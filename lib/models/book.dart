@@ -19,7 +19,7 @@ class Book {
   final String? contentHash;
   final String? tableOfContents;
   final String? coverImagePath; // 书籍封面图片路径
-  final String? textEncoding; // TXT编码（auto/gbk/utf8/utf16le/utf16be）
+  final String? textEncoding; // TXT编码（导入时自动检测的结果）
 
   // ---- CanonicalLocator 双轨定位字段 ----
 

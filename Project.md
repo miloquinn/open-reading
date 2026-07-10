@@ -1,4 +1,4 @@
-# 小元读书项目索引 (Project.md)
+# 开元阅读项目索引 (Project.md)
 
 ## 核心架构
 本项目采用 **Flutter + Foliate (WebView)** 的混合架构，旨在提供高性能、高兼容性的阅读体验。

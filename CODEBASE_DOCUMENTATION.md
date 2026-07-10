@@ -1,4 +1,4 @@
-# 小元读书代码库索引（OpenReading）
+# 开元阅读代码库索引（OpenReading）
 
 > 更新：2026-04-03
 > 范围：`OpenReading/lib/` + `OpenReading/test/`
@@ -6,7 +6,7 @@
 
 ## 当前真相源
 
-- 当前工作区中的主 Flutter 工程是 `OpenReading/`，不是根目录旧文档里仍出现的 `Xiaoyuan Reader/`。
+- 当前工作区中的主 Flutter 工程是 `OpenReading/`，不是根目录旧文档里仍出现的 `OpenReading/`。
 - 当前默认阅读入口由 `lib/services/reading/reading_router_service.dart` 打开 `lib/pages/foliate_reader_page.dart`。
 - `lib/reader_core/` 当前主要承担解析、文档模型与阅读支撑能力，不再作为独立阅读页面入口存在。
 
@@ -184,7 +184,7 @@
 
 | 文件 | 作用 | 技术 | 状态 |
 | --- | --- | --- | --- |
-| `lib/widgets/app_brand_icon.dart` | 应用品牌图标组件，统一渲染小元读书的品牌标识。 | Flutter UI | 支撑模块 |
+| `lib/widgets/app_brand_icon.dart` | 应用品牌图标组件，统一渲染开元阅读的品牌标识。 | Flutter UI | 支撑模块 |
 | `lib/widgets/scrolling_text.dart` | 滚动文本组件，用于超长文本的自动滚动显示。 | Flutter UI | 支撑模块 |
 | `lib/widgets/side_toast.dart` | 侧边提示组件，提供全局浮层式提示反馈。 | Flutter UI、渲染层 | 支撑模块 |
 | `lib/widgets/webdav_config_dialog.dart` | WebDAV 配置对话框，用于编辑服务器、账号和测试连接。 | Flutter UI、渲染层 | 支撑模块 |

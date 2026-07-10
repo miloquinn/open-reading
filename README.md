@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0d1117,50:1a1b26,100:0d1117&height=200&section=header&text=Open%20Reading&fontSize=50&fontColor=f7768e&fontAlignY=40&desc=%E5%B0%8F%E5%85%83%E9%98%85%E8%AF%BB%E5%99%A8%20%E2%80%94%20An%20Elegant%20Cross-Platform%20Ebook%20Reader&descSize=16&descAlignY=60&descAlign=50&animation=fadeIn" width="100%" />
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0d1117,50:1a1b26,100:0d1117&height=200&section=header&text=Open%20Reading&fontSize=50&fontColor=f7768e&fontAlignY=40&desc=%E5%BC%80%E5%85%83%E9%98%85%E8%AF%BB%20%E2%80%94%20An%20Elegant%20Cross-Platform%20Ebook%20Reader&descSize=16&descAlignY=60&descAlign=50&animation=fadeIn" width="100%" />
 </p>
 
 <p align="center">
@@ -20,10 +20,10 @@
 
 ## 📖 About
 
-**Open Reading** (小元阅读器) 是 [小元读书 (Origo Reader)](https://github.com/KeloYuan/Origo-Reader) 项目的**开源跨平台版本**，基于 Flutter 构建，覆盖 Android、iOS、macOS、Windows、Linux 五个平台。
+**OpenReading** (开元阅读) 是 [小元读书 (Origo Reader)](https://github.com/KeloYuan/Origo-Reader) 项目的**开源跨平台版本**，基于 Flutter 构建，覆盖 Android、iOS、macOS、Windows、Linux 五个平台。
 
 > 市面上的阅读器要么功能臃肿，要么界面丑陋。
-> Open Reading 只想做一件事：**让你安静地读书，顺便好看一点。**
+> OpenReading 只想做一件事：**让你安静地读书，顺便好看一点。**
 
 ---
 
@@ -160,7 +160,7 @@ lib/
 ---
 
 <p align="center">
-  <b>小元阅读器</b> — <i>Reading, refined.</i><br/><br/>
+  <b>开元阅读</b> — <i>Reading, refined.</i><br/><br/>
   Part of <a href="https://github.com/KeloYuan/Origo-Reader">Origo Reader (小元读书)</a><br/><br/>
   If you like this project, give it a ⭐ — it keeps me going!
 </p>

@@ -224,24 +224,6 @@ class BookDao {
     }
   }
 
-  // 更新书籍编码
-  Future<void> updateBookTextEncoding(int bookId, String? textEncoding) async {
-    try {
-      final db = await _dbService.database;
-      final result = await db.update(
-        'books',
-        {'text_encoding': textEncoding},
-        where: 'id = ?',
-        whereArgs: [bookId],
-      );
-      if (result == 0) {
-        throw Exception('书籍不存在');
-      }
-    } catch (e) {
-      throw Exception('更新书籍编码失败: $e');
-    }
-  }
-
   /// 通过内容哈希值查找书籍
   ///
   /// 用于检查是否已导入相同内容的书籍

@@ -35,7 +35,7 @@ void main() async {
     // 检查并启用设备的最高刷新率
     SystemChrome.setApplicationSwitcherDescription(
       const ApplicationSwitcherDescription(
-        label: '小元阅读器',
+        label: '开元阅读',
         primaryColor: 0xFF1976D2,
       ),
     );
@@ -79,7 +79,6 @@ void main() async {
               create: (_) => AppSettingsNotifier(),
             ),
             provider.ChangeNotifierProvider(create: (_) => TtsService()),
-            provider.ChangeNotifierProvider(create: (_) => ShareService()),
           ],
           child: const XxReadApp(),
         ),
@@ -397,49 +396,38 @@ class _XxReadAppState extends State<XxReadApp> {
       _bootstrapError = null;
     });
 
-    // 🗄️ 初始化数据管理器
-    debugPrint('🚀 开始初始化应用数据管理系统');
+    // 初始化缓存与应用状态服务
     try {
-      await DataManager().initialize();
-      debugPrint('✅ 数据管理系统初始化成功');
+      await DataCacheService().initialize();
+      await AppStateService().initialize();
     } catch (e) {
-      debugPrint('❌ 数据管理系统初始化失败: $e');
+      debugPrint('数据服务初始化失败: $e');
       if (mounted) {
         setState(() => _bootstrapError = '数据系统初始化失败');
       }
       return;
     }
 
-    // 🖼️ 初始化图片管理器
+    // 初始化图片管理器
     try {
       final appDocDir = await getApplicationDocumentsDirectory();
       await BookImageManager().initialize(appDocDir.path);
-      debugPrint('✅ 图片管理器已初始化');
     } catch (e) {
-      debugPrint('❌ 图片管理器初始化失败: $e');
+      debugPrint('图片管理器初始化失败: $e');
       if (mounted) {
         setState(() => _bootstrapError = '图片管理器初始化失败');
       }
       return;
     }
 
-    // 🔧 修复历史绝对路径（升级/重装后可能导致书籍与封面路径失效）
+    // 修复历史绝对路径（升级/重装后可能导致书籍与封面路径失效）
     try {
-      final repairedCount =
-          await BookStorageRepairService().repairAllBooksIfNeeded();
-      if (repairedCount > 0) {
-        debugPrint('✅ 已完成书籍路径修复: $repairedCount');
-      }
-
+      await BookStorageRepairService().repairAllBooksIfNeeded();
       // 清理历史残留的临时/无效文件，避免占用存储
-      final removedCount =
-          await BookStorageRepairService().cleanupUnusedStorageArtifacts();
-      if (removedCount > 0) {
-        debugPrint('✅ 已清理无用存储文件: $removedCount');
-      }
+      await BookStorageRepairService().cleanupUnusedStorageArtifacts();
     } catch (e) {
       // 路径修复失败不阻塞启动
-      debugPrint('⚠️ 书籍路径修复失败（已忽略，不阻塞启动）: $e');
+      debugPrint('书籍路径修复失败（已忽略，不阻塞启动）: $e');
     }
 
     if (!mounted) return;

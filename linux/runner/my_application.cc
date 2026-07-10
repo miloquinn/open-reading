@@ -17,11 +17,11 @@ static const char* get_localized_app_name() {
     if (strstr(locale, "zh_CN") || strstr(locale, "zh_TW") ||
         strstr(locale, "zh-Hans") || strstr(locale, "zh-Hant") ||
         strstr(locale, "Chinese")) {
-      return "小元阅读器";
+      return "开元阅读";
     }
   }
   // Default to English
-  return "Xiaoyuan Reader";
+  return "OpenReading";
 }
 
 struct _MyApplication {

@@ -297,7 +297,7 @@ class _UserAgreementPageState extends State<UserAgreementPage>
         ),
         const SizedBox(height: 18),
         Text(
-          '小元阅读器',
+          '开元阅读',
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.w700,
                 color: scheme.onSurface,
@@ -489,7 +489,7 @@ class _UserAgreementPageState extends State<UserAgreementPage>
               ),
               const SizedBox(height: 14),
               Text(
-                '欢迎使用小元阅读器',
+                '欢迎使用开元阅读',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w700,
                       color: scheme.primary,

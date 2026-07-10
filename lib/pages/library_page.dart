@@ -10,7 +10,7 @@ import 'package:flutter/services.dart';
 import '../models/book.dart';
 import '../services/books/book_services.dart';
 import '../services/library/library_services.dart';
-import '../services/reading/reading_router_service.dart';
+import '../core/reader/native_reader_service.dart';
 import '../widgets/side_toast.dart';
 import 'import_book_page.dart';
 import 'home_layout_constants.dart';
@@ -226,7 +226,7 @@ class _LibraryPageState extends State<LibraryPage> {
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : _books.isEmpty
-                      ? _buildEmptyLibrary(compactTop: true)
+                      ? _buildEmptyLibrary()
                       : books.isEmpty
                           ? _buildNoSearchResult()
                           : RefreshIndicator(
@@ -553,64 +553,14 @@ class _LibraryPageState extends State<LibraryPage> {
     );
   }
 
-  Widget _buildEmptyLibrary({bool compactTop = false}) {
-    final topInset =
-        compactTop ? 20.0 : MediaQuery.of(context).padding.top + 100;
-    final scheme = Theme.of(context).colorScheme;
-    final useBlur = !_isMaterial3Style && !GlassEffectConfig.shouldDisableBlur;
-    final card = Container(
-      padding: const EdgeInsets.all(32),
-      decoration: _panelDecoration(
-        radius: 24,
-        stronger: true,
-        addShadow: true,
-        borderAlpha: 0.2,
-        color: _isMaterial3Style
-            ? scheme.surfaceContainerHigh
-            : GlassEffectConfig.surfaceColor(context, opacity: 0.8),
-      ),
+  Widget _buildEmptyLibrary() {
+    return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Theme.of(
-                context,
-              ).colorScheme.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: AppBrandIcon(
-              size: 60,
-              borderRadius: 16,
-              border: Border.all(
-                color: Theme.of(context)
-                    .colorScheme
-                    .primary
-                    .withValues(alpha: 0.24),
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            '开启阅读之旅',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            '你的书架还是空的\n点击右上角的 "+" 按钮\n添加你的第一本书吧',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onSurface.withValues(alpha: 0.7),
-                  height: 1.5,
-                ),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
+          const AppBrandIcon(size: 56, borderRadius: 14),
+          const SizedBox(height: 16),
+          TextButton.icon(
             onPressed: () async {
               await Navigator.push(
                 context,
@@ -622,32 +572,8 @@ class _LibraryPageState extends State<LibraryPage> {
             },
             icon: const Icon(Icons.add),
             label: const Text('导入书籍'),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 12,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
           ),
         ],
-      ),
-    );
-
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(40, topInset, 40, 40),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: useBlur
-              ? BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                  child: card,
-                )
-              : card,
-        ),
       ),
     );
   }
@@ -774,7 +700,7 @@ class _LibraryPageState extends State<LibraryPage> {
                     final fullBook = await _bookDao.getBookById(book.id!);
                     if (fullBook != null && mounted && context.mounted) {
                       // 直接打开沉浸式阅读器
-                      await ReadingRouterService.openBook(context, fullBook);
+                      await NativeReaderService.openBook(context, fullBook);
                       _loadBooks();
                     }
                   },
@@ -830,7 +756,7 @@ class _LibraryPageState extends State<LibraryPage> {
               onTap: () async {
                 final fullBook = await _bookDao.getBookById(book.id!);
                 if (fullBook != null && mounted && context.mounted) {
-                  await ReadingRouterService.openBook(context, fullBook);
+                  await NativeReaderService.openBook(context, fullBook);
                   _loadBooks();
                 }
               },
@@ -1126,7 +1052,7 @@ class _LibraryPageState extends State<LibraryPage> {
                           Navigator.pop(context);
                           final fullBook = await _bookDao.getBookById(book.id!);
                           if (fullBook != null && context.mounted) {
-                            await ReadingRouterService.openBook(
+                            await NativeReaderService.openBook(
                                 context, fullBook);
                             _loadBooks();
                           }

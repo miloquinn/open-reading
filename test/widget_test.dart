@@ -18,7 +18,7 @@ import 'package:xxread/services/core/core_services.dart';
 import 'package:xxread/services/tts_service.dart';
 
 void main() {
-  testWidgets('小元读书 app smoke test', (WidgetTester tester) async {
+  testWidgets('开元阅读 app smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
     await tester.pumpWidget(
       ProviderScope(
@@ -29,7 +29,6 @@ void main() {
               create: (_) => AppSettingsNotifier(),
             ),
             provider.ChangeNotifierProvider(create: (_) => TtsService()),
-            provider.ChangeNotifierProvider(create: (_) => ShareService()),
           ],
           child: const XxReadApp(),
         ),

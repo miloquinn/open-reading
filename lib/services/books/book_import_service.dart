@@ -24,7 +24,6 @@ import 'package:xxread/services/books/epub_image_extractor_service.dart';
 import 'package:xxread/services/books/book_image_map_service.dart';
 import 'package:xxread/services/library/library_event_bus_service.dart';
 import 'package:xxread/services/ai/global_ai_reading_service.dart';
-import 'package:xxread/utils/encoding_detector_helper.dart';
 
 class EnhancedBookMetadata {
   final String title;
@@ -160,7 +159,6 @@ class BookImportService {
   /// 返回成功导入的Book对象，失败或取消返回null
   Future<Book?> importBook({
     ImportProgressCallback? progressCallback,
-    String? encodingOverride,
   }) async {
     try {
       progressCallback?.call(0.0, '选择文件中...');
@@ -187,9 +185,6 @@ class BookImportService {
 
       if (result != null && result.files.isNotEmpty) {
         final pickedFile = result.files.first;
-        final pickedExtension = (pickedFile.extension ?? '').toLowerCase();
-        final normalizedEncodingOverride =
-            EnhancedTxtImportService.normalizeEncoding(encodingOverride);
 
         // 获取原始文件路径
         final sourcePath = pickedFile.path;
@@ -254,25 +249,6 @@ class BookImportService {
               // 继续执行复制流程，然后更新路径
               // （不在这里return，让后续流程处理）
             } else {
-              // 对TXT重复导入允许刷新编码设置，避免“重新选择GB2312无效”。
-              if (pickedExtension == 'txt' &&
-                  normalizedEncodingOverride != 'auto' &&
-                  existingBook.id != null &&
-                  existingBook.textEncoding != normalizedEncodingOverride) {
-                await _bookDao.updateBookTextEncoding(
-                  existingBook.id!,
-                  normalizedEncodingOverride,
-                );
-                progressCallback?.call(1.0, '书籍已存在，已更新编码设置');
-                debugPrint(
-                  '♻️ 重复TXT导入，已更新编码: '
-                  '${existingBook.textEncoding} -> $normalizedEncodingOverride',
-                );
-                return existingBook.copyWith(
-                  textEncoding: normalizedEncodingOverride,
-                );
-              }
-
               // 旧文件存在，这是真正的重复
               debugPrint('Duplicate book detected: ${existingBook.title}');
               throw Exception(
@@ -366,7 +342,6 @@ class BookImportService {
           newFilePath,
           pickedFile.name,
           pickedFile.extension ?? '',
-          encodingOverride: encodingOverride,
           progressCallback: (subProgress, message) {
             // 将子进度映射到0.55-0.85区间（占30%）
             final mappedProgress = 0.55 + (subProgress * 0.3);
@@ -397,7 +372,7 @@ class BookImportService {
           totalPages: metadata.estimatedPages,
           coverImagePath: coverImagePath,
           contentHash: contentHash,
-          textEncoding: metadata.textEncoding ?? encodingOverride,
+          textEncoding: metadata.textEncoding,
         );
 
         // 7. Insert metadata into the database
@@ -479,7 +454,6 @@ class BookImportService {
     String filePath,
     String fileName,
     String extension, {
-    String? encodingOverride,
     Function(double, String)? progressCallback,
   }) async {
     final ext = extension.toLowerCase();
@@ -541,11 +515,7 @@ class BookImportService {
           break;
         case 'txt':
           progressCallback?.call(0.5, '检测文本编码...');
-          metadata = await _extractTxtMetadata(
-            bytes,
-            fileName,
-            encodingOverride: encodingOverride,
-          );
+          metadata = await _extractTxtMetadata(bytes, fileName);
           break;
         case 'mobi':
         case 'azw':
@@ -804,38 +774,18 @@ class BookImportService {
     }
   }
 
-  /// 使用增强服务提取TXT元数据（使用isolate优化）
+  /// 使用增强服务提取TXT元数据（使用isolate优化），编码自动检测
   Future<EnhancedBookMetadata> _extractTxtMetadata(
     Uint8List bytes,
-    String fileName, {
-    String? encodingOverride,
-  }) async {
+    String fileName,
+  ) async {
     try {
-      debugPrint('📖 开始TXT元数据提取: $fileName');
-      final normalizedOverride =
-          EnhancedTxtImportService.normalizeEncoding(encodingOverride);
-      var resolvedEncoding = normalizedOverride;
-
-      if (normalizedOverride == 'auto') {
-        // 仅自动模式执行编码检测。
-        debugPrint('🔍 分析文件编码特征...');
-        final analysis = EncodingDetectorHelper.analyzeEncoding(bytes);
-        final report = EncodingDetectorHelper.generateReport(analysis);
-        EncodingDetectorHelper.debugPrintReport(report);
-
-        resolvedEncoding = _enhancedTxtService.detectEncoding(
-          bytes,
-          encodingOverride: null,
-        );
-      } else {
-        debugPrint('🧷 使用用户指定编码: $normalizedOverride（跳过自动检测）');
-      }
+      var resolvedEncoding = _enhancedTxtService.detectEncoding(bytes);
 
       // 对于大文件，使用isolate处理
       SimpleMetadata simpleMetadata;
       if (bytes.length > 5 * 1024 * 1024) {
         // 大于5MB，使用isolate
-        debugPrint('使用isolate处理大TXT文件: ${bytes.length / 1024 / 1024} MB');
         simpleMetadata = await compute(
           extractTxtMetadataInIsolate,
           MetadataExtractionParams(
@@ -849,53 +799,33 @@ class BookImportService {
         // 小文件在主线程处理
         String content;
         try {
-          if (resolvedEncoding == 'auto') {
-            debugPrint('🔄 开始智能编码检测...');
-          } else {
-            debugPrint('🔄 使用指定编码解码: $resolvedEncoding');
-          }
           final decodeResult = _enhancedTxtService.decodeWithResult(
             bytes,
             encodingOverride: resolvedEncoding,
           );
           content = decodeResult.content;
           resolvedEncoding = decodeResult.encoding;
-          debugPrint('✅ 文本解码成功，编码=$resolvedEncoding，内容长度: ${content.length}');
-        } catch (e, stackTrace) {
-          debugPrint('❌ 编码检测失败: $e');
-          debugPrint('Stack trace: $stackTrace');
-          if (resolvedEncoding != 'auto') {
-            final retry = _enhancedTxtService.decodeWithResult(
-              bytes,
-              encodingOverride: resolvedEncoding,
-            );
-            content = retry.content;
-            resolvedEncoding = retry.encoding;
-            debugPrint('使用指定编码重试解码: $resolvedEncoding');
-          } else {
-            content = utf8.decode(bytes, allowMalformed: true);
-            resolvedEncoding = 'utf8';
-            debugPrint('使用UTF-8 fallback解码');
-          }
+        } catch (e) {
+          content = utf8.decode(bytes, allowMalformed: true);
+          resolvedEncoding = 'utf8';
         }
 
-        // ✅ 文本预处理：压缩空行、添加缩进、段落间距
+        // 文本预处理：压缩空行、添加缩进、段落间距
         content = _preprocessor.process(
           content,
           indentSize: 2,
           indentDialogue: true,
           compressEmptyLines: true,
-          paragraphSpacing: 0, // 默认0行空行（段落紧密排列）
+          paragraphSpacing: 0,
         );
-        debugPrint('✅ 文本预处理完成：压缩空行、添加缩进、段落间距');
 
-        // 🔧 不要使用 trim()，否则会移除段首缩进！
+        // 不要使用 trim()，否则会移除段首缩进
         final lines =
             content.split('\n').where((e) => e.trim().isNotEmpty).toList();
         var title = lines.isNotEmpty
             ? lines.first.substring(0, lines.first.length.clamp(0, 50))
             : fileName.replaceAll(RegExp(r'\.(txt)$'), '');
-        if (_looksGarbled(title) && encodingOverride != null) {
+        if (_looksGarbled(title)) {
           title = fileName.replaceAll(RegExp(r'\.(txt)$'), '');
         }
         final estimatedPages = (content.length / 1500).ceil().clamp(1, 9999);

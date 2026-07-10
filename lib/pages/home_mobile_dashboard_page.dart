@@ -12,7 +12,7 @@ import '../services/books/book_services.dart';
 import '../services/core/core_services.dart';
 import '../services/library/library_event_bus_service.dart';
 import '../services/reading/reading_plan_service.dart';
-import '../services/reading/reading_router_service.dart';
+import '../core/reader/native_reader_service.dart';
 import '../services/reading/reading_stats_dao.dart';
 import '../utils/layout_helper.dart';
 import '../utils/page_transitions.dart';
@@ -366,7 +366,7 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
   }
 
   Future<void> _openBook(Book book) async {
-    await ReadingRouterService.openBook(context, book);
+    await NativeReaderService.openBook(context, book);
     if (!mounted) return;
     await _loadAllStats();
   }

@@ -101,7 +101,7 @@ abstract class AppLocalizations {
   /// The title of the application
   ///
   /// In en, this message translates to:
-  /// **'Xiaoyuan Reader'**
+  /// **'OpenReading'**
   String get appTitle;
 
   /// Home tab label

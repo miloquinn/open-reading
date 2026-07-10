@@ -4,12 +4,12 @@ project(runner LANGUAGES CXX)
 
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
-# Set APP_NAME to "Xiaoyuan Reader" for English or "小元阅读器" for Chinese
+# Set APP_NAME to "OpenReading" for English or "开元阅读" for Chinese
 option(APP_NAME_CN "Use Chinese app name" ON)
 if(APP_NAME_CN)
-    set(BINARY_NAME "小元阅读器")
+    set(BINARY_NAME "开元阅读")
 else()
-    set(BINARY_NAME "Xiaoyuan Reader")
+    set(BINARY_NAME "OpenReading")
 endif()
 
 # The unique GTK application identifier for this application. See:
