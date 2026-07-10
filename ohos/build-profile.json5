@@ -1,0 +1,53 @@
+{
+  "app": {
+    "signingConfigs": [
+      {
+        "name": "default",
+        "type": "HarmonyOS",
+        "material": {
+          "certpath": "/Users/xiaoyuan/.ohos/config/default_ohos_TXVHaQ54VqIYDob7T3Pu-Td0elKEkko_sl6qklNumHI=.cer",
+          "keyAlias": "debugKey",
+          "keyPassword": "0000001AF2DE3AE7BF8E6FBAC7638B5541A0E29FB250DC832B4CD523146259873662D3E02624B13DEE05",
+          "profile": "/Users/xiaoyuan/.ohos/config/default_ohos_TXVHaQ54VqIYDob7T3Pu-Td0elKEkko_sl6qklNumHI=.p7b",
+          "signAlg": "SHA256withECDSA",
+          "storeFile": "/Users/xiaoyuan/.ohos/config/default_ohos_TXVHaQ54VqIYDob7T3Pu-Td0elKEkko_sl6qklNumHI=.p12",
+          "storePassword": "0000001AD87D404999FA12B2F2725A2A5DEB0085B9B92BFB60C0F2A3B5C1F009E24D34D3DC4BA2E13C11"
+        }
+      }
+    ],
+    "products": [
+      {
+        "name": "default",
+        "signingConfig": "default",
+        "compatibleSdkVersion": "6.0.2(22)",
+        "runtimeOS": "HarmonyOS",
+        "targetSdkVersion": "6.0.2(22)"
+      }
+    ],
+    "buildModeSet": [
+      {
+        "name": "debug"
+      },
+      {
+        "name": "profile"
+      },
+      {
+        "name": "release"
+      }
+    ]
+  },
+  "modules": [
+    {
+      "name": "entry",
+      "srcPath": "./entry",
+      "targets": [
+        {
+          "name": "default",
+          "applyToProducts": [
+            "default"
+          ]
+        }
+      ]
+    }
+  ]
+}

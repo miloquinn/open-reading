@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Reader Debug</title>
+<style>
+  html {
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  body {
+    user-select: none;
+    margin: 0 !important;
+    height: 100vh;
+  }
+
+  #footnote-dialog {
+    position: fixed;
+    width: 80vw;
+    height: 80vh;
+    max-width: 400px;
+    max-height: 200px;
+    min-width: 300px;
+    min-height: 200px;
+    border-radius: 15px;
+    border: 1px solid grey;
+    user-select: none;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    outline: none;
+    z-index: 1000;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+  }
+
+  #footnote-dialog main {
+    overflow: auto;
+    width: 100%;
+    height: 100%;
+  }
+
+  #debug-controls {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    z-index: 2000;
+  }
+  
+  .translated-text {
+    display: block !important;
+    font-style: italic;
+    color: #666;
+    font-size: 0.9em;
+    margin-top: 0.2em;
+  }
+  
+  .translated-text.hidden {
+    display: none !important;
+  }
+</style>
+
+<div id="debug-controls">
+  <div>
+    <button onclick="window.prevPage()">Prev</button>
+    <button onclick="window.nextPage()">Next</button>
+    <button onclick="window.goToPercent(0.5)">50%</button>
+  </div>
+  <div style="margin-top: 10px;">
+    <label>Translation:</label><br>
+    <button onclick="setTranslationMode('off')">Off</button>
+    <button onclick="setTranslationMode('bilingual')">Bilingual</button>
+    <button onclick="setTranslationMode('translation-only')">Trans Only</button>
+    <button onclick="setTranslationMode('original-only')">Orig Only</button>
+  </div>
+  <div style="margin-top: 10px;">
+    <button onclick="testCFIPreservation()">Test CFI</button>
+    <div id="cfi-result" style="font-size: 0.8em; margin-top: 5px;"></div>
+  </div>
+</div>
+
+<div id="footnote-dialog">
+  <main></main>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "core-js/stable": "https://esm.sh/core-js@3/stable"
+  }
+}
+</script>
+
+<script>
+  console.log("ReaderUA", navigator.userAgent);
+
+  const urlParams = new URLSearchParams(window.location.search);
+  if (!urlParams.has('url')) {
+    const mockParams = {
+      importing: false,
+      url: '../local/alice.epub',
+      initialCfi: "epubcfi(/6/6!/4/2[pgepubid00003],/16/1:223,/20/7:170)",
+      style: {
+        fontSize: 1.4,
+        fontName: "book",
+        fontPath: "",
+        fontWeight: 400.0,
+        letterSpacing: 0.0,
+        spacing: 1.5,
+        paragraphSpacing: 5.0,
+        textIndent: 0.0,
+        fontColor: "#111111ff",
+        backgroundColor: "#fefefeff",
+        topMargin: 20.0,
+        bottomMargin: 50.0,
+        sideMargin: 15.0,
+        justify: true,
+        hyphenate: true,
+        // 'slide' 'scroll' 'noAnimation'
+        pageTurnStyle: "slide",
+        // pageTurnStyle: "slide",
+        maxColumnCount: 1,
+        // auto 'horizontal-tb' 'vertical-rl'
+        // writingMode: "vertical-rl",
+        writingMode: "horizontal-tb",
+        backgroundImage: "none",
+        
+        // true, false
+        allowScript: true,
+      },
+      readingRules: {
+        convertChineseMode: "none",
+        bionicReadingMode: false
+      }
+    };
+
+    const params = new URLSearchParams();
+    params.set('importing', JSON.stringify(mockParams.importing));
+    params.set('url', JSON.stringify(mockParams.url));
+    params.set('initialCfi', JSON.stringify(mockParams.initialCfi));
+    params.set('style', JSON.stringify(mockParams.style));
+    params.set('readingRules', JSON.stringify(mockParams.readingRules));
+
+    window.location.href = window.location.pathname + '?' + params.toString();
+  }
+
+  window.flutter_inappwebview = {
+    callHandler: (name, data) => {
+      console.log(`Flutter Handler Called: ${name}`, data);
+      // Mock translation response for testing
+      if (name === 'translateText') {
+        return Promise.resolve(`【模拟翻译】${data}`);
+      }
+      return Promise.resolve(null);
+    }
+  };
+
+  // available types: highlight, underline, bookmark
+    const anno = [
+    { id: 1, type: 'highlight', value: "epubcfi(/6/6!/4/2[pgepubid00003]/18,/1:1,/1:18)", color: 'blue', note: 'this is' },
+    { id: 2, type: 'highlight', value: "epubcfi(/6/6!/4/2[pgepubid00003]/18,/3:300,/5:102)", color: '#66ccff', note: 'this is' },
+    { id: 3, type: 'underline', value: "epubcfi(/6/6!/4/2[pgepubid00003]/18/6,/1:1,/1:8)", color: 'red', note: 'this is' },
+  ]
+
+  setTimeout(() => {
+    reader.renderAnnotation(anno)
+  }, 1000)
+
+  // Translation testing functions
+  function setTranslationMode(mode) {
+    if (reader.view && reader.view.setTranslationMode) {
+      reader.view.setTranslationMode(mode);
+      console.log('Translation mode set to:', mode);
+    } else {
+      console.warn('Translation mode not available');
+    }
+  }
+
+  function testCFIPreservation() {
+    if (!reader.view) {
+      document.getElementById('cfi-result').textContent = 'View not ready';
+      return;
+    }
+
+    const testCFI = "epubcfi(/6/6!/4/2[pgepubid00003],/16/1:223,/20/7:170)";
+    const resultDiv = document.getElementById('cfi-result');
+    
+    try {
+      // Test 1: Get current location before translation
+      const beforeLocation = reader.view.getCFI();
+      resultDiv.innerHTML = `Before: ${beforeLocation}<br>`;
+      
+      // Test 2: Enable translation
+      setTranslationMode('bilingual');
+      
+      setTimeout(() => {
+        // Test 3: Get location after translation
+        const afterLocation = reader.view.getCFI();
+        resultDiv.innerHTML += `After: ${afterLocation}<br>`;
+        
+        // Test 4: Navigate to specific CFI
+        reader.view.goTo(testCFI);
+        
+        setTimeout(() => {
+          const finalLocation = reader.view.getCFI();
+          resultDiv.innerHTML += `Final: ${finalLocation}<br>`;
+          
+          if (beforeLocation && afterLocation && finalLocation) {
+            resultDiv.innerHTML += `<span style="color: ${beforeLocation === afterLocation ? 'green' : 'orange'};">CFI Stable: ${beforeLocation === afterLocation}</span>`;
+          }
+        }, 1000);
+      }, 2000);
+      
+    } catch (error) {
+      resultDiv.textContent = `Error: ${error.message}`;
+      console.error('CFI test error:', error);
+    }
+  }
+
+  // Make functions globally available
+  window.setTranslationMode = setTranslationMode;
+  window.testCFIPreservation = testCFIPreservation;
+</script>
+
+<script src="./src/book.js" type="module"></script>
+<script src="./src/vendor/pdfjs/pdf.js"></script>
+</html>

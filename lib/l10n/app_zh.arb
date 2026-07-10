@@ -1,0 +1,965 @@
+{
+  "@@locale": "zh",
+  "appTitle": "小元阅读器",
+  "@appTitle": {
+    "description": "应用标题"
+  },
+  "home": "首页",
+  "@home": {
+    "description": "首页标签"
+  },
+  "library": "书库",
+  "@library": {
+    "description": "书库标签"
+  },
+  "settings": "设置",
+  "@settings": {
+    "description": "设置标签"
+  },
+  "statistics": "统计",
+  "@statistics": {
+    "description": "统计标签"
+  },
+  "reading": "阅读",
+  "@reading": {
+    "description": "阅读页面标题"
+  },
+  "importBooks": "导入书籍",
+  "@importBooks": {
+    "description": "导入书籍按钮"
+  },
+  "darkMode": "深色模式",
+  "@darkMode": {
+    "description": "深色模式设置"
+  },
+  "lightMode": "浅色模式",
+  "@lightMode": {
+    "description": "浅色模式设置"
+  },
+  "systemMode": "跟随系统",
+  "@systemMode": {
+    "description": "跟随系统主题"
+  },
+  "theme": "主题",
+  "@theme": {
+    "description": "主题设置"
+  },
+  "accent": "强调色",
+  "@accent": {
+    "description": "强调色设置"
+  },
+  "bookmarks": "书签",
+  "@bookmarks": {
+    "description": "书签功能"
+  },
+  "notes": "笔记",
+  "@notes": {
+    "description": "笔记功能"
+  },
+  "highlights": "高亮",
+  "@highlights": {
+    "description": "高亮功能"
+  },
+  "ttsReading": "语音朗读",
+  "@ttsReading": {
+    "description": "TTS朗读功能"
+  },
+  "share": "分享",
+  "@share": {
+    "description": "分享按钮"
+  },
+  "shareContent": "分享内容",
+  "@shareContent": {
+    "description": "分享内容对话框标题"
+  },
+  "shareCurrentPage": "分享当前页面",
+  "@shareCurrentPage": {
+    "description": "分享当前页面选项"
+  },
+  "shareSelectedText": "分享选中文本",
+  "@shareSelectedText": {
+    "description": "分享选中文本选项"
+  },
+  "shareProgress": "分享阅读进度",
+  "@shareProgress": {
+    "description": "分享阅读进度选项"
+  },
+  "play": "播放",
+  "@play": {
+    "description": "播放按钮"
+  },
+  "pause": "暂停",
+  "@pause": {
+    "description": "暂停按钮"
+  },
+  "stop": "停止",
+  "@stop": {
+    "description": "停止按钮"
+  },
+  "speed": "语速",
+  "@speed": {
+    "description": "语速设置"
+  },
+  "pitch": "音调",
+  "@pitch": {
+    "description": "音调设置"
+  },
+  "language": "语言",
+  "@language": {
+    "description": "语言设置"
+  },
+  "fontSize": "字体大小",
+  "@fontSize": {
+    "description": "字体大小设置"
+  },
+  "readingProgress": "阅读进度",
+  "@readingProgress": {
+    "description": "阅读进度指示"
+  },
+  "totalPages": "总页数",
+  "@totalPages": {
+    "description": "总页数标签"
+  },
+  "currentPage": "当前页",
+  "@currentPage": {
+    "description": "当前页标签"
+  },
+  "readingTime": "阅读时长",
+  "@readingTime": {
+    "description": "阅读时长统计"
+  },
+  "booksRead": "已读书籍",
+  "@booksRead": {
+    "description": "已读书籍统计"
+  },
+  "todayReading": "今日阅读",
+  "@todayReading": {
+    "description": "今日阅读时长"
+  },
+  "cancel": "取消",
+  "@cancel": {
+    "description": "取消按钮"
+  },
+  "confirm": "确认",
+  "@confirm": {
+    "description": "确认按钮"
+  },
+  "delete": "删除",
+  "@delete": {
+    "description": "删除按钮"
+  },
+  "edit": "编辑",
+  "@edit": {
+    "description": "编辑按钮"
+  },
+  "save": "保存",
+  "@save": {
+    "description": "保存按钮"
+  },
+  "back": "返回",
+  "@back": {
+    "description": "返回按钮"
+  },
+  "next": "下一页",
+  "@next": {
+    "description": "下一页按钮"
+  },
+  "previous": "上一页",
+  "@previous": {
+    "description": "上一页按钮"
+  },
+  "search": "搜索",
+  "@search": {
+    "description": "搜索功能"
+  },
+  "noResults": "未找到结果",
+  "@noResults": {
+    "description": "无搜索结果"
+  },
+  "loading": "加载中...",
+  "@loading": {
+    "description": "加载中提示"
+  },
+  "error": "错误",
+  "@error": {
+    "description": "错误信息"
+  },
+  "initializationFailed": "初始化失败",
+  "@initializationFailed": {
+    "description": "初始化失败消息"
+  },
+  "unknownError": "未知错误",
+  "@unknownError": {
+    "description": "未知错误消息"
+  },
+  "retry": "重试",
+  "@retry": {
+    "description": "重试按钮"
+  },
+  "appearanceSettings": "外观设置",
+  "@appearanceSettings": {
+    "description": "外观设置部分"
+  },
+  "readingTips": "阅读提示",
+  "@readingTips": {
+    "description": "阅读提示部分"
+  },
+  "readingFontSettingsMoved": "阅读字体设置已移至阅读界面",
+  "@readingFontSettingsMoved": {
+    "description": "字体设置迁移消息"
+  },
+  "readingFontSettingsHint": "打开任意书籍，点击屏幕中央，在底部控制栏中点击「设置」按钮，即可调整字体大小、行间距、字符间距、页面边距与阅读字体。",
+  "@readingFontSettingsHint": {
+    "description": "字体设置位置提示"
+  },
+  "readingSettings": "阅读设置",
+  "@readingSettings": {
+    "description": "阅读设置部分"
+  },
+  "enableTts": "启用朗读功能",
+  "@enableTts": {
+    "description": "启用TTS选项"
+  },
+  "enableTtsHint": "开启文本转语音朗读",
+  "@enableTtsHint": {
+    "description": "启用TTS提示"
+  },
+  "ttsSpeedLabel": "朗读速度",
+  "@ttsSpeedLabel": {
+    "description": "TTS语速标签"
+  },
+  "ttsSpeedHint": "调整朗读的快慢",
+  "@ttsSpeedHint": {
+    "description": "语速调整提示"
+  },
+  "ttsVolumeLabel": "朗读音量",
+  "@ttsVolumeLabel": {
+    "description": "TTS音量标签"
+  },
+  "ttsVolumeHint": "调整朗读音量大小",
+  "@ttsVolumeHint": {
+    "description": "音量调整提示"
+  },
+  "ttsPitchLabel": "音调高低",
+  "@ttsPitchLabel": {
+    "description": "TTS音调标签"
+  },
+  "ttsPitchHint": "调整朗读音调",
+  "@ttsPitchHint": {
+    "description": "音调调整提示"
+  },
+  "cloudSync": "云端同步",
+  "@cloudSync": {
+    "description": "云端同步部分"
+  },
+  "webdavConfig": "WebDAV配置",
+  "@webdavConfig": {
+    "description": "WebDAV配置"
+  },
+  "webdavConfigured": "已配置 - {serverUrl}",
+  "@webdavConfigured": {
+    "description": "WebDAV已配置状态",
+    "placeholders": {
+      "serverUrl": {}
+    }
+  },
+  "webdavConfigHint": "点击配置WebDAV服务器",
+  "@webdavConfigHint": {
+    "description": "WebDAV配置提示"
+  },
+  "appSettings": "应用设置",
+  "@appSettings": {
+    "description": "应用设置部分"
+  },
+  "appFont": "全局字体",
+  "@appFont": {
+    "description": "应用字体设置"
+  },
+  "fontSystem": "系统默认",
+  "@fontSystem": {
+    "description": "系统默认字体"
+  },
+  "fontSourceHanSans": "思源黑体",
+  "@fontSourceHanSans": {
+    "description": "思源黑体"
+  },
+  "fontJetBrainsMono": "JetBrains Mono",
+  "@fontJetBrainsMono": {
+    "description": "JetBrains Mono字体"
+  },
+  "languageSystem": "跟随系统",
+  "@languageSystem": {
+    "description": "跟随系统语言"
+  },
+  "languageChinese": "简体中文",
+  "@languageChinese": {
+    "description": "简体中文"
+  },
+  "languageEnglish": "English",
+  "@languageEnglish": {
+    "description": "英语"
+  },
+  "typographySettings": "排版设置",
+  "@typographySettings": {
+    "description": "排版设置部分"
+  },
+  "fontFamilyLabel": "字体",
+  "@fontFamilyLabel": {
+    "description": "字体标签"
+  },
+  "fontSizeLabel": "字体大小",
+  "@fontSizeLabel": {
+    "description": "字体大小标签"
+  },
+  "lineSpacingLabel": "行距",
+  "@lineSpacingLabel": {
+    "description": "行距标签"
+  },
+  "letterSpacingLabel": "字间距",
+  "@letterSpacingLabel": {
+    "description": "字间距标签"
+  },
+  "firstLineIndentLabel": "首行缩进",
+  "@firstLineIndentLabel": {
+    "description": "首行缩进标签"
+  },
+  "pageMarginLabel": "页边距",
+  "@pageMarginLabel": {
+    "description": "页边距标签"
+  },
+  "resetDefault": "恢复默认",
+  "@resetDefault": {
+    "description": "恢复默认按钮"
+  },
+  "ttsPanelTitle": "语音朗读",
+  "@ttsPanelTitle": {
+    "description": "TTS面板标题"
+  },
+  "ttsPreviewEffect": "预览效果",
+  "@ttsPreviewEffect": {
+    "description": "预览效果标签"
+  },
+  "ttsVolume": "音量",
+  "@ttsVolume": {
+    "description": "TTS音量"
+  },
+  "ttsPitch": "音调",
+  "@ttsPitch": {
+    "description": "TTS音调"
+  },
+  "ttsSpeed": "语速",
+  "@ttsSpeed": {
+    "description": "TTS语速"
+  },
+  "ttsPreviousSentence": "上一句",
+  "@ttsPreviousSentence": {
+    "description": "上一句按钮"
+  },
+  "ttsNextSentence": "下一句",
+  "@ttsNextSentence": {
+    "description": "下一句按钮"
+  },
+  "ttsTimerStop": "定时停止",
+  "@ttsTimerStop": {
+    "description": "定时停止标签"
+  },
+  "ttsTimerOff": "不限时",
+  "@ttsTimerOff": {
+    "description": "不限时选项"
+  },
+  "ttsTimerMinutes": "{minutes} 分钟后停止",
+  "@ttsTimerMinutes": {
+    "description": "定时分钟选项",
+    "placeholders": {
+      "minutes": {}
+    }
+  },
+  "ttsPlaying": "正在播放",
+  "@ttsPlaying": {
+    "description": "TTS播放状态"
+  },
+  "ttsPaused": "已暂停",
+  "@ttsPaused": {
+    "description": "TTS暂停状态"
+  },
+  "ttsStopped": "已停止",
+  "@ttsStopped": {
+    "description": "TTS停止状态"
+  },
+  "ttsPreviousSentenceFailed": "上一句失败",
+  "@ttsPreviousSentenceFailed": {
+    "description": "上一句失败消息"
+  },
+  "ttsNextSentenceFailed": "下一句失败",
+  "@ttsNextSentenceFailed": {
+    "description": "下一句失败消息"
+  },
+  "ttsEmptyContentError": "当前页面内容为空",
+  "@ttsEmptyContentError": {
+    "description": "空内容错误"
+  },
+  "ttsPlaybackFailed": "播放失败",
+  "@ttsPlaybackFailed": {
+    "description": "播放失败消息"
+  },
+  "ttsOperationFailed": "操作失败",
+  "@ttsOperationFailed": {
+    "description": "操作失败消息"
+  },
+  "pageTurningSettings": "翻页方式",
+  "@pageTurningSettings": {
+    "description": "翻页设置"
+  },
+  "pageTurningMode": "翻页模式",
+  "@pageTurningMode": {
+    "description": "翻页模式"
+  },
+  "pageTurningCover": "覆盖翻页",
+  "@pageTurningCover": {
+    "description": "覆盖翻页"
+  },
+  "pageTurningSlide": "左右滑动",
+  "@pageTurningSlide": {
+    "description": "滑动翻页"
+  },
+  "pageTurningScroll": "上下滚动",
+  "@pageTurningScroll": {
+    "description": "滚动翻页"
+  },
+  "pageTurningSimulation": "仿真翻页",
+  "@pageTurningSimulation": {
+    "description": "仿真翻页"
+  },
+  "tapZoneSettings": "点击翻页区域",
+  "@tapZoneSettings": {
+    "description": "点击区域设置"
+  },
+  "tapZoneNextPage": "下一页",
+  "@tapZoneNextPage": {
+    "description": "下一页点击区域"
+  },
+  "tapZonePreviousPage": "上一页",
+  "@tapZonePreviousPage": {
+    "description": "上一页点击区域"
+  },
+  "tapZoneMenu": "菜单",
+  "@tapZoneMenu": {
+    "description": "菜单点击区域"
+  },
+  "tapZoneLegend": "图例",
+  "@tapZoneLegend": {
+    "description": "点击区域图例"
+  },
+  "highlightColor": "荧光笔颜色",
+  "@highlightColor": {
+    "description": "高亮颜色标签"
+  },
+  "highlightPreview": "预览效果",
+  "@highlightPreview": {
+    "description": "高亮预览"
+  },
+  "highlightSampleText": "这是一段示例文本，",
+  "@highlightSampleText": {
+    "description": "示例文本"
+  },
+  "highlightSampleText2": "这部分将被高亮显示，",
+  "@highlightSampleText2": {
+    "description": "示例文本2"
+  },
+  "highlightSampleText3": "展示荧光笔效果。",
+  "@highlightSampleText3": {
+    "description": "示例文本3"
+  },
+  "webdavTitle": "WebDAV配置",
+  "@webdavTitle": {
+    "description": "WebDAV配置标题"
+  },
+  "webdavSetupCloudSync": "设置云端同步服务",
+  "@webdavSetupCloudSync": {
+    "description": "设置云同步提示"
+  },
+  "webdavServerUrl": "服务器地址",
+  "@webdavServerUrl": {
+    "description": "WebDAV服务器地址标签"
+  },
+  "webdavUsername": "用户名",
+  "@webdavUsername": {
+    "description": "WebDAV用户名标签"
+  },
+  "webdavPassword": "密码",
+  "@webdavPassword": {
+    "description": "WebDAV密码标签"
+  },
+  "webdavEnterServerUrl": "请输入服务器地址",
+  "@webdavEnterServerUrl": {
+    "description": "输入服务器地址错误"
+  },
+  "webdavInvalidUrl": "请输入有效的URL",
+  "@webdavInvalidUrl": {
+    "description": "无效URL错误"
+  },
+  "webdavEnterUsername": "请输入用户名",
+  "@webdavEnterUsername": {
+    "description": "输入用户名错误"
+  },
+  "webdavEnterPassword": "请输入密码",
+  "@webdavEnterPassword": {
+    "description": "输入密码错误"
+  },
+  "webdavConnectionFailed": "连接失败，请检查设置",
+  "@webdavConnectionFailed": {
+    "description": "连接失败消息"
+  },
+  "webdavTestConnection": "测试连接",
+  "@webdavTestConnection": {
+    "description": "测试连接按钮"
+  },
+  "webdavSaveConfig": "保存配置",
+  "@webdavSaveConfig": {
+    "description": "保存配置按钮"
+  },
+  "webdavClearConfig": "清除配置",
+  "@webdavClearConfig": {
+    "description": "清除配置按钮"
+  },
+  "webdavTestSuccess": "连接测试成功！",
+  "@webdavTestSuccess": {
+    "description": "测试成功消息"
+  },
+  "webdavTestFailed": "连接测试失败",
+  "@webdavTestFailed": {
+    "description": "测试失败消息"
+  },
+  "webdavConfigSaved": "WebDAV配置已保存",
+  "@webdavConfigSaved": {
+    "description": "配置保存成功消息"
+  },
+  "webdavConfigSaveFailed": "保存配置失败",
+  "@webdavConfigSaveFailed": {
+    "description": "保存配置失败消息"
+  },
+  "webdavConfirmClear": "确定要清除WebDAV配置吗？这将删除所有同步设置。",
+  "@webdavConfirmClear": {
+    "description": "确认清除消息"
+  },
+  "webdavConfigCleared": "WebDAV配置已清除",
+  "@webdavConfigCleared": {
+    "description": "配置清除消息"
+  },
+  "colorLightBlue": "浅蓝色",
+  "@colorLightBlue": {
+    "description": "浅蓝色"
+  },
+  "colorRed": "红色",
+  "@colorRed": {
+    "description": "红色"
+  },
+  "colorGreen": "绿色",
+  "@colorGreen": {
+    "description": "绿色"
+  },
+  "colorPurple": "紫色",
+  "@colorPurple": {
+    "description": "紫色"
+  },
+  "colorGold": "金色",
+  "@colorGold": {
+    "description": "金色"
+  },
+  "colorOrange": "橙色",
+  "@colorOrange": {
+    "description": "橙色"
+  },
+  "colorYellow": "黄色",
+  "@colorYellow": {
+    "description": "黄色"
+  },
+  "colorDarkGreen": "深绿色",
+  "@colorDarkGreen": {
+    "description": "深绿色"
+  },
+  "colorCustom": "自定义",
+  "@colorCustom": {
+    "description": "自定义"
+  },
+  "noteTypeHighlight": "高亮",
+  "@noteTypeHighlight": {
+    "description": "高亮类型"
+  },
+  "noteTypeUnderline": "下划线",
+  "@noteTypeUnderline": {
+    "description": "下划线类型"
+  },
+  "noteTypeNote": "笔记",
+  "@noteTypeNote": {
+    "description": "笔记类型"
+  },
+  "noteTypeUnknown": "未知",
+  "@noteTypeUnknown": {
+    "description": "未知类型"
+  },
+  "bookFormatTXT": "TXT",
+  "@bookFormatTXT": {
+    "description": "TXT书籍格式"
+  },
+  "bookFormatEPUB": "EPUB",
+  "@bookFormatEPUB": {
+    "description": "EPUB书籍格式"
+  },
+  "bookFormatPDF": "PDF",
+  "@bookFormatPDF": {
+    "description": "PDF书籍格式"
+  },
+  "importBook": "导入书籍",
+  "@importBook": {
+    "description": "导入书籍动作"
+  },
+  "importFromFiles": "从文件导入",
+  "@importFromFiles": {
+    "description": "从文件导入"
+  },
+  "importNoBooks": "还没有导入任何书籍",
+  "@importNoBooks": {
+    "description": "无书籍消息"
+  },
+  "importSuccess": "书籍导入成功",
+  "@importSuccess": {
+    "description": "导入成功消息"
+  },
+  "importFailed": "导入失败",
+  "@importFailed": {
+    "description": "导入失败消息"
+  },
+  "importProcessing": "正在处理书籍...",
+  "@importProcessing": {
+    "description": "导入处理中消息"
+  },
+  "author": "作者",
+  "@author": {
+    "description": "作者标签"
+  },
+  "progress": "进度",
+  "@progress": {
+    "description": "进度标签"
+  },
+  "continueReading": "继续阅读",
+  "@continueReading": {
+    "description": "继续阅读按钮"
+  },
+  "recentBooks": "最近阅读",
+  "@recentBooks": {
+    "description": "最近阅读部分"
+  },
+  "allBooks": "全部书籍",
+  "@allBooks": {
+    "description": "全部书籍部分"
+  },
+  "emptyLibrary": "书库是空的",
+  "@emptyLibrary": {
+    "description": "空书库消息"
+  },
+  "deleteBook": "删除书籍",
+  "@deleteBook": {
+    "description": "删除书籍动作"
+  },
+  "deleteBookConfirm": "确定要删除这本书吗？",
+  "@deleteBookConfirm": {
+    "description": "删除书籍确认"
+  },
+  "bookDeleted": "书籍已删除",
+  "@bookDeleted": {
+    "description": "书籍删除消息"
+  },
+  "userAgreement": "用户协议",
+  "@userAgreement": {
+    "description": "用户协议标题"
+  },
+  "acceptAgreement": "我已阅读并同意",
+  "@acceptAgreement": {
+    "description": "同意协议复选框"
+  },
+  "declineAgreement": "不同意",
+  "@declineAgreement": {
+    "description": "不同意按钮"
+  },
+  "statsToday": "今日",
+  "@statsToday": {
+    "description": "今日统计"
+  },
+  "statsThisWeek": "本周",
+  "@statsThisWeek": {
+    "description": "本周统计"
+  },
+  "statsTotal": "总计",
+  "@statsTotal": {
+    "description": "总计统计"
+  },
+  "statsMinutes": "{minutes} 分钟",
+  "@statsMinutes": {
+    "description": "阅读分钟数",
+    "placeholders": {
+      "minutes": {}
+    }
+  },
+  "statsHours": "{hours} 小时",
+  "@statsHours": {
+    "description": "阅读小时数",
+    "placeholders": {
+      "hours": {}
+    }
+  },
+  "statsBooks": "{count} 本",
+  "@statsBooks": {
+    "description": "书籍数量",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "statsConsecutiveDays": "连续阅读",
+  "@statsConsecutiveDays": {
+    "description": "连续阅读天数"
+  },
+  "statsFocusTime": "专注时长",
+  "@statsFocusTime": {
+    "description": "专注时间"
+  },
+  "statsThisWeekTotal": "本周总计",
+  "@statsThisWeekTotal": {
+    "description": "本周总计"
+  },
+  "statsKeepReading": "坚持每日阅读",
+  "@statsKeepReading": {
+    "description": "保持阅读提示"
+  },
+  "statsMaxSession": "最长单次",
+  "@statsMaxSession": {
+    "description": "最长单次阅读"
+  },
+  "statsWeeklyTrend": "周阅读趋势",
+  "@statsWeeklyTrend": {
+    "description": "周阅读趋势"
+  },
+  "statsAchievements": "阅读成就",
+  "@statsAchievements": {
+    "description": "阅读成就"
+  },
+  "readerToolbarMenu": "菜单",
+  "@readerToolbarMenu": {
+    "description": "阅读器工具栏菜单"
+  },
+  "readerToolbarTOC": "目录",
+  "@readerToolbarTOC": {
+    "description": "目录"
+  },
+  "readerToolbarSettings": "设置",
+  "@readerToolbarSettings": {
+    "description": "阅读器设置"
+  },
+  "readerAddBookmark": "添加书签",
+  "@readerAddBookmark": {
+    "description": "添加书签"
+  },
+  "readerAddNote": "添加笔记",
+  "@readerAddNote": {
+    "description": "添加笔记"
+  },
+  "readerShare": "分享",
+  "@readerShare": {
+    "description": "分享内容"
+  },
+  "bookmarkAdded": "已添加书签",
+  "@bookmarkAdded": {
+    "description": "添加书签消息"
+  },
+  "bookmarkRemoved": "已移除书签",
+  "@bookmarkRemoved": {
+    "description": "移除书签消息"
+  },
+  "themeBlue": "海洋蓝",
+  "@themeBlue": {
+    "description": "蓝色主题"
+  },
+  "themePurple": "神秘紫",
+  "@themePurple": {
+    "description": "紫色主题"
+  },
+  "themeGreen": "森林绿",
+  "@themeGreen": {
+    "description": "绿色主题"
+  },
+  "themeOrange": "活力橙",
+  "@themeOrange": {
+    "description": "橙色主题"
+  },
+  "themeRed": "热情红",
+  "@themeRed": {
+    "description": "红色主题"
+  },
+  "themeCustom": "自定义",
+  "@themeCustom": {
+    "description": "自定义主题"
+  },
+  "tapZoneLeftRight": "左/右",
+  "@tapZoneLeftRight": {
+    "description": "左右点击区域"
+  },
+  "tapZoneLeftCenterRight": "左/中/右",
+  "@tapZoneLeftCenterRight": {
+    "description": "左中右点击区域"
+  },
+  "homeTagline": "优雅阅读",
+  "@homeTagline": {
+    "description": "Homepage app tagline under title"
+  },
+  "homeReadingStatsTitle": "阅读统计",
+  "@homeReadingStatsTitle": {
+    "description": "Home dashboard page title"
+  },
+  "homeTodayReadingMoment": "今日阅读时光",
+  "@homeTodayReadingMoment": {
+    "description": "Hero card title for today reading"
+  },
+  "homeReadMinutesKeepGoing": "已阅读 {minutes} 分钟，继续保持",
+  "@homeReadMinutesKeepGoing": {
+    "description": "Encouragement text with today minutes",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "homeTodayReadingJourneyStart": "开始今天的阅读之旅吧",
+  "@homeTodayReadingJourneyStart": {
+    "description": "Prompt when there is no reading today"
+  },
+  "homeTodayReadingKeepRhythm": "已完成今日阅读，保持节奏",
+  "@homeTodayReadingKeepRhythm": {
+    "description": "Prompt when today reading is positive"
+  },
+  "homeTodayReadingPrompt": "今天也要留点时间给阅读",
+  "@homeTodayReadingPrompt": {
+    "description": "Generic reading prompt text"
+  },
+  "homeTotalReadingHours": "累计阅读 {hours} 小时",
+  "@homeTotalReadingHours": {
+    "description": "Total reading hours text with value",
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "homeWeeklyReading": "本周阅读",
+  "@homeWeeklyReading": {
+    "description": "Weekly reading label"
+  },
+  "homeTotalReading": "累计阅读",
+  "@homeTotalReading": {
+    "description": "Total reading label"
+  },
+  "homeLibraryCount": "书架藏书",
+  "@homeLibraryCount": {
+    "description": "Library books count label"
+  },
+  "homeCollectionCount": "藏书",
+  "@homeCollectionCount": {
+    "description": "Short label for collection count"
+  },
+  "homeKeyMetrics": "关键指标",
+  "@homeKeyMetrics": {
+    "description": "Section title for key metrics"
+  },
+  "homeReadingRhythm": "阅读节奏",
+  "@homeReadingRhythm": {
+    "description": "Section title for reading rhythm"
+  },
+  "homeAchievements": "阅读成就",
+  "@homeAchievements": {
+    "description": "Section title for achievements"
+  },
+  "homeConsecutiveReading": "连续阅读",
+  "@homeConsecutiveReading": {
+    "description": "Achievement title consecutive reading"
+  },
+  "homeConsecutiveReadingDesc": "保持每日阅读习惯",
+  "@homeConsecutiveReadingDesc": {
+    "description": "Achievement description for consecutive reading"
+  },
+  "homeFocusDuration": "专注时长",
+  "@homeFocusDuration": {
+    "description": "Achievement title for focus duration"
+  },
+  "homeFocusDurationDesc": "单次最长阅读时间",
+  "@homeFocusDurationDesc": {
+    "description": "Achievement description for focus duration"
+  },
+  "homeWeeklyTotal": "本周总计",
+  "@homeWeeklyTotal": {
+    "description": "Achievement title for weekly total"
+  },
+  "homeWeeklyTotalDesc": "本周阅读时长",
+  "@homeWeeklyTotalDesc": {
+    "description": "Achievement description for weekly total"
+  },
+  "homeRecentReading": "最近阅读",
+  "@homeRecentReading": {
+    "description": "Section title for recent reading books"
+  },
+  "homeWeeklyTrend": "本周阅读趋势",
+  "@homeWeeklyTrend": {
+    "description": "Chart title for weekly trend"
+  },
+  "homeBarTooltipMinutes": "{minutes} 分钟",
+  "@homeBarTooltipMinutes": {
+    "description": "Bar chart tooltip text for minutes",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "unitMinute": "分钟",
+  "@unitMinute": {
+    "description": "Minute unit label"
+  },
+  "unitHour": "小时",
+  "@unitHour": {
+    "description": "Hour unit label"
+  },
+  "unitBook": "本",
+  "@unitBook": {
+    "description": "Book unit label"
+  },
+  "unitDay": "天",
+  "@unitDay": {
+    "description": "Day unit label"
+  },
+  "weekdayMonShort": "一",
+  "@weekdayMonShort": {
+    "description": "Short label for Monday"
+  },
+  "weekdayTueShort": "二",
+  "@weekdayTueShort": {
+    "description": "Short label for Tuesday"
+  },
+  "weekdayWedShort": "三",
+  "@weekdayWedShort": {
+    "description": "Short label for Wednesday"
+  },
+  "weekdayThuShort": "四",
+  "@weekdayThuShort": {
+    "description": "Short label for Thursday"
+  },
+  "weekdayFriShort": "五",
+  "@weekdayFriShort": {
+    "description": "Short label for Friday"
+  },
+  "weekdaySatShort": "六",
+  "@weekdaySatShort": {
+    "description": "Short label for Saturday"
+  },
+  "weekdaySunShort": "日",
+  "@weekdaySunShort": {
+    "description": "Short label for Sunday"
+  }
+}

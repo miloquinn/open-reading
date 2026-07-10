@@ -1,0 +1,87 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ / VS Code
+*.iml
+*.ipr
+*.iws
+.idea/
+.vscode/
+
+# Claude / Agent internal
+.claude/
+CLAUDE.md
+AGENTS.md
+.omx/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+pubspec.lock
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+android/local.properties
+
+# Platform subdirs (vendored / generated)
+/anx-reader
+/legado
+
+# Internal dev docs & logs
+Log.md
+knowledge_base/
+*.pen
+
+# Screenshots / dev captures
+screenshots/
+shot/
+diagrams/
+
+# Misc utility scripts & internal docs
+extract_svg.py
+fix_svg.py
+replace_withopacity.ps1
+预览SVG图表.html
+如何预览SVG图表.md
+修复SVG显示.py
+提取并转换SVG.py
+devtools_options.yaml
+
+# Copyright application / internal docs
+软著*.md
+需求.md
+最终解决方案.md
+转换为PDF说明.md
+
+# Test data (novel TXT files — not part of the project)
+/*.txt
+
+# Secrets
+*.env
+*.pem
+*.key

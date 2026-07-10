@@ -1,0 +1,33 @@
+{
+  "name": "foliate",
+  "version": "1.0.0",
+  "description": "This folder forked from [Foliate-js](https://github.com/johnfactotum/foliate-js) which is MIT licensed.",
+  "main": "book.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "rm -rf dist && webpack",
+    "debug": "http-server . -p 3000 -c-1 --cors -o debug.html",
+    "dev": "http-server . -p 3000 -c-1 --cors"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/core": "^7.23.0",
+    "@babel/plugin-transform-class-properties": "^7.27.1",
+    "@babel/plugin-transform-nullish-coalescing-operator": "^7.27.1",
+    "@babel/plugin-transform-optional-chaining": "^7.27.1",
+    "@babel/plugin-transform-private-methods": "^7.27.1",
+    "@babel/plugin-transform-runtime": "^7.23.0",
+    "@babel/preset-env": "^7.23.0",
+    "babel-loader": "^9.1.3",
+    "core-js": "^3.33.0",
+    "http-server": "^14.1.1",
+    "webpack": "^5.99.7",
+    "webpack-cli": "^6.0.1"
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.23.0",
+    "regenerator-runtime": "^0.14.0"
+  }
+}

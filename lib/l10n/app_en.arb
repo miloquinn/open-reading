@@ -1,0 +1,965 @@
+{
+  "@@locale": "en",
+  "appTitle": "Xiaoyuan Reader",
+  "@appTitle": {
+    "description": "The title of the application"
+  },
+  "home": "Home",
+  "@home": {
+    "description": "Home tab label"
+  },
+  "library": "Library",
+  "@library": {
+    "description": "Library tab label"
+  },
+  "settings": "Settings",
+  "@settings": {
+    "description": "Settings tab label"
+  },
+  "statistics": "Statistics",
+  "@statistics": {
+    "description": "Statistics tab label"
+  },
+  "reading": "Reading",
+  "@reading": {
+    "description": "Reading page title"
+  },
+  "importBooks": "Import Books",
+  "@importBooks": {
+    "description": "Import books button label"
+  },
+  "darkMode": "Dark Mode",
+  "@darkMode": {
+    "description": "Dark mode setting label"
+  },
+  "lightMode": "Light Mode",
+  "@lightMode": {
+    "description": "Light mode setting label"
+  },
+  "systemMode": "System",
+  "@systemMode": {
+    "description": "System theme mode setting label"
+  },
+  "theme": "Theme",
+  "@theme": {
+    "description": "Theme setting section"
+  },
+  "accent": "Accent Color",
+  "@accent": {
+    "description": "Accent color setting label"
+  },
+  "bookmarks": "Bookmarks",
+  "@bookmarks": {
+    "description": "Bookmarks feature label"
+  },
+  "notes": "Notes",
+  "@notes": {
+    "description": "Notes feature label"
+  },
+  "highlights": "Highlights",
+  "@highlights": {
+    "description": "Highlights feature label"
+  },
+  "ttsReading": "Text-to-Speech",
+  "@ttsReading": {
+    "description": "TTS reading feature label"
+  },
+  "share": "Share",
+  "@share": {
+    "description": "Share button label"
+  },
+  "shareContent": "Share Content",
+  "@shareContent": {
+    "description": "Share content dialog title"
+  },
+  "shareCurrentPage": "Share Current Page",
+  "@shareCurrentPage": {
+    "description": "Share current page option"
+  },
+  "shareSelectedText": "Share Selected Text",
+  "@shareSelectedText": {
+    "description": "Share selected text option"
+  },
+  "shareProgress": "Share Reading Progress",
+  "@shareProgress": {
+    "description": "Share reading progress option"
+  },
+  "play": "Play",
+  "@play": {
+    "description": "Play TTS button"
+  },
+  "pause": "Pause",
+  "@pause": {
+    "description": "Pause TTS button"
+  },
+  "stop": "Stop",
+  "@stop": {
+    "description": "Stop TTS button"
+  },
+  "speed": "Speed",
+  "@speed": {
+    "description": "TTS speed setting"
+  },
+  "pitch": "Pitch",
+  "@pitch": {
+    "description": "TTS pitch setting"
+  },
+  "language": "Language",
+  "@language": {
+    "description": "Language setting"
+  },
+  "fontSize": "Font Size",
+  "@fontSize": {
+    "description": "Font size setting"
+  },
+  "readingProgress": "Reading Progress",
+  "@readingProgress": {
+    "description": "Reading progress indicator"
+  },
+  "totalPages": "Total Pages",
+  "@totalPages": {
+    "description": "Total pages label"
+  },
+  "currentPage": "Current Page",
+  "@currentPage": {
+    "description": "Current page label"
+  },
+  "readingTime": "Reading Time",
+  "@readingTime": {
+    "description": "Reading time statistics"
+  },
+  "booksRead": "Books Read",
+  "@booksRead": {
+    "description": "Books read statistics"
+  },
+  "todayReading": "Today's Reading",
+  "@todayReading": {
+    "description": "Today's reading time"
+  },
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "Cancel button"
+  },
+  "confirm": "Confirm",
+  "@confirm": {
+    "description": "Confirm button"
+  },
+  "delete": "Delete",
+  "@delete": {
+    "description": "Delete button"
+  },
+  "edit": "Edit",
+  "@edit": {
+    "description": "Edit button"
+  },
+  "save": "Save",
+  "@save": {
+    "description": "Save button"
+  },
+  "back": "Back",
+  "@back": {
+    "description": "Back button"
+  },
+  "next": "Next",
+  "@next": {
+    "description": "Next button"
+  },
+  "previous": "Previous",
+  "@previous": {
+    "description": "Previous button"
+  },
+  "search": "Search",
+  "@search": {
+    "description": "Search function"
+  },
+  "noResults": "No results found",
+  "@noResults": {
+    "description": "No search results message"
+  },
+  "loading": "Loading...",
+  "@loading": {
+    "description": "Loading indicator text"
+  },
+  "error": "Error",
+  "@error": {
+    "description": "Error message"
+  },
+  "initializationFailed": "Initialization failed",
+  "@initializationFailed": {
+    "description": "Initialization failed message"
+  },
+  "unknownError": "Unknown error",
+  "@unknownError": {
+    "description": "Unknown error message"
+  },
+  "retry": "Retry",
+  "@retry": {
+    "description": "Retry button"
+  },
+  "appearanceSettings": "Appearance",
+  "@appearanceSettings": {
+    "description": "Appearance settings section"
+  },
+  "readingTips": "Reading Tips",
+  "@readingTips": {
+    "description": "Reading tips section"
+  },
+  "readingFontSettingsMoved": "Reading font settings moved",
+  "@readingFontSettingsMoved": {
+    "description": "Message about moved font settings"
+  },
+  "readingFontSettingsHint": "Open any book, tap the center of the screen, then use the bottom toolbar to adjust font size, line spacing, letter spacing, margins, and reading font.",
+  "@readingFontSettingsHint": {
+    "description": "Hint about font settings location"
+  },
+  "readingSettings": "Reading Settings",
+  "@readingSettings": {
+    "description": "Reading settings section"
+  },
+  "enableTts": "Enable TTS",
+  "@enableTts": {
+    "description": "Enable text-to-speech option"
+  },
+  "enableTtsHint": "Enable text-to-speech reading",
+  "@enableTtsHint": {
+    "description": "Hint about enabling TTS"
+  },
+  "ttsSpeedLabel": "Speed",
+  "@ttsSpeedLabel": {
+    "description": "TTS speed label"
+  },
+  "ttsSpeedHint": "Adjust reading speed",
+  "@ttsSpeedHint": {
+    "description": "Hint for TTS speed"
+  },
+  "ttsVolumeLabel": "Volume",
+  "@ttsVolumeLabel": {
+    "description": "TTS volume label"
+  },
+  "ttsVolumeHint": "Adjust reading volume",
+  "@ttsVolumeHint": {
+    "description": "Hint for TTS volume"
+  },
+  "ttsPitchLabel": "Pitch",
+  "@ttsPitchLabel": {
+    "description": "TTS pitch label"
+  },
+  "ttsPitchHint": "Adjust reading pitch",
+  "@ttsPitchHint": {
+    "description": "Hint for TTS pitch"
+  },
+  "cloudSync": "Cloud Sync",
+  "@cloudSync": {
+    "description": "Cloud sync section"
+  },
+  "webdavConfig": "WebDAV",
+  "@webdavConfig": {
+    "description": "WebDAV configuration"
+  },
+  "webdavConfigured": "Configured - {serverUrl}",
+  "@webdavConfigured": {
+    "description": "WebDAV configured status",
+    "placeholders": {
+      "serverUrl": {}
+    }
+  },
+  "webdavConfigHint": "Tap to configure WebDAV server",
+  "@webdavConfigHint": {
+    "description": "Hint for WebDAV config"
+  },
+  "appSettings": "App Settings",
+  "@appSettings": {
+    "description": "App settings section"
+  },
+  "appFont": "App Font",
+  "@appFont": {
+    "description": "App font setting"
+  },
+  "fontSystem": "System Default",
+  "@fontSystem": {
+    "description": "System default font"
+  },
+  "fontSourceHanSans": "Source Han Sans",
+  "@fontSourceHanSans": {
+    "description": "Source Han Sans font"
+  },
+  "fontJetBrainsMono": "JetBrains Mono",
+  "@fontJetBrainsMono": {
+    "description": "JetBrains Mono font"
+  },
+  "languageSystem": "Follow System",
+  "@languageSystem": {
+    "description": "Follow system language"
+  },
+  "languageChinese": "Chinese",
+  "@languageChinese": {
+    "description": "Chinese language"
+  },
+  "languageEnglish": "English",
+  "@languageEnglish": {
+    "description": "English language"
+  },
+  "typographySettings": "Typography",
+  "@typographySettings": {
+    "description": "Typography settings section"
+  },
+  "fontFamilyLabel": "Font",
+  "@fontFamilyLabel": {
+    "description": "Font family label"
+  },
+  "fontSizeLabel": "Font Size",
+  "@fontSizeLabel": {
+    "description": "Font size label"
+  },
+  "lineSpacingLabel": "Line Spacing",
+  "@lineSpacingLabel": {
+    "description": "Line spacing label"
+  },
+  "letterSpacingLabel": "Letter Spacing",
+  "@letterSpacingLabel": {
+    "description": "Letter spacing label"
+  },
+  "firstLineIndentLabel": "First-line Indent",
+  "@firstLineIndentLabel": {
+    "description": "First line indent label"
+  },
+  "pageMarginLabel": "Page Margin",
+  "@pageMarginLabel": {
+    "description": "Page margin label"
+  },
+  "resetDefault": "Reset",
+  "@resetDefault": {
+    "description": "Reset to default button"
+  },
+  "ttsPanelTitle": "Text-to-Speech",
+  "@ttsPanelTitle": {
+    "description": "TTS panel title"
+  },
+  "ttsPreviewEffect": "Preview Effect",
+  "@ttsPreviewEffect": {
+    "description": "Preview effect label"
+  },
+  "ttsVolume": "Volume",
+  "@ttsVolume": {
+    "description": "TTS volume"
+  },
+  "ttsPitch": "Pitch",
+  "@ttsPitch": {
+    "description": "TTS pitch"
+  },
+  "ttsSpeed": "Speed",
+  "@ttsSpeed": {
+    "description": "TTS speed"
+  },
+  "ttsPreviousSentence": "Previous Sentence",
+  "@ttsPreviousSentence": {
+    "description": "Previous sentence button"
+  },
+  "ttsNextSentence": "Next Sentence",
+  "@ttsNextSentence": {
+    "description": "Next sentence button"
+  },
+  "ttsTimerStop": "Timer Stop",
+  "@ttsTimerStop": {
+    "description": "Timer stop label"
+  },
+  "ttsTimerOff": "No Limit",
+  "@ttsTimerOff": {
+    "description": "No time limit option"
+  },
+  "ttsTimerMinutes": "{minutes} minutes",
+  "@ttsTimerMinutes": {
+    "description": "Timer minutes option",
+    "placeholders": {
+      "minutes": {}
+    }
+  },
+  "ttsPlaying": "Playing",
+  "@ttsPlaying": {
+    "description": "TTS playing status"
+  },
+  "ttsPaused": "Paused",
+  "@ttsPaused": {
+    "description": "TTS paused status"
+  },
+  "ttsStopped": "Stopped",
+  "@ttsStopped": {
+    "description": "TTS stopped status"
+  },
+  "ttsPreviousSentenceFailed": "Failed to play previous sentence",
+  "@ttsPreviousSentenceFailed": {
+    "description": "Previous sentence failed message"
+  },
+  "ttsNextSentenceFailed": "Failed to play next sentence",
+  "@ttsNextSentenceFailed": {
+    "description": "Next sentence failed message"
+  },
+  "ttsEmptyContentError": "Current page content is empty",
+  "@ttsEmptyContentError": {
+    "description": "Empty content error"
+  },
+  "ttsPlaybackFailed": "Playback failed",
+  "@ttsPlaybackFailed": {
+    "description": "Playback failed message"
+  },
+  "ttsOperationFailed": "Operation failed",
+  "@ttsOperationFailed": {
+    "description": "Operation failed message"
+  },
+  "pageTurningSettings": "Page Turning",
+  "@pageTurningSettings": {
+    "description": "Page turning settings"
+  },
+  "pageTurningMode": "Page Mode",
+  "@pageTurningMode": {
+    "description": "Page turning mode"
+  },
+  "pageTurningCover": "Cover",
+  "@pageTurningCover": {
+    "description": "Cover page turning"
+  },
+  "pageTurningSlide": "Slide",
+  "@pageTurningSlide": {
+    "description": "Slide page turning"
+  },
+  "pageTurningScroll": "Scroll",
+  "@pageTurningScroll": {
+    "description": "Scroll page turning"
+  },
+  "pageTurningSimulation": "Simulation",
+  "@pageTurningSimulation": {
+    "description": "Simulation page turning"
+  },
+  "tapZoneSettings": "Tap Zones",
+  "@tapZoneSettings": {
+    "description": "Tap zone settings"
+  },
+  "tapZoneNextPage": "Next Page",
+  "@tapZoneNextPage": {
+    "description": "Next page tap zone"
+  },
+  "tapZonePreviousPage": "Previous Page",
+  "@tapZonePreviousPage": {
+    "description": "Previous page tap zone"
+  },
+  "tapZoneMenu": "Menu",
+  "@tapZoneMenu": {
+    "description": "Menu tap zone"
+  },
+  "tapZoneLegend": "Legend",
+  "@tapZoneLegend": {
+    "description": "Tap zone legend"
+  },
+  "highlightColor": "Highlight Color",
+  "@highlightColor": {
+    "description": "Highlight color label"
+  },
+  "highlightPreview": "Preview",
+  "@highlightPreview": {
+    "description": "Highlight preview"
+  },
+  "highlightSampleText": "This is a sample text,",
+  "@highlightSampleText": {
+    "description": "Sample text for highlight preview"
+  },
+  "highlightSampleText2": "this part will be highlighted,",
+  "@highlightSampleText2": {
+    "description": "Sample text part 2"
+  },
+  "highlightSampleText3": "showing the highlight effect.",
+  "@highlightSampleText3": {
+    "description": "Sample text part 3"
+  },
+  "webdavTitle": "WebDAV Configuration",
+  "@webdavTitle": {
+    "description": "WebDAV configuration title"
+  },
+  "webdavSetupCloudSync": "Setup Cloud Sync Service",
+  "@webdavSetupCloudSync": {
+    "description": "Setup cloud sync hint"
+  },
+  "webdavServerUrl": "Server URL",
+  "@webdavServerUrl": {
+    "description": "WebDAV server URL label"
+  },
+  "webdavUsername": "Username",
+  "@webdavUsername": {
+    "description": "WebDAV username label"
+  },
+  "webdavPassword": "Password",
+  "@webdavPassword": {
+    "description": "WebDAV password label"
+  },
+  "webdavEnterServerUrl": "Please enter server URL",
+  "@webdavEnterServerUrl": {
+    "description": "Enter server URL error"
+  },
+  "webdavInvalidUrl": "Please enter a valid URL",
+  "@webdavInvalidUrl": {
+    "description": "Invalid URL error"
+  },
+  "webdavEnterUsername": "Please enter username",
+  "@webdavEnterUsername": {
+    "description": "Enter username error"
+  },
+  "webdavEnterPassword": "Please enter password",
+  "@webdavEnterPassword": {
+    "description": "Enter password error"
+  },
+  "webdavConnectionFailed": "Connection failed, please check settings",
+  "@webdavConnectionFailed": {
+    "description": "Connection failed message"
+  },
+  "webdavTestConnection": "Test Connection",
+  "@webdavTestConnection": {
+    "description": "Test connection button"
+  },
+  "webdavSaveConfig": "Save Configuration",
+  "@webdavSaveConfig": {
+    "description": "Save configuration button"
+  },
+  "webdavClearConfig": "Clear Configuration",
+  "@webdavClearConfig": {
+    "description": "Clear configuration button"
+  },
+  "webdavTestSuccess": "Connection test successful!",
+  "@webdavTestSuccess": {
+    "description": "Test success message"
+  },
+  "webdavTestFailed": "Connection test failed",
+  "@webdavTestFailed": {
+    "description": "Test failed message"
+  },
+  "webdavConfigSaved": "WebDAV configuration saved",
+  "@webdavConfigSaved": {
+    "description": "Config saved message"
+  },
+  "webdavConfigSaveFailed": "Failed to save configuration",
+  "@webdavConfigSaveFailed": {
+    "description": "Save config failed message"
+  },
+  "webdavConfirmClear": "Are you sure you want to clear WebDAV configuration?",
+  "@webdavConfirmClear": {
+    "description": "Confirm clear message"
+  },
+  "webdavConfigCleared": "WebDAV configuration cleared",
+  "@webdavConfigCleared": {
+    "description": "Config cleared message"
+  },
+  "colorLightBlue": "Light Blue",
+  "@colorLightBlue": {
+    "description": "Light blue color name"
+  },
+  "colorRed": "Red",
+  "@colorRed": {
+    "description": "Red color name"
+  },
+  "colorGreen": "Green",
+  "@colorGreen": {
+    "description": "Green color name"
+  },
+  "colorPurple": "Purple",
+  "@colorPurple": {
+    "description": "Purple color name"
+  },
+  "colorGold": "Gold",
+  "@colorGold": {
+    "description": "Gold color name"
+  },
+  "colorOrange": "Orange",
+  "@colorOrange": {
+    "description": "Orange color name"
+  },
+  "colorYellow": "Yellow",
+  "@colorYellow": {
+    "description": "Yellow color name"
+  },
+  "colorDarkGreen": "Dark Green",
+  "@colorDarkGreen": {
+    "description": "Dark green color name"
+  },
+  "colorCustom": "Custom",
+  "@colorCustom": {
+    "description": "Custom color name"
+  },
+  "noteTypeHighlight": "Highlight",
+  "@noteTypeHighlight": {
+    "description": "Highlight note type"
+  },
+  "noteTypeUnderline": "Underline",
+  "@noteTypeUnderline": {
+    "description": "Underline note type"
+  },
+  "noteTypeNote": "Note",
+  "@noteTypeNote": {
+    "description": "Note type"
+  },
+  "noteTypeUnknown": "Unknown",
+  "@noteTypeUnknown": {
+    "description": "Unknown note type"
+  },
+  "bookFormatTXT": "TXT",
+  "@bookFormatTXT": {
+    "description": "TXT book format"
+  },
+  "bookFormatEPUB": "EPUB",
+  "@bookFormatEPUB": {
+    "description": "EPUB book format"
+  },
+  "bookFormatPDF": "PDF",
+  "@bookFormatPDF": {
+    "description": "PDF book format"
+  },
+  "importBook": "Import Book",
+  "@importBook": {
+    "description": "Import book action"
+  },
+  "importFromFiles": "Import from Files",
+  "@importFromFiles": {
+    "description": "Import from files"
+  },
+  "importNoBooks": "No books imported yet",
+  "@importNoBooks": {
+    "description": "No books message"
+  },
+  "importSuccess": "Book imported successfully",
+  "@importSuccess": {
+    "description": "Import success message"
+  },
+  "importFailed": "Import failed",
+  "@importFailed": {
+    "description": "Import failed message"
+  },
+  "importProcessing": "Processing book...",
+  "@importProcessing": {
+    "description": "Import processing message"
+  },
+  "author": "Author",
+  "@author": {
+    "description": "Author label"
+  },
+  "progress": "Progress",
+  "@progress": {
+    "description": "Progress label"
+  },
+  "continueReading": "Continue Reading",
+  "@continueReading": {
+    "description": "Continue reading button"
+  },
+  "recentBooks": "Recent Books",
+  "@recentBooks": {
+    "description": "Recent books section"
+  },
+  "allBooks": "All Books",
+  "@allBooks": {
+    "description": "All books section"
+  },
+  "emptyLibrary": "Library is empty",
+  "@emptyLibrary": {
+    "description": "Empty library message"
+  },
+  "deleteBook": "Delete Book",
+  "@deleteBook": {
+    "description": "Delete book action"
+  },
+  "deleteBookConfirm": "Are you sure you want to delete this book?",
+  "@deleteBookConfirm": {
+    "description": "Delete book confirmation"
+  },
+  "bookDeleted": "Book deleted",
+  "@bookDeleted": {
+    "description": "Book deleted message"
+  },
+  "userAgreement": "User Agreement",
+  "@userAgreement": {
+    "description": "User agreement title"
+  },
+  "acceptAgreement": "I have read and agree",
+  "@acceptAgreement": {
+    "description": "Accept agreement checkbox"
+  },
+  "declineAgreement": "Decline",
+  "@declineAgreement": {
+    "description": "Decline agreement button"
+  },
+  "statsToday": "Today",
+  "@statsToday": {
+    "description": "Today's statistics"
+  },
+  "statsThisWeek": "This Week",
+  "@statsThisWeek": {
+    "description": "This week's statistics"
+  },
+  "statsTotal": "Total",
+  "@statsTotal": {
+    "description": "Total statistics"
+  },
+  "statsMinutes": "{minutes} min",
+  "@statsMinutes": {
+    "description": "Reading minutes",
+    "placeholders": {
+      "minutes": {}
+    }
+  },
+  "statsHours": "{hours} h",
+  "@statsHours": {
+    "description": "Reading hours",
+    "placeholders": {
+      "hours": {}
+    }
+  },
+  "statsBooks": "{count} books",
+  "@statsBooks": {
+    "description": "Book count",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "statsConsecutiveDays": "Consecutive Days",
+  "@statsConsecutiveDays": {
+    "description": "Consecutive reading days"
+  },
+  "statsFocusTime": "Focus Time",
+  "@statsFocusTime": {
+    "description": "Focus time"
+  },
+  "statsThisWeekTotal": "This Week Total",
+  "@statsThisWeekTotal": {
+    "description": "This week total"
+  },
+  "statsKeepReading": "Keep Reading Daily",
+  "@statsKeepReading": {
+    "description": "Keep reading daily tip"
+  },
+  "statsMaxSession": "Max Session",
+  "@statsMaxSession": {
+    "description": "Maximum session"
+  },
+  "statsWeeklyTrend": "Weekly Trend",
+  "@statsWeeklyTrend": {
+    "description": "Weekly reading trend"
+  },
+  "statsAchievements": "Achievements",
+  "@statsAchievements": {
+    "description": "Reading achievements"
+  },
+  "readerToolbarMenu": "Menu",
+  "@readerToolbarMenu": {
+    "description": "Reader toolbar menu"
+  },
+  "readerToolbarTOC": "Table of Contents",
+  "@readerToolbarTOC": {
+    "description": "Table of contents"
+  },
+  "readerToolbarSettings": "Settings",
+  "@readerToolbarSettings": {
+    "description": "Reader settings"
+  },
+  "readerAddBookmark": "Add Bookmark",
+  "@readerAddBookmark": {
+    "description": "Add bookmark"
+  },
+  "readerAddNote": "Add Note",
+  "@readerAddNote": {
+    "description": "Add note"
+  },
+  "readerShare": "Share",
+  "@readerShare": {
+    "description": "Share content"
+  },
+  "bookmarkAdded": "Bookmark added",
+  "@bookmarkAdded": {
+    "description": "Bookmark added message"
+  },
+  "bookmarkRemoved": "Bookmark removed",
+  "@bookmarkRemoved": {
+    "description": "Bookmark removed message"
+  },
+  "themeBlue": "Ocean Blue",
+  "@themeBlue": {
+    "description": "Blue theme name"
+  },
+  "themePurple": "Mystic Purple",
+  "@themePurple": {
+    "description": "Purple theme name"
+  },
+  "themeGreen": "Forest Green",
+  "@themeGreen": {
+    "description": "Green theme name"
+  },
+  "themeOrange": "Vibrant Orange",
+  "@themeOrange": {
+    "description": "Orange theme name"
+  },
+  "themeRed": "Passionate Red",
+  "@themeRed": {
+    "description": "Red theme name"
+  },
+  "themeCustom": "Custom",
+  "@themeCustom": {
+    "description": "Custom theme name"
+  },
+  "tapZoneLeftRight": "Left/Right",
+  "@tapZoneLeftRight": {
+    "description": "Left/Right tap zone"
+  },
+  "tapZoneLeftCenterRight": "Left/Center/Right",
+  "@tapZoneLeftCenterRight": {
+    "description": "Left/Center/Right tap zone"
+  },
+  "homeTagline": "Read beautifully",
+  "@homeTagline": {
+    "description": "Homepage app tagline under title"
+  },
+  "homeReadingStatsTitle": "Reading Stats",
+  "@homeReadingStatsTitle": {
+    "description": "Home dashboard page title"
+  },
+  "homeTodayReadingMoment": "Today's Reading Moment",
+  "@homeTodayReadingMoment": {
+    "description": "Hero card title for today reading"
+  },
+  "homeReadMinutesKeepGoing": "Read {minutes} minutes, keep going",
+  "@homeReadMinutesKeepGoing": {
+    "description": "Encouragement text with today minutes",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "homeTodayReadingJourneyStart": "Start your reading journey today",
+  "@homeTodayReadingJourneyStart": {
+    "description": "Prompt when there is no reading today"
+  },
+  "homeTodayReadingKeepRhythm": "You are on track today, keep the rhythm",
+  "@homeTodayReadingKeepRhythm": {
+    "description": "Prompt when today reading is positive"
+  },
+  "homeTodayReadingPrompt": "Save some time for reading today",
+  "@homeTodayReadingPrompt": {
+    "description": "Generic reading prompt text"
+  },
+  "homeTotalReadingHours": "Total reading {hours} hours",
+  "@homeTotalReadingHours": {
+    "description": "Total reading hours text with value",
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "homeWeeklyReading": "This Week",
+  "@homeWeeklyReading": {
+    "description": "Weekly reading label"
+  },
+  "homeTotalReading": "Total Reading",
+  "@homeTotalReading": {
+    "description": "Total reading label"
+  },
+  "homeLibraryCount": "Library Books",
+  "@homeLibraryCount": {
+    "description": "Library books count label"
+  },
+  "homeCollectionCount": "Collection",
+  "@homeCollectionCount": {
+    "description": "Short label for collection count"
+  },
+  "homeKeyMetrics": "Key Metrics",
+  "@homeKeyMetrics": {
+    "description": "Section title for key metrics"
+  },
+  "homeReadingRhythm": "Reading Rhythm",
+  "@homeReadingRhythm": {
+    "description": "Section title for reading rhythm"
+  },
+  "homeAchievements": "Reading Achievements",
+  "@homeAchievements": {
+    "description": "Section title for achievements"
+  },
+  "homeConsecutiveReading": "Consecutive Reading",
+  "@homeConsecutiveReading": {
+    "description": "Achievement title consecutive reading"
+  },
+  "homeConsecutiveReadingDesc": "Keep a daily reading habit",
+  "@homeConsecutiveReadingDesc": {
+    "description": "Achievement description for consecutive reading"
+  },
+  "homeFocusDuration": "Focus Duration",
+  "@homeFocusDuration": {
+    "description": "Achievement title for focus duration"
+  },
+  "homeFocusDurationDesc": "Longest single reading session",
+  "@homeFocusDurationDesc": {
+    "description": "Achievement description for focus duration"
+  },
+  "homeWeeklyTotal": "Weekly Total",
+  "@homeWeeklyTotal": {
+    "description": "Achievement title for weekly total"
+  },
+  "homeWeeklyTotalDesc": "Reading time this week",
+  "@homeWeeklyTotalDesc": {
+    "description": "Achievement description for weekly total"
+  },
+  "homeRecentReading": "Recent Reading",
+  "@homeRecentReading": {
+    "description": "Section title for recent reading books"
+  },
+  "homeWeeklyTrend": "Weekly Reading Trend",
+  "@homeWeeklyTrend": {
+    "description": "Chart title for weekly trend"
+  },
+  "homeBarTooltipMinutes": "{minutes} min",
+  "@homeBarTooltipMinutes": {
+    "description": "Bar chart tooltip text for minutes",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "unitMinute": "min",
+  "@unitMinute": {
+    "description": "Minute unit label"
+  },
+  "unitHour": "hour",
+  "@unitHour": {
+    "description": "Hour unit label"
+  },
+  "unitBook": "books",
+  "@unitBook": {
+    "description": "Book unit label"
+  },
+  "unitDay": "days",
+  "@unitDay": {
+    "description": "Day unit label"
+  },
+  "weekdayMonShort": "Mon",
+  "@weekdayMonShort": {
+    "description": "Short label for Monday"
+  },
+  "weekdayTueShort": "Tue",
+  "@weekdayTueShort": {
+    "description": "Short label for Tuesday"
+  },
+  "weekdayWedShort": "Wed",
+  "@weekdayWedShort": {
+    "description": "Short label for Wednesday"
+  },
+  "weekdayThuShort": "Thu",
+  "@weekdayThuShort": {
+    "description": "Short label for Thursday"
+  },
+  "weekdayFriShort": "Fri",
+  "@weekdayFriShort": {
+    "description": "Short label for Friday"
+  },
+  "weekdaySatShort": "Sat",
+  "@weekdaySatShort": {
+    "description": "Short label for Saturday"
+  },
+  "weekdaySunShort": "Sun",
+  "@weekdaySunShort": {
+    "description": "Short label for Sunday"
+  }
+}
