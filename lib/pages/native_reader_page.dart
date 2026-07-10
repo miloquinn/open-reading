@@ -300,8 +300,11 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
     int chapterIndex,
     Size size,
     TextDirection direction,
+    TextScaler textScaler,
   ) {
-    final key = '$chapterIndex:${size.width.round()}:${size.height.round()}';
+    final scaleKey = textScaler.scale(100).round();
+    final key =
+        '$chapterIndex:${size.width.round()}:${size.height.round()}:$scaleKey';
     return _pageCache.putIfAbsent(
       key,
       () {
@@ -310,6 +313,7 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
           maxWidth: size.width - 44,
           maxHeight: size.height - 88,
           direction: direction,
+          textScaler: textScaler,
         );
         for (var i = 0; i < chapter.blocks.length; i++) {
           if (chapter.blocks[i].imageBase64 != null) {
@@ -337,6 +341,7 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
     List<_NativeChapter> chapters,
     Size size,
     TextDirection direction,
+    TextScaler textScaler,
   ) {
     final result = <_BookPageRef>[];
     for (var chapterIndex = 0; chapterIndex < chapters.length; chapterIndex++) {
@@ -345,6 +350,7 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
         chapterIndex,
         size,
         direction,
+        textScaler,
       );
       for (var pageIndex = 0; pageIndex < chapterPages.length; pageIndex++) {
         result.add(
@@ -472,12 +478,14 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
                 _chapterIndex,
                 size,
                 Directionality.of(context),
+                MediaQuery.textScalerOf(context),
               );
               final bookPages = _pageMode == NativePageMode.horizontalSlide
                   ? _bookPagesFor(
                       chapters,
                       size,
                       Directionality.of(context),
+                      MediaQuery.textScalerOf(context),
                     )
                   : const <_BookPageRef>[];
               if (_openPreviousChapterAtLastPage) {
@@ -617,6 +625,67 @@ List<String> _paginateText(
   required double maxWidth,
   required double maxHeight,
   required TextDirection direction,
+  required TextScaler textScaler,
+}) {
+  if (text.isEmpty || maxWidth <= 0 || maxHeight <= 0) return <String>[''];
+  final pages = <String>[];
+  var start = 0;
+
+  while (start < text.length) {
+    var low = 1;
+    var high = text.length - start;
+    var best = 1;
+
+    bool fits(int length) {
+      var end = start + length;
+      if (end < text.length &&
+          _isLowSurrogate(text.codeUnitAt(end)) &&
+          end > start) {
+        end--;
+      }
+      final painter = TextPainter(
+        text: TextSpan(
+          text: text.substring(start, end),
+          style: _NativeReaderPageState._textStyle,
+        ),
+        textDirection: direction,
+        textScaler: textScaler,
+      )..layout(maxWidth: maxWidth);
+      return painter.height <= maxHeight;
+    }
+
+    while (low <= high) {
+      final mid = low + ((high - low) >> 1);
+      if (fits(mid)) {
+        best = mid;
+        low = mid + 1;
+      } else {
+        high = mid - 1;
+      }
+    }
+
+    var end = start + best;
+    if (end < text.length && _isLowSurrogate(text.codeUnitAt(end))) end--;
+    if (end <= start) end = (start + 1).clamp(0, text.length);
+    pages.add(text.substring(start, end));
+    start = end;
+  }
+
+  assert(
+      pages.join() == text, 'Native pagination must preserve every character');
+  return pages.isEmpty ? <String>[''] : pages;
+}
+
+bool _isLowSurrogate(int codeUnit) => codeUnit >= 0xDC00 && codeUnit <= 0xDFFF;
+
+// TODO: remove after the new lossless paginator has been validated on devices.
+// ignore: unused_element
+List<String> _paginateTextLegacy(
+  String text, {
+  required double maxWidth,
+  required double maxHeight,
+  required TextDirection direction,
+  required TextScaler textScaler,
 }) {
   if (text.isEmpty || maxWidth <= 0 || maxHeight <= 0) return <String>[''];
   final pages = <String>[];

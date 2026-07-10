@@ -246,6 +246,8 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
           // 主内容 - 优化的PageView，减少卡顿
           PageView(
             controller: _pageController,
+            // 预构建相邻页面，避免首次滑动时页面构建/数据加载挤在动画帧里造成掉帧
+            allowImplicitScrolling: true,
             onPageChanged: (index) {
               // 使用更稳定的方式避免在build过程中调用setState
               if (mounted && _selectedIndex != index) {
@@ -265,90 +267,93 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
               return RepaintBoundary(child: _buildPageWrapper(item.page));
             }).toList(),
           ),
-          _buildMobileTopBarOverlay(mediaQuery),
-          // 悬浮药丸导航栏
+          RepaintBoundary(child: _buildMobileTopBarOverlay(mediaQuery)),
+          // 悬浮药丸导航栏（RepaintBoundary 隔离：避免 PageView 滑动时
+          // 连带重绘毛玻璃导航栏，降低切页动画的每帧绘制成本）
           Positioned(
             left: 0,
             right: 0,
             bottom: 0,
-            child: SizedBox(
-              height: metrics.navContainerHeight,
-              child: Center(
-                child: Padding(
-                  padding: EdgeInsets.only(bottom: metrics.navBottomInset),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(60),
-                    child: (() {
-                      final navBar = Container(
-                        width: navWidth,
-                        height: kHomeMobileFloatingNavHeight,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _isMaterial3Style
-                              ? scheme.surfaceContainerHigh
-                              : GlassEffectConfig.surfaceColor(
-                                  context,
-                                  opacity:
-                                      GlassEffectConfig.navigationBarOpacity,
-                                ),
-                          borderRadius: BorderRadius.circular(60),
-                          border: Border.all(
-                            color: scheme.outline.withValues(
-                              alpha: _isMaterial3Style ? 0.22 : 0.15,
-                            ),
-                            width: 0.6,
+            child: RepaintBoundary(
+              child: SizedBox(
+                height: metrics.navContainerHeight,
+                child: Center(
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: metrics.navBottomInset),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(60),
+                      child: (() {
+                        final navBar = Container(
+                          width: navWidth,
+                          height: kHomeMobileFloatingNavHeight,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: scheme.shadow.withValues(
-                                alpha: _isMaterial3Style ? 0.07 : 0.12,
+                          decoration: BoxDecoration(
+                            color: _isMaterial3Style
+                                ? scheme.surfaceContainerHigh
+                                : GlassEffectConfig.surfaceColor(
+                                    context,
+                                    opacity:
+                                        GlassEffectConfig.navigationBarOpacity,
+                                  ),
+                            borderRadius: BorderRadius.circular(60),
+                            border: Border.all(
+                              color: scheme.outline.withValues(
+                                alpha: _isMaterial3Style ? 0.22 : 0.15,
                               ),
-                              blurRadius: _isMaterial3Style ? 12 : 30,
-                              offset: const Offset(0, 8),
+                              width: 0.6,
                             ),
-                            if (!_isMaterial3Style)
+                            boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.06),
-                                blurRadius: 60,
-                                offset: const Offset(0, 16),
+                                color: scheme.shadow.withValues(
+                                  alpha: _isMaterial3Style ? 0.07 : 0.12,
+                                ),
+                                blurRadius: _isMaterial3Style ? 12 : 30,
+                                offset: const Offset(0, 8),
                               ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.max,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children:
-                              _navigationItems.asMap().entries.map((entry) {
-                            final index = entry.key;
-                            final item = entry.value;
-                            final isSelected = _selectedIndex == index;
+                              if (!_isMaterial3Style)
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.06),
+                                  blurRadius: 60,
+                                  offset: const Offset(0, 16),
+                                ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.max,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children:
+                                _navigationItems.asMap().entries.map((entry) {
+                              final index = entry.key;
+                              final item = entry.value;
+                              final isSelected = _selectedIndex == index;
 
-                            return Expanded(
-                              child: HomeBounceNavigationItem(
-                                item: item,
-                                isSelected: isSelected,
-                                onTap: () => _switchToTab(index),
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                      );
+                              return Expanded(
+                                child: HomeBounceNavigationItem(
+                                  item: item,
+                                  isSelected: isSelected,
+                                  onTap: () => _switchToTab(index),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        );
 
-                      if (_disableShellBlur) {
-                        return navBar;
-                      }
-                      return BackdropFilter(
-                        enabled: !_disableShellBlur,
-                        filter: ImageFilter.blur(
-                          sigmaX: GlassEffectConfig.navigationBarBlur,
-                          sigmaY: GlassEffectConfig.navigationBarBlur,
-                        ),
-                        child: navBar,
-                      );
-                    })(),
+                        if (_disableShellBlur) {
+                          return navBar;
+                        }
+                        return BackdropFilter(
+                          enabled: !_disableShellBlur,
+                          filter: ImageFilter.blur(
+                            sigmaX: GlassEffectConfig.navigationBarBlur,
+                            sigmaY: GlassEffectConfig.navigationBarBlur,
+                          ),
+                          child: navBar,
+                        );
+                      })(),
+                    ),
                   ),
                 ),
               ),

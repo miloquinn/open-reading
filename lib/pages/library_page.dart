@@ -834,9 +834,12 @@ class _LibraryPageState extends State<LibraryPage> {
   Widget _buildListCover(BuildContext context, Book book) {
     if (book.coverImagePath != null && book.coverImagePath!.isNotEmpty) {
       final fit = Platform.isAndroid ? BoxFit.contain : BoxFit.cover;
+      // 列表封面显示宽度固定 44，按屏幕像素密度限制解码尺寸即可
       return Image.file(
         File(book.coverImagePath!),
         fit: fit,
+        cacheWidth: (44 * MediaQuery.of(context).devicePixelRatio).round(),
+        gaplessPlayback: true,
         errorBuilder: (context, error, stackTrace) =>
             _buildListDefaultCover(context, book),
       );
@@ -958,6 +961,10 @@ class _LibraryPageState extends State<LibraryPage> {
                                   fit: Platform.isAndroid
                                       ? BoxFit.contain
                                       : BoxFit.cover,
+                                  cacheWidth: (50 *
+                                          MediaQuery.of(context)
+                                              .devicePixelRatio)
+                                      .round(),
                                 ),
                               )
                             : const Center(
@@ -1645,6 +1652,10 @@ class _BookCoverItem extends StatelessWidget {
     if (book.coverImagePath != null && book.coverImagePath!.isNotEmpty) {
       final fit = Platform.isAndroid ? BoxFit.contain : BoxFit.cover;
       // 有封面图片时，直接显示真实的书籍封面
+      // cacheWidth 限制解码分辨率：网格封面显示宽度不会超过 ~240 逻辑像素，
+      // 全分辨率解码原图会占用大量内存并在滑动切页时造成掉帧。
+      final cacheWidth =
+          (240 * MediaQuery.of(context).devicePixelRatio).round();
       return SizedBox(
         width: double.infinity,
         height: double.infinity,
@@ -1654,6 +1665,8 @@ class _BookCoverItem extends StatelessWidget {
           child: Image.file(
             File(book.coverImagePath!),
             fit: fit,
+            cacheWidth: cacheWidth,
+            gaplessPlayback: true,
             errorBuilder: (context, error, stackTrace) {
               return _buildDefaultCover(context);
             },

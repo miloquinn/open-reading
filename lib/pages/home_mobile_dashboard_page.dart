@@ -1517,6 +1517,10 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
                                 fit: Platform.isAndroid
                                     ? BoxFit.contain
                                     : BoxFit.cover,
+                                cacheWidth: (44 *
+                                        MediaQuery.of(context)
+                                            .devicePixelRatio)
+                                    .round(),
                                 errorBuilder: (context, error, stackTrace) {
                                   return const SizedBox.shrink();
                                 },
