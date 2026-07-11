@@ -156,7 +156,7 @@ enum BookFormat implements Comparable<BookFormat> {
     }
   }
 
-  bool get isReadiumPreferred =>
+  bool get prefersStructuredPublication =>
       this == epub || this == pdf || this == cbz || this == divina;
 
   bool get isImportEnabled => this != cbr && this != unknown;
@@ -180,14 +180,13 @@ enum BookFormat implements Comparable<BookFormat> {
   int compareTo(BookFormat other) => index.compareTo(other.index);
 }
 
-/// 阅读器渲染类型枚举，与 iOS ReaderRendererType 对齐。
+/// 阅读器渲染类型枚举。
 enum ReaderRendererType implements Comparable<ReaderRendererType> {
-  readium,
-  pdfKit,
-  textKit,
-  webKit,
-  foliate,
-  nativeCPlusPlus;
+  flutterNative,
+  platformNative,
+  textNative,
+  webFallback,
+  nativeExtension;
 
   @override
   int compareTo(ReaderRendererType other) => index.compareTo(other.index);
@@ -464,7 +463,7 @@ class CanonicalLocator {
   }
 
   /// 从 CFI（EPUB Canonical Fragment Identifier）构造。
-  /// 当前保留占位；EPUB CFI 解析将在后续集成 Readium 时补齐。
+  /// 当前保留占位；EPUB CFI 解析将在原生定位链路完善后补齐。
   factory CanonicalLocator.fromCfi({
     required BookFormat format,
     required String cfi,
@@ -771,9 +770,9 @@ class RenderedLocator {
     final renderer = rendererRaw != null
         ? ReaderRendererType.values.firstWhere(
             (e) => e.name == rendererRaw,
-            orElse: () => ReaderRendererType.foliate,
+            orElse: () => ReaderRendererType.flutterNative,
           )
-        : ReaderRendererType.foliate;
+        : ReaderRendererType.flutterNative;
     return RenderedLocator.create(
       version: (json['version'] as int?) ?? 1,
       format: format,
@@ -1112,9 +1111,9 @@ class ReaderSelection {
     final renderer = rendererRaw != null
         ? ReaderRendererType.values.firstWhere(
             (e) => e.name == rendererRaw,
-            orElse: () => ReaderRendererType.foliate,
+            orElse: () => ReaderRendererType.flutterNative,
           )
-        : ReaderRendererType.foliate;
+        : ReaderRendererType.flutterNative;
     return ReaderSelection.create(
       bookId: (json['bookId'] as String?) ?? '',
       format: format,
@@ -1353,11 +1352,11 @@ Map<String, dynamic>? _jsonDecode(String raw) {
   }
 }
 
-/// 默认渲染器回退，与 iOS ReaderBackendPlanner.legacyCompatibleRenderer 对齐。
+/// 默认渲染器回退。
 ReaderRendererType _defaultRenderer(BookFormat format) {
-  if (format == BookFormat.txt) return ReaderRendererType.foliate;
-  if (format.supportsTextFallback) return ReaderRendererType.textKit;
-  return ReaderRendererType.readium;
+  if (format == BookFormat.txt) return ReaderRendererType.flutterNative;
+  if (format.supportsTextFallback) return ReaderRendererType.textNative;
+  return ReaderRendererType.platformNative;
 }
 
 /// String 截断辅助，用于 toString 中的长文本摘要。

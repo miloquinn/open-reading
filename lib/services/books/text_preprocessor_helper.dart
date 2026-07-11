@@ -11,7 +11,7 @@ import 'package:flutter/foundation.dart';
 /// 3. 添加段首缩进（可配置0-4个字符）
 /// 4. 处理特殊字符
 ///
-/// 用于Legado风格分页前的文本规范化
+/// 用于原生阅读引擎分页前的文本规范化。
 class TextPreprocessor {
   /// 预处理文本
   ///

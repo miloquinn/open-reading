@@ -11,13 +11,10 @@ import androidx.core.view.WindowCompat
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import android.util.Log
-import android.content.Intent
-import java.io.File
 
 class MainActivity : FlutterActivity() {
     private val CHANNEL = "com.niki.xxread/fullscreen"
     private val READER_KEYS_CHANNEL = "com.niki.xxread/reader_keys"
-    private val READIUM_CHANNEL = "com.niki.xxread/readium"
     private var readerKeysChannel: MethodChannel? = null
     @Volatile private var volumePagingEnabled: Boolean = false
 
@@ -76,37 +73,6 @@ class MainActivity : FlutterActivity() {
             }
         }
 
-        MethodChannel(
-            flutterEngine.dartExecutor.binaryMessenger,
-            READIUM_CHANNEL,
-        ).setMethodCallHandler { call, result ->
-            when (call.method) {
-                "isAvailable" -> result.success(true)
-                "openEpub" -> {
-                    val args = call.arguments as? Map<*, *>
-                    val filePath = args?.get("filePath") as? String
-                    val title = args?.get("title") as? String ?: ""
-                    val author = args?.get("author") as? String ?: ""
-                    if (filePath.isNullOrBlank()) {
-                        result.success(false)
-                        return@setMethodCallHandler
-                    }
-                    if (!File(filePath).exists()) {
-                        result.success(false)
-                        return@setMethodCallHandler
-                    }
-
-                    val intent = Intent(this, ReadiumEpubActivity::class.java).apply {
-                        putExtra(ReadiumEpubActivity.EXTRA_FILE_PATH, filePath)
-                        putExtra("title", title)
-                        putExtra("author", author)
-                    }
-                    startActivity(intent)
-                    result.success(true)
-                }
-                else -> result.notImplemented()
-            }
-        }
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {

@@ -47,7 +47,7 @@ dependencies:
   pdfx: ^2.6.0
   archive: ^3.6.1
 
-  # Foliate 阅读器（WebView）
+  # 打开项目主页和外部协议文档
   url_launcher: ^6.3.2
 
   # 数据处理

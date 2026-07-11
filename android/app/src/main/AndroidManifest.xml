@@ -18,14 +18,6 @@
         android:networkSecurityConfig="@xml/network_security_config"
         android:usesCleartextTraffic="true">
         <activity
-            android:name=".ReadiumEpubActivity"
-            android:exported="false"
-            android:theme="@style/ReadiumTheme"
-            android:configChanges="orientation|screenSize|smallestScreenSize|layoutDirection|fontScale|screenLayout|density|uiMode"
-            android:hardwareAccelerated="true"
-            android:screenOrientation="unspecified"
-            android:resizeableActivity="true" />
-        <activity
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTop"
