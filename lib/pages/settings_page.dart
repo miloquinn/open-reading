@@ -2,6 +2,7 @@
 // 技术要点：Flutter UI、Icons Plus、Package Info、Provider、SharedPreferences、URL Launcher。
 
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
@@ -32,6 +33,9 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
+  static const _aiQuickModelsKey = 'reader_ai_quick_models_v1';
+  static const _activeAiQuickModelKey = 'reader_ai_active_quick_model_v1';
+
   final ReaderHttpAIService _aiService = ReaderHttpAIService();
   late final TextEditingController _aiApiKeyController;
   late final TextEditingController _aiModelController;
@@ -66,6 +70,8 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _obscureAiApiKey = true;
   bool _isSavingAiSettings = false;
   String? _aiSettingsError;
+  List<_AiQuickModel> _aiQuickModels = const [];
+  String? _activeAiQuickModelId;
 
   @override
   void initState() {
@@ -103,6 +109,20 @@ class _SettingsPageState extends State<SettingsPage> {
             ? activeAiSettings
             : await _aiService.loadSettings(provider),
     };
+    final quickModels = _loadAiQuickModels(
+      prefs,
+      activeAiSettings,
+      aiSettingsByProvider,
+    );
+    var activeQuickModelId = prefs.getString(_activeAiQuickModelKey);
+    if (activeQuickModelId == null) {
+      for (final item in quickModels) {
+        if (item.matches(activeAiSettings)) {
+          activeQuickModelId = item.id;
+          break;
+        }
+      }
+    }
     if (!mounted) {
       return;
     }
@@ -130,6 +150,8 @@ class _SettingsPageState extends State<SettingsPage> {
         ..clear()
         ..addAll(aiSettingsByProvider);
       _selectedAiProvider = activeAiSettings.provider;
+      _aiQuickModels = quickModels;
+      _activeAiQuickModelId = activeQuickModelId;
       _aiSettingsLoaded = true;
     });
     _applyAiDraft(_aiDraftByProvider[_selectedAiProvider]!);
@@ -137,6 +159,95 @@ class _SettingsPageState extends State<SettingsPage> {
     if (prefs.getBool('enableAnimations') != true) {
       await prefs.setBool('enableAnimations', true);
     }
+  }
+
+  List<_AiQuickModel> _loadAiQuickModels(
+    SharedPreferences prefs,
+    AIProviderSettings activeSettings,
+    Map<AIProviderType, AIProviderSettings> settingsByProvider,
+  ) {
+    final raw = prefs.getString(_aiQuickModelsKey);
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(raw);
+        if (decoded is List) {
+          final saved = decoded
+              .whereType<Map>()
+              .map(
+                (item) => _AiQuickModel.fromJson(
+                  Map<String, dynamic>.from(item),
+                ),
+              )
+              .whereType<_AiQuickModel>()
+              .toList(growable: false);
+          if (saved.isNotEmpty) return saved;
+        }
+      } catch (_) {
+        // Fall back to the curated starter cards below.
+      }
+    }
+
+    final result = <_AiQuickModel>[
+      _AiQuickModel.fromSettings(activeSettings, isCustom: true),
+    ];
+    const starterPresetIds = <String>[
+      'deepseek_chat',
+      'openai_gpt_4_1_mini',
+      'gemini_2_flash',
+    ];
+    for (final presetId in starterPresetIds) {
+      final preset = AIModelPresets.all.firstWhere(
+        (item) => item.id == presetId,
+        orElse: () => AIModelPresets.all.first,
+      );
+      final providerSettings = settingsByProvider[preset.provider];
+      final sameEndpoint = providerSettings != null &&
+          providerSettings.baseUrl == preset.toSettings().baseUrl;
+      final settings = preset.toSettings(
+        apiKey: sameEndpoint ? providerSettings.apiKey : '',
+      );
+      if (result.any((item) => item.matches(settings))) continue;
+      result.add(
+        _AiQuickModel(
+          id: 'preset-${preset.id}',
+          settings: settings,
+          isCustom: false,
+        ),
+      );
+    }
+    return result;
+  }
+
+  Future<void> _persistAiQuickModels() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      _aiQuickModelsKey,
+      jsonEncode(_aiQuickModels.map((item) => item.toJson()).toList()),
+    );
+    if (_activeAiQuickModelId != null) {
+      await prefs.setString(
+        _activeAiQuickModelKey,
+        _activeAiQuickModelId!,
+      );
+    }
+  }
+
+  String _knownAiApiKey(AIProviderType provider, String baseUrl) {
+    final normalizedBase = normalizeAIBaseUrl(provider, baseUrl);
+    for (final item in _aiQuickModels) {
+      if (item.settings.provider == provider &&
+          item.settings.baseUrl == normalizedBase &&
+          item.settings.apiKey.isNotEmpty) {
+        return item.settings.apiKey;
+      }
+    }
+    final draft = _aiDraftByProvider[provider];
+    if (draft != null &&
+        draft.baseUrl == normalizedBase &&
+        draft.apiKey.isNotEmpty) {
+      return draft.apiKey;
+    }
+    return '';
   }
 
   Future<void> _loadAppVersion() async {
@@ -266,6 +377,7 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
+  // ignore: unused_element
   Future<void> _showAiCustomConfigDialog() async {
     final l10n = context.l10n;
     _stashCurrentAiDraft();
@@ -780,6 +892,706 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Widget _buildAiSettingsSection() {
+    if (!_aiSettingsLoaded) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final isZh = Localizations.localeOf(context).languageCode == 'zh';
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 2, 20, 12),
+            child: Text(
+              isZh
+                  ? '左右滑动选择模型，点击卡片即可切换。'
+                  : 'Swipe through models and tap a card to switch.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+            ),
+          ),
+          SizedBox(
+            height: 154,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              physics: const BouncingScrollPhysics(),
+              itemCount: _aiQuickModels.length + 1,
+              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              itemBuilder: (context, index) {
+                if (index == _aiQuickModels.length) {
+                  return _buildAddAiModelCard();
+                }
+                return _buildAiModelCard(_aiQuickModels[index]);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAiModelCard(_AiQuickModel item) {
+    final scheme = Theme.of(context).colorScheme;
+    final selected = item.id == _activeAiQuickModelId;
+    final configured = item.settings.isConfigured;
+    return SizedBox(
+      width: 184,
+      child: Material(
+        color: selected
+            ? scheme.primaryContainer.withValues(alpha: 0.7)
+            : scheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(18),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: () => _activateAiQuickModel(item),
+          onLongPress: item.isCustom ? () => _removeAiQuickModel(item) : null,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: selected ? scheme.primary : scheme.outlineVariant,
+                width: selected ? 1.6 : 1,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: scheme.surface.withValues(alpha: 0.7),
+                        borderRadius: BorderRadius.circular(99),
+                      ),
+                      child: Text(
+                        item.settings.provider.displayName,
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                      ),
+                    ),
+                    const Spacer(),
+                    Icon(
+                      selected
+                          ? Icons.check_circle_rounded
+                          : configured
+                              ? Icons.circle_rounded
+                              : Icons.key_off_rounded,
+                      size: 18,
+                      color: selected
+                          ? scheme.primary
+                          : configured
+                              ? scheme.onSurfaceVariant
+                              : scheme.error,
+                    ),
+                  ],
+                ),
+                const Spacer(),
+                Text(
+                  item.settings.model,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        height: 1.2,
+                      ),
+                ),
+                const SizedBox(height: 7),
+                Text(
+                  configured ? 'API Key 已配置' : '点击完成配置',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color:
+                            configured ? scheme.onSurfaceVariant : scheme.error,
+                      ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAddAiModelCard() {
+    final scheme = Theme.of(context).colorScheme;
+    return SizedBox(
+      width: 112,
+      child: Material(
+        color: scheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(18),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: () => _showAiModelSheet(),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: scheme.outlineVariant),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: scheme.primary.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.add_rounded, color: scheme.primary),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  '添加模型',
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _activateAiQuickModel(_AiQuickModel item) async {
+    if (!item.settings.isConfigured) {
+      await _showAiModelSheet(editing: item);
+      return;
+    }
+    try {
+      await _aiService.saveSettings(item.settings);
+      if (!mounted) return;
+      setState(() {
+        _activeAiQuickModelId = item.id;
+        _selectedAiProvider = item.settings.provider;
+        _aiDraftByProvider[item.settings.provider] = item.settings;
+        _applyAiDraft(item.settings);
+      });
+      await _persistAiQuickModels();
+      if (mounted) {
+        showSideToast(context, '已切换到 ${item.settings.model}');
+      }
+    } catch (error) {
+      if (mounted) showSideToast(context, '$error');
+    }
+  }
+
+  Future<void> _removeAiQuickModel(_AiQuickModel item) async {
+    if (_aiQuickModels.length <= 1) return;
+    setState(() {
+      _aiQuickModels = _aiQuickModels
+          .where((candidate) => candidate.id != item.id)
+          .toList(growable: false);
+      if (_activeAiQuickModelId == item.id) {
+        _activeAiQuickModelId = _aiQuickModels.first.id;
+      }
+    });
+    await _persistAiQuickModels();
+  }
+
+  Future<void> _showAiModelSheet({_AiQuickModel? editing}) async {
+    final initial = editing?.settings ??
+        AIModelPresets.defaultForProvider(_selectedAiProvider).toSettings(
+          apiKey: _aiDraftByProvider[_selectedAiProvider]?.apiKey ?? '',
+        );
+    var provider = initial.provider;
+    var customMode = editing?.isCustom ?? false;
+    var selectedPreset = AIModelPresets.match(initial) ??
+        AIModelPresets.defaultForProvider(provider);
+    final apiKeyController = TextEditingController(text: initial.apiKey);
+    final baseUrlController = TextEditingController(text: initial.baseUrl);
+    final modelController = TextEditingController(text: initial.model);
+    final temperatureController = TextEditingController(
+      text: initial.temperature.toStringAsFixed(2),
+    );
+    var fetchedModels = <String>[];
+    var loadingModels = false;
+    String? errorText;
+
+    final result = await showModalBottomSheet<_AiQuickModel>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (sheetContext, setSheetState) {
+          final scheme = Theme.of(sheetContext).colorScheme;
+          final presets = AIModelPresets.byProvider(provider);
+
+          void applyPreset(AIModelPreset preset) {
+            selectedPreset = preset;
+            baseUrlController.text = preset.baseUrl;
+            modelController.text = preset.model;
+            temperatureController.text = preset.temperature.toStringAsFixed(2);
+            apiKeyController.text = _knownAiApiKey(
+              preset.provider,
+              preset.baseUrl,
+            );
+          }
+
+          Future<void> fetchModels() async {
+            final apiKey = apiKeyController.text.trim();
+            final baseUrl = baseUrlController.text.trim();
+            if (apiKey.isEmpty || baseUrl.isEmpty) {
+              setSheetState(() {
+                errorText = '请先填写 Base URL 和 API Key';
+              });
+              return;
+            }
+            setSheetState(() {
+              loadingModels = true;
+              errorText = null;
+            });
+            try {
+              final models = await _aiService.fetchAvailableModels(
+                AIProviderSettings(
+                  provider: provider,
+                  apiKey: apiKey,
+                  baseUrl: baseUrl,
+                  model: modelController.text.trim(),
+                  temperature:
+                      double.tryParse(temperatureController.text) ?? 0.7,
+                ),
+              );
+              if (!sheetContext.mounted) return;
+              setSheetState(() {
+                fetchedModels = models;
+                loadingModels = false;
+              });
+            } catch (error) {
+              if (!sheetContext.mounted) return;
+              setSheetState(() {
+                loadingModels = false;
+                errorText = '$error';
+              });
+            }
+          }
+
+          Future<void> saveModel() async {
+            final temperature =
+                double.tryParse(temperatureController.text.trim());
+            final settings = AIProviderSettings(
+              provider: provider,
+              apiKey: apiKeyController.text.trim(),
+              baseUrl: baseUrlController.text.trim(),
+              model: modelController.text.trim(),
+              temperature: temperature ?? 0.7,
+            ).normalized();
+            final validation = validateAIProviderSettings(settings);
+            if (validation != null) {
+              setSheetState(() => errorText = validation);
+              return;
+            }
+            try {
+              await _aiService.saveSettings(settings);
+              if (!sheetContext.mounted) return;
+              Navigator.of(sheetContext).pop(
+                _AiQuickModel(
+                  id: editing?.id ?? _AiQuickModel.idFor(settings),
+                  settings: settings,
+                  isCustom: customMode,
+                ),
+              );
+            } catch (error) {
+              if (sheetContext.mounted) {
+                setSheetState(() => errorText = '$error');
+              }
+            }
+          }
+
+          return AnimatedPadding(
+            duration: const Duration(milliseconds: 180),
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
+            ),
+            child: FractionallySizedBox(
+              heightFactor: 0.92,
+              child: Material(
+                color: scheme.surface,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(28),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: Column(
+                  children: [
+                    Container(
+                      width: 42,
+                      height: 4,
+                      margin: const EdgeInsets.only(top: 10, bottom: 8),
+                      decoration: BoxDecoration(
+                        color: scheme.outlineVariant,
+                        borderRadius: BorderRadius.circular(99),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 8, 12, 12),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  editing == null ? '添加模型' : '配置模型',
+                                  style: Theme.of(sheetContext)
+                                      .textTheme
+                                      .titleLarge
+                                      ?.copyWith(fontWeight: FontWeight.w800),
+                                ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  '每张快捷卡片只绑定一个模型',
+                                  style: Theme.of(sheetContext)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
+                                        color: scheme.onSurfaceVariant,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () => Navigator.of(sheetContext).pop(),
+                            icon: const Icon(Icons.close_rounded),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Divider(height: 1),
+                    Expanded(
+                      child: ListView(
+                        padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+                        children: [
+                          SegmentedButton<bool>(
+                            segments: const [
+                              ButtonSegment(
+                                value: false,
+                                label: Text('预设模型'),
+                                icon: Icon(Icons.auto_awesome_outlined),
+                              ),
+                              ButtonSegment(
+                                value: true,
+                                label: Text('自定义'),
+                                icon: Icon(Icons.tune_rounded),
+                              ),
+                            ],
+                            selected: {customMode},
+                            onSelectionChanged: (selection) {
+                              setSheetState(() {
+                                customMode = selection.first;
+                                errorText = null;
+                                fetchedModels = [];
+                                if (!customMode) applyPreset(selectedPreset);
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 18),
+                          DropdownButtonFormField<AIProviderType>(
+                            initialValue: provider,
+                            decoration: const InputDecoration(
+                              labelText: '大模型服务商',
+                              prefixIcon: Icon(Icons.hub_outlined),
+                              border: OutlineInputBorder(),
+                            ),
+                            items: AIProviderType.values
+                                .map(
+                                  (item) => DropdownMenuItem(
+                                    value: item,
+                                    child: Text(item.displayName),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (value) {
+                              if (value == null) return;
+                              setSheetState(() {
+                                provider = value;
+                                selectedPreset =
+                                    AIModelPresets.defaultForProvider(value);
+                                fetchedModels = [];
+                                errorText = null;
+                                if (!customMode) {
+                                  applyPreset(selectedPreset);
+                                } else {
+                                  apiKeyController.text = _knownAiApiKey(
+                                    value,
+                                    baseUrlController.text,
+                                  );
+                                }
+                              });
+                            },
+                          ),
+                          if (!customMode) ...[
+                            const SizedBox(height: 16),
+                            DropdownButtonFormField<AIModelPreset>(
+                              key: ValueKey(
+                                'sheet-${provider.value}-${selectedPreset.id}',
+                              ),
+                              initialValue: selectedPreset,
+                              isExpanded: true,
+                              decoration: const InputDecoration(
+                                labelText: '预设模型',
+                                prefixIcon: Icon(Icons.memory_rounded),
+                                border: OutlineInputBorder(),
+                              ),
+                              items: presets
+                                  .map(
+                                    (preset) => DropdownMenuItem(
+                                      value: preset,
+                                      child: Text(
+                                        '${preset.vendor} · ${preset.label}',
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  )
+                                  .toList(),
+                              onChanged: (preset) {
+                                if (preset == null) return;
+                                setSheetState(() => applyPreset(preset));
+                              },
+                            ),
+                          ],
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: baseUrlController,
+                            enabled: customMode,
+                            decoration: const InputDecoration(
+                              labelText: 'Base URL',
+                              prefixIcon: Icon(Icons.link_rounded),
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: apiKeyController,
+                            obscureText: _obscureAiApiKey,
+                            decoration: InputDecoration(
+                              labelText: 'API Key',
+                              prefixIcon: const Icon(Icons.key_rounded),
+                              border: const OutlineInputBorder(),
+                              suffixIcon: IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _obscureAiApiKey = !_obscureAiApiKey;
+                                  });
+                                  setSheetState(() {});
+                                },
+                                icon: Icon(
+                                  _obscureAiApiKey
+                                      ? Icons.visibility_off_rounded
+                                      : Icons.visibility_rounded,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: modelController,
+                            enabled: customMode,
+                            decoration: InputDecoration(
+                              labelText: '模型型号',
+                              prefixIcon: const Icon(Icons.smart_toy_outlined),
+                              border: const OutlineInputBorder(),
+                              suffixIcon: customMode
+                                  ? IconButton(
+                                      tooltip: '自动获取模型',
+                                      onPressed:
+                                          loadingModels ? null : fetchModels,
+                                      icon: loadingModels
+                                          ? const SizedBox(
+                                              width: 18,
+                                              height: 18,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                              ),
+                                            )
+                                          : const Icon(Icons.refresh_rounded),
+                                    )
+                                  : null,
+                            ),
+                          ),
+                          if (customMode) ...[
+                            const SizedBox(height: 8),
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: TextButton.icon(
+                                onPressed: loadingModels ? null : fetchModels,
+                                icon: const Icon(Icons.travel_explore_rounded),
+                                label: const Text('自动获取模型列表'),
+                              ),
+                            ),
+                          ],
+                          if (fetchedModels.isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              '选择一个模型',
+                              style: Theme.of(sheetContext)
+                                  .textTheme
+                                  .titleSmall
+                                  ?.copyWith(fontWeight: FontWeight.w700),
+                            ),
+                            const SizedBox(height: 8),
+                            Container(
+                              constraints: const BoxConstraints(maxHeight: 220),
+                              decoration: BoxDecoration(
+                                border:
+                                    Border.all(color: scheme.outlineVariant),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: ListView.builder(
+                                shrinkWrap: true,
+                                itemCount: fetchedModels.length,
+                                itemBuilder: (_, index) {
+                                  final model = fetchedModels[index];
+                                  final selected =
+                                      modelController.text.trim() == model;
+                                  return ListTile(
+                                    dense: true,
+                                    title: Text(model),
+                                    trailing: Icon(
+                                      selected
+                                          ? Icons.check_circle_rounded
+                                          : Icons.circle_outlined,
+                                      color: selected ? scheme.primary : null,
+                                    ),
+                                    onTap: () {
+                                      modelController.text = model;
+                                      setSheetState(() {});
+                                    },
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                          if (customMode) ...[
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              controller: temperatureController,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                decimal: true,
+                              ),
+                              decoration: const InputDecoration(
+                                labelText: 'Temperature',
+                                prefixIcon: Icon(Icons.thermostat_rounded),
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                          ],
+                          if (errorText != null) ...[
+                            const SizedBox(height: 12),
+                            Text(
+                              errorText!,
+                              style: TextStyle(
+                                color: scheme.error,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.icon(
+                          onPressed: saveModel,
+                          icon: const Icon(Icons.add_task_rounded),
+                          label: Text(editing == null ? '添加并启用' : '保存并启用'),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+
+    apiKeyController.dispose();
+    baseUrlController.dispose();
+    modelController.dispose();
+    temperatureController.dispose();
+
+    if (result == null || !mounted) return;
+    setState(() {
+      final existingIndex =
+          _aiQuickModels.indexWhere((item) => item.id == result.id);
+      if (existingIndex >= 0) {
+        final next = [..._aiQuickModels];
+        next[existingIndex] = result;
+        _aiQuickModels = next;
+      } else {
+        _aiQuickModels = [..._aiQuickModels, result];
+      }
+      _activeAiQuickModelId = result.id;
+      _selectedAiProvider = result.settings.provider;
+      _aiDraftByProvider[result.settings.provider] = result.settings;
+      _applyAiDraft(result.settings);
+    });
+    await _persistAiQuickModels();
+  }
+
+  // Kept temporarily for migration from the previous full-page AI editor.
+  // ignore: unused_element
+  Future<void> _openAiSettingsPage() async {
+    final isZh = Localizations.localeOf(context).languageCode == 'zh';
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (routeContext) => StatefulBuilder(
+          builder: (routeContext, setRouteState) => Scaffold(
+            appBar: AppBar(
+              title: Text(isZh ? 'AI 阅读助手' : 'AI Reading Assistant'),
+              scrolledUnderElevation: 0,
+            ),
+            body: SafeArea(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+                children: [
+                  Text(
+                    isZh
+                        ? '选择服务商和模型，填写 API Key 即可。其余参数保持默认。'
+                        : 'Choose a provider and model, then enter your API key.',
+                    style:
+                        Theme.of(routeContext).textTheme.bodyMedium?.copyWith(
+                              color: Theme.of(routeContext)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                              height: 1.5,
+                            ),
+                  ),
+                  const SizedBox(height: 24),
+                  _buildAiConfigurationForm(setRouteState),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    if (mounted) setState(() {});
+  }
+
+  Widget _buildAiConfigurationForm(StateSetter setRouteState) {
     final l10n = context.l10n;
     final colorScheme = Theme.of(context).colorScheme;
     final isZh = Localizations.localeOf(context).languageCode == 'zh';
@@ -789,243 +1601,144 @@ class _SettingsPageState extends State<SettingsPage> {
     final matchedPreset = AIModelPresets.match(currentSettings);
     final providerPresets = AIModelPresets.byProvider(_selectedAiProvider);
 
-    if (!_aiSettingsLoaded) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-        child: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 2, 20, 22),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      isZh
-                          ? '让 AI 读懂你正在看的内容'
-                          : 'Let AI understand what you are reading',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.2,
-                          ),
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      isZh
-                          ? '选一个服务商和模型，填入 API Key 即可。高级参数保持可选。'
-                          : 'Choose a provider and model, then add an API key. Advanced settings stay optional.',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                            height: 1.45,
-                          ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: currentSettings.isConfigured
-                      ? colorScheme.primary.withValues(alpha: 0.1)
-                      : colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(99),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      currentSettings.isConfigured
-                          ? Icons.check_circle_rounded
-                          : Icons.circle_outlined,
-                      size: 15,
-                      color: currentSettings.isConfigured
-                          ? colorScheme.primary
-                          : colorScheme.onSurfaceVariant,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      currentSettings.isConfigured
-                          ? (isZh ? '已就绪' : 'Ready')
-                          : (isZh ? '未配置' : 'Not set'),
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                            color: currentSettings.isConfigured
-                                ? colorScheme.primary
-                                : colorScheme.onSurfaceVariant,
-                            fontWeight: FontWeight.w700,
-                          ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        DropdownButtonFormField<AIProviderType>(
+          key: ValueKey<String>('ai-provider-${_selectedAiProvider.value}'),
+          initialValue: _selectedAiProvider,
+          decoration: InputDecoration(
+            labelText: isZh ? '服务商' : 'Provider',
+            prefixIcon: const Icon(Icons.cloud_outlined),
+            border: const OutlineInputBorder(),
           ),
-          const SizedBox(height: 20),
-          Text(
-            isZh ? '服务商' : 'Provider',
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
+          items: AIProviderType.values
+              .map(
+                (provider) => DropdownMenuItem(
+                  value: provider,
+                  child: Text(provider.displayName),
                 ),
+              )
+              .toList(),
+          onChanged: (provider) {
+            if (provider == null || provider == _selectedAiProvider) return;
+            _onAiProviderChanged(provider);
+            setRouteState(() {});
+          },
+        ),
+        const SizedBox(height: 16),
+        DropdownButtonFormField<AIModelPreset>(
+          key: ValueKey<String>(
+            'ai-preset-${_selectedAiProvider.value}-${_selectedAiPreset?.id ?? 'custom'}',
           ),
-          const SizedBox(height: 9),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: AIProviderType.values.map((provider) {
-              final selected = provider == _selectedAiProvider;
-              return ChoiceChip(
-                selected: selected,
-                label: Text(provider.displayName),
-                showCheckmark: false,
-                avatar: selected
-                    ? Icon(Icons.check_rounded,
-                        size: 16, color: colorScheme.onPrimaryContainer)
-                    : null,
-                onSelected: (_) {
-                  if (!selected) _onAiProviderChanged(provider);
-                },
-                side: BorderSide(
-                  color: selected
-                      ? colorScheme.primary.withValues(alpha: 0.35)
-                      : colorScheme.outlineVariant,
-                ),
-                selectedColor: colorScheme.primaryContainer,
-                backgroundColor: Colors.transparent,
-                labelStyle: TextStyle(
-                  color: selected
-                      ? colorScheme.onPrimaryContainer
-                      : colorScheme.onSurfaceVariant,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                ),
-              );
-            }).toList(),
+          initialValue: matchedPreset,
+          hint: Text(l10n.settingsAiPresetHint),
+          isExpanded: true,
+          decoration: InputDecoration(
+            labelText: isZh ? '模型' : 'Model',
+            prefixIcon: const Icon(Icons.memory_rounded),
+            border: const OutlineInputBorder(),
+            helperText: matchedPreset == null
+                ? (isZh ? '正在使用自定义模型参数' : 'Using custom model settings')
+                : '${matchedPreset.vendor} · ${matchedPreset.model}',
           ),
-          const SizedBox(height: 18),
-          DropdownButtonFormField<AIModelPreset>(
-            key: ValueKey<String>(
-              'ai-preset-${_selectedAiProvider.value}-${_selectedAiPreset?.id ?? 'custom'}',
-            ),
-            initialValue: matchedPreset,
-            hint: Text(l10n.settingsAiPresetHint),
-            isExpanded: true,
-            decoration: InputDecoration(
-              labelText: isZh ? '模型' : 'Model',
-              prefixIcon: const Icon(Icons.memory_rounded),
-              border: const OutlineInputBorder(),
-              helperText: matchedPreset == null
-                  ? (isZh ? '正在使用自定义模型参数' : 'Using custom model settings')
-                  : '${matchedPreset.vendor} · ${matchedPreset.model}',
-            ),
-            items: providerPresets
-                .map(
-                  (preset) => DropdownMenuItem(
-                    value: preset,
-                    child: Text(
-                      '${preset.vendor} · ${preset.label}',
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                )
-                .toList(),
-            onChanged: (preset) {
-              if (preset != null) _onAiPresetChanged(preset);
-            },
-          ),
-          const SizedBox(height: 16),
-          TextFormField(
-            controller: _aiApiKeyController,
-            obscureText: _obscureAiApiKey,
-            onChanged: (_) {
-              if (_aiSettingsError != null) {
-                setState(() {
-                  _aiSettingsError = null;
-                });
-              }
-            },
-            decoration: InputDecoration(
-              labelText: 'API Key',
-              hintText: isZh ? '仅保存在当前设备' : 'Stored on this device only',
-              prefixIcon: const Icon(Icons.key_rounded),
-              border: const OutlineInputBorder(),
-              suffixIcon: IconButton(
-                tooltip:
-                    _obscureAiApiKey ? l10n.settingsShow : l10n.settingsHide,
-                onPressed: () {
-                  setState(() {
-                    _obscureAiApiKey = !_obscureAiApiKey;
-                  });
-                },
-                icon: Icon(
-                  _obscureAiApiKey
-                      ? Icons.visibility_off_rounded
-                      : Icons.visibility_rounded,
-                ),
-              ),
-            ),
-          ),
-          if (_aiSettingsError != null) ...[
-            const SizedBox(height: 10),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(Icons.error_outline_rounded,
-                    size: 17, color: colorScheme.error),
-                const SizedBox(width: 7),
-                Expanded(
+          items: providerPresets
+              .map(
+                (preset) => DropdownMenuItem(
+                  value: preset,
                   child: Text(
-                    _aiSettingsError!,
-                    style: TextStyle(
-                      color: colorScheme.error,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12,
-                    ),
+                    '${preset.vendor} · ${preset.label}',
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-              ],
-            ),
-          ],
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: _showAiCustomConfigDialog,
-                  icon: const Icon(Icons.tune_rounded),
-                  label: Text(isZh ? '高级设置' : 'Advanced'),
-                ),
+              )
+              .toList(),
+          onChanged: (preset) {
+            if (preset != null) {
+              _onAiPresetChanged(preset);
+              setRouteState(() {});
+            }
+          },
+        ),
+        const SizedBox(height: 16),
+        TextFormField(
+          controller: _aiApiKeyController,
+          obscureText: _obscureAiApiKey,
+          onChanged: (_) {
+            if (_aiSettingsError != null) {
+              setState(() {
+                _aiSettingsError = null;
+              });
+              setRouteState(() {});
+            }
+          },
+          decoration: InputDecoration(
+            labelText: 'API Key',
+            hintText: isZh ? '仅保存在当前设备' : 'Stored on this device only',
+            prefixIcon: const Icon(Icons.key_rounded),
+            border: const OutlineInputBorder(),
+            suffixIcon: IconButton(
+              tooltip: _obscureAiApiKey ? l10n.settingsShow : l10n.settingsHide,
+              onPressed: () {
+                setState(() {
+                  _obscureAiApiKey = !_obscureAiApiKey;
+                });
+                setRouteState(() {});
+              },
+              icon: Icon(
+                _obscureAiApiKey
+                    ? Icons.visibility_off_rounded
+                    : Icons.visibility_rounded,
               ),
-              const SizedBox(width: 12),
+            ),
+          ),
+        ),
+        if (_aiSettingsError != null) ...[
+          const SizedBox(height: 10),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.error_outline_rounded,
+                  size: 17, color: colorScheme.error),
+              const SizedBox(width: 7),
               Expanded(
-                flex: 2,
-                child: FilledButton.icon(
-                  onPressed: _isSavingAiSettings ? null : _saveAiSettings,
-                  icon: _isSavingAiSettings
-                      ? SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: colorScheme.onPrimary,
-                          ),
-                        )
-                      : const Icon(Icons.check_rounded),
-                  label: Text(_isSavingAiSettings
-                      ? l10n.settingsAiSaving
-                      : (isZh ? '保存并启用' : 'Save and enable')),
+                child: Text(
+                  _aiSettingsError!,
+                  style: TextStyle(
+                    color: colorScheme.error,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                  ),
                 ),
               ),
             ],
           ),
         ],
-      ),
+        const SizedBox(height: 20),
+        FilledButton.icon(
+          onPressed: _isSavingAiSettings
+              ? null
+              : () async {
+                  await _saveAiSettings();
+                  setRouteState(() {});
+                },
+          icon: _isSavingAiSettings
+              ? SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: colorScheme.onPrimary,
+                  ),
+                )
+              : const Icon(Icons.check_rounded),
+          label: Text(
+            _isSavingAiSettings
+                ? l10n.settingsAiSaving
+                : (isZh ? '保存并启用' : 'Save and enable'),
+          ),
+        ),
+      ],
     );
   }
 
@@ -2395,6 +3108,72 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _AiQuickModel {
+  const _AiQuickModel({
+    required this.id,
+    required this.settings,
+    required this.isCustom,
+  });
+
+  final String id;
+  final AIProviderSettings settings;
+  final bool isCustom;
+
+  factory _AiQuickModel.fromSettings(
+    AIProviderSettings settings, {
+    required bool isCustom,
+  }) {
+    final normalized = settings.normalized();
+    return _AiQuickModel(
+      id: idFor(normalized),
+      settings: normalized,
+      isCustom: isCustom,
+    );
+  }
+
+  static String idFor(AIProviderSettings settings) {
+    final source =
+        '${settings.provider.value}|${settings.baseUrl}|${settings.model}';
+    return 'model-${base64Url.encode(utf8.encode(source)).replaceAll('=', '')}';
+  }
+
+  bool matches(AIProviderSettings other) {
+    final normalized = other.normalized();
+    return settings.provider == normalized.provider &&
+        settings.baseUrl == normalized.baseUrl &&
+        settings.model == normalized.model;
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'provider': settings.provider.value,
+        'apiKey': settings.apiKey,
+        'baseUrl': settings.baseUrl,
+        'model': settings.model,
+        'temperature': settings.temperature,
+        'isCustom': isCustom,
+      };
+
+  static _AiQuickModel? fromJson(Map<String, dynamic> json) {
+    final id = json['id']?.toString() ?? '';
+    final model = json['model']?.toString() ?? '';
+    final baseUrl = json['baseUrl']?.toString() ?? '';
+    if (id.isEmpty || model.isEmpty || baseUrl.isEmpty) return null;
+    final settings = AIProviderSettings(
+      provider: AIProviderTypeX.fromValue(json['provider']?.toString()),
+      apiKey: json['apiKey']?.toString() ?? '',
+      baseUrl: baseUrl,
+      model: model,
+      temperature: (json['temperature'] as num?)?.toDouble() ?? 0.7,
+    ).normalized();
+    return _AiQuickModel(
+      id: id,
+      settings: settings,
+      isCustom: json['isCustom'] == true,
     );
   }
 }

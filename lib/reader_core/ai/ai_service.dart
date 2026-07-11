@@ -597,6 +597,69 @@ class ReaderHttpAIService implements ConfigurableAIService {
     _cachedActive = normalized;
   }
 
+  Future<List<String>> fetchAvailableModels(
+    AIProviderSettings settings,
+  ) async {
+    final normalized = settings.normalized();
+    if (normalized.apiKey.isEmpty) {
+      throw const AIServiceException('请先填写 API Key');
+    }
+
+    final base = normalized.baseUrl.replaceAll(RegExp(r'/+$'), '');
+    final endpoint = switch (normalized.provider) {
+      AIProviderType.claude =>
+        base.endsWith('/v1') ? '$base/models' : '$base/v1/models',
+      _ => '$base/models',
+    };
+    final options = _buildRequestOptions(normalized).copyWith(
+      responseType: ResponseType.json,
+      receiveTimeout: const Duration(seconds: 30),
+    );
+
+    try {
+      final response = await _dio.get<dynamic>(endpoint, options: options);
+      dynamic body = response.data;
+      if (body is String) {
+        body = jsonDecode(body);
+      }
+      if (body is! Map) {
+        throw const AIServiceException('模型列表返回格式无法识别');
+      }
+
+      final rawModels = body['data'] ?? body['models'];
+      if (rawModels is! List) {
+        throw const AIServiceException('服务端没有返回可用模型列表');
+      }
+
+      final models = rawModels
+          .map((item) {
+            if (item is String) return item;
+            if (item is Map) {
+              final value = item['id'] ?? item['name'] ?? item['model'];
+              return value?.toString();
+            }
+            return null;
+          })
+          .whereType<String>()
+          .map((model) => model.replaceFirst(RegExp(r'^models/'), '').trim())
+          .where((model) => model.isNotEmpty)
+          .toSet()
+          .toList()
+        ..sort();
+
+      if (models.isEmpty) {
+        throw const AIServiceException('没有获取到可用模型');
+      }
+      return models;
+    } on DioException catch (error) {
+      throw AIServiceException(_extractDioErrorMessage(error));
+    } on AIServiceException {
+      rethrow;
+    } catch (error) {
+      throw AIServiceException('获取模型失败：$error');
+    }
+  }
+
   @override
   Future<String> askSelection({
     required String selectedText,
