@@ -42,7 +42,7 @@ jobs:
       - name: Analyze source
         # Keep existing warnings visible without making the initial rollout
         # unusable. Analyzer errors still fail the job.
-        run: flutter analyze --no-fatal-warnings
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
 
       - name: Run tests
         run: flutter test
