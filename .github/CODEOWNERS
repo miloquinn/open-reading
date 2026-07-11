@@ -1,0 +1,4 @@
+# Request the repository owner on every pull request. Requiring this approval
+# is enforced separately in the main-branch ruleset on GitHub.
+* @miloquinn
+
