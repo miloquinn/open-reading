@@ -42,6 +42,9 @@
 | 小元读书 | 面向用户的阅读产品，目前仅提供 iOS 版本 | [xxread.top](https://xxread.top/) |
 | 小元读书社区 | 阅读、创作与交流社区 | [community.xxread.top](https://community.xxread.top/) |
 
+## 开元阅读，永远免费！用阅读，造福人类！
+## 书源协议已开源，希望大家，齐心协力，共筑阅读世界 
+
 ## 🚀 不是 WebView 套壳，是 Flutter 原生阅读引擎
 
 很多跨平台阅读器会把 EPUB 的 HTML 直接交给 WebView，再围绕网页容器拼接阅读功能。
