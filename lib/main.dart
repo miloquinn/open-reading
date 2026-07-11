@@ -131,7 +131,7 @@ class ThemeNotifier extends ChangeNotifier {
   Color? _customAccentColor; // 存储自定义强调色
   Color? _globalAccentColor; // 全局强调色（与应用主题分离）
   String _lastPresetThemeName = AppThemes.blueTheme.name;
-  AppUiStyle _uiStyle = AppUiStyle.glass;
+  AppUiStyle _uiStyle = AppUiStyle.material3;
 
   ThemeMode get themeMode => _themeMode;
   bool get isInitialized => _isInitialized;
@@ -144,6 +144,7 @@ class ThemeNotifier extends ChangeNotifier {
   bool get isUsingThemeAccent => effectiveAccentColor == null;
   String get lastPresetThemeName => _lastPresetThemeName;
   AppUiStyle get uiStyle => _uiStyle;
+  bool get isGlassEffectsEnabled => _uiStyle == AppUiStyle.glass;
   bool get shouldDisableGlassEffects => _uiStyle == AppUiStyle.material3;
 
   ThemeNotifier() {
@@ -361,6 +362,10 @@ class ThemeNotifier extends ChangeNotifier {
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_uiStylePrefKey, style.storageValue);
+  }
+
+  Future<void> setGlassEffectsEnabled(bool enabled) {
+    return setUiStyle(enabled ? AppUiStyle.glass : AppUiStyle.material3);
   }
 
   void _syncGlassEffectState() {

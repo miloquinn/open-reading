@@ -40,7 +40,7 @@ class LibraryPage extends StatefulWidget {
 
 class _LibraryPageState extends State<LibraryPage> {
   List<Book> _books = [];
-  bool _isLoading = true;
+  bool _isInitialLoading = true;
   final _bookDao = BookDao();
   StreamSubscription<void>? _librarySubscription;
   final TextEditingController _searchController = TextEditingController();
@@ -147,18 +147,17 @@ class _LibraryPageState extends State<LibraryPage> {
   }
 
   Future<void> _loadBooks() async {
-    setState(() => _isLoading = true);
     try {
       final books = await _bookDao.getAllBooks();
       if (mounted) {
         setState(() {
           _books = books;
-          _isLoading = false;
+          _isInitialLoading = false;
         });
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() => _isInitialLoading = false);
       }
       // Handle error
     }
@@ -224,20 +223,20 @@ class _LibraryPageState extends State<LibraryPage> {
             _buildShelfSummaryCard(),
             const SizedBox(height: 8),
             Expanded(
-              child: _isLoading
+              child: _isInitialLoading
                   ? const Center(child: CircularProgressIndicator())
-                  : _books.isEmpty
-                      ? _buildEmptyLibrary()
-                      : books.isEmpty
-                          ? _buildNoSearchResult()
-                          : RefreshIndicator(
-                              onRefresh: _loadBooks,
-                              strokeWidth: 2.5,
-                              displacement: 48,
-                              color: Theme.of(context).colorScheme.primary,
-                              backgroundColor: palette.cardStrong,
-                              child: _buildBooksGrid(books),
-                            ),
+                  : RefreshIndicator(
+                      onRefresh: _loadBooks,
+                      strokeWidth: 2.5,
+                      displacement: 48,
+                      color: Theme.of(context).colorScheme.primary,
+                      backgroundColor: palette.cardStrong,
+                      child: _books.isEmpty
+                          ? _buildRefreshableState(_buildEmptyLibrary())
+                          : books.isEmpty
+                              ? _buildRefreshableState(_buildNoSearchResult())
+                              : _buildBooksGrid(books),
+                    ),
             ),
           ],
         ),
@@ -601,6 +600,24 @@ class _LibraryPageState extends State<LibraryPage> {
     );
   }
 
+  Widget _buildRefreshableState(Widget state) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return ListView(
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
+          ),
+          children: [
+            SizedBox(
+              height: constraints.maxHeight,
+              child: state,
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _buildBooksGrid(List<Book> books) {
     final useRail =
         LayoutHelper.getNavigationType(context) == NavigationType.rail;
@@ -675,6 +692,9 @@ class _LibraryPageState extends State<LibraryPage> {
           ),
           child: GridView.builder(
             scrollCacheExtent: const ScrollCacheExtent.pixels(720),
+            physics: const AlwaysScrollableScrollPhysics(
+              parent: BouncingScrollPhysics(),
+            ),
             padding: EdgeInsets.fromLTRB(
               16,
               12,
@@ -720,6 +740,9 @@ class _LibraryPageState extends State<LibraryPage> {
     final scheme = theme.colorScheme;
     return ListView.builder(
       scrollCacheExtent: const ScrollCacheExtent.pixels(720),
+      physics: const AlwaysScrollableScrollPhysics(
+        parent: BouncingScrollPhysics(),
+      ),
       padding: EdgeInsets.fromLTRB(
         16,
         8,

@@ -34,7 +34,7 @@ class PageStyleHelper {
     final scheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
     final uiStyle =
-        theme.extension<UiStyleThemeExtension>()?.style ?? AppUiStyle.glass;
+        theme.extension<UiStyleThemeExtension>()?.style ?? AppUiStyle.material3;
     final isMaterial3Style = uiStyle == AppUiStyle.material3;
 
     return PageVisualPalette(

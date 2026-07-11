@@ -16,6 +16,7 @@ import '../reader_core/ai/ai_service.dart';
 import '../services/core/core_services.dart';
 import '../widgets/side_toast.dart';
 import '../widgets/app_brand_icon.dart';
+import '../widgets/contributors_view.dart';
 import 'home_shell_page.dart';
 import 'home_layout_constants.dart';
 import '../utils/localization_extension.dart';
@@ -24,6 +25,92 @@ import '../utils/system_ui_helper.dart';
 import '../utils/ui_style.dart';
 
 part 'settings_page_cover_actions_part.dart';
+
+class _GithubMark extends StatelessWidget {
+  const _GithubMark();
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(painter: _GithubMarkPainter());
+  }
+}
+
+class _GithubMarkPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = Colors.white;
+    canvas.save();
+    canvas.scale(size.width / 24, size.height / 24);
+
+    final mark = Path()
+      ..moveTo(6.1, 7.2)
+      ..lineTo(5.1, 3.1)
+      ..quadraticBezierTo(8.2, 3.2, 10.1, 4.8)
+      ..quadraticBezierTo(12, 4.35, 13.9, 4.8)
+      ..quadraticBezierTo(15.8, 3.2, 18.9, 3.1)
+      ..lineTo(17.9, 7.2)
+      ..quadraticBezierTo(19.6, 9.0, 19.6, 11.8)
+      ..quadraticBezierTo(19.6, 16.7, 15.8, 18.2)
+      ..quadraticBezierTo(14.9, 18.55, 14.9, 20.0)
+      ..lineTo(14.9, 22.0)
+      ..lineTo(9.1, 22.0)
+      ..lineTo(9.1, 20.3)
+      ..quadraticBezierTo(7.5, 20.65, 6.7, 19.5)
+      ..quadraticBezierTo(6.0, 18.45, 5.0, 17.75)
+      ..quadraticBezierTo(4.4, 17.3, 4.7, 16.9)
+      ..quadraticBezierTo(5.0, 16.55, 5.7, 17.0)
+      ..quadraticBezierTo(6.9, 17.75, 7.4, 18.35)
+      ..quadraticBezierTo(8.0, 19.0, 9.1, 18.7)
+      ..quadraticBezierTo(9.15, 18.0, 9.55, 17.55)
+      ..quadraticBezierTo(4.4, 16.95, 4.4, 11.8)
+      ..quadraticBezierTo(4.4, 9.0, 6.1, 7.2)
+      ..close();
+    canvas.drawPath(mark, paint);
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _QqMark extends StatelessWidget {
+  const _QqMark();
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(painter: _QqMarkPainter());
+  }
+}
+
+class _QqMarkPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final white = Paint()..color = Colors.white;
+    final blue = Paint()..color = const Color(0xFF1677FF);
+    canvas.save();
+    canvas.scale(size.width / 24, size.height / 24);
+
+    canvas.drawOval(const Rect.fromLTWH(6.6, 2.2, 10.8, 17.8), white);
+    canvas.drawOval(const Rect.fromLTWH(4.2, 9.0, 4.6, 8.3), white);
+    canvas.drawOval(const Rect.fromLTWH(15.2, 9.0, 4.6, 8.3), white);
+    canvas.drawOval(const Rect.fromLTWH(5.0, 18.0, 6.8, 3.2), white);
+    canvas.drawOval(const Rect.fromLTWH(12.2, 18.0, 6.8, 3.2), white);
+    canvas.drawOval(const Rect.fromLTWH(8.8, 6.2, 2.1, 2.8), blue);
+    canvas.drawOval(const Rect.fromLTWH(13.1, 6.2, 2.1, 2.8), blue);
+    canvas.drawOval(const Rect.fromLTWH(10.3, 9.1, 3.4, 2.0), blue);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(6.0, 13.1, 12.0, 2.25),
+        const Radius.circular(1.1),
+      ),
+      blue,
+    );
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -61,7 +148,7 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _enablePerformanceMonitor = false;
   bool _enableMemoryStats = false;
   bool _showFPS = false;
-  String _appVersion = '3.0.0';
+  String _appVersion = '0.9.1';
   final Map<AIProviderType, AIProviderSettings> _aiDraftByProvider =
       <AIProviderType, AIProviderSettings>{};
   AIProviderType _selectedAiProvider = AIProviderType.openai;
@@ -261,7 +348,7 @@ class _SettingsPageState extends State<SettingsPage> {
         final buildNumber = info.buildNumber.trim();
         _appVersion = version.isNotEmpty
             ? (buildNumber.isNotEmpty ? '$version ($buildNumber)' : version)
-            : '3.0.0';
+            : '0.9.1';
       });
     } catch (_) {
       // Keep default version fallback.
@@ -768,6 +855,11 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           const SizedBox(height: 20),
           _buildAboutCard(),
+          const SizedBox(height: 20),
+          const ContributorsView(
+            repositoryOwner: 'miloquinn',
+            repositoryName: 'open-reading',
+          ),
           const SizedBox(height: 100),
         ],
       ),
@@ -1754,198 +1846,13 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Widget _buildUiStyleSelector(ThemeNotifier themeNotifier) {
-    final currentStyle = themeNotifier.uiStyle;
     final l10n = context.l10n;
-    return _buildActionSetting(
+    return _buildSwitchSetting(
       title: l10n.settingsUiStyleTitle,
-      subtitle: l10n.settingsCurrentValue(currentStyle.displayName),
-      onTap: () => _showUiStyleModal(themeNotifier),
-      icon: currentStyle.icon,
-    );
-  }
-
-  void _showUiStyleModal(ThemeNotifier themeNotifier) {
-    final l10n = context.l10n;
-    const options = [
-      _UiStyleOption(style: AppUiStyle.glass),
-      _UiStyleOption(style: AppUiStyle.material3),
-    ];
-    final isMaterial3Style = Theme.of(context)
-            .extension<UiStyleThemeExtension>()
-            ?.isMaterial3Style ??
-        false;
-    final scheme = Theme.of(context).colorScheme;
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor:
-          isMaterial3Style ? scheme.surfaceContainerHigh : Colors.transparent,
-      builder: (modalContext) {
-        return Container(
-          decoration: BoxDecoration(
-            color: isMaterial3Style
-                ? Theme.of(modalContext).colorScheme.surfaceContainerHigh
-                : Theme.of(modalContext).colorScheme.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-            border: Border(
-              top: BorderSide(
-                color: Theme.of(modalContext).colorScheme.outline.withValues(
-                      alpha: isMaterial3Style ? 0.24 : 0.16,
-                    ),
-              ),
-            ),
-          ),
-          child: SafeArea(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  margin: const EdgeInsets.only(top: 12, bottom: 14),
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Theme.of(modalContext)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 2, 24, 12),
-                  child: Row(
-                    children: [
-                      Icon(
-                        themeNotifier.uiStyle.icon,
-                        color: Theme.of(modalContext).colorScheme.primary,
-                        size: 22,
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        l10n.settingsUiStyleTitle,
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          color: Theme.of(modalContext).colorScheme.onSurface,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                ...options.map((item) {
-                  final selected = themeNotifier.uiStyle == item.style;
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 4,
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(14),
-                        onTap: () async {
-                          if (selected) {
-                            Navigator.of(modalContext).pop();
-                            return;
-                          }
-
-                          Navigator.of(modalContext).pop();
-                          await themeNotifier.setUiStyle(item.style);
-                          if (!mounted) return;
-                          _showRestartDialog(
-                            reason: l10n.settingsUiStyleSwitchedRestart(
-                              item.style.displayName,
-                            ),
-                          );
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 12,
-                          ),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: selected
-                                  ? Theme.of(modalContext).colorScheme.primary
-                                  : Theme.of(modalContext)
-                                      .colorScheme
-                                      .outline
-                                      .withValues(alpha: 0.35),
-                              width: selected ? 1.6 : 1,
-                            ),
-                            color: selected
-                                ? Theme.of(modalContext)
-                                    .colorScheme
-                                    .primary
-                                    .withValues(alpha: 0.08)
-                                : Colors.transparent,
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                item.style.icon,
-                                color: selected
-                                    ? Theme.of(modalContext).colorScheme.primary
-                                    : Theme.of(modalContext)
-                                        .colorScheme
-                                        .onSurface
-                                        .withValues(alpha: 0.75),
-                                size: 18,
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      item.style.displayName,
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        color: selected
-                                            ? Theme.of(
-                                                modalContext,
-                                              ).colorScheme.primary
-                                            : Theme.of(
-                                                modalContext,
-                                              ).colorScheme.onSurface,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      item.style.subtitle,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Theme.of(modalContext)
-                                            .colorScheme
-                                            .onSurface
-                                            .withValues(alpha: 0.62),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              if (selected)
-                                Icon(
-                                  Icons.check_circle,
-                                  color: Theme.of(modalContext)
-                                      .colorScheme
-                                      .primary,
-                                ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                }),
-                const SizedBox(height: 12),
-              ],
-            ),
-          ),
-        );
-      },
+      subtitle: l10n.settingsGlassEffectSubtitle,
+      value: themeNotifier.isGlassEffectsEnabled,
+      onChanged: themeNotifier.setGlassEffectsEnabled,
+      icon: Icons.blur_on_rounded,
     );
   }
 
@@ -2984,18 +2891,93 @@ class _SettingsPageState extends State<SettingsPage> {
           const Divider(height: 1),
           const SizedBox(height: 14),
           _buildAboutLine(isZh ? '版本' : 'Version', _appVersion),
-          _buildAboutLine(isZh ? '维护者' : 'Maintainer', 'miloquinn'),
+          _buildAboutLine(isZh ? '维护者' : 'Maintainer', '小元Niki'),
           _buildAboutLine(isZh ? '许可证' : 'License', 'MIT'),
+          const SizedBox(height: 14),
+          _buildCommunityButton(
+            onPressed: _openGithubRepo,
+            backgroundColor: const Color(0xFF181717),
+            foregroundColor: Colors.white,
+            icon: const _GithubMark(),
+            title: 'GitHub',
+            subtitle: isZh ? '查看开源项目' : 'View open-source project',
+          ),
           const SizedBox(height: 10),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: _openGithubRepo,
-              icon: const Icon(Icons.code_rounded),
-              label: const Text('github.com/miloquinn/open-reading'),
-            ),
+          _buildCommunityButton(
+            onPressed: _openQqGroup,
+            backgroundColor: const Color(0xFF1677FF),
+            foregroundColor: Colors.white,
+            icon: const _QqMark(),
+            title: isZh ? '加入 QQ 群' : 'Join QQ group',
+            subtitle: '1003560209',
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCommunityButton({
+    required VoidCallback onPressed,
+    required Color backgroundColor,
+    required Color foregroundColor,
+    required Widget icon,
+    required String title,
+    required String subtitle,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      height: 60,
+      child: FilledButton(
+        onPressed: onPressed,
+        style: FilledButton.styleFrom(
+          backgroundColor: backgroundColor,
+          foregroundColor: foregroundColor,
+          padding: const EdgeInsets.symmetric(horizontal: 18),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          elevation: 0,
+        ).copyWith(
+          overlayColor: WidgetStatePropertyAll(
+            foregroundColor.withValues(alpha: 0.12),
+          ),
+        ),
+        child: Row(
+          children: [
+            SizedBox(width: 24, height: 24, child: icon),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.1,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w500,
+                      color: foregroundColor.withValues(alpha: 0.72),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.arrow_outward_rounded,
+              size: 19,
+              color: foregroundColor.withValues(alpha: 0.78),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -3035,6 +3017,22 @@ class _SettingsPageState extends State<SettingsPage> {
     if (!ok && mounted) {
       showSideToast(context, context.l10n.settingsGithubOpenFailed,
           icon: Icons.error_outline);
+    }
+  }
+
+  Future<void> _openQqGroup() async {
+    final uri = Uri.parse(
+      'mqqapi://card/show_pslcard?src_type=internal&version=1&uin=1003560209&card_type=group&source=qrcode',
+    );
+    final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!ok && mounted) {
+      showSideToast(
+        context,
+        Localizations.localeOf(context).languageCode == 'zh'
+            ? '无法打开 QQ，请确认已安装 QQ'
+            : 'Could not open QQ. Please make sure QQ is installed.',
+        icon: Icons.error_outline,
+      );
     }
   }
 
@@ -3186,10 +3184,4 @@ class _LanguageOption {
     required this.code,
     required this.label,
   });
-}
-
-class _UiStyleOption {
-  final AppUiStyle style;
-
-  const _UiStyleOption({required this.style});
 }
