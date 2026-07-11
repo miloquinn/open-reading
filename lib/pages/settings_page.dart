@@ -1820,7 +1820,7 @@ class _SettingsPageState extends State<SettingsPage> {
           label: Text(
             _isSavingAiSettings
                 ? l10n.settingsAiSaving
-                : (l10n.settingsAiSaveAndEnable),
+                : l10n.settingsAiSaveAndEnable,
           ),
         ),
       ],
