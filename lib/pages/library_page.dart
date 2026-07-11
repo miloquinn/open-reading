@@ -768,14 +768,14 @@ class _LibraryPageState extends State<LibraryPage> {
                 child: Row(
                   children: [
                     SizedBox(
-                      width: 44,
-                      height: 64,
+                      width: 64,
+                      height: 92,
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(11),
                         child: _buildListCover(context, book),
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -836,11 +836,11 @@ class _LibraryPageState extends State<LibraryPage> {
   Widget _buildListCover(BuildContext context, Book book) {
     if (book.coverImagePath != null && book.coverImagePath!.isNotEmpty) {
       final fit = Platform.isAndroid ? BoxFit.contain : BoxFit.cover;
-      // 列表封面显示宽度固定 44，按屏幕像素密度限制解码尺寸即可
+      // 列表封面显示宽度固定 64，按屏幕像素密度限制解码尺寸即可
       return Image.file(
         File(book.coverImagePath!),
         fit: fit,
-        cacheWidth: (44 * MediaQuery.of(context).devicePixelRatio).round(),
+        cacheWidth: (64 * MediaQuery.of(context).devicePixelRatio).round(),
         gaplessPlayback: true,
         errorBuilder: (context, error, stackTrace) =>
             _buildListDefaultCover(context, book),
@@ -852,7 +852,7 @@ class _LibraryPageState extends State<LibraryPage> {
   Widget _buildListDefaultCover(BuildContext context, Book book) {
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(11),
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -864,8 +864,8 @@ class _LibraryPageState extends State<LibraryPage> {
       ),
       child: const Center(
         child: AppBrandIcon(
-          size: 32,
-          borderRadius: 8,
+          size: 40,
+          borderRadius: 9,
         ),
       ),
     );

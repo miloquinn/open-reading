@@ -1892,6 +1892,30 @@ abstract class AppLocalizations {
   /// **'Scroll vertically to read, swipe horizontally to switch chapters'**
   String get readerModeVerticalScrollHint;
 
+  /// Subtitle explaining whole-book continuous vertical scrolling
+  ///
+  /// In en, this message translates to:
+  /// **'Scroll continuously from the beginning to the end of the book'**
+  String get readerModeWholeBookScrollHint;
+
+  /// Switch controlling whether vertical scrolling is limited to one chapter
+  ///
+  /// In en, this message translates to:
+  /// **'Scroll by chapter'**
+  String get readerScrollByChapterTitle;
+
+  /// Subtitle when chapter-scoped vertical scrolling is enabled
+  ///
+  /// In en, this message translates to:
+  /// **'Scroll within one chapter, then swipe left or right to switch chapters'**
+  String get readerScrollByChapterOnHint;
+
+  /// Subtitle when whole-book vertical scrolling is enabled
+  ///
+  /// In en, this message translates to:
+  /// **'All chapters form one continuous vertical list'**
+  String get readerScrollByChapterOffHint;
+
   /// Subtitle explaining the horizontal paging mode
   ///
   /// In en, this message translates to:

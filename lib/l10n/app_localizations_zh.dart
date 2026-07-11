@@ -977,6 +977,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get readerModeVerticalScrollHint => '上下滚动正文，左右滑动切换章节';
 
   @override
+  String get readerModeWholeBookScrollHint => '整本书从头到尾连续向下滚动';
+
+  @override
+  String get readerScrollByChapterTitle => '按章节滚动';
+
+  @override
+  String get readerScrollByChapterOnHint => '单章内上下滚动，左右滑动切换章节';
+
+  @override
+  String get readerScrollByChapterOffHint => '所有章节合并为一条连续的纵向内容流';
+
+  @override
   String get readerModeHorizontalPageHint => '点击左侧上一页，点击右侧下一页';
 
   @override

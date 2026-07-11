@@ -992,6 +992,21 @@ class AppLocalizationsEn extends AppLocalizations {
       'Scroll vertically to read, swipe horizontally to switch chapters';
 
   @override
+  String get readerModeWholeBookScrollHint =>
+      'Scroll continuously from the beginning to the end of the book';
+
+  @override
+  String get readerScrollByChapterTitle => 'Scroll by chapter';
+
+  @override
+  String get readerScrollByChapterOnHint =>
+      'Scroll within one chapter, then swipe left or right to switch chapters';
+
+  @override
+  String get readerScrollByChapterOffHint =>
+      'All chapters form one continuous vertical list';
+
+  @override
   String get readerModeHorizontalPageHint =>
       'Tap the left side for the previous page, the right side for the next page';
 

@@ -1369,6 +1369,22 @@
   "@readerModeVerticalScrollHint": {
     "description": "Subtitle explaining the vertical scroll page mode"
   },
+  "readerModeWholeBookScrollHint": "Scroll continuously from the beginning to the end of the book",
+  "@readerModeWholeBookScrollHint": {
+    "description": "Subtitle explaining whole-book continuous vertical scrolling"
+  },
+  "readerScrollByChapterTitle": "Scroll by chapter",
+  "@readerScrollByChapterTitle": {
+    "description": "Switch controlling whether vertical scrolling is limited to one chapter"
+  },
+  "readerScrollByChapterOnHint": "Scroll within one chapter, then swipe left or right to switch chapters",
+  "@readerScrollByChapterOnHint": {
+    "description": "Subtitle when chapter-scoped vertical scrolling is enabled"
+  },
+  "readerScrollByChapterOffHint": "All chapters form one continuous vertical list",
+  "@readerScrollByChapterOffHint": {
+    "description": "Subtitle when whole-book vertical scrolling is enabled"
+  },
   "readerModeHorizontalPageHint": "Tap the left side for the previous page, the right side for the next page",
   "@readerModeHorizontalPageHint": {
     "description": "Subtitle explaining the horizontal paging mode"

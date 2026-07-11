@@ -127,6 +127,70 @@ class CustomPageTransitions {
     );
   }
 
+  /// A lightweight reader transition that keeps complex page contents smooth.
+  static Route<T> createSmoothReaderPageRoute<T extends Object?>(Widget page) {
+    return PageRouteBuilder<T>(
+      pageBuilder: (context, animation, secondaryAnimation) => page,
+      transitionDuration: const Duration(milliseconds: 360),
+      reverseTransitionDuration: const Duration(milliseconds: 300),
+      // Reader pages may contain long text layouts, images and backdrop
+      // filters. A route snapshot avoids repainting them on every frame.
+      allowSnapshotting: true,
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        final motion = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+          reverseCurve: Curves.easeInCubic,
+        );
+        final position = Tween<Offset>(
+          begin: const Offset(0.10, 0.025),
+          end: Offset.zero,
+        ).animate(motion);
+        final scale = Tween<double>(
+          begin: 0.965,
+          end: 1,
+        ).animate(motion);
+        final opacity = Tween<double>(begin: 0, end: 1).animate(
+          CurvedAnimation(
+            parent: animation,
+            curve: const Interval(0, 0.72, curve: Curves.easeOut),
+            reverseCurve: Curves.easeIn,
+          ),
+        );
+
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            FadeTransition(
+              opacity: animation.drive(Tween<double>(begin: 0, end: 0.08)),
+              child: const ColoredBox(color: Colors.black),
+            ),
+            SlideTransition(
+              position: position,
+              child: ScaleTransition(
+                scale: scale,
+                alignment: Alignment.centerRight,
+                child: FadeTransition(
+                  opacity: opacity,
+                  child: AnimatedBuilder(
+                    animation: animation,
+                    child: child,
+                    builder: (context, child) => ClipRRect(
+                      borderRadius: BorderRadius.circular(
+                        26 * (1 - animation.value),
+                      ),
+                      child: child,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   /// 创建优化的阅读页面过渡动画
   /// 专门为阅读页面设计，提供最佳的用户体验
   static Route<T> createReaderPageRoute<T extends Object?>(Widget page) {

@@ -169,7 +169,7 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
   Book? _recommendedPlanBook;
   String? _aiReadingAdvice;
   String? _aiAdviceBookTitle;
-  bool _isLoading = true;
+  bool _isInitialLoading = true;
   Timer? _focusTimer;
   DateTime? _focusEndTime;
   Duration _focusRemaining = Duration.zero;
@@ -193,7 +193,6 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
   }
 
   Future<void> _loadAllStats() async {
-    setState(() => _isLoading = true);
     try {
       final summaryFuture = _statsDao.getSummaryStats();
       final weeklyFuture = _statsDao.getWeeklyChartData();
@@ -222,11 +221,13 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
         _recommendedPlanBook = recommendedBook;
         _aiReadingAdvice = aiAdviceData.$1;
         _aiAdviceBookTitle = aiAdviceData.$2;
-        _isLoading = false;
+        _isInitialLoading = false;
       });
     } catch (_) {
       if (!mounted) return;
-      setState(() => _isLoading = false);
+      setState(() {
+        _isInitialLoading = false;
+      });
     }
   }
 
@@ -311,8 +312,12 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
         kHomeMobileFloatingNavBottomGap +
         kHomeMobileContentBottomExtra;
 
+    final refreshEdgeOffset = useRailNavigation
+        ? mediaQuery.padding.top
+        : mediaQuery.padding.top + kHomeMobileTopBarHeight;
+
     return _HomeContentMetrics(
-      refreshEdgeOffset: mediaQuery.padding.top,
+      refreshEdgeOffset: refreshEdgeOffset,
       horizontalPadding: horizontalPadding,
       contentTopPadding: useRailNavigation
           ? mediaQuery.padding.top + 8
@@ -522,7 +527,7 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
           ],
         ),
       ),
-      child: _isLoading
+      child: _isInitialLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: _loadAllStats,
