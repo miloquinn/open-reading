@@ -1,0 +1,218 @@
+name: Cross-platform release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing version tag to build and release (for example v0.9.1)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  FLUTTER_VERSION: "3.44.4"
+  RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+
+jobs:
+  android:
+    name: Android APKs
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out release source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Generate localizations
+        run: flutter gen-l10n
+
+      - name: Build release APKs
+        run: flutter build apk --release --split-per-abi
+
+      - name: Name Android packages
+        shell: bash
+        run: |
+          version="${RELEASE_TAG#v}"
+          mkdir -p release-assets
+          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk \
+            "release-assets/OpenReading-Android-arm64-v8a-${version}.apk"
+          cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk \
+            "release-assets/OpenReading-Android-armeabi-v7a-${version}.apk"
+          cp build/app/outputs/flutter-apk/app-x86_64-release.apk \
+            "release-assets/OpenReading-Android-x86_64-${version}.apk"
+
+      - name: Upload Android artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-release
+          path: release-assets/*
+          if-no-files-found: error
+
+  windows:
+    name: Windows x64
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out release source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Generate localizations
+        run: flutter gen-l10n
+
+      - name: Ensure NuGet is available
+        shell: pwsh
+        run: |
+          if (-not (Get-Command nuget -ErrorAction SilentlyContinue)) {
+            choco install nuget.commandline -y --no-progress
+          }
+
+      - name: Build Windows release
+        run: flutter build windows --release
+
+      - name: Package Windows bundle
+        shell: pwsh
+        run: |
+          $version = $env:RELEASE_TAG.TrimStart('v')
+          New-Item -ItemType Directory -Path release-assets -Force | Out-Null
+          Compress-Archive `
+            -Path 'build/windows/x64/runner/Release/*' `
+            -DestinationPath "release-assets/OpenReading-Windows-x64-$version.zip" `
+            -Force
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-release
+          path: release-assets/*
+          if-no-files-found: error
+
+  linux:
+    name: Linux x64
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out release source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            clang cmake ninja-build pkg-config libgtk-3-dev \
+            liblzma-dev libglu1-mesa
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Generate localizations
+        run: flutter gen-l10n
+
+      - name: Build Linux release
+        run: flutter build linux --release
+
+      - name: Package Linux bundle
+        shell: bash
+        run: |
+          version="${RELEASE_TAG#v}"
+          mkdir -p release-assets
+          tar -C build/linux/x64/release -czf \
+            "release-assets/OpenReading-Linux-x64-${version}.tar.gz" bundle
+
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-release
+          path: release-assets/*
+          if-no-files-found: error
+
+  publish:
+    name: Publish GitHub Release
+    needs: [android, windows, linux]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Download all platform artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+
+      - name: Create or update release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          version="${RELEASE_TAG#v}"
+          notes_file="${RUNNER_TEMP}/release-notes.md"
+          cat > "$notes_file" <<EOF
+          ## 下载说明
+
+          - **Android arm64-v8a**：推荐，大多数现代手机和平板使用此版本
+          - **Android armeabi-v7a**：适用于较旧的 32 位 Android 设备
+          - **Android x86_64**：适用于 x86_64 模拟器或设备
+          - **Windows x64**：解压 ZIP 后运行 \`xxread.exe\`
+          - **Linux x64**：解压后运行 \`bundle/open_reading\`，需要 GTK 3 运行环境
+
+          此 Release 由 GitHub Actions 从 Tag \`${RELEASE_TAG}\` 自动构建。
+          EOF
+
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" release-assets/* --clobber
+            gh release edit "$RELEASE_TAG" \
+              --title "开元阅读 ${RELEASE_TAG}" \
+              --notes-file "$notes_file" \
+              --draft=false \
+              --latest
+          else
+            gh release create "$RELEASE_TAG" release-assets/* \
+              --target "$RELEASE_TAG" \
+              --title "开元阅读 ${RELEASE_TAG}" \
+              --notes-file "$notes_file" \
+              --latest
+          fi
+
+      - name: Show published assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release view "$RELEASE_TAG"
