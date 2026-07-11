@@ -10,6 +10,12 @@
   </p>
 
   <p>
+    <a href="https://open.xxread.top/"><strong>Open Reading website</strong></a> ·
+    <a href="https://community.xxread.top/">Xiaoyuan Reader Community</a> ·
+    <a href="https://xxread.top/">Xiaoyuan Reader (iOS only)</a>
+  </p>
+
+  <p>
     <a href="https://flutter.dev/"><img src="https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white" alt="Flutter"></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-2ea44f" alt="MIT License"></a>
     <img src="https://img.shields.io/badge/Reader_Engine-Flutter_Native-0ea5e9" alt="Flutter Native Reader Engine">
@@ -24,6 +30,14 @@ Open Reading is an open-source ebook reader built with Flutter. It keeps books,
 progress, bookmarks, and notes on the user's device by default while providing
 careful typography, TTS, annotations, reading statistics, optional AI tools,
 and community-extensible book sources.
+
+## Projects and websites
+
+| Name | Role | Website |
+| --- | --- | --- |
+| Open Reading | The open-source, cross-platform reader maintained in this repository | [open.xxread.top](https://open.xxread.top/) |
+| Xiaoyuan Reader | The user-facing reading product, currently available only on iOS | [xxread.top](https://xxread.top/) |
+| Xiaoyuan Reader Community | A community for reading, writing, and discussion | [community.xxread.top](https://community.xxread.top/) |
 
 ## Not a WebView wrapper — a native Flutter reading engine
 

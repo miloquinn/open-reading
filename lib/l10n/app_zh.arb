@@ -335,6 +335,14 @@
   "@languageEnglish": {
     "description": "英语"
   },
+  "languageJapanese": "日本語",
+  "@languageJapanese": {
+    "description": "日语（原生名称）"
+  },
+  "languageTraditionalChinese": "繁體中文",
+  "@languageTraditionalChinese": {
+    "description": "繁体中文（原生名称）"
+  },
   "typographySettings": "排版设置",
   "@typographySettings": {
     "description": "排版设置部分"
@@ -1062,6 +1070,25 @@
   "settingsHide": "隐藏",
   "settingsAiSaving": "保存中...",
   "settingsAiSaveConfig": "保存 AI 配置",
+  "settingsPageIntro": "只保留真正影响阅读体验的选项。",
+  "settingsAiSwipeHint": "左右滑动选择模型，点击卡片即可切换。",
+  "settingsAiLegacyIntro": "选择服务商和模型，填写 API Key 即可。其余参数保持默认。",
+  "settingsAiModelLabel": "模型",
+  "settingsAiUsingCustomParams": "正在使用自定义模型参数",
+  "settingsAiApiKeyStoredLocally": "仅保存在当前设备",
+  "settingsAiSaveAndEnable": "保存并启用",
+  "settingsAboutTagline": "开源、跨平台、专注阅读",
+  "settingsVersionLabel": "版本",
+  "settingsMaintainerLabel": "维护者",
+  "settingsLicenseLabel": "许可证",
+  "settingsViewSourceSubtitle": "查看开源项目",
+  "settingsJoinQqGroup": "加入 QQ 群",
+  "settingsQqOpenFailed": "无法打开 QQ，请确认已安装 QQ",
+  "contributorsTitle": "贡献者",
+  "contributorsSubtitle": "感谢每一位让 Open Reading 变得更好的人",
+  "contributorsOpenProfileFailed": "无法打开贡献者主页",
+  "contributorsEmpty": "暂时没有可展示的贡献者",
+  "contributorsLoadFailed": "贡献者加载失败，请检查网络后重试",
   "settingsDarkModeTitle": "夜间模式",
   "settingsCurrentValue": "当前：{value}",
   "settingsUiStyleTitle": "玻璃效果",

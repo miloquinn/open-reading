@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../utils/localization_extension.dart';
 import '../utils/page_style_helper.dart';
 import 'side_toast.dart';
 
@@ -25,9 +26,6 @@ class ContributorsView extends StatefulWidget {
 class _ContributorsViewState extends State<ContributorsView> {
   late final Dio _dio;
   late Future<List<_Contributor>> _contributorsFuture;
-
-  bool get _isChinese =>
-      Localizations.localeOf(context).languageCode.toLowerCase() == 'zh';
 
   @override
   void initState() {
@@ -81,7 +79,7 @@ class _ContributorsViewState extends State<ContributorsView> {
     if (!opened && mounted) {
       showSideToast(
         context,
-        _isChinese ? '无法打开贡献者主页' : 'Could not open contributor profile',
+        context.l10n.contributorsOpenProfileFailed,
         icon: Icons.error_outline_rounded,
       );
     }
@@ -123,16 +121,14 @@ class _ContributorsViewState extends State<ContributorsView> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _isChinese ? '贡献者' : 'Contributors',
+                      context.l10n.contributorsTitle,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w800,
                           ),
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      _isChinese
-                          ? '感谢每一位让 Open Reading 变得更好的人'
-                          : 'Thanks to everyone making Open Reading better',
+                      context.l10n.contributorsSubtitle,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: scheme.onSurfaceVariant,
                           ),
@@ -163,9 +159,7 @@ class _ContributorsViewState extends State<ContributorsView> {
                   height: 60,
                   child: Center(
                     child: Text(
-                      _isChinese
-                          ? '暂时没有可展示的贡献者'
-                          : 'No contributors to show yet',
+                      context.l10n.contributorsEmpty,
                       style: TextStyle(color: scheme.onSurfaceVariant),
                     ),
                   ),
@@ -257,13 +251,13 @@ class _ContributorsViewState extends State<ContributorsView> {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              _isChinese ? '贡献者加载失败，请检查网络后重试' : 'Could not load contributors',
+              context.l10n.contributorsLoadFailed,
               style: TextStyle(color: scheme.onErrorContainer),
             ),
           ),
           TextButton(
             onPressed: _retry,
-            child: Text(_isChinese ? '重试' : 'Retry'),
+            child: Text(context.l10n.retry),
           ),
         ],
       ),

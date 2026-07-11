@@ -332,6 +332,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get languageEnglish => 'English';
 
   @override
+  String get languageJapanese => '日本語';
+
+  @override
+  String get languageTraditionalChinese => '繁體中文';
+
+  @override
   String get typographySettings => '排版设置';
 
   @override
@@ -1297,6 +1303,63 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsAiSaveConfig => '保存 AI 配置';
 
   @override
+  String get settingsPageIntro => '只保留真正影响阅读体验的选项。';
+
+  @override
+  String get settingsAiSwipeHint => '左右滑动选择模型，点击卡片即可切换。';
+
+  @override
+  String get settingsAiLegacyIntro => '选择服务商和模型，填写 API Key 即可。其余参数保持默认。';
+
+  @override
+  String get settingsAiModelLabel => '模型';
+
+  @override
+  String get settingsAiUsingCustomParams => '正在使用自定义模型参数';
+
+  @override
+  String get settingsAiApiKeyStoredLocally => '仅保存在当前设备';
+
+  @override
+  String get settingsAiSaveAndEnable => '保存并启用';
+
+  @override
+  String get settingsAboutTagline => '开源、跨平台、专注阅读';
+
+  @override
+  String get settingsVersionLabel => '版本';
+
+  @override
+  String get settingsMaintainerLabel => '维护者';
+
+  @override
+  String get settingsLicenseLabel => '许可证';
+
+  @override
+  String get settingsViewSourceSubtitle => '查看开源项目';
+
+  @override
+  String get settingsJoinQqGroup => '加入 QQ 群';
+
+  @override
+  String get settingsQqOpenFailed => '无法打开 QQ，请确认已安装 QQ';
+
+  @override
+  String get contributorsTitle => '贡献者';
+
+  @override
+  String get contributorsSubtitle => '感谢每一位让 Open Reading 变得更好的人';
+
+  @override
+  String get contributorsOpenProfileFailed => '无法打开贡献者主页';
+
+  @override
+  String get contributorsEmpty => '暂时没有可展示的贡献者';
+
+  @override
+  String get contributorsLoadFailed => '贡献者加载失败，请检查网络后重试';
+
+  @override
   String get settingsDarkModeTitle => '夜间模式';
 
   @override
@@ -1668,5 +1731,1735 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String statsWeekNumber(Object week) {
     return '第$week周';
+  }
+}
+
+/// The translations for Chinese, as used in Taiwan (`zh_TW`).
+class AppLocalizationsZhTw extends AppLocalizationsZh {
+  AppLocalizationsZhTw() : super('zh_TW');
+
+  @override
+  String get appTitle => '開元閱讀';
+
+  @override
+  String get home => '首頁';
+
+  @override
+  String get library => '書庫';
+
+  @override
+  String get bookSources => '書源';
+
+  @override
+  String get bookSourcesSubtitle => '連接開放書源，跨來源搜尋可閱讀內容';
+
+  @override
+  String get bookSourcesAdd => '新增書源';
+
+  @override
+  String get bookSourcesSearchHint => '輸入書名或作者，搜尋已啟用書源';
+
+  @override
+  String get bookSourcesSearch => '搜尋';
+
+  @override
+  String get bookSourcesSearching => '正在搜尋書源…';
+
+  @override
+  String bookSourcesFailedCount(int count) {
+    return '$count 個書源請求失敗';
+  }
+
+  @override
+  String get bookSourcesSearchPrompt => '新增並啟用書源後，即可在這裡統一搜尋';
+
+  @override
+  String get bookSourcesNoResults => '沒有找到符合的書籍';
+
+  @override
+  String get bookSourcesNoSourcesTitle => '還沒有書源';
+
+  @override
+  String get bookSourcesNoSourcesDescription =>
+      '貼上相容 Open Reading Source Protocol 的服務位址即可接入。';
+
+  @override
+  String get bookSourcesManageTitle => '已接入書源';
+
+  @override
+  String get bookSourcesEnabled => '已啟用';
+
+  @override
+  String get bookSourcesDisabled => '已停用';
+
+  @override
+  String get bookSourcesRemove => '移除';
+
+  @override
+  String get bookSourcesRemoveTitle => '移除書源';
+
+  @override
+  String get bookSourcesRemoveMessage => '此操作只移除書源設定，不會刪除本機書籍。';
+
+  @override
+  String get bookSourcesCancel => '取消';
+
+  @override
+  String get bookSourcesConfirm => '確認';
+
+  @override
+  String get bookSourcesAddTitle => '新增開放書源';
+
+  @override
+  String get bookSourcesUrlLabel => '書源位址';
+
+  @override
+  String get bookSourcesUrlHint => 'https://example.com 或探索文件 URL';
+
+  @override
+  String get bookSourcesConnect => '連接並驗證';
+
+  @override
+  String get bookSourcesConnecting => '正在驗證協定…';
+
+  @override
+  String get bookSourcesAdded => '書源已新增';
+
+  @override
+  String get bookSourcesProtocolTitle => 'Open Reading Source Protocol';
+
+  @override
+  String get bookSourcesProtocolDescription =>
+      '統一探索、搜尋、書籍詳情、目錄與章節內文介面。開發者可架設原生書源，也可為既有合法內容服務撰寫轉接閘道。';
+
+  @override
+  String get bookSourcesProtocolDetails => '檢視協定';
+
+  @override
+  String get bookSourcesProtocolRepository => '協定開源倉庫';
+
+  @override
+  String get bookSourcesProtocolRepositoryOpen => '在 GitHub 檢視';
+
+  @override
+  String get bookSourcesProtocolRepositoryOpenFailed => '無法開啟書源協定倉庫';
+
+  @override
+  String get bookSourcesProtocolDialogTitle => '開放書源協定 v1';
+
+  @override
+  String get bookSourcesProtocolDialogBody =>
+      '服務在 /.well-known/open-reading-source.json 發布探索文件，並實作 /v1/search、書籍詳情、章節目錄與章節內文介面。首版僅支援公開、無需登入的 HTTP(S) 書源。';
+
+  @override
+  String get bookSourcesClose => '關閉';
+
+  @override
+  String bookSourcesIdentity(String sourceId, String bookId) {
+    return '書源 ID：$sourceId\n書籍 ID：$bookId';
+  }
+
+  @override
+  String get settings => '設定';
+
+  @override
+  String get statistics => '統計';
+
+  @override
+  String get reading => '閱讀';
+
+  @override
+  String get importBooks => '匯入書籍';
+
+  @override
+  String get darkMode => '深色模式';
+
+  @override
+  String get lightMode => '淺色模式';
+
+  @override
+  String get systemMode => '跟隨系統';
+
+  @override
+  String get theme => '主題';
+
+  @override
+  String get accent => '強調色';
+
+  @override
+  String get bookmarks => '書籤';
+
+  @override
+  String get notes => '筆記';
+
+  @override
+  String get highlights => '螢光標記';
+
+  @override
+  String get ttsReading => '語音朗讀';
+
+  @override
+  String get share => '分享';
+
+  @override
+  String get shareContent => '分享內容';
+
+  @override
+  String get shareCurrentPage => '分享目前頁面';
+
+  @override
+  String get shareSelectedText => '分享選取文字';
+
+  @override
+  String get shareProgress => '分享閱讀進度';
+
+  @override
+  String get play => '播放';
+
+  @override
+  String get pause => '暫停';
+
+  @override
+  String get stop => '停止';
+
+  @override
+  String get speed => '語速';
+
+  @override
+  String get pitch => '音調';
+
+  @override
+  String get language => '語言';
+
+  @override
+  String get fontSize => '字體大小';
+
+  @override
+  String get readingProgress => '閱讀進度';
+
+  @override
+  String get totalPages => '總頁數';
+
+  @override
+  String get currentPage => '目前頁面';
+
+  @override
+  String get readingTime => '閱讀時長';
+
+  @override
+  String get booksRead => '已讀書籍';
+
+  @override
+  String get todayReading => '今日閱讀';
+
+  @override
+  String get cancel => '取消';
+
+  @override
+  String get confirm => '確認';
+
+  @override
+  String get delete => '刪除';
+
+  @override
+  String get edit => '編輯';
+
+  @override
+  String get save => '儲存';
+
+  @override
+  String get back => '返回';
+
+  @override
+  String get next => '下一頁';
+
+  @override
+  String get previous => '上一頁';
+
+  @override
+  String get search => '搜尋';
+
+  @override
+  String get noResults => '找不到結果';
+
+  @override
+  String get loading => '載入中...';
+
+  @override
+  String get error => '錯誤';
+
+  @override
+  String get initializationFailed => '初始化失敗';
+
+  @override
+  String get unknownError => '未知錯誤';
+
+  @override
+  String get retry => '重試';
+
+  @override
+  String get appearanceSettings => '外觀設定';
+
+  @override
+  String get readingTips => '閱讀提示';
+
+  @override
+  String get readingFontSettingsMoved => '閱讀字體設定已移至閱讀介面';
+
+  @override
+  String get readingFontSettingsHint =>
+      '開啟任意書籍，點擊螢幕中央，在底部控制列中點擊「設定」按鈕，即可調整字體大小、行距、字元間距、頁面邊界與閱讀字體。';
+
+  @override
+  String get readingSettings => '閱讀設定';
+
+  @override
+  String get enableTts => '啟用朗讀功能';
+
+  @override
+  String get enableTtsHint => '開啟文字轉語音朗讀';
+
+  @override
+  String get ttsSpeedLabel => '朗讀速度';
+
+  @override
+  String get ttsSpeedHint => '調整朗讀的快慢';
+
+  @override
+  String get ttsVolumeLabel => '朗讀音量';
+
+  @override
+  String get ttsVolumeHint => '調整朗讀音量大小';
+
+  @override
+  String get ttsPitchLabel => '音調高低';
+
+  @override
+  String get ttsPitchHint => '調整朗讀音調';
+
+  @override
+  String get appSettings => '應用程式設定';
+
+  @override
+  String get appFont => '全域字體';
+
+  @override
+  String get fontSystem => '系統預設';
+
+  @override
+  String get fontSourceHanSans => '思源黑體';
+
+  @override
+  String get fontJetBrainsMono => 'JetBrains Mono';
+
+  @override
+  String get languageSystem => '跟隨系統';
+
+  @override
+  String get languageChinese => '简体中文';
+
+  @override
+  String get languageEnglish => 'English';
+
+  @override
+  String get languageJapanese => '日本語';
+
+  @override
+  String get languageTraditionalChinese => '繁體中文';
+
+  @override
+  String get typographySettings => '排版設定';
+
+  @override
+  String get fontFamilyLabel => '字體';
+
+  @override
+  String get fontSizeLabel => '字體大小';
+
+  @override
+  String get lineSpacingLabel => '行距';
+
+  @override
+  String get letterSpacingLabel => '字距';
+
+  @override
+  String get firstLineIndentLabel => '首行縮排';
+
+  @override
+  String get pageMarginLabel => '頁面邊界';
+
+  @override
+  String get resetDefault => '恢復預設';
+
+  @override
+  String get ttsPanelTitle => '語音朗讀';
+
+  @override
+  String get ttsPreviewEffect => '預覽效果';
+
+  @override
+  String get ttsVolume => '音量';
+
+  @override
+  String get ttsPitch => '音調';
+
+  @override
+  String get ttsSpeed => '語速';
+
+  @override
+  String get ttsPreviousSentence => '上一句';
+
+  @override
+  String get ttsNextSentence => '下一句';
+
+  @override
+  String get ttsTimerStop => '定時停止';
+
+  @override
+  String get ttsTimerOff => '不限時';
+
+  @override
+  String ttsTimerMinutes(Object minutes) {
+    return '$minutes 分鐘後停止';
+  }
+
+  @override
+  String get ttsPlaying => '正在播放';
+
+  @override
+  String get ttsPaused => '已暫停';
+
+  @override
+  String get ttsStopped => '已停止';
+
+  @override
+  String get ttsPreviousSentenceFailed => '上一句失敗';
+
+  @override
+  String get ttsNextSentenceFailed => '下一句失敗';
+
+  @override
+  String get ttsEmptyContentError => '目前頁面內容為空';
+
+  @override
+  String get ttsPlaybackFailed => '播放失敗';
+
+  @override
+  String get ttsOperationFailed => '操作失敗';
+
+  @override
+  String get pageTurningMode => '翻頁模式';
+
+  @override
+  String get pageTurningSlide => '左右滑動';
+
+  @override
+  String get pageTurningScroll => '上下捲動';
+
+  @override
+  String get tapZoneSettings => '點擊翻頁區域';
+
+  @override
+  String get tapZoneNextPage => '下一頁';
+
+  @override
+  String get tapZonePreviousPage => '上一頁';
+
+  @override
+  String get tapZoneMenu => '選單';
+
+  @override
+  String get tapZoneLegend => '圖例';
+
+  @override
+  String get highlightColor => '螢光筆顏色';
+
+  @override
+  String get highlightPreview => '預覽效果';
+
+  @override
+  String get highlightSampleText => '這是一段範例文字，';
+
+  @override
+  String get highlightSampleText2 => '這部分將被標記顯示，';
+
+  @override
+  String get highlightSampleText3 => '展示螢光筆效果。';
+
+  @override
+  String get colorLightBlue => '淺藍色';
+
+  @override
+  String get colorRed => '紅色';
+
+  @override
+  String get colorGreen => '綠色';
+
+  @override
+  String get colorPurple => '紫色';
+
+  @override
+  String get colorGold => '金色';
+
+  @override
+  String get colorOrange => '橙色';
+
+  @override
+  String get colorYellow => '黃色';
+
+  @override
+  String get colorDarkGreen => '深綠色';
+
+  @override
+  String get colorCustom => '自訂';
+
+  @override
+  String get noteTypeHighlight => '螢光標記';
+
+  @override
+  String get noteTypeUnderline => '底線';
+
+  @override
+  String get noteTypeNote => '筆記';
+
+  @override
+  String get noteTypeUnknown => '未知';
+
+  @override
+  String get bookFormatTXT => 'TXT';
+
+  @override
+  String get bookFormatEPUB => 'EPUB';
+
+  @override
+  String get bookFormatPDF => 'PDF';
+
+  @override
+  String get importBook => '匯入書籍';
+
+  @override
+  String get importFromFiles => '從檔案匯入';
+
+  @override
+  String get importNoBooks => '還沒有匯入任何書籍';
+
+  @override
+  String get importSuccess => '書籍匯入成功';
+
+  @override
+  String get importFailed => '匯入失敗';
+
+  @override
+  String get importProcessing => '正在處理書籍...';
+
+  @override
+  String get author => '作者';
+
+  @override
+  String get progress => '進度';
+
+  @override
+  String get continueReading => '繼續閱讀';
+
+  @override
+  String get recentBooks => '最近閱讀';
+
+  @override
+  String get allBooks => '全部書籍';
+
+  @override
+  String get emptyLibrary => '書庫是空的';
+
+  @override
+  String get deleteBook => '刪除書籍';
+
+  @override
+  String get deleteBookConfirm => '確定要刪除這本書嗎？';
+
+  @override
+  String get bookDeleted => '書籍已刪除';
+
+  @override
+  String get userAgreement => '使用者條款';
+
+  @override
+  String get acceptAgreement => '我已閱讀並同意';
+
+  @override
+  String get declineAgreement => '不同意';
+
+  @override
+  String get statsToday => '今日';
+
+  @override
+  String get statsThisWeek => '本週';
+
+  @override
+  String get statsTotal => '總計';
+
+  @override
+  String statsMinutes(Object minutes) {
+    return '$minutes 分鐘';
+  }
+
+  @override
+  String statsHours(Object hours) {
+    return '$hours 小時';
+  }
+
+  @override
+  String statsBooks(Object count) {
+    return '$count 本';
+  }
+
+  @override
+  String get statsConsecutiveDays => '連續閱讀';
+
+  @override
+  String get statsFocusTime => '專注時長';
+
+  @override
+  String get statsThisWeekTotal => '本週總計';
+
+  @override
+  String get statsKeepReading => '堅持每日閱讀';
+
+  @override
+  String get statsMaxSession => '最長單次';
+
+  @override
+  String get statsWeeklyTrend => '週閱讀趨勢';
+
+  @override
+  String get statsAchievements => '閱讀成就';
+
+  @override
+  String get readerToolbarMenu => '選單';
+
+  @override
+  String get readerToolbarTOC => '目錄';
+
+  @override
+  String get readerToolbarSettings => '設定';
+
+  @override
+  String get readerAddBookmark => '新增書籤';
+
+  @override
+  String get readerAddNote => '新增筆記';
+
+  @override
+  String get readerShare => '分享';
+
+  @override
+  String get bookmarkAdded => '已新增書籤';
+
+  @override
+  String get bookmarkRemoved => '已移除書籤';
+
+  @override
+  String get themeBlue => '海洋藍';
+
+  @override
+  String get themePurple => '神秘紫';
+
+  @override
+  String get themeGreen => '森林綠';
+
+  @override
+  String get themeOrange => '活力橙';
+
+  @override
+  String get themeRed => '熱情紅';
+
+  @override
+  String get themeCustom => '自訂';
+
+  @override
+  String get tapZoneLeftRight => '左/右';
+
+  @override
+  String get tapZoneLeftCenterRight => '左/中/右';
+
+  @override
+  String get homeTagline => '優雅閱讀';
+
+  @override
+  String get homeReadingStatsTitle => '閱讀統計';
+
+  @override
+  String get homeTodayReadingMoment => '今日閱讀時光';
+
+  @override
+  String homeReadMinutesKeepGoing(int minutes) {
+    return '已閱讀 $minutes 分鐘，繼續保持';
+  }
+
+  @override
+  String get homeTodayReadingJourneyStart => '開始今天的閱讀之旅吧';
+
+  @override
+  String get homeTodayReadingKeepRhythm => '已完成今日閱讀，保持節奏';
+
+  @override
+  String get homeTodayReadingPrompt => '今天也要留點時間給閱讀';
+
+  @override
+  String homeTotalReadingHours(String hours) {
+    return '累計閱讀 $hours 小時';
+  }
+
+  @override
+  String get homeWeeklyReading => '本週閱讀';
+
+  @override
+  String get homeTotalReading => '累計閱讀';
+
+  @override
+  String get homeLibraryCount => '書架藏書';
+
+  @override
+  String get homeCollectionCount => '藏書';
+
+  @override
+  String get homeKeyMetrics => '關鍵指標';
+
+  @override
+  String get homeReadingRhythm => '閱讀節奏';
+
+  @override
+  String get homeAchievements => '閱讀成就';
+
+  @override
+  String get homeConsecutiveReading => '連續閱讀';
+
+  @override
+  String get homeConsecutiveReadingDesc => '保持每日閱讀習慣';
+
+  @override
+  String get homeFocusDuration => '專注時長';
+
+  @override
+  String get homeFocusDurationDesc => '單次最長閱讀時間';
+
+  @override
+  String get homeWeeklyTotal => '本週總計';
+
+  @override
+  String get homeWeeklyTotalDesc => '本週閱讀時長';
+
+  @override
+  String get homeRecentReading => '最近閱讀';
+
+  @override
+  String get homeWeeklyTrend => '本週閱讀趨勢';
+
+  @override
+  String homeBarTooltipMinutes(int minutes) {
+    return '$minutes 分鐘';
+  }
+
+  @override
+  String get unitMinute => '分鐘';
+
+  @override
+  String get unitHour => '小時';
+
+  @override
+  String get unitBook => '本';
+
+  @override
+  String get unitDay => '天';
+
+  @override
+  String get weekdayMonShort => '一';
+
+  @override
+  String get weekdayTueShort => '二';
+
+  @override
+  String get weekdayWedShort => '三';
+
+  @override
+  String get weekdayThuShort => '四';
+
+  @override
+  String get weekdayFriShort => '五';
+
+  @override
+  String get weekdaySatShort => '六';
+
+  @override
+  String get weekdaySunShort => '日';
+
+  @override
+  String get agreementTagline => '沉浸閱讀 · AI 助手 · 本機優先';
+
+  @override
+  String get agreementCardTitle => '使用者服務條款';
+
+  @override
+  String get agreementCardSubtitle => '請仔細閱讀以下內容';
+
+  @override
+  String get agreementWelcomeTitle => '歡迎使用開元閱讀';
+
+  @override
+  String get agreementWelcomeBody => '為確保你獲得穩定、可預期的閱讀體驗，請先閱讀並同意以下條款內容。';
+
+  @override
+  String get agreementFeatureFormatsTitle => '多格式支援';
+
+  @override
+  String get agreementFeatureFormatsBody => 'EPUB、PDF、TXT、MOBI 等多種格式';
+
+  @override
+  String get agreementFeatureCustomizationTitle => '個人化閱讀';
+
+  @override
+  String get agreementFeatureCustomizationBody => '自訂字體、顏色、排版等閱讀體驗';
+
+  @override
+  String get agreementFeatureSyncTitle => '本機優先';
+
+  @override
+  String get agreementFeatureSyncBody => '書籍、進度與筆記儲存在目前裝置，由你掌控';
+
+  @override
+  String get agreementFeatureTtsTitle => 'TTS 朗讀';
+
+  @override
+  String get agreementFeatureTtsBody => '智慧語音朗讀，解放雙眼，聽書更自由';
+
+  @override
+  String get agreementTapToAgreeHint => '點擊「同意並繼續」即表示您已閱讀並同意使用本應用程式';
+
+  @override
+  String get agreementExitApp => '離開應用程式';
+
+  @override
+  String get agreementAgreeAndContinue => '同意並繼續';
+
+  @override
+  String get agreementExitDialogContent => '如果您不同意使用者條款，將無法使用本應用程式。確定要離開嗎？';
+
+  @override
+  String get agreementConfirmExit => '確定離開';
+
+  @override
+  String get readerFileMissing => '書籍檔案不存在，請重新匯入';
+
+  @override
+  String get readerUnsupportedFormat => '原生閱讀器目前僅支援 EPUB 和 TXT';
+
+  @override
+  String get bootstrapDataServiceFailed => '資料系統初始化失敗';
+
+  @override
+  String get bootstrapImageManagerFailed => '圖片管理器初始化失敗';
+
+  @override
+  String homeFocusCompleted(int minutes) {
+    return '$minutes 分鐘專注已完成，做得很好。';
+  }
+
+  @override
+  String get homeDailyReadingGoal => '每日閱讀目標';
+
+  @override
+  String get homeAiAdviceSection => 'AI 閱讀建議';
+
+  @override
+  String get homeTodayGlance => '今日速覽';
+
+  @override
+  String get homeTodayReadingPlan => '今日閱讀計畫';
+
+  @override
+  String get homeViewAll => '檢視全部';
+
+  @override
+  String get homeSyncingReadingPlan => '正在同步你的閱讀計畫';
+
+  @override
+  String get homeGoalDoneSuggestReview => '今日目標已完成，建議做一次閱讀回顧';
+
+  @override
+  String homeRemainingToGoal(int minutes) {
+    return '還差 $minutes 分鐘即可完成今日目標';
+  }
+
+  @override
+  String get homePickBookHint => '從書架選一本想繼續的書，先完成 1 個專注番茄鐘。';
+
+  @override
+  String homeContinueBookHint(String title) {
+    return '優先繼續《$title》，完成後再切換其他書籍。';
+  }
+
+  @override
+  String get homeTodayActionAdvice => '今日行動建議';
+
+  @override
+  String homeProgressPercent(int percent) {
+    return '$percent% 進度';
+  }
+
+  @override
+  String homeStreakDays(int days) {
+    return '連讀 $days 天';
+  }
+
+  @override
+  String homeWeekMinutes(int minutes) {
+    return '本週 $minutes 分鐘';
+  }
+
+  @override
+  String get homePlanLoading => '計畫載入中';
+
+  @override
+  String homeGoalMinutesPerDay(int minutes) {
+    return '目標 $minutes 分鐘/天';
+  }
+
+  @override
+  String get homeAiAdviceForYou => 'AI 給你的閱讀建議';
+
+  @override
+  String homeBasedOnBook(String title) {
+    return '根據《$title》';
+  }
+
+  @override
+  String get homeTodayReadingMinutesLabel => '今日閱讀（分鐘）';
+
+  @override
+  String get homeTotalReadingMinutesLabel => '累計閱讀（分鐘）';
+
+  @override
+  String get homeGeneratingPlan => '正在產生今日閱讀計畫...';
+
+  @override
+  String get homeCompletedLabel => '完成';
+
+  @override
+  String get homeTodayGoalAchieved => '今日目標已達成';
+
+  @override
+  String homeMinutesRemaining(int minutes) {
+    return '還差 $minutes 分鐘';
+  }
+
+  @override
+  String homeReadOfGoalMinutes(int read, int goal) {
+    return '已讀 $read / $goal 分鐘';
+  }
+
+  @override
+  String homeSessionsToFinishGoal(int sessions) {
+    return '約 $sessions 次專注可完成今日目標';
+  }
+
+  @override
+  String get homeStreakLabel => '連續';
+
+  @override
+  String get homeWeekAchievedLabel => '週達標';
+
+  @override
+  String get homeFocusLabel => '專注';
+
+  @override
+  String homeDaysCount(int days) {
+    return '$days天';
+  }
+
+  @override
+  String homeTimesCount(int times) {
+    return '$times次';
+  }
+
+  @override
+  String homeFocusCountdown(String time) {
+    return '專注倒數 $time';
+  }
+
+  @override
+  String get homeGoLibraryRead => '去書庫閱讀';
+
+  @override
+  String get homeEndFocus => '結束專注';
+
+  @override
+  String homeFocusMinutesButton(int minutes) {
+    return '專注 $minutes 分鐘';
+  }
+
+  @override
+  String homeAdjustGoalMinutes(int minutes) {
+    return '調整目標：$minutes 分鐘';
+  }
+
+  @override
+  String get homeNoRecentReading => '暫無最近閱讀紀錄，去書庫開啟一本書開始閱讀吧。';
+
+  @override
+  String homeReadingProgressPercent(String percent) {
+    return '閱讀進度 $percent%';
+  }
+
+  @override
+  String get librarySearchHint => '搜尋書名、作者';
+
+  @override
+  String libraryFilterAll(int count) {
+    return '全部 $count';
+  }
+
+  @override
+  String libraryFilterReading(int count) {
+    return '在讀 $count';
+  }
+
+  @override
+  String libraryFilterFinished(int count) {
+    return '已讀 $count';
+  }
+
+  @override
+  String get libraryNoMatchingBooks => '沒有符合的書籍';
+
+  @override
+  String get libraryNoReadingBooks => '目前沒有在讀書籍';
+
+  @override
+  String get libraryNoFinishedBooks => '目前沒有已讀書籍';
+
+  @override
+  String get libraryNoBooks => '暫無書籍';
+
+  @override
+  String libraryProgressContinue(int percent) {
+    return '$percent% · 繼續閱讀';
+  }
+
+  @override
+  String libraryPageNumber(int page) {
+    return '第 $page 頁';
+  }
+
+  @override
+  String get libraryStartFromBeginning => '從頭開始';
+
+  @override
+  String get libraryBookInfo => '書籍資訊';
+
+  @override
+  String libraryFormatAndPages(String format, int pages) {
+    return '$format · $pages 頁';
+  }
+
+  @override
+  String get libraryDeleteBookHint => '將永久刪除此書籍';
+
+  @override
+  String get libraryBookTitle => '書名';
+
+  @override
+  String get libraryFormat => '格式';
+
+  @override
+  String libraryPagesCount(int pages) {
+    return '$pages 頁';
+  }
+
+  @override
+  String get libraryClose => '關閉';
+
+  @override
+  String get libraryConfirmDeleteTitle => '確認刪除';
+
+  @override
+  String libraryDeleteBookMessage(String title) {
+    return '確定要刪除《$title》嗎？檔案將從裝置中永久移除。';
+  }
+
+  @override
+  String libraryDeletingBook(String title) {
+    return '正在刪除《$title》...';
+  }
+
+  @override
+  String libraryBookDeletedToast(String title) {
+    return '《$title》已刪除';
+  }
+
+  @override
+  String libraryDeleteFailed(String error) {
+    return '刪除失敗：$error';
+  }
+
+  @override
+  String get libraryReadingBadge => '在讀';
+
+  @override
+  String get libraryDeletingBookFile => '刪除書籍檔案...';
+
+  @override
+  String get libraryDeletingCoverImage => '刪除封面圖片...';
+
+  @override
+  String get libraryCleaningDatabase => '清理資料庫紀錄...';
+
+  @override
+  String get libraryDeleteComplete => '刪除完成';
+
+  @override
+  String get readerPrefaceTitle => '內文前';
+
+  @override
+  String get readerModeHorizontalPage => '水平分頁';
+
+  @override
+  String get readerModeVerticalScrollHint => '上下捲動內文，左右滑動切換章節';
+
+  @override
+  String get readerModeWholeBookScrollHint => '整本書從頭到尾連續向下捲動';
+
+  @override
+  String get readerScrollByChapterTitle => '按章節捲動';
+
+  @override
+  String get readerScrollByChapterOnHint => '單章內上下捲動，左右滑動切換章節';
+
+  @override
+  String get readerScrollByChapterOffHint => '所有章節合併為一條連續的縱向內容流';
+
+  @override
+  String get readerModeHorizontalPageHint => '點擊左側上一頁，點擊右側下一頁';
+
+  @override
+  String get readerModeHorizontalSlideHint => '頁面跟隨手指橫向移動並吸附翻頁';
+
+  @override
+  String readerFontSizeValue(int size) {
+    return '字體大小  $size';
+  }
+
+  @override
+  String readerHorizontalMarginValue(int margin) {
+    return '左右頁面邊界  $margin';
+  }
+
+  @override
+  String readerVerticalMarginValue(int margin) {
+    return '上下頁面邊界  $margin';
+  }
+
+  @override
+  String readerChapterCount(int count) {
+    return '$count 章';
+  }
+
+  @override
+  String readerChapterFallback(int number) {
+    return '第 $number 章';
+  }
+
+  @override
+  String readerOpenFailed(String error) {
+    return '開啟失敗：$error';
+  }
+
+  @override
+  String get readerNoContent => '書籍沒有可顯示的內文';
+
+  @override
+  String readerStatusPaged(
+      int chapter, int chapterCount, int page, int pageCount) {
+    return '第 $chapter/$chapterCount 章 · $page/$pageCount 頁';
+  }
+
+  @override
+  String readerStatusScroll(int chapter, int chapterCount) {
+    return '第 $chapter/$chapterCount 章 · 縱向捲動';
+  }
+
+  @override
+  String get importPreparing => '準備匯入...';
+
+  @override
+  String importFailedWithError(String error) {
+    return '匯入失敗：$error';
+  }
+
+  @override
+  String get importLocalFile => '本機檔案';
+
+  @override
+  String get settingsAiTempHintMinimax => 'Temperature：MiniMax 建議 0.01 ~ 1.00';
+
+  @override
+  String get settingsAiCustomConfigTitle => '自訂 AI 設定';
+
+  @override
+  String settingsAiCurrentProvider(String provider) {
+    return '目前服務商：$provider';
+  }
+
+  @override
+  String get settingsAiTempErrorMinimax =>
+      'MiniMax 的 Temperature 必須在 0.01 ~ 1.00 之間';
+
+  @override
+  String get settingsAiTempErrorOutOfRange => 'Temperature 超出範圍，請按提示填寫';
+
+  @override
+  String get settingsApply => '套用';
+
+  @override
+  String get settingsAiCustomApplied => '已套用自訂參數，記得儲存設定';
+
+  @override
+  String get settingsAiApiKeyRequired => 'API Key 不能為空';
+
+  @override
+  String get settingsAiModelRequired => 'Model 不能為空';
+
+  @override
+  String get settingsAiBaseUrlInvalid => 'Base URL 必須是合法的 http/https 位址';
+
+  @override
+  String get settingsAiSettingsSaved => 'AI 設定已儲存';
+
+  @override
+  String settingsSaveFailed(String error) {
+    return '儲存失敗：$error';
+  }
+
+  @override
+  String get settingsVolumeKeyTurnTitle => '音量鍵翻頁';
+
+  @override
+  String get settingsVolumeKeyTurnSubtitle => '使用音量鍵控制翻頁';
+
+  @override
+  String get settingsShowStatusBarTitle => '閱讀時顯示系統狀態列';
+
+  @override
+  String get settingsShowStatusBarOnSubtitle => '已隱藏閱讀頁電量/時間 UI';
+
+  @override
+  String get settingsShowStatusBarOffSubtitle => '使用閱讀頁電量/時間 UI';
+
+  @override
+  String get settingsAiAssistantTitle => 'AI 閱讀助手';
+
+  @override
+  String get settingsSystemSettingsTitle => '系統設定';
+
+  @override
+  String get settingsKeepScreenOnTitle => '保持螢幕恆亮';
+
+  @override
+  String get settingsKeepScreenOnSubtitle => '閱讀時防止螢幕自動關閉';
+
+  @override
+  String get settingsAutoSaveTitle => '自動儲存';
+
+  @override
+  String get settingsAutoSaveSubtitle => '自動儲存閱讀進度';
+
+  @override
+  String get settingsHelpPlaceholder => '這裡可以放說明資訊';
+
+  @override
+  String get settingsAiConfigured => 'AI 已設定';
+
+  @override
+  String get settingsAiNotConfigured => '尚未設定 API Key';
+
+  @override
+  String get settingsAiReadyToUse => '可直接使用';
+
+  @override
+  String get settingsAiPendingConfig => '待設定';
+
+  @override
+  String settingsAiCurrentPreset(String preset) {
+    return '目前預設組合：$preset';
+  }
+
+  @override
+  String settingsAiCurrentCustom(String model) {
+    return '目前設定：自訂 · $model';
+  }
+
+  @override
+  String get settingsAiPresetIntro => '已內建常用服務商和模型，通常只需要選擇預設組合並輸入 API Key。';
+
+  @override
+  String get settingsAiProviderLabel => '服務商';
+
+  @override
+  String get settingsAiPresetHint => '選擇預設模型';
+
+  @override
+  String get settingsAiPresetLabel => '預設模型';
+
+  @override
+  String get settingsAiCustomButton => '自訂';
+
+  @override
+  String get settingsAiPresetSelectedHint => '選擇預設組合後只需輸入 API Key 即可使用。';
+
+  @override
+  String get settingsAiCustomActiveHint => '目前使用自訂參數，可隨時切回預設組合。';
+
+  @override
+  String get settingsAiApiKeyHint => '輸入後即可啟用目前預設組合';
+
+  @override
+  String get settingsShow => '顯示';
+
+  @override
+  String get settingsHide => '隱藏';
+
+  @override
+  String get settingsAiSaving => '儲存中...';
+
+  @override
+  String get settingsAiSaveConfig => '儲存 AI 設定';
+
+  @override
+  String get settingsPageIntro => '只保留真正影響閱讀體驗的選項。';
+
+  @override
+  String get settingsAiSwipeHint => '左右滑動選擇模型，點擊卡片即可切換。';
+
+  @override
+  String get settingsAiLegacyIntro => '選擇服務商和模型，填寫 API Key 即可。其餘參數保持預設。';
+
+  @override
+  String get settingsAiModelLabel => '模型';
+
+  @override
+  String get settingsAiUsingCustomParams => '正在使用自訂模型參數';
+
+  @override
+  String get settingsAiApiKeyStoredLocally => '僅儲存在目前裝置';
+
+  @override
+  String get settingsAiSaveAndEnable => '儲存並啟用';
+
+  @override
+  String get settingsAboutTagline => '開源、跨平台、專注閱讀';
+
+  @override
+  String get settingsVersionLabel => '版本';
+
+  @override
+  String get settingsMaintainerLabel => '維護者';
+
+  @override
+  String get settingsLicenseLabel => '授權條款';
+
+  @override
+  String get settingsViewSourceSubtitle => '檢視開源專案';
+
+  @override
+  String get settingsJoinQqGroup => '加入 QQ 群';
+
+  @override
+  String get settingsQqOpenFailed => '無法開啟 QQ，請確認已安裝 QQ';
+
+  @override
+  String get contributorsTitle => '貢獻者';
+
+  @override
+  String get contributorsSubtitle => '感謝每一位讓 Open Reading 變得更好的人';
+
+  @override
+  String get contributorsOpenProfileFailed => '無法開啟貢獻者主頁';
+
+  @override
+  String get contributorsEmpty => '暫時沒有可顯示的貢獻者';
+
+  @override
+  String get contributorsLoadFailed => '貢獻者載入失敗，請檢查網路後重試';
+
+  @override
+  String get settingsDarkModeTitle => '夜間模式';
+
+  @override
+  String settingsCurrentValue(String value) {
+    return '目前：$value';
+  }
+
+  @override
+  String get settingsUiStyleTitle => '玻璃效果';
+
+  @override
+  String get settingsGlassEffectSubtitle => '開啟半透明、背景模糊和懸浮層次效果';
+
+  @override
+  String get settingsAccentFollowTheme => '強調色：跟隨主題';
+
+  @override
+  String settingsAccentValue(String name) {
+    return '強調色：$name';
+  }
+
+  @override
+  String get settingsAppThemeTitle => '應用程式主題';
+
+  @override
+  String settingsCurrentThemeSummary(String theme, String accent) {
+    return '目前：$theme · $accent';
+  }
+
+  @override
+  String get settingsFollowAppTheme => '跟隨應用程式主題';
+
+  @override
+  String get settingsAccentColorTitle => '強調色';
+
+  @override
+  String get settingsThemeModeSystemHint => '跟隨系統外觀自動切換';
+
+  @override
+  String get settingsThemeModeLightHint => '一律使用淺色外觀';
+
+  @override
+  String get settingsThemeModeDarkHint => '一律使用深色外觀';
+
+  @override
+  String get settingsSelectAppTheme => '選擇應用程式主題';
+
+  @override
+  String get settingsDone => '完成';
+
+  @override
+  String get settingsAccentColorAdvice => '建議優先選擇應用程式主題，再視需要覆寫強調色。';
+
+  @override
+  String get settingsAccentFollowThemeOption => '跟隨主題';
+
+  @override
+  String get settingsAccentFollowThemeDesc => '使用目前應用程式主題的預設強調色';
+
+  @override
+  String get settingsAboutTitle => '關於應用程式';
+
+  @override
+  String get settingsAppName => '開元閱讀';
+
+  @override
+  String get settingsAuthor => '維護者：小元Niki';
+
+  @override
+  String get settingsGithubRepo => 'GitHub 倉庫';
+
+  @override
+  String get settingsNewYearGreeting => '一個專注、克制、可自由修改的跨平台閱讀器。';
+
+  @override
+  String get settingsGithubOpenFailed => '無法開啟 GitHub 連結';
+
+  @override
+  String get settingsIosOnlyFeature => '該功能僅支援 iOS';
+
+  @override
+  String settingsIosSyncResult(String storage, int books, int files) {
+    return '已同步到$storage\n書籍 $books 本，檔案複製 $files 個';
+  }
+
+  @override
+  String get settingsRestartRequiredReason => '此設定變更需要重新啟動應用程式才能完全生效。';
+
+  @override
+  String get settingsRestartRequiredTitle => '需要重新啟動應用程式';
+
+  @override
+  String settingsRestartPrompt(String reason) {
+    return '$reason\n\n是否現在重新啟動應用程式？';
+  }
+
+  @override
+  String get settingsRestartLater => '稍後';
+
+  @override
+  String get settingsRestartNow => '重新啟動';
+
+  @override
+  String get statsDetailedTitle => '詳細統計';
+
+  @override
+  String get statsRange7Days => '7天';
+
+  @override
+  String get statsRange30Days => '30天';
+
+  @override
+  String get statsRange90Days => '90天';
+
+  @override
+  String get statsRange1Year => '1年';
+
+  @override
+  String get statsRangeAll => '全部';
+
+  @override
+  String get statsTabOverview => '總覽';
+
+  @override
+  String get statsTabCharts => '圖表';
+
+  @override
+  String get statsTabBooks => '書籍';
+
+  @override
+  String get statsTabAchievements => '成就';
+
+  @override
+  String get statsReadingOverview => '閱讀總覽';
+
+  @override
+  String statsCumulativeHours(Object hours) {
+    return '累計 $hours 小時';
+  }
+
+  @override
+  String statsStreakEncouragement(Object days) {
+    return '保持節奏，你已經連續閱讀 $days 天';
+  }
+
+  @override
+  String get statsTotalDuration => '總時長';
+
+  @override
+  String get statsAvgSession => '平均單次';
+
+  @override
+  String statsDaysCount(Object count) {
+    return '$count 天';
+  }
+
+  @override
+  String get statsNoData => '暫無資料';
+
+  @override
+  String get statsPeriodEarlyMorning => '清晨 05:00-08:59';
+
+  @override
+  String get statsPeriodMorning => '上午 09:00-11:59';
+
+  @override
+  String get statsPeriodAfternoon => '下午 12:00-17:59';
+
+  @override
+  String get statsPeriodEvening => '晚上 18:00-21:59';
+
+  @override
+  String get statsPeriodLateNight => '深夜 22:00-04:59';
+
+  @override
+  String get statsTotalReadingTime => '總閱讀時長';
+
+  @override
+  String get statsTotalPagesRead => '總閱讀頁數';
+
+  @override
+  String get statsBooksReadCount => '閱讀書籍數';
+
+  @override
+  String get statsUnitPage => '頁';
+
+  @override
+  String get statsTodayProgress => '今日閱讀進度';
+
+  @override
+  String statsMinutesOfTarget(Object current, Object target) {
+    return '$current / $target 分鐘';
+  }
+
+  @override
+  String get statsPagesRead => '閱讀頁數';
+
+  @override
+  String statsPagesOfTarget(Object current, Object target) {
+    return '$current / $target 頁';
+  }
+
+  @override
+  String get statsReadingHabits => '閱讀習慣分析';
+
+  @override
+  String get statsBestReadingPeriod => '最佳閱讀時段';
+
+  @override
+  String get statsAvgSessionReading => '平均單次閱讀';
+
+  @override
+  String get statsMaxStreakDays => '最高連讀天數';
+
+  @override
+  String get statsFocusScore => '閱讀專注度';
+
+  @override
+  String get statsBookCount => '書籍數量';
+
+  @override
+  String get statsTrendAnalysis => '閱讀趨勢分析';
+
+  @override
+  String statsAxisMinutes(Object value) {
+    return '$value分';
+  }
+
+  @override
+  String statsAxisPages(Object value) {
+    return '$value頁';
+  }
+
+  @override
+  String statsAxisBooks(Object value) {
+    return '$value本';
+  }
+
+  @override
+  String statsAxisHour(Object hour) {
+    return '$hour時';
+  }
+
+  @override
+  String get statsTimeDistribution => '閱讀時間分布';
+
+  @override
+  String get statsFormatDistribution => '書籍格式分布';
+
+  @override
+  String get statsCompleted => '已完成';
+
+  @override
+  String get statsInProgress => '閱讀中';
+
+  @override
+  String get statsDurationRanking => '閱讀時長排行';
+
+  @override
+  String get statsProgressRanking => '閱讀進度排行';
+
+  @override
+  String statsPagesCount(Object count) {
+    return '$count頁';
+  }
+
+  @override
+  String statsSessionCount(Object count) {
+    return '$count 次工作階段';
+  }
+
+  @override
+  String statsAchievementsSummary(Object achieved, Object remaining) {
+    return '已獲得 $achieved 個成就，還有 $remaining 個等待解鎖';
+  }
+
+  @override
+  String get statsAchievementFirstReadTitle => '初次閱讀';
+
+  @override
+  String get statsAchievementFirstReadDesc => '完成第一次閱讀紀錄';
+
+  @override
+  String get statsAchievementNoviceTitle => '閱讀新手';
+
+  @override
+  String get statsAchievementNoviceDesc => '累計閱讀時長達到 10 小時';
+
+  @override
+  String get statsAchievementBookwormTitle => '書蟲';
+
+  @override
+  String get statsAchievementBookwormDesc => '累計閱讀時長達到 100 小時';
+
+  @override
+  String get statsAchievementExpertTitle => '閱讀達人';
+
+  @override
+  String get statsAchievementExpertDesc => '連續閱讀 7 天';
+
+  @override
+  String get statsAchievementOceanTitle => '知識海洋';
+
+  @override
+  String get statsAchievementOceanDesc => '閱讀頁數達到 10000 頁';
+
+  @override
+  String get statsAchievementScholarTitle => '博學者';
+
+  @override
+  String get statsAchievementScholarDesc => '閱讀 10 本不同的書籍';
+
+  @override
+  String get statsAchievementMarathonTitle => '閱讀馬拉松';
+
+  @override
+  String get statsAchievementMarathonDesc => '連續閱讀 30 天';
+
+  @override
+  String get statsAchievementFocusTitle => '專注達人';
+
+  @override
+  String get statsAchievementFocusDesc => '累計閱讀時長達到 500 小時';
+
+  @override
+  String statsProgressPercent(Object percent) {
+    return '進度：$percent%';
+  }
+
+  @override
+  String get statsGoalProgress => '閱讀目標進度';
+
+  @override
+  String get statsMonthlyReadingTime => '本月閱讀時長';
+
+  @override
+  String get statsWeeklyReadingTime => '本週閱讀時長';
+
+  @override
+  String get statsAvgDailyPages7d => '近 7 天日均頁數';
+
+  @override
+  String statsHoursCount(Object count) {
+    return '$count小時';
+  }
+
+  @override
+  String get statsSpeedTrend => '閱讀速度趨勢';
+
+  @override
+  String statsAvgSpeed(Object speed) {
+    return '平均：$speed頁/分鐘';
+  }
+
+  @override
+  String get statsReadingContinuity => '閱讀連續性';
+
+  @override
+  String statsCurrentStreak(Object days) {
+    return '目前連讀：$days天';
+  }
+
+  @override
+  String get statsHeatmapLess => '少';
+
+  @override
+  String get statsHeatmapMore => '多';
+
+  @override
+  String statsWeekNumber(Object week) {
+    return '第$week週';
   }
 }

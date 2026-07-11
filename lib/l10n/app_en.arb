@@ -327,13 +327,21 @@
   "@languageSystem": {
     "description": "Follow system language"
   },
-  "languageChinese": "Chinese",
+  "languageChinese": "简体中文",
   "@languageChinese": {
-    "description": "Chinese language"
+    "description": "Simplified Chinese language shown in its native name"
   },
   "languageEnglish": "English",
   "@languageEnglish": {
     "description": "English language"
+  },
+  "languageJapanese": "日本語",
+  "@languageJapanese": {
+    "description": "Japanese language shown in its native name"
+  },
+  "languageTraditionalChinese": "繁體中文",
+  "@languageTraditionalChinese": {
+    "description": "Traditional Chinese language shown in its native name"
   },
   "typographySettings": "Typography",
   "@typographySettings": {
@@ -1740,6 +1748,82 @@
   "settingsAiSaveConfig": "Save AI configuration",
   "@settingsAiSaveConfig": {
     "description": "Button label to save AI settings"
+  },
+  "settingsPageIntro": "Only the options that shape your reading experience.",
+  "@settingsPageIntro": {
+    "description": "Subtitle under the settings page title"
+  },
+  "settingsAiSwipeHint": "Swipe through models and tap a card to switch.",
+  "@settingsAiSwipeHint": {
+    "description": "Hint above the horizontal AI model card list"
+  },
+  "settingsAiLegacyIntro": "Choose a provider and model, then enter your API key.",
+  "@settingsAiLegacyIntro": {
+    "description": "Intro text on the legacy AI settings page"
+  },
+  "settingsAiModelLabel": "Model",
+  "@settingsAiModelLabel": {
+    "description": "Label of the AI model dropdown"
+  },
+  "settingsAiUsingCustomParams": "Using custom model settings",
+  "@settingsAiUsingCustomParams": {
+    "description": "Helper text when no preset matches the current AI settings"
+  },
+  "settingsAiApiKeyStoredLocally": "Stored on this device only",
+  "@settingsAiApiKeyStoredLocally": {
+    "description": "Hint of the API key field about local-only storage"
+  },
+  "settingsAiSaveAndEnable": "Save and enable",
+  "@settingsAiSaveAndEnable": {
+    "description": "Button label to save and enable AI settings"
+  },
+  "settingsAboutTagline": "Open source, cross-platform, focused on reading",
+  "@settingsAboutTagline": {
+    "description": "Tagline under the app name in the about card"
+  },
+  "settingsVersionLabel": "Version",
+  "@settingsVersionLabel": {
+    "description": "Version label in the about card"
+  },
+  "settingsMaintainerLabel": "Maintainer",
+  "@settingsMaintainerLabel": {
+    "description": "Maintainer label in the about card"
+  },
+  "settingsLicenseLabel": "License",
+  "@settingsLicenseLabel": {
+    "description": "License label in the about card"
+  },
+  "settingsViewSourceSubtitle": "View open-source project",
+  "@settingsViewSourceSubtitle": {
+    "description": "Subtitle of the GitHub repository row"
+  },
+  "settingsJoinQqGroup": "Join QQ group",
+  "@settingsJoinQqGroup": {
+    "description": "Row title to join the QQ group"
+  },
+  "settingsQqOpenFailed": "Could not open QQ. Please make sure QQ is installed.",
+  "@settingsQqOpenFailed": {
+    "description": "Toast when the QQ link fails to open"
+  },
+  "contributorsTitle": "Contributors",
+  "@contributorsTitle": {
+    "description": "Title of the contributors card"
+  },
+  "contributorsSubtitle": "Thanks to everyone making Open Reading better",
+  "@contributorsSubtitle": {
+    "description": "Subtitle of the contributors card"
+  },
+  "contributorsOpenProfileFailed": "Could not open contributor profile",
+  "@contributorsOpenProfileFailed": {
+    "description": "Toast when a contributor profile link fails to open"
+  },
+  "contributorsEmpty": "No contributors to show yet",
+  "@contributorsEmpty": {
+    "description": "Empty state of the contributors card"
+  },
+  "contributorsLoadFailed": "Could not load contributors",
+  "@contributorsLoadFailed": {
+    "description": "Error state of the contributors card"
   },
   "settingsDarkModeTitle": "Night mode",
   "@settingsDarkModeTitle": {

@@ -13,6 +13,12 @@
   </p>
 
   <p>
+    <a href="https://open.xxread.top/"><strong>开元阅读官网</strong></a> ·
+    <a href="https://community.xxread.top/">小元读书社区</a> ·
+    <a href="https://xxread.top/">小元读书（仅 iOS）</a>
+  </p>
+
+  <p>
     <a href="https://flutter.dev/"><img src="https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white" alt="Flutter"></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-2ea44f" alt="MIT License"></a>
     <img src="https://img.shields.io/badge/Reader_Engine-Flutter_Native-0ea5e9" alt="Flutter Native Reader Engine">
@@ -27,6 +33,17 @@
 开元阅读是一款使用 Flutter 构建的开源电子书阅读器。项目希望把阅读重新变得简单：
 书籍、进度和笔记默认留在自己的设备上，同时提供稳定排版、朗读、标注、阅读统计、
 可选 AI 辅助，以及能够由社区共同扩展的开放书源能力。
+
+## 🌐 项目与站点
+
+| 名称 | 定位 | 地址 |
+| --- | --- | --- |
+| 开元阅读 | 本仓库对应的开源、跨平台阅读器 | [open.xxread.top](https://open.xxread.top/) |
+| 小元读书 | 面向用户的阅读产品，目前仅提供 iOS 版本 | [xxread.top](https://xxread.top/) |
+| 小元读书社区 | 阅读、创作与交流社区 | [community.xxread.top](https://community.xxread.top/) |
+
+## 开元阅读，永远免费！用阅读，造福人类！
+## 书源协议已开源，希望大家，齐心协力，共筑阅读世界 
 
 ## 🚀 不是 WebView 套壳，是 Flutter 原生阅读引擎
 

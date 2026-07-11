@@ -895,9 +895,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  Localizations.localeOf(context).languageCode == 'zh'
-                      ? '只保留真正影响阅读体验的选项。'
-                      : 'Only the options that shape your reading experience.',
+                  context.l10n.settingsPageIntro,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: scheme.onSurfaceVariant,
                         height: 1.45,
@@ -991,7 +989,7 @@ class _SettingsPageState extends State<SettingsPage> {
       );
     }
 
-    final isZh = Localizations.localeOf(context).languageCode == 'zh';
+    final l10n = context.l10n;
     return Padding(
       padding: const EdgeInsets.only(bottom: 18),
       child: Column(
@@ -1000,9 +998,7 @@ class _SettingsPageState extends State<SettingsPage> {
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 2, 20, 12),
             child: Text(
-              isZh
-                  ? '左右滑动选择模型，点击卡片即可切换。'
-                  : 'Swipe through models and tap a card to switch.',
+              l10n.settingsAiSwipeHint,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
@@ -1646,13 +1642,13 @@ class _SettingsPageState extends State<SettingsPage> {
   // Kept temporarily for migration from the previous full-page AI editor.
   // ignore: unused_element
   Future<void> _openAiSettingsPage() async {
-    final isZh = Localizations.localeOf(context).languageCode == 'zh';
+    final l10n = context.l10n;
     await Navigator.of(context).push<void>(
       MaterialPageRoute(
         builder: (routeContext) => StatefulBuilder(
           builder: (routeContext, setRouteState) => Scaffold(
             appBar: AppBar(
-              title: Text(isZh ? 'AI 阅读助手' : 'AI Reading Assistant'),
+              title: Text(l10n.settingsAiAssistantTitle),
               scrolledUnderElevation: 0,
             ),
             body: SafeArea(
@@ -1660,9 +1656,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
                 children: [
                   Text(
-                    isZh
-                        ? '选择服务商和模型，填写 API Key 即可。其余参数保持默认。'
-                        : 'Choose a provider and model, then enter your API key.',
+                    l10n.settingsAiLegacyIntro,
                     style:
                         Theme.of(routeContext).textTheme.bodyMedium?.copyWith(
                               color: Theme.of(routeContext)
@@ -1686,7 +1680,6 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget _buildAiConfigurationForm(StateSetter setRouteState) {
     final l10n = context.l10n;
     final colorScheme = Theme.of(context).colorScheme;
-    final isZh = Localizations.localeOf(context).languageCode == 'zh';
     final currentSettings = (_aiDraftByProvider[_selectedAiProvider] ??
             AIProviderSettings.defaults(_selectedAiProvider))
         .normalized();
@@ -1700,7 +1693,7 @@ class _SettingsPageState extends State<SettingsPage> {
           key: ValueKey<String>('ai-provider-${_selectedAiProvider.value}'),
           initialValue: _selectedAiProvider,
           decoration: InputDecoration(
-            labelText: isZh ? '服务商' : 'Provider',
+            labelText: l10n.settingsAiProviderLabel,
             prefixIcon: const Icon(Icons.cloud_outlined),
             border: const OutlineInputBorder(),
           ),
@@ -1727,11 +1720,11 @@ class _SettingsPageState extends State<SettingsPage> {
           hint: Text(l10n.settingsAiPresetHint),
           isExpanded: true,
           decoration: InputDecoration(
-            labelText: isZh ? '模型' : 'Model',
+            labelText: l10n.settingsAiModelLabel,
             prefixIcon: const Icon(Icons.memory_rounded),
             border: const OutlineInputBorder(),
             helperText: matchedPreset == null
-                ? (isZh ? '正在使用自定义模型参数' : 'Using custom model settings')
+                ? l10n.settingsAiUsingCustomParams
                 : '${matchedPreset.vendor} · ${matchedPreset.model}',
           ),
           items: providerPresets
@@ -1766,7 +1759,7 @@ class _SettingsPageState extends State<SettingsPage> {
           },
           decoration: InputDecoration(
             labelText: 'API Key',
-            hintText: isZh ? '仅保存在当前设备' : 'Stored on this device only',
+            hintText: l10n.settingsAiApiKeyStoredLocally,
             prefixIcon: const Icon(Icons.key_rounded),
             border: const OutlineInputBorder(),
             suffixIcon: IconButton(
@@ -1827,7 +1820,7 @@ class _SettingsPageState extends State<SettingsPage> {
           label: Text(
             _isSavingAiSettings
                 ? l10n.settingsAiSaving
-                : (isZh ? '保存并启用' : 'Save and enable'),
+                : (l10n.settingsAiSaveAndEnable),
           ),
         ),
       ],
@@ -2227,6 +2220,15 @@ class _SettingsPageState extends State<SettingsPage> {
       case 'zh-CN':
       case 'zh_CN':
         return l10n.languageChinese;
+      case 'zh-TW':
+      case 'zh_TW':
+      case 'zh-Hant':
+      case 'zh_Hant':
+        return l10n.languageTraditionalChinese;
+      case 'ja':
+      case 'ja-JP':
+      case 'ja_JP':
+        return l10n.languageJapanese;
       case 'en':
       case 'en-US':
       case 'en_US':
@@ -2241,7 +2243,9 @@ class _SettingsPageState extends State<SettingsPage> {
     final options = [
       _LanguageOption(code: 'system', label: l10n.languageSystem),
       _LanguageOption(code: 'zh', label: l10n.languageChinese),
+      _LanguageOption(code: 'zh-TW', label: l10n.languageTraditionalChinese),
       _LanguageOption(code: 'en', label: l10n.languageEnglish),
+      _LanguageOption(code: 'ja', label: l10n.languageJapanese),
     ];
 
     showModalBottomSheet(
@@ -2842,7 +2846,6 @@ class _SettingsPageState extends State<SettingsPage> {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     final palette = PageStyleHelper.palette(context);
-    final isZh = Localizations.localeOf(context).languageCode == 'zh';
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -2875,9 +2878,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      isZh
-                          ? '开源、跨平台、专注阅读'
-                          : 'Open source, cross-platform, focused on reading',
+                      l10n.settingsAboutTagline,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: scheme.onSurfaceVariant,
                           ),
@@ -2890,9 +2891,9 @@ class _SettingsPageState extends State<SettingsPage> {
           const SizedBox(height: 18),
           const Divider(height: 1),
           const SizedBox(height: 14),
-          _buildAboutLine(isZh ? '版本' : 'Version', _appVersion),
-          _buildAboutLine(isZh ? '维护者' : 'Maintainer', '小元Niki'),
-          _buildAboutLine(isZh ? '许可证' : 'License', 'MIT'),
+          _buildAboutLine(l10n.settingsVersionLabel, _appVersion),
+          _buildAboutLine(l10n.settingsMaintainerLabel, '小元Niki'),
+          _buildAboutLine(l10n.settingsLicenseLabel, 'MIT'),
           const SizedBox(height: 14),
           _buildCommunityButton(
             onPressed: _openGithubRepo,
@@ -2900,7 +2901,7 @@ class _SettingsPageState extends State<SettingsPage> {
             foregroundColor: Colors.white,
             icon: const _GithubMark(),
             title: 'GitHub',
-            subtitle: isZh ? '查看开源项目' : 'View open-source project',
+            subtitle: l10n.settingsViewSourceSubtitle,
           ),
           const SizedBox(height: 10),
           _buildCommunityButton(
@@ -2908,7 +2909,7 @@ class _SettingsPageState extends State<SettingsPage> {
             backgroundColor: const Color(0xFF1677FF),
             foregroundColor: Colors.white,
             icon: const _QqMark(),
-            title: isZh ? '加入 QQ 群' : 'Join QQ group',
+            title: l10n.settingsJoinQqGroup,
             subtitle: '1003560209',
           ),
         ],
@@ -3028,9 +3029,7 @@ class _SettingsPageState extends State<SettingsPage> {
     if (!ok && mounted) {
       showSideToast(
         context,
-        Localizations.localeOf(context).languageCode == 'zh'
-            ? '无法打开 QQ，请确认已安装 QQ'
-            : 'Could not open QQ. Please make sure QQ is installed.',
+        context.l10n.settingsQqOpenFailed,
         icon: Icons.error_outline,
       );
     }

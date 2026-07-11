@@ -2,15 +2,9 @@
 cmake_minimum_required(VERSION 3.13)
 project(runner LANGUAGES CXX)
 
-# The name of the executable created for the application. Change this to change
-# the on-disk name of your application.
-# Set APP_NAME to "OpenReading" for English or "开元阅读" for Chinese
-option(APP_NAME_CN "Use Chinese app name" ON)
-if(APP_NAME_CN)
-    set(BINARY_NAME "开元阅读")
-else()
-    set(BINARY_NAME "OpenReading")
-endif()
+# Keep the native CMake target ASCII-only for compatibility across Linux
+# toolchains. The localized application name is configured in the UI layer.
+set(BINARY_NAME "open_reading")
 
 # The unique GTK application identifier for this application. See:
 # https://wiki.gnome.org/HowDoI/ChooseApplicationID

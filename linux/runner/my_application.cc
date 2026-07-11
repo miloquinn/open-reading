@@ -2,8 +2,9 @@
 
 #include <flutter_linux/flutter_linux.h>
 #include <clocale>
+#include <cstring>
 #ifdef GDK_WINDOWING_X11
-#include <gdk/gdkx>
+#include <gdk/gdkx.h>
 #endif
 
 #include "flutter/generated_plugin_registrant.h"
@@ -17,7 +18,7 @@ static const char* get_localized_app_name() {
     if (strstr(locale, "zh_CN") || strstr(locale, "zh_TW") ||
         strstr(locale, "zh-Hans") || strstr(locale, "zh-Hant") ||
         strstr(locale, "Chinese")) {
-      return "开元阅读";
+      return u8"开元阅读";
     }
   }
   // Default to English

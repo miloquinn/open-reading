@@ -1,5 +1,5 @@
 name: xxread
-description: "开源、跨平台、专注阅读的电子书阅读器。"
+description: "开元阅读（Open Reading）：本地优先、跨平台、开放书源的开源电子书阅读器。"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
