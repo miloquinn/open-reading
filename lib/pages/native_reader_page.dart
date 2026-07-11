@@ -69,7 +69,7 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
   String? _lastSavedLocation;
   bool _openPreviousChapterAtLastPage = false;
   bool _controlsVisible = false;
-  NativePageMode _pageMode = NativePageMode.verticalScroll;
+  NativePageMode _pageMode = NativePageMode.horizontalSlide;
   bool _scrollByChapter = true;
   int _continuousAnchorChapter = 0;
   Key _continuousCenterKey = GlobalKey();
@@ -161,7 +161,7 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
           (mode) => mode.name == name,
           orElse: () => name == 'horizontalPage'
               ? NativePageMode.instantPage
-              : NativePageMode.verticalScroll,
+              : NativePageMode.horizontalSlide,
         );
       }
       _fontSize = prefs.getDouble(_fontSizeKey) ?? 19;
@@ -2031,7 +2031,7 @@ Future<List<Map<String, dynamic>>> _parseEpubChapters(Uint8List bytes) async {
       final blocks = <Map<String, String>>[];
       final plainText = StringBuffer();
       final elements = document.body?.querySelectorAll(
-            'h1,h2,h3,h4,h5,h6,p,li,blockquote,pre,img,svg image',
+            'h1,h2,h3,h4,h5,h6,p,li,blockquote,pre,a,img,svg image',
           ) ??
           const <html_dom.Element>[];
       for (final element in elements) {
@@ -2049,6 +2049,9 @@ Future<List<Map<String, dynamic>>> _parseEpubChapters(Uint8List bytes) async {
           if (encoded != null) {
             blocks.add(<String, String>{'type': 'image', 'content': encoded});
           }
+          continue;
+        }
+        if (element.localName == 'a' && _hasEpubTextBlockAncestor(element)) {
           continue;
         }
         final text = element.text
@@ -2124,6 +2127,27 @@ Future<List<Map<String, dynamic>>> _parseEpubChapters(Uint8List bytes) async {
 
   append(epub.Chapters);
   return result;
+}
+
+bool _hasEpubTextBlockAncestor(html_dom.Element element) {
+  const blockTags = <String>{
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    'p',
+    'li',
+    'blockquote',
+    'pre',
+  };
+  html_dom.Element? ancestor = element.parent;
+  while (ancestor != null) {
+    if (blockTags.contains(ancestor.localName)) return true;
+    ancestor = ancestor.parent;
+  }
+  return false;
 }
 
 List<Map<String, dynamic>> _parseTxtFileInBackground(

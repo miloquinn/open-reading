@@ -6,6 +6,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart' as intl;
 
 import 'app_localizations_en.dart';
+import 'app_localizations_ja.dart';
 import 'app_localizations_zh.dart';
 
 // ignore_for_file: type=lint
@@ -95,7 +96,9 @@ abstract class AppLocalizations {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('en'),
-    Locale('zh')
+    Locale('ja'),
+    Locale('zh'),
+    Locale('zh', 'TW')
   ];
 
   /// The title of the application
@@ -716,10 +719,10 @@ abstract class AppLocalizations {
   /// **'Follow System'**
   String get languageSystem;
 
-  /// Chinese language
+  /// Simplified Chinese language shown in its native name
   ///
   /// In en, this message translates to:
-  /// **'Chinese'**
+  /// **'简体中文'**
   String get languageChinese;
 
   /// English language
@@ -727,6 +730,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'English'**
   String get languageEnglish;
+
+  /// Japanese language shown in its native name
+  ///
+  /// In en, this message translates to:
+  /// **'日本語'**
+  String get languageJapanese;
+
+  /// Traditional Chinese language shown in its native name
+  ///
+  /// In en, this message translates to:
+  /// **'繁體中文'**
+  String get languageTraditionalChinese;
 
   /// Typography settings section
   ///
@@ -2463,6 +2478,90 @@ abstract class AppLocalizations {
   /// **'Save AI configuration'**
   String get settingsAiSaveConfig;
 
+  /// Subtitle under the settings page title
+  ///
+  /// In en, this message translates to:
+  /// **'Only the options that shape your reading experience.'**
+  String get settingsPageIntro;
+
+  /// Hint above the horizontal AI model card list
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe through models and tap a card to switch.'**
+  String get settingsAiSwipeHint;
+
+  /// Intro text on the legacy AI settings page
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a provider and model, then enter your API key.'**
+  String get settingsAiLegacyIntro;
+
+  /// Label of the AI model dropdown
+  ///
+  /// In en, this message translates to:
+  /// **'Model'**
+  String get settingsAiModelLabel;
+
+  /// Helper text when no preset matches the current AI settings
+  ///
+  /// In en, this message translates to:
+  /// **'Using custom model settings'**
+  String get settingsAiUsingCustomParams;
+
+  /// Hint of the API key field about local-only storage
+  ///
+  /// In en, this message translates to:
+  /// **'Stored on this device only'**
+  String get settingsAiApiKeyStoredLocally;
+
+  /// Button label to save and enable AI settings
+  ///
+  /// In en, this message translates to:
+  /// **'Save and enable'**
+  String get settingsAiSaveAndEnable;
+
+  /// Tagline under the app name in the about card
+  ///
+  /// In en, this message translates to:
+  /// **'Open source, cross-platform, focused on reading'**
+  String get settingsAboutTagline;
+
+  /// Version label in the about card
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get settingsVersionLabel;
+
+  /// Maintainer label in the about card
+  ///
+  /// In en, this message translates to:
+  /// **'Maintainer'**
+  String get settingsMaintainerLabel;
+
+  /// License label in the about card
+  ///
+  /// In en, this message translates to:
+  /// **'License'**
+  String get settingsLicenseLabel;
+
+  /// Subtitle of the GitHub repository row
+  ///
+  /// In en, this message translates to:
+  /// **'View open-source project'**
+  String get settingsViewSourceSubtitle;
+
+  /// Row title to join the QQ group
+  ///
+  /// In en, this message translates to:
+  /// **'Join QQ group'**
+  String get settingsJoinQqGroup;
+
+  /// Toast when the QQ link fails to open
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open QQ. Please make sure QQ is installed.'**
+  String get settingsQqOpenFailed;
+
   /// Title of the theme mode setting and modal
   ///
   /// In en, this message translates to:
@@ -3135,17 +3234,31 @@ class _AppLocalizationsDelegate
 
   @override
   bool isSupported(Locale locale) =>
-      <String>['en', 'zh'].contains(locale.languageCode);
+      <String>['en', 'ja', 'zh'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
+  // Lookup logic when language+country codes are specified.
+  switch (locale.languageCode) {
+    case 'zh':
+      {
+        switch (locale.countryCode) {
+          case 'TW':
+            return AppLocalizationsZhTw();
+        }
+        break;
+      }
+  }
+
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
     case 'en':
       return AppLocalizationsEn();
+    case 'ja':
+      return AppLocalizationsJa();
     case 'zh':
       return AppLocalizationsZh();
   }

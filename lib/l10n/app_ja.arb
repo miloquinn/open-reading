@@ -1,0 +1,1018 @@
+{
+  "@@locale": "ja",
+  "appTitle": "OpenReading",
+  "home": "ホーム",
+  "library": "本棚",
+  "bookSources": "ソース",
+  "bookSourcesSubtitle": "オープンソースに接続し、提供元をまたいで読める本を検索",
+  "bookSourcesAdd": "ソースを追加",
+  "bookSourcesSearchHint": "書名や著者で有効なソースを検索",
+  "bookSourcesSearch": "検索",
+  "bookSourcesSearching": "ソースを検索中…",
+  "bookSourcesFailedCount": "{count} 件のソースリクエストが失敗しました",
+  "@bookSourcesFailedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bookSourcesSearchPrompt": "ソースを追加して有効化すると、ここでまとめて検索できます",
+  "bookSourcesNoResults": "該当する書籍が見つかりません",
+  "bookSourcesNoSourcesTitle": "ソースがまだありません",
+  "bookSourcesNoSourcesDescription": "Open Reading Source Protocol に対応したサービスのアドレスを貼り付けて接続します。",
+  "bookSourcesManageTitle": "接続済みのソース",
+  "bookSourcesEnabled": "有効",
+  "bookSourcesDisabled": "無効",
+  "bookSourcesRemove": "削除",
+  "bookSourcesRemoveTitle": "ソースを削除",
+  "bookSourcesRemoveMessage": "ソースの設定のみを削除します。ローカルの書籍には影響しません。",
+  "bookSourcesCancel": "キャンセル",
+  "bookSourcesConfirm": "確認",
+  "bookSourcesAddTitle": "オープンソースを追加",
+  "bookSourcesUrlLabel": "ソースのアドレス",
+  "bookSourcesUrlHint": "https://example.com またはディスカバリードキュメントの URL",
+  "bookSourcesConnect": "接続して検証",
+  "bookSourcesConnecting": "プロトコルを検証中…",
+  "bookSourcesAdded": "ソースを追加しました",
+  "bookSourcesProtocolTitle": "Open Reading Source Protocol",
+  "bookSourcesProtocolDescription": "発見・検索・書籍詳細・目次・本文取得を統一したインターフェース。開発者はネイティブソースを構築したり、正規のコンテンツサービス向けにアダプターを作成したりできます。",
+  "bookSourcesProtocolDetails": "プロトコルを見る",
+  "bookSourcesProtocolRepository": "プロトコルのリポジトリ",
+  "bookSourcesProtocolRepositoryOpen": "GitHub で見る",
+  "bookSourcesProtocolRepositoryOpenFailed": "プロトコルのリポジトリを開けませんでした",
+  "bookSourcesProtocolDialogTitle": "オープンソースプロトコル v1",
+  "bookSourcesProtocolDialogBody": "サービスは /.well-known/open-reading-source.json でディスカバリードキュメントを公開し、/v1/search、書籍詳細、章の目次、章の本文の各エンドポイントを実装します。バージョン 1 はログイン不要の公開 HTTP(S) ソースのみをサポートします。",
+  "bookSourcesClose": "閉じる",
+  "bookSourcesIdentity": "ソース ID：{sourceId}\n書籍 ID：{bookId}",
+  "@bookSourcesIdentity": {
+    "placeholders": {
+      "sourceId": {
+        "type": "String"
+      },
+      "bookId": {
+        "type": "String"
+      }
+    }
+  },
+  "settings": "設定",
+  "statistics": "統計",
+  "reading": "読書",
+  "importBooks": "書籍を追加",
+  "darkMode": "ダークモード",
+  "lightMode": "ライトモード",
+  "systemMode": "システムに従う",
+  "theme": "テーマ",
+  "accent": "アクセントカラー",
+  "bookmarks": "ブックマーク",
+  "notes": "メモ",
+  "highlights": "ハイライト",
+  "ttsReading": "読み上げ",
+  "share": "共有",
+  "shareContent": "コンテンツを共有",
+  "shareCurrentPage": "現在のページを共有",
+  "shareSelectedText": "選択したテキストを共有",
+  "shareProgress": "読書の進捗を共有",
+  "play": "再生",
+  "pause": "一時停止",
+  "stop": "停止",
+  "speed": "速度",
+  "pitch": "ピッチ",
+  "language": "言語",
+  "fontSize": "文字サイズ",
+  "readingProgress": "読書の進捗",
+  "totalPages": "総ページ数",
+  "currentPage": "現在のページ",
+  "readingTime": "読書時間",
+  "booksRead": "読了した本",
+  "todayReading": "今日の読書",
+  "cancel": "キャンセル",
+  "confirm": "確認",
+  "delete": "削除",
+  "edit": "編集",
+  "save": "保存",
+  "back": "戻る",
+  "next": "次のページ",
+  "previous": "前のページ",
+  "search": "検索",
+  "noResults": "結果が見つかりません",
+  "loading": "読み込み中...",
+  "error": "エラー",
+  "initializationFailed": "初期化に失敗しました",
+  "unknownError": "不明なエラー",
+  "retry": "再試行",
+  "appearanceSettings": "外観設定",
+  "readingTips": "読書のヒント",
+  "readingFontSettingsMoved": "読書フォント設定は読書画面に移動しました",
+  "readingFontSettingsHint": "本を開いて画面中央をタップし、下部のツールバーの「設定」から文字サイズ・行間・字間・余白・読書フォントを調整できます。",
+  "readingSettings": "読書設定",
+  "enableTts": "読み上げを有効にする",
+  "enableTtsHint": "テキスト読み上げをオンにします",
+  "ttsSpeedLabel": "読み上げ速度",
+  "ttsSpeedHint": "読み上げの速さを調整",
+  "ttsVolumeLabel": "読み上げ音量",
+  "ttsVolumeHint": "読み上げの音量を調整",
+  "ttsPitchLabel": "ピッチ",
+  "ttsPitchHint": "読み上げのピッチを調整",
+  "appSettings": "アプリ設定",
+  "appFont": "アプリのフォント",
+  "fontSystem": "システム標準",
+  "fontSourceHanSans": "源ノ角ゴシック",
+  "fontJetBrainsMono": "JetBrains Mono",
+  "languageSystem": "システムに従う",
+  "languageChinese": "简体中文",
+  "languageEnglish": "English",
+  "languageJapanese": "日本語",
+  "languageTraditionalChinese": "繁體中文",
+  "typographySettings": "組版設定",
+  "fontFamilyLabel": "フォント",
+  "fontSizeLabel": "文字サイズ",
+  "lineSpacingLabel": "行間",
+  "letterSpacingLabel": "字間",
+  "firstLineIndentLabel": "字下げ",
+  "pageMarginLabel": "ページ余白",
+  "resetDefault": "初期値に戻す",
+  "ttsPanelTitle": "読み上げ",
+  "ttsPreviewEffect": "プレビュー",
+  "ttsVolume": "音量",
+  "ttsPitch": "ピッチ",
+  "ttsSpeed": "速度",
+  "ttsPreviousSentence": "前の文",
+  "ttsNextSentence": "次の文",
+  "ttsTimerStop": "タイマー停止",
+  "ttsTimerOff": "制限なし",
+  "ttsTimerMinutes": "{minutes} 分後に停止",
+  "@ttsTimerMinutes": {
+    "placeholders": {
+      "minutes": {}
+    }
+  },
+  "ttsPlaying": "再生中",
+  "ttsPaused": "一時停止中",
+  "ttsStopped": "停止しました",
+  "ttsPreviousSentenceFailed": "前の文の再生に失敗しました",
+  "ttsNextSentenceFailed": "次の文の再生に失敗しました",
+  "ttsEmptyContentError": "現在のページに内容がありません",
+  "ttsPlaybackFailed": "再生に失敗しました",
+  "ttsOperationFailed": "操作に失敗しました",
+  "pageTurningMode": "ページめくり",
+  "pageTurningSlide": "左右スワイプ",
+  "pageTurningScroll": "縦スクロール",
+  "tapZoneSettings": "タップ領域",
+  "tapZoneNextPage": "次のページ",
+  "tapZonePreviousPage": "前のページ",
+  "tapZoneMenu": "メニュー",
+  "tapZoneLegend": "凡例",
+  "highlightColor": "マーカーの色",
+  "highlightPreview": "プレビュー",
+  "highlightSampleText": "これはサンプルテキストです。",
+  "highlightSampleText2": "この部分がハイライトされ、",
+  "highlightSampleText3": "マーカーの効果を確認できます。",
+  "colorLightBlue": "ライトブルー",
+  "colorRed": "レッド",
+  "colorGreen": "グリーン",
+  "colorPurple": "パープル",
+  "colorGold": "ゴールド",
+  "colorOrange": "オレンジ",
+  "colorYellow": "イエロー",
+  "colorDarkGreen": "ダークグリーン",
+  "colorCustom": "カスタム",
+  "noteTypeHighlight": "ハイライト",
+  "noteTypeUnderline": "下線",
+  "noteTypeNote": "メモ",
+  "noteTypeUnknown": "不明",
+  "bookFormatTXT": "TXT",
+  "bookFormatEPUB": "EPUB",
+  "bookFormatPDF": "PDF",
+  "importBook": "書籍を追加",
+  "importFromFiles": "ファイルから追加",
+  "importNoBooks": "まだ書籍が追加されていません",
+  "importSuccess": "書籍を追加しました",
+  "importFailed": "追加に失敗しました",
+  "importProcessing": "書籍を処理中...",
+  "author": "著者",
+  "progress": "進捗",
+  "continueReading": "続きを読む",
+  "recentBooks": "最近の読書",
+  "allBooks": "すべての本",
+  "emptyLibrary": "本棚は空です",
+  "deleteBook": "書籍を削除",
+  "deleteBookConfirm": "この本を削除してもよろしいですか？",
+  "bookDeleted": "書籍を削除しました",
+  "userAgreement": "利用規約",
+  "acceptAgreement": "読んだうえで同意します",
+  "declineAgreement": "同意しない",
+  "statsToday": "今日",
+  "statsThisWeek": "今週",
+  "statsTotal": "合計",
+  "statsMinutes": "{minutes} 分",
+  "@statsMinutes": {
+    "placeholders": {
+      "minutes": {}
+    }
+  },
+  "statsHours": "{hours} 時間",
+  "@statsHours": {
+    "placeholders": {
+      "hours": {}
+    }
+  },
+  "statsBooks": "{count} 冊",
+  "@statsBooks": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "statsConsecutiveDays": "連続読書",
+  "statsFocusTime": "集中時間",
+  "statsThisWeekTotal": "今週の合計",
+  "statsKeepReading": "毎日の読書を続けよう",
+  "statsMaxSession": "最長セッション",
+  "statsWeeklyTrend": "週間の読書傾向",
+  "statsAchievements": "読書の実績",
+  "readerToolbarMenu": "メニュー",
+  "readerToolbarTOC": "目次",
+  "readerToolbarSettings": "設定",
+  "readerAddBookmark": "ブックマークを追加",
+  "readerAddNote": "メモを追加",
+  "readerShare": "共有",
+  "bookmarkAdded": "ブックマークを追加しました",
+  "bookmarkRemoved": "ブックマークを削除しました",
+  "themeBlue": "オーシャンブルー",
+  "themePurple": "ミスティックパープル",
+  "themeGreen": "フォレストグリーン",
+  "themeOrange": "ビビッドオレンジ",
+  "themeRed": "パッションレッド",
+  "themeCustom": "カスタム",
+  "tapZoneLeftRight": "左／右",
+  "tapZoneLeftCenterRight": "左／中央／右",
+  "homeTagline": "美しく読む",
+  "homeReadingStatsTitle": "読書統計",
+  "homeTodayReadingMoment": "今日の読書時間",
+  "homeReadMinutesKeepGoing": "{minutes} 分読みました。この調子で続けましょう",
+  "@homeReadMinutesKeepGoing": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "homeTodayReadingJourneyStart": "今日の読書を始めましょう",
+  "homeTodayReadingKeepRhythm": "今日の読書は順調です。リズムを保ちましょう",
+  "homeTodayReadingPrompt": "今日も読書の時間をつくりましょう",
+  "homeTotalReadingHours": "累計 {hours} 時間読書",
+  "@homeTotalReadingHours": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "homeWeeklyReading": "今週の読書",
+  "homeTotalReading": "累計読書",
+  "homeLibraryCount": "本棚の蔵書",
+  "homeCollectionCount": "蔵書",
+  "homeKeyMetrics": "主要な指標",
+  "homeReadingRhythm": "読書のリズム",
+  "homeAchievements": "読書の実績",
+  "homeConsecutiveReading": "連続読書",
+  "homeConsecutiveReadingDesc": "毎日の読書習慣を保つ",
+  "homeFocusDuration": "集中時間",
+  "homeFocusDurationDesc": "1 回の最長読書時間",
+  "homeWeeklyTotal": "今週の合計",
+  "homeWeeklyTotalDesc": "今週の読書時間",
+  "homeRecentReading": "最近の読書",
+  "homeWeeklyTrend": "今週の読書傾向",
+  "homeBarTooltipMinutes": "{minutes} 分",
+  "@homeBarTooltipMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "unitMinute": "分",
+  "unitHour": "時間",
+  "unitBook": "冊",
+  "unitDay": "日",
+  "weekdayMonShort": "月",
+  "weekdayTueShort": "火",
+  "weekdayWedShort": "水",
+  "weekdayThuShort": "木",
+  "weekdayFriShort": "金",
+  "weekdaySatShort": "土",
+  "weekdaySunShort": "日",
+  "agreementTagline": "没入型読書 · AI アシスタント · ローカルファースト",
+  "agreementCardTitle": "利用規約",
+  "agreementCardSubtitle": "以下の内容をよくお読みください",
+  "agreementWelcomeTitle": "OpenReading へようこそ",
+  "agreementWelcomeBody": "安定した読書体験を提供するため、まず以下の規約をお読みのうえ同意してください。",
+  "agreementFeatureFormatsTitle": "多形式対応",
+  "agreementFeatureFormatsBody": "EPUB、PDF、TXT、MOBI などに対応",
+  "agreementFeatureCustomizationTitle": "パーソナライズ",
+  "agreementFeatureCustomizationBody": "フォント・色・組版など読書体験を自由にカスタマイズ",
+  "agreementFeatureSyncTitle": "ローカルファースト",
+  "agreementFeatureSyncBody": "書籍・進捗・メモはお使いの端末に保存され、あなたが管理します",
+  "agreementFeatureTtsTitle": "読み上げ（TTS）",
+  "agreementFeatureTtsBody": "スマートな音声読み上げで目を休めながら本を楽しめます",
+  "agreementTapToAgreeHint": "「同意して続ける」をタップすると、規約を読み、本アプリの利用に同意したものとみなされます",
+  "agreementExitApp": "アプリを終了",
+  "agreementAgreeAndContinue": "同意して続ける",
+  "agreementExitDialogContent": "利用規約に同意しない場合、本アプリはご利用いただけません。終了してもよろしいですか？",
+  "agreementConfirmExit": "終了する",
+  "readerFileMissing": "書籍ファイルが見つかりません。再度追加してください。",
+  "readerUnsupportedFormat": "ネイティブリーダーは現在 EPUB と TXT のみ対応しています",
+  "bootstrapDataServiceFailed": "データシステムの初期化に失敗しました",
+  "bootstrapImageManagerFailed": "画像マネージャーの初期化に失敗しました",
+  "homeFocusCompleted": "{minutes} 分の集中セッションが完了しました。おつかれさまです！",
+  "@homeFocusCompleted": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "homeDailyReadingGoal": "1 日の読書目標",
+  "homeAiAdviceSection": "AI 読書アドバイス",
+  "homeTodayGlance": "今日のまとめ",
+  "homeTodayReadingPlan": "今日の読書プラン",
+  "homeViewAll": "すべて見る",
+  "homeSyncingReadingPlan": "読書プランを同期しています",
+  "homeGoalDoneSuggestReview": "今日の目標を達成しました。読書のふり返りはいかがですか",
+  "homeRemainingToGoal": "今日の目標まであと {minutes} 分",
+  "@homeRemainingToGoal": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "homePickBookHint": "本棚から続きを読みたい本を選び、まず 1 回の集中セッションを完了しましょう。",
+  "homeContinueBookHint": "まず『{title}』を読み進めてから、ほかの本に切り替えましょう。",
+  "@homeContinueBookHint": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "homeTodayActionAdvice": "今日のアクション",
+  "homeProgressPercent": "進捗 {percent}%",
+  "@homeProgressPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "homeStreakDays": "{days} 日連続",
+  "@homeStreakDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "homeWeekMinutes": "今週 {minutes} 分",
+  "@homeWeekMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "homePlanLoading": "プランを読み込み中",
+  "homeGoalMinutesPerDay": "目標 {minutes} 分／日",
+  "@homeGoalMinutesPerDay": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "homeAiAdviceForYou": "あなたへの AI 読書アドバイス",
+  "homeBasedOnBook": "『{title}』に基づく",
+  "@homeBasedOnBook": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "homeTodayReadingMinutesLabel": "今日の読書（分）",
+  "homeTotalReadingMinutesLabel": "累計読書（分）",
+  "homeGeneratingPlan": "今日の読書プランを作成中...",
+  "homeCompletedLabel": "達成",
+  "homeTodayGoalAchieved": "今日の目標を達成しました",
+  "homeMinutesRemaining": "あと {minutes} 分",
+  "@homeMinutesRemaining": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "homeReadOfGoalMinutes": "{read} / {goal} 分読了",
+  "@homeReadOfGoalMinutes": {
+    "placeholders": {
+      "read": {
+        "type": "int"
+      },
+      "goal": {
+        "type": "int"
+      }
+    }
+  },
+  "homeSessionsToFinishGoal": "あと約 {sessions} 回の集中で今日の目標を達成できます",
+  "@homeSessionsToFinishGoal": {
+    "placeholders": {
+      "sessions": {
+        "type": "int"
+      }
+    }
+  },
+  "homeStreakLabel": "連続",
+  "homeWeekAchievedLabel": "週間達成",
+  "homeFocusLabel": "集中",
+  "homeDaysCount": "{days}日",
+  "@homeDaysCount": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "homeTimesCount": "{times}回",
+  "@homeTimesCount": {
+    "placeholders": {
+      "times": {
+        "type": "int"
+      }
+    }
+  },
+  "homeFocusCountdown": "集中カウントダウン {time}",
+  "@homeFocusCountdown": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "homeGoLibraryRead": "本棚から読む",
+  "homeEndFocus": "集中を終了",
+  "homeFocusMinutesButton": "{minutes} 分集中する",
+  "@homeFocusMinutesButton": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "homeAdjustGoalMinutes": "目標を調整：{minutes} 分",
+  "@homeAdjustGoalMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "homeNoRecentReading": "最近の読書記録はありません。本棚から本を開いて読書を始めましょう。",
+  "homeReadingProgressPercent": "読書進捗 {percent}%",
+  "@homeReadingProgressPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "librarySearchHint": "書名・著者を検索",
+  "libraryFilterAll": "すべて {count}",
+  "@libraryFilterAll": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryFilterReading": "読書中 {count}",
+  "@libraryFilterReading": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryFilterFinished": "読了 {count}",
+  "@libraryFilterFinished": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryNoMatchingBooks": "該当する本がありません",
+  "libraryNoReadingBooks": "読書中の本はありません",
+  "libraryNoFinishedBooks": "読了した本はありません",
+  "libraryNoBooks": "本がまだありません",
+  "libraryProgressContinue": "{percent}% · 続きを読む",
+  "@libraryProgressContinue": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryPageNumber": "{page} ページ",
+  "@libraryPageNumber": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryStartFromBeginning": "最初から読む",
+  "libraryBookInfo": "書籍情報",
+  "libraryFormatAndPages": "{format} · {pages} ページ",
+  "@libraryFormatAndPages": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      },
+      "pages": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryDeleteBookHint": "この本は完全に削除されます",
+  "libraryBookTitle": "書名",
+  "libraryFormat": "形式",
+  "libraryPagesCount": "{pages} ページ",
+  "@libraryPagesCount": {
+    "placeholders": {
+      "pages": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryClose": "閉じる",
+  "libraryConfirmDeleteTitle": "削除の確認",
+  "libraryDeleteBookMessage": "『{title}』を削除しますか？ファイルは端末から完全に削除されます。",
+  "@libraryDeleteBookMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryDeletingBook": "『{title}』を削除中...",
+  "@libraryDeletingBook": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryBookDeletedToast": "『{title}』を削除しました",
+  "@libraryBookDeletedToast": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryDeleteFailed": "削除に失敗しました：{error}",
+  "@libraryDeleteFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryReadingBadge": "読書中",
+  "libraryDeletingBookFile": "書籍ファイルを削除中...",
+  "libraryDeletingCoverImage": "カバー画像を削除中...",
+  "libraryCleaningDatabase": "データベースの記録を整理中...",
+  "libraryDeleteComplete": "削除が完了しました",
+  "readerPrefaceTitle": "前付",
+  "readerModeHorizontalPage": "横めくり",
+  "readerModeVerticalScrollHint": "本文は縦スクロール、左右スワイプで章を切り替え",
+  "readerModeWholeBookScrollHint": "本全体を最初から最後まで連続して縦にスクロール",
+  "readerScrollByChapterTitle": "章ごとにスクロール",
+  "readerScrollByChapterOnHint": "章内は縦スクロール、左右スワイプで章を切り替え",
+  "readerScrollByChapterOffHint": "全章をひとつの連続した縦の流れとして表示",
+  "readerModeHorizontalPageHint": "左側タップで前のページ、右側タップで次のページ",
+  "readerModeHorizontalSlideHint": "ページが指に追従して横に動き、離すと吸着します",
+  "readerFontSizeValue": "文字サイズ  {size}",
+  "@readerFontSizeValue": {
+    "placeholders": {
+      "size": {
+        "type": "int"
+      }
+    }
+  },
+  "readerHorizontalMarginValue": "左右余白  {margin}",
+  "@readerHorizontalMarginValue": {
+    "placeholders": {
+      "margin": {
+        "type": "int"
+      }
+    }
+  },
+  "readerVerticalMarginValue": "上下余白  {margin}",
+  "@readerVerticalMarginValue": {
+    "placeholders": {
+      "margin": {
+        "type": "int"
+      }
+    }
+  },
+  "readerChapterCount": "{count} 章",
+  "@readerChapterCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "readerChapterFallback": "第 {number} 章",
+  "@readerChapterFallback": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "readerOpenFailed": "開けませんでした：{error}",
+  "@readerOpenFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "readerNoContent": "この本には表示できる本文がありません",
+  "readerStatusPaged": "第 {chapter}/{chapterCount} 章 · {page}/{pageCount} ページ",
+  "@readerStatusPaged": {
+    "placeholders": {
+      "chapter": {
+        "type": "int"
+      },
+      "chapterCount": {
+        "type": "int"
+      },
+      "page": {
+        "type": "int"
+      },
+      "pageCount": {
+        "type": "int"
+      }
+    }
+  },
+  "readerStatusScroll": "第 {chapter}/{chapterCount} 章 · 縦スクロール",
+  "@readerStatusScroll": {
+    "placeholders": {
+      "chapter": {
+        "type": "int"
+      },
+      "chapterCount": {
+        "type": "int"
+      }
+    }
+  },
+  "importPreparing": "インポートを準備中...",
+  "importFailedWithError": "追加に失敗しました：{error}",
+  "@importFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "importLocalFile": "ローカルファイル",
+  "settingsAiTempHintMinimax": "Temperature：MiniMax の推奨は 0.01 ~ 1.00",
+  "settingsAiCustomConfigTitle": "カスタム AI 設定",
+  "settingsAiCurrentProvider": "現在のプロバイダー：{provider}",
+  "@settingsAiCurrentProvider": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsAiTempErrorMinimax": "MiniMax の Temperature は 0.01 ~ 1.00 の範囲で指定してください",
+  "settingsAiTempErrorOutOfRange": "Temperature が範囲外です。ヒントに従って入力してください",
+  "settingsApply": "適用",
+  "settingsAiCustomApplied": "カスタムパラメーターを適用しました。設定の保存を忘れずに",
+  "settingsAiApiKeyRequired": "API Key を入力してください",
+  "settingsAiModelRequired": "Model を入力してください",
+  "settingsAiBaseUrlInvalid": "Base URL は有効な http/https アドレスである必要があります",
+  "settingsAiSettingsSaved": "AI 設定を保存しました",
+  "settingsSaveFailed": "保存に失敗しました：{error}",
+  "@settingsSaveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsVolumeKeyTurnTitle": "音量キーでページめくり",
+  "settingsVolumeKeyTurnSubtitle": "音量キーでページをめくります",
+  "settingsShowStatusBarTitle": "読書中にステータスバーを表示",
+  "settingsShowStatusBarOnSubtitle": "リーダーの電池／時刻表示は非表示です",
+  "settingsShowStatusBarOffSubtitle": "リーダーの電池／時刻表示を使用します",
+  "settingsAiAssistantTitle": "AI 読書アシスタント",
+  "settingsSystemSettingsTitle": "システム設定",
+  "settingsKeepScreenOnTitle": "画面を常にオン",
+  "settingsKeepScreenOnSubtitle": "読書中に画面が自動で消えないようにします",
+  "settingsAutoSaveTitle": "自動保存",
+  "settingsAutoSaveSubtitle": "読書の進捗を自動的に保存します",
+  "settingsHelpPlaceholder": "ここにヘルプ情報を表示できます",
+  "settingsAiConfigured": "AI 設定済み",
+  "settingsAiNotConfigured": "API Key が未設定です",
+  "settingsAiReadyToUse": "すぐに使えます",
+  "settingsAiPendingConfig": "設定待ち",
+  "settingsAiCurrentPreset": "現在のプリセット：{preset}",
+  "@settingsAiCurrentPreset": {
+    "placeholders": {
+      "preset": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsAiCurrentCustom": "現在の設定：カスタム · {model}",
+  "@settingsAiCurrentCustom": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsAiPresetIntro": "主要なプロバイダーとモデルを内蔵しています。通常はプリセットを選んで API Key を入力するだけです。",
+  "settingsAiProviderLabel": "プロバイダー",
+  "settingsAiPresetHint": "プリセットモデルを選択",
+  "settingsAiPresetLabel": "プリセットモデル",
+  "settingsAiCustomButton": "カスタム",
+  "settingsAiPresetSelectedHint": "プリセットを選んだら API Key を入力するだけで使えます。",
+  "settingsAiCustomActiveHint": "現在カスタムパラメーターを使用中です。いつでもプリセットに戻せます。",
+  "settingsAiApiKeyHint": "入力すると現在のプリセットが有効になります",
+  "settingsShow": "表示",
+  "settingsHide": "非表示",
+  "settingsAiSaving": "保存中...",
+  "settingsAiSaveConfig": "AI 設定を保存",
+  "settingsPageIntro": "読書体験に本当に影響する項目だけを残しています。",
+  "settingsAiSwipeHint": "左右にスワイプしてモデルを選び、カードをタップで切り替え。",
+  "settingsAiLegacyIntro": "プロバイダーとモデルを選び、API Key を入力してください。ほかのパラメーターは既定のままで構いません。",
+  "settingsAiModelLabel": "モデル",
+  "settingsAiUsingCustomParams": "カスタムモデルパラメーターを使用中",
+  "settingsAiApiKeyStoredLocally": "この端末のみに保存されます",
+  "settingsAiSaveAndEnable": "保存して有効化",
+  "settingsAboutTagline": "オープンソース・クロスプラットフォーム・読書に集中",
+  "settingsVersionLabel": "バージョン",
+  "settingsMaintainerLabel": "メンテナー",
+  "settingsLicenseLabel": "ライセンス",
+  "settingsViewSourceSubtitle": "オープンソースプロジェクトを見る",
+  "settingsJoinQqGroup": "QQ グループに参加",
+  "settingsQqOpenFailed": "QQ を開けませんでした。QQ がインストールされているか確認してください。",
+  "settingsDarkModeTitle": "ナイトモード",
+  "settingsCurrentValue": "現在：{value}",
+  "@settingsCurrentValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsUiStyleTitle": "ガラスエフェクト",
+  "settingsGlassEffectSubtitle": "半透明・背景ぼかし・浮遊感のあるレイヤー効果を有効にします",
+  "settingsAccentFollowTheme": "アクセントカラー：テーマに従う",
+  "settingsAccentValue": "アクセントカラー：{name}",
+  "@settingsAccentValue": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsAppThemeTitle": "アプリテーマ",
+  "settingsCurrentThemeSummary": "現在：{theme} · {accent}",
+  "@settingsCurrentThemeSummary": {
+    "placeholders": {
+      "theme": {
+        "type": "String"
+      },
+      "accent": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsFollowAppTheme": "アプリテーマに従う",
+  "settingsAccentColorTitle": "アクセントカラー",
+  "settingsThemeModeSystemHint": "システムの外観に合わせて自動で切り替え",
+  "settingsThemeModeLightHint": "常にライトモードを使用",
+  "settingsThemeModeDarkHint": "常にダークモードを使用",
+  "settingsSelectAppTheme": "アプリテーマを選択",
+  "settingsDone": "完了",
+  "settingsAccentColorAdvice": "まずアプリテーマを選び、必要に応じてアクセントカラーを上書きするのがおすすめです。",
+  "settingsAccentFollowThemeOption": "テーマに従う",
+  "settingsAccentFollowThemeDesc": "現在のアプリテーマの既定アクセントカラーを使用",
+  "settingsAboutTitle": "アプリについて",
+  "settingsAppName": "Open Reading",
+  "settingsAuthor": "メンテナー：小元Niki",
+  "settingsGithubRepo": "GitHub リポジトリ",
+  "settingsNewYearGreeting": "集中と節度を大切にした、自由に改変できるクロスプラットフォームリーダー。",
+  "settingsGithubOpenFailed": "GitHub のリンクを開けませんでした",
+  "settingsIosOnlyFeature": "この機能は iOS のみ対応しています",
+  "settingsIosSyncResult": "{storage} に同期しました\n書籍 {books} 冊、ファイル {files} 件をコピー",
+  "@settingsIosSyncResult": {
+    "placeholders": {
+      "storage": {
+        "type": "String"
+      },
+      "books": {
+        "type": "int"
+      },
+      "files": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsRestartRequiredReason": "この設定変更を完全に反映するには、アプリの再起動が必要です。",
+  "settingsRestartRequiredTitle": "再起動が必要です",
+  "settingsRestartPrompt": "{reason}\n\n今すぐ再起動しますか？",
+  "@settingsRestartPrompt": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsRestartLater": "後で",
+  "settingsRestartNow": "再起動",
+  "statsDetailedTitle": "詳細統計",
+  "statsRange7Days": "7日",
+  "statsRange30Days": "30日",
+  "statsRange90Days": "90日",
+  "statsRange1Year": "1年",
+  "statsRangeAll": "すべて",
+  "statsTabOverview": "概要",
+  "statsTabCharts": "グラフ",
+  "statsTabBooks": "書籍",
+  "statsTabAchievements": "実績",
+  "statsReadingOverview": "読書の概要",
+  "statsCumulativeHours": "累計 {hours} 時間",
+  "@statsCumulativeHours": {
+    "placeholders": {
+      "hours": {}
+    }
+  },
+  "statsStreakEncouragement": "この調子で。{days} 日連続で読書しています",
+  "@statsStreakEncouragement": {
+    "placeholders": {
+      "days": {}
+    }
+  },
+  "statsTotalDuration": "総時間",
+  "statsAvgSession": "平均セッション",
+  "statsDaysCount": "{count} 日",
+  "@statsDaysCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "statsNoData": "データがありません",
+  "statsPeriodEarlyMorning": "早朝 05:00-08:59",
+  "statsPeriodMorning": "午前 09:00-11:59",
+  "statsPeriodAfternoon": "午後 12:00-17:59",
+  "statsPeriodEvening": "夜 18:00-21:59",
+  "statsPeriodLateNight": "深夜 22:00-04:59",
+  "statsTotalReadingTime": "総読書時間",
+  "statsTotalPagesRead": "総読書ページ数",
+  "statsBooksReadCount": "読んだ本の数",
+  "statsUnitPage": "ページ",
+  "statsTodayProgress": "今日の読書進捗",
+  "statsMinutesOfTarget": "{current} / {target} 分",
+  "@statsMinutesOfTarget": {
+    "placeholders": {
+      "current": {},
+      "target": {}
+    }
+  },
+  "statsPagesRead": "読書ページ数",
+  "statsPagesOfTarget": "{current} / {target} ページ",
+  "@statsPagesOfTarget": {
+    "placeholders": {
+      "current": {},
+      "target": {}
+    }
+  },
+  "statsReadingHabits": "読書習慣の分析",
+  "statsBestReadingPeriod": "最も読む時間帯",
+  "statsAvgSessionReading": "平均セッション時間",
+  "statsMaxStreakDays": "最長連続日数",
+  "statsFocusScore": "読書の集中度",
+  "statsBookCount": "書籍数",
+  "statsTrendAnalysis": "読書トレンド分析",
+  "statsAxisMinutes": "{value}分",
+  "@statsAxisMinutes": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "statsAxisPages": "{value}頁",
+  "@statsAxisPages": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "statsAxisBooks": "{value}冊",
+  "@statsAxisBooks": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "statsAxisHour": "{hour}時",
+  "@statsAxisHour": {
+    "placeholders": {
+      "hour": {}
+    }
+  },
+  "statsTimeDistribution": "読書時間の分布",
+  "statsFormatDistribution": "書籍形式の分布",
+  "statsCompleted": "読了",
+  "statsInProgress": "読書中",
+  "statsDurationRanking": "読書時間ランキング",
+  "statsProgressRanking": "読書進捗ランキング",
+  "statsPagesCount": "{count}ページ",
+  "@statsPagesCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "statsSessionCount": "{count} セッション",
+  "@statsSessionCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "statsAchievementsSummary": "{achieved} 個の実績を獲得、残り {remaining} 個",
+  "@statsAchievementsSummary": {
+    "placeholders": {
+      "achieved": {},
+      "remaining": {}
+    }
+  },
+  "statsAchievementFirstReadTitle": "はじめての読書",
+  "statsAchievementFirstReadDesc": "初めての読書記録を達成",
+  "statsAchievementNoviceTitle": "読書ビギナー",
+  "statsAchievementNoviceDesc": "累計読書時間 10 時間を達成",
+  "statsAchievementBookwormTitle": "本の虫",
+  "statsAchievementBookwormDesc": "累計読書時間 100 時間を達成",
+  "statsAchievementExpertTitle": "読書の達人",
+  "statsAchievementExpertDesc": "7 日連続で読書",
+  "statsAchievementOceanTitle": "知識の海",
+  "statsAchievementOceanDesc": "読書ページ数 10,000 ページを達成",
+  "statsAchievementScholarTitle": "博識家",
+  "statsAchievementScholarDesc": "10 冊の異なる本を読む",
+  "statsAchievementMarathonTitle": "読書マラソン",
+  "statsAchievementMarathonDesc": "30 日連続で読書",
+  "statsAchievementFocusTitle": "集中の達人",
+  "statsAchievementFocusDesc": "累計読書時間 500 時間を達成",
+  "statsProgressPercent": "進捗：{percent}%",
+  "@statsProgressPercent": {
+    "placeholders": {
+      "percent": {}
+    }
+  },
+  "statsGoalProgress": "読書目標の進捗",
+  "statsMonthlyReadingTime": "今月の読書時間",
+  "statsWeeklyReadingTime": "今週の読書時間",
+  "statsAvgDailyPages7d": "直近 7 日の 1 日平均ページ数",
+  "statsHoursCount": "{count}時間",
+  "@statsHoursCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "statsSpeedTrend": "読書速度の推移",
+  "statsAvgSpeed": "平均：{speed}ページ/分",
+  "@statsAvgSpeed": {
+    "placeholders": {
+      "speed": {}
+    }
+  },
+  "statsReadingContinuity": "読書の継続性",
+  "statsCurrentStreak": "現在の連続日数：{days}日",
+  "@statsCurrentStreak": {
+    "placeholders": {
+      "days": {}
+    }
+  },
+  "statsHeatmapLess": "少",
+  "statsHeatmapMore": "多",
+  "statsWeekNumber": "第{week}週",
+  "@statsWeekNumber": {
+    "placeholders": {
+      "week": {}
+    }
+  }
+}

@@ -332,10 +332,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get languageSystem => 'Follow System';
 
   @override
-  String get languageChinese => 'Chinese';
+  String get languageChinese => '简体中文';
 
   @override
   String get languageEnglish => 'English';
+
+  @override
+  String get languageJapanese => '日本語';
+
+  @override
+  String get languageTraditionalChinese => '繁體中文';
 
   @override
   String get typographySettings => 'Typography';
@@ -1330,6 +1336,53 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsAiSaveConfig => 'Save AI configuration';
+
+  @override
+  String get settingsPageIntro =>
+      'Only the options that shape your reading experience.';
+
+  @override
+  String get settingsAiSwipeHint =>
+      'Swipe through models and tap a card to switch.';
+
+  @override
+  String get settingsAiLegacyIntro =>
+      'Choose a provider and model, then enter your API key.';
+
+  @override
+  String get settingsAiModelLabel => 'Model';
+
+  @override
+  String get settingsAiUsingCustomParams => 'Using custom model settings';
+
+  @override
+  String get settingsAiApiKeyStoredLocally => 'Stored on this device only';
+
+  @override
+  String get settingsAiSaveAndEnable => 'Save and enable';
+
+  @override
+  String get settingsAboutTagline =>
+      'Open source, cross-platform, focused on reading';
+
+  @override
+  String get settingsVersionLabel => 'Version';
+
+  @override
+  String get settingsMaintainerLabel => 'Maintainer';
+
+  @override
+  String get settingsLicenseLabel => 'License';
+
+  @override
+  String get settingsViewSourceSubtitle => 'View open-source project';
+
+  @override
+  String get settingsJoinQqGroup => 'Join QQ group';
+
+  @override
+  String get settingsQqOpenFailed =>
+      'Could not open QQ. Please make sure QQ is installed.';
 
   @override
   String get settingsDarkModeTitle => 'Night mode';
