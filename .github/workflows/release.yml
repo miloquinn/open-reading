@@ -46,7 +46,35 @@ jobs:
       - name: Generate localizations
         run: flutter gen-l10n
 
+      - name: Prepare Android release signing
+        shell: bash
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          for variable in \
+            ANDROID_KEYSTORE_BASE64 \
+            ANDROID_KEYSTORE_PASSWORD \
+            ANDROID_KEY_ALIAS \
+            ANDROID_KEY_PASSWORD; do
+            if [[ -z "${!variable}" ]]; then
+              echo "::error::Required Android signing secret is missing: ${variable}"
+              exit 1
+            fi
+          done
+
+          keystore_path="${RUNNER_TEMP}/open-reading-release.jks"
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$keystore_path"
+          chmod 600 "$keystore_path"
+          echo "ANDROID_KEYSTORE_PATH=$keystore_path" >> "$GITHUB_ENV"
+
       - name: Build release APKs
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: flutter build apk --release --split-per-abi
 
       - name: Name Android packages
