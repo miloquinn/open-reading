@@ -15,6 +15,8 @@
   <p>
     <a href="https://flutter.dev/"><img src="https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white" alt="Flutter"></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-2ea44f" alt="MIT License"></a>
+    <img src="https://img.shields.io/badge/Reader_Engine-Flutter_Native-0ea5e9" alt="Flutter Native Reader Engine">
+    <img src="https://img.shields.io/badge/Core_Reader-No_WebView-f97316" alt="Core Reader Without WebView">
     <a href="https://github.com/miloquinn/open-reading"><img src="https://img.shields.io/badge/GitHub-open--reading-181717?logo=github" alt="GitHub"></a>
     <a href="https://github.com/miloquinn/open-reading-source-protocol"><img src="https://img.shields.io/badge/Book_Source-Open_Protocol-7c3aed" alt="Open Reading Source Protocol"></a>
   </p>
@@ -26,6 +28,27 @@
 书籍、进度和笔记默认留在自己的设备上，同时提供稳定排版、朗读、标注、阅读统计、
 可选 AI 辅助，以及能够由社区共同扩展的开放书源能力。
 
+## 🚀 不是 WebView 套壳，是 Flutter 原生阅读引擎
+
+很多跨平台阅读器会把 EPUB 的 HTML 直接交给 WebView，再围绕网页容器拼接阅读功能。
+开元阅读的核心阅读页选择了一条更难、但上限更高的路：**自研 Flutter 原生阅读引擎**。
+
+从章节解析、文本样式、精确测量、分页切割、图片混排，到页码、目录、阅读位置和布局
+变化后的锚点恢复，都在 Flutter 渲染体系内完成。核心阅读链路不依赖 WebView，因此界面、
+手势、主题和阅读状态可以与整个 App 保持一致，而不是在 Flutter 与网页容器之间来回同步。
+
+原生引擎目前包含：
+
+- 基于 Flutter `TextPainter` 的真实尺寸测量与二分分页，不用粗略字符数假装页码；
+- 字号、行距、横纵边距和屏幕尺寸共同生成布局签名，配置变化后重新精确排版；
+- 内存分页缓存与章节级懒加载，降低重复排版和大文本一次性加载的成本；
+- EPUB 章节、样式与图片块解析，以及 TXT 等文本格式的原生章节索引；
+- 基于字符偏移的稳定阅读锚点，重新排版后尽可能回到同一阅读位置；
+- 分页完整性断言，确保分页前后不吞字、不重复字符。
+
+这不是把网页塞进 App 的阅读壳，而是一套可以继续优化性能、排版能力和交互体验的原生
+阅读基础设施。
+
 > [!IMPORTANT]
 > 在线书源通过独立开源的 **Open Reading Source Protocol（ORSP）** 接入。
 > 查看[协议仓库、规范、OpenAPI 和测试书源](https://github.com/miloquinn/open-reading-source-protocol)。
@@ -35,6 +58,7 @@
 | 方向 | 已实现能力 |
 | --- | --- |
 | 📚 本地阅读 | EPUB、PDF、TXT、ZIP 导入，本地书架与阅读进度管理 |
+| ⚡ 原生引擎 | 自研 Flutter 原生排版、精确分页、锚点恢复与章节级缓存，核心阅读链路无 WebView |
 | 🎨 阅读体验 | 字号、行距、边距、主题、分页缓存与多种阅读布局 |
 | 📝 阅读记录 | 书签、高亮、笔记、阅读统计与历史记录 |
 | 🔊 辅助功能 | 系统 TTS 文本朗读与阅读状态保持 |

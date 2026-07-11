@@ -9,9 +9,18 @@ Open Reading es un lector de libros electrónicos de código abierto creado con
 Flutter. Los libros, el progreso, los marcadores y las notas permanecen de
 forma predeterminada en el dispositivo del usuario.
 
+## Un motor nativo de Flutter, no una envoltura WebView
+
+La pantalla principal de lectura utiliza un motor propio y nativo de Flutter.
+El análisis de capítulos, la medición real con `TextPainter`, la paginación por
+búsqueda binaria, las imágenes, la caché y los anclajes de posición se procesan
+dentro del sistema de renderizado de Flutter. La ruta principal de lectura no
+depende de WebView.
+
 ## Funciones principales
 
 - Importación de EPUB, PDF, TXT y ZIP y biblioteca local
+- Maquetación nativa de Flutter, paginación precisa, caché y restauración de posición
 - Tipografía, espaciado, márgenes, temas y caché de paginación
 - Marcadores, resaltados, notas, historial y estadísticas
 - Texto a voz del sistema y servicios de IA configurables

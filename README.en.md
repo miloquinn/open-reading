@@ -12,6 +12,8 @@
   <p>
     <a href="https://flutter.dev/"><img src="https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white" alt="Flutter"></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-2ea44f" alt="MIT License"></a>
+    <img src="https://img.shields.io/badge/Reader_Engine-Flutter_Native-0ea5e9" alt="Flutter Native Reader Engine">
+    <img src="https://img.shields.io/badge/Core_Reader-No_WebView-f97316" alt="Core Reader Without WebView">
     <a href="https://github.com/miloquinn/open-reading-source-protocol"><img src="https://img.shields.io/badge/Book_Source-Open_Protocol-7c3aed" alt="Open Reading Source Protocol"></a>
   </p>
 </div>
@@ -23,6 +25,29 @@ progress, bookmarks, and notes on the user's device by default while providing
 careful typography, TTS, annotations, reading statistics, optional AI tools,
 and community-extensible book sources.
 
+## Not a WebView wrapper — a native Flutter reading engine
+
+Many cross-platform readers hand EPUB HTML to a WebView and build the reading
+experience around a browser container. Open Reading takes the harder route:
+its core reader is a custom **Flutter-native rendering and pagination engine**.
+
+Chapter parsing, styled text measurement, pagination, mixed image content,
+reading anchors, table-of-contents navigation, and layout restoration all stay
+inside Flutter's rendering system. The core reading path does not depend on a
+WebView, so gestures, themes, state, and animation remain native to the app.
+
+The engine includes:
+
+- real layout measurement with Flutter `TextPainter` and binary-search pagination;
+- layout signatures derived from typography, margins, and viewport dimensions;
+- in-memory pagination caches and chapter-level lazy loading;
+- native EPUB chapter, style, and image parsing plus indexed text chapters;
+- character-offset anchors that survive repagination;
+- integrity assertions ensuring pagination neither drops nor duplicates text.
+
+This is not a webpage placed inside an app. It is native reading infrastructure
+with room for deeper performance, typography, and interaction work.
+
 > [!IMPORTANT]
 > Online sources use the independently maintained **Open Reading Source
 > Protocol (ORSP)**. Visit the [protocol repository](https://github.com/miloquinn/open-reading-source-protocol)
@@ -33,6 +58,7 @@ and community-extensible book sources.
 | Area | Capabilities |
 | --- | --- |
 | Local reading | Import EPUB, PDF, TXT, and ZIP; manage a local library and progress |
+| Native engine | Custom Flutter layout, precise pagination, reading anchors, and chapter caches without WebView in the core reader |
 | Reading UI | Typography, spacing, margins, themes, layouts, and pagination cache |
 | Notes | Bookmarks, highlights, notes, history, and reading statistics |
 | Accessibility | System text-to-speech with reading-state preservation |
