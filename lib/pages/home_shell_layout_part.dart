@@ -249,23 +249,27 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
             // 预构建相邻页面，避免首次滑动时页面构建/数据加载挤在动画帧里造成掉帧
             allowImplicitScrolling: true,
             onPageChanged: (index) {
-              // 使用更稳定的方式避免在build过程中调用setState
+              // animateToPage 跨两页时会先经过中间页。程序化切换期间忽略
+              // 这个中间回调，避免底部导航出现“首页 -> 书库 -> 设置”的闪跳。
+              final targetIndex = _targetTabIndex;
+              if (targetIndex != null && index != targetIndex) {
+                return;
+              }
+              if (targetIndex == index) {
+                _targetTabIndex = null;
+              }
               if (mounted && _selectedIndex != index) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  _updateSelectedIndex(index);
-                });
+                _updateSelectedIndex(index);
               }
             },
-            // 优化滚动物理效果，减少过度滚动
-            physics: const BouncingScrollPhysics(
-              parent: AlwaysScrollableScrollPhysics(),
+            // PageScrollPhysics 保留整页吸附，同时减少 Bouncing 在页面落位时
+            // 额外的回弹帧，让三页之间的切换更干净。
+            physics: const PageScrollPhysics(
+              parent: ClampingScrollPhysics(),
             ),
             // 禁用页面捕捉以减少卡顿
             pageSnapping: true,
-            children: _navigationItems.map((item) {
-              // 使用RepaintBoundary和AutomaticKeepAliveClientMixin优化重绘和内存管理
-              return RepaintBoundary(child: _buildPageWrapper(item.page));
-            }).toList(),
+            children: _mobilePages,
           ),
           RepaintBoundary(child: _buildMobileTopBarOverlay(mediaQuery)),
           // 悬浮药丸导航栏（RepaintBoundary 隔离：避免 PageView 滑动时
@@ -445,16 +449,19 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
 
   void _switchToTab(int index) {
     if (index < 0 || index >= _navigationItems.length) return;
-    if (_selectedIndex == index) return;
+    if (_selectedIndex == index || _targetTabIndex == index) return;
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _updateSelectedIndex(index);
-    });
-
+    final currentPage = _pageController.hasClients
+        ? (_pageController.page ?? _selectedIndex.toDouble()).round()
+        : _selectedIndex;
+    final pageDistance = (index - currentPage).abs();
+    _targetTabIndex = index;
     _pageController.animateToPage(
       index,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeOutCubic,
+      // 跨两页时给动画更多时间，避免 300ms 内高速掠过书库页造成“卡一下”
+      // 的视觉感受；相邻页则保持轻快响应。
+      duration: Duration(milliseconds: pageDistance > 1 ? 420 : 260),
+      curve: Curves.easeInOutCubicEmphasized,
     );
   }
 

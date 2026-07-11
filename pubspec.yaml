@@ -1,5 +1,5 @@
 name: xxread
-description: "情人节快乐！"
+description: "开源、跨平台、专注阅读的电子书阅读器。"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -64,9 +64,8 @@ dependencies:
   # TTS 朗读
   flutter_tts: ^4.2.3
 
-  # WebDAV 同步
+  # 网络请求（AI 与封面检索）
   dio: ^5.9.0
-  connectivity_plus: ^6.1.5
 
   # 高亮笔记
   uuid: ^4.5.1

@@ -73,10 +73,12 @@ class PageStyleHelper {
               scheme.primaryContainer.withValues(alpha: isDark ? 0.40 : 0.56),
             ),
       border: scheme.outline.withValues(
-        alpha: isMaterial3Style ? (isDark ? 0.36 : 0.24) : (isDark ? 0.24 : 0.12),
+        alpha:
+            isMaterial3Style ? (isDark ? 0.36 : 0.24) : (isDark ? 0.24 : 0.12),
       ),
       iconMuted: scheme.onSurface.withValues(alpha: isDark ? 0.82 : 0.74),
-      textMuted: scheme.onSurfaceVariant.withValues(alpha: isDark ? 0.84 : 0.72),
+      textMuted:
+          scheme.onSurfaceVariant.withValues(alpha: isDark ? 0.84 : 0.72),
     );
   }
 

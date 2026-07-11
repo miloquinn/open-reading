@@ -8,7 +8,7 @@ class LayoutHelper {
   static const double largeMobileBreakpoint = 414.0; // iPhone Plus/Pro Max等大屏手机
   static const double tabletBreakpoint = 820.0; // 降低断点以支持小尺寸平板(7-8英寸)和折叠屏
   static const double desktopBreakpoint = 1200.0;
-  
+
   // 判断是否为普通手机
   static bool isSmallMobile(BuildContext context) {
     return MediaQuery.of(context).size.width < largeMobileBreakpoint;
@@ -35,12 +35,12 @@ class LayoutHelper {
   static bool isDesktop(BuildContext context) {
     return MediaQuery.of(context).size.width >= desktopBreakpoint;
   }
-  
+
   // 判断是否为宽屏设备（平板或桌面）
   static bool isWideScreen(BuildContext context) {
     return MediaQuery.of(context).size.width >= tabletBreakpoint;
   }
-  
+
   // 获取屏幕类型
   static ScreenType getScreenType(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
@@ -54,7 +54,7 @@ class LayoutHelper {
       return ScreenType.mobile;
     }
   }
-  
+
   // 根据屏幕类型返回不同的值
   static T getValue<T>(
     BuildContext context, {
@@ -74,7 +74,7 @@ class LayoutHelper {
         return mobile;
     }
   }
-  
+
   // 获取响应式边距
   static double getHorizontalPadding(BuildContext context) {
     return getValue(
@@ -85,9 +85,10 @@ class LayoutHelper {
       desktop: 64.0,
     );
   }
-  
+
   // 获取响应式列数
-  static int getColumnCount(BuildContext context, {
+  static int getColumnCount(
+    BuildContext context, {
     int mobileColumns = 1,
     int? tabletColumns,
     int? desktopColumns,
@@ -99,7 +100,7 @@ class LayoutHelper {
       desktop: desktopColumns ?? tabletColumns ?? mobileColumns * 3,
     );
   }
-  
+
   // 获取响应式字体大小
   static double getFontSize(
     BuildContext context, {
@@ -115,36 +116,36 @@ class LayoutHelper {
     );
     return baseFontSize * scale;
   }
-  
+
   // 获取书库网格的纵横比
   static double getBookGridAspectRatio(BuildContext context) {
     return getValue(
       context,
       mobile: 0.7,
-      tablet: 0.5,  // 平板封面再高一点
-      desktop: 0.8,  // 桌面也相应调整
+      tablet: 0.5, // 平板封面再高一点
+      desktop: 0.8, // 桌面也相应调整
     );
   }
-  
+
   // 获取书库网格的列数
   static int getBookGridColumns(BuildContext context) {
     return getValue(
       context,
       mobile: 2,
-      tablet: 3,    // 平板减为3列，封面更高更接近3:4
-      desktop: 5,   // 桌面增加到5列
+      tablet: 3, // 平板减为3列，封面更高更接近3:4
+      desktop: 5, // 桌面增加到5列
     );
   }
-  
+
   // 判断是否应该显示双页布局
   static bool shouldShowDoublePage(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
-    
+
     // 横屏且宽度足够时显示双页
     return width > height && width >= tabletBreakpoint;
   }
-  
+
   // 获取导航栏类型
   static NavigationType getNavigationType(BuildContext context) {
     if (isDesktop(context) || isTablet(context)) {

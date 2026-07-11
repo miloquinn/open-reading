@@ -1,4 +1,4 @@
-# 开元阅读代码库索引（OpenReading）
+# 开元阅读代码库索引（Open Reading）
 
 > 更新：2026-04-03
 > 范围：`OpenReading/lib/` + `OpenReading/test/`
@@ -30,7 +30,7 @@
 4. `lib/services/reading/reading_router_service.dart`、`lib/services/reading/web_reader_source_service.dart`：理解书籍如何被路由到阅读器。
 5. `lib/pages/foliate_reader_page.dart`：理解当前线上主阅读器。
 6. `lib/reader_core/`：理解解析、文档模型与阅读支撑实现。
-7. `lib/services/sync/`、`lib/services/tts_service.dart`、`lib/services/core/`：最后补齐同步、朗读与基础设施。
+7. `lib/services/tts_service.dart`、`lib/services/core/`：最后补齐朗读与基础设施。
 
 ## 分类规则
 
@@ -90,13 +90,12 @@
 | `lib/pages/home_widgets/home_mobile_top_bar_widget.dart` | 移动端首页顶部栏组件，承载品牌展示与顶部操作入口。 | Flutter UI、渲染层 | 支撑模块 |
 | `lib/pages/home_widgets/home_navigation_item.dart` | 首页导航项数据与表现组件，描述单个导航入口。 | Flutter UI | 支撑模块 |
 | `lib/pages/home_widgets/home_page_wrappers.dart` | 首页相关页面包装组件，统一处理 KeepAlive、样式和系统栏。 | Flutter UI | 支撑模块 |
-| `lib/pages/import_book_page.dart` | 书籍导入页面，处理本地文件导入与 WebDAV 远端导入。 | Flutter UI、文件系统 | 支撑模块 |
+| `lib/pages/import_book_page.dart` | 书籍导入页面，处理本地文件导入。 | Flutter UI、文件系统 | 支撑模块 |
 | `lib/pages/library_page.dart` | 书库页面，负责书籍列表、筛选、排序和进入阅读。 | Flutter UI、文件系统、渲染层 | 支撑模块 |
 | `lib/reader_core/` | 阅读支撑层，负责解析、文档模型与共享数据结构等基础能力。 | Parser、Document Model | 支撑模块 |
 | `lib/pages/settings_page.dart` | 设置页面，负责应用主题、语言、同步、备份和外观设置。 | Flutter UI、Icons Plus、Package Info、Provider、SharedPreferences、URL Launcher | 支撑模块 |
 | `lib/pages/settings_page_cover_actions_part.dart` | 设置页封面相关操作的 part 拆分文件，减少主页面复杂度。 | Flutter UI、Dart part | 拆分文件 |
 | `lib/pages/user_agreement_page.dart` | 用户协议页面，同时管理首次启动协议确认状态。 | Flutter UI、SharedPreferences、渲染层 | 支撑模块 |
-| `lib/pages/webdav_remote_import_page.dart` | WebDAV 远程导入页面，用于浏览云端目录并导入书籍。 | Flutter UI、文件系统 | 支撑模块 |
 
 ### 阅读内核
 
@@ -153,12 +152,6 @@
 | `lib/services/reading/reading_router_service.dart` | 阅读路由服务，按书籍格式打开当前 Foliate 主阅读页面。 | 服务层、文件系统、Flutter | 主链路路由 |
 | `lib/services/reading/reading_stats_dao.dart` | 阅读统计 DAO，负责阅读时长、页数和趋势数据的统计落库。 | 服务层 | 支撑模块 |
 | `lib/services/reading/web_reader_source_service.dart` | Web 阅读资源准备服务，把不同格式转换成 Web 阅读器可加载的源文件。 | 服务层、Archive ZIP、Path、JSON、文件系统 | 支撑模块 |
-| `lib/services/sync/ios_cloud_sync_service.dart` | iOS 云同步服务，负责文件目录快照和平台特定同步入口。 | 服务层、Path、Path Provider、JSON、文件系统、Flutter | 支撑模块 |
-| `lib/services/sync/sync_services.dart` | 同步模块聚合导出文件，统一暴露 WebDAV、iOS 云同步与辅助模型。 | 服务层、Barrel Export | 聚合导出 |
-| `lib/services/sync/sync_utils.dart` | 同步辅助工具，负责设备标识、序列化和同步通用函数。 | 服务层、SharedPreferences、UUID、JSON、文件系统、Flutter | 支撑模块 |
-| `lib/services/sync/webdav_sync_manifest_model.dart` | WebDAV 清单模型，定义同步清单的数据结构。 | 服务层 | 支撑模块 |
-| `lib/services/sync/webdav_sync_path_helper.dart` | WebDAV 路径辅助工具，统一管理云端目录和文件命名规则。 | 服务层 | 支撑模块 |
-| `lib/services/sync/webdav_sync_service.dart` | WebDAV 同步主服务，负责连接、上传、下载、冲突处理与状态通知。 | 服务层、Dio、HTML 解析、Path、Path Provider、SharedPreferences | 支撑模块 |
 | `lib/services/tts/base_tts.dart` | TTS 抽象基类，定义语音列表、播放状态和统一接口。 | 服务层、Flutter | 支撑模块 |
 | `lib/services/tts/tts_preferences.dart` | TTS 偏好设置服务，负责朗读配置项的持久化。 | 服务层、SharedPreferences | 支撑模块 |
 | `lib/services/tts_service.dart` | 当前主链路 TTS 服务，直接封装 FlutterTts 并管理朗读状态。 | 服务层、Flutter TTS、SharedPreferences、渲染层、Flutter | 当前主链路 |
@@ -187,7 +180,6 @@
 | `lib/widgets/app_brand_icon.dart` | 应用品牌图标组件，统一渲染开元阅读的品牌标识。 | Flutter UI | 支撑模块 |
 | `lib/widgets/scrolling_text.dart` | 滚动文本组件，用于超长文本的自动滚动显示。 | Flutter UI | 支撑模块 |
 | `lib/widgets/side_toast.dart` | 侧边提示组件，提供全局浮层式提示反馈。 | Flutter UI、渲染层 | 支撑模块 |
-| `lib/widgets/webdav_config_dialog.dart` | WebDAV 配置对话框，用于编辑服务器、账号和测试连接。 | Flutter UI、渲染层 | 支撑模块 |
 
 ### 测试代码
 

@@ -68,7 +68,7 @@ extension _HomeDashboardSections on _HomeDashboardPageState {
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    'AI 阅读建议',
+                    context.l10n.homeAiAdviceSection,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -78,7 +78,7 @@ extension _HomeDashboardSections on _HomeDashboardPageState {
               if ((sourceBookTitle ?? '').trim().isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Text(
-                  '基于《${sourceBookTitle!.trim()}》',
+                  context.l10n.homeBasedOnBook(sourceBookTitle!.trim()),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.72),
                     fontWeight: FontWeight.w600,

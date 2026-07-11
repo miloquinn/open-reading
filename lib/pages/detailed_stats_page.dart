@@ -10,6 +10,7 @@ import 'package:fl_chart/fl_chart.dart';
 import '../services/books/book_services.dart';
 import '../services/reading/reading_stats_dao.dart';
 import '../utils/glass_config.dart';
+import '../utils/localization_extension.dart';
 import '../models/book.dart';
 
 class _StatsBlurScope extends InheritedWidget {
@@ -81,23 +82,23 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
 
   // UI状态
   bool _isLoading = true;
-  String _selectedTimeRange = '7天';
+  String _selectedTimeRange = '7d';
   int _selectedStatType = 0; // 0: 时长, 1: 页数, 2: 书籍数
 
   // 根据选择的时间范围获取窗口化的每日数据
   List<Map<String, dynamic>> get _windowedDailyStats {
     int days;
     switch (_selectedTimeRange) {
-      case '7天':
+      case '7d':
         days = 7;
         break;
-      case '30天':
+      case '30d':
         days = 30;
         break;
-      case '90天':
+      case '90d':
         days = 90;
         break;
-      case '1年':
+      case '1y':
         days = 365;
         break;
       default:
@@ -107,6 +108,22 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
     return _dailyStats.length <= days
         ? _dailyStats
         : _dailyStats.sublist(_dailyStats.length - days);
+  }
+
+  String _timeRangeLabel(String range) {
+    final l10n = context.l10n;
+    switch (range) {
+      case '7d':
+        return l10n.statsRange7Days;
+      case '30d':
+        return l10n.statsRange30Days;
+      case '90d':
+        return l10n.statsRange90Days;
+      case '1y':
+        return l10n.statsRange1Year;
+      default:
+        return l10n.statsRangeAll;
+    }
   }
 
   // 平均阅读速度：页/分钟（基于窗口化数据）
@@ -128,13 +145,13 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
   // 平均单次阅读时长（以有阅读的天为“次”近似）
   String get _avgSessionDurationLabel {
     final avg = _sessionSummary['avgSessionMinutes'] ?? 0;
-    return '$avg 分钟';
+    return context.l10n.statsMinutes(avg);
   }
 
   // 最高连读天数
   String get _maxStreakLabel {
     final streak = _overallStats['streak'] ?? 0;
-    if (streak > 0) return '$streak 天';
+    if (streak > 0) return context.l10n.statsDaysCount(streak);
     int best = 0, cur = 0;
     for (final e in _windowedDailyStats) {
       if (((e['readingTime'] as int?) ?? 0) > 0) {
@@ -144,7 +161,7 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
         cur = 0;
       }
     }
-    return '$best 天';
+    return context.l10n.statsDaysCount(best);
   }
 
   // 阅读专注度（相对60分钟目标的达成度）
@@ -161,9 +178,10 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
   }
 
   String _inferBestReadingPeriod() {
+    final l10n = context.l10n;
     if (_hourlyDistribution.isEmpty ||
         _hourlyDistribution.values.every((v) => v <= 0)) {
-      return '暂无数据';
+      return l10n.statsNoData;
     }
 
     int sumRange(int start, int endInclusive) {
@@ -175,16 +193,16 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
     }
 
     final ranges = <MapEntry<String, int>>[
-      MapEntry('清晨 05:00-08:59', sumRange(5, 8)),
-      MapEntry('上午 09:00-11:59', sumRange(9, 11)),
-      MapEntry('下午 12:00-17:59', sumRange(12, 17)),
-      MapEntry('晚上 18:00-21:59', sumRange(18, 21)),
-      MapEntry('深夜 22:00-04:59', sumRange(22, 23) + sumRange(0, 4)),
+      MapEntry(l10n.statsPeriodEarlyMorning, sumRange(5, 8)),
+      MapEntry(l10n.statsPeriodMorning, sumRange(9, 11)),
+      MapEntry(l10n.statsPeriodAfternoon, sumRange(12, 17)),
+      MapEntry(l10n.statsPeriodEvening, sumRange(18, 21)),
+      MapEntry(l10n.statsPeriodLateNight, sumRange(22, 23) + sumRange(0, 4)),
     ];
 
     ranges.sort((a, b) => b.value.compareTo(a.value));
     if (ranges.first.value <= 0) {
-      return '暂无数据';
+      return l10n.statsNoData;
     }
     return ranges.first.key;
   }
@@ -515,7 +533,7 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        '详细统计',
+                        context.l10n.statsDetailedTitle,
                         style: TextStyle(
                           fontSize: 26,
                           fontWeight: FontWeight.w700,
@@ -560,8 +578,9 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
               color: scheme.primary,
               size: 20,
             ),
-            itemBuilder: (context) => ['7天', '30天', '90天', '1年', '全部']
-                .map((range) => PopupMenuItem(value: range, child: Text(range)))
+            itemBuilder: (context) => ['7d', '30d', '90d', '1y', 'all']
+                .map((range) => PopupMenuItem(
+                    value: range, child: Text(_timeRangeLabel(range))))
                 .toList(),
           ),
         ),
@@ -595,11 +614,11 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
                   onTap: (index) {
                     _handleTabTap(index);
                   },
-                  tabs: const [
-                    Tab(text: '总览'),
-                    Tab(text: '图表'),
-                    Tab(text: '书籍'),
-                    Tab(text: '成就'),
+                  tabs: [
+                    Tab(text: context.l10n.statsTabOverview),
+                    Tab(text: context.l10n.statsTabCharts),
+                    Tab(text: context.l10n.statsTabBooks),
+                    Tab(text: context.l10n.statsTabAchievements),
                   ],
                   labelColor: scheme.primary,
                   unselectedLabelColor:
@@ -672,6 +691,7 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
 
   Widget _buildOverviewHeroPanel() {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
     final totalReadingMinutes = _overallStats['totalReadingTime'] ?? 0;
     final totalHours = (totalReadingMinutes / 60.0).toStringAsFixed(1);
     final streakDays = _overallStats['streak'] ?? 0;
@@ -722,14 +742,14 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      '阅读总览',
+                      l10n.statsReadingOverview,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.w700,
                           ),
                     ),
                   ),
                   Text(
-                    _selectedTimeRange,
+                    _timeRangeLabel(_selectedTimeRange),
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
@@ -740,7 +760,7 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
               ),
               const SizedBox(height: 14),
               Text(
-                '累计 $totalHours 小时',
+                l10n.statsCumulativeHours(totalHours),
                 style: TextStyle(
                   fontSize: 30,
                   fontWeight: FontWeight.w800,
@@ -750,7 +770,7 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
               ),
               const SizedBox(height: 6),
               Text(
-                '保持节奏，你已经连续阅读 $streakDays 天',
+                l10n.statsStreakEncouragement(streakDays),
                 style: TextStyle(
                   fontSize: 14,
                   color: scheme.onSurface.withValues(alpha: 0.72),
@@ -762,11 +782,13 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
                 runSpacing: 8,
                 children: [
                   _buildOverviewChip(
-                      Icons.schedule_rounded, '总时长', '$totalReadingMinutes 分钟'),
-                  _buildOverviewChip(
-                      Icons.today_rounded, '今日阅读', '$todayMinutes 分钟'),
-                  _buildOverviewChip(
-                      Icons.timer_outlined, '平均单次', _avgSessionDurationLabel),
+                      Icons.schedule_rounded,
+                      l10n.statsTotalDuration,
+                      l10n.statsMinutes(totalReadingMinutes)),
+                  _buildOverviewChip(Icons.today_rounded, l10n.todayReading,
+                      l10n.statsMinutes(todayMinutes)),
+                  _buildOverviewChip(Icons.timer_outlined, l10n.statsAvgSession,
+                      _avgSessionDurationLabel),
                 ],
               ),
             ],
@@ -807,32 +829,33 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
 
   // 核心统计网格
   Widget _buildStatsGrid() {
+    final l10n = context.l10n;
     final stats = [
       {
-        'title': '总阅读时长',
+        'title': l10n.statsTotalReadingTime,
         'value': '${_overallStats['totalReadingTime'] ?? 0}',
-        'unit': '分钟',
+        'unit': l10n.unitMinute,
         'icon': Icons.schedule_rounded,
         'color': const Color(0xFF3B82F6),
       },
       {
-        'title': '总阅读页数',
+        'title': l10n.statsTotalPagesRead,
         'value': '${_overallStats['totalPages'] ?? 0}',
-        'unit': '页',
+        'unit': l10n.statsUnitPage,
         'icon': Icons.auto_stories_rounded,
         'color': const Color(0xFFF59E0B),
       },
       {
-        'title': '阅读书籍数',
+        'title': l10n.statsBooksReadCount,
         'value': '${_overallStats['totalBooks'] ?? 0}',
-        'unit': '本',
+        'unit': l10n.unitBook,
         'icon': Icons.library_books_rounded,
         'color': const Color(0xFF22C55E),
       },
       {
-        'title': '连续阅读',
+        'title': l10n.statsConsecutiveDays,
         'value': '${_overallStats['streak'] ?? 0}',
-        'unit': '天',
+        'unit': l10n.unitDay,
         'icon': Icons.local_fire_department_rounded,
         'color': const Color(0xFFA855F7),
       },
@@ -988,7 +1011,7 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    '今日阅读进度',
+                    context.l10n.statsTodayProgress,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
@@ -1008,11 +1031,12 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              '阅读时长',
+                              context.l10n.readingTime,
                               style: Theme.of(context).textTheme.bodyMedium,
                             ),
                             Text(
-                              '$todayTime / $targetTime 分钟',
+                              context.l10n
+                                  .statsMinutesOfTarget(todayTime, targetTime),
                               style: Theme.of(context)
                                   .textTheme
                                   .bodyMedium
@@ -1048,11 +1072,12 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              '阅读页数',
+                              context.l10n.statsPagesRead,
                               style: Theme.of(context).textTheme.bodyMedium,
                             ),
                             Text(
-                              '$todayPages / $targetPages 页',
+                              context.l10n
+                                  .statsPagesOfTarget(todayPages, targetPages),
                               style: Theme.of(context)
                                   .textTheme
                                   .bodyMedium
@@ -1133,7 +1158,7 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    '最近阅读',
+                    context.l10n.recentBooks,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
@@ -1207,6 +1232,7 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
 
   // 阅读习惯分析
   Widget _buildReadingHabits() {
+    final l10n = context.l10n;
     return ClipRRect(
       borderRadius: BorderRadius.circular(24),
       child: _GlassAwareBackdropFilter(
@@ -1256,7 +1282,7 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    '阅读习惯分析',
+                    l10n.statsReadingHabits,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
@@ -1265,18 +1291,19 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
               ),
               const SizedBox(height: 20),
               _buildHabitItem(
-                '最佳阅读时段',
+                l10n.statsBestReadingPeriod,
                 _inferBestReadingPeriod(),
                 Icons.access_time,
               ),
-              _buildHabitItem('平均单次阅读', _avgSessionDurationLabel, Icons.timer),
+              _buildHabitItem(l10n.statsAvgSessionReading,
+                  _avgSessionDurationLabel, Icons.timer),
               _buildHabitItem(
-                '最高连读天数',
+                l10n.statsMaxStreakDays,
                 _maxStreakLabel,
                 Icons.local_fire_department,
               ),
               _buildHabitItem(
-                '阅读专注度',
+                l10n.statsFocusScore,
                 _focusScoreLabel,
                 Icons.center_focus_strong,
               ),
@@ -1363,9 +1390,9 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
           ),
           child: Row(
             children: [
-              _buildTypeButton('阅读时长', 0),
-              _buildTypeButton('阅读页数', 1),
-              _buildTypeButton('书籍数量', 2),
+              _buildTypeButton(context.l10n.readingTime, 0),
+              _buildTypeButton(context.l10n.statsPagesRead, 1),
+              _buildTypeButton(context.l10n.statsBookCount, 2),
             ],
           ),
         ),
@@ -1429,7 +1456,7 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '阅读趋势分析',
+                context.l10n.statsTrendAnalysis,
                 style: Theme.of(
                   context,
                 ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
@@ -1581,13 +1608,13 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
               String label;
               if (_selectedStatType == 0) {
                 // 阅读时长 - 分钟
-                label = '${value.toInt()}分';
+                label = context.l10n.statsAxisMinutes(value.toInt());
               } else if (_selectedStatType == 1) {
                 // 阅读页数
-                label = '${value.toInt()}页';
+                label = context.l10n.statsAxisPages(value.toInt());
               } else {
                 // 书籍数量
-                label = '${value.toInt()}本';
+                label = context.l10n.statsAxisBooks(value.toInt());
               }
 
               return Padding(
@@ -1691,7 +1718,7 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '阅读时间分布',
+                context.l10n.statsTimeDistribution,
                 style: Theme.of(
                   context,
                 ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
@@ -1739,7 +1766,7 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
           tooltipRoundedRadius: 8,
           getTooltipItem: (group, groupIndex, rod, rodIndex) {
             return BarTooltipItem(
-              '${group.x}:00\n${rod.toY.toInt()}分钟',
+              '${group.x}:00\n${context.l10n.statsMinutes(rod.toY.toInt())}',
               const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
@@ -1781,7 +1808,7 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
               return Padding(
                 padding: const EdgeInsets.only(top: 8),
                 child: Text(
-                  '$hour时',
+                  context.l10n.statsAxisHour(hour),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         fontSize: 10,
                         color: Theme.of(context)
@@ -1808,7 +1835,7 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
               return Padding(
                 padding: const EdgeInsets.only(right: 6),
                 child: Text(
-                  '${value.toInt()}分',
+                  context.l10n.statsAxisMinutes(value.toInt()),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         fontSize: 10,
                         color: Theme.of(context)
@@ -1907,7 +1934,7 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '书籍格式分布',
+                context.l10n.statsFormatDistribution,
                 style: Theme.of(
                   context,
                 ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
@@ -1937,7 +1964,7 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
           PieChartSectionData(
             color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
             value: 1,
-            title: '暂无数据',
+            title: context.l10n.statsNoData,
             radius: 80,
             titleStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
                   fontWeight: FontWeight.w600,
@@ -2044,19 +2071,19 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
           child: Row(
             children: [
               _buildSummaryItem(
-                '已完成',
+                context.l10n.statsCompleted,
                 completedBooks,
                 Icons.check_circle,
                 Colors.green,
               ),
               _buildSummaryItem(
-                '阅读中',
+                context.l10n.statsInProgress,
                 inProgressBooks,
                 Icons.schedule,
                 Colors.orange,
               ),
               _buildSummaryItem(
-                '总计',
+                context.l10n.statsTotal,
                 _bookStats.length,
                 Icons.library_books,
                 Colors.blue,
@@ -2148,7 +2175,9 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                hasRealDuration ? '阅读时长排行' : '阅读进度排行',
+                hasRealDuration
+                    ? context.l10n.statsDurationRanking
+                    : context.l10n.statsProgressRanking,
                 style: Theme.of(
                   context,
                 ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
@@ -2271,7 +2300,9 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                readingTime > 0 ? '$readingTime分钟' : '$pagesRead页',
+                readingTime > 0
+                    ? context.l10n.statsMinutes(readingTime)
+                    : context.l10n.statsPagesCount(pagesRead),
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: Theme.of(context).colorScheme.primary,
@@ -2279,7 +2310,7 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
               ),
               Text(
                 readingTime > 0
-                    ? '$sessionCount 次会话'
+                    ? context.l10n.statsSessionCount(sessionCount)
                     : '${(progress * 100).toInt()}%',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(
@@ -2381,14 +2412,15 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '阅读成就',
+                      context.l10n.statsAchievements,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '已获得 $achievedCount 个成就，还有 ${totalCount - achievedCount} 个等待解锁',
+                      context.l10n.statsAchievementsSummary(
+                          achievedCount, totalCount - achievedCount),
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: Theme.of(
                               context,
@@ -2417,6 +2449,7 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
 
   /// 根据真实统计数据生成成就列表
   List<Map<String, dynamic>> _getAchievementsList() {
+    final l10n = context.l10n;
     final totalReadingMinutes = _overallStats['totalReadingTime'] ?? 0;
     final totalPages = _overallStats['totalPages'] ?? 0;
     final totalBooks = _overallStats['totalBooks'] ?? 0;
@@ -2424,64 +2457,64 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
 
     return [
       {
-        'title': '初次阅读',
-        'description': '完成第一次阅读记录',
+        'title': l10n.statsAchievementFirstReadTitle,
+        'description': l10n.statsAchievementFirstReadDesc,
         'icon': Icons.auto_stories_rounded,
         'gradient': [const Color(0xFF3B82F6), const Color(0xFF2563EB)], // 蓝色
         'achieved': totalReadingMinutes > 0,
         'progress': totalReadingMinutes > 0 ? 1.0 : 0.0,
       },
       {
-        'title': '阅读新手',
-        'description': '累计阅读时长达到10小时',
+        'title': l10n.statsAchievementNoviceTitle,
+        'description': l10n.statsAchievementNoviceDesc,
         'icon': Icons.timer_rounded,
         'gradient': [const Color(0xFF10B981), const Color(0xFF059669)], // 绿色
         'achieved': totalReadingMinutes >= 600,
         'progress': (totalReadingMinutes / 600).clamp(0.0, 1.0),
       },
       {
-        'title': '书虫',
-        'description': '累计阅读时长达到100小时',
+        'title': l10n.statsAchievementBookwormTitle,
+        'description': l10n.statsAchievementBookwormDesc,
         'icon': Icons.local_fire_department_rounded,
         'gradient': [const Color(0xFFF59E0B), const Color(0xFFD97706)], // 橙色
         'achieved': totalReadingMinutes >= 6000,
         'progress': (totalReadingMinutes / 6000).clamp(0.0, 1.0),
       },
       {
-        'title': '阅读达人',
-        'description': '连续阅读7天',
+        'title': l10n.statsAchievementExpertTitle,
+        'description': l10n.statsAchievementExpertDesc,
         'icon': Icons.calendar_month_rounded,
         'gradient': [const Color(0xFF8B5CF6), const Color(0xFF7C3AED)], // 紫色
         'achieved': streak >= 7,
         'progress': (streak / 7).clamp(0.0, 1.0),
       },
       {
-        'title': '知识海洋',
-        'description': '阅读页数达到10000页',
+        'title': l10n.statsAchievementOceanTitle,
+        'description': l10n.statsAchievementOceanDesc,
         'icon': Icons.waves_rounded,
         'gradient': [const Color(0xFF06B6D4), const Color(0xFF0891B2)], // 青色
         'achieved': totalPages >= 10000,
         'progress': (totalPages / 10000).clamp(0.0, 1.0),
       },
       {
-        'title': '博学者',
-        'description': '阅读10本不同的书籍',
+        'title': l10n.statsAchievementScholarTitle,
+        'description': l10n.statsAchievementScholarDesc,
         'icon': Icons.school_rounded,
         'gradient': [const Color(0xFF78716C), const Color(0xFF57534E)], // 棕色
         'achieved': totalBooks >= 10,
         'progress': (totalBooks / 10).clamp(0.0, 1.0),
       },
       {
-        'title': '阅读马拉松',
-        'description': '连续阅读30天',
+        'title': l10n.statsAchievementMarathonTitle,
+        'description': l10n.statsAchievementMarathonDesc,
         'icon': Icons.trending_up_rounded,
         'gradient': [const Color(0xFF6366F1), const Color(0xFF4F46E5)], // 靛蓝
         'achieved': streak >= 30,
         'progress': (streak / 30).clamp(0.0, 1.0),
       },
       {
-        'title': '专注达人',
-        'description': '累计阅读时长达到500小时',
+        'title': l10n.statsAchievementFocusTitle,
+        'description': l10n.statsAchievementFocusDesc,
         'icon': Icons.center_focus_strong_rounded,
         'gradient': [const Color(0xFFEF4444), const Color(0xFFDC2626)], // 红色
         'achieved': totalReadingMinutes >= 30000,
@@ -2625,7 +2658,9 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '进度: ${((achievement['progress'] as double) * 100).toInt()}%',
+                              context.l10n.statsProgressPercent(
+                                  ((achievement['progress'] as double) * 100)
+                                      .toInt()),
                               style: Theme.of(context)
                                   .textTheme
                                   .bodySmall
@@ -2666,6 +2701,7 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
         .skip(math.max(0, _windowedDailyStats.length - 7))
         .fold<int>(0, (sum, item) => sum + ((item['pagesRead'] as int?) ?? 0));
     final avgDailyPages = weekPages / 7.0;
+    final l10n = context.l10n;
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(24),
@@ -2693,37 +2729,37 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '阅读目标进度',
+                l10n.statsGoalProgress,
                 style: Theme.of(
                   context,
                 ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 20),
               _buildGoalProgress(
-                '本月阅读时长',
-                '20小时',
+                l10n.statsMonthlyReadingTime,
+                l10n.statsHoursCount(20),
                 monthMinutes / 60.0,
                 20,
                 Colors.blue,
-                valueUnit: '小时',
+                valueUnit: l10n.unitHour,
               ),
               const SizedBox(height: 16),
               _buildGoalProgress(
-                '本周阅读时长',
-                '10小时',
+                l10n.statsWeeklyReadingTime,
+                l10n.statsHoursCount(10),
                 weekMinutes / 60.0,
                 10,
                 Colors.orange,
-                valueUnit: '小时',
+                valueUnit: l10n.unitHour,
               ),
               const SizedBox(height: 16),
               _buildGoalProgress(
-                '近7天日均页数',
-                '30页',
+                l10n.statsAvgDailyPages7d,
+                l10n.statsPagesCount(30),
                 avgDailyPages,
                 30,
                 Colors.green,
-                valueUnit: '页',
+                valueUnit: l10n.statsUnitPage,
               ),
             ],
           ),
@@ -2827,7 +2863,7 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
               Row(
                 children: [
                   Text(
-                    '阅读速度趋势',
+                    context.l10n.statsSpeedTrend,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
@@ -2845,7 +2881,8 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      '平均: ${_averagePagesPerMinute.toStringAsFixed(1)}页/分钟',
+                      context.l10n.statsAvgSpeed(
+                          _averagePagesPerMinute.toStringAsFixed(1)),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: Theme.of(context).colorScheme.primary,
                             fontWeight: FontWeight.w600,
@@ -3025,7 +3062,7 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
               Row(
                 children: [
                   Text(
-                    '阅读连续性',
+                    context.l10n.statsReadingContinuity,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
@@ -3043,7 +3080,8 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      '当前连读: ${_overallStats['streak'] ?? 0}天',
+                      context.l10n
+                          .statsCurrentStreak(_overallStats['streak'] ?? 0),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: Theme.of(context).colorScheme.tertiary,
                             fontWeight: FontWeight.w600,
@@ -3063,7 +3101,7 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
               Row(
                 children: [
                   Text(
-                    '少',
+                    context.l10n.statsHeatmapLess,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Theme.of(
                             context,
@@ -3093,7 +3131,7 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
                   }),
                   const SizedBox(width: 8),
                   Text(
-                    '多',
+                    context.l10n.statsHeatmapMore,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Theme.of(
                             context,
@@ -3112,7 +3150,16 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
   Widget _buildHeatmapGrid() {
     // const int totalDays = 91; // 13周 x 7天 (备用)
     const int weeksToShow = 13;
-    final List<String> weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+    final l10n = context.l10n;
+    final List<String> weekDays = [
+      l10n.weekdaySunShort,
+      l10n.weekdayMonShort,
+      l10n.weekdayTueShort,
+      l10n.weekdayWedShort,
+      l10n.weekdayThuShort,
+      l10n.weekdayFriShort,
+      l10n.weekdaySatShort,
+    ];
 
     return Column(
       children: [
@@ -3124,7 +3171,7 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
               if (weekIndex % 2 == 0) {
                 return Expanded(
                   child: Text(
-                    '第${weekIndex + 1}周',
+                    l10n.statsWeekNumber(weekIndex + 1),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           fontSize: 10,
                           color: Theme.of(

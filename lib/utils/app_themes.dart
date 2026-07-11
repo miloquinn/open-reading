@@ -491,11 +491,11 @@ class AppThemes {
     final Color onPrimaryColor = _getContrastingColor(primaryColor);
     final Color primaryContainerColor = isDark
         ? accentHSL
-              .withLightness((accentHSL.lightness * 0.2).clamp(0.0, 1.0))
-              .toColor()
+            .withLightness((accentHSL.lightness * 0.2).clamp(0.0, 1.0))
+            .toColor()
         : accentHSL
-              .withLightness((accentHSL.lightness * 0.9).clamp(0.0, 1.0))
-              .toColor();
+            .withLightness((accentHSL.lightness * 0.9).clamp(0.0, 1.0))
+            .toColor();
     final Color onPrimaryContainerColor = _getContrastingColor(
       primaryContainerColor,
     );
@@ -513,9 +513,8 @@ class AppThemes {
       onPrimaryContainer: onPrimaryContainerColor,
       secondary: secondaryColor,
       onSecondary: _getContrastingColor(secondaryColor),
-      inversePrimary: isDark
-          ? primaryColor
-          : accentHSL.withLightness(0.8).toColor(),
+      inversePrimary:
+          isDark ? primaryColor : accentHSL.withLightness(0.8).toColor(),
       surfaceTint: primaryColor,
     );
   }

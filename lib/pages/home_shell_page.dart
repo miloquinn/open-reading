@@ -92,17 +92,18 @@ class _HomeShellPageState extends State<HomeShellPage> {
   // 当前选中的导航索引（首页=0，书库=1，...）。
   // 所有导航点击、PageView 切换，最终都更新这个值。
   int _selectedIndex = 0;
+  int? _targetTabIndex;
   late PageController _pageController;
   AppLocalizations? _l10n;
 
   // 导航项单一数据源：
   // - 底部导航（手机）和侧边栏（平板/桌面）都读这里。
   List<HomeNavigationItem> _navigationItems = [];
+  List<Widget> _mobilePages = const [];
 
   @override
   void initState() {
     super.initState();
-    _initializeNavigationItems();
     // 优化PageController，设置合适的视窗比例
     _pageController = PageController(
       viewportFraction: 1.0, // 保持全屏显示
@@ -117,45 +118,52 @@ class _HomeShellPageState extends State<HomeShellPage> {
   /// 2) 设置固定在最后。
   void _initializeNavigationItems() {
     final l10n = _l10n;
+    if (l10n == null) return;
     final items = <HomeNavigationItem>[
       HomeNavigationItem(
         icon: Icons.home_outlined,
         selectedIcon: Icons.home,
-        label: l10n?.home ?? 'Home',
+        label: l10n.home,
         page: const HomeDashboardPage(),
       ),
       HomeNavigationItem(
         icon: Icons.library_books_outlined,
         selectedIcon: Icons.library_books,
-        label: l10n?.library ?? 'Library',
+        label: l10n.library,
         page: const LibraryPage(),
       ),
       HomeNavigationItem(
         icon: Icons.settings_outlined,
         selectedIcon: Icons.settings,
-        label: l10n?.settings ?? 'Settings',
+        label: l10n.settings,
         page: const SettingsPage(),
       ),
     ];
 
-    setState(() {
-      _navigationItems = items;
-      // 如果当前选中的索引超出范围，重置为首页
-      if (_selectedIndex >= _navigationItems.length) {
-        _selectedIndex = 0;
-      }
-    });
+    _navigationItems = items;
+    _mobilePages = items
+        .map((item) => RepaintBoundary(child: _buildPageWrapper(item.page)))
+        .toList(growable: false);
+    // 如果当前选中的索引超出范围，重置为首页
+    if (_selectedIndex >= _navigationItems.length) {
+      _selectedIndex = 0;
+    }
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _l10n = AppLocalizations.of(context);
+    final nextL10n = AppLocalizations.of(context);
     // 每次依赖变化时重新应用沉浸式设置
     _setupPageImmersiveMode();
     // 应用基于主题的设置
     _setupThemeBasedImmersiveMode();
-    _initializeNavigationItems();
+    // 仅在本地化实例变化时重建页面表。普通 tab setState 不再重新创建
+    // PageView 的整组子节点，避免切页动画开始前产生额外布局工作。
+    if (_l10n != nextL10n || _navigationItems.isEmpty) {
+      _l10n = nextL10n;
+      _initializeNavigationItems();
+    }
   }
 
   void _updateSelectedIndex(int index) {

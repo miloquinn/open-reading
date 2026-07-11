@@ -6,6 +6,7 @@ import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:flutter/services.dart';
 import '../models/book.dart';
 import '../services/books/book_services.dart';
@@ -350,8 +351,8 @@ class _LibraryPageState extends State<LibraryPage> {
               child: TextField(
                 controller: _searchController,
                 onChanged: _onSearchChanged,
-                decoration: const InputDecoration(
-                  hintText: '搜索书名、作者',
+                decoration: InputDecoration(
+                  hintText: context.l10n.librarySearchHint,
                   border: InputBorder.none,
                   isDense: true,
                 ),
@@ -397,18 +398,18 @@ class _LibraryPageState extends State<LibraryPage> {
           runSpacing: 8,
           children: [
             _buildStatChip(
-              label: '全部 $total',
+              label: context.l10n.libraryFilterAll(total),
               active: _selectedFilter == _LibraryFilter.all,
               onTap: () => setState(() => _selectedFilter = _LibraryFilter.all),
             ),
             _buildStatChip(
-              label: '在读 $inReading',
+              label: context.l10n.libraryFilterReading(inReading),
               active: _selectedFilter == _LibraryFilter.reading,
               onTap: () =>
                   setState(() => _selectedFilter = _LibraryFilter.reading),
             ),
             _buildStatChip(
-              label: '已读 $finished',
+              label: context.l10n.libraryFilterFinished(finished),
               active: _selectedFilter == _LibraryFilter.finished,
               onTap: () =>
                   setState(() => _selectedFilter = _LibraryFilter.finished),
@@ -571,7 +572,7 @@ class _LibraryPageState extends State<LibraryPage> {
               _loadBooks();
             },
             icon: const Icon(Icons.add),
-            label: const Text('导入书籍'),
+            label: Text(context.l10n.importBooks),
           ),
         ],
       ),
@@ -582,11 +583,11 @@ class _LibraryPageState extends State<LibraryPage> {
     final palette = PageStyleHelper.palette(context);
     final hasSearch = _searchQuery.trim().isNotEmpty;
     final message = hasSearch
-        ? '没有匹配的书籍'
+        ? context.l10n.libraryNoMatchingBooks
         : switch (_selectedFilter) {
-            _LibraryFilter.reading => '当前没有在读书籍',
-            _LibraryFilter.finished => '当前没有已读书籍',
-            _LibraryFilter.all => '暂无书籍',
+            _LibraryFilter.reading => context.l10n.libraryNoReadingBooks,
+            _LibraryFilter.finished => context.l10n.libraryNoFinishedBooks,
+            _LibraryFilter.all => context.l10n.libraryNoBooks,
           };
 
     return Center(
@@ -673,7 +674,7 @@ class _LibraryPageState extends State<LibraryPage> {
             ),
           ),
           child: GridView.builder(
-            cacheExtent: 720,
+            scrollCacheExtent: const ScrollCacheExtent.pixels(720),
             padding: EdgeInsets.fromLTRB(
               16,
               12,
@@ -718,7 +719,7 @@ class _LibraryPageState extends State<LibraryPage> {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     return ListView.builder(
-      cacheExtent: 720,
+      scrollCacheExtent: const ScrollCacheExtent.pixels(720),
       padding: EdgeInsets.fromLTRB(
         16,
         8,
@@ -731,7 +732,8 @@ class _LibraryPageState extends State<LibraryPage> {
         final progress = book.totalPages > 0
             ? (book.currentPage / book.totalPages).clamp(0.0, 1.0)
             : 0.0;
-        final progressText = '${(progress * 100).round()}% · 继续阅读';
+        final progressText =
+            context.l10n.libraryProgressContinue((progress * 100).round());
 
         return Container(
           margin: const EdgeInsets.only(bottom: 8),
@@ -1047,10 +1049,10 @@ class _LibraryPageState extends State<LibraryPage> {
                         context: context,
                         icon: Icons.play_circle_outline,
                         iconColor: localScheme.primary,
-                        title: '继续阅读',
+                        title: context.l10n.continueReading,
                         subtitle: book.currentPage > 0
-                            ? '第 ${book.currentPage} 页'
-                            : '从头开始',
+                            ? context.l10n.libraryPageNumber(book.currentPage)
+                            : context.l10n.libraryStartFromBeginning,
                         backgroundColor:
                             localScheme.primaryContainer.withValues(
                           alpha: isMaterial3Style ? 0.42 : 0.15,
@@ -1070,9 +1072,11 @@ class _LibraryPageState extends State<LibraryPage> {
                         context: context,
                         icon: Icons.info_outline,
                         iconColor: localScheme.tertiary,
-                        title: '书籍信息',
-                        subtitle:
-                            '${book.format.toUpperCase()} · ${book.totalPages} 页',
+                        title: context.l10n.libraryBookInfo,
+                        subtitle: context.l10n.libraryFormatAndPages(
+                          book.format.toUpperCase(),
+                          book.totalPages,
+                        ),
                         backgroundColor:
                             localScheme.tertiaryContainer.withValues(
                           alpha: isMaterial3Style ? 0.44 : 0.15,
@@ -1087,8 +1091,8 @@ class _LibraryPageState extends State<LibraryPage> {
                         context: context,
                         icon: Icons.delete_outline_rounded,
                         iconColor: localScheme.error,
-                        title: '删除书籍',
-                        subtitle: '将永久删除此书籍',
+                        title: context.l10n.deleteBook,
+                        subtitle: context.l10n.libraryDeleteBookHint,
                         backgroundColor: localScheme.errorContainer.withValues(
                           alpha: isMaterial3Style ? 0.46 : 0.15,
                         ),
@@ -1222,25 +1226,28 @@ class _LibraryPageState extends State<LibraryPage> {
               color: Theme.of(context).colorScheme.primary,
             ),
             const SizedBox(width: 8),
-            const Text('书籍信息'),
+            Text(context.l10n.libraryBookInfo),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildInfoRow('书名', book.title),
+            _buildInfoRow(context.l10n.libraryBookTitle, book.title),
             const SizedBox(height: 12),
-            _buildInfoRow('作者', book.author),
-            const SizedBox(height: 12),
-            _buildInfoRow('格式', book.format.toUpperCase()),
-            const SizedBox(height: 12),
-            _buildInfoRow('总页数', '${book.totalPages} 页'),
-            const SizedBox(height: 12),
-            _buildInfoRow('当前页', '${book.currentPage} 页'),
+            _buildInfoRow(context.l10n.author, book.author),
             const SizedBox(height: 12),
             _buildInfoRow(
-              '阅读进度',
+                context.l10n.libraryFormat, book.format.toUpperCase()),
+            const SizedBox(height: 12),
+            _buildInfoRow(context.l10n.totalPages,
+                context.l10n.libraryPagesCount(book.totalPages)),
+            const SizedBox(height: 12),
+            _buildInfoRow(context.l10n.currentPage,
+                context.l10n.libraryPagesCount(book.currentPage)),
+            const SizedBox(height: 12),
+            _buildInfoRow(
+              context.l10n.readingProgress,
               '${((book.currentPage / (book.totalPages > 0 ? book.totalPages : 1)) * 100).toStringAsFixed(1)}%',
             ),
           ],
@@ -1248,7 +1255,7 @@ class _LibraryPageState extends State<LibraryPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('关闭'),
+            child: Text(context.l10n.libraryClose),
           ),
         ],
       ),
@@ -1303,14 +1310,14 @@ class _LibraryPageState extends State<LibraryPage> {
             borderRadius: BorderRadius.circular(20),
           ),
           title: Text(
-            '确认删除',
+            context.l10n.libraryConfirmDeleteTitle,
             style: Theme.of(context).textTheme.headlineSmall,
           ),
-          content: Text('确定要删除《${book.title}》吗？文件将从设备中永久移除。'),
+          content: Text(context.l10n.libraryDeleteBookMessage(book.title)),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('取消'),
+              child: Text(context.l10n.cancel),
             ),
             TextButton(
               onPressed: () async {
@@ -1338,7 +1345,7 @@ class _LibraryPageState extends State<LibraryPage> {
                           const SizedBox(width: 20),
                           Expanded(
                             child: Text(
-                              '正在删除《${book.title}》...',
+                              context.l10n.libraryDeletingBook(book.title),
                               style: Theme.of(context).textTheme.bodyMedium,
                             ),
                           ),
@@ -1355,17 +1362,19 @@ class _LibraryPageState extends State<LibraryPage> {
                   navigator.pop();
                   _loadBooks();
                   if (!toastContext.mounted) return;
-                  showSideToast(toastContext, '《${book.title}》已删除');
+                  showSideToast(toastContext,
+                      toastContext.l10n.libraryBookDeletedToast(book.title));
                 } catch (e) {
                   if (!mounted) return;
                   navigator.pop();
 
                   if (!toastContext.mounted) return;
-                  showSideToast(toastContext, '删除失败: $e');
+                  showSideToast(toastContext,
+                      toastContext.l10n.libraryDeleteFailed('$e'));
                 }
               },
               child: Text(
-                '删除',
+                context.l10n.delete,
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.error,
                 ),
@@ -1403,11 +1412,12 @@ class _LibraryPageState extends State<LibraryPage> {
     void Function(String message)? onProgress,
   }) async {
     debugPrint('🗑️ 开始删除书籍: ${book.title}');
+    final l10n = context.l10n;
     final startTime = DateTime.now();
 
     try {
       // 1. 删除书籍文件
-      onProgress?.call('删除书籍文件...');
+      onProgress?.call(l10n.libraryDeletingBookFile);
       final file = File(book.filePath);
       if (await file.exists()) {
         await file.delete();
@@ -1417,7 +1427,7 @@ class _LibraryPageState extends State<LibraryPage> {
       }
 
       // 2. 删除封面图片文件
-      onProgress?.call('删除封面图片...');
+      onProgress?.call(l10n.libraryDeletingCoverImage);
       if (book.coverImagePath != null && book.coverImagePath!.isNotEmpty) {
         final coverFile = File(book.coverImagePath!);
         if (await coverFile.exists()) {
@@ -1427,13 +1437,13 @@ class _LibraryPageState extends State<LibraryPage> {
       }
 
       // 3. 删除数据库记录（会级联删除笔记、书签等）
-      onProgress?.call('清理数据库记录...');
+      onProgress?.call(l10n.libraryCleaningDatabase);
       await _bookDao.deleteBook(book.id!);
       debugPrint('✅ 已删除数据库记录');
 
       final duration = DateTime.now().difference(startTime).inMilliseconds;
       debugPrint('🎉 书籍删除完成: ${book.title} (总耗时: ${duration}ms)');
-      onProgress?.call('删除完成');
+      onProgress?.call(l10n.libraryDeleteComplete);
     } catch (e, stackTrace) {
       debugPrint('❌ 删除书籍失败: $e');
       debugPrint('堆栈跟踪: $stackTrace');
@@ -1579,7 +1589,7 @@ class _BookCoverItem extends StatelessWidget {
                                       ],
                               ),
                               child: Text(
-                                '在读',
+                                context.l10n.libraryReadingBadge,
                                 style: TextStyle(
                                   color: scheme.onPrimary,
                                   fontSize: 9,

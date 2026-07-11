@@ -87,19 +87,6 @@ import ReadiumStreamer
       return super.application(application, didFinishLaunchingWithOptions: launchOptions)
     }
 
-    let iCloudChannel = FlutterMethodChannel(
-      name: "com.niki.xxread/icloud",
-      binaryMessenger: messenger
-    )
-    iCloudChannel.setMethodCallHandler { [weak self] (call: FlutterMethodCall, result: @escaping FlutterResult) in
-      switch call.method {
-      case "getICloudDocumentsPath":
-        self?.getICloudDocumentsPath(result: result)
-      default:
-        result(FlutterMethodNotImplemented)
-      }
-    }
-
     let readerUIChannel = FlutterMethodChannel(
       name: "com.niki.xxread/reader_ui",
       binaryMessenger: messenger
@@ -146,26 +133,6 @@ import ReadiumStreamer
     }
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
-  }
-
-  private func getICloudDocumentsPath(result: @escaping FlutterResult) {
-    // nil 表示默认容器，需要目标已开启 iCloud Documents capability
-    guard let iCloudContainer = FileManager.default.url(forUbiquityContainerIdentifier: nil) else {
-      result(nil)
-      return
-    }
-
-    let documentsURL = iCloudContainer.appendingPathComponent("Documents")
-    do {
-      try FileManager.default.createDirectory(
-        at: documentsURL,
-        withIntermediateDirectories: true,
-        attributes: nil
-      )
-      result(documentsURL.path)
-    } catch {
-      result(nil)
-    }
   }
 
   private func openEpubByReadium(call: FlutterMethodCall, result: @escaping FlutterResult) {

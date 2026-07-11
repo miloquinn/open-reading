@@ -85,3 +85,7 @@ devtools_options.yaml
 *.env
 *.pem
 *.key
+
+# l10n tooling artifacts
+l10n_untranslated.json
+.l10n_work/

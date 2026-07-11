@@ -11,7 +11,6 @@
 - `lib/pages/native_reader_page.dart`：当前 Flutter 原生阅读页面
 - `lib/reader_core/`：阅读支撑实现（解析、文档模型与共享数据结构）
 - `lib/services/pagination/`：旧分页链路
-- `lib/services/sync/webdav_sync_service.dart`：同步主入口
 
 ## 本次整理结果
 

@@ -141,11 +141,11 @@ class GlobalAIReadingService {
 
   static const String _rootFolder = 'ai_knowledge';
 
-
   /// 旧版：导入后自动解析书籍结构。因 Foliate 原生解析取代了 reader_core/parser，
   /// 此方法已不再有解析器可用，暂留为空壳以保持 API 兼容。
   Future<void> scheduleImportedBookAnalysis({required legacy.Book book}) async {
-    debugPrint('[GlobalAI] scheduleImportedBookAnalysis skipped: parsers removed');
+    debugPrint(
+        '[GlobalAI] scheduleImportedBookAnalysis skipped: parsers removed');
   }
 
   /// 旧版：为已解析书籍生成知识库。因 ParsedBook 依赖已移除的 parser 模块，
@@ -154,7 +154,8 @@ class GlobalAIReadingService {
     required dynamic parsedBook,
     int? legacyBookId,
   }) async {
-    debugPrint('[GlobalAI] ensureKnowledgeForParsedBook skipped: parsers removed');
+    debugPrint(
+        '[GlobalAI] ensureKnowledgeForParsedBook skipped: parsers removed');
   }
 
   Future<List<TermAnnotation>> loadTermAnnotations({
@@ -352,12 +353,6 @@ class GlobalAIReadingService {
     await _writeJson(memoryFile, next);
   }
 
-
-
-
-
-
-
   bool _skipChineseToken(String token) {
     if (token.length < 2 || token.length > 8) {
       return true;
@@ -420,7 +415,6 @@ class GlobalAIReadingService {
     return stop.contains(lower);
   }
 
-
   List<String> _tokenizeQuery(String query) {
     final tokens = <String>[];
     final normalized = query.trim();
@@ -461,7 +455,6 @@ class GlobalAIReadingService {
         .where((e) => (e['question'] as String?)?.trim().isNotEmpty ?? false)
         .toList();
   }
-
 
   Future<File> _bookMemoryFile(String bookId) async {
     final dir = await _bookFolder(bookId);

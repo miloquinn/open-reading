@@ -72,15 +72,21 @@ enum BookFormat implements Comparable<BookFormat> {
     if (normalized.contains('epub')) return epub;
     if (normalized.contains('pdf')) return pdf;
     if (normalized.contains('markdown')) return md;
-    if (normalized.contains('xhtml') || normalized.contains('html')) return html;
-    if (normalized.contains('fictionbook') || normalized.contains('fb2')) return fb2;
+    if (normalized.contains('xhtml') || normalized.contains('html')) {
+      return html;
+    }
+    if (normalized.contains('fictionbook') || normalized.contains('fb2')) {
+      return fb2;
+    }
     if (normalized.contains('rtf')) return rtf;
     if (normalized.contains('officedocument.wordprocessingml') ||
         normalized.contains('openxmlformats-officedocument.wordprocessingml') ||
         normalized.contains('wordprocessingml')) {
       return docx;
     }
-    if (normalized.contains('msword') || normalized.contains('vnd.ms-word')) return doc;
+    if (normalized.contains('msword') || normalized.contains('vnd.ms-word')) {
+      return doc;
+    }
     if (normalized.contains('azw3') ||
         normalized.contains('mobi8-ebook') ||
         normalized.contains('kf8')) {
@@ -92,13 +98,22 @@ enum BookFormat implements Comparable<BookFormat> {
         normalized.contains('/mobi')) {
       return mobi;
     }
-    if (normalized.contains('vnd.amazon.ebook') || normalized.contains('azw')) return azw;
-    if (normalized.contains('text/plain') || normalized.contains('plain')) return txt;
-    if (normalized.contains('comicbook+zip') || normalized.contains('x-cbz')) return cbz;
-    if (normalized.contains('application/divina') || normalized.contains('divina+json')) {
+    if (normalized.contains('vnd.amazon.ebook') || normalized.contains('azw')) {
+      return azw;
+    }
+    if (normalized.contains('text/plain') || normalized.contains('plain')) {
+      return txt;
+    }
+    if (normalized.contains('comicbook+zip') || normalized.contains('x-cbz')) {
+      return cbz;
+    }
+    if (normalized.contains('application/divina') ||
+        normalized.contains('divina+json')) {
       return divina;
     }
-    if (normalized.contains('comicbook-rar') || normalized.contains('x-cbr')) return cbr;
+    if (normalized.contains('comicbook-rar') || normalized.contains('x-cbr')) {
+      return cbr;
+    }
     return unknown;
   }
 
@@ -189,7 +204,8 @@ enum AnnotationTargetKind implements Comparable<AnnotationTargetKind> {
 }
 
 /// 批注定位解析状态枚举。
-enum AnnotationResolutionStatus implements Comparable<AnnotationResolutionStatus> {
+enum AnnotationResolutionStatus
+    implements Comparable<AnnotationResolutionStatus> {
   exact,
   quoteContext,
   rendererHint,
@@ -197,7 +213,8 @@ enum AnnotationResolutionStatus implements Comparable<AnnotationResolutionStatus
   unresolved;
 
   @override
-  int compareTo(AnnotationResolutionStatus other) => index.compareTo(other.index);
+  int compareTo(AnnotationResolutionStatus other) =>
+      index.compareTo(other.index);
 }
 
 // ---------------------------------------------------------------------------
@@ -363,8 +380,9 @@ class CanonicalLocator {
       href: _normalizedSnippet(href),
       chapterId: _normalizedSnippet(chapterId),
       resourceHref: _normalizedSnippet(resourceHref),
-      progression:
-          progression != null ? math.min(math.max(progression, 0.0), 1.0) : null,
+      progression: progression != null
+          ? math.min(math.max(progression, 0.0), 1.0)
+          : null,
       positionHint: positionHint,
       totalPositionsHint: totalPositionsHint,
       fragments: fragments,
@@ -392,7 +410,8 @@ class CanonicalLocator {
             quote: excerpt,
             chapterId: chapterId,
             startOffsetUtf16: offset,
-            offsetHint: offset ?? (positionHint != null ? math.max(positionHint - 1, 0) : null),
+            offsetHint: offset ??
+                (positionHint != null ? math.max(positionHint - 1, 0) : null),
           )
         : null;
     return CanonicalLocator.create(
@@ -428,7 +447,8 @@ class CanonicalLocator {
             quote: excerpt ?? '',
             chapterId: chapterId,
             startOffsetUtf16: offset,
-            offsetHint: offset ?? (positionHint != null ? math.max(positionHint - 1, 0) : null),
+            offsetHint: offset ??
+                (positionHint != null ? math.max(positionHint - 1, 0) : null),
           )
         : null;
     return CanonicalLocator.create(
@@ -564,7 +584,9 @@ class CanonicalLocator {
     if (resourceHref != null) map['resourceHref'] = resourceHref;
     if (progression != null) map['progression'] = progression;
     if (positionHint != null) map['positionHint'] = positionHint;
-    if (totalPositionsHint != null) map['totalPositionsHint'] = totalPositionsHint;
+    if (totalPositionsHint != null) {
+      map['totalPositionsHint'] = totalPositionsHint;
+    }
     if (fragments.isNotEmpty) map['fragments'] = fragments;
     if (textAnchor != null) map['textAnchor'] = textAnchor!.toJson();
     if (contentSignature != null) map['contentSignature'] = contentSignature;
@@ -589,12 +611,11 @@ class CanonicalLocator {
       progression: (json['progression'] as num?)?.toDouble(),
       positionHint: json['positionHint'] as int?,
       totalPositionsHint: json['totalPositionsHint'] as int?,
-      fragments: (json['fragments'] as List<dynamic>?)
-              ?.cast<String>()
-              .toList() ?? const [],
-      textAnchor: textAnchorJson != null
-          ? TextAnchor.fromJson(textAnchorJson)
-          : null,
+      fragments:
+          (json['fragments'] as List<dynamic>?)?.cast<String>().toList() ??
+              const [],
+      textAnchor:
+          textAnchorJson != null ? TextAnchor.fromJson(textAnchorJson) : null,
       contentSignature: json['contentSignature'] as String?,
     );
   }
@@ -728,7 +749,9 @@ class RenderedLocator {
     };
     if (mediaType != null) map['mediaType'] = mediaType;
     if (title != null) map['title'] = title;
-    if (resourceProgression != null) map['resourceProgression'] = resourceProgression;
+    if (resourceProgression != null) {
+      map['resourceProgression'] = resourceProgression;
+    }
     if (totalProgression != null) map['totalProgression'] = totalProgression;
     if (fragments != null) map['fragments'] = fragments;
     if (textBefore != null) map['textBefore'] = textBefore;
@@ -848,7 +871,9 @@ class AnnotationAnchor {
     };
     if (styleRaw != null) map['styleRaw'] = styleRaw;
     if (note != null) map['note'] = note;
-    if (resolutionStatus != null) map['resolutionStatus'] = resolutionStatus!.name;
+    if (resolutionStatus != null) {
+      map['resolutionStatus'] = resolutionStatus!.name;
+    }
     return map;
   }
 
@@ -982,8 +1007,9 @@ class ReaderSelection {
       lengthUtf16: lengthUtf16 != null ? math.max(lengthUtf16, 0) : null,
       prefix: _normalizedSnippet(prefix),
       suffix: _normalizedSnippet(suffix),
-      progression:
-          progression != null ? math.min(math.max(progression, 0.0), 1.0) : null,
+      progression: progression != null
+          ? math.min(math.max(progression, 0.0), 1.0)
+          : null,
       positionHint: positionHint != null ? math.max(positionHint, 1) : null,
       totalPositionsHint:
           totalPositionsHint != null ? math.max(totalPositionsHint, 1) : null,
@@ -1002,35 +1028,48 @@ class ReaderSelection {
     final anchor = canonicalLocator.textAnchor;
     final normalizedSelected = _normalizedSnippet(selectedText) ??
         _normalizedSnippet(anchor?.quote) ??
-        _normalizedSnippet(CanonicalLocator.excerptFromHref(canonicalLocator.href ?? '')) ??
+        _normalizedSnippet(
+            CanonicalLocator.excerptFromHref(canonicalLocator.href ?? '')) ??
         _normalizedSnippet(renderedLocator?.textAfter) ??
-        _normalizedSnippet(renderedLocator?.textBefore) ?? '';
+        _normalizedSnippet(renderedLocator?.textBefore) ??
+        '';
     final resolvedFormat = canonicalLocator.format;
-    final resolvedRenderer = renderedLocator?.renderer ?? _defaultRenderer(resolvedFormat);
+    final resolvedRenderer =
+        renderedLocator?.renderer ?? _defaultRenderer(resolvedFormat);
     final resourceHref = canonicalLocator.resourceHref ??
         canonicalLocator.href ??
         renderedLocator?.href;
     final startOffset = anchor?.startOffsetUtf16 ??
         anchor?.offsetHint ??
-        (resourceHref != null ? CanonicalLocator.offsetFromHref(resourceHref) : null);
+        (resourceHref != null
+            ? CanonicalLocator.offsetFromHref(resourceHref)
+            : null);
     final startOffsetUtf16Val =
         startOffset != null ? math.max(startOffset, 0) : null;
-    final lengthUtf16Val = anchor?.lengthUtf16 ?? (normalizedSelected.isEmpty ? 0 : normalizedSelected.length);
+    final lengthUtf16Val = anchor?.lengthUtf16 ??
+        (normalizedSelected.isEmpty ? 0 : normalizedSelected.length);
 
     return ReaderSelection.create(
       bookId: bookId,
       format: resolvedFormat,
       renderer: resolvedRenderer,
       selectedText: normalizedSelected,
-      chapterId: canonicalLocator.chapterId ?? anchor?.chapterId ?? (resourceHref != null ? CanonicalLocator.chapterIdFromHref(resourceHref) : null),
+      chapterId: canonicalLocator.chapterId ??
+          anchor?.chapterId ??
+          (resourceHref != null
+              ? CanonicalLocator.chapterIdFromHref(resourceHref)
+              : null),
       resourceHref: resourceHref,
       startOffsetUtf16: startOffsetUtf16Val,
       lengthUtf16: lengthUtf16Val,
       prefix: anchor?.prefix ?? renderedLocator?.textBefore,
       suffix: anchor?.suffix ?? renderedLocator?.textAfter,
-      progression: canonicalLocator.progression ?? renderedLocator?.totalProgression ?? renderedLocator?.progression,
+      progression: canonicalLocator.progression ??
+          renderedLocator?.totalProgression ??
+          renderedLocator?.progression,
       positionHint: canonicalLocator.positionHint ?? renderedLocator?.position,
-      totalPositionsHint: canonicalLocator.totalPositionsHint ?? renderedLocator?.totalPositions,
+      totalPositionsHint: canonicalLocator.totalPositionsHint ??
+          renderedLocator?.totalPositions,
       rendererLocatorJson: renderedLocator != null
           ? LocatorCodec.encodeRenderedLocator(renderedLocator)
           : null,
@@ -1052,8 +1091,12 @@ class ReaderSelection {
     if (suffix != null) map['suffix'] = suffix;
     if (progression != null) map['progression'] = progression;
     if (positionHint != null) map['positionHint'] = positionHint;
-    if (totalPositionsHint != null) map['totalPositionsHint'] = totalPositionsHint;
-    if (rendererLocatorJson != null) map['rendererLocatorJson'] = rendererLocatorJson;
+    if (totalPositionsHint != null) {
+      map['totalPositionsHint'] = totalPositionsHint;
+    }
+    if (rendererLocatorJson != null) {
+      map['rendererLocatorJson'] = rendererLocatorJson;
+    }
     return map;
   }
 
@@ -1224,9 +1267,8 @@ String? _buildTextAnchorHref({
   String? excerpt,
 }) {
   final normalizedExcerpt = _textAnchorExcerpt(excerpt ?? '');
-  final encodedExcerpt = normalizedExcerpt.isEmpty
-      ? null
-      : Uri.encodeComponent(normalizedExcerpt);
+  final encodedExcerpt =
+      normalizedExcerpt.isEmpty ? null : Uri.encodeComponent(normalizedExcerpt);
 
   if (chapterId != null && chapterId.isNotEmpty) {
     final encodedChapterId = Uri.encodeComponent(chapterId);
@@ -1257,7 +1299,9 @@ String? _buildTextAnchorHref({
 String _textAnchorExcerpt(String text, {int limit = 72}) {
   final normalized = _normalizedSnippet(text) ?? '';
   if (normalized.isEmpty) return '';
-  return normalized.length <= limit ? normalized : normalized.substring(0, limit);
+  return normalized.length <= limit
+      ? normalized
+      : normalized.substring(0, limit);
 }
 
 /// URL 路径解码，处理可能包含 % 编码的字符串。

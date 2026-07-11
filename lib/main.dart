@@ -381,7 +381,7 @@ class XxReadApp extends StatefulWidget {
 class _XxReadAppState extends State<XxReadApp> {
   bool? _hasAcceptedAgreement;
   bool _isBootstrapped = false;
-  String? _bootstrapError;
+  _BootstrapError? _bootstrapError;
 
   @override
   void initState() {
@@ -403,7 +403,7 @@ class _XxReadAppState extends State<XxReadApp> {
     } catch (e) {
       debugPrint('数据服务初始化失败: $e');
       if (mounted) {
-        setState(() => _bootstrapError = '数据系统初始化失败');
+        setState(() => _bootstrapError = _BootstrapError.dataService);
       }
       return;
     }
@@ -415,7 +415,7 @@ class _XxReadAppState extends State<XxReadApp> {
     } catch (e) {
       debugPrint('图片管理器初始化失败: $e');
       if (mounted) {
-        setState(() => _bootstrapError = '图片管理器初始化失败');
+        setState(() => _bootstrapError = _BootstrapError.imageManager);
       }
       return;
     }
@@ -558,7 +558,13 @@ class _XxReadAppState extends State<XxReadApp> {
               ),
               const SizedBox(height: 8),
               Text(
-                _bootstrapError ?? context.l10n.unknownError,
+                switch (_bootstrapError) {
+                  _BootstrapError.dataService =>
+                    context.l10n.bootstrapDataServiceFailed,
+                  _BootstrapError.imageManager =>
+                    context.l10n.bootstrapImageManagerFailed,
+                  null => context.l10n.unknownError,
+                },
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
@@ -741,4 +747,10 @@ class _XxReadAppState extends State<XxReadApp> {
       ],
     );
   }
+}
+
+/// 启动初始化失败的类型，文案在 build 时按当前语言解析。
+enum _BootstrapError {
+  dataService,
+  imageManager,
 }

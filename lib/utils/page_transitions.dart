@@ -168,8 +168,8 @@ class CustomPageTransitions {
             // 背景阴影层
             if (secondaryAnimation.value > 0)
               Container(
-                color: Colors.black.withValues(alpha: 
-                  shadowAnimation.value * 0.3,
+                color: Colors.black.withValues(
+                  alpha: shadowAnimation.value * 0.3,
                 ),
               ),
             // 退出的页面

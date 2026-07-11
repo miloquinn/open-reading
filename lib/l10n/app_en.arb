@@ -248,25 +248,6 @@
   "@ttsPitchHint": {
     "description": "Hint for TTS pitch"
   },
-  "cloudSync": "Cloud Sync",
-  "@cloudSync": {
-    "description": "Cloud sync section"
-  },
-  "webdavConfig": "WebDAV",
-  "@webdavConfig": {
-    "description": "WebDAV configuration"
-  },
-  "webdavConfigured": "Configured - {serverUrl}",
-  "@webdavConfigured": {
-    "description": "WebDAV configured status",
-    "placeholders": {
-      "serverUrl": {}
-    }
-  },
-  "webdavConfigHint": "Tap to configure WebDAV server",
-  "@webdavConfigHint": {
-    "description": "Hint for WebDAV config"
-  },
   "appSettings": "App Settings",
   "@appSettings": {
     "description": "App settings section"
@@ -406,17 +387,9 @@
   "@ttsOperationFailed": {
     "description": "Operation failed message"
   },
-  "pageTurningSettings": "Page Turning",
-  "@pageTurningSettings": {
-    "description": "Page turning settings"
-  },
   "pageTurningMode": "Page Mode",
   "@pageTurningMode": {
     "description": "Page turning mode"
-  },
-  "pageTurningCover": "Cover",
-  "@pageTurningCover": {
-    "description": "Cover page turning"
   },
   "pageTurningSlide": "Slide",
   "@pageTurningSlide": {
@@ -425,10 +398,6 @@
   "pageTurningScroll": "Scroll",
   "@pageTurningScroll": {
     "description": "Scroll page turning"
-  },
-  "pageTurningSimulation": "Simulation",
-  "@pageTurningSimulation": {
-    "description": "Simulation page turning"
   },
   "tapZoneSettings": "Tap Zones",
   "@tapZoneSettings": {
@@ -469,82 +438,6 @@
   "highlightSampleText3": "showing the highlight effect.",
   "@highlightSampleText3": {
     "description": "Sample text part 3"
-  },
-  "webdavTitle": "WebDAV Configuration",
-  "@webdavTitle": {
-    "description": "WebDAV configuration title"
-  },
-  "webdavSetupCloudSync": "Setup Cloud Sync Service",
-  "@webdavSetupCloudSync": {
-    "description": "Setup cloud sync hint"
-  },
-  "webdavServerUrl": "Server URL",
-  "@webdavServerUrl": {
-    "description": "WebDAV server URL label"
-  },
-  "webdavUsername": "Username",
-  "@webdavUsername": {
-    "description": "WebDAV username label"
-  },
-  "webdavPassword": "Password",
-  "@webdavPassword": {
-    "description": "WebDAV password label"
-  },
-  "webdavEnterServerUrl": "Please enter server URL",
-  "@webdavEnterServerUrl": {
-    "description": "Enter server URL error"
-  },
-  "webdavInvalidUrl": "Please enter a valid URL",
-  "@webdavInvalidUrl": {
-    "description": "Invalid URL error"
-  },
-  "webdavEnterUsername": "Please enter username",
-  "@webdavEnterUsername": {
-    "description": "Enter username error"
-  },
-  "webdavEnterPassword": "Please enter password",
-  "@webdavEnterPassword": {
-    "description": "Enter password error"
-  },
-  "webdavConnectionFailed": "Connection failed, please check settings",
-  "@webdavConnectionFailed": {
-    "description": "Connection failed message"
-  },
-  "webdavTestConnection": "Test Connection",
-  "@webdavTestConnection": {
-    "description": "Test connection button"
-  },
-  "webdavSaveConfig": "Save Configuration",
-  "@webdavSaveConfig": {
-    "description": "Save configuration button"
-  },
-  "webdavClearConfig": "Clear Configuration",
-  "@webdavClearConfig": {
-    "description": "Clear configuration button"
-  },
-  "webdavTestSuccess": "Connection test successful!",
-  "@webdavTestSuccess": {
-    "description": "Test success message"
-  },
-  "webdavTestFailed": "Connection test failed",
-  "@webdavTestFailed": {
-    "description": "Test failed message"
-  },
-  "webdavConfigSaved": "WebDAV configuration saved",
-  "@webdavConfigSaved": {
-    "description": "Config saved message"
-  },
-  "webdavConfigSaveFailed": "Failed to save configuration",
-  "@webdavConfigSaveFailed": {
-    "description": "Save config failed message"
-  },
-  "webdavConfirmClear": "Are you sure you want to clear WebDAV configuration?",
-  "@webdavConfirmClear": {
-    "description": "Confirm clear message"
-  },
-  "webdavConfigCleared": "WebDAV configuration cleared",
-  "@webdavConfigCleared": {
-    "description": "Config cleared message"
   },
   "colorLightBlue": "Light Blue",
   "@colorLightBlue": {
@@ -961,5 +854,1353 @@
   "weekdaySunShort": "Sun",
   "@weekdaySunShort": {
     "description": "Short label for Sunday"
+  },
+  "agreementTagline": "Immersive Reading · AI Assistant · Local First",
+  "@agreementTagline": {
+    "description": "Tagline badge under the app title on the user agreement page"
+  },
+  "agreementCardTitle": "User Service Agreement",
+  "@agreementCardTitle": {
+    "description": "Title of the agreement content card"
+  },
+  "agreementCardSubtitle": "Please read the following carefully",
+  "@agreementCardSubtitle": {
+    "description": "Subtitle under the agreement card title"
+  },
+  "agreementWelcomeTitle": "Welcome to OpenReading",
+  "@agreementWelcomeTitle": {
+    "description": "Welcome heading inside the agreement content"
+  },
+  "agreementWelcomeBody": "To ensure a stable and predictable reading experience, please read and agree to the following agreement first.",
+  "@agreementWelcomeBody": {
+    "description": "Welcome paragraph asking the user to read and agree to the agreement"
+  },
+  "agreementFeatureFormatsTitle": "Multi-Format Support",
+  "@agreementFeatureFormatsTitle": {
+    "description": "Feature item title: supported book formats"
+  },
+  "agreementFeatureFormatsBody": "EPUB, PDF, TXT, MOBI and more",
+  "@agreementFeatureFormatsBody": {
+    "description": "Feature item description: supported book formats"
+  },
+  "agreementFeatureCustomizationTitle": "Personalized Reading",
+  "@agreementFeatureCustomizationTitle": {
+    "description": "Feature item title: reading customization"
+  },
+  "agreementFeatureCustomizationBody": "Customize fonts, colors, typography and more",
+  "@agreementFeatureCustomizationBody": {
+    "description": "Feature item description: reading customization"
+  },
+  "agreementFeatureSyncTitle": "Local First",
+  "@agreementFeatureSyncTitle": {
+    "description": "Feature item title: local-first storage"
+  },
+  "agreementFeatureSyncBody": "Books, progress, and notes stay on the device you control",
+  "@agreementFeatureSyncBody": {
+    "description": "Feature item description: local-first storage"
+  },
+  "agreementFeatureTtsTitle": "Text-to-Speech",
+  "@agreementFeatureTtsTitle": {
+    "description": "Feature item title: TTS read-aloud"
+  },
+  "agreementFeatureTtsBody": "Smart voice narration frees your eyes so you can listen anywhere",
+  "@agreementFeatureTtsBody": {
+    "description": "Feature item description: TTS read-aloud"
+  },
+  "agreementTapToAgreeHint": "By tapping \"Agree and Continue\", you confirm that you have read and agree to use this app",
+  "@agreementTapToAgreeHint": {
+    "description": "Hint explaining what tapping the agree button means"
+  },
+  "agreementExitApp": "Exit App",
+  "@agreementExitApp": {
+    "description": "Decline button label and exit confirmation dialog title"
+  },
+  "agreementAgreeAndContinue": "Agree and Continue",
+  "@agreementAgreeAndContinue": {
+    "description": "Primary button to accept the agreement and continue"
+  },
+  "agreementExitDialogContent": "If you do not agree to the user agreement, you will not be able to use this app. Are you sure you want to exit?",
+  "@agreementExitDialogContent": {
+    "description": "Body of the exit confirmation dialog shown when declining the agreement"
+  },
+  "agreementConfirmExit": "Exit",
+  "@agreementConfirmExit": {
+    "description": "Confirm button in the exit dialog"
+  },
+  "readerFileMissing": "Book file not found. Please re-import it.",
+  "@readerFileMissing": {
+    "description": "Toast shown when opening a book whose file is missing"
+  },
+  "readerUnsupportedFormat": "The native reader currently only supports EPUB and TXT.",
+  "@readerUnsupportedFormat": {
+    "description": "Toast shown when opening an unsupported book format"
+  },
+  "bootstrapDataServiceFailed": "Failed to initialize the data system",
+  "@bootstrapDataServiceFailed": {
+    "description": "Startup error when the data/cache services fail to initialize"
+  },
+  "bootstrapImageManagerFailed": "Failed to initialize the image manager",
+  "@bootstrapImageManagerFailed": {
+    "description": "Startup error when the book image manager fails to initialize"
+  },
+  "homeFocusCompleted": "{minutes}-minute focus session complete. Well done!",
+  "@homeFocusCompleted": {
+    "description": "Toast shown when a focus timer finishes",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "homeDailyReadingGoal": "Daily Reading Goal",
+  "@homeDailyReadingGoal": {
+    "description": "Title of the daily reading goal picker bottom sheet"
+  },
+  "homeAiAdviceSection": "AI Reading Advice",
+  "@homeAiAdviceSection": {
+    "description": "Section label for the AI reading advice card"
+  },
+  "homeTodayGlance": "Today at a Glance",
+  "@homeTodayGlance": {
+    "description": "Section label for the today summary row"
+  },
+  "homeTodayReadingPlan": "Today's Reading Plan",
+  "@homeTodayReadingPlan": {
+    "description": "Header of the daily reading plan section"
+  },
+  "homeViewAll": "View All",
+  "@homeViewAll": {
+    "description": "Action to open the full detailed stats page"
+  },
+  "homeSyncingReadingPlan": "Syncing your reading plan",
+  "@homeSyncingReadingPlan": {
+    "description": "Hero card title while the reading plan is loading"
+  },
+  "homeGoalDoneSuggestReview": "Today's goal is complete — consider a reading review",
+  "@homeGoalDoneSuggestReview": {
+    "description": "Hero card title when today's reading goal is done"
+  },
+  "homeRemainingToGoal": "Just {minutes} more minutes to reach today's goal",
+  "@homeRemainingToGoal": {
+    "description": "Hero card title showing minutes left to today's goal",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "homePickBookHint": "Pick a book from your shelf to continue and complete 1 focus session first.",
+  "@homePickBookHint": {
+    "description": "Recommendation shown when no book is suggested"
+  },
+  "homeContinueBookHint": "Continue \"{title}\" first, then switch to other books.",
+  "@homeContinueBookHint": {
+    "description": "Recommendation to continue a specific book",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "homeTodayActionAdvice": "Today's Action Plan",
+  "@homeTodayActionAdvice": {
+    "description": "Title of the hero card with today's suggested actions"
+  },
+  "homeProgressPercent": "{percent}% progress",
+  "@homeProgressPercent": {
+    "description": "Plan completion percentage badge on the hero card",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "homeStreakDays": "{days}-day streak",
+  "@homeStreakDays": {
+    "description": "Hero chip showing consecutive reading days",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "homeWeekMinutes": "{minutes} min this week",
+  "@homeWeekMinutes": {
+    "description": "Hero chip showing minutes read this week",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "homePlanLoading": "Plan loading",
+  "@homePlanLoading": {
+    "description": "Hero chip placeholder while the plan is loading"
+  },
+  "homeGoalMinutesPerDay": "Goal: {minutes} min/day",
+  "@homeGoalMinutesPerDay": {
+    "description": "Hero chip showing the daily goal in minutes",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "homeAiAdviceForYou": "AI Reading Advice for You",
+  "@homeAiAdviceForYou": {
+    "description": "Title of the AI advice card on the mobile dashboard"
+  },
+  "homeBasedOnBook": "Based on \"{title}\"",
+  "@homeBasedOnBook": {
+    "description": "Subtitle indicating which book the AI advice is based on",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "homeTodayReadingMinutesLabel": "Today's Reading (min)",
+  "@homeTodayReadingMinutesLabel": {
+    "description": "Caption under today's reading minutes summary number"
+  },
+  "homeTotalReadingMinutesLabel": "Total Reading (min)",
+  "@homeTotalReadingMinutesLabel": {
+    "description": "Caption under total reading minutes summary number"
+  },
+  "homeGeneratingPlan": "Generating today's reading plan...",
+  "@homeGeneratingPlan": {
+    "description": "Loading text while the daily plan is being generated"
+  },
+  "homeCompletedLabel": "Done",
+  "@homeCompletedLabel": {
+    "description": "Small label under the plan completion percentage ring"
+  },
+  "homeTodayGoalAchieved": "Today's goal achieved",
+  "@homeTodayGoalAchieved": {
+    "description": "Plan card title when today's goal is reached"
+  },
+  "homeMinutesRemaining": "{minutes} minutes to go",
+  "@homeMinutesRemaining": {
+    "description": "Plan card title showing minutes left to today's goal",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "homeReadOfGoalMinutes": "Read {read} / {goal} min",
+  "@homeReadOfGoalMinutes": {
+    "description": "Minutes read out of the daily goal",
+    "placeholders": {
+      "read": {
+        "type": "int"
+      },
+      "goal": {
+        "type": "int"
+      }
+    }
+  },
+  "homeSessionsToFinishGoal": "About {sessions} focus sessions to finish today's goal",
+  "@homeSessionsToFinishGoal": {
+    "description": "Estimated focus sessions needed to complete the daily goal",
+    "placeholders": {
+      "sessions": {
+        "type": "int"
+      }
+    }
+  },
+  "homeStreakLabel": "Streak",
+  "@homeStreakLabel": {
+    "description": "Plan metric badge label for the reading streak"
+  },
+  "homeWeekAchievedLabel": "Weekly goal",
+  "@homeWeekAchievedLabel": {
+    "description": "Plan metric badge label for days the goal was met this week"
+  },
+  "homeFocusLabel": "Focus",
+  "@homeFocusLabel": {
+    "description": "Plan metric badge label for focus sessions today"
+  },
+  "homeDaysCount": "{days} days",
+  "@homeDaysCount": {
+    "description": "Day count value in plan metric badges",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "homeTimesCount": "{times} times",
+  "@homeTimesCount": {
+    "description": "Times count value in plan metric badges",
+    "placeholders": {
+      "times": {
+        "type": "int"
+      }
+    }
+  },
+  "homeFocusCountdown": "Focus countdown {time}",
+  "@homeFocusCountdown": {
+    "description": "Label above the focus timer progress bar; time is mm:ss",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "homeGoLibraryRead": "Read from Library",
+  "@homeGoLibraryRead": {
+    "description": "Button when no recommended book is available"
+  },
+  "homeEndFocus": "End Focus",
+  "@homeEndFocus": {
+    "description": "Button to cancel the running focus timer"
+  },
+  "homeFocusMinutesButton": "Focus {minutes} min",
+  "@homeFocusMinutesButton": {
+    "description": "Button to start a focus session of the given minutes",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "homeAdjustGoalMinutes": "Adjust goal: {minutes} min",
+  "@homeAdjustGoalMinutes": {
+    "description": "Button to open the daily goal picker showing the current goal",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "homeNoRecentReading": "No recent reading yet. Open a book from your library to get started.",
+  "@homeNoRecentReading": {
+    "description": "Empty state for the recent reading list"
+  },
+  "homeReadingProgressPercent": "Progress {percent}%",
+  "@homeReadingProgressPercent": {
+    "description": "Reading progress percentage of a book in the recent list",
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "librarySearchHint": "Search titles or authors",
+  "@librarySearchHint": {
+    "description": "Hint text for the library search field"
+  },
+  "libraryFilterAll": "All {count}",
+  "@libraryFilterAll": {
+    "description": "Filter chip showing total book count",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryFilterReading": "Reading {count}",
+  "@libraryFilterReading": {
+    "description": "Filter chip showing count of books in progress",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryFilterFinished": "Finished {count}",
+  "@libraryFilterFinished": {
+    "description": "Filter chip showing count of finished books",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryNoMatchingBooks": "No matching books",
+  "@libraryNoMatchingBooks": {
+    "description": "Shown when a library search returns no books"
+  },
+  "libraryNoReadingBooks": "No books in progress",
+  "@libraryNoReadingBooks": {
+    "description": "Shown when the reading filter has no books"
+  },
+  "libraryNoFinishedBooks": "No finished books",
+  "@libraryNoFinishedBooks": {
+    "description": "Shown when the finished filter has no books"
+  },
+  "libraryNoBooks": "No books yet",
+  "@libraryNoBooks": {
+    "description": "Shown when the library has no books for the current filter"
+  },
+  "libraryProgressContinue": "{percent}% · Continue reading",
+  "@libraryProgressContinue": {
+    "description": "List item subtitle showing reading progress percentage",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryPageNumber": "Page {page}",
+  "@libraryPageNumber": {
+    "description": "Current page indicator in book options sheet",
+    "placeholders": {
+      "page": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryStartFromBeginning": "Start from the beginning",
+  "@libraryStartFromBeginning": {
+    "description": "Subtitle when a book has not been started yet"
+  },
+  "libraryBookInfo": "Book Info",
+  "@libraryBookInfo": {
+    "description": "Book information option and dialog title"
+  },
+  "libraryFormatAndPages": "{format} · {pages} pages",
+  "@libraryFormatAndPages": {
+    "description": "Book format and total page count subtitle",
+    "placeholders": {
+      "format": {
+        "type": "String"
+      },
+      "pages": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryDeleteBookHint": "This book will be permanently deleted",
+  "@libraryDeleteBookHint": {
+    "description": "Subtitle of the delete book option"
+  },
+  "libraryBookTitle": "Title",
+  "@libraryBookTitle": {
+    "description": "Book title label in the book info dialog"
+  },
+  "libraryFormat": "Format",
+  "@libraryFormat": {
+    "description": "Book format label in the book info dialog"
+  },
+  "libraryPagesCount": "{pages} pages",
+  "@libraryPagesCount": {
+    "description": "Page count value in the book info dialog",
+    "placeholders": {
+      "pages": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryClose": "Close",
+  "@libraryClose": {
+    "description": "Close button in the book info dialog"
+  },
+  "libraryConfirmDeleteTitle": "Confirm Deletion",
+  "@libraryConfirmDeleteTitle": {
+    "description": "Title of the delete book confirmation dialog"
+  },
+  "libraryDeleteBookMessage": "Delete \"{title}\"? The file will be permanently removed from your device.",
+  "@libraryDeleteBookMessage": {
+    "description": "Delete book confirmation message with book title",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryDeletingBook": "Deleting \"{title}\"...",
+  "@libraryDeletingBook": {
+    "description": "Progress dialog message while deleting a book",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryBookDeletedToast": "\"{title}\" deleted",
+  "@libraryBookDeletedToast": {
+    "description": "Toast shown after a book is deleted",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryDeleteFailed": "Failed to delete: {error}",
+  "@libraryDeleteFailed": {
+    "description": "Toast shown when deleting a book fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryReadingBadge": "Reading",
+  "@libraryReadingBadge": {
+    "description": "Badge on a book cover indicating the book is in progress"
+  },
+  "libraryDeletingBookFile": "Deleting book file...",
+  "@libraryDeletingBookFile": {
+    "description": "Deletion progress step: removing the book file"
+  },
+  "libraryDeletingCoverImage": "Deleting cover image...",
+  "@libraryDeletingCoverImage": {
+    "description": "Deletion progress step: removing the cover image"
+  },
+  "libraryCleaningDatabase": "Cleaning up database records...",
+  "@libraryCleaningDatabase": {
+    "description": "Deletion progress step: removing database records"
+  },
+  "libraryDeleteComplete": "Deletion complete",
+  "@libraryDeleteComplete": {
+    "description": "Deletion progress step: finished"
+  },
+  "readerPrefaceTitle": "Front Matter",
+  "@readerPrefaceTitle": {
+    "description": "Chapter title for TXT content that appears before the first detected chapter heading"
+  },
+  "readerModeHorizontalPage": "Horizontal Paging",
+  "@readerModeHorizontalPage": {
+    "description": "Page mode option: content split into pages turned instantly by tapping"
+  },
+  "readerModeVerticalScrollHint": "Scroll vertically to read, swipe horizontally to switch chapters",
+  "@readerModeVerticalScrollHint": {
+    "description": "Subtitle explaining the vertical scroll page mode"
+  },
+  "readerModeHorizontalPageHint": "Tap the left side for the previous page, the right side for the next page",
+  "@readerModeHorizontalPageHint": {
+    "description": "Subtitle explaining the horizontal paging mode"
+  },
+  "readerModeHorizontalSlideHint": "Pages follow your finger horizontally and snap into place",
+  "@readerModeHorizontalSlideHint": {
+    "description": "Subtitle explaining the horizontal slide page mode"
+  },
+  "readerFontSizeValue": "Font size  {size}",
+  "@readerFontSizeValue": {
+    "description": "Slider label showing the current reader font size",
+    "placeholders": {
+      "size": {
+        "type": "int"
+      }
+    }
+  },
+  "readerHorizontalMarginValue": "Horizontal margin  {margin}",
+  "@readerHorizontalMarginValue": {
+    "description": "Slider label showing the current left/right page margin",
+    "placeholders": {
+      "margin": {
+        "type": "int"
+      }
+    }
+  },
+  "readerVerticalMarginValue": "Vertical margin  {margin}",
+  "@readerVerticalMarginValue": {
+    "description": "Slider label showing the current top/bottom page margin",
+    "placeholders": {
+      "margin": {
+        "type": "int"
+      }
+    }
+  },
+  "readerChapterCount": "{count} chapters",
+  "@readerChapterCount": {
+    "description": "Total chapter count shown in the table of contents header",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "readerChapterFallback": "Chapter {number}",
+  "@readerChapterFallback": {
+    "description": "Fallback title for a chapter without a title, 1-based index",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "readerOpenFailed": "Failed to open: {error}",
+  "@readerOpenFailed": {
+    "description": "Error message when a book fails to load in the native reader",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "readerNoContent": "This book has no readable content",
+  "@readerNoContent": {
+    "description": "Shown when a book parses successfully but contains no displayable text"
+  },
+  "readerStatusPaged": "Chapter {chapter}/{chapterCount} · Page {page}/{pageCount}",
+  "@readerStatusPaged": {
+    "description": "Bottom status bar in paged modes: current chapter and page position",
+    "placeholders": {
+      "chapter": {
+        "type": "int"
+      },
+      "chapterCount": {
+        "type": "int"
+      },
+      "page": {
+        "type": "int"
+      },
+      "pageCount": {
+        "type": "int"
+      }
+    }
+  },
+  "readerStatusScroll": "Chapter {chapter}/{chapterCount} · Vertical scroll",
+  "@readerStatusScroll": {
+    "description": "Bottom status bar in vertical scroll mode: current chapter position",
+    "placeholders": {
+      "chapter": {
+        "type": "int"
+      },
+      "chapterCount": {
+        "type": "int"
+      }
+    }
+  },
+  "importPreparing": "Preparing import...",
+  "@importPreparing": {
+    "description": "Progress message shown when a local file import starts"
+  },
+  "importFailedWithError": "Import failed: {error}",
+  "@importFailedWithError": {
+    "description": "Toast shown when importing a book throws an exception",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "importLocalFile": "Local Files",
+  "@importLocalFile": {
+    "description": "Button label to import a book from local device storage"
+  },
+  "settingsAiTempHintMinimax": "Temperature: MiniMax recommends 0.01 ~ 1.00",
+  "@settingsAiTempHintMinimax": {
+    "description": "Temperature range hint for the MiniMax AI provider"
+  },
+  "settingsAiCustomConfigTitle": "Custom AI Configuration",
+  "@settingsAiCustomConfigTitle": {
+    "description": "Title of the custom AI config dialog"
+  },
+  "settingsAiCurrentProvider": "Current provider: {provider}",
+  "@settingsAiCurrentProvider": {
+    "description": "Shows the currently selected AI provider in the custom config dialog",
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsAiTempErrorMinimax": "MiniMax Temperature must be between 0.01 and 1.00",
+  "@settingsAiTempErrorMinimax": {
+    "description": "Validation error for MiniMax temperature range"
+  },
+  "settingsAiTempErrorOutOfRange": "Temperature is out of range, please follow the hint",
+  "@settingsAiTempErrorOutOfRange": {
+    "description": "Validation error for temperature out of allowed range"
+  },
+  "settingsApply": "Apply",
+  "@settingsApply": {
+    "description": "Apply button in the custom AI config dialog"
+  },
+  "settingsAiCustomApplied": "Custom parameters applied, remember to save the configuration",
+  "@settingsAiCustomApplied": {
+    "description": "Toast after applying custom AI parameters"
+  },
+  "settingsAiApiKeyRequired": "API Key cannot be empty",
+  "@settingsAiApiKeyRequired": {
+    "description": "Validation error when API key is empty"
+  },
+  "settingsAiModelRequired": "Model cannot be empty",
+  "@settingsAiModelRequired": {
+    "description": "Validation error when model is empty"
+  },
+  "settingsAiBaseUrlInvalid": "Base URL must be a valid http/https address",
+  "@settingsAiBaseUrlInvalid": {
+    "description": "Validation error for invalid base URL"
+  },
+  "settingsAiSettingsSaved": "AI settings saved",
+  "@settingsAiSettingsSaved": {
+    "description": "Toast after saving AI settings"
+  },
+  "settingsSaveFailed": "Save failed: {error}",
+  "@settingsSaveFailed": {
+    "description": "Error message when saving settings fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsVolumeKeyTurnTitle": "Volume key page turning",
+  "@settingsVolumeKeyTurnTitle": {
+    "description": "Switch title for volume-key page turning"
+  },
+  "settingsVolumeKeyTurnSubtitle": "Use volume keys to turn pages",
+  "@settingsVolumeKeyTurnSubtitle": {
+    "description": "Switch subtitle for volume-key page turning"
+  },
+  "settingsShowStatusBarTitle": "Show system status bar while reading",
+  "@settingsShowStatusBarTitle": {
+    "description": "Switch title for showing system status bar in reader"
+  },
+  "settingsShowStatusBarOnSubtitle": "Reader battery/time UI hidden",
+  "@settingsShowStatusBarOnSubtitle": {
+    "description": "Subtitle when system status bar is shown in reader"
+  },
+  "settingsShowStatusBarOffSubtitle": "Using reader battery/time UI",
+  "@settingsShowStatusBarOffSubtitle": {
+    "description": "Subtitle when system status bar is hidden in reader"
+  },
+  "settingsAiAssistantTitle": "AI Reading Assistant",
+  "@settingsAiAssistantTitle": {
+    "description": "Section title for AI assistant settings"
+  },
+  "settingsSystemSettingsTitle": "System Settings",
+  "@settingsSystemSettingsTitle": {
+    "description": "Section title for system settings"
+  },
+  "settingsKeepScreenOnTitle": "Keep screen on",
+  "@settingsKeepScreenOnTitle": {
+    "description": "Switch title for keeping screen on"
+  },
+  "settingsKeepScreenOnSubtitle": "Prevent the screen from turning off while reading",
+  "@settingsKeepScreenOnSubtitle": {
+    "description": "Switch subtitle for keeping screen on"
+  },
+  "settingsAutoSaveTitle": "Auto save",
+  "@settingsAutoSaveTitle": {
+    "description": "Switch title for auto save"
+  },
+  "settingsAutoSaveSubtitle": "Automatically save reading progress",
+  "@settingsAutoSaveSubtitle": {
+    "description": "Switch subtitle for auto save"
+  },
+  "settingsHelpPlaceholder": "Help information can go here",
+  "@settingsHelpPlaceholder": {
+    "description": "Placeholder toast for the help button"
+  },
+  "settingsAiConfigured": "AI configured",
+  "@settingsAiConfigured": {
+    "description": "Status text when AI is configured"
+  },
+  "settingsAiNotConfigured": "API Key not configured yet",
+  "@settingsAiNotConfigured": {
+    "description": "Status text when AI API key is missing"
+  },
+  "settingsAiReadyToUse": "Ready to use",
+  "@settingsAiReadyToUse": {
+    "description": "Badge when AI settings are complete"
+  },
+  "settingsAiPendingConfig": "Pending setup",
+  "@settingsAiPendingConfig": {
+    "description": "Badge when AI settings are incomplete"
+  },
+  "settingsAiCurrentPreset": "Current preset: {preset}",
+  "@settingsAiCurrentPreset": {
+    "description": "Shows the matched AI model preset",
+    "placeholders": {
+      "preset": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsAiCurrentCustom": "Current configuration: custom · {model}",
+  "@settingsAiCurrentCustom": {
+    "description": "Shows the custom AI model in use",
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsAiPresetIntro": "Common providers and models are built in; usually you only need to pick a preset and enter an API Key.",
+  "@settingsAiPresetIntro": {
+    "description": "Intro text explaining AI presets"
+  },
+  "settingsAiProviderLabel": "Provider",
+  "@settingsAiProviderLabel": {
+    "description": "Label of the AI provider dropdown"
+  },
+  "settingsAiPresetHint": "Select a preset model",
+  "@settingsAiPresetHint": {
+    "description": "Hint of the AI preset dropdown"
+  },
+  "settingsAiPresetLabel": "Preset model",
+  "@settingsAiPresetLabel": {
+    "description": "Label of the AI preset dropdown"
+  },
+  "settingsAiCustomButton": "Custom",
+  "@settingsAiCustomButton": {
+    "description": "Button opening the custom AI config dialog"
+  },
+  "settingsAiPresetSelectedHint": "After selecting a preset, just enter an API Key to start using it.",
+  "@settingsAiPresetSelectedHint": {
+    "description": "Hint shown when a preset is selected"
+  },
+  "settingsAiCustomActiveHint": "Custom parameters are in use; you can switch back to a preset at any time.",
+  "@settingsAiCustomActiveHint": {
+    "description": "Hint shown when custom AI parameters are active"
+  },
+  "settingsAiApiKeyHint": "Enter to enable the current preset",
+  "@settingsAiApiKeyHint": {
+    "description": "Hint text of the API key input"
+  },
+  "settingsShow": "Show",
+  "@settingsShow": {
+    "description": "Tooltip to reveal the API key"
+  },
+  "settingsHide": "Hide",
+  "@settingsHide": {
+    "description": "Tooltip to hide the API key"
+  },
+  "settingsAiSaving": "Saving...",
+  "@settingsAiSaving": {
+    "description": "Button label while AI settings are being saved"
+  },
+  "settingsAiSaveConfig": "Save AI configuration",
+  "@settingsAiSaveConfig": {
+    "description": "Button label to save AI settings"
+  },
+  "settingsDarkModeTitle": "Night mode",
+  "@settingsDarkModeTitle": {
+    "description": "Title of the theme mode setting and modal"
+  },
+  "settingsCurrentValue": "Current: {value}",
+  "@settingsCurrentValue": {
+    "description": "Generic subtitle showing the current value of a setting",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsUiStyleTitle": "UI style",
+  "@settingsUiStyleTitle": {
+    "description": "Title of the UI style setting and modal"
+  },
+  "settingsUiStyleSwitchedRestart": "UI style switched to {style}. Restart to fully apply it to all pages.",
+  "@settingsUiStyleSwitchedRestart": {
+    "description": "Restart dialog reason after switching UI style",
+    "placeholders": {
+      "style": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsAccentFollowTheme": "Accent color: follow theme",
+  "@settingsAccentFollowTheme": {
+    "description": "Accent summary when following the app theme"
+  },
+  "settingsAccentValue": "Accent color: {name}",
+  "@settingsAccentValue": {
+    "description": "Accent summary showing the chosen color name",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsAppThemeTitle": "App theme",
+  "@settingsAppThemeTitle": {
+    "description": "Title of the app theme setting"
+  },
+  "settingsCurrentThemeSummary": "Current: {theme} · {accent}",
+  "@settingsCurrentThemeSummary": {
+    "description": "Subtitle combining the current theme name and accent summary",
+    "placeholders": {
+      "theme": {
+        "type": "String"
+      },
+      "accent": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsFollowAppTheme": "Follow app theme",
+  "@settingsFollowAppTheme": {
+    "description": "Accent color subtitle when no custom accent is set"
+  },
+  "settingsAccentColorTitle": "Accent color",
+  "@settingsAccentColorTitle": {
+    "description": "Title of the accent color setting and modal"
+  },
+  "settingsThemeModeSystemHint": "Switch automatically with the system appearance",
+  "@settingsThemeModeSystemHint": {
+    "description": "Hint for system theme mode"
+  },
+  "settingsThemeModeLightHint": "Always use the light appearance",
+  "@settingsThemeModeLightHint": {
+    "description": "Hint for light theme mode"
+  },
+  "settingsThemeModeDarkHint": "Always use the dark appearance",
+  "@settingsThemeModeDarkHint": {
+    "description": "Hint for dark theme mode"
+  },
+  "settingsSelectAppTheme": "Choose app theme",
+  "@settingsSelectAppTheme": {
+    "description": "Title of the app theme picker modal"
+  },
+  "settingsDone": "Done",
+  "@settingsDone": {
+    "description": "Done button in theme/accent modals"
+  },
+  "settingsAccentColorAdvice": "Prefer choosing an app theme first, then override the accent color as needed.",
+  "@settingsAccentColorAdvice": {
+    "description": "Advice text in the accent color modal"
+  },
+  "settingsAccentFollowThemeOption": "Follow theme",
+  "@settingsAccentFollowThemeOption": {
+    "description": "Option title to follow the theme accent"
+  },
+  "settingsAccentFollowThemeDesc": "Use the current app theme's default accent color",
+  "@settingsAccentFollowThemeDesc": {
+    "description": "Description for the follow-theme accent option"
+  },
+  "settingsAboutTitle": "About",
+  "@settingsAboutTitle": {
+    "description": "Title of the about card"
+  },
+  "settingsAppName": "Open Reading",
+  "@settingsAppName": {
+    "description": "Display name of the app in the about card"
+  },
+  "settingsAuthor": "Maintainer: miloquinn",
+  "@settingsAuthor": {
+    "description": "Author line in the about card"
+  },
+  "settingsGithubRepo": "GitHub repository",
+  "@settingsGithubRepo": {
+    "description": "Link label to the GitHub repository"
+  },
+  "settingsNewYearGreeting": "A focused, restrained, and freely modifiable cross-platform reader.",
+  "@settingsNewYearGreeting": {
+    "description": "New Year greeting in the about card"
+  },
+  "settingsGithubOpenFailed": "Could not open the GitHub link",
+  "@settingsGithubOpenFailed": {
+    "description": "Toast when the GitHub link fails to open"
+  },
+  "settingsIosOnlyFeature": "This feature is only available on iOS",
+  "@settingsIosOnlyFeature": {
+    "description": "Toast when using an iOS-only feature on another platform"
+  },
+  "settingsIosSyncResult": "Synced to {storage}\n{books} books, {files} files copied",
+  "@settingsIosSyncResult": {
+    "description": "Toast summarizing the iOS sync result",
+    "placeholders": {
+      "storage": {
+        "type": "String"
+      },
+      "books": {
+        "type": "int"
+      },
+      "files": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsRestartRequiredReason": "This settings change requires an app restart to take full effect.",
+  "@settingsRestartRequiredReason": {
+    "description": "Default reason in the restart dialog"
+  },
+  "settingsRestartRequiredTitle": "Restart required",
+  "@settingsRestartRequiredTitle": {
+    "description": "Title of the restart dialog"
+  },
+  "settingsRestartPrompt": "{reason}\n\nRestart the app now?",
+  "@settingsRestartPrompt": {
+    "description": "Body of the restart dialog combining the reason and the question",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsRestartLater": "Later",
+  "@settingsRestartLater": {
+    "description": "Button to postpone the restart"
+  },
+  "settingsRestartNow": "Restart",
+  "@settingsRestartNow": {
+    "description": "Button to restart the app immediately"
+  },
+  "statsDetailedTitle": "Detailed Statistics",
+  "@statsDetailedTitle": {
+    "description": "Detailed stats page title"
+  },
+  "statsRange7Days": "7 days",
+  "@statsRange7Days": {
+    "description": "Time range option: last 7 days"
+  },
+  "statsRange30Days": "30 days",
+  "@statsRange30Days": {
+    "description": "Time range option: last 30 days"
+  },
+  "statsRange90Days": "90 days",
+  "@statsRange90Days": {
+    "description": "Time range option: last 90 days"
+  },
+  "statsRange1Year": "1 year",
+  "@statsRange1Year": {
+    "description": "Time range option: last year"
+  },
+  "statsRangeAll": "All",
+  "@statsRangeAll": {
+    "description": "Time range option: all time"
+  },
+  "statsTabOverview": "Overview",
+  "@statsTabOverview": {
+    "description": "Stats tab title: overview"
+  },
+  "statsTabCharts": "Charts",
+  "@statsTabCharts": {
+    "description": "Stats tab title: charts"
+  },
+  "statsTabBooks": "Books",
+  "@statsTabBooks": {
+    "description": "Stats tab title: books"
+  },
+  "statsTabAchievements": "Achievements",
+  "@statsTabAchievements": {
+    "description": "Stats tab title: achievements"
+  },
+  "statsReadingOverview": "Reading Overview",
+  "@statsReadingOverview": {
+    "description": "Hero panel title on the overview tab"
+  },
+  "statsCumulativeHours": "Total {hours} hours",
+  "@statsCumulativeHours": {
+    "description": "Hero headline: cumulative reading hours (hours is a preformatted decimal string)",
+    "placeholders": {
+      "hours": {}
+    }
+  },
+  "statsStreakEncouragement": "Keep the rhythm — you have read {days} days in a row",
+  "@statsStreakEncouragement": {
+    "description": "Hero subtitle encouraging the current reading streak",
+    "placeholders": {
+      "days": {}
+    }
+  },
+  "statsTotalDuration": "Total Time",
+  "@statsTotalDuration": {
+    "description": "Overview chip label: total reading time"
+  },
+  "statsAvgSession": "Avg Session",
+  "@statsAvgSession": {
+    "description": "Overview chip label: average single-session duration"
+  },
+  "statsDaysCount": "{count} days",
+  "@statsDaysCount": {
+    "description": "A number of days with unit",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "statsNoData": "No data",
+  "@statsNoData": {
+    "description": "Shown when there is no statistics data"
+  },
+  "statsPeriodEarlyMorning": "Early morning 05:00-08:59",
+  "@statsPeriodEarlyMorning": {
+    "description": "Best reading period label: early morning"
+  },
+  "statsPeriodMorning": "Morning 09:00-11:59",
+  "@statsPeriodMorning": {
+    "description": "Best reading period label: morning"
+  },
+  "statsPeriodAfternoon": "Afternoon 12:00-17:59",
+  "@statsPeriodAfternoon": {
+    "description": "Best reading period label: afternoon"
+  },
+  "statsPeriodEvening": "Evening 18:00-21:59",
+  "@statsPeriodEvening": {
+    "description": "Best reading period label: evening"
+  },
+  "statsPeriodLateNight": "Late night 22:00-04:59",
+  "@statsPeriodLateNight": {
+    "description": "Best reading period label: late night"
+  },
+  "statsTotalReadingTime": "Total Reading Time",
+  "@statsTotalReadingTime": {
+    "description": "Stats grid card title: total reading time"
+  },
+  "statsTotalPagesRead": "Total Pages Read",
+  "@statsTotalPagesRead": {
+    "description": "Stats grid card title: total pages read"
+  },
+  "statsBooksReadCount": "Books Read",
+  "@statsBooksReadCount": {
+    "description": "Stats grid card title: number of books read"
+  },
+  "statsUnitPage": "pages",
+  "@statsUnitPage": {
+    "description": "Unit suffix for pages"
+  },
+  "statsTodayProgress": "Today's Reading Progress",
+  "@statsTodayProgress": {
+    "description": "Card title: today's reading progress"
+  },
+  "statsMinutesOfTarget": "{current} / {target} min",
+  "@statsMinutesOfTarget": {
+    "description": "Progress vs target in minutes",
+    "placeholders": {
+      "current": {},
+      "target": {}
+    }
+  },
+  "statsPagesRead": "Pages Read",
+  "@statsPagesRead": {
+    "description": "Label for pages read (progress row and chart type selector)"
+  },
+  "statsPagesOfTarget": "{current} / {target} pages",
+  "@statsPagesOfTarget": {
+    "description": "Progress vs target in pages",
+    "placeholders": {
+      "current": {},
+      "target": {}
+    }
+  },
+  "statsReadingHabits": "Reading Habits",
+  "@statsReadingHabits": {
+    "description": "Card title: reading habits analysis"
+  },
+  "statsBestReadingPeriod": "Best Reading Time",
+  "@statsBestReadingPeriod": {
+    "description": "Habit item label: best reading period of the day"
+  },
+  "statsAvgSessionReading": "Avg Session Reading",
+  "@statsAvgSessionReading": {
+    "description": "Habit item label: average single reading session"
+  },
+  "statsMaxStreakDays": "Longest Streak",
+  "@statsMaxStreakDays": {
+    "description": "Habit item label: longest consecutive reading days"
+  },
+  "statsFocusScore": "Reading Focus",
+  "@statsFocusScore": {
+    "description": "Habit item label: reading focus score"
+  },
+  "statsBookCount": "Book Count",
+  "@statsBookCount": {
+    "description": "Chart type selector: number of books"
+  },
+  "statsTrendAnalysis": "Reading Trend Analysis",
+  "@statsTrendAnalysis": {
+    "description": "Chart title: reading trend analysis"
+  },
+  "statsAxisMinutes": "{value} min",
+  "@statsAxisMinutes": {
+    "description": "Chart axis label: minutes (compact)",
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "statsAxisPages": "{value} pg",
+  "@statsAxisPages": {
+    "description": "Chart axis label: pages (compact)",
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "statsAxisBooks": "{value} bk",
+  "@statsAxisBooks": {
+    "description": "Chart axis label: books (compact)",
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "statsAxisHour": "{hour}h",
+  "@statsAxisHour": {
+    "description": "Chart axis label: hour of day (compact)",
+    "placeholders": {
+      "hour": {}
+    }
+  },
+  "statsTimeDistribution": "Reading Time Distribution",
+  "@statsTimeDistribution": {
+    "description": "Chart title: hourly reading time distribution"
+  },
+  "statsFormatDistribution": "Book Format Distribution",
+  "@statsFormatDistribution": {
+    "description": "Chart title: book format distribution pie chart"
+  },
+  "statsCompleted": "Completed",
+  "@statsCompleted": {
+    "description": "Books summary: completed books"
+  },
+  "statsInProgress": "In Progress",
+  "@statsInProgress": {
+    "description": "Books summary: books currently being read"
+  },
+  "statsDurationRanking": "Reading Time Ranking",
+  "@statsDurationRanking": {
+    "description": "Books ranking title when real durations exist"
+  },
+  "statsProgressRanking": "Reading Progress Ranking",
+  "@statsProgressRanking": {
+    "description": "Books ranking title when only progress data exists"
+  },
+  "statsPagesCount": "{count} pages",
+  "@statsPagesCount": {
+    "description": "A number of pages with unit",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "statsSessionCount": "{count} sessions",
+  "@statsSessionCount": {
+    "description": "Number of reading sessions",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "statsAchievementsSummary": "Earned {achieved} achievements, {remaining} more to unlock",
+  "@statsAchievementsSummary": {
+    "description": "Achievements overview subtitle",
+    "placeholders": {
+      "achieved": {},
+      "remaining": {}
+    }
+  },
+  "statsAchievementFirstReadTitle": "First Read",
+  "@statsAchievementFirstReadTitle": {
+    "description": "Achievement title: first reading session"
+  },
+  "statsAchievementFirstReadDesc": "Complete your first reading session",
+  "@statsAchievementFirstReadDesc": {
+    "description": "Achievement description: first reading session"
+  },
+  "statsAchievementNoviceTitle": "Reading Novice",
+  "@statsAchievementNoviceTitle": {
+    "description": "Achievement title: 10 hours total"
+  },
+  "statsAchievementNoviceDesc": "Read for a total of 10 hours",
+  "@statsAchievementNoviceDesc": {
+    "description": "Achievement description: 10 hours total"
+  },
+  "statsAchievementBookwormTitle": "Bookworm",
+  "@statsAchievementBookwormTitle": {
+    "description": "Achievement title: 100 hours total"
+  },
+  "statsAchievementBookwormDesc": "Read for a total of 100 hours",
+  "@statsAchievementBookwormDesc": {
+    "description": "Achievement description: 100 hours total"
+  },
+  "statsAchievementExpertTitle": "Reading Expert",
+  "@statsAchievementExpertTitle": {
+    "description": "Achievement title: 7-day streak"
+  },
+  "statsAchievementExpertDesc": "Read 7 days in a row",
+  "@statsAchievementExpertDesc": {
+    "description": "Achievement description: 7-day streak"
+  },
+  "statsAchievementOceanTitle": "Ocean of Knowledge",
+  "@statsAchievementOceanTitle": {
+    "description": "Achievement title: 10000 pages"
+  },
+  "statsAchievementOceanDesc": "Read 10,000 pages",
+  "@statsAchievementOceanDesc": {
+    "description": "Achievement description: 10000 pages"
+  },
+  "statsAchievementScholarTitle": "Polymath",
+  "@statsAchievementScholarTitle": {
+    "description": "Achievement title: 10 different books"
+  },
+  "statsAchievementScholarDesc": "Read 10 different books",
+  "@statsAchievementScholarDesc": {
+    "description": "Achievement description: 10 different books"
+  },
+  "statsAchievementMarathonTitle": "Reading Marathon",
+  "@statsAchievementMarathonTitle": {
+    "description": "Achievement title: 30-day streak"
+  },
+  "statsAchievementMarathonDesc": "Read 30 days in a row",
+  "@statsAchievementMarathonDesc": {
+    "description": "Achievement description: 30-day streak"
+  },
+  "statsAchievementFocusTitle": "Focus Master",
+  "@statsAchievementFocusTitle": {
+    "description": "Achievement title: 500 hours total"
+  },
+  "statsAchievementFocusDesc": "Read for a total of 500 hours",
+  "@statsAchievementFocusDesc": {
+    "description": "Achievement description: 500 hours total"
+  },
+  "statsProgressPercent": "Progress: {percent}%",
+  "@statsProgressPercent": {
+    "description": "Achievement progress percentage",
+    "placeholders": {
+      "percent": {}
+    }
+  },
+  "statsGoalProgress": "Reading Goal Progress",
+  "@statsGoalProgress": {
+    "description": "Chart title: reading goal progress"
+  },
+  "statsMonthlyReadingTime": "This Month's Reading Time",
+  "@statsMonthlyReadingTime": {
+    "description": "Goal row label: this month's reading time"
+  },
+  "statsWeeklyReadingTime": "This Week's Reading Time",
+  "@statsWeeklyReadingTime": {
+    "description": "Goal row label: this week's reading time"
+  },
+  "statsAvgDailyPages7d": "Daily Avg Pages (Last 7 Days)",
+  "@statsAvgDailyPages7d": {
+    "description": "Goal row label: average daily pages over the last 7 days"
+  },
+  "statsHoursCount": "{count} hours",
+  "@statsHoursCount": {
+    "description": "A number of hours with unit",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "statsSpeedTrend": "Reading Speed Trend",
+  "@statsSpeedTrend": {
+    "description": "Chart title: reading speed trend"
+  },
+  "statsAvgSpeed": "Avg: {speed} pages/min",
+  "@statsAvgSpeed": {
+    "description": "Average reading speed badge (speed is a preformatted decimal string)",
+    "placeholders": {
+      "speed": {}
+    }
+  },
+  "statsReadingContinuity": "Reading Continuity",
+  "@statsReadingContinuity": {
+    "description": "Heatmap card title: reading continuity"
+  },
+  "statsCurrentStreak": "Current streak: {days} days",
+  "@statsCurrentStreak": {
+    "description": "Current consecutive reading days badge",
+    "placeholders": {
+      "days": {}
+    }
+  },
+  "statsHeatmapLess": "Less",
+  "@statsHeatmapLess": {
+    "description": "Heatmap legend: low intensity"
+  },
+  "statsHeatmapMore": "More",
+  "@statsHeatmapMore": {
+    "description": "Heatmap legend: high intensity"
+  },
+  "statsWeekNumber": "Week {week}",
+  "@statsWeekNumber": {
+    "description": "Heatmap column header: week number",
+    "placeholders": {
+      "week": {}
+    }
   }
 }

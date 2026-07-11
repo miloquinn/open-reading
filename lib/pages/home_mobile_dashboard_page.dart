@@ -5,6 +5,7 @@ import 'dart:io';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 
 import '../models/book.dart';
 import '../services/ai/global_ai_reading_service.dart';
@@ -15,6 +16,7 @@ import '../services/reading/reading_plan_service.dart';
 import '../core/reader/native_reader_service.dart';
 import '../services/reading/reading_stats_dao.dart';
 import '../utils/layout_helper.dart';
+import '../utils/localization_extension.dart';
 import '../utils/page_transitions.dart';
 import '../utils/ui_style.dart';
 import '../widgets/app_brand_icon.dart';
@@ -392,7 +394,7 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
           _focusEndTime = null;
           _focusRemaining = Duration.zero;
         });
-        showSideToast(context, '25 分钟专注已完成，做得很好。',
+        showSideToast(context, context.l10n.homeFocusCompleted(_focusMinutes),
             icon: Icons.emoji_events_rounded);
         _loadAllStats();
       } else {
@@ -456,7 +458,7 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      '每日阅读目标',
+                      context.l10n.homeDailyReadingGoal,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w700,
                           ),
@@ -470,7 +472,7 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
                   children: options.map((value) {
                     final isSelected = value == currentGoal;
                     return ChoiceChip(
-                      label: Text('$value 分钟'),
+                      label: Text(context.l10n.statsMinutes(value)),
                       selected: isSelected,
                       onSelected: (_) => Navigator.pop(context, value),
                     );
@@ -530,7 +532,7 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
               backgroundColor: palette.refreshBackgroundColor,
               edgeOffset: metrics.refreshEdgeOffset,
               child: ListView(
-                cacheExtent: 900,
+                scrollCacheExtent: const ScrollCacheExtent.pixels(900),
                 physics: const AlwaysScrollableScrollPhysics(
                   parent: BouncingScrollPhysics(),
                 ),
@@ -556,26 +558,31 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
                           SizedBox(height: metrics.sectionSpacing),
                           if ((_aiReadingAdvice ?? '').trim().isNotEmpty) ...[
                             RepaintBoundary(
-                              child: _buildSectionLabel('AI 阅读建议'),
+                              child: _buildSectionLabel(
+                                  context.l10n.homeAiAdviceSection),
                             ),
                             SizedBox(height: metrics.sectionSpacing),
                             RepaintBoundary(child: _buildAiAdviceCard()),
                             SizedBox(height: metrics.sectionSpacing),
                           ],
-                          RepaintBoundary(child: _buildSectionLabel('今日速览')),
+                          RepaintBoundary(
+                              child: _buildSectionLabel(
+                                  context.l10n.homeTodayGlance)),
                           SizedBox(height: metrics.sectionSpacing),
                           RepaintBoundary(child: _buildSummaryRow()),
                           SizedBox(height: metrics.sectionSpacing),
                           RepaintBoundary(
                             child: _buildHeaderRow(
-                              '今日阅读计划',
+                              context.l10n.homeTodayReadingPlan,
                               '$planDone / $planTotal',
                             ),
                           ),
                           SizedBox(height: metrics.sectionSpacing),
                           RepaintBoundary(child: _buildPlanCard()),
                           SizedBox(height: metrics.sectionSpacing),
-                          RepaintBoundary(child: _buildSectionLabel('阅读进度')),
+                          RepaintBoundary(
+                              child: _buildSectionLabel(
+                                  context.l10n.readingProgress)),
                           SizedBox(height: metrics.sectionSpacing),
                           RepaintBoundary(
                             child: _buildWeekCard(dots, weekPercent),
@@ -583,8 +590,8 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
                           SizedBox(height: metrics.sectionSpacing),
                           RepaintBoundary(
                             child: _buildHeaderRow(
-                              '最近阅读',
-                              '查看全部',
+                              context.l10n.homeRecentReading,
+                              context.l10n.homeViewAll,
                               action: _openStats,
                             ),
                           ),
@@ -611,7 +618,7 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
       child: Row(
         children: [
           Text(
-            '首页',
+            context.l10n.home,
             style: TextStyle(
               fontSize: 30,
               fontWeight: FontWeight.w700,
@@ -644,14 +651,14 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
     final weekMinutes = (_summaryStats['week'] ?? 0) ~/ 60;
     final streak = plan?.streakDays ?? (_summaryStats['streak'] ?? 0);
     final title = plan == null
-        ? '正在同步你的阅读计划'
+        ? context.l10n.homeSyncingReadingPlan
         : plan.isGoalCompleted
-            ? '今日目标已完成，建议做一次阅读复盘'
-            : '还差 ${plan.remainingMinutes} 分钟即可完成今日目标';
+            ? context.l10n.homeGoalDoneSuggestReview
+            : context.l10n.homeRemainingToGoal(plan.remainingMinutes);
     final recommendedBookTitle = _recommendedPlanBook?.title;
     final recommendationText = recommendedBookTitle == null
-        ? '从书架选一本想继续的书，先完成 1 个专注番茄。'
-        : '优先继续《$recommendedBookTitle》，完成后再切换其他书籍。';
+        ? context.l10n.homePickBookHint
+        : context.l10n.homeContinueBookHint(recommendedBookTitle);
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -679,7 +686,7 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
               ),
               const SizedBox(width: 10),
               Text(
-                '今日行动建议',
+                context.l10n.homeTodayActionAdvice,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
@@ -696,7 +703,8 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
-                    '${(plan.completionRate * 100).round()}% 进度',
+                    context.l10n.homeProgressPercent(
+                        (plan.completionRate * 100).round()),
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
@@ -751,16 +759,17 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
             children: [
               _buildHeroChip(
                 icon: Icons.local_fire_department_outlined,
-                text: '连读 $streak 天',
+                text: context.l10n.homeStreakDays(streak),
               ),
               _buildHeroChip(
                 icon: Icons.calendar_view_week_outlined,
-                text: '本周 $weekMinutes 分钟',
+                text: context.l10n.homeWeekMinutes(weekMinutes),
               ),
               _buildHeroChip(
                 icon: Icons.flag_outlined,
-                text:
-                    plan == null ? '计划加载中' : '目标 ${plan.dailyGoalMinutes} 分钟/天',
+                text: plan == null
+                    ? context.l10n.homePlanLoading
+                    : context.l10n.homeGoalMinutesPerDay(plan.dailyGoalMinutes),
               ),
             ],
           ),
@@ -792,7 +801,7 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
               ),
               const SizedBox(width: 8),
               Text(
-                'AI 给你的阅读建议',
+                context.l10n.homeAiAdviceForYou,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -804,7 +813,7 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
           if (fromBook.isNotEmpty) ...[
             const SizedBox(height: 6),
             Text(
-              '基于《$fromBook》',
+              context.l10n.homeBasedOnBook(fromBook),
               style: TextStyle(
                 fontSize: 12,
                 color: palette.secondaryTextColor,
@@ -964,7 +973,7 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '今日阅读（分钟）',
+                    context.l10n.homeTodayReadingMinutesLabel,
                     style: TextStyle(
                       fontSize: 14,
                       color: palette.secondaryTextColor,
@@ -1007,7 +1016,7 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '累计阅读（分钟）',
+                    context.l10n.homeTotalReadingMinutesLabel,
                     style: TextStyle(
                       fontSize: 14,
                       color: palette.secondaryTextColor,
@@ -1075,7 +1084,7 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
             ),
             const SizedBox(width: 10),
             Text(
-              '正在生成今日阅读计划...',
+              context.l10n.homeGeneratingPlan,
               style: TextStyle(
                 fontSize: 14,
                 color: palette.secondaryTextColor,
@@ -1145,7 +1154,7 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          '完成',
+                          context.l10n.homeCompletedLabel,
                           style: TextStyle(
                             fontSize: 11,
                             color: palette.secondaryTextColor,
@@ -1163,8 +1172,9 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
                   children: [
                     Text(
                       plan.isGoalCompleted
-                          ? '今日目标已达成'
-                          : '还差 ${plan.remainingMinutes} 分钟',
+                          ? context.l10n.homeTodayGoalAchieved
+                          : context.l10n
+                              .homeMinutesRemaining(plan.remainingMinutes),
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
@@ -1173,7 +1183,10 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '已读 ${plan.todayReadMinutes} / ${plan.dailyGoalMinutes} 分钟',
+                      context.l10n.homeReadOfGoalMinutes(
+                        plan.todayReadMinutes,
+                        plan.dailyGoalMinutes,
+                      ),
                       style: TextStyle(
                         fontSize: 14,
                         color: palette.secondaryTextColor,
@@ -1182,7 +1195,8 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
                     if (!plan.isGoalCompleted) ...[
                       const SizedBox(height: 4),
                       Text(
-                        '约 ${plan.suggestedSessionsToFinish} 次专注可完成今日目标',
+                        context.l10n.homeSessionsToFinishGoal(
+                            plan.suggestedSessionsToFinish),
                         style: TextStyle(
                           fontSize: 12,
                           color: palette.accentColor,
@@ -1202,18 +1216,18 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
             children: [
               _buildPlanMetricBadge(
                 icon: Icons.local_fire_department_outlined,
-                label: '连击',
-                value: '${plan.streakDays}天',
+                label: context.l10n.homeStreakLabel,
+                value: context.l10n.homeDaysCount(plan.streakDays),
               ),
               _buildPlanMetricBadge(
                 icon: Icons.calendar_view_week_outlined,
-                label: '周达标',
-                value: '${plan.weekAchievedDays}天',
+                label: context.l10n.homeWeekAchievedLabel,
+                value: context.l10n.homeDaysCount(plan.weekAchievedDays),
               ),
               _buildPlanMetricBadge(
                 icon: Icons.timer_outlined,
-                label: '专注',
-                value: '${plan.focusSessionsToday}次',
+                label: context.l10n.homeFocusLabel,
+                value: context.l10n.homeTimesCount(plan.focusSessionsToday),
               ),
             ],
           ),
@@ -1235,7 +1249,8 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '专注倒计时 ${_formatDurationShort(_focusRemaining)}',
+                    context.l10n.homeFocusCountdown(
+                        _formatDurationShort(_focusRemaining)),
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -1267,7 +1282,9 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
                       ? null
                       : () => _openBook(_recommendedPlanBook!),
                   icon: const AppBrandIcon(size: 18, borderRadius: 5),
-                  label: Text(_recommendedPlanBook == null ? '去书库阅读' : '继续阅读'),
+                  label: Text(_recommendedPlanBook == null
+                      ? context.l10n.homeGoLibraryRead
+                      : context.l10n.continueReading),
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 10),
                   ),
@@ -1282,7 +1299,9 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
                     isFocusActive ? Icons.stop_circle_outlined : Icons.timer,
                     size: 18,
                   ),
-                  label: Text(isFocusActive ? '结束专注' : '专注25分钟'),
+                  label: Text(isFocusActive
+                      ? context.l10n.homeEndFocus
+                      : context.l10n.homeFocusMinutesButton(_focusMinutes)),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 10),
                   ),
@@ -1296,7 +1315,8 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
             child: TextButton.icon(
               onPressed: _showGoalPicker,
               icon: const Icon(Icons.tune_rounded, size: 16),
-              label: Text('调整目标：${plan.dailyGoalMinutes} 分钟'),
+              label: Text(
+                  context.l10n.homeAdjustGoalMinutes(plan.dailyGoalMinutes)),
             ),
           ),
         ],
@@ -1408,7 +1428,7 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
             Row(
               children: [
                 Text(
-                  '本周阅读趋势',
+                  context.l10n.homeWeeklyTrend,
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w600,
@@ -1463,7 +1483,7 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
           ),
         ),
         child: Text(
-          '暂无最近阅读记录，去书库打开一本书开始阅读吧。',
+          context.l10n.homeNoRecentReading,
           style: TextStyle(
             fontSize: 14,
             color: palette.secondaryTextColor,
@@ -1518,8 +1538,7 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
                                     ? BoxFit.contain
                                     : BoxFit.cover,
                                 cacheWidth: (44 *
-                                        MediaQuery.of(context)
-                                            .devicePixelRatio)
+                                        MediaQuery.of(context).devicePixelRatio)
                                     .round(),
                                 errorBuilder: (context, error, stackTrace) {
                                   return const SizedBox.shrink();
@@ -1545,7 +1564,7 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '阅读进度 $progress%',
+                            context.l10n.homeReadingProgressPercent(progress),
                             style: TextStyle(
                               fontSize: 14,
                               color: palette.secondaryTextColor,

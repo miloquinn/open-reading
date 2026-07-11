@@ -67,8 +67,8 @@ abstract class AppLocalizations {
 
   final String localeName;
 
-  static AppLocalizations? of(BuildContext context) {
-    return Localizations.of<AppLocalizations>(context, AppLocalizations);
+  static AppLocalizations of(BuildContext context) {
+    return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
   }
 
   static const LocalizationsDelegate<AppLocalizations> delegate =
@@ -470,30 +470,6 @@ abstract class AppLocalizations {
   /// **'Adjust reading pitch'**
   String get ttsPitchHint;
 
-  /// Cloud sync section
-  ///
-  /// In en, this message translates to:
-  /// **'Cloud Sync'**
-  String get cloudSync;
-
-  /// WebDAV configuration
-  ///
-  /// In en, this message translates to:
-  /// **'WebDAV'**
-  String get webdavConfig;
-
-  /// WebDAV configured status
-  ///
-  /// In en, this message translates to:
-  /// **'Configured - {serverUrl}'**
-  String webdavConfigured(Object serverUrl);
-
-  /// Hint for WebDAV config
-  ///
-  /// In en, this message translates to:
-  /// **'Tap to configure WebDAV server'**
-  String get webdavConfigHint;
-
   /// App settings section
   ///
   /// In en, this message translates to:
@@ -698,23 +674,11 @@ abstract class AppLocalizations {
   /// **'Operation failed'**
   String get ttsOperationFailed;
 
-  /// Page turning settings
-  ///
-  /// In en, this message translates to:
-  /// **'Page Turning'**
-  String get pageTurningSettings;
-
   /// Page turning mode
   ///
   /// In en, this message translates to:
   /// **'Page Mode'**
   String get pageTurningMode;
-
-  /// Cover page turning
-  ///
-  /// In en, this message translates to:
-  /// **'Cover'**
-  String get pageTurningCover;
 
   /// Slide page turning
   ///
@@ -727,12 +691,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Scroll'**
   String get pageTurningScroll;
-
-  /// Simulation page turning
-  ///
-  /// In en, this message translates to:
-  /// **'Simulation'**
-  String get pageTurningSimulation;
 
   /// Tap zone settings
   ///
@@ -793,120 +751,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'showing the highlight effect.'**
   String get highlightSampleText3;
-
-  /// WebDAV configuration title
-  ///
-  /// In en, this message translates to:
-  /// **'WebDAV Configuration'**
-  String get webdavTitle;
-
-  /// Setup cloud sync hint
-  ///
-  /// In en, this message translates to:
-  /// **'Setup Cloud Sync Service'**
-  String get webdavSetupCloudSync;
-
-  /// WebDAV server URL label
-  ///
-  /// In en, this message translates to:
-  /// **'Server URL'**
-  String get webdavServerUrl;
-
-  /// WebDAV username label
-  ///
-  /// In en, this message translates to:
-  /// **'Username'**
-  String get webdavUsername;
-
-  /// WebDAV password label
-  ///
-  /// In en, this message translates to:
-  /// **'Password'**
-  String get webdavPassword;
-
-  /// Enter server URL error
-  ///
-  /// In en, this message translates to:
-  /// **'Please enter server URL'**
-  String get webdavEnterServerUrl;
-
-  /// Invalid URL error
-  ///
-  /// In en, this message translates to:
-  /// **'Please enter a valid URL'**
-  String get webdavInvalidUrl;
-
-  /// Enter username error
-  ///
-  /// In en, this message translates to:
-  /// **'Please enter username'**
-  String get webdavEnterUsername;
-
-  /// Enter password error
-  ///
-  /// In en, this message translates to:
-  /// **'Please enter password'**
-  String get webdavEnterPassword;
-
-  /// Connection failed message
-  ///
-  /// In en, this message translates to:
-  /// **'Connection failed, please check settings'**
-  String get webdavConnectionFailed;
-
-  /// Test connection button
-  ///
-  /// In en, this message translates to:
-  /// **'Test Connection'**
-  String get webdavTestConnection;
-
-  /// Save configuration button
-  ///
-  /// In en, this message translates to:
-  /// **'Save Configuration'**
-  String get webdavSaveConfig;
-
-  /// Clear configuration button
-  ///
-  /// In en, this message translates to:
-  /// **'Clear Configuration'**
-  String get webdavClearConfig;
-
-  /// Test success message
-  ///
-  /// In en, this message translates to:
-  /// **'Connection test successful!'**
-  String get webdavTestSuccess;
-
-  /// Test failed message
-  ///
-  /// In en, this message translates to:
-  /// **'Connection test failed'**
-  String get webdavTestFailed;
-
-  /// Config saved message
-  ///
-  /// In en, this message translates to:
-  /// **'WebDAV configuration saved'**
-  String get webdavConfigSaved;
-
-  /// Save config failed message
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to save configuration'**
-  String get webdavConfigSaveFailed;
-
-  /// Confirm clear message
-  ///
-  /// In en, this message translates to:
-  /// **'Are you sure you want to clear WebDAV configuration?'**
-  String get webdavConfirmClear;
-
-  /// Config cleared message
-  ///
-  /// In en, this message translates to:
-  /// **'WebDAV configuration cleared'**
-  String get webdavConfigCleared;
 
   /// Light blue color name
   ///
@@ -1495,6 +1339,1555 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sun'**
   String get weekdaySunShort;
+
+  /// Tagline badge under the app title on the user agreement page
+  ///
+  /// In en, this message translates to:
+  /// **'Immersive Reading · AI Assistant · Local First'**
+  String get agreementTagline;
+
+  /// Title of the agreement content card
+  ///
+  /// In en, this message translates to:
+  /// **'User Service Agreement'**
+  String get agreementCardTitle;
+
+  /// Subtitle under the agreement card title
+  ///
+  /// In en, this message translates to:
+  /// **'Please read the following carefully'**
+  String get agreementCardSubtitle;
+
+  /// Welcome heading inside the agreement content
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to OpenReading'**
+  String get agreementWelcomeTitle;
+
+  /// Welcome paragraph asking the user to read and agree to the agreement
+  ///
+  /// In en, this message translates to:
+  /// **'To ensure a stable and predictable reading experience, please read and agree to the following agreement first.'**
+  String get agreementWelcomeBody;
+
+  /// Feature item title: supported book formats
+  ///
+  /// In en, this message translates to:
+  /// **'Multi-Format Support'**
+  String get agreementFeatureFormatsTitle;
+
+  /// Feature item description: supported book formats
+  ///
+  /// In en, this message translates to:
+  /// **'EPUB, PDF, TXT, MOBI and more'**
+  String get agreementFeatureFormatsBody;
+
+  /// Feature item title: reading customization
+  ///
+  /// In en, this message translates to:
+  /// **'Personalized Reading'**
+  String get agreementFeatureCustomizationTitle;
+
+  /// Feature item description: reading customization
+  ///
+  /// In en, this message translates to:
+  /// **'Customize fonts, colors, typography and more'**
+  String get agreementFeatureCustomizationBody;
+
+  /// Feature item title: local-first storage
+  ///
+  /// In en, this message translates to:
+  /// **'Local First'**
+  String get agreementFeatureSyncTitle;
+
+  /// Feature item description: local-first storage
+  ///
+  /// In en, this message translates to:
+  /// **'Books, progress, and notes stay on the device you control'**
+  String get agreementFeatureSyncBody;
+
+  /// Feature item title: TTS read-aloud
+  ///
+  /// In en, this message translates to:
+  /// **'Text-to-Speech'**
+  String get agreementFeatureTtsTitle;
+
+  /// Feature item description: TTS read-aloud
+  ///
+  /// In en, this message translates to:
+  /// **'Smart voice narration frees your eyes so you can listen anywhere'**
+  String get agreementFeatureTtsBody;
+
+  /// Hint explaining what tapping the agree button means
+  ///
+  /// In en, this message translates to:
+  /// **'By tapping \"Agree and Continue\", you confirm that you have read and agree to use this app'**
+  String get agreementTapToAgreeHint;
+
+  /// Decline button label and exit confirmation dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Exit App'**
+  String get agreementExitApp;
+
+  /// Primary button to accept the agreement and continue
+  ///
+  /// In en, this message translates to:
+  /// **'Agree and Continue'**
+  String get agreementAgreeAndContinue;
+
+  /// Body of the exit confirmation dialog shown when declining the agreement
+  ///
+  /// In en, this message translates to:
+  /// **'If you do not agree to the user agreement, you will not be able to use this app. Are you sure you want to exit?'**
+  String get agreementExitDialogContent;
+
+  /// Confirm button in the exit dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Exit'**
+  String get agreementConfirmExit;
+
+  /// Toast shown when opening a book whose file is missing
+  ///
+  /// In en, this message translates to:
+  /// **'Book file not found. Please re-import it.'**
+  String get readerFileMissing;
+
+  /// Toast shown when opening an unsupported book format
+  ///
+  /// In en, this message translates to:
+  /// **'The native reader currently only supports EPUB and TXT.'**
+  String get readerUnsupportedFormat;
+
+  /// Startup error when the data/cache services fail to initialize
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to initialize the data system'**
+  String get bootstrapDataServiceFailed;
+
+  /// Startup error when the book image manager fails to initialize
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to initialize the image manager'**
+  String get bootstrapImageManagerFailed;
+
+  /// Toast shown when a focus timer finishes
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes}-minute focus session complete. Well done!'**
+  String homeFocusCompleted(int minutes);
+
+  /// Title of the daily reading goal picker bottom sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Reading Goal'**
+  String get homeDailyReadingGoal;
+
+  /// Section label for the AI reading advice card
+  ///
+  /// In en, this message translates to:
+  /// **'AI Reading Advice'**
+  String get homeAiAdviceSection;
+
+  /// Section label for the today summary row
+  ///
+  /// In en, this message translates to:
+  /// **'Today at a Glance'**
+  String get homeTodayGlance;
+
+  /// Header of the daily reading plan section
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s Reading Plan'**
+  String get homeTodayReadingPlan;
+
+  /// Action to open the full detailed stats page
+  ///
+  /// In en, this message translates to:
+  /// **'View All'**
+  String get homeViewAll;
+
+  /// Hero card title while the reading plan is loading
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing your reading plan'**
+  String get homeSyncingReadingPlan;
+
+  /// Hero card title when today's reading goal is done
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s goal is complete — consider a reading review'**
+  String get homeGoalDoneSuggestReview;
+
+  /// Hero card title showing minutes left to today's goal
+  ///
+  /// In en, this message translates to:
+  /// **'Just {minutes} more minutes to reach today\'s goal'**
+  String homeRemainingToGoal(int minutes);
+
+  /// Recommendation shown when no book is suggested
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a book from your shelf to continue and complete 1 focus session first.'**
+  String get homePickBookHint;
+
+  /// Recommendation to continue a specific book
+  ///
+  /// In en, this message translates to:
+  /// **'Continue \"{title}\" first, then switch to other books.'**
+  String homeContinueBookHint(String title);
+
+  /// Title of the hero card with today's suggested actions
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s Action Plan'**
+  String get homeTodayActionAdvice;
+
+  /// Plan completion percentage badge on the hero card
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% progress'**
+  String homeProgressPercent(int percent);
+
+  /// Hero chip showing consecutive reading days
+  ///
+  /// In en, this message translates to:
+  /// **'{days}-day streak'**
+  String homeStreakDays(int days);
+
+  /// Hero chip showing minutes read this week
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min this week'**
+  String homeWeekMinutes(int minutes);
+
+  /// Hero chip placeholder while the plan is loading
+  ///
+  /// In en, this message translates to:
+  /// **'Plan loading'**
+  String get homePlanLoading;
+
+  /// Hero chip showing the daily goal in minutes
+  ///
+  /// In en, this message translates to:
+  /// **'Goal: {minutes} min/day'**
+  String homeGoalMinutesPerDay(int minutes);
+
+  /// Title of the AI advice card on the mobile dashboard
+  ///
+  /// In en, this message translates to:
+  /// **'AI Reading Advice for You'**
+  String get homeAiAdviceForYou;
+
+  /// Subtitle indicating which book the AI advice is based on
+  ///
+  /// In en, this message translates to:
+  /// **'Based on \"{title}\"'**
+  String homeBasedOnBook(String title);
+
+  /// Caption under today's reading minutes summary number
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s Reading (min)'**
+  String get homeTodayReadingMinutesLabel;
+
+  /// Caption under total reading minutes summary number
+  ///
+  /// In en, this message translates to:
+  /// **'Total Reading (min)'**
+  String get homeTotalReadingMinutesLabel;
+
+  /// Loading text while the daily plan is being generated
+  ///
+  /// In en, this message translates to:
+  /// **'Generating today\'s reading plan...'**
+  String get homeGeneratingPlan;
+
+  /// Small label under the plan completion percentage ring
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get homeCompletedLabel;
+
+  /// Plan card title when today's goal is reached
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s goal achieved'**
+  String get homeTodayGoalAchieved;
+
+  /// Plan card title showing minutes left to today's goal
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} minutes to go'**
+  String homeMinutesRemaining(int minutes);
+
+  /// Minutes read out of the daily goal
+  ///
+  /// In en, this message translates to:
+  /// **'Read {read} / {goal} min'**
+  String homeReadOfGoalMinutes(int read, int goal);
+
+  /// Estimated focus sessions needed to complete the daily goal
+  ///
+  /// In en, this message translates to:
+  /// **'About {sessions} focus sessions to finish today\'s goal'**
+  String homeSessionsToFinishGoal(int sessions);
+
+  /// Plan metric badge label for the reading streak
+  ///
+  /// In en, this message translates to:
+  /// **'Streak'**
+  String get homeStreakLabel;
+
+  /// Plan metric badge label for days the goal was met this week
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly goal'**
+  String get homeWeekAchievedLabel;
+
+  /// Plan metric badge label for focus sessions today
+  ///
+  /// In en, this message translates to:
+  /// **'Focus'**
+  String get homeFocusLabel;
+
+  /// Day count value in plan metric badges
+  ///
+  /// In en, this message translates to:
+  /// **'{days} days'**
+  String homeDaysCount(int days);
+
+  /// Times count value in plan metric badges
+  ///
+  /// In en, this message translates to:
+  /// **'{times} times'**
+  String homeTimesCount(int times);
+
+  /// Label above the focus timer progress bar; time is mm:ss
+  ///
+  /// In en, this message translates to:
+  /// **'Focus countdown {time}'**
+  String homeFocusCountdown(String time);
+
+  /// Button when no recommended book is available
+  ///
+  /// In en, this message translates to:
+  /// **'Read from Library'**
+  String get homeGoLibraryRead;
+
+  /// Button to cancel the running focus timer
+  ///
+  /// In en, this message translates to:
+  /// **'End Focus'**
+  String get homeEndFocus;
+
+  /// Button to start a focus session of the given minutes
+  ///
+  /// In en, this message translates to:
+  /// **'Focus {minutes} min'**
+  String homeFocusMinutesButton(int minutes);
+
+  /// Button to open the daily goal picker showing the current goal
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust goal: {minutes} min'**
+  String homeAdjustGoalMinutes(int minutes);
+
+  /// Empty state for the recent reading list
+  ///
+  /// In en, this message translates to:
+  /// **'No recent reading yet. Open a book from your library to get started.'**
+  String get homeNoRecentReading;
+
+  /// Reading progress percentage of a book in the recent list
+  ///
+  /// In en, this message translates to:
+  /// **'Progress {percent}%'**
+  String homeReadingProgressPercent(String percent);
+
+  /// Hint text for the library search field
+  ///
+  /// In en, this message translates to:
+  /// **'Search titles or authors'**
+  String get librarySearchHint;
+
+  /// Filter chip showing total book count
+  ///
+  /// In en, this message translates to:
+  /// **'All {count}'**
+  String libraryFilterAll(int count);
+
+  /// Filter chip showing count of books in progress
+  ///
+  /// In en, this message translates to:
+  /// **'Reading {count}'**
+  String libraryFilterReading(int count);
+
+  /// Filter chip showing count of finished books
+  ///
+  /// In en, this message translates to:
+  /// **'Finished {count}'**
+  String libraryFilterFinished(int count);
+
+  /// Shown when a library search returns no books
+  ///
+  /// In en, this message translates to:
+  /// **'No matching books'**
+  String get libraryNoMatchingBooks;
+
+  /// Shown when the reading filter has no books
+  ///
+  /// In en, this message translates to:
+  /// **'No books in progress'**
+  String get libraryNoReadingBooks;
+
+  /// Shown when the finished filter has no books
+  ///
+  /// In en, this message translates to:
+  /// **'No finished books'**
+  String get libraryNoFinishedBooks;
+
+  /// Shown when the library has no books for the current filter
+  ///
+  /// In en, this message translates to:
+  /// **'No books yet'**
+  String get libraryNoBooks;
+
+  /// List item subtitle showing reading progress percentage
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% · Continue reading'**
+  String libraryProgressContinue(int percent);
+
+  /// Current page indicator in book options sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Page {page}'**
+  String libraryPageNumber(int page);
+
+  /// Subtitle when a book has not been started yet
+  ///
+  /// In en, this message translates to:
+  /// **'Start from the beginning'**
+  String get libraryStartFromBeginning;
+
+  /// Book information option and dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Book Info'**
+  String get libraryBookInfo;
+
+  /// Book format and total page count subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'{format} · {pages} pages'**
+  String libraryFormatAndPages(String format, int pages);
+
+  /// Subtitle of the delete book option
+  ///
+  /// In en, this message translates to:
+  /// **'This book will be permanently deleted'**
+  String get libraryDeleteBookHint;
+
+  /// Book title label in the book info dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get libraryBookTitle;
+
+  /// Book format label in the book info dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Format'**
+  String get libraryFormat;
+
+  /// Page count value in the book info dialog
+  ///
+  /// In en, this message translates to:
+  /// **'{pages} pages'**
+  String libraryPagesCount(int pages);
+
+  /// Close button in the book info dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get libraryClose;
+
+  /// Title of the delete book confirmation dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Deletion'**
+  String get libraryConfirmDeleteTitle;
+
+  /// Delete book confirmation message with book title
+  ///
+  /// In en, this message translates to:
+  /// **'Delete \"{title}\"? The file will be permanently removed from your device.'**
+  String libraryDeleteBookMessage(String title);
+
+  /// Progress dialog message while deleting a book
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting \"{title}\"...'**
+  String libraryDeletingBook(String title);
+
+  /// Toast shown after a book is deleted
+  ///
+  /// In en, this message translates to:
+  /// **'\"{title}\" deleted'**
+  String libraryBookDeletedToast(String title);
+
+  /// Toast shown when deleting a book fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to delete: {error}'**
+  String libraryDeleteFailed(String error);
+
+  /// Badge on a book cover indicating the book is in progress
+  ///
+  /// In en, this message translates to:
+  /// **'Reading'**
+  String get libraryReadingBadge;
+
+  /// Deletion progress step: removing the book file
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting book file...'**
+  String get libraryDeletingBookFile;
+
+  /// Deletion progress step: removing the cover image
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting cover image...'**
+  String get libraryDeletingCoverImage;
+
+  /// Deletion progress step: removing database records
+  ///
+  /// In en, this message translates to:
+  /// **'Cleaning up database records...'**
+  String get libraryCleaningDatabase;
+
+  /// Deletion progress step: finished
+  ///
+  /// In en, this message translates to:
+  /// **'Deletion complete'**
+  String get libraryDeleteComplete;
+
+  /// Chapter title for TXT content that appears before the first detected chapter heading
+  ///
+  /// In en, this message translates to:
+  /// **'Front Matter'**
+  String get readerPrefaceTitle;
+
+  /// Page mode option: content split into pages turned instantly by tapping
+  ///
+  /// In en, this message translates to:
+  /// **'Horizontal Paging'**
+  String get readerModeHorizontalPage;
+
+  /// Subtitle explaining the vertical scroll page mode
+  ///
+  /// In en, this message translates to:
+  /// **'Scroll vertically to read, swipe horizontally to switch chapters'**
+  String get readerModeVerticalScrollHint;
+
+  /// Subtitle explaining the horizontal paging mode
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the left side for the previous page, the right side for the next page'**
+  String get readerModeHorizontalPageHint;
+
+  /// Subtitle explaining the horizontal slide page mode
+  ///
+  /// In en, this message translates to:
+  /// **'Pages follow your finger horizontally and snap into place'**
+  String get readerModeHorizontalSlideHint;
+
+  /// Slider label showing the current reader font size
+  ///
+  /// In en, this message translates to:
+  /// **'Font size  {size}'**
+  String readerFontSizeValue(int size);
+
+  /// Slider label showing the current left/right page margin
+  ///
+  /// In en, this message translates to:
+  /// **'Horizontal margin  {margin}'**
+  String readerHorizontalMarginValue(int margin);
+
+  /// Slider label showing the current top/bottom page margin
+  ///
+  /// In en, this message translates to:
+  /// **'Vertical margin  {margin}'**
+  String readerVerticalMarginValue(int margin);
+
+  /// Total chapter count shown in the table of contents header
+  ///
+  /// In en, this message translates to:
+  /// **'{count} chapters'**
+  String readerChapterCount(int count);
+
+  /// Fallback title for a chapter without a title, 1-based index
+  ///
+  /// In en, this message translates to:
+  /// **'Chapter {number}'**
+  String readerChapterFallback(int number);
+
+  /// Error message when a book fails to load in the native reader
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to open: {error}'**
+  String readerOpenFailed(String error);
+
+  /// Shown when a book parses successfully but contains no displayable text
+  ///
+  /// In en, this message translates to:
+  /// **'This book has no readable content'**
+  String get readerNoContent;
+
+  /// Bottom status bar in paged modes: current chapter and page position
+  ///
+  /// In en, this message translates to:
+  /// **'Chapter {chapter}/{chapterCount} · Page {page}/{pageCount}'**
+  String readerStatusPaged(
+      int chapter, int chapterCount, int page, int pageCount);
+
+  /// Bottom status bar in vertical scroll mode: current chapter position
+  ///
+  /// In en, this message translates to:
+  /// **'Chapter {chapter}/{chapterCount} · Vertical scroll'**
+  String readerStatusScroll(int chapter, int chapterCount);
+
+  /// Progress message shown when a local file import starts
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing import...'**
+  String get importPreparing;
+
+  /// Toast shown when importing a book throws an exception
+  ///
+  /// In en, this message translates to:
+  /// **'Import failed: {error}'**
+  String importFailedWithError(String error);
+
+  /// Button label to import a book from local device storage
+  ///
+  /// In en, this message translates to:
+  /// **'Local Files'**
+  String get importLocalFile;
+
+  /// Temperature range hint for the MiniMax AI provider
+  ///
+  /// In en, this message translates to:
+  /// **'Temperature: MiniMax recommends 0.01 ~ 1.00'**
+  String get settingsAiTempHintMinimax;
+
+  /// Title of the custom AI config dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Custom AI Configuration'**
+  String get settingsAiCustomConfigTitle;
+
+  /// Shows the currently selected AI provider in the custom config dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Current provider: {provider}'**
+  String settingsAiCurrentProvider(String provider);
+
+  /// Validation error for MiniMax temperature range
+  ///
+  /// In en, this message translates to:
+  /// **'MiniMax Temperature must be between 0.01 and 1.00'**
+  String get settingsAiTempErrorMinimax;
+
+  /// Validation error for temperature out of allowed range
+  ///
+  /// In en, this message translates to:
+  /// **'Temperature is out of range, please follow the hint'**
+  String get settingsAiTempErrorOutOfRange;
+
+  /// Apply button in the custom AI config dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get settingsApply;
+
+  /// Toast after applying custom AI parameters
+  ///
+  /// In en, this message translates to:
+  /// **'Custom parameters applied, remember to save the configuration'**
+  String get settingsAiCustomApplied;
+
+  /// Validation error when API key is empty
+  ///
+  /// In en, this message translates to:
+  /// **'API Key cannot be empty'**
+  String get settingsAiApiKeyRequired;
+
+  /// Validation error when model is empty
+  ///
+  /// In en, this message translates to:
+  /// **'Model cannot be empty'**
+  String get settingsAiModelRequired;
+
+  /// Validation error for invalid base URL
+  ///
+  /// In en, this message translates to:
+  /// **'Base URL must be a valid http/https address'**
+  String get settingsAiBaseUrlInvalid;
+
+  /// Toast after saving AI settings
+  ///
+  /// In en, this message translates to:
+  /// **'AI settings saved'**
+  String get settingsAiSettingsSaved;
+
+  /// Error message when saving settings fails
+  ///
+  /// In en, this message translates to:
+  /// **'Save failed: {error}'**
+  String settingsSaveFailed(String error);
+
+  /// Switch title for volume-key page turning
+  ///
+  /// In en, this message translates to:
+  /// **'Volume key page turning'**
+  String get settingsVolumeKeyTurnTitle;
+
+  /// Switch subtitle for volume-key page turning
+  ///
+  /// In en, this message translates to:
+  /// **'Use volume keys to turn pages'**
+  String get settingsVolumeKeyTurnSubtitle;
+
+  /// Switch title for showing system status bar in reader
+  ///
+  /// In en, this message translates to:
+  /// **'Show system status bar while reading'**
+  String get settingsShowStatusBarTitle;
+
+  /// Subtitle when system status bar is shown in reader
+  ///
+  /// In en, this message translates to:
+  /// **'Reader battery/time UI hidden'**
+  String get settingsShowStatusBarOnSubtitle;
+
+  /// Subtitle when system status bar is hidden in reader
+  ///
+  /// In en, this message translates to:
+  /// **'Using reader battery/time UI'**
+  String get settingsShowStatusBarOffSubtitle;
+
+  /// Section title for AI assistant settings
+  ///
+  /// In en, this message translates to:
+  /// **'AI Reading Assistant'**
+  String get settingsAiAssistantTitle;
+
+  /// Section title for system settings
+  ///
+  /// In en, this message translates to:
+  /// **'System Settings'**
+  String get settingsSystemSettingsTitle;
+
+  /// Switch title for keeping screen on
+  ///
+  /// In en, this message translates to:
+  /// **'Keep screen on'**
+  String get settingsKeepScreenOnTitle;
+
+  /// Switch subtitle for keeping screen on
+  ///
+  /// In en, this message translates to:
+  /// **'Prevent the screen from turning off while reading'**
+  String get settingsKeepScreenOnSubtitle;
+
+  /// Switch title for auto save
+  ///
+  /// In en, this message translates to:
+  /// **'Auto save'**
+  String get settingsAutoSaveTitle;
+
+  /// Switch subtitle for auto save
+  ///
+  /// In en, this message translates to:
+  /// **'Automatically save reading progress'**
+  String get settingsAutoSaveSubtitle;
+
+  /// Placeholder toast for the help button
+  ///
+  /// In en, this message translates to:
+  /// **'Help information can go here'**
+  String get settingsHelpPlaceholder;
+
+  /// Status text when AI is configured
+  ///
+  /// In en, this message translates to:
+  /// **'AI configured'**
+  String get settingsAiConfigured;
+
+  /// Status text when AI API key is missing
+  ///
+  /// In en, this message translates to:
+  /// **'API Key not configured yet'**
+  String get settingsAiNotConfigured;
+
+  /// Badge when AI settings are complete
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to use'**
+  String get settingsAiReadyToUse;
+
+  /// Badge when AI settings are incomplete
+  ///
+  /// In en, this message translates to:
+  /// **'Pending setup'**
+  String get settingsAiPendingConfig;
+
+  /// Shows the matched AI model preset
+  ///
+  /// In en, this message translates to:
+  /// **'Current preset: {preset}'**
+  String settingsAiCurrentPreset(String preset);
+
+  /// Shows the custom AI model in use
+  ///
+  /// In en, this message translates to:
+  /// **'Current configuration: custom · {model}'**
+  String settingsAiCurrentCustom(String model);
+
+  /// Intro text explaining AI presets
+  ///
+  /// In en, this message translates to:
+  /// **'Common providers and models are built in; usually you only need to pick a preset and enter an API Key.'**
+  String get settingsAiPresetIntro;
+
+  /// Label of the AI provider dropdown
+  ///
+  /// In en, this message translates to:
+  /// **'Provider'**
+  String get settingsAiProviderLabel;
+
+  /// Hint of the AI preset dropdown
+  ///
+  /// In en, this message translates to:
+  /// **'Select a preset model'**
+  String get settingsAiPresetHint;
+
+  /// Label of the AI preset dropdown
+  ///
+  /// In en, this message translates to:
+  /// **'Preset model'**
+  String get settingsAiPresetLabel;
+
+  /// Button opening the custom AI config dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get settingsAiCustomButton;
+
+  /// Hint shown when a preset is selected
+  ///
+  /// In en, this message translates to:
+  /// **'After selecting a preset, just enter an API Key to start using it.'**
+  String get settingsAiPresetSelectedHint;
+
+  /// Hint shown when custom AI parameters are active
+  ///
+  /// In en, this message translates to:
+  /// **'Custom parameters are in use; you can switch back to a preset at any time.'**
+  String get settingsAiCustomActiveHint;
+
+  /// Hint text of the API key input
+  ///
+  /// In en, this message translates to:
+  /// **'Enter to enable the current preset'**
+  String get settingsAiApiKeyHint;
+
+  /// Tooltip to reveal the API key
+  ///
+  /// In en, this message translates to:
+  /// **'Show'**
+  String get settingsShow;
+
+  /// Tooltip to hide the API key
+  ///
+  /// In en, this message translates to:
+  /// **'Hide'**
+  String get settingsHide;
+
+  /// Button label while AI settings are being saved
+  ///
+  /// In en, this message translates to:
+  /// **'Saving...'**
+  String get settingsAiSaving;
+
+  /// Button label to save AI settings
+  ///
+  /// In en, this message translates to:
+  /// **'Save AI configuration'**
+  String get settingsAiSaveConfig;
+
+  /// Title of the theme mode setting and modal
+  ///
+  /// In en, this message translates to:
+  /// **'Night mode'**
+  String get settingsDarkModeTitle;
+
+  /// Generic subtitle showing the current value of a setting
+  ///
+  /// In en, this message translates to:
+  /// **'Current: {value}'**
+  String settingsCurrentValue(String value);
+
+  /// Title of the UI style setting and modal
+  ///
+  /// In en, this message translates to:
+  /// **'UI style'**
+  String get settingsUiStyleTitle;
+
+  /// Restart dialog reason after switching UI style
+  ///
+  /// In en, this message translates to:
+  /// **'UI style switched to {style}. Restart to fully apply it to all pages.'**
+  String settingsUiStyleSwitchedRestart(String style);
+
+  /// Accent summary when following the app theme
+  ///
+  /// In en, this message translates to:
+  /// **'Accent color: follow theme'**
+  String get settingsAccentFollowTheme;
+
+  /// Accent summary showing the chosen color name
+  ///
+  /// In en, this message translates to:
+  /// **'Accent color: {name}'**
+  String settingsAccentValue(String name);
+
+  /// Title of the app theme setting
+  ///
+  /// In en, this message translates to:
+  /// **'App theme'**
+  String get settingsAppThemeTitle;
+
+  /// Subtitle combining the current theme name and accent summary
+  ///
+  /// In en, this message translates to:
+  /// **'Current: {theme} · {accent}'**
+  String settingsCurrentThemeSummary(String theme, String accent);
+
+  /// Accent color subtitle when no custom accent is set
+  ///
+  /// In en, this message translates to:
+  /// **'Follow app theme'**
+  String get settingsFollowAppTheme;
+
+  /// Title of the accent color setting and modal
+  ///
+  /// In en, this message translates to:
+  /// **'Accent color'**
+  String get settingsAccentColorTitle;
+
+  /// Hint for system theme mode
+  ///
+  /// In en, this message translates to:
+  /// **'Switch automatically with the system appearance'**
+  String get settingsThemeModeSystemHint;
+
+  /// Hint for light theme mode
+  ///
+  /// In en, this message translates to:
+  /// **'Always use the light appearance'**
+  String get settingsThemeModeLightHint;
+
+  /// Hint for dark theme mode
+  ///
+  /// In en, this message translates to:
+  /// **'Always use the dark appearance'**
+  String get settingsThemeModeDarkHint;
+
+  /// Title of the app theme picker modal
+  ///
+  /// In en, this message translates to:
+  /// **'Choose app theme'**
+  String get settingsSelectAppTheme;
+
+  /// Done button in theme/accent modals
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get settingsDone;
+
+  /// Advice text in the accent color modal
+  ///
+  /// In en, this message translates to:
+  /// **'Prefer choosing an app theme first, then override the accent color as needed.'**
+  String get settingsAccentColorAdvice;
+
+  /// Option title to follow the theme accent
+  ///
+  /// In en, this message translates to:
+  /// **'Follow theme'**
+  String get settingsAccentFollowThemeOption;
+
+  /// Description for the follow-theme accent option
+  ///
+  /// In en, this message translates to:
+  /// **'Use the current app theme\'s default accent color'**
+  String get settingsAccentFollowThemeDesc;
+
+  /// Title of the about card
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get settingsAboutTitle;
+
+  /// Display name of the app in the about card
+  ///
+  /// In en, this message translates to:
+  /// **'Open Reading'**
+  String get settingsAppName;
+
+  /// Author line in the about card
+  ///
+  /// In en, this message translates to:
+  /// **'Maintainer: miloquinn'**
+  String get settingsAuthor;
+
+  /// Link label to the GitHub repository
+  ///
+  /// In en, this message translates to:
+  /// **'GitHub repository'**
+  String get settingsGithubRepo;
+
+  /// New Year greeting in the about card
+  ///
+  /// In en, this message translates to:
+  /// **'A focused, restrained, and freely modifiable cross-platform reader.'**
+  String get settingsNewYearGreeting;
+
+  /// Toast when the GitHub link fails to open
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the GitHub link'**
+  String get settingsGithubOpenFailed;
+
+  /// Toast when using an iOS-only feature on another platform
+  ///
+  /// In en, this message translates to:
+  /// **'This feature is only available on iOS'**
+  String get settingsIosOnlyFeature;
+
+  /// Toast summarizing the iOS sync result
+  ///
+  /// In en, this message translates to:
+  /// **'Synced to {storage}\n{books} books, {files} files copied'**
+  String settingsIosSyncResult(String storage, int books, int files);
+
+  /// Default reason in the restart dialog
+  ///
+  /// In en, this message translates to:
+  /// **'This settings change requires an app restart to take full effect.'**
+  String get settingsRestartRequiredReason;
+
+  /// Title of the restart dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Restart required'**
+  String get settingsRestartRequiredTitle;
+
+  /// Body of the restart dialog combining the reason and the question
+  ///
+  /// In en, this message translates to:
+  /// **'{reason}\n\nRestart the app now?'**
+  String settingsRestartPrompt(String reason);
+
+  /// Button to postpone the restart
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get settingsRestartLater;
+
+  /// Button to restart the app immediately
+  ///
+  /// In en, this message translates to:
+  /// **'Restart'**
+  String get settingsRestartNow;
+
+  /// Detailed stats page title
+  ///
+  /// In en, this message translates to:
+  /// **'Detailed Statistics'**
+  String get statsDetailedTitle;
+
+  /// Time range option: last 7 days
+  ///
+  /// In en, this message translates to:
+  /// **'7 days'**
+  String get statsRange7Days;
+
+  /// Time range option: last 30 days
+  ///
+  /// In en, this message translates to:
+  /// **'30 days'**
+  String get statsRange30Days;
+
+  /// Time range option: last 90 days
+  ///
+  /// In en, this message translates to:
+  /// **'90 days'**
+  String get statsRange90Days;
+
+  /// Time range option: last year
+  ///
+  /// In en, this message translates to:
+  /// **'1 year'**
+  String get statsRange1Year;
+
+  /// Time range option: all time
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get statsRangeAll;
+
+  /// Stats tab title: overview
+  ///
+  /// In en, this message translates to:
+  /// **'Overview'**
+  String get statsTabOverview;
+
+  /// Stats tab title: charts
+  ///
+  /// In en, this message translates to:
+  /// **'Charts'**
+  String get statsTabCharts;
+
+  /// Stats tab title: books
+  ///
+  /// In en, this message translates to:
+  /// **'Books'**
+  String get statsTabBooks;
+
+  /// Stats tab title: achievements
+  ///
+  /// In en, this message translates to:
+  /// **'Achievements'**
+  String get statsTabAchievements;
+
+  /// Hero panel title on the overview tab
+  ///
+  /// In en, this message translates to:
+  /// **'Reading Overview'**
+  String get statsReadingOverview;
+
+  /// Hero headline: cumulative reading hours (hours is a preformatted decimal string)
+  ///
+  /// In en, this message translates to:
+  /// **'Total {hours} hours'**
+  String statsCumulativeHours(Object hours);
+
+  /// Hero subtitle encouraging the current reading streak
+  ///
+  /// In en, this message translates to:
+  /// **'Keep the rhythm — you have read {days} days in a row'**
+  String statsStreakEncouragement(Object days);
+
+  /// Overview chip label: total reading time
+  ///
+  /// In en, this message translates to:
+  /// **'Total Time'**
+  String get statsTotalDuration;
+
+  /// Overview chip label: average single-session duration
+  ///
+  /// In en, this message translates to:
+  /// **'Avg Session'**
+  String get statsAvgSession;
+
+  /// A number of days with unit
+  ///
+  /// In en, this message translates to:
+  /// **'{count} days'**
+  String statsDaysCount(Object count);
+
+  /// Shown when there is no statistics data
+  ///
+  /// In en, this message translates to:
+  /// **'No data'**
+  String get statsNoData;
+
+  /// Best reading period label: early morning
+  ///
+  /// In en, this message translates to:
+  /// **'Early morning 05:00-08:59'**
+  String get statsPeriodEarlyMorning;
+
+  /// Best reading period label: morning
+  ///
+  /// In en, this message translates to:
+  /// **'Morning 09:00-11:59'**
+  String get statsPeriodMorning;
+
+  /// Best reading period label: afternoon
+  ///
+  /// In en, this message translates to:
+  /// **'Afternoon 12:00-17:59'**
+  String get statsPeriodAfternoon;
+
+  /// Best reading period label: evening
+  ///
+  /// In en, this message translates to:
+  /// **'Evening 18:00-21:59'**
+  String get statsPeriodEvening;
+
+  /// Best reading period label: late night
+  ///
+  /// In en, this message translates to:
+  /// **'Late night 22:00-04:59'**
+  String get statsPeriodLateNight;
+
+  /// Stats grid card title: total reading time
+  ///
+  /// In en, this message translates to:
+  /// **'Total Reading Time'**
+  String get statsTotalReadingTime;
+
+  /// Stats grid card title: total pages read
+  ///
+  /// In en, this message translates to:
+  /// **'Total Pages Read'**
+  String get statsTotalPagesRead;
+
+  /// Stats grid card title: number of books read
+  ///
+  /// In en, this message translates to:
+  /// **'Books Read'**
+  String get statsBooksReadCount;
+
+  /// Unit suffix for pages
+  ///
+  /// In en, this message translates to:
+  /// **'pages'**
+  String get statsUnitPage;
+
+  /// Card title: today's reading progress
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s Reading Progress'**
+  String get statsTodayProgress;
+
+  /// Progress vs target in minutes
+  ///
+  /// In en, this message translates to:
+  /// **'{current} / {target} min'**
+  String statsMinutesOfTarget(Object current, Object target);
+
+  /// Label for pages read (progress row and chart type selector)
+  ///
+  /// In en, this message translates to:
+  /// **'Pages Read'**
+  String get statsPagesRead;
+
+  /// Progress vs target in pages
+  ///
+  /// In en, this message translates to:
+  /// **'{current} / {target} pages'**
+  String statsPagesOfTarget(Object current, Object target);
+
+  /// Card title: reading habits analysis
+  ///
+  /// In en, this message translates to:
+  /// **'Reading Habits'**
+  String get statsReadingHabits;
+
+  /// Habit item label: best reading period of the day
+  ///
+  /// In en, this message translates to:
+  /// **'Best Reading Time'**
+  String get statsBestReadingPeriod;
+
+  /// Habit item label: average single reading session
+  ///
+  /// In en, this message translates to:
+  /// **'Avg Session Reading'**
+  String get statsAvgSessionReading;
+
+  /// Habit item label: longest consecutive reading days
+  ///
+  /// In en, this message translates to:
+  /// **'Longest Streak'**
+  String get statsMaxStreakDays;
+
+  /// Habit item label: reading focus score
+  ///
+  /// In en, this message translates to:
+  /// **'Reading Focus'**
+  String get statsFocusScore;
+
+  /// Chart type selector: number of books
+  ///
+  /// In en, this message translates to:
+  /// **'Book Count'**
+  String get statsBookCount;
+
+  /// Chart title: reading trend analysis
+  ///
+  /// In en, this message translates to:
+  /// **'Reading Trend Analysis'**
+  String get statsTrendAnalysis;
+
+  /// Chart axis label: minutes (compact)
+  ///
+  /// In en, this message translates to:
+  /// **'{value} min'**
+  String statsAxisMinutes(Object value);
+
+  /// Chart axis label: pages (compact)
+  ///
+  /// In en, this message translates to:
+  /// **'{value} pg'**
+  String statsAxisPages(Object value);
+
+  /// Chart axis label: books (compact)
+  ///
+  /// In en, this message translates to:
+  /// **'{value} bk'**
+  String statsAxisBooks(Object value);
+
+  /// Chart axis label: hour of day (compact)
+  ///
+  /// In en, this message translates to:
+  /// **'{hour}h'**
+  String statsAxisHour(Object hour);
+
+  /// Chart title: hourly reading time distribution
+  ///
+  /// In en, this message translates to:
+  /// **'Reading Time Distribution'**
+  String get statsTimeDistribution;
+
+  /// Chart title: book format distribution pie chart
+  ///
+  /// In en, this message translates to:
+  /// **'Book Format Distribution'**
+  String get statsFormatDistribution;
+
+  /// Books summary: completed books
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get statsCompleted;
+
+  /// Books summary: books currently being read
+  ///
+  /// In en, this message translates to:
+  /// **'In Progress'**
+  String get statsInProgress;
+
+  /// Books ranking title when real durations exist
+  ///
+  /// In en, this message translates to:
+  /// **'Reading Time Ranking'**
+  String get statsDurationRanking;
+
+  /// Books ranking title when only progress data exists
+  ///
+  /// In en, this message translates to:
+  /// **'Reading Progress Ranking'**
+  String get statsProgressRanking;
+
+  /// A number of pages with unit
+  ///
+  /// In en, this message translates to:
+  /// **'{count} pages'**
+  String statsPagesCount(Object count);
+
+  /// Number of reading sessions
+  ///
+  /// In en, this message translates to:
+  /// **'{count} sessions'**
+  String statsSessionCount(Object count);
+
+  /// Achievements overview subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Earned {achieved} achievements, {remaining} more to unlock'**
+  String statsAchievementsSummary(Object achieved, Object remaining);
+
+  /// Achievement title: first reading session
+  ///
+  /// In en, this message translates to:
+  /// **'First Read'**
+  String get statsAchievementFirstReadTitle;
+
+  /// Achievement description: first reading session
+  ///
+  /// In en, this message translates to:
+  /// **'Complete your first reading session'**
+  String get statsAchievementFirstReadDesc;
+
+  /// Achievement title: 10 hours total
+  ///
+  /// In en, this message translates to:
+  /// **'Reading Novice'**
+  String get statsAchievementNoviceTitle;
+
+  /// Achievement description: 10 hours total
+  ///
+  /// In en, this message translates to:
+  /// **'Read for a total of 10 hours'**
+  String get statsAchievementNoviceDesc;
+
+  /// Achievement title: 100 hours total
+  ///
+  /// In en, this message translates to:
+  /// **'Bookworm'**
+  String get statsAchievementBookwormTitle;
+
+  /// Achievement description: 100 hours total
+  ///
+  /// In en, this message translates to:
+  /// **'Read for a total of 100 hours'**
+  String get statsAchievementBookwormDesc;
+
+  /// Achievement title: 7-day streak
+  ///
+  /// In en, this message translates to:
+  /// **'Reading Expert'**
+  String get statsAchievementExpertTitle;
+
+  /// Achievement description: 7-day streak
+  ///
+  /// In en, this message translates to:
+  /// **'Read 7 days in a row'**
+  String get statsAchievementExpertDesc;
+
+  /// Achievement title: 10000 pages
+  ///
+  /// In en, this message translates to:
+  /// **'Ocean of Knowledge'**
+  String get statsAchievementOceanTitle;
+
+  /// Achievement description: 10000 pages
+  ///
+  /// In en, this message translates to:
+  /// **'Read 10,000 pages'**
+  String get statsAchievementOceanDesc;
+
+  /// Achievement title: 10 different books
+  ///
+  /// In en, this message translates to:
+  /// **'Polymath'**
+  String get statsAchievementScholarTitle;
+
+  /// Achievement description: 10 different books
+  ///
+  /// In en, this message translates to:
+  /// **'Read 10 different books'**
+  String get statsAchievementScholarDesc;
+
+  /// Achievement title: 30-day streak
+  ///
+  /// In en, this message translates to:
+  /// **'Reading Marathon'**
+  String get statsAchievementMarathonTitle;
+
+  /// Achievement description: 30-day streak
+  ///
+  /// In en, this message translates to:
+  /// **'Read 30 days in a row'**
+  String get statsAchievementMarathonDesc;
+
+  /// Achievement title: 500 hours total
+  ///
+  /// In en, this message translates to:
+  /// **'Focus Master'**
+  String get statsAchievementFocusTitle;
+
+  /// Achievement description: 500 hours total
+  ///
+  /// In en, this message translates to:
+  /// **'Read for a total of 500 hours'**
+  String get statsAchievementFocusDesc;
+
+  /// Achievement progress percentage
+  ///
+  /// In en, this message translates to:
+  /// **'Progress: {percent}%'**
+  String statsProgressPercent(Object percent);
+
+  /// Chart title: reading goal progress
+  ///
+  /// In en, this message translates to:
+  /// **'Reading Goal Progress'**
+  String get statsGoalProgress;
+
+  /// Goal row label: this month's reading time
+  ///
+  /// In en, this message translates to:
+  /// **'This Month\'s Reading Time'**
+  String get statsMonthlyReadingTime;
+
+  /// Goal row label: this week's reading time
+  ///
+  /// In en, this message translates to:
+  /// **'This Week\'s Reading Time'**
+  String get statsWeeklyReadingTime;
+
+  /// Goal row label: average daily pages over the last 7 days
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Avg Pages (Last 7 Days)'**
+  String get statsAvgDailyPages7d;
+
+  /// A number of hours with unit
+  ///
+  /// In en, this message translates to:
+  /// **'{count} hours'**
+  String statsHoursCount(Object count);
+
+  /// Chart title: reading speed trend
+  ///
+  /// In en, this message translates to:
+  /// **'Reading Speed Trend'**
+  String get statsSpeedTrend;
+
+  /// Average reading speed badge (speed is a preformatted decimal string)
+  ///
+  /// In en, this message translates to:
+  /// **'Avg: {speed} pages/min'**
+  String statsAvgSpeed(Object speed);
+
+  /// Heatmap card title: reading continuity
+  ///
+  /// In en, this message translates to:
+  /// **'Reading Continuity'**
+  String get statsReadingContinuity;
+
+  /// Current consecutive reading days badge
+  ///
+  /// In en, this message translates to:
+  /// **'Current streak: {days} days'**
+  String statsCurrentStreak(Object days);
+
+  /// Heatmap legend: low intensity
+  ///
+  /// In en, this message translates to:
+  /// **'Less'**
+  String get statsHeatmapLess;
+
+  /// Heatmap legend: high intensity
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get statsHeatmapMore;
+
+  /// Heatmap column header: week number
+  ///
+  /// In en, this message translates to:
+  /// **'Week {week}'**
+  String statsWeekNumber(Object week);
 }
 
 class _AppLocalizationsDelegate

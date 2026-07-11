@@ -5,6 +5,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/glass_config.dart';
+import '../utils/localization_extension.dart';
 import '../utils/ui_style.dart';
 import '../widgets/app_brand_icon.dart';
 
@@ -297,7 +298,7 @@ class _UserAgreementPageState extends State<UserAgreementPage>
         ),
         const SizedBox(height: 18),
         Text(
-          '开元阅读',
+          context.l10n.appTitle,
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.w700,
                 color: scheme.onSurface,
@@ -316,7 +317,7 @@ class _UserAgreementPageState extends State<UserAgreementPage>
             ),
           ),
           child: Text(
-            '沉浸阅读 · AI 助手 · 云端同步',
+            context.l10n.agreementTagline,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: scheme.primary,
                   fontWeight: FontWeight.w600,
@@ -399,14 +400,14 @@ class _UserAgreementPageState extends State<UserAgreementPage>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '用户服务协议',
+                        context.l10n.agreementCardTitle,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '请仔细阅读以下内容',
+                        context.l10n.agreementCardSubtitle,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: Theme.of(
                                 context,
@@ -489,7 +490,7 @@ class _UserAgreementPageState extends State<UserAgreementPage>
               ),
               const SizedBox(height: 14),
               Text(
-                '欢迎使用开元阅读',
+                context.l10n.agreementWelcomeTitle,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w700,
                       color: scheme.primary,
@@ -498,7 +499,7 @@ class _UserAgreementPageState extends State<UserAgreementPage>
               ),
               const SizedBox(height: 12),
               Text(
-                '为保证你获得稳定、可预期的阅读体验，请先阅读并同意以下协议内容。',
+                context.l10n.agreementWelcomeBody,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       height: 1.6,
                       color: scheme.onSurface.withValues(alpha: 0.8),
@@ -514,29 +515,29 @@ class _UserAgreementPageState extends State<UserAgreementPage>
         // 功能特色列表
         _buildFeatureItem(
           icon: Icons.layers_rounded,
-          title: '多格式支持',
-          description: 'EPUB、PDF、TXT、MOBI等多种格式',
+          title: context.l10n.agreementFeatureFormatsTitle,
+          description: context.l10n.agreementFeatureFormatsBody,
           accent: scheme.primary,
         ),
         const SizedBox(height: 12),
         _buildFeatureItem(
           icon: Icons.palette_rounded,
-          title: '个性化阅读',
-          description: '自定义字体、颜色、排版等阅读体验',
+          title: context.l10n.agreementFeatureCustomizationTitle,
+          description: context.l10n.agreementFeatureCustomizationBody,
           accent: scheme.secondary,
         ),
         const SizedBox(height: 12),
         _buildFeatureItem(
-          icon: Icons.cloud_sync_rounded,
-          title: 'WebDAV同步',
-          description: '支持WebDAV云端同步，多设备阅读进度同步',
+          icon: Icons.lock_outline_rounded,
+          title: context.l10n.agreementFeatureSyncTitle,
+          description: context.l10n.agreementFeatureSyncBody,
           accent: scheme.tertiary,
         ),
         const SizedBox(height: 12),
         _buildFeatureItem(
           icon: Icons.record_voice_over_rounded,
-          title: 'TTS朗读',
-          description: '智能语音朗读，解放双眼，听书更自由',
+          title: context.l10n.agreementFeatureTtsTitle,
+          description: context.l10n.agreementFeatureTtsBody,
           accent: scheme.primary,
         ),
 
@@ -577,7 +578,7 @@ class _UserAgreementPageState extends State<UserAgreementPage>
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  '点击"同意并继续"即表示您已阅读并同意使用该应用',
+                  context.l10n.agreementTapToAgreeHint,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w500,
                         height: 1.5,
@@ -669,7 +670,7 @@ class _UserAgreementPageState extends State<UserAgreementPage>
         // 拒绝按钮
         Expanded(
           child: _buildActionButton(
-            label: '退出应用',
+            label: context.l10n.agreementExitApp,
             onPressed: _onDisagreePressed,
             isPrimary: false,
           ),
@@ -679,7 +680,7 @@ class _UserAgreementPageState extends State<UserAgreementPage>
         Expanded(
           flex: 2,
           child: _buildActionButton(
-            label: '同意并继续',
+            label: context.l10n.agreementAgreeAndContinue,
             onPressed: _onAgreePressed,
             isPrimary: true,
           ),
@@ -819,12 +820,12 @@ class _UserAgreementPageState extends State<UserAgreementPage>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('退出应用'),
-        content: const Text('如果您不同意用户协议，将无法使用本应用。确定要退出吗？'),
+        title: Text(context.l10n.agreementExitApp),
+        content: Text(context.l10n.agreementExitDialogContent),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: Text(context.l10n.cancel),
           ),
           TextButton(
             onPressed: () {
@@ -833,7 +834,7 @@ class _UserAgreementPageState extends State<UserAgreementPage>
                 widget.onDisagreed!();
               }
             },
-            child: const Text('确定退出'),
+            child: Text(context.l10n.agreementConfirmExit),
           ),
         ],
       ),

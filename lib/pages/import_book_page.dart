@@ -1,12 +1,10 @@
-// 文件说明：书籍导入页面，处理本地文件与 WebDAV 导入。
+// 文件说明：书籍导入页面，处理本地文件导入。
 // 技术要点：Flutter UI、文件系统。
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../pages/webdav_remote_import_page.dart';
 import '../services/books/book_services.dart';
-import '../services/sync/webdav_sync_service.dart';
 import '../utils/localization_extension.dart';
 import '../utils/system_ui_helper.dart';
 import '../widgets/side_toast.dart';
@@ -27,7 +25,7 @@ class _ImportBookPageState extends State<ImportBookPage> {
     setState(() {
       _isLoading = true;
       _progress = 0.0;
-      _progressMessage = '准备导入...';
+      _progressMessage = context.l10n.importPreparing;
     });
 
     try {
@@ -47,7 +45,8 @@ class _ImportBookPageState extends State<ImportBookPage> {
       }
     } catch (e) {
       if (mounted) {
-        showSideToast(context, '导入失败: $e');
+        showSideToast(
+            context, context.l10n.importFailedWithError(e.toString()));
       }
     } finally {
       if (mounted) {
@@ -57,23 +56,6 @@ class _ImportBookPageState extends State<ImportBookPage> {
           _progressMessage = '';
         });
       }
-    }
-  }
-
-  Future<void> _importFromWebDav() async {
-    if (!WebDavSyncService().isConfigured) {
-      showSideToast(context, '请先在设置中完成 WebDAV 配置');
-      return;
-    }
-
-    final importedCount = await Navigator.push<int>(
-      context,
-      MaterialPageRoute(builder: (_) => const WebDavRemoteImportPage()),
-    );
-
-    if (!mounted) return;
-    if ((importedCount ?? 0) > 0) {
-      Navigator.pop(context, true);
     }
   }
 
@@ -101,14 +83,8 @@ class _ImportBookPageState extends State<ImportBookPage> {
               children: [
                 _buildImportButton(
                   icon: Icons.file_open_rounded,
-                  label: '本地文件',
+                  label: context.l10n.importLocalFile,
                   onTap: _pickFile,
-                ),
-                const SizedBox(height: 12),
-                _buildImportButton(
-                  icon: Icons.cloud_download_rounded,
-                  label: 'WebDAV',
-                  onTap: _importFromWebDav,
                 ),
                 if (_isLoading) ...[
                   const SizedBox(height: 24),

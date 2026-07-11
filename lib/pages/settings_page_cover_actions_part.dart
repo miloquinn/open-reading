@@ -5,37 +5,35 @@ part of 'settings_page.dart';
 
 extension _SettingsPageCoverActions on _SettingsPageState {
   void _showRestartDialog({
-    String reason = '该设置变更需要重启应用才能完全生效。',
+    String? reason,
   }) {
+    final l10n = context.l10n;
+    final effectiveReason = reason ?? l10n.settingsRestartRequiredReason;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.restart_alt, color: Colors.orange),
-            SizedBox(width: 8),
-            Text('需要重启应用'),
+            const Icon(Icons.restart_alt, color: Colors.orange),
+            const SizedBox(width: 8),
+            Text(l10n.settingsRestartRequiredTitle),
           ],
         ),
-        content: Text('$reason\n\n是否现在重启应用？'),
+        content: Text(l10n.settingsRestartPrompt(effectiveReason)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('稍后'),
+            child: Text(l10n.settingsRestartLater),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
               RestartableApp.restart(this.context);
             },
-            child: const Text('重启'),
+            child: Text(l10n.settingsRestartNow),
           ),
         ],
       ),
     );
-  }
-
-  void _showInfoPopup(String message) {
-    showSideToast(context, message);
   }
 }
