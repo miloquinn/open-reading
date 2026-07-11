@@ -100,10 +100,16 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
     });
   }
 
-  TextStyle get _readerTextStyle => DefaultTextStyle.of(context)
-      .style
-      .merge(_textStyle.copyWith(fontSize: _fontSize))
-      .copyWith(inherit: false);
+  TextStyle get _readerTextStyle =>
+      (Theme.of(context).textTheme.bodyMedium ?? const TextStyle()).merge(
+        _textStyle.copyWith(fontSize: _fontSize),
+      );
+
+  Widget _buildReaderText(String text) => RichText(
+        text: TextSpan(text: text, style: _readerTextStyle),
+        textDirection: Directionality.of(context),
+        textScaler: MediaQuery.textScalerOf(context),
+      );
 
   double get _readerBottomMargin => (_verticalMargin - 14).clamp(4, 34);
 
@@ -482,7 +488,7 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
     TextScaler textScaler,
   ) {
     final scaleKey = textScaler.scale(100).round();
-    final key = 'v4:$chapterIndex:${size.width.round()}:${size.height.round()}:'
+    final key = 'v5:$chapterIndex:${size.width.round()}:${size.height.round()}:'
         '$scaleKey:${_fontSize.toStringAsFixed(1)}:'
         '${_horizontalMargin.toStringAsFixed(1)}:'
         '${_verticalMargin.toStringAsFixed(1)}:'
@@ -504,7 +510,7 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
 
   Widget _buildPage(_NativeChapter chapter, _ReaderPageData page) {
     final imageIndex = page.imageBlockIndex;
-    if (imageIndex == null) return Text(page.text, style: _readerTextStyle);
+    if (imageIndex == null) return _buildReaderText(page.text);
     final bytes = chapter.blocks[imageIndex].imageBytes;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -523,7 +529,7 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
         if (page.text.isNotEmpty)
           Expanded(
             flex: 6,
-            child: Text(page.text, style: _readerTextStyle),
+            child: _buildReaderText(page.text),
           ),
       ],
     );
@@ -615,7 +621,7 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
               }
               return Padding(
                 padding: const EdgeInsets.only(bottom: 10),
-                child: Text(block.text ?? '', style: _readerTextStyle),
+                child: _buildReaderText(block.text ?? ''),
               );
             }).toList(growable: false),
           ),
