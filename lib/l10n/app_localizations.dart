@@ -2475,17 +2475,17 @@ abstract class AppLocalizations {
   /// **'Current: {value}'**
   String settingsCurrentValue(String value);
 
-  /// Title of the UI style setting and modal
+  /// Title of the glass effect toggle
   ///
   /// In en, this message translates to:
-  /// **'UI style'**
+  /// **'Glass effect'**
   String get settingsUiStyleTitle;
 
-  /// Restart dialog reason after switching UI style
+  /// Description of the glass effect toggle
   ///
   /// In en, this message translates to:
-  /// **'UI style switched to {style}. Restart to fully apply it to all pages.'**
-  String settingsUiStyleSwitchedRestart(String style);
+  /// **'Use translucent surfaces, background blur, and floating depth'**
+  String get settingsGlassEffectSubtitle;
 
   /// Accent summary when following the app theme
   ///

@@ -1305,12 +1305,10 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get settingsUiStyleTitle => '界面风格';
+  String get settingsUiStyleTitle => '玻璃效果';
 
   @override
-  String settingsUiStyleSwitchedRestart(String style) {
-    return '界面风格已切换为 $style，重启后会完整应用到所有页面。';
-  }
+  String get settingsGlassEffectSubtitle => '开启半透明、背景模糊和悬浮层次效果';
 
   @override
   String get settingsAccentFollowTheme => '强调色：跟随主题';

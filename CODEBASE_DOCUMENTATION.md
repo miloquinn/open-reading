@@ -1,194 +1,112 @@
-# 开元阅读代码库索引（Open Reading）
+# 开元阅读代码库说明
 
-> 更新：2026-04-03
-> 范围：`OpenReading/lib/` + `OpenReading/test/`
-> 目标：帮助从零开始阅读代码，先看主链路，再逐步下钻到子模块和辅助层。
+> 范围：主 Flutter 工程及 Android、iOS、Windows、macOS、Linux、Web 平台壳层
+> 目标：提供与当前代码一致的阅读顺序和模块边界。
 
-## 当前真相源
+## 当前主链路
 
-- 当前工作区中的主 Flutter 工程是 `OpenReading/`，不是根目录旧文档里仍出现的 `OpenReading/`。
-- 当前默认阅读入口由 `lib/services/reading/reading_router_service.dart` 打开 `lib/pages/foliate_reader_page.dart`。
-- `lib/reader_core/` 当前主要承担解析、文档模型与阅读支撑能力，不再作为独立阅读页面入口存在。
+开元阅读的核心阅读入口是 `NativeReaderService`，阅读页面是 `NativeReaderPage`。
+书籍内容经本地解析后进入 Flutter 原生排版和分页流程。字号、行距、边距或视口变化会
+形成新的布局签名，并通过阅读锚点恢复位置。
 
-## 本次冗余清理
-
-- 删除无外部引用文件：`lib/pages/home_widgets/home_achievement_section_widget.dart`
-- 删除无外部引用文件：`lib/pages/home_widgets/home_mobile_hero_card_widget.dart`
-- 删除无外部引用文件：`lib/pages/home_widgets/home_mobile_summary_grid_widget.dart`
-- 删除无外部引用文件：`lib/pages/home_widgets/home_recent_books_section_widget.dart`
-- 删除无外部引用文件：`lib/pages/home_widgets/home_stat_card_widget.dart`
-- 删除无外部引用文件：`lib/pages/home_widgets/home_weekly_chart_card_widget.dart`
-- 删除无外部引用文件：`lib/services/reading/readium_bridge.dart`
-- 删除无外部引用文件：`lib/services/tts/system_tts.dart`
-- 删除无外部引用文件：`lib/utils/theme_mixin.dart`
+```text
+首页 / 书库
+    ↓
+NativeReaderService
+    ↓
+NativeReaderPage
+    ├── 章节解析与懒加载
+    ├── TextPainter 精确测量
+    ├── 分页与内存缓存
+    ├── 图片和富文本块
+    └── CanonicalLocator 进度保存
+```
 
 ## 建议阅读顺序
 
-1. `lib/main.dart`：先看应用如何启动、注入依赖和选择首页。
-2. `lib/pages/home_shell_page.dart`、`lib/pages/home_mobile_dashboard_page.dart`、`lib/pages/library_page.dart`：理解用户进入应用后的主导航。
-3. `lib/services/books/book_import_service.dart`、`lib/services/books/book_dao.dart`：理解书籍是如何导入并入库的。
-4. `lib/services/reading/reading_router_service.dart`、`lib/services/reading/web_reader_source_service.dart`：理解书籍如何被路由到阅读器。
-5. `lib/pages/foliate_reader_page.dart`：理解当前线上主阅读器。
-6. `lib/reader_core/`：理解解析、文档模型与阅读支撑实现。
-7. `lib/services/tts_service.dart`、`lib/services/core/`：最后补齐朗读与基础设施。
+1. `lib/main.dart`：应用启动与全局服务初始化。
+2. `lib/pages/home_shell_page.dart`：主导航和页面装配。
+3. `lib/pages/library_page.dart`：本地书库与打开书籍入口。
+4. `lib/core/reader/native_reader_service.dart`：阅读路由边界。
+5. `lib/pages/native_reader_page.dart`：原生阅读、分页和交互实现。
+6. `lib/core/reader/canonical_locator.dart`：稳定阅读定位模型。
+7. `lib/services/books/`：导入、数据库、图片、笔记与进度。
+8. `lib/reader_core/`：格式解析和统一文档支撑。
+9. `lib/book_sources/` 与 `lib/pages/book_sources_page.dart`：开放书源能力。
+10. `test/`：通过测试理解模块预期行为。
 
-## 分类规则
+## 目录职责
 
-- `主入口` / `当前主链路`：建议最先阅读，能快速建立全局心智模型。
-- `支撑模块`：被主链路调用的功能模块。
-- `拆分文件`：通过 `part` 拆出的实现细节，通常依附于同目录主文件。
-- `聚合导出`：只做 `export` 的入口文件，方便按领域导入，不含核心逻辑。
-- `生成文件`：自动生成，阅读时知道作用即可，不建议手改。
-- `测试`：验证模块边界行为，适合理解预期输出。
+### `lib/core/`
 
-## 文件数量概览
+放置跨页面共享的核心模型与阅读入口。阅读定位模型把内容位置和屏幕排版位置分开，避免
+字号、边距或设备变化后只能依赖旧页码。
 
-| 分类 | 文件数 |
-| --- | ---: |
-| 入口与生成文件 | 4 |
-| 数据模型 | 5 |
-| 页面层 | 21 |
-| 阅读内核 | 19 |
-| 业务服务 | 52 |
-| 工具层 | 12 |
-| 通用组件 | 4 |
-| 测试代码 | 4 |
+### `lib/pages/`
 
-## 文件索引
+应用页面层，包括首页、书库、原生阅读器、开放书源、统计、设置和用户协议。复杂页面
+可通过同目录 `part` 文件拆分，但状态所有权仍保留在主页面。
 
-### 入口与生成文件
+### `lib/reader_core/`
 
-| 文件 | 作用 | 技术 | 状态 |
-| --- | --- | --- | --- |
-| `lib/l10n/app_localizations.dart` | Flutter 国际化生成入口，汇总多语言委托与本地化访问方法。 | Flutter Localizations、Intl、Flutter | 生成文件 |
-| `lib/l10n/app_localizations_en.dart` | 英文语言包的生成代码，实现 AppLocalizations 的英文文案。 | Intl | 生成文件 |
-| `lib/l10n/app_localizations_zh.dart` | 中文语言包的生成代码，实现 AppLocalizations 的中文文案。 | Intl | 生成文件 |
-| `lib/main.dart` | 应用启动入口，负责初始化数据库、依赖注入、主题、国际化与全局服务。 | Flutter Localizations、Riverpod、Provider、SharedPreferences、SQLite FFI、Path Provider | 主入口 |
+阅读支撑层，包括格式解析、统一文档模型、块级内容和分页计划。该目录提供可复用能力，
+实际阅读交互由原生阅读页面负责。
 
-### 数据模型
+### `lib/services/books/`
 
-| 文件 | 作用 | 技术 | 状态 |
-| --- | --- | --- | --- |
-| `lib/models/book.dart` | 书籍数据模型，定义书籍元数据、阅读进度和缓存字段。 | Dart 数据模型 | 支撑模块 |
-| `lib/models/book_note.dart` | 书摘与笔记模型，统一描述高亮、笔记内容和颜色信息。 | Dart 数据模型、Flutter | 支撑模块 |
-| `lib/models/bookmark.dart` | 书签数据模型，保存书签位置、标题和创建时间。 | Dart 数据模型 | 支撑模块 |
-| `lib/models/chapter.dart` | 章节数据模型，描述章节标题、顺序与正文切片。 | Dart 数据模型 | 支撑模块 |
+书籍领域服务，处理文件导入、编码识别、元数据、封面与图片、数据库访问、书签、笔记、
+分页缓存清理和存储修复。
 
-### 页面层
+### `lib/book_sources/`
 
-| 文件 | 作用 | 技术 | 状态 |
-| --- | --- | --- | --- |
-| `lib/pages/detailed_stats_page.dart` | 阅读统计详情页，展示时长、趋势和图表等分析数据。 | Flutter UI、FL Chart、文件系统、渲染层 | 支撑模块 |
-| `lib/pages/foliate_reader_page.dart` | 当前主链路 Web 阅读页面，承载 Foliate/WebView 阅读器与交互桥接。 | Flutter UI、InAppWebView、SharedPreferences、JSON | 当前主链路 |
-| `lib/pages/home_dashboard_page.dart` | 大屏首页仪表盘页面，聚合统计卡片、最近阅读和可视化内容。 | Flutter UI、FL Chart、渲染层、文件系统 | 支撑模块 |
-| `lib/pages/home_dashboard_sections_part.dart` | 首页仪表盘的 part 拆分文件，承载统计区块与局部构建方法。 | Flutter UI、Dart part | 拆分文件 |
-| `lib/pages/home_layout_constants.dart` | 首页响应式布局常量文件，统一定义间距、断点和尺寸策略。 | Flutter UI | 支撑模块 |
-| `lib/pages/home_mobile_dashboard_page.dart` | 移动端首页页面，负责最近阅读、周统计、专注计时与 AI 建议。 | Flutter UI、文件系统 | 支撑模块 |
-| `lib/pages/home_shell_layout_part.dart` | 首页壳层的 part 拆分文件，承载导航布局和系统栏相关实现。 | Flutter UI、Dart part | 拆分文件 |
-| `lib/pages/home_shell_page.dart` | 首页壳层页面，负责底部导航、页面装配和桌面/移动端切换。 | Flutter UI、SharedPreferences、渲染层 | 支撑模块 |
-| `lib/pages/home_widgets/home_bounce_navigation_item.dart` | 首页底部导航动画组件，为导航项提供弹跳反馈。 | Flutter UI | 支撑模块 |
-| `lib/pages/home_widgets/home_mobile_top_bar_widget.dart` | 移动端首页顶部栏组件，承载品牌展示与顶部操作入口。 | Flutter UI、渲染层 | 支撑模块 |
-| `lib/pages/home_widgets/home_navigation_item.dart` | 首页导航项数据与表现组件，描述单个导航入口。 | Flutter UI | 支撑模块 |
-| `lib/pages/home_widgets/home_page_wrappers.dart` | 首页相关页面包装组件，统一处理 KeepAlive、样式和系统栏。 | Flutter UI | 支撑模块 |
-| `lib/pages/import_book_page.dart` | 书籍导入页面，处理本地文件导入。 | Flutter UI、文件系统 | 支撑模块 |
-| `lib/pages/library_page.dart` | 书库页面，负责书籍列表、筛选、排序和进入阅读。 | Flutter UI、文件系统、渲染层 | 支撑模块 |
-| `lib/reader_core/` | 阅读支撑层，负责解析、文档模型与共享数据结构等基础能力。 | Parser、Document Model | 支撑模块 |
-| `lib/pages/settings_page.dart` | 设置页面，负责应用主题、语言、同步、备份和外观设置。 | Flutter UI、Icons Plus、Package Info、Provider、SharedPreferences、URL Launcher | 支撑模块 |
-| `lib/pages/settings_page_cover_actions_part.dart` | 设置页封面相关操作的 part 拆分文件，减少主页面复杂度。 | Flutter UI、Dart part | 拆分文件 |
-| `lib/pages/user_agreement_page.dart` | 用户协议页面，同时管理首次启动协议确认状态。 | Flutter UI、SharedPreferences、渲染层 | 支撑模块 |
+开放书源协议实现：
 
-### 阅读内核
+- `models/`：已注册书源与协议数据模型；
+- `protocol/`：协议常量、发现文档和响应解析；
+- `services/`：HTTP 客户端与本地书源注册表。
 
-| 文件 | 作用 | 技术 | 状态 |
-| --- | --- | --- | --- |
-| `lib/reader_core/ai/ai_service.dart` | 阅读内核 AI 配置与请求模型，统一描述模型、提供商和请求参数。 | ReaderCore、Dio、SharedPreferences、JSON | 支撑模块 |
-| `lib/reader_core/data/reader_models.dart` | 阅读内核的数据模型集合，定义章节、目录、样式等核心结构。 | ReaderCore、Flutter | 支撑模块 |
-| `lib/reader_core/document/flow_doc.dart` | FlowDoc 文档抽象层，将不同格式统一成可排版的块级结构。 | ReaderCore、Flutter | 支撑模块 |
-| `lib/reader_core/document/html_to_flow_doc.dart` | HTML 到 FlowDoc 的转换器，把 HTML 结构归一化到阅读文档模型。 | ReaderCore、HTML 解析、Flutter | 支撑模块 |
-| `lib/reader_core/paginator/flow_paginator.dart` | FlowDoc 分页器，负责把流式文档切分成页面计划。 | ReaderCore、Flutter | 支撑模块 |
-| `lib/reader_core/paginator/page_plan.dart` | 分页计划数据模型，描述页面、文本片段和图片片段的排版结果。 | ReaderCore、JSON | 支撑模块 |
-| `lib/reader_core/parser/docx_parser.dart` | DOCX 解析器，把 Word 文档转换成阅读内核可消费的章节数据。 | ReaderCore、Archive ZIP、JSON、文件系统 | 支撑模块 |
-| `lib/reader_core/parser/epub_parser.dart` | EPUB 解析器，抽取章节、目录和 HTML 内容并生成 FlowDoc。 | ReaderCore、EPUBX、HTML 解析、文件系统 | 支撑模块 |
-| `lib/reader_core/parser/fb2_parser.dart` | FB2 解析器，用于读取 FictionBook 文本并转成统一章节模型。 | ReaderCore、JSON、文件系统 | 支撑模块 |
-| `lib/reader_core/parser/mobi_parser.dart` | MOBI 解析器，负责读取元数据和文本内容并输出统一结构。 | ReaderCore、JSON、文件系统 | 支撑模块 |
-| `lib/reader_core/parser/parser_models.dart` | 阅读解析阶段的通用模型与解析器接口定义。 | ReaderCore | 支撑模块 |
-| `lib/reader_core/parser/rtf_parser.dart` | RTF 解析器，用于提取富文本内容并桥接到阅读模型。 | ReaderCore、JSON、文件系统 | 支撑模块 |
-| `lib/reader_core/parser/text_parser_bridge.dart` | 纯文本解析桥接层，为 TXT/RTF/FB2 等文本格式提供统一入口。 | ReaderCore、文件系统 | 支撑模块 |
-| `lib/reader_core/parser/txt_parser.dart` | TXT 解析器，负责解码、切章与生成可重排的文档结构。 | ReaderCore、文件系统、Flutter | 支撑模块 |
+规范和参考服务独立维护在：
+https://github.com/miloquinn/open-reading-source-protocol
 
-### 业务服务
+### `lib/services/core/`
 
-| 文件 | 作用 | 技术 | 状态 |
-| --- | --- | --- | --- |
-| `lib/services/ai/global_ai_reading_service.dart` | 全局 AI 阅读服务，为首页和阅读场景生成建议、摘要和知识片段。 | 服务层、Crypto 哈希、Path、Path Provider、JSON、文件系统 | 支撑模块 |
-| `lib/services/books/book_cover_fetcher_service.dart` | 封面抓取服务，负责从远程资源拉取书籍封面。 | 服务层、Dio、Flutter | 支撑模块 |
-| `lib/services/books/book_dao.dart` | 书籍 DAO，负责书籍元数据、进度和分页缓存字段的数据库读写。 | 服务层、Flutter | 支撑模块 |
-| `lib/services/books/book_image_map_service.dart` | EPUB 图片路径映射服务，维护原始资源路径到本地缓存路径的映射。 | 服务层、Path Provider、Path、文件系统、JSON、Flutter | 支撑模块 |
-| `lib/services/books/book_image_service.dart` | 书籍图片缓存服务，负责图片落盘、去重和显示元数据管理。 | 服务层、Path、Crypto 哈希、文件系统、渲染层、JSON | 支撑模块 |
-| `lib/services/books/book_import_isolate_service.dart` | 导入隔离线程服务，把哈希计算和元数据提取放到 isolate 执行。 | 服务层、Crypto 哈希、文件系统、JSON、Flutter | 支撑模块 |
-| `lib/services/books/book_import_service.dart` | 书籍导入总入口，统筹 TXT、EPUB、PDF 和压缩包的导入流程。 | 服务层、File Picker、Path、Path Provider、SharedPreferences、EPUBX | 支撑模块 |
-| `lib/services/books/book_note_dao.dart` | 笔记与高亮 DAO，负责书摘、批注和高亮数据的本地读写。 | 服务层 | 支撑模块 |
-| `lib/services/books/book_services.dart` | 书籍模块聚合导出文件，统一暴露导入、DAO 与图片处理服务。 | 服务层、Barrel Export | 聚合导出 |
-| `lib/services/books/book_storage_repair_service.dart` | 书籍存储修复服务，用于处理文件迁移和失效路径修复。 | 服务层、Path、Path Provider、文件系统、Flutter | 支撑模块 |
-| `lib/services/books/bookmark_dao.dart` | 书签 DAO，负责书签数据的增删改查。 | 服务层 | 支撑模块 |
-| `lib/services/books/cover_generator_service.dart` | 封面生成服务，基于标题与颜色方案生成默认封面图片。 | 服务层、Path、Path Provider、文件系统、渲染层、Flutter | 支撑模块 |
-| `lib/services/books/enhanced_txt_import_service.dart` | 增强 TXT 导入服务，负责解码检测、文本预处理与章节提取。 | 服务层、JSON、Flutter | 支撑模块 |
-| `lib/services/books/epub_image_extractor_service.dart` | EPUB 图片提取服务，把压缩包中的图片抽取到本地缓存目录。 | 服务层、Archive ZIP、EPUBX、Path、文件系统、Flutter | 支撑模块 |
-| `lib/services/core/app_settings_service.dart` | 应用设置服务，负责全局偏好项的读取与变更通知。 | 服务层、SharedPreferences、Flutter | 支撑模块 |
-| `lib/services/core/app_state_service.dart` | 应用状态服务，记录最近阅读、当前书籍和全局运行状态。 | 服务层、Flutter | 支撑模块 |
-| `lib/services/core/core_services.dart` | 核心基础设施聚合导出文件，统一暴露数据库、缓存和备份服务。 | 服务层、Barrel Export | 聚合导出 |
-| `lib/services/core/data_backup_service.dart` | 数据备份服务，负责数据库与缓存数据的备份、校验和恢复。 | 服务层、Path Provider、SharedPreferences、Crypto 哈希、JSON、文件系统 | 支撑模块 |
-| `lib/services/core/data_cache_service.dart` | 数据缓存服务，负责轻量级缓存、脏标记和恢复加速。 | 服务层、SharedPreferences、JSON、Flutter | 支撑模块 |
-| `lib/services/core/data_service.dart` | 数据总管服务，协调数据库、缓存、离线队列与完整性检查。 | 服务层、Flutter | 支撑模块 |
-| `lib/services/core/database_service.dart` | 数据库底座服务，负责 SQLite 初始化、建表和版本升级。 | 服务层、Path、Path Provider、SQLite FFI、文件系统、Flutter | 支撑模块 |
-| `lib/services/core/enhanced_database_service.dart` | 增强数据库服务，补充事务、统计和健康检查能力。 | 服务层、SQLite、Flutter | 支撑模块 |
-| `lib/services/core/offline_data_service.dart` | 离线数据服务，维护离线操作队列和网络恢复后的同步策略。 | 服务层、Connectivity Plus、Flutter | 支撑模块 |
-| `lib/services/core/share_service.dart` | 分享服务，统一生成分享文本并调用系统分享能力。 | 服务层、Share Plus、Intl、Flutter | 支撑模块 |
-| `lib/services/library/library_event_bus_service.dart` | 书库事件总线，用于在不同页面之间广播书库刷新事件。 | 服务层 | 支撑模块 |
-| `lib/services/library/library_services.dart` | 书库模块聚合导出文件，暴露书库事件与相关服务入口。 | 服务层、Barrel Export | 聚合导出 |
-| `lib/services/reading/local_reader_file_server.dart` | 本地阅读文件服务器，为 Web 阅读器提供本地文件访问能力。 | 服务层、文件系统 | 支撑模块 |
-| `lib/services/reading/reading_plan_service.dart` | 阅读计划服务，计算今日计划、推荐书籍和进度快照。 | 服务层、SharedPreferences | 支撑模块 |
-| `lib/services/reading/reading_progress_service.dart` | 阅读进度服务，负责保存、恢复和广播书籍阅读位置。 | 服务层、SharedPreferences、Flutter | 支撑模块 |
-| `lib/services/reading/reading_router_service.dart` | 阅读路由服务，按书籍格式打开当前 Foliate 主阅读页面。 | 服务层、文件系统、Flutter | 主链路路由 |
-| `lib/services/reading/reading_stats_dao.dart` | 阅读统计 DAO，负责阅读时长、页数和趋势数据的统计落库。 | 服务层 | 支撑模块 |
-| `lib/services/reading/web_reader_source_service.dart` | Web 阅读资源准备服务，把不同格式转换成 Web 阅读器可加载的源文件。 | 服务层、Archive ZIP、Path、JSON、文件系统 | 支撑模块 |
-| `lib/services/tts/base_tts.dart` | TTS 抽象基类，定义语音列表、播放状态和统一接口。 | 服务层、Flutter | 支撑模块 |
-| `lib/services/tts/tts_preferences.dart` | TTS 偏好设置服务，负责朗读配置项的持久化。 | 服务层、SharedPreferences | 支撑模块 |
-| `lib/services/tts_service.dart` | 当前主链路 TTS 服务，直接封装 FlutterTts 并管理朗读状态。 | 服务层、Flutter TTS、SharedPreferences、渲染层、Flutter | 当前主链路 |
+数据库、缓存、备份、应用设置和全局状态等基础设施。
 
-### 工具层
+### `lib/services/ai/` 与 `lib/reader_core/ai/`
 
-| 文件 | 作用 | 技术 | 状态 |
-| --- | --- | --- | --- |
-| `lib/utils/app_themes.dart` | 应用主题定义文件，集中维护主题色板与 ThemeData 生成逻辑。 | 工具方法、Flutter | 支撑模块 |
-| `lib/utils/encoding_detector_helper.dart` | 编码检测辅助工具，帮助 TXT 导入阶段判断文本编码。 | 工具方法、Flutter | 支撑模块 |
-| `lib/utils/fast_gbk_decoder.dart` | GBK 快速解码工具，为中文 TXT 导入提供高性能解码能力。 | 工具方法、GBK 编解码 | 支撑模块 |
-| `lib/utils/font_catalog_helper.dart` | 字体目录辅助工具，维护阅读字体选项与展示文案。 | 工具方法 | 支撑模块 |
-| `lib/utils/glass_config.dart` | 毛玻璃效果配置文件，统一管理玻璃态 UI 的参数和预设。 | 工具方法、Flutter | 支撑模块 |
-| `lib/utils/layout_helper.dart` | 响应式布局工具，根据屏幕尺寸判断导航模式与布局类型。 | 工具方法、Flutter | 支撑模块 |
-| `lib/utils/localization_extension.dart` | 本地化扩展方法，为 BuildContext 提供便捷的文案访问入口。 | 工具方法、Flutter | 支撑模块 |
-| `lib/utils/page_style_helper.dart` | 页面样式辅助工具，统一包装页面的背景、间距和视觉风格。 | 工具方法、Flutter | 支撑模块 |
-| `lib/utils/page_transitions.dart` | 页面转场工具，封装自定义路由动画与导航扩展。 | 工具方法 | 支撑模块 |
-| `lib/utils/progressive_blur.dart` | 渐进式模糊组件与算法，提供多层次背景模糊效果。 | 工具方法、渲染层、Flutter | 支撑模块 |
-| `lib/utils/system_ui_helper.dart` | 系统 UI 辅助工具，统一处理状态栏与导航栏样式。 | 工具方法、Flutter | 支撑模块 |
-| `lib/utils/ui_style.dart` | 应用 UI 风格扩展，定义 Material3 与玻璃态等风格切换。 | 工具方法、Flutter | 支撑模块 |
+可选 AI 能力。负责提供商配置、模型列表、请求参数和阅读场景提示。API 密钥由用户配置，
+不得写入仓库。
 
-### 通用组件
+### `lib/l10n/`
 
-| 文件 | 作用 | 技术 | 状态 |
-| --- | --- | --- | --- |
-| `lib/widgets/app_brand_icon.dart` | 应用品牌图标组件，统一渲染开元阅读的品牌标识。 | Flutter UI | 支撑模块 |
-| `lib/widgets/scrolling_text.dart` | 滚动文本组件，用于超长文本的自动滚动显示。 | Flutter UI | 支撑模块 |
-| `lib/widgets/side_toast.dart` | 侧边提示组件，提供全局浮层式提示反馈。 | Flutter UI、渲染层 | 支撑模块 |
+应用本地化资源。以 ARB 文件为真相源，生成的 Dart 文件不应手工修改。
 
-### 测试代码
+### 平台目录
 
-| 文件 | 作用 | 技术 | 状态 |
-| --- | --- | --- | --- |
-| `test/reader_core/txt_parser_reflow_test.dart` | TXT 解析重排测试，验证 FlowDoc 与章节切分结果。 | 测试、Flutter Test、文件系统 | 测试 |
-| `test/widget_test.dart` | 应用级基础测试，验证主应用可以完成最小化挂载。 | 测试、Riverpod、Flutter Test、Provider、Flutter | 测试 |
+`android/`、`ios/`、`windows/`、`macos/`、`linux/` 和 `web/` 只承载 Flutter 运行所需的
+平台启动、窗口、系统 UI 和插件注册代码。业务和阅读逻辑应优先保留在 `lib/`。
 
-## 如何继续往下读
+## 开发检查
 
-- 如果你想先理解“导入一本 TXT 之后发生了什么”，下一轮可以从 `book_import_service.dart` 开始逐文件讲。
-- 如果你想先理解“打开一本书之后发生了什么”，下一轮可以从 `reading_router_service.dart` 和 `foliate_reader_page.dart` 开始。
+```bash
+flutter pub get
+dart format --set-exit-if-changed lib test
+flutter analyze
+flutter test
+```
+
+针对书源协议：
+
+```bash
+flutter test test/book_source_protocol_test.dart test/book_source_e2e_test.dart
+```
+
+## 代码注释原则
+
+- 注释解释当前实现的原因、约束和边界，不记录已经删除的历史方案。
+- 不在注释中写未经验证的性能结论或来源猜测。
+- 第三方包名称只在真实依赖、许可和必要 API 上下文中出现。
+- 删除功能时同步删除失效文档、平台桥接、构建依赖和资源。
+- 生成文件由对应工具更新，不手工添加业务说明。
+
+更新时间：2026-07-11

@@ -161,7 +161,7 @@ class BookDao {
     }
 
     try {
-      // 2. 清理旧分页缓存目录（ Foliate 取代旧分页后，旧缓存已是冗余，简单清理目录即可）
+      // 2. 清理已停用的旧分页缓存目录。
       final book = await getBookById(bookId);
       if (book != null && book.contentHash != null) {
         final cacheDir = await _paginationCacheDir();

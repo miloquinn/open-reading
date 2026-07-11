@@ -56,24 +56,40 @@ class EnhancedTxtImportService {
     final sample = bytes.length > _encodingSampleSize
         ? bytes.sublist(0, _encodingSampleSize)
         : bytes;
-    return _detectTextEncodingWithResult(sample).encoding;
+    return _detectTextEncodingWithResult(
+      sample,
+      sampleMayEndMidCharacter: sample.length < bytes.length,
+    ).encoding;
   }
 
   TxtDecodeResult decodeWithResult(
     Uint8List bytes, {
     String? encodingOverride,
+    bool verifyEncodingOverride = false,
   }) {
     final encoding = normalizeEncoding(encodingOverride);
     if (encoding == 'auto') {
       return _detectTextEncodingWithResult(bytes);
     }
+
+    // Older app versions could persist GBK after a UTF-8 sample happened to
+    // end in the middle of a multi-byte character. Treat that stored value as
+    // a hint and re-detect it so existing books can recover without re-import.
+    if (verifyEncodingOverride && encoding == 'gbk') {
+      return _detectTextEncodingWithResult(bytes);
+    }
     return _decodeWithSpecifiedEncoding(bytes, encoding);
   }
 
-  String decodeWithOverride(Uint8List bytes, {String? encodingOverride}) {
+  String decodeWithOverride(
+    Uint8List bytes, {
+    String? encodingOverride,
+    bool verifyEncodingOverride = false,
+  }) {
     return decodeWithResult(
       bytes,
       encodingOverride: encodingOverride,
+      verifyEncodingOverride: verifyEncodingOverride,
     ).content;
   }
 
@@ -122,7 +138,10 @@ class EnhancedTxtImportService {
     return _detectTextEncodingWithResult(bytes).content;
   }
 
-  TxtDecodeResult _detectTextEncodingWithResult(Uint8List bytes) {
+  TxtDecodeResult _detectTextEncodingWithResult(
+    Uint8List bytes, {
+    bool sampleMayEndMidCharacter = false,
+  }) {
     if (bytes.isEmpty) {
       return const TxtDecodeResult(content: '', encoding: 'utf8');
     }
@@ -152,21 +171,28 @@ class EnhancedTxtImportService {
     final sample = bytes.length > _encodingSampleSize
         ? bytes.sublist(0, _encodingSampleSize)
         : bytes;
+    final sampleIsTruncated =
+        sampleMayEndMidCharacter || sample.length < bytes.length;
 
-    final utf8Valid = _isValidUtf8Bytes(sample);
+    final utf8Valid = _isValidUtf8Bytes(
+      sample,
+      allowIncompleteTrailingSequence: sampleIsTruncated,
+    );
+
+    // A byte stream that is structurally valid UTF-8 should not be sent
+    // through the heuristic scorer. Chinese UTF-8 bytes can also resemble
+    // valid GBK pairs, so scoring both candidates may incorrectly favor GBK.
+    if (utf8Valid) {
+      return TxtDecodeResult(
+        content: utf8.decode(bytes, allowMalformed: sampleIsTruncated),
+        encoding: 'utf8',
+      );
+    }
+
     final utf16Likely = _isLikelyUtf16Bytes(sample);
     final gbkConfidence = _estimateGbkByteConfidence(sample);
 
     final candidateScores = <String, double>{};
-
-    if (utf8Valid) {
-      try {
-        final utf8Text = utf8.decode(sample, allowMalformed: false);
-        candidateScores['utf8'] = _quickContentScore(utf8Text, 'utf8') + 0.35;
-      } catch (_) {
-        // ignore
-      }
-    }
 
     try {
       final gbkText = _decodeGbkBestEffort(sample);
@@ -220,7 +246,10 @@ class EnhancedTxtImportService {
     return _decodeWithSpecifiedEncoding(bytes, best.key);
   }
 
-  bool _isValidUtf8Bytes(Uint8List bytes) {
+  bool _isValidUtf8Bytes(
+    Uint8List bytes, {
+    bool allowIncompleteTrailingSequence = false,
+  }) {
     int i = 0;
     while (i < bytes.length) {
       final b = bytes[i];
@@ -243,7 +272,26 @@ class EnhancedTxtImportService {
       }
 
       if (i + needed >= bytes.length) {
-        return false;
+        if (!allowIncompleteTrailingSequence) {
+          return false;
+        }
+
+        // A fixed-size detection sample may end between UTF-8 continuation
+        // bytes. Validate the bytes that are present, then accept only this
+        // final incomplete sequence instead of rejecting the entire sample.
+        for (int j = 1; i + j < bytes.length; j++) {
+          if ((bytes[i + j] & 0xC0) != 0x80) {
+            return false;
+          }
+        }
+        if (i + 1 < bytes.length) {
+          final b1 = bytes[i + 1];
+          if (b == 0xE0 && b1 < 0xA0) return false;
+          if (b == 0xED && b1 >= 0xA0) return false;
+          if (b == 0xF0 && b1 < 0x90) return false;
+          if (b == 0xF4 && b1 >= 0x90) return false;
+        }
+        return true;
       }
 
       for (int j = 1; j <= needed; j++) {

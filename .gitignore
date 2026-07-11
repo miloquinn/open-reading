@@ -48,10 +48,6 @@ app.*.map.json
 /android/app/release
 android/local.properties
 
-# Platform subdirs (vendored / generated)
-/anx-reader
-/legado
-
 # Internal dev docs & logs
 Log.md
 knowledge_base/

@@ -1340,12 +1340,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get settingsUiStyleTitle => 'UI style';
+  String get settingsUiStyleTitle => 'Glass effect';
 
   @override
-  String settingsUiStyleSwitchedRestart(String style) {
-    return 'UI style switched to $style. Restart to fully apply it to all pages.';
-  }
+  String get settingsGlassEffectSubtitle =>
+      'Use translucent surfaces, background blur, and floating depth';
 
   @override
   String get settingsAccentFollowTheme => 'Accent color: follow theme';

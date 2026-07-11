@@ -1,28 +1,12 @@
-// 文件说明：用户协议页面，同时管理首次启动协议确认状态。
-// 技术要点：Flutter UI、SharedPreferences、渲染层。
-
-import 'dart:ui';
+// 用户首次启动时展示的欢迎页、使用条款与隐私说明。
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../utils/glass_config.dart';
+
 import '../utils/localization_extension.dart';
-import '../utils/ui_style.dart';
 import '../widgets/app_brand_icon.dart';
 
-/// 用户协议页面
-///
-/// 在首次启动应用时显示，包含用户协议内容和同意按钮
-/// 具有优美的动画效果和符合项目风格的毛玻璃设计
-///
-/// 核心功能：
-/// - [_showAnimatedContent] 显示带动画的协议内容
-/// - [_onAgreePressed] 处理用户同意操作
-/// - [_onDisagreePressed] 处理用户拒绝操作
 class UserAgreementPage extends StatefulWidget {
-  /// 用户同意协议后的回调
   final VoidCallback onAgreed;
-
-  /// 用户拒绝协议后的回调（可选）
   final VoidCallback? onDisagreed;
 
   const UserAgreementPage({
@@ -36,291 +20,172 @@ class UserAgreementPage extends StatefulWidget {
 }
 
 class _UserAgreementPageState extends State<UserAgreementPage>
-    with TickerProviderStateMixin {
-  late AnimationController _fadeController;
-  late AnimationController _scaleController;
-  late AnimationController _slideController;
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _fade;
+  late final Animation<Offset> _slide;
+  bool _confirmed = false;
+  bool _saving = false;
 
-  late Animation<double> _fadeAnimation;
-  late Animation<double> _scaleAnimation;
-  late Animation<Offset> _slideAnimation;
+  bool get _isChinese =>
+      Localizations.localeOf(context).languageCode.toLowerCase() == 'zh';
 
-  bool _showContent = false;
-
-  bool get _isMaterial3Style {
-    return Theme.of(context)
-            .extension<UiStyleThemeExtension>()
-            ?.isMaterial3Style ??
-        false;
-  }
-
-  bool get _useBlur =>
-      !_isMaterial3Style && !GlassEffectConfig.shouldDisableBlur;
+  _AgreementCopy get _copy =>
+      _isChinese ? _AgreementCopy.chinese : _AgreementCopy.english;
 
   @override
   void initState() {
     super.initState();
-    _initAnimations();
-    _startAnimations();
-  }
-
-  /// 初始化所有动画控制器和动画
-  void _initAnimations() {
-    // 淡入动画
-    _fadeController = AnimationController(
-      duration: const Duration(milliseconds: 800),
+    _controller = AnimationController(
       vsync: this,
-    );
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeOut));
-
-    // 缩放动画
-    _scaleController = AnimationController(
-      duration: const Duration(milliseconds: 600),
-      vsync: this,
-    );
-    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _scaleController, curve: Curves.elasticOut),
-    );
-
-    // 滑动动画
-    _slideController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
-      vsync: this,
-    );
-    _slideAnimation =
-        Tween<Offset>(begin: const Offset(0, 0.5), end: Offset.zero).animate(
-      CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
-    );
-  }
-
-  /// 启动动画序列
-  void _startAnimations() async {
-    await Future.delayed(const Duration(milliseconds: 200));
-
-    // 并行启动背景动画
-    _fadeController.forward();
-    _scaleController.forward();
-
-    // 延迟启动内容动画
-    await Future.delayed(const Duration(milliseconds: 300));
-    setState(() => _showContent = true);
-    _slideController.forward();
+      duration: const Duration(milliseconds: 520),
+    )..forward();
+    _fade = CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic);
+    _slide = Tween<Offset>(
+      begin: const Offset(0, 0.025),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
   }
 
   @override
   void dispose() {
-    _fadeController.dispose();
-    _scaleController.dispose();
-    _slideController.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor:
+          isDark ? const Color(0xFF11110F) : const Color(0xFFF4F1EA),
       body: Stack(
         children: [
-          // 动态背景
-          _buildAnimatedBackground(),
-          // 主内容
-          AnimatedBuilder(
-            animation: _fadeAnimation,
-            builder: (context, child) {
-              return Opacity(
-                opacity: _fadeAnimation.value,
-                child: _buildContent(),
-              );
-            },
+          Positioned.fill(
+              child: CustomPaint(painter: _PaperGrainPainter(isDark))),
+          SafeArea(
+            child: FadeTransition(
+              opacity: _fade,
+              child: SlideTransition(
+                position: _slide,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final wide = constraints.maxWidth >= 880;
+                    return Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 1160),
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(
+                            wide ? 48 : 20,
+                            wide ? 40 : 18,
+                            wide ? 48 : 20,
+                            wide ? 32 : 18,
+                          ),
+                          child: wide
+                              ? Row(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    Expanded(
+                                        flex: 4,
+                                        child: _buildIntroduction(scheme)),
+                                    const SizedBox(width: 52),
+                                    Expanded(
+                                        flex: 6,
+                                        child: _buildAgreementPanel(scheme)),
+                                  ],
+                                )
+                              : Column(
+                                  children: [
+                                    _buildCompactHeader(scheme),
+                                    const SizedBox(height: 18),
+                                    Expanded(
+                                        child: _buildAgreementPanel(scheme)),
+                                  ],
+                                ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
-  /// 构建动态背景
-  Widget _buildAnimatedBackground() {
-    final scheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final startColor = Color.alphaBlend(
-      scheme.primary.withValues(alpha: isDark ? 0.28 : 0.12),
-      scheme.surface,
-    );
-    final midColor = Color.alphaBlend(
-      scheme.secondary.withValues(alpha: isDark ? 0.22 : 0.10),
-      scheme.surface,
-    );
-    final endColor = scheme.surface;
-
-    return AnimatedBuilder(
-      animation: _scaleAnimation,
-      builder: (context, child) {
-        return Transform.scale(
-          scale: _scaleAnimation.value,
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                stops: const [0.0, 0.3, 0.7, 1.0],
-                colors: [
-                  startColor,
-                  midColor,
-                  scheme.tertiaryContainer
-                      .withValues(alpha: isDark ? 0.22 : 0.16),
-                  endColor,
-                ],
-              ),
-            ),
-            child: Stack(
-              children: [
-                Positioned(
-                  top: -100,
-                  left: -100,
-                  child: Container(
-                    width: 300,
-                    height: 300,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: RadialGradient(
-                        colors: [
-                          scheme.primary.withValues(alpha: 0.20),
-                          Colors.transparent,
-                        ],
-                      ),
-                    ),
-                  ),
+  Widget _buildIntroduction(ColorScheme scheme) {
+    final copy = _copy;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildBrand(scheme, compact: false),
+          const Spacer(),
+          Text(
+            copy.heroTitle,
+            style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                  height: 1.08,
+                  letterSpacing: -1.4,
+                  fontWeight: FontWeight.w700,
+                  color: scheme.onSurface,
                 ),
-                Positioned(
-                  bottom: -150,
-                  right: -150,
-                  child: Container(
-                    width: 400,
-                    height: 400,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: RadialGradient(
-                        colors: [
-                          scheme.secondary.withValues(alpha: 0.18),
-                          Colors.transparent,
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 120,
-                  right: -70,
-                  child: Container(
-                    width: 220,
-                    height: 220,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: RadialGradient(
-                        colors: [
-                          scheme.tertiary.withValues(alpha: 0.12),
-                          Colors.transparent,
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
           ),
-        );
-      },
-    );
-  }
-
-  /// 构建主要内容
-  Widget _buildContent() {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 14, 24, 24),
-        child: Column(
-          children: [
-            // 应用图标和标题
-            _buildHeader(),
-            const SizedBox(height: 20),
-            // 协议内容卡片
-            Expanded(
-              flex: 7,
-              child: _showContent
-                  ? SlideTransition(
-                      position: _slideAnimation,
-                      child: _buildAgreementCard(),
-                    )
-                  : const SizedBox.shrink(),
-            ),
-            const SizedBox(height: 16),
-            // 底部按钮
-            if (_showContent)
-              SlideTransition(
-                position: _slideAnimation,
-                child: _buildButtons(),
-              ),
-            const SizedBox(height: 12),
-          ],
-        ),
+          const SizedBox(height: 18),
+          Text(
+            copy.heroBody,
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  height: 1.75,
+                  color: scheme.onSurface.withValues(alpha: 0.68),
+                ),
+          ),
+          const SizedBox(height: 30),
+          _buildPrinciple(
+            scheme,
+            Icons.folder_outlined,
+            copy.localTitle,
+            copy.localBody,
+          ),
+          const SizedBox(height: 16),
+          _buildPrinciple(
+            scheme,
+            Icons.code_rounded,
+            copy.openSourceTitle,
+            copy.openSourceBody,
+          ),
+          const Spacer(flex: 2),
+          Text(
+            copy.versionLabel,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: scheme.onSurface.withValues(alpha: 0.42),
+                  letterSpacing: 0.4,
+                ),
+          ),
+        ],
       ),
     );
   }
 
-  /// 构建页面头部（应用图标和标题）
-  Widget _buildHeader() {
-    final scheme = Theme.of(context).colorScheme;
-    return Column(
+  Widget _buildCompactHeader(ColorScheme scheme) {
+    return Row(
       children: [
+        Expanded(child: _buildBrand(scheme, compact: true)),
         Container(
-          width: 96,
-          height: 96,
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
-            color: scheme.surface.withValues(alpha: 0.72),
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: scheme.outline.withValues(alpha: 0.24)),
-            boxShadow: [
-              BoxShadow(
-                color: scheme.primary.withValues(alpha: 0.18),
-                blurRadius: 18,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: const AppBrandIcon(
-            size: 80,
-            borderRadius: 20,
-          ),
-        ),
-        const SizedBox(height: 18),
-        Text(
-          context.l10n.appTitle,
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: scheme.onSurface,
-                letterSpacing: 0.3,
-              ),
-        ),
-        const SizedBox(height: 10),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
-          decoration: BoxDecoration(
-            color: scheme.primaryContainer.withValues(alpha: 0.42),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: scheme.primary.withValues(alpha: 0.22),
-              width: 1,
-            ),
+            border: Border.all(color: scheme.outline.withValues(alpha: 0.22)),
+            borderRadius: BorderRadius.circular(99),
           ),
           child: Text(
-            context.l10n.agreementTagline,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: scheme.primary,
-                  fontWeight: FontWeight.w600,
+            'MIT · LOCAL FIRST',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.8,
                 ),
           ),
         ),
@@ -328,334 +193,182 @@ class _UserAgreementPageState extends State<UserAgreementPage>
     );
   }
 
-  /// 构建协议内容卡片
-  Widget _buildAgreementCard() {
-    final scheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardBody = Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: _isMaterial3Style
-            ? scheme.surfaceContainerHigh
-            : (isDark
-                ? Colors.black.withValues(
-                    alpha: GlassEffectConfig.effectiveOpacity(0.4),
-                  )
-                : Colors.white.withValues(
-                    alpha: GlassEffectConfig.effectiveOpacity(0.85),
-                  )),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: _isMaterial3Style
-              ? scheme.outline.withValues(alpha: 0.24)
-              : (isDark
-                  ? Colors.white.withValues(alpha: 0.1)
-                  : Colors.white.withValues(alpha: 0.5)),
-          width: _isMaterial3Style ? 1.0 : 1.5,
+  Widget _buildBrand(ColorScheme scheme, {required bool compact}) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        AppBrandIcon(
+          size: compact ? 42 : 52,
+          borderRadius: compact ? 11 : 14,
+          border: Border.all(color: scheme.outline.withValues(alpha: 0.18)),
         ),
+        SizedBox(width: compact ? 12 : 14),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              context.l10n.appTitle,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.4,
+                  ),
+            ),
+            if (!compact)
+              Text(
+                'OPEN READING',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: scheme.onSurface.withValues(alpha: 0.46),
+                      letterSpacing: 2.2,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPrinciple(
+    ColorScheme scheme,
+    IconData icon,
+    String title,
+    String body,
+  ) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: scheme.onSurface.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon,
+              size: 18, color: scheme.onSurface.withValues(alpha: 0.74)),
+        ),
+        const SizedBox(width: 13),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+              const SizedBox(height: 3),
+              Text(
+                body,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      height: 1.55,
+                      color: scheme.onSurface.withValues(alpha: 0.58),
+                    ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAgreementPanel(ColorScheme scheme) {
+    final copy = _copy;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1B1B18) : const Color(0xFFFCFBF7),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: scheme.outline.withValues(alpha: 0.16)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.22 : 0.07),
+            blurRadius: 34,
+            offset: const Offset(0, 18),
+          ),
+        ],
       ),
+      clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
-          // 卡片标题 - 渐变背景
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  scheme.primary.withValues(alpha: 0.12),
-                  scheme.secondary.withValues(alpha: 0.08),
-                ],
-              ),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(24),
-                topRight: Radius.circular(24),
-              ),
-            ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 22, 24, 18),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: scheme.primary.withValues(alpha: 0.16),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: scheme.primary.withValues(alpha: 0.20),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Icon(
-                    Icons.verified_user_rounded,
-                    color: scheme.primary,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        context.l10n.agreementCardTitle,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                        copy.agreementTitle,
+                        style:
+                            Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: -0.6,
+                                ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 5),
                       Text(
-                        context.l10n.agreementCardSubtitle,
+                        copy.agreementSubtitle,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurface.withValues(alpha: 0.6),
+                              color: scheme.onSurface.withValues(alpha: 0.52),
                             ),
                       ),
                     ],
                   ),
                 ),
+                const SizedBox(width: 12),
+                Icon(Icons.article_outlined,
+                    color: scheme.onSurface.withValues(alpha: 0.34)),
               ],
             ),
           ),
-          // 协议内容
+          Divider(height: 1, color: scheme.outline.withValues(alpha: 0.13)),
           Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              physics: const BouncingScrollPhysics(),
-              child: _buildAgreementContent(),
+            child: Scrollbar(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(24, 22, 24, 28),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildImportantNotice(scheme, copy),
+                    const SizedBox(height: 26),
+                    for (var i = 0; i < copy.sections.length; i++) ...[
+                      _buildLegalSection(scheme, i + 1, copy.sections[i]),
+                      if (i != copy.sections.length - 1)
+                        const SizedBox(height: 24),
+                    ],
+                  ],
+                ),
+              ),
             ),
           ),
+          Divider(height: 1, color: scheme.outline.withValues(alpha: 0.13)),
+          _buildConsentArea(scheme, copy),
         ],
-      ),
-    );
-
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: scheme.primary.withValues(alpha: isDark ? 0.22 : 0.12),
-            blurRadius: 30,
-            offset: const Offset(0, 15),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: _useBlur
-            ? BackdropFilter(
-                enabled: _useBlur,
-                filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                child: cardBody,
-              )
-            : cardBody,
       ),
     );
   }
 
-  /// 构建协议内容文本
-  Widget _buildAgreementContent() {
-    final scheme = Theme.of(context).colorScheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // 欢迎信息
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                scheme.primary.withValues(alpha: 0.12),
-                scheme.secondary.withValues(alpha: 0.08),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: scheme.primary.withValues(alpha: 0.20),
-              width: 1,
-            ),
-          ),
-          child: Column(
-            children: [
-              AppBrandIcon(
-                size: 54,
-                borderRadius: 14,
-                border:
-                    Border.all(color: scheme.primary.withValues(alpha: 0.20)),
-              ),
-              const SizedBox(height: 14),
-              Text(
-                context.l10n.agreementWelcomeTitle,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: scheme.primary,
-                    ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                context.l10n.agreementWelcomeBody,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      height: 1.6,
-                      color: scheme.onSurface.withValues(alpha: 0.8),
-                    ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-
-        const SizedBox(height: 24),
-
-        // 功能特色列表
-        _buildFeatureItem(
-          icon: Icons.layers_rounded,
-          title: context.l10n.agreementFeatureFormatsTitle,
-          description: context.l10n.agreementFeatureFormatsBody,
-          accent: scheme.primary,
-        ),
-        const SizedBox(height: 12),
-        _buildFeatureItem(
-          icon: Icons.palette_rounded,
-          title: context.l10n.agreementFeatureCustomizationTitle,
-          description: context.l10n.agreementFeatureCustomizationBody,
-          accent: scheme.secondary,
-        ),
-        const SizedBox(height: 12),
-        _buildFeatureItem(
-          icon: Icons.lock_outline_rounded,
-          title: context.l10n.agreementFeatureSyncTitle,
-          description: context.l10n.agreementFeatureSyncBody,
-          accent: scheme.tertiary,
-        ),
-        const SizedBox(height: 12),
-        _buildFeatureItem(
-          icon: Icons.record_voice_over_rounded,
-          title: context.l10n.agreementFeatureTtsTitle,
-          description: context.l10n.agreementFeatureTtsBody,
-          accent: scheme.primary,
-        ),
-
-        const SizedBox(height: 24),
-
-        // 提示信息
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                scheme.primary.withValues(alpha: 0.16),
-                scheme.secondary.withValues(alpha: 0.10),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: scheme.primary.withValues(alpha: 0.3),
-              width: 1.5,
-            ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: scheme.primary.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  Icons.tips_and_updates_rounded,
-                  color: scheme.primary,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  context.l10n.agreementTapToAgreeHint,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w500,
-                        height: 1.5,
-                      ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// 构建功能特色项
-  Widget _buildFeatureItem({
-    required IconData icon,
-    required String title,
-    required String description,
-    required Color accent,
-  }) {
-    final scheme = Theme.of(context).colorScheme;
+  Widget _buildImportantNotice(ColorScheme scheme, _AgreementCopy copy) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: _isMaterial3Style
-            ? scheme.surfaceContainerLow
-            : scheme.surface.withValues(alpha: 0.58),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: accent.withValues(alpha: 0.24),
-          width: 1,
-        ),
+        color: scheme.onSurface.withValues(alpha: 0.045),
+        borderRadius: BorderRadius.circular(13),
+        border: Border.all(color: scheme.outline.withValues(alpha: 0.13)),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: accent.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(10),
-              boxShadow: [
-                BoxShadow(
-                  color: accent.withValues(alpha: 0.20),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Icon(
-              icon,
-              color: accent,
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 16),
+          Icon(Icons.info_outline_rounded,
+              size: 20, color: scheme.onSurface.withValues(alpha: 0.7)),
+          const SizedBox(width: 12),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  description,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withValues(alpha: 0.7),
-                        height: 1.4,
-                      ),
-                ),
-              ],
+            child: Text(
+              copy.importantNotice,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    height: 1.65,
+                    fontWeight: FontWeight.w600,
+                    color: scheme.onSurface.withValues(alpha: 0.78),
+                  ),
             ),
           ),
         ],
@@ -663,178 +376,156 @@ class _UserAgreementPageState extends State<UserAgreementPage>
     );
   }
 
-  /// 构建底部按钮
-  Widget _buildButtons() {
-    return Row(
+  Widget _buildLegalSection(
+    ColorScheme scheme,
+    int index,
+    _AgreementSection section,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 拒绝按钮
-        Expanded(
-          child: _buildActionButton(
-            label: context.l10n.agreementExitApp,
-            onPressed: _onDisagreePressed,
-            isPrimary: false,
-          ),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 28,
+              child: Text(
+                index.toString().padLeft(2, '0'),
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: scheme.onSurface.withValues(alpha: 0.34),
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.5,
+                    ),
+              ),
+            ),
+            Expanded(
+              child: Text(
+                section.title,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 16),
-        // 同意按钮
-        Expanded(
-          flex: 2,
-          child: _buildActionButton(
-            label: context.l10n.agreementAgreeAndContinue,
-            onPressed: _onAgreePressed,
-            isPrimary: true,
+        const SizedBox(height: 9),
+        Padding(
+          padding: const EdgeInsets.only(left: 28),
+          child: Text(
+            section.body,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  height: 1.72,
+                  color: scheme.onSurface.withValues(alpha: 0.68),
+                ),
           ),
         ),
       ],
     );
   }
 
-  /// 构建操作按钮
-  Widget _buildActionButton({
-    required String label,
-    required VoidCallback onPressed,
-    required bool isPrimary,
-  }) {
-    final scheme = Theme.of(context).colorScheme;
-    final buttonBody = Material(
-      color: isPrimary ? Colors.transparent : Colors.transparent,
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(28),
-        child: Container(
-          decoration: BoxDecoration(
-            border: isPrimary
-                ? null
-                : Border.all(
-                    color: scheme.outline.withValues(alpha: 0.3),
-                    width: 1.5,
+  Widget _buildConsentArea(ColorScheme scheme, _AgreementCopy copy) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(18, 12, 18, 16),
+      child: Column(
+        children: [
+          InkWell(
+            onTap:
+                _saving ? null : () => setState(() => _confirmed = !_confirmed),
+            borderRadius: BorderRadius.circular(10),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                children: [
+                  Checkbox(
+                    value: _confirmed,
+                    onChanged: _saving
+                        ? null
+                        : (value) =>
+                            setState(() => _confirmed = value ?? false),
                   ),
-            borderRadius: BorderRadius.circular(28),
-            color: isPrimary
-                ? Colors.transparent
-                : (_isMaterial3Style
-                    ? scheme.surfaceContainer
-                    : scheme.surface.withValues(alpha: 0.8)),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      copy.confirmLabel,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            height: 1.45,
+                            color: scheme.onSurface.withValues(alpha: 0.72),
+                          ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-          alignment: Alignment.center,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          const SizedBox(height: 10),
+          Row(
             children: [
-              if (isPrimary)
-                Icon(
-                  Icons.check_circle_rounded,
-                  color: scheme.onPrimary,
-                  size: 22,
-                ),
-              if (isPrimary) const SizedBox(width: 8),
-              Text(
-                label,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 17,
-                  color: isPrimary
-                      ? scheme.onPrimary
-                      : scheme.onSurface.withValues(alpha: 0.8),
+              TextButton(
+                onPressed: _saving ? null : _onDisagreePressed,
+                child: Text(copy.exitLabel),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton(
+                  onPressed: _confirmed && !_saving ? _onAgreePressed : null,
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(52),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(13),
+                    ),
+                  ),
+                  child: _saving
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Text(copy.continueLabel),
                 ),
               ),
             ],
           ),
-        ),
-      ),
-    );
-
-    return Container(
-      height: 56,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(28),
-        gradient: isPrimary
-            ? LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  scheme.primary,
-                  scheme.secondary,
-                ],
-              )
-            : null,
-        boxShadow: isPrimary
-            ? [
-                BoxShadow(
-                  color: scheme.primary.withValues(alpha: 0.32),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-                BoxShadow(
-                  color: scheme.secondary.withValues(alpha: 0.22),
-                  blurRadius: 15,
-                  offset: const Offset(0, 4),
-                ),
-              ]
-            : null,
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(28),
-        child: _useBlur
-            ? BackdropFilter(
-                enabled: _useBlur,
-                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                child: buttonBody,
-              )
-            : buttonBody,
+        ],
       ),
     );
   }
 
-  /// 处理用户同意操作
-  ///
-  /// 保存用户同意状态到SharedPreferences，并调用成功回调
   Future<void> _onAgreePressed() async {
+    if (!_confirmed || _saving) return;
+    setState(() => _saving = true);
     try {
-      // 保存用户同意状态
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('userAgreementAccepted', true);
-      await prefs.setString(
-        'agreementAcceptedDate',
-        DateTime.now().toIso8601String(),
+      await UserAgreementService.acceptAgreement(
+        locale: Localizations.localeOf(context).toLanguageTag(),
       );
-
-      debugPrint('✅ 用户协议已同意，状态已保存');
-
-      // 添加触觉反馈
-      // HapticFeedback.lightImpact();
-
-      // 调用成功回调
-      widget.onAgreed();
-    } catch (e) {
-      debugPrint('❌ 保存协议状态失败: $e');
-      // 即使保存失败，也允许用户继续使用
-      widget.onAgreed();
+      if (mounted) widget.onAgreed();
+    } catch (error) {
+      debugPrint('保存用户协议状态失败: $error');
+      if (!mounted) return;
+      setState(() => _saving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_copy.saveFailed)),
+      );
     }
   }
 
-  /// 处理用户拒绝操作
-  ///
-  /// 如果用户拒绝协议，可以退出应用或显示说明
   void _onDisagreePressed() {
-    // 显示确认对话框
-    showDialog(
+    final copy = _copy;
+    showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(context.l10n.agreementExitApp),
-        content: Text(context.l10n.agreementExitDialogContent),
+      builder: (dialogContext) => AlertDialog(
+        title: Text(copy.exitDialogTitle),
+        content: Text(copy.exitDialogBody),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(context.l10n.cancel),
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(copy.cancelLabel),
           ),
-          TextButton(
+          FilledButton.tonal(
             onPressed: () {
-              Navigator.pop(context);
-              if (widget.onDisagreed != null) {
-                widget.onDisagreed!();
-              }
+              Navigator.pop(dialogContext);
+              widget.onDisagreed?.call();
             },
-            child: Text(context.l10n.agreementConfirmExit),
+            child: Text(copy.confirmExitLabel),
           ),
         ],
       ),
@@ -842,45 +533,224 @@ class _UserAgreementPageState extends State<UserAgreementPage>
   }
 }
 
-/// 用户协议服务
-///
-/// 提供协议相关的辅助方法
+class _PaperGrainPainter extends CustomPainter {
+  final bool isDark;
+  const _PaperGrainPainter(this.isDark);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final linePaint = Paint()
+      ..color = (isDark ? Colors.white : Colors.black).withValues(alpha: 0.018)
+      ..strokeWidth = 0.6;
+    for (double y = 18; y < size.height; y += 22) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), linePaint);
+    }
+
+    final accentPaint = Paint()
+      ..color = (isDark ? Colors.white : Colors.black).withValues(alpha: 0.032)
+      ..strokeWidth = 1;
+    canvas.drawLine(
+      Offset(size.width * 0.08, 0),
+      Offset(size.width * 0.08, size.height),
+      accentPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _PaperGrainPainter oldDelegate) =>
+      oldDelegate.isDark != isDark;
+}
+
 class UserAgreementService {
+  static const String currentAgreementVersion = '2026-07-11.1';
   static const String _keyAgreementAccepted = 'userAgreementAccepted';
   static const String _keyAcceptedDate = 'agreementAcceptedDate';
+  static const String _keyAcceptedVersion = 'agreementAcceptedVersion';
+  static const String _keyAcceptedLocale = 'agreementAcceptedLocale';
 
-  /// 检查用户是否已同意协议
   static Future<bool> hasUserAcceptedAgreement() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      return prefs.getBool(_keyAgreementAccepted) ?? false;
-    } catch (e) {
-      debugPrint('❌ 检查协议状态失败: $e');
+      return (prefs.getBool(_keyAgreementAccepted) ?? false) &&
+          prefs.getString(_keyAcceptedVersion) == currentAgreementVersion;
+    } catch (error) {
+      debugPrint('检查用户协议状态失败: $error');
       return false;
     }
   }
 
-  /// 获取用户同意协议的日期
+  static Future<void> acceptAgreement({required String locale}) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyAgreementAccepted, true);
+    await prefs.setString(
+        _keyAcceptedDate, DateTime.now().toUtc().toIso8601String());
+    await prefs.setString(_keyAcceptedVersion, currentAgreementVersion);
+    await prefs.setString(_keyAcceptedLocale, locale);
+  }
+
   static Future<DateTime?> getAgreementAcceptedDate() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final dateString = prefs.getString(_keyAcceptedDate);
-      return dateString != null ? DateTime.parse(dateString) : null;
-    } catch (e) {
-      debugPrint('❌ 获取协议日期失败: $e');
+      final value = prefs.getString(_keyAcceptedDate);
+      return value == null ? null : DateTime.tryParse(value);
+    } catch (error) {
+      debugPrint('读取用户协议同意时间失败: $error');
       return null;
     }
   }
 
-  /// 重置协议状态（用于测试或重新显示协议）
   static Future<void> resetAgreementStatus() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove(_keyAgreementAccepted);
-      await prefs.remove(_keyAcceptedDate);
-      debugPrint('🔄 协议状态已重置');
-    } catch (e) {
-      debugPrint('❌ 重置协议状态失败: $e');
-    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_keyAgreementAccepted);
+    await prefs.remove(_keyAcceptedDate);
+    await prefs.remove(_keyAcceptedVersion);
+    await prefs.remove(_keyAcceptedLocale);
   }
+}
+
+class _AgreementSection {
+  final String title;
+  final String body;
+  const _AgreementSection(this.title, this.body);
+}
+
+class _AgreementCopy {
+  final String heroTitle;
+  final String heroBody;
+  final String localTitle;
+  final String localBody;
+  final String openSourceTitle;
+  final String openSourceBody;
+  final String versionLabel;
+  final String agreementTitle;
+  final String agreementSubtitle;
+  final String importantNotice;
+  final List<_AgreementSection> sections;
+  final String confirmLabel;
+  final String exitLabel;
+  final String continueLabel;
+  final String exitDialogTitle;
+  final String exitDialogBody;
+  final String cancelLabel;
+  final String confirmExitLabel;
+  final String saveFailed;
+
+  const _AgreementCopy({
+    required this.heroTitle,
+    required this.heroBody,
+    required this.localTitle,
+    required this.localBody,
+    required this.openSourceTitle,
+    required this.openSourceBody,
+    required this.versionLabel,
+    required this.agreementTitle,
+    required this.agreementSubtitle,
+    required this.importantNotice,
+    required this.sections,
+    required this.confirmLabel,
+    required this.exitLabel,
+    required this.continueLabel,
+    required this.exitDialogTitle,
+    required this.exitDialogBody,
+    required this.cancelLabel,
+    required this.confirmExitLabel,
+    required this.saveFailed,
+  });
+
+  static const chinese = _AgreementCopy(
+    heroTitle: '把阅读，留在自己的设备里。',
+    heroBody: '开元阅读是一款开源、跨平台、本地优先的电子书阅读工具。它提供阅读能力，但不提供、托管或审核你导入的书籍。',
+    localTitle: '本地优先',
+    localBody: '书籍、进度与笔记原则上保存在你的设备中，由你自行管理与备份。',
+    openSourceTitle: 'MIT 开源',
+    openSourceBody: '源代码按 MIT License 提供；软件按“原样”交付，不附带任何明示或默示担保。',
+    versionLabel: '条款版本 2026-07-11.1',
+    agreementTitle: '使用条款与隐私说明',
+    agreementSubtitle: '使用前请完整阅读，重点条款已直接说明',
+    importantNotice:
+        '特别提示：你导入、打开、转换、朗读或通过第三方书源获取的任何文件和内容，均由你自行选择并承担责任。开元阅读及其开发者不提供盗版内容，不对用户内容的来源、合法性、安全性或准确性负责。',
+    sections: [
+      _AgreementSection('协议范围与接受',
+          '本协议适用于你对开元阅读软件及其附带功能的下载、安装和使用。点击“同意并继续”即表示你已阅读、理解并同意本协议；如你不同意，请停止使用并退出应用。若你未达到所在地法律规定的独立同意年龄，应由监护人阅读并同意。'),
+      _AgreementSection('开源软件与许可',
+          '开元阅读是按 MIT License 发布的开源软件。你可以在该许可证允许的范围内使用、复制、修改、合并、发布、分发、再许可或销售软件副本，但须保留许可证要求的版权与许可声明。本协议仅规范你对已分发应用及相关服务的使用，不限制 MIT License 已授予的权利；第三方组件仍适用各自许可证。'),
+      _AgreementSection('用户内容与版权责任',
+          '“用户内容”包括你导入、下载、打开、转换、缓存、标注、朗读或以其他方式处理的书籍、文档、图片、元数据及链接。你须确保自己对用户内容拥有合法权利或已取得必要授权，并自行承担因内容引起的版权、商标、隐私、名誉、违法信息、恶意文件及其他争议或损失。软件和开发者不上传、出售、授权、背书或审核你的用户内容，也不因软件能够读取某种格式而表示该内容可以被合法使用。'),
+      _AgreementSection('禁止使用',
+          '你不得利用本软件侵犯知识产权或其他合法权益，不得传播违法、有害或恶意内容，不得绕过数字版权保护、访问控制或付费限制，不得攻击、干扰第三方系统，亦不得将本软件用于任何违反适用法律的活动。因你的使用行为导致的投诉、索赔、处罚或损失由你自行承担。'),
+      _AgreementSection('书源、链接与第三方服务',
+          '自定义书源、网络接口、外部链接、封面检索、在线内容、系统 TTS、AI 服务及其他第三方能力由相应第三方提供和控制。开发者不保证其持续可用、合法合规、安全、准确或不侵权，也不对第三方的收费、内容变更、数据处理或服务中断负责。启用前请自行审查来源、接口协议、隐私政策和使用条款；因第三方服务产生的责任由你与相应第三方处理。'),
+      _AgreementSection('数据与隐私',
+          '本软件采用本地优先设计，书籍、阅读进度、笔记和设置通常保存在你的设备。除非你主动启用联网书源、封面搜索、AI、同步或其他联网功能，本软件不会为了提供本地阅读而主动将书籍正文发送给开发者。启用联网功能时，相关查询、文本片段、设备网络信息或必要参数可能发送给你选择的第三方服务，具体以该服务规则为准。你应自行保护设备、访问密钥和备份；卸载、清理数据、设备故障或误操作可能导致数据永久丢失。'),
+      _AgreementSection('AI 与自动化输出',
+          'AI 摘要、问答、翻译、推荐或其他自动生成结果可能不准确、不完整、过时或具有误导性，仅供辅助阅读，不构成法律、医疗、投资、学术或其他专业意见。你应独立核验后再使用，不应依赖其作出高风险决定。你提交给 AI 服务的内容还受对应服务商条款约束。'),
+      _AgreementSection('无担保声明',
+          '在适用法律允许的最大范围内，本软件及相关资料均按“原样”和“可用”状态提供，不作任何明示、默示或法定担保，包括但不限于适销性、特定用途适用性、权利完整、不侵权、准确性、兼容性、安全性、无错误、不中断或数据不丢失。开源贡献者没有义务提供维护、更新、技术支持或缺陷修复。'),
+      _AgreementSection('责任限制',
+          '在适用法律允许的最大范围内，开发者、版权人及贡献者不对因安装、使用或无法使用本软件，用户内容，第三方服务，数据丢失，设备异常，业务中断或安全事件产生的任何直接、间接、附带、特殊、惩罚性或后果性损失承担责任，无论该责任基于合同、侵权或其他理论。法律不得排除的责任不受本条排除，但应限制在法律允许的最低范围。'),
+      _AgreementSection('赔偿与责任承担',
+          '如因你的用户内容、违法使用、侵权行为、违反本协议或使用第三方服务，导致开发者、版权人或贡献者遭受第三方索赔、行政调查、处罚、损失或合理费用，你应在适用法律允许的范围内承担相应责任并使其免受损害。'),
+      _AgreementSection('变更、停止与适用规则',
+          '软件功能、项目维护状态和本协议可能因开源项目发展、法律变化或风险控制需要而调整。重大条款更新时，应用可要求你重新确认；不同意新条款的，你应停止使用。你可随时卸载软件。争议优先友好协商；在不影响你依法享有的强制性消费者权益前提下，适用开发者所在地法律并由有管辖权的法院处理。若部分条款无效，其余条款仍然有效。'),
+    ],
+    confirmLabel: '我已完整阅读并同意以上条款，知悉用户导入内容、第三方书源及联网服务的风险由我自行承担。',
+    exitLabel: '不同意',
+    continueLabel: '同意并继续',
+    exitDialogTitle: '不同意条款？',
+    exitDialogBody: '你需要同意使用条款后才能继续使用开元阅读。若不同意，请退出应用。',
+    cancelLabel: '返回阅读',
+    confirmExitLabel: '确认退出',
+    saveFailed: '无法保存同意状态，请稍后重试。',
+  );
+
+  static const english = _AgreementCopy(
+    heroTitle: 'Keep reading on your own device.',
+    heroBody:
+        'OpenReading is an open-source, cross-platform, local-first ebook reader. It provides reading tools; it does not provide, host, or review books you import.',
+    localTitle: 'Local first',
+    localBody:
+        'Books, progress, and notes generally remain on your device for you to manage and back up.',
+    openSourceTitle: 'MIT licensed',
+    openSourceBody:
+        'Source code is provided under the MIT License and the software is supplied “as is,” without warranties.',
+    versionLabel: 'Terms version 2026-07-11.1',
+    agreementTitle: 'Terms of Use & Privacy Notice',
+    agreementSubtitle: 'Please read before using OpenReading',
+    importantNotice:
+        'Important: You are solely responsible for every file or item you import, open, convert, read aloud, or obtain through a third-party source. OpenReading and its developers do not provide pirated material and do not verify the origin, legality, safety, or accuracy of user content.',
+    sections: [
+      _AgreementSection('Scope and acceptance',
+          'These terms apply to your download, installation, and use of OpenReading and its included features. By selecting “Agree and continue,” you confirm that you have read, understood, and accepted them. If you do not agree, stop using and exit the app. A guardian must consent where required by local law.'),
+      _AgreementSection('Open-source license',
+          'OpenReading is released under the MIT License. You may use, copy, modify, merge, publish, distribute, sublicense, or sell copies as permitted by that license, provided required copyright and license notices are retained. These terms govern use of the distributed app and related features without restricting rights granted by the MIT License. Third-party components remain subject to their own licenses.'),
+      _AgreementSection('User content and rights',
+          '“User content” includes books, documents, images, metadata, links, and other material you import, download, open, convert, cache, annotate, or read aloud. You must have all rights and permissions required to use it. You are solely responsible for copyright, trademark, privacy, defamation, unlawful-content, malware, and other claims or losses involving user content. The software and its developers do not upload, sell, license, endorse, or review that content, and format support does not imply lawful permission to use a file.'),
+      _AgreementSection('Prohibited use',
+          'You may not use the software to infringe intellectual property or other rights; distribute unlawful, harmful, or malicious content; bypass digital rights management, access controls, or paywalls; attack or disrupt third-party systems; or engage in activity prohibited by applicable law. You are responsible for complaints, claims, penalties, and losses resulting from your conduct.'),
+      _AgreementSection('Book sources and third parties',
+          'Custom book sources, network APIs, external links, cover search, online content, system text-to-speech, AI services, and other integrations are provided and controlled by third parties. The developers do not warrant their availability, legality, safety, accuracy, or non-infringement and are not responsible for third-party charges, content changes, data practices, or outages. Review each provider and its terms before enabling it.'),
+      _AgreementSection('Data and privacy',
+          'OpenReading is local-first. Books, reading progress, notes, and settings are normally stored on your device. Unless you enable a network book source, cover search, AI, sync, or another online feature, the app does not need to send book text to the developers to provide local reading. When an online feature is used, queries, selected text, network information, or necessary parameters may be sent to the provider you selected under that provider’s policies. Protect your device, API keys, and backups; uninstalling, clearing data, device failure, or user error may permanently erase data.'),
+      _AgreementSection('AI and automated output',
+          'AI summaries, answers, translations, recommendations, and other generated output may be inaccurate, incomplete, outdated, or misleading. They are reading aids only and are not legal, medical, financial, academic, or other professional advice. Verify output independently and do not rely on it for high-risk decisions. Material submitted to an AI provider is also governed by that provider’s terms.'),
+      _AgreementSection('Disclaimer of warranties',
+          'To the fullest extent permitted by law, the software and related materials are provided “as is” and “as available,” without express, implied, or statutory warranties, including merchantability, fitness for a particular purpose, title, non-infringement, accuracy, compatibility, security, error-free operation, uninterrupted availability, or preservation of data. Open-source contributors have no duty to maintain, update, support, or fix the software.'),
+      _AgreementSection('Limitation of liability',
+          'To the fullest extent permitted by law, developers, copyright holders, and contributors are not liable for direct, indirect, incidental, special, punitive, or consequential loss arising from installation, use, inability to use, user content, third-party services, data loss, device issues, business interruption, or security incidents, whether under contract, tort, or another theory. Liability that cannot legally be excluded remains limited to the minimum extent permitted by law.'),
+      _AgreementSection('Indemnity',
+          'To the extent permitted by applicable law, you are responsible for and will hold developers, copyright holders, and contributors harmless from third-party claims, investigations, penalties, losses, and reasonable costs arising from your user content, unlawful or infringing conduct, breach of these terms, or use of third-party services.'),
+      _AgreementSection('Changes, termination, and law',
+          'Features, maintenance status, and these terms may change as the open-source project, law, or risk controls evolve. Material updates may require renewed consent; if you disagree, stop using the app. You may uninstall at any time. Disputes should first be resolved informally. Subject to mandatory consumer protections, the law of the developer’s location and courts with lawful jurisdiction apply. If one provision is unenforceable, the rest remain effective.'),
+    ],
+    confirmLabel:
+        'I have read and agree to these terms and understand that I am responsible for user-imported content, third-party book sources, and online services.',
+    exitLabel: 'Decline',
+    continueLabel: 'Agree and continue',
+    exitDialogTitle: 'Decline the terms?',
+    exitDialogBody:
+        'You must accept the Terms of Use to continue using OpenReading. If you do not agree, please exit the app.',
+    cancelLabel: 'Go back',
+    confirmExitLabel: 'Exit',
+    saveFailed: 'Could not save your consent. Please try again.',
+  );
 }

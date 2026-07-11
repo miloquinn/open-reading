@@ -25,6 +25,8 @@ import '../utils/glass_config.dart';
 
 enum NativePageMode { verticalScroll, instantPage, horizontalSlide }
 
+const int _largeTxtFileThreshold = 16 * 1024 * 1024;
+
 class NativeReaderPage extends StatefulWidget {
   const NativeReaderPage({super.key, required this.book});
 
@@ -71,7 +73,7 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
   bool _continuousVisibilityUpdateScheduled = false;
   double _fontSize = 19;
   double _horizontalMargin = 18;
-  double _verticalMargin = 24;
+  double _verticalMargin = 28;
   Offset? _pointerDownPosition;
   DateTime? _pointerDownTime;
   bool _pointerMoved = false;
@@ -94,6 +96,15 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
     super.didChangeDependencies();
     if (_readerDependenciesInitialized) return;
     final cacheKey = _bookCacheKey;
+    if (_isLargeTxtBook) {
+      // Large TXT books already retain their chapter text in memory. Keeping
+      // another static cache prevents that memory from being released after
+      // leaving the reader and can push Android into heavy GC or an OOM.
+      _pageCache = <String, List<_ReaderPageData>>{};
+      _chaptersFuture = _loadBook();
+      _readerDependenciesInitialized = true;
+      return;
+    }
     if (!_bookMemoryCache.containsKey(cacheKey) &&
         _bookMemoryCache.length >= 2) {
       final oldestKey = _bookMemoryCache.keys.first;
@@ -116,9 +127,19 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
   }
 
   String get _bookCacheKey =>
+      '${widget.book.format.toLowerCase() == 'txt' ? 'txt-parser-v4:' : ''}'
       '${widget.book.contentHash ?? widget.book.filePath}:'
       '${widget.book.fileModifiedTime ?? File(widget.book.filePath).lastModifiedSync().millisecondsSinceEpoch}:'
       '${widget.book.textEncoding ?? 'auto'}';
+
+  bool get _isLargeTxtBook {
+    if (widget.book.format.toLowerCase() != 'txt') return false;
+    try {
+      return File(widget.book.filePath).lengthSync() > _largeTxtFileThreshold;
+    } catch (_) {
+      return false;
+    }
+  }
 
   @override
   void dispose() {
@@ -142,7 +163,8 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
       }
       _fontSize = prefs.getDouble(_fontSizeKey) ?? 19;
       _horizontalMargin = prefs.getDouble(_horizontalMarginKey) ?? 18;
-      _verticalMargin = prefs.getDouble(_verticalMarginKey) ?? 24;
+      _verticalMargin =
+          (prefs.getDouble(_verticalMarginKey) ?? 28).clamp(28, 48);
       _scrollByChapter = prefs.getBool(_scrollByChapterKey) ?? true;
     });
   }
@@ -178,7 +200,7 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
     setState(() {
       _fontSize = fontSize ?? _fontSize;
       _horizontalMargin = horizontalMargin ?? _horizontalMargin;
-      _verticalMargin = verticalMargin ?? _verticalMargin;
+      _verticalMargin = (verticalMargin ?? _verticalMargin).clamp(28, 48);
       _pageIndex = 0;
       _restoreAnchorAfterLayout = true;
     });
@@ -250,6 +272,9 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
     final l10n = context.l10n;
     final format = widget.book.format.toLowerCase();
     if (format == 'txt') {
+      final sourceFile = File(widget.book.filePath);
+      final fileSize = await sourceFile.length();
+      final useParsedCache = fileSize <= _largeTxtFileThreshold;
       final cacheDirectory = Directory(
         path.join(
           (await getApplicationSupportDirectory()).path,
@@ -258,24 +283,60 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
       );
       final cacheName = sha1.convert(utf8.encode(_bookCacheKey)).toString();
       final cachePath = path.join(cacheDirectory.path, '$cacheName.json');
-      final cached = await compute(_readParsedChapterCache, cachePath);
-      if (cached != null) {
-        return cached.map(_nativeChapterFromMap).toList(growable: false);
+      if (useParsedCache) {
+        final cached = await compute(_readParsedChapterCache, cachePath);
+        if (cached != null) {
+          return cached.map(_nativeChapterFromMap).toList(growable: false);
+        }
       }
 
-      final bytes = await File(widget.book.filePath).readAsBytes();
-      final parsed = await compute(_parseTxtInBackground, <String, dynamic>{
-        'bytes': bytes,
+      final parseArguments = <String, dynamic>{
+        'path': sourceFile.path,
         'encoding': widget.book.textEncoding,
         'title': widget.book.title,
         'prefaceTitle': l10n.readerPrefaceTitle,
-      });
-      unawaited(
-        compute(_writeParsedChapterCache, <String, dynamic>{
-          'path': cachePath,
-          'chapters': parsed,
-        }).catchError((_) {}),
+      };
+      if (!useParsedCache) {
+        final indexPath = '$cachePath.index';
+        final dataPath = '$cachePath.data';
+        final cachedIndex = await compute(_readLargeTxtIndexCache, indexPath);
+        if (cachedIndex != null) {
+          return _nativeChaptersFromFileIndex(cachedIndex);
+        }
+
+        unawaited(
+          compute(
+            _deleteOversizedParsedChapterCaches,
+            cacheDirectory.path,
+          ).catchError((_) {}),
+        );
+
+        // The worker writes normalized UTF-8 chapter data to disk and returns
+        // only offsets/titles. The UI isolate loads one chapter at a time.
+        final indexed = await compute(
+          _indexTxtFileInBackground,
+          <String, dynamic>{
+            ...parseArguments,
+            'indexPath': indexPath,
+            'dataPath': dataPath,
+          },
+        );
+        return _nativeChaptersFromFileIndex(indexed);
+      }
+
+      // Small TXT books can keep using the JSON chapter cache.
+      final parsed = await compute(
+        _parseTxtFileInBackground,
+        parseArguments,
       );
+      if (useParsedCache) {
+        unawaited(
+          compute(_writeParsedChapterCache, <String, dynamic>{
+            'path': cachePath,
+            'chapters': parsed,
+          }).catchError((_) {}),
+        );
+      }
       return parsed.map(_nativeChapterFromMap).toList(growable: false);
     }
 
@@ -537,9 +598,9 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
                     style: Theme.of(context).textTheme.titleMedium),
                 Slider(
                   value: previewVerticalMargin,
-                  min: 8,
+                  min: 28,
                   max: 48,
-                  divisions: 40,
+                  divisions: 20,
                   onChanged: (value) =>
                       setSheetState(() => previewVerticalMargin = value),
                   onChangeEnd: (value) => _updateLayout(verticalMargin: value),
@@ -705,7 +766,7 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
     TextScaler textScaler,
   ) {
     final scaleKey = textScaler.scale(100).round();
-    final key = 'v5:$chapterIndex:${size.width.round()}:${size.height.round()}:'
+    final key = 'v6:$chapterIndex:${size.width.round()}:${size.height.round()}:'
         '$scaleKey:${_fontSize.toStringAsFixed(1)}:'
         '${_horizontalMargin.toStringAsFixed(1)}:'
         '${_verticalMargin.toStringAsFixed(1)}:'
@@ -1430,30 +1491,6 @@ List<String> _paginateText(
     var end = start + best;
     if (end < text.length && _isLowSurrogate(text.codeUnitAt(end))) end--;
     if (end <= start) end = (start + 1).clamp(0, text.length);
-    if (end < text.length) {
-      final pageText = text.substring(start, end);
-      final painter = TextPainter(
-        text: spanBuilder?.call(sourceOffset + start, sourceOffset + end) ??
-            TextSpan(text: pageText, style: style),
-        textDirection: direction,
-        textScaler: textScaler,
-      )..layout(maxWidth: maxWidth);
-      final lines = painter.computeLineMetrics();
-      if (lines.length > 1 && pageText.isNotEmpty) {
-        final lastLine = painter.getLineBoundary(
-          TextPosition(offset: pageText.length - 1),
-        );
-        final visibleTail = pageText
-            .substring(lastLine.start, lastLine.end)
-            .replaceAll(RegExp(r'\s+'), '');
-        if (visibleTail.runes.length <= 2 && lastLine.start > 0) {
-          end = start + lastLine.start;
-          if (end < text.length && _isLowSurrogate(text.codeUnitAt(end))) {
-            end--;
-          }
-        }
-      }
-    }
     pages.add(text.substring(start, end));
     start = end;
   }
@@ -1564,19 +1601,55 @@ List<_ReaderPageData> _paginateChapter(
 bool _isLowSurrogate(int codeUnit) => codeUnit >= 0xDC00 && codeUnit <= 0xDFFF;
 
 class _NativeChapter {
-  const _NativeChapter({
+  _NativeChapter({
     required this.id,
     required this.title,
-    required this.plainText,
-    required this.blocks,
+    required String plainText,
+    required List<_NativeBlock> blocks,
     this.depth = 0,
-  });
+  })  : _plainText = plainText,
+        _blocks = blocks,
+        _dataPath = null,
+        _startOffset = 0,
+        _endOffset = 0;
+
+  _NativeChapter.lazyFileText({
+    required this.id,
+    required this.title,
+    required String dataPath,
+    required int startOffset,
+    required int endOffset,
+    this.depth = 0,
+  })  : _plainText = null,
+        _blocks = null,
+        _dataPath = dataPath,
+        _startOffset = startOffset,
+        _endOffset = endOffset;
 
   final String id;
   final String title;
-  final String plainText;
-  final List<_NativeBlock> blocks;
   final int depth;
+  final String? _plainText;
+  final List<_NativeBlock>? _blocks;
+  final String? _dataPath;
+  final int _startOffset;
+  final int _endOffset;
+
+  late final String plainText = _plainText ?? _readIndexedText();
+
+  late final List<_NativeBlock> blocks =
+      _blocks ?? <_NativeBlock>[_NativeBlock.text(plainText)];
+
+  String _readIndexedText() {
+    final file = File(_dataPath!);
+    final handle = file.openSync();
+    try {
+      handle.setPositionSync(_startOffset);
+      return utf8.decode(handle.readSync(_endOffset - _startOffset));
+    } finally {
+      handle.closeSync();
+    }
+  }
 }
 
 class _BookPageRef {
@@ -1845,13 +1918,14 @@ Future<List<Map<String, dynamic>>> _parseEpubChapters(Uint8List bytes) async {
   return result;
 }
 
-List<Map<String, dynamic>> _parseTxtInBackground(
+List<Map<String, dynamic>> _parseTxtFileInBackground(
   Map<String, dynamic> arguments,
 ) {
-  final bytes = arguments['bytes'] as Uint8List;
+  final bytes = File(arguments['path'] as String).readAsBytesSync();
   final decoded = EnhancedTxtImportService().decodeWithOverride(
     bytes,
     encodingOverride: arguments['encoding'] as String?,
+    verifyEncodingOverride: true,
   );
   final chapters = _parseTxtChapters(
     decoded,
@@ -1868,6 +1942,120 @@ List<Map<String, dynamic>> _parseTxtInBackground(
         },
       )
       .toList(growable: false);
+}
+
+Map<String, dynamic> _indexTxtFileInBackground(
+  Map<String, dynamic> arguments,
+) {
+  final bytes = File(arguments['path'] as String).readAsBytesSync();
+  final decoded = EnhancedTxtImportService().decodeWithOverride(
+    bytes,
+    encodingOverride: arguments['encoding'] as String?,
+    verifyEncodingOverride: true,
+  );
+  final matches = _findTxtChapterMatches(decoded);
+  final chapters = <Map<String, dynamic>>[];
+  final indexPath = arguments['indexPath'] as String;
+  final dataPath = arguments['dataPath'] as String;
+  final dataFile = File(dataPath);
+  dataFile.parent.createSync(recursive: true);
+  final temporaryData = File('$dataPath.tmp');
+  final output = temporaryData.openSync(mode: FileMode.write);
+
+  void writeChapter({
+    required String id,
+    required String title,
+    required int startChar,
+    required int endChar,
+  }) {
+    final startByte = output.positionSync();
+    output.writeFromSync(
+      utf8.encode(decoded.substring(startChar, endChar)),
+    );
+    chapters.add(<String, dynamic>{
+      'id': id,
+      'title': title,
+      'depth': 0,
+      'start': startByte,
+      'end': output.positionSync(),
+    });
+  }
+
+  try {
+    if (matches.isEmpty) {
+      writeChapter(
+        id: 'txt-0',
+        title: arguments['title'] as String,
+        startChar: 0,
+        endChar: decoded.length,
+      );
+    } else {
+      if (matches.first.$1 > 0 &&
+          decoded.substring(0, matches.first.$1).trim().isNotEmpty) {
+        writeChapter(
+          id: 'txt-preface',
+          title: arguments['prefaceTitle'] as String,
+          startChar: 0,
+          endChar: matches.first.$1,
+        );
+      }
+      for (var i = 0; i < matches.length; i++) {
+        writeChapter(
+          id: 'txt-$i',
+          title: matches[i].$2,
+          startChar: matches[i].$1,
+          endChar: i + 1 < matches.length ? matches[i + 1].$1 : decoded.length,
+        );
+      }
+    }
+  } finally {
+    output.closeSync();
+  }
+
+  if (dataFile.existsSync()) dataFile.deleteSync();
+  temporaryData.renameSync(dataPath);
+
+  final result = <String, dynamic>{
+    'version': 1,
+    'dataPath': dataPath,
+    'chapters': chapters,
+  };
+  final indexFile = File(indexPath);
+  final temporaryIndex = File('$indexPath.tmp');
+  temporaryIndex.writeAsStringSync(jsonEncode(result), flush: true);
+  if (indexFile.existsSync()) indexFile.deleteSync();
+  temporaryIndex.renameSync(indexPath);
+  return result;
+}
+
+Map<String, dynamic>? _readLargeTxtIndexCache(String indexPath) {
+  try {
+    final indexFile = File(indexPath);
+    if (!indexFile.existsSync()) return null;
+    final decoded = jsonDecode(indexFile.readAsStringSync());
+    if (decoded is! Map<String, dynamic> || decoded['version'] != 1) {
+      return null;
+    }
+    final dataPath = decoded['dataPath'] as String?;
+    final chapters = decoded['chapters'];
+    if (dataPath == null || !File(dataPath).existsSync() || chapters is! List) {
+      return null;
+    }
+    return decoded;
+  } catch (_) {
+    return null;
+  }
+}
+
+void _deleteOversizedParsedChapterCaches(String cacheDirectoryPath) {
+  final directory = Directory(cacheDirectoryPath);
+  if (!directory.existsSync()) return;
+  for (final entry in directory.listSync().whereType<File>()) {
+    if (entry.path.endsWith('.json') &&
+        entry.lengthSync() > _largeTxtFileThreshold) {
+      entry.deleteSync();
+    }
+  }
 }
 
 List<Map<String, dynamic>>? _readParsedChapterCache(String cachePath) {
@@ -1927,6 +2115,24 @@ _NativeChapter _nativeChapterFromMap(Map<String, dynamic> chapter) {
     plainText: text,
     blocks: <_NativeBlock>[_NativeBlock.text(text)],
   );
+}
+
+List<_NativeChapter> _nativeChaptersFromFileIndex(
+  Map<String, dynamic> index,
+) {
+  final dataPath = index['dataPath'] as String? ?? '';
+  final chapters = index['chapters'] as List<dynamic>? ?? const [];
+  return chapters.map((chapter) {
+    final values = Map<String, dynamic>.from(chapter as Map);
+    return _NativeChapter.lazyFileText(
+      id: values['id'] as String? ?? '',
+      title: values['title'] as String? ?? '',
+      depth: values['depth'] as int? ?? 0,
+      dataPath: dataPath,
+      startOffset: values['start'] as int? ?? 0,
+      endOffset: values['end'] as int? ?? 0,
+    );
+  }).toList(growable: false);
 }
 
 List<_NativeChapter> _parseHtmlDocument(String source, String fallbackTitle) {
@@ -2054,22 +2260,7 @@ String _extractDocxText(Uint8List bytes) {
 
 List<_NativeChapter> _parseTxtChapters(
     String text, String fallbackTitle, String prefaceTitle) {
-  final heading = RegExp(
-    r'^(?:第[0-9零〇一二三四五六七八九十百千万两]+[章节卷部篇回]|chapter\s+\d+|part\s+\d+|序章|序言|前言|引言|楔子|后记|尾声|番外)(?:[\s　:：.-]+.*)?$',
-    caseSensitive: false,
-  );
-  final matches = <(int, String)>[];
-  var offset = 0;
-  while (offset < text.length) {
-    final lineEnd = text.indexOf('\n', offset);
-    final end = lineEnd < 0 ? text.length : lineEnd;
-    final line = text.substring(offset, end);
-    final title = line.trim();
-    if (title.length <= 80 && heading.hasMatch(title)) {
-      matches.add((offset, title));
-    }
-    offset = lineEnd < 0 ? text.length : lineEnd + 1;
-  }
+  final matches = _findTxtChapterMatches(text);
   if (matches.isEmpty) {
     return <_NativeChapter>[
       _NativeChapter(
@@ -2103,4 +2294,26 @@ List<_NativeChapter> _parseTxtChapters(
     ));
   }
   return chapters;
+}
+
+List<(int, String)> _findTxtChapterMatches(String text) {
+  final heading = RegExp(
+    r'^(?:第[0-9零〇一二三四五六七八九十百千万两]+[章节卷部篇回]|chapter\s+\d+|part\s+\d+|序章|序言|前言|引言|楔子|后记|尾声|番外)(?:[\s　:：.-]+.*)?$',
+    caseSensitive: false,
+  );
+  final matches = <(int, String)>[];
+  var offset = 0;
+  while (offset < text.length) {
+    final lineEnd = text.indexOf('\n', offset);
+    final end = lineEnd < 0 ? text.length : lineEnd;
+    final line = text.substring(offset, end);
+    final title = line.trim();
+    final normalizedTitle =
+        title.replaceFirst(RegExp(r'^#{1,6}\s*'), '').trim();
+    if (normalizedTitle.length <= 80 && heading.hasMatch(normalizedTitle)) {
+      matches.add((offset, normalizedTitle));
+    }
+    offset = lineEnd < 0 ? text.length : lineEnd + 1;
+  }
+  return matches;
 }

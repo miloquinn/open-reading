@@ -422,7 +422,7 @@ class BookImportService {
             await _imageMapService.saveImageMap(bookId, newImageMap);
             debugPrint('✅ 图片映射已保存: ${newImageMap.length} 张');
 
-            // 🗑️ 旧分页缓存已由 Foliate 原生分页取代，无需清除
+            // 当前阅读引擎按需分页，无需在导入阶段清除分页结果。
           }
         }
 
@@ -976,7 +976,7 @@ class BookImportService {
     }
   }
 
-  /// 传统 FB2 XML 解析（WebView 解析失败时的回退方案）
+  /// FB2 XML 基础解析回退方案。
   Future<EnhancedBookMetadata> _extractFb2MetadataXml(
     Uint8List bytes,
     String fileName,
@@ -1267,7 +1267,7 @@ class BookImportService {
     }
   }
 
-  /// 基础 MOBI 元数据提取（WebView 解析失败时的回退方案）
+  /// MOBI 元数据基础解析回退方案。
   EnhancedBookMetadata _extractBasicMobiMetadata(
     Uint8List bytes,
     String fileName,
@@ -1282,7 +1282,7 @@ class BookImportService {
       additionalInfo: {
         'format': fileName.split('.').last.toUpperCase(),
         'fileSize': bytes.length,
-        'note': 'Basic extraction - WebView parsing failed',
+        'note': 'Basic metadata extraction fallback',
       },
     );
   }

@@ -141,8 +141,8 @@ class GlobalAIReadingService {
 
   static const String _rootFolder = 'ai_knowledge';
 
-  /// 旧版：导入后自动解析书籍结构。因 Foliate 原生解析取代了 reader_core/parser，
-  /// 此方法已不再有解析器可用，暂留为空壳以保持 API 兼容。
+  /// 旧版导入后自动解析入口。
+  /// 当前阅读页按需解析内容，因此保留空实现兼容旧调用点。
   Future<void> scheduleImportedBookAnalysis({required legacy.Book book}) async {
     debugPrint(
         '[GlobalAI] scheduleImportedBookAnalysis skipped: parsers removed');

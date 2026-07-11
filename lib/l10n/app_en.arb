@@ -1754,18 +1754,13 @@
       }
     }
   },
-  "settingsUiStyleTitle": "UI style",
+  "settingsUiStyleTitle": "Glass effect",
   "@settingsUiStyleTitle": {
-    "description": "Title of the UI style setting and modal"
+    "description": "Title of the glass effect toggle"
   },
-  "settingsUiStyleSwitchedRestart": "UI style switched to {style}. Restart to fully apply it to all pages.",
-  "@settingsUiStyleSwitchedRestart": {
-    "description": "Restart dialog reason after switching UI style",
-    "placeholders": {
-      "style": {
-        "type": "String"
-      }
-    }
+  "settingsGlassEffectSubtitle": "Use translucent surfaces, background blur, and floating depth",
+  "@settingsGlassEffectSubtitle": {
+    "description": "Description of the glass effect toggle"
   },
   "settingsAccentFollowTheme": "Accent color: follow theme",
   "@settingsAccentFollowTheme": {

@@ -33,15 +33,6 @@ target 'Runner' do
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 
-  pod 'ReadiumInternal', :podspec => File.join(__dir__, 'ReadiumLocalSpecs/ReadiumInternal.podspec')
-  pod 'ReadiumFuzi', :podspec => File.join(__dir__, 'ReadiumLocalSpecs/ReadiumFuzi.podspec')
-  pod 'ReadiumZIPFoundation', :podspec => File.join(__dir__, 'ReadiumLocalSpecs/ReadiumZIPFoundation.podspec')
-  pod 'ReadiumGCDWebServer', :podspec => File.join(__dir__, 'ReadiumLocalSpecs/ReadiumGCDWebServer.podspec')
-  pod 'ReadiumAdapterGCDWebServer', :podspec => File.join(__dir__, 'ReadiumLocalSpecs/ReadiumAdapterGCDWebServer.podspec')
-  pod 'ReadiumShared', :podspec => File.join(__dir__, 'ReadiumLocalSpecs/ReadiumShared.podspec')
-  pod 'ReadiumStreamer', :podspec => File.join(__dir__, 'ReadiumLocalSpecs/ReadiumStreamer.podspec')
-  pod 'ReadiumNavigator', :podspec => File.join(__dir__, 'ReadiumLocalSpecs/ReadiumNavigator.podspec')
-
   target 'RunnerTests' do
     inherit! :search_paths
   end
