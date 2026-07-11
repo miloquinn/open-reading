@@ -2562,6 +2562,36 @@ abstract class AppLocalizations {
   /// **'Could not open QQ. Please make sure QQ is installed.'**
   String get settingsQqOpenFailed;
 
+  /// Title of the contributors card
+  ///
+  /// In en, this message translates to:
+  /// **'Contributors'**
+  String get contributorsTitle;
+
+  /// Subtitle of the contributors card
+  ///
+  /// In en, this message translates to:
+  /// **'Thanks to everyone making Open Reading better'**
+  String get contributorsSubtitle;
+
+  /// Toast when a contributor profile link fails to open
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open contributor profile'**
+  String get contributorsOpenProfileFailed;
+
+  /// Empty state of the contributors card
+  ///
+  /// In en, this message translates to:
+  /// **'No contributors to show yet'**
+  String get contributorsEmpty;
+
+  /// Error state of the contributors card
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load contributors'**
+  String get contributorsLoadFailed;
+
   /// Title of the theme mode setting and modal
   ///
   /// In en, this message translates to:

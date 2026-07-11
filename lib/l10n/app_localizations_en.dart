@@ -1385,6 +1385,23 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not open QQ. Please make sure QQ is installed.';
 
   @override
+  String get contributorsTitle => 'Contributors';
+
+  @override
+  String get contributorsSubtitle =>
+      'Thanks to everyone making Open Reading better';
+
+  @override
+  String get contributorsOpenProfileFailed =>
+      'Could not open contributor profile';
+
+  @override
+  String get contributorsEmpty => 'No contributors to show yet';
+
+  @override
+  String get contributorsLoadFailed => 'Could not load contributors';
+
+  @override
   String get settingsDarkModeTitle => 'Night mode';
 
   @override

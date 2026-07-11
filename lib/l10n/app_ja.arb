@@ -773,6 +773,11 @@
   "settingsViewSourceSubtitle": "オープンソースプロジェクトを見る",
   "settingsJoinQqGroup": "QQ グループに参加",
   "settingsQqOpenFailed": "QQ を開けませんでした。QQ がインストールされているか確認してください。",
+  "contributorsTitle": "コントリビューター",
+  "contributorsSubtitle": "Open Reading をより良くしてくれるすべての人に感謝します",
+  "contributorsOpenProfileFailed": "コントリビューターのプロフィールを開けませんでした",
+  "contributorsEmpty": "表示できるコントリビューターはまだいません",
+  "contributorsLoadFailed": "コントリビューターを読み込めませんでした。ネットワークを確認して再試行してください",
   "settingsDarkModeTitle": "ナイトモード",
   "settingsCurrentValue": "現在：{value}",
   "@settingsCurrentValue": {

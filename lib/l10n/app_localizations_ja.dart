@@ -1352,6 +1352,22 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsQqOpenFailed => 'QQ を開けませんでした。QQ がインストールされているか確認してください。';
 
   @override
+  String get contributorsTitle => 'コントリビューター';
+
+  @override
+  String get contributorsSubtitle => 'Open Reading をより良くしてくれるすべての人に感謝します';
+
+  @override
+  String get contributorsOpenProfileFailed => 'コントリビューターのプロフィールを開けませんでした';
+
+  @override
+  String get contributorsEmpty => '表示できるコントリビューターはまだいません';
+
+  @override
+  String get contributorsLoadFailed =>
+      'コントリビューターを読み込めませんでした。ネットワークを確認して再試行してください';
+
+  @override
   String get settingsDarkModeTitle => 'ナイトモード';
 
   @override

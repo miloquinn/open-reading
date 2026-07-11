@@ -1345,6 +1345,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsQqOpenFailed => '无法打开 QQ，请确认已安装 QQ';
 
   @override
+  String get contributorsTitle => '贡献者';
+
+  @override
+  String get contributorsSubtitle => '感谢每一位让 Open Reading 变得更好的人';
+
+  @override
+  String get contributorsOpenProfileFailed => '无法打开贡献者主页';
+
+  @override
+  String get contributorsEmpty => '暂时没有可展示的贡献者';
+
+  @override
+  String get contributorsLoadFailed => '贡献者加载失败，请检查网络后重试';
+
+  @override
   String get settingsDarkModeTitle => '夜间模式';
 
   @override
@@ -3058,6 +3073,21 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get settingsQqOpenFailed => '無法開啟 QQ，請確認已安裝 QQ';
+
+  @override
+  String get contributorsTitle => '貢獻者';
+
+  @override
+  String get contributorsSubtitle => '感謝每一位讓 Open Reading 變得更好的人';
+
+  @override
+  String get contributorsOpenProfileFailed => '無法開啟貢獻者主頁';
+
+  @override
+  String get contributorsEmpty => '暫時沒有可顯示的貢獻者';
+
+  @override
+  String get contributorsLoadFailed => '貢獻者載入失敗，請檢查網路後重試';
 
   @override
   String get settingsDarkModeTitle => '夜間模式';

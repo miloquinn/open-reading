@@ -773,6 +773,11 @@
   "settingsViewSourceSubtitle": "檢視開源專案",
   "settingsJoinQqGroup": "加入 QQ 群",
   "settingsQqOpenFailed": "無法開啟 QQ，請確認已安裝 QQ",
+  "contributorsTitle": "貢獻者",
+  "contributorsSubtitle": "感謝每一位讓 Open Reading 變得更好的人",
+  "contributorsOpenProfileFailed": "無法開啟貢獻者主頁",
+  "contributorsEmpty": "暫時沒有可顯示的貢獻者",
+  "contributorsLoadFailed": "貢獻者載入失敗，請檢查網路後重試",
   "settingsDarkModeTitle": "夜間模式",
   "settingsCurrentValue": "目前：{value}",
   "@settingsCurrentValue": {

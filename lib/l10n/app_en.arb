@@ -1805,6 +1805,26 @@
   "@settingsQqOpenFailed": {
     "description": "Toast when the QQ link fails to open"
   },
+  "contributorsTitle": "Contributors",
+  "@contributorsTitle": {
+    "description": "Title of the contributors card"
+  },
+  "contributorsSubtitle": "Thanks to everyone making Open Reading better",
+  "@contributorsSubtitle": {
+    "description": "Subtitle of the contributors card"
+  },
+  "contributorsOpenProfileFailed": "Could not open contributor profile",
+  "@contributorsOpenProfileFailed": {
+    "description": "Toast when a contributor profile link fails to open"
+  },
+  "contributorsEmpty": "No contributors to show yet",
+  "@contributorsEmpty": {
+    "description": "Empty state of the contributors card"
+  },
+  "contributorsLoadFailed": "Could not load contributors",
+  "@contributorsLoadFailed": {
+    "description": "Error state of the contributors card"
+  },
   "settingsDarkModeTitle": "Night mode",
   "@settingsDarkModeTitle": {
     "description": "Title of the theme mode setting and modal"
