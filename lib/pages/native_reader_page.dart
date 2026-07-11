@@ -100,9 +100,12 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
     });
   }
 
-  TextStyle get _readerTextStyle => _textStyle.copyWith(fontSize: _fontSize);
+  TextStyle get _readerTextStyle => DefaultTextStyle.of(context)
+      .style
+      .merge(_textStyle.copyWith(fontSize: _fontSize))
+      .copyWith(inherit: false);
 
-  double get _readerBottomMargin => (_verticalMargin - 6).clamp(12, 42);
+  double get _readerBottomMargin => (_verticalMargin - 14).clamp(4, 34);
 
   double get _effectiveBottomMargin =>
       _readerBottomMargin + MediaQuery.viewPaddingOf(context).bottom;
@@ -479,7 +482,7 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
     TextScaler textScaler,
   ) {
     final scaleKey = textScaler.scale(100).round();
-    final key = 'v2:$chapterIndex:${size.width.round()}:${size.height.round()}:'
+    final key = 'v4:$chapterIndex:${size.width.round()}:${size.height.round()}:'
         '$scaleKey:${_fontSize.toStringAsFixed(1)}:'
         '${_horizontalMargin.toStringAsFixed(1)}:'
         '${_verticalMargin.toStringAsFixed(1)}:'
