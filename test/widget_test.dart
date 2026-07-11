@@ -1,5 +1,5 @@
 // 文件说明：应用级基础测试，验证主应用可以完成最小化挂载。
-// 技术要点：测试、Riverpod、Flutter Test、Provider、Flutter。
+// 技术要点：测试、Flutter Test、Provider、Flutter。
 
 // This is a basic Flutter widget test for XX阅读 app.
 //
@@ -9,7 +9,6 @@
 // tree, read text, and verify that the values of widget properties are correct.
 
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart' as provider;
 
@@ -21,17 +20,15 @@ void main() {
   testWidgets('开元阅读 app smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
     await tester.pumpWidget(
-      ProviderScope(
-        child: provider.MultiProvider(
-          providers: [
-            provider.ChangeNotifierProvider(create: (_) => ThemeNotifier()),
-            provider.ChangeNotifierProvider(
-              create: (_) => AppSettingsNotifier(),
-            ),
-            provider.ChangeNotifierProvider(create: (_) => TtsService()),
-          ],
-          child: const XxReadApp(),
-        ),
+      provider.MultiProvider(
+        providers: [
+          provider.ChangeNotifierProvider(create: (_) => ThemeNotifier()),
+          provider.ChangeNotifierProvider(
+            create: (_) => AppSettingsNotifier(),
+          ),
+          provider.ChangeNotifierProvider(create: (_) => TtsService()),
+        ],
+        child: const XxReadApp(),
       ),
     );
 

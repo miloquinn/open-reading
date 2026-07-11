@@ -85,3 +85,10 @@ devtools_options.yaml
 # l10n tooling artifacts
 l10n_untranslated.json
 .l10n_work/
+
+# Syncthing
+.syncthing.*.tmp
+*.sync-conflict-*
+.stfolder/
+.stversions/
+.stignore

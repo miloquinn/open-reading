@@ -1,9 +1,10 @@
 // 文件说明：阅读内核 AI 配置与请求模型，统一描述模型、提供商和请求参数。
-// 技术要点：ReaderCore、Dio、SharedPreferences、JSON。
+// 技术要点：ReaderCore、Dio、SharedPreferences、Secure Storage、JSON。
 
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AIRequestMeta {
@@ -550,6 +551,54 @@ class ReaderHttpAIService implements ConfigurableAIService {
   final Dio _dio;
   AIProviderSettings? _cachedActive;
 
+  static const _secureStorage = FlutterSecureStorage();
+
+  /// 读取 API Key：优先安全存储；发现 SharedPreferences 中的历史明文
+  /// key 时迁移到安全存储并删除明文副本。
+  Future<String> _readApiKey(
+    SharedPreferences prefs,
+    AIProviderType provider,
+  ) async {
+    final storageKey = _apiKeyKey(provider);
+    try {
+      final secureValue = await _secureStorage.read(key: storageKey);
+      if (secureValue != null) {
+        // 清理可能残留的明文副本
+        if (prefs.containsKey(storageKey)) {
+          await prefs.remove(storageKey);
+        }
+        return secureValue;
+      }
+      final legacyValue = prefs.getString(storageKey);
+      if (legacyValue != null) {
+        await _secureStorage.write(key: storageKey, value: legacyValue);
+        await prefs.remove(storageKey);
+        return legacyValue;
+      }
+      return '';
+    } on Exception {
+      // 安全存储不可用（如 Linux 无 keyring）时回退明文存储，
+      // 保证功能可用优先于存储强度。
+      return prefs.getString(storageKey) ?? '';
+    }
+  }
+
+  Future<void> _writeApiKey(
+    SharedPreferences prefs,
+    AIProviderType provider,
+    String apiKey,
+  ) async {
+    final storageKey = _apiKeyKey(provider);
+    try {
+      await _secureStorage.write(key: storageKey, value: apiKey);
+      if (prefs.containsKey(storageKey)) {
+        await prefs.remove(storageKey);
+      }
+    } on Exception {
+      await prefs.setString(storageKey, apiKey);
+    }
+  }
+
   @override
   Future<AIProviderSettings> loadSettings([AIProviderType? provider]) async {
     final prefs = await SharedPreferences.getInstance();
@@ -557,7 +606,7 @@ class ReaderHttpAIService implements ConfigurableAIService {
         AIProviderTypeX.fromValue(prefs.getString(_activeProviderKey));
     final defaults = AIProviderSettings.defaults(activeProvider);
 
-    final apiKey = prefs.getString(_apiKeyKey(activeProvider)) ?? '';
+    final apiKey = await _readApiKey(prefs, activeProvider);
     final baseUrl =
         prefs.getString(_baseUrlKey(activeProvider)) ?? defaults.baseUrl;
     final model = prefs.getString(_modelKey(activeProvider)) ?? defaults.model;
@@ -587,7 +636,7 @@ class ReaderHttpAIService implements ConfigurableAIService {
     }
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_activeProviderKey, normalized.provider.value);
-    await prefs.setString(_apiKeyKey(normalized.provider), normalized.apiKey);
+    await _writeApiKey(prefs, normalized.provider, normalized.apiKey);
     await prefs.setString(_baseUrlKey(normalized.provider), normalized.baseUrl);
     await prefs.setString(_modelKey(normalized.provider), normalized.model);
     await prefs.setDouble(

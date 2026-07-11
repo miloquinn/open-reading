@@ -1,5 +1,5 @@
 // 文件说明：应用启动入口，负责初始化数据库、依赖注入、主题、国际化与全局服务。
-// 技术要点：Flutter Localizations、Riverpod、Provider、SharedPreferences、SQLite FFI、Path Provider。
+// 技术要点：Flutter Localizations、Provider、SharedPreferences、SQLite FFI、Path Provider。
 
 import 'dart:io';
 
@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart' as provider;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -71,17 +70,15 @@ void main() async {
 
   runApp(
     RestartableApp(
-      child: ProviderScope(
-        child: provider.MultiProvider(
-          providers: [
-            provider.ChangeNotifierProvider(create: (_) => ThemeNotifier()),
-            provider.ChangeNotifierProvider(
-              create: (_) => AppSettingsNotifier(),
-            ),
-            provider.ChangeNotifierProvider(create: (_) => TtsService()),
-          ],
-          child: const XxReadApp(),
-        ),
+      child: provider.MultiProvider(
+        providers: [
+          provider.ChangeNotifierProvider(create: (_) => ThemeNotifier()),
+          provider.ChangeNotifierProvider(
+            create: (_) => AppSettingsNotifier(),
+          ),
+          provider.ChangeNotifierProvider(create: (_) => TtsService()),
+        ],
+        child: const XxReadApp(),
       ),
     ),
   );

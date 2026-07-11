@@ -127,12 +127,25 @@ class BookDao {
       // 🗑️ 删除相关缓存
       await _deleteBookCaches(bookId);
 
-      // 删除数据库记录
-      final result = await db.delete(
-        'books',
-        where: 'id = ?',
-        whereArgs: [bookId],
-      );
+      // 删除数据库记录。显式删除子表行：外键 CASCADE 依赖
+      // PRAGMA foreign_keys 开启，这里手动删除保证历史数据也被清理。
+      final result = await db.transaction((txn) async {
+        await txn.delete(
+          'bookmarks',
+          where: 'bookId = ?',
+          whereArgs: [bookId],
+        );
+        await txn.delete(
+          'book_notes',
+          where: 'book_id = ?',
+          whereArgs: [bookId],
+        );
+        return txn.delete(
+          'books',
+          where: 'id = ?',
+          whereArgs: [bookId],
+        );
+      });
       if (result == 0) {
         throw Exception('书籍不存在或已被删除');
       }

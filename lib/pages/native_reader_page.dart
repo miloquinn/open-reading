@@ -2054,7 +2054,9 @@ Future<List<Map<String, dynamic>>> _parseEpubChapters(Uint8List bytes) async {
         if (element.localName == 'a' && _hasEpubTextBlockAncestor(element)) {
           continue;
         }
-        final text = element.text
+        // 只取块的"自有文本"（排除嵌套块子树）：querySelectorAll 会同时
+        // 命中 blockquote 与其内部的 p，用整棵子树的 text 会导致正文重复。
+        final text = _epubElementOwnText(element)
             .replaceAll(RegExp(r'[ \t]+'), ' ')
             .replaceAll(RegExp(r'\n\s*\n+'), '\n\n')
             .trim();
@@ -2130,24 +2132,44 @@ Future<List<Map<String, dynamic>>> _parseEpubChapters(Uint8List bytes) async {
 }
 
 bool _hasEpubTextBlockAncestor(html_dom.Element element) {
-  const blockTags = <String>{
-    'h1',
-    'h2',
-    'h3',
-    'h4',
-    'h5',
-    'h6',
-    'p',
-    'li',
-    'blockquote',
-    'pre',
-  };
   html_dom.Element? ancestor = element.parent;
   while (ancestor != null) {
-    if (blockTags.contains(ancestor.localName)) return true;
+    if (_epubTextBlockTags.contains(ancestor.localName)) return true;
     ancestor = ancestor.parent;
   }
   return false;
+}
+
+const Set<String> _epubTextBlockTags = <String>{
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
+  'p',
+  'li',
+  'blockquote',
+  'pre',
+};
+
+/// 收集元素的自有文本：遇到嵌套的文本块子元素时跳过其子树，
+/// 该子树的文本由它自己作为独立块处理。
+String _epubElementOwnText(html_dom.Element element) {
+  final buffer = StringBuffer();
+  void visit(html_dom.Node node) {
+    for (final child in node.nodes) {
+      if (child is html_dom.Element) {
+        if (_epubTextBlockTags.contains(child.localName)) continue;
+        visit(child);
+      } else if (child is html_dom.Text) {
+        buffer.write(child.data);
+      }
+    }
+  }
+
+  visit(element);
+  return buffer.toString();
 }
 
 List<Map<String, dynamic>> _parseTxtFileInBackground(

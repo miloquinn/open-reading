@@ -406,6 +406,10 @@ class DataCacheService {
     }
   }
 
+  /// 永不过期的持久化键：应用状态等长期数据不应被"7天未访问"清理策略删除，
+  /// 否则用户超过一周未打开应用后会丢失阅读状态。
+  static const Set<String> _persistentKeys = {'app_state_v2'};
+
   /// 清理过期缓存
   Future<void> _cleanupExpiredCache() async {
     final now = DateTime.now();
@@ -415,6 +419,7 @@ class DataCacheService {
     const maxAge = Duration(days: 7);
 
     for (final entry in _cacheTimestamp.entries) {
+      if (_persistentKeys.contains(entry.key)) continue;
       if (now.difference(entry.value) > maxAge) {
         expiredKeys.add(entry.key);
       }

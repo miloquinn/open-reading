@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/registered_book_source.dart';
+import '../protocol/book_source_protocol.dart';
 
 class BookSourceRegistry {
   static const String _storageKey = 'open_reading_book_sources_v1';
@@ -42,6 +43,18 @@ class BookSourceRegistry {
     final index = sources.indexWhere((item) => item.id == source.id);
     if (index >= 0) {
       final previous = sources[index];
+      // 防止书源 id 劫持：清单 id 由服务端自报，若同 id 的源来自
+      // 不同域名，则拒绝静默覆盖已注册源的 API 地址。用户如确要
+      // 更换域名，需先删除旧源再添加。
+      final sameOrigin = previous.manifestUrl.host == source.manifestUrl.host &&
+          previous.apiBaseUrl.host == source.apiBaseUrl.host;
+      if (!sameOrigin) {
+        throw BookSourceProtocolException(
+          'A source with id "${source.id}" is already registered from '
+          '${previous.manifestUrl.host}. Remove it first before adding a '
+          'source with the same id from a different host.',
+        );
+      }
       sources[index] = RegisteredBookSource(
         id: source.id,
         name: source.name,

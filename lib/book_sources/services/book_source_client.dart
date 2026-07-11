@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 
 import '../models/registered_book_source.dart';
@@ -16,6 +18,10 @@ class DiscoveredBookSource {
 class BookSourceClient {
   final Dio _dio;
 
+  /// 单次响应体上限。书源返回的都是 JSON 元数据/章节文本，
+  /// 超过该值基本可以判定为异常或恶意响应，中途截断防止 OOM。
+  static const int maxResponseBytes = 8 * 1024 * 1024;
+
   BookSourceClient({Dio? dio})
       : _dio = dio ??
             Dio(
@@ -29,6 +35,39 @@ class BookSourceClient {
                 },
               ),
             );
+
+  /// 拒绝明显不该被书源指向的地址：链路本地（含云平台元数据端点
+  /// 169.254.169.254）、0.0.0.0、组播。环回与私网地址保持合法，
+  /// 本地测试书源和自建内网书源是受支持的使用场景。
+  static void ensureSafeTarget(Uri uri) {
+    final address = InternetAddress.tryParse(uri.host);
+    if (address == null) return; // 域名交由 DNS 解析，不在此处拦截
+    final isBlocked = address.isLinkLocal ||
+        address.isMulticast ||
+        address.address == '0.0.0.0' ||
+        address.address == '::';
+    if (isBlocked) {
+      throw const BookSourceProtocolException(
+        'This address is not allowed as a book source target.',
+      );
+    }
+  }
+
+  /// 统一的受限 GET：目标地址校验 + 响应体大小上限。
+  Future<Object?> _getBounded(Uri uri) async {
+    ensureSafeTarget(uri);
+    final cancelToken = CancelToken();
+    final response = await _dio.getUri<Object?>(
+      uri,
+      cancelToken: cancelToken,
+      onReceiveProgress: (received, total) {
+        if (received > maxResponseBytes || total > maxResponseBytes) {
+          cancelToken.cancel('Response exceeds $maxResponseBytes bytes.');
+        }
+      },
+    );
+    return response.data;
+  }
 
   static Uri normalizeManifestUri(String input) {
     final trimmed = input.trim();
@@ -51,9 +90,8 @@ class BookSourceClient {
   Future<DiscoveredBookSource> discover(String input) async {
     final manifestUrl = normalizeManifestUri(input);
     try {
-      final response = await _dio.getUri<Object?>(manifestUrl);
       final manifest = BookSourceManifest.fromJson(
-        decodeBookSourceJson(response.data),
+        decodeBookSourceJson(await _getBounded(manifestUrl)),
       );
       return DiscoveredBookSource(
         manifestUrl: manifestUrl,
@@ -83,9 +121,8 @@ class BookSourceClient {
       },
     );
     try {
-      final response = await _dio.getUri<Object?>(uri);
       return BookSourceSearchPage.fromJson(
-        decodeBookSourceJson(response.data),
+        decodeBookSourceJson(await _getBounded(uri)),
       );
     } on DioException catch (error) {
       throw BookSourceProtocolException(_dioErrorMessage(error));
@@ -101,8 +138,9 @@ class BookSourceClient {
       'v1/books/${Uri.encodeComponent(bookId)}',
     );
     try {
-      final response = await _dio.getUri<Object?>(uri);
-      return BookSourceBook.fromJson(decodeBookSourceJson(response.data));
+      return BookSourceBook.fromJson(
+        decodeBookSourceJson(await _getBounded(uri)),
+      );
     } on DioException catch (error) {
       throw BookSourceProtocolException(_dioErrorMessage(error));
     }
@@ -117,8 +155,7 @@ class BookSourceClient {
       'v1/books/${Uri.encodeComponent(bookId)}/chapters',
     );
     try {
-      final response = await _dio.getUri<Object?>(uri);
-      final json = decodeBookSourceJson(response.data);
+      final json = decodeBookSourceJson(await _getBounded(uri));
       final items = json['items'];
       if (items is! List) {
         throw const BookSourceProtocolException(
@@ -146,9 +183,8 @@ class BookSourceClient {
       '${Uri.encodeComponent(chapterId)}',
     );
     try {
-      final response = await _dio.getUri<Object?>(uri);
       return BookSourceChapterContent.fromJson(
-        decodeBookSourceJson(response.data),
+        decodeBookSourceJson(await _getBounded(uri)),
       );
     } on DioException catch (error) {
       throw BookSourceProtocolException(_dioErrorMessage(error));

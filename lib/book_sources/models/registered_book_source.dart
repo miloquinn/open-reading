@@ -106,5 +106,10 @@ class RegisteredBookSource {
 
 Uri? _optionalUri(Object? value) {
   if (value is! String || value.isEmpty) return null;
-  return Uri.tryParse(value);
+  final parsed = Uri.tryParse(value);
+  // 本地存储可能被篡改，只接受 http/https，防止注入其他 scheme。
+  if (parsed == null || (parsed.scheme != 'http' && parsed.scheme != 'https')) {
+    return null;
+  }
+  return parsed;
 }

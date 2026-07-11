@@ -72,9 +72,16 @@ class DatabaseService {
     return await openDatabase(
       path,
       version: _dbVersion,
+      onConfigure: _onConfigure,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
+  }
+
+  Future<void> _onConfigure(Database db) async {
+    // sqflite 默认关闭外键约束，必须在每个连接上显式开启，
+    // 否则建表语句里的 ON DELETE CASCADE 不会生效。
+    await db.execute('PRAGMA foreign_keys = ON');
   }
 
   Future<void> _onCreate(Database db, int version) async {

@@ -31,18 +31,26 @@ class HashCalculationResult {
 }
 
 /// 元数据提取参数
+///
+/// [bytes] 只需传文件头部切片（isolate 消息是拷贝语义，传整文件
+/// 会白白复制上百 MB）；[totalByteLength] 传原始文件完整长度，
+/// 用于页数估算。
 class MetadataExtractionParams {
   final Uint8List bytes;
   final String fileName;
   final String extension;
   final String? encodingOverride;
+  final int? totalByteLength;
 
   MetadataExtractionParams({
     required this.bytes,
     required this.fileName,
     required this.extension,
     this.encodingOverride,
+    this.totalByteLength,
   });
+
+  int get effectiveTotalLength => totalByteLength ?? bytes.length;
 }
 
 /// 简化的元数据结果（用于isolate传输）
@@ -130,7 +138,8 @@ Future<SimpleMetadata> extractTxtMetadataInIsolate(
     }
 
     // 估算页数（基于文件大小，避免完全解析）
-    final estimatedPages = (params.bytes.length / 1500).ceil().clamp(1, 9999);
+    final estimatedPages =
+        (params.effectiveTotalLength / 1500).ceil().clamp(1, 9999);
 
     // 提取描述（前200字符）
     String? description;
@@ -152,7 +161,8 @@ Future<SimpleMetadata> extractTxtMetadataInIsolate(
       title: params.fileName
           .replaceAll(RegExp(r'\.(txt)$', caseSensitive: false), ''),
       author: 'Unknown',
-      estimatedPages: (params.bytes.length / 10000).ceil().clamp(1, 9999),
+      estimatedPages:
+          (params.effectiveTotalLength / 10000).ceil().clamp(1, 9999),
     );
   }
 }
@@ -270,7 +280,8 @@ Future<SimpleMetadata> extractMobiMetadataInIsolate(
     }
 
     // 基于文件大小估算页数
-    estimatedPages = (params.bytes.length / 3000).ceil().clamp(50, 1000);
+    estimatedPages =
+        (params.effectiveTotalLength / 3000).ceil().clamp(50, 1000);
 
     return SimpleMetadata(
       title: title,
@@ -285,7 +296,8 @@ Future<SimpleMetadata> extractMobiMetadataInIsolate(
         '',
       ),
       author: 'Unknown',
-      estimatedPages: (params.bytes.length / 3000).ceil().clamp(50, 1000),
+      estimatedPages:
+          (params.effectiveTotalLength / 3000).ceil().clamp(50, 1000),
     );
   }
 }

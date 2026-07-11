@@ -58,6 +58,12 @@ class EnhancedBookMetadata {
 /// 导入进度回调函数类型
 typedef ImportProgressCallback = void Function(double progress, String message);
 
+/// 顶层函数：在 isolate 中解析 EPUB（zip 解压 + XML 解析是 CPU
+/// 密集操作，放主线程会掉帧）。
+Future<EpubBook> parseEpubBookInIsolate(Uint8List bytes) {
+  return EpubReader.readBook(bytes);
+}
+
 class BookImportService {
   final _bookDao = BookDao();
   final _enhancedTxtService = EnhancedTxtImportService();
@@ -81,14 +87,19 @@ class BookImportService {
     final targetSink = target.openWrite();
 
     int bytesCopied = 0;
+    int lastReportedBytes = 0;
+    const reportInterval = 1024 * 1024;
 
     try {
       await for (var chunk in sourceStream) {
         targetSink.add(chunk);
         bytesCopied += chunk.length;
 
-        // 每复制1MB或完成时更新进度
-        if (bytesCopied % (1024 * 1024) == 0 || bytesCopied >= fileSize) {
+        // 每复制约1MB或完成时更新进度（chunk 边界几乎不会恰好对齐
+        // 1MB 整数倍，所以按累计增量判断而不是取模）
+        if (bytesCopied - lastReportedBytes >= reportInterval ||
+            bytesCopied >= fileSize) {
+          lastReportedBytes = bytesCopied;
           final progress = bytesCopied / fileSize;
           progressCallback?.call(progress);
         }
@@ -100,6 +111,12 @@ class BookImportService {
       debugPrint('文件复制完成: ${fileSize / 1024 / 1024} MB');
     } catch (e) {
       await targetSink.close();
+      // 清理写了一半的目标文件，避免残留脏文件被后续查重逻辑误认
+      try {
+        if (await target.exists()) {
+          await target.delete();
+        }
+      } catch (_) {}
       debugPrint('文件复制失败: $e');
       rethrow;
     }
@@ -556,7 +573,14 @@ class BookImportService {
     String fileName,
   ) async {
     try {
-      final epubBook = await EpubReader.readBook(bytes);
+      EpubBook epubBook;
+      try {
+        epubBook = await compute(parseEpubBookInIsolate, bytes);
+      } catch (e) {
+        // isolate 解析或结果传输失败时回退主线程解析
+        debugPrint('⚠️ EPUB isolate 解析失败，回退主线程: $e');
+        epubBook = await EpubReader.readBook(bytes);
+      }
 
       // Extract basic metadata first (needed for cover fetching)
       final title = epubBook.Title?.isNotEmpty == true
@@ -785,14 +809,19 @@ class BookImportService {
       // 对于大文件，使用isolate处理
       SimpleMetadata simpleMetadata;
       if (bytes.length > 5 * 1024 * 1024) {
-        // 大于5MB，使用isolate
+        // 大于5MB，使用isolate。isolate 消息是拷贝语义，只传
+        // 元数据分析所需的头部切片，完整长度单独传给页数估算。
+        const headSliceBytes = 100 * 1024;
         simpleMetadata = await compute(
           extractTxtMetadataInIsolate,
           MetadataExtractionParams(
-            bytes: bytes,
+            // sublist 而非 sublistView：视图发给 isolate 会连带
+            // 拷贝整个底层缓冲区
+            bytes: bytes.sublist(0, headSliceBytes),
             fileName: fileName,
             extension: 'txt',
             encodingOverride: resolvedEncoding,
+            totalByteLength: bytes.length,
           ),
         );
       } else {
@@ -1144,12 +1173,14 @@ class BookImportService {
       if (bytes.length > 5 * 1024 * 1024) {
         // 大于5MB，使用isolate
         debugPrint('使用isolate处理大MOBI文件: ${bytes.length / 1024 / 1024} MB');
+        const headSliceBytes = 500 * 1024;
         simpleMetadata = await compute(
           extractMobiMetadataInIsolate,
           MetadataExtractionParams(
-            bytes: bytes,
+            bytes: bytes.sublist(0, headSliceBytes),
             fileName: fileName,
             extension: fileName.split('.').last.toLowerCase(),
+            totalByteLength: bytes.length,
           ),
         );
       } else {
@@ -1409,7 +1440,12 @@ class BookImportService {
       }
 
       final bookName = bookFileName.replaceAll(RegExp(r'\.[^.]+$'), '');
-      final coverPath = join(coversDir.path, '${bookName}_cover.jpg');
+      // 文件名加入完整文件名（含扩展名）的哈希后缀，
+      // 避免"同名不同格式"的书封面互相覆盖
+      final nameHash =
+          md5.convert(utf8.encode(bookFileName)).toString().substring(0, 8);
+      final coverPath =
+          join(coversDir.path, '${bookName}_${nameHash}_cover.jpg');
       final coverFile = File(coverPath);
 
       await coverFile.writeAsBytes(imageBytes);
@@ -1617,30 +1653,36 @@ class BookImportService {
 
   /// 增强的PDF封面提取
   Future<Uint8List?> _extractPdfCover(Uint8List bytes) async {
+    PdfDocument? pdfDocument;
+    PdfPage? page;
     try {
-      final pdfDocument = await PdfDocument.openData(bytes);
+      pdfDocument = await PdfDocument.openData(bytes);
 
       // 获取第一页作为封面
       if (pdfDocument.pagesCount > 0) {
-        final page = await pdfDocument.getPage(1);
+        page = await pdfDocument.getPage(1);
         final pageImage = await page.render(
           width: 300, // 封面宽度
           height: 400, // 封面高度
         );
-
-        await page.close();
-        await pdfDocument.close();
 
         if (pageImage?.bytes != null && pageImage!.bytes.isNotEmpty) {
           return pageImage.bytes;
         }
       }
 
-      await pdfDocument.close();
       return null;
     } catch (e) {
       debugPrint('Error extracting PDF cover: $e');
       return null;
+    } finally {
+      // render 抛异常时也要释放原生 PDF 句柄
+      try {
+        await page?.close();
+      } catch (_) {}
+      try {
+        await pdfDocument?.close();
+      } catch (_) {}
     }
   }
 }

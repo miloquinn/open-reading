@@ -56,7 +56,6 @@ dependencies:
   # UI
   fl_chart: ^0.68.0
   provider: ^6.1.5
-  flutter_riverpod: ^2.6.1
   sqflite_common_ffi: ^2.3.6
   path_provider: ^2.1.5
   intl: ^0.20.2
@@ -72,6 +71,7 @@ dependencies:
 
   # 字符编码支持（GB2312/GBK）
   gbk_codec: ^0.4.0
+  flutter_secure_storage: ^10.3.1
 
 dev_dependencies:
   flutter_test:

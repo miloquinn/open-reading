@@ -29,10 +29,9 @@ class AppSettingsNotifier extends ChangeNotifier {
         prefs.getString(_keyAppLocale) ?? prefs.getString(_keyLegacyLocale);
     _applyLocaleCode(storedLocale ?? 'system', notify: false);
     final storedFontFamily = prefs.getString(_keyAppFontFamily);
-    if (storedFontFamily != null && storedFontFamily.isNotEmpty) {
-      await prefs.remove(_keyAppFontFamily);
-    }
-    _appFontFamily = null;
+    _appFontFamily = (storedFontFamily == null || storedFontFamily.isEmpty)
+        ? null
+        : storedFontFamily;
     _isInitialized = true;
     notifyListeners();
   }
