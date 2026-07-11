@@ -98,7 +98,8 @@ jobs:
 
   windows:
     name: Windows x64
-    runs-on: windows-latest
+    # pdfx's PDFium downloader is not compatible with CMake 4 on windows-latest.
+    runs-on: windows-2022
     timeout-minutes: 45
     steps:
       - name: Check out release source
