@@ -10,6 +10,7 @@ import 'package:html/dom.dart' as html_dom;
 import 'package:path/path.dart' as path;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:xxread/core/reader/canonical_locator.dart';
 import 'package:xxread/models/book.dart';
 import 'package:xxread/services/books/book_dao.dart';
 
@@ -25,6 +26,9 @@ class NativeReaderPage extends StatefulWidget {
 }
 
 class _NativeReaderPageState extends State<NativeReaderPage> {
+  static final Map<String, Future<List<_NativeChapter>>> _bookMemoryCache = {};
+  static final Map<String, Map<String, List<_ReaderPageData>>>
+      _paginationMemoryCache = {};
   static const _pageModeKey = 'native_reader_page_mode';
   static const _fontSizeKey = 'native_reader_font_size';
   static const _horizontalMarginKey = 'native_reader_horizontal_margin';
@@ -37,9 +41,12 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
 
   late final Future<List<_NativeChapter>> _chaptersFuture;
   final PageController _pageController = PageController();
-  final Map<String, List<_ReaderPageData>> _pageCache = {};
+  late final Map<String, List<_ReaderPageData>> _pageCache;
   int _chapterIndex = 0;
   int _pageIndex = 0;
+  int? _anchorOffset;
+  bool _restoreAnchorAfterLayout = true;
+  String? _lastSavedLocation;
   bool _openPreviousChapterAtLastPage = false;
   bool _controlsVisible = false;
   NativePageMode _pageMode = NativePageMode.verticalScroll;
@@ -54,10 +61,18 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
   void initState() {
     super.initState();
     _chapterIndex = widget.book.currentPage;
-    _chaptersFuture = _loadBook();
+    final savedLocator = widget.book.toCanonicalLocator();
+    _anchorOffset = savedLocator?.textAnchor?.startOffsetUtf16;
+    final cacheKey = _bookCacheKey;
+    _pageCache = _paginationMemoryCache.putIfAbsent(cacheKey, () => {});
+    _chaptersFuture = _bookMemoryCache.putIfAbsent(cacheKey, _loadBook);
     _loadPageMode();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   }
+
+  String get _bookCacheKey =>
+      '${widget.book.contentHash ?? widget.book.filePath}:'
+      '${widget.book.fileModifiedTime ?? File(widget.book.filePath).lastModifiedSync().millisecondsSinceEpoch}';
 
   @override
   void dispose() {
@@ -82,11 +97,15 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
       _fontSize = prefs.getDouble(_fontSizeKey) ?? 19;
       _horizontalMargin = prefs.getDouble(_horizontalMarginKey) ?? 18;
       _verticalMargin = prefs.getDouble(_verticalMarginKey) ?? 24;
-      _pageCache.clear();
     });
   }
 
   TextStyle get _readerTextStyle => _textStyle.copyWith(fontSize: _fontSize);
+
+  double get _readerBottomMargin => (_verticalMargin - 6).clamp(12, 42);
+
+  double get _effectiveBottomMargin =>
+      _readerBottomMargin + MediaQuery.viewPaddingOf(context).bottom;
 
   Future<void> _updateLayout({
     double? fontSize,
@@ -98,12 +117,45 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
       _horizontalMargin = horizontalMargin ?? _horizontalMargin;
       _verticalMargin = verticalMargin ?? _verticalMargin;
       _pageIndex = 0;
-      _pageCache.clear();
+      _restoreAnchorAfterLayout = true;
     });
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble(_fontSizeKey, _fontSize);
     await prefs.setDouble(_horizontalMarginKey, _horizontalMargin);
     await prefs.setDouble(_verticalMarginKey, _verticalMargin);
+  }
+
+  String get _layoutSignature => '${_fontSize.toStringAsFixed(1)}:'
+      '${_horizontalMargin.toStringAsFixed(1)}:'
+      '${_verticalMargin.toStringAsFixed(1)}:${_pageMode.name}';
+
+  void _saveCanonicalProgress(
+    _NativeChapter chapter,
+    _ReaderPageData page,
+    int chapterIndex,
+  ) {
+    _anchorOffset = page.startOffset;
+    final bookId = widget.book.id;
+    if (bookId == null) return;
+    final excerptEnd =
+        (page.startOffset + 72).clamp(0, chapter.plainText.length);
+    final excerpt = chapter.plainText.substring(page.startOffset, excerptEnd);
+    final locator = CanonicalLocator.fromComponents(
+      format: BookFormat.fromFileExtension(widget.book.format),
+      chapterId: chapter.id,
+      offset: page.startOffset,
+      excerpt: excerpt,
+      progression: chapter.plainText.isEmpty
+          ? 0
+          : page.startOffset / chapter.plainText.length,
+    );
+    BookDao().updateBookCanonicalLocator(
+      bookId,
+      LocatorCodec.encodeCanonicalLocator(locator),
+      null,
+      _layoutSignature,
+      chapterIndex,
+    );
   }
 
   Future<void> _setPageMode(NativePageMode mode) async {
@@ -125,6 +177,7 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
         return parsed
             .map(
               (chapter) => _NativeChapter(
+                id: chapter['id'] as String? ?? '',
                 title: chapter['title'] as String? ?? '',
                 depth: chapter['depth'] as int? ?? 0,
                 plainText: chapter['plainText'] as String? ?? '',
@@ -426,17 +479,18 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
     TextScaler textScaler,
   ) {
     final scaleKey = textScaler.scale(100).round();
-    final key = '$chapterIndex:${size.width.round()}:${size.height.round()}:'
+    final key = 'v2:$chapterIndex:${size.width.round()}:${size.height.round()}:'
         '$scaleKey:${_fontSize.toStringAsFixed(1)}:'
         '${_horizontalMargin.toStringAsFixed(1)}:'
-        '${_verticalMargin.toStringAsFixed(1)}';
+        '${_verticalMargin.toStringAsFixed(1)}:'
+        '${_effectiveBottomMargin.toStringAsFixed(1)}';
     return _pageCache.putIfAbsent(
       key,
       () {
         return _paginateChapter(
           chapter,
           maxWidth: size.width - (_horizontalMargin * 2),
-          maxHeight: size.height - (_verticalMargin * 2) - 8,
+          maxHeight: size.height - _verticalMargin - _effectiveBottomMargin - 6,
           direction: direction,
           textScaler: textScaler,
           style: _readerTextStyle,
@@ -500,7 +554,11 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
     return result;
   }
 
-  void _onBookPageChanged(int index, List<_BookPageRef> bookPages) {
+  void _onBookPageChanged(
+    int index,
+    List<_BookPageRef> bookPages,
+    List<_NativeChapter> chapters,
+  ) {
     final page = bookPages[index];
     final chapterChanged = page.chapterIndex != _chapterIndex;
     setState(() {
@@ -510,6 +568,11 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
     if (chapterChanged && widget.book.id != null) {
       BookDao().updateBookProgress(widget.book.id!, page.chapterIndex);
     }
+    _saveCanonicalProgress(
+      chapters[page.chapterIndex],
+      page.content,
+      page.chapterIndex,
+    );
   }
 
   Widget _buildReaderContent(
@@ -522,9 +585,11 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
       return SelectionArea(
         child: SingleChildScrollView(
           key: ValueKey(_chapterIndex),
-          padding: EdgeInsets.symmetric(
-            horizontal: _horizontalMargin,
-            vertical: _verticalMargin,
+          padding: EdgeInsets.fromLTRB(
+            _horizontalMargin,
+            _verticalMargin,
+            _horizontalMargin,
+            _effectiveBottomMargin,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -558,13 +623,16 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
       return PageView.builder(
         controller: _pageController,
         itemCount: bookPages.length,
-        onPageChanged: (index) => _onBookPageChanged(index, bookPages),
+        onPageChanged: (index) =>
+            _onBookPageChanged(index, bookPages, chapters),
         itemBuilder: (context, index) {
           final page = bookPages[index];
           return Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: _horizontalMargin,
-              vertical: _verticalMargin,
+            padding: EdgeInsets.fromLTRB(
+              _horizontalMargin,
+              _verticalMargin,
+              _horizontalMargin,
+              _effectiveBottomMargin,
             ),
             child: SizedBox.expand(
               child: _buildPage(
@@ -577,9 +645,11 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
       );
     }
     return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: _horizontalMargin,
-        vertical: _verticalMargin,
+      padding: EdgeInsets.fromLTRB(
+        _horizontalMargin,
+        _verticalMargin,
+        _horizontalMargin,
+        _effectiveBottomMargin,
       ),
       child: SizedBox.expand(
         child: KeyedSubtree(
@@ -639,6 +709,32 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
                 _openPreviousChapterAtLastPage = false;
               }
               _pageIndex = _pageIndex.clamp(0, pages.length - 1);
+              if (_restoreAnchorAfterLayout && _anchorOffset != null) {
+                final anchor = _anchorOffset!;
+                final restoredIndex = pages.indexWhere(
+                  (page) =>
+                      anchor >= page.startOffset && anchor < page.endOffset,
+                );
+                if (restoredIndex >= 0) _pageIndex = restoredIndex;
+                _restoreAnchorAfterLayout = false;
+              }
+              if (_pageMode != NativePageMode.verticalScroll) {
+                final locationKey = '$_chapterIndex:$_pageIndex:'
+                    '${pages[_pageIndex].startOffset}';
+                if (_lastSavedLocation != locationKey) {
+                  _lastSavedLocation = locationKey;
+                  final pageToSave = pages[_pageIndex];
+                  final chapterToSave = chapter;
+                  final chapterIndexToSave = _chapterIndex;
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    _saveCanonicalProgress(
+                      chapterToSave,
+                      pageToSave,
+                      chapterIndexToSave,
+                    );
+                  });
+                }
+              }
               if (_pageMode == NativePageMode.horizontalSlide) {
                 final targetPage = bookPages.indexWhere(
                   (page) =>
@@ -785,7 +881,14 @@ List<String> _paginateText(
 
   while (start < text.length) {
     var low = 1;
-    var high = text.length - start;
+    final remainingLength = text.length - start;
+    final fontSize = style.fontSize ?? 19;
+    final lineHeight = fontSize * (style.height ?? 1.2);
+    final estimatedLines = (maxHeight / lineHeight).ceil().clamp(1, 10000);
+    final estimatedCharsPerLine =
+        (maxWidth / (fontSize * 0.9)).ceil().clamp(1, 10000);
+    var high =
+        (estimatedLines * estimatedCharsPerLine * 2).clamp(1, remainingLength);
     var best = 1;
 
     bool fits(int length) {
@@ -806,6 +909,12 @@ List<String> _paginateText(
       return painter.height <= maxHeight;
     }
 
+    while (high < remainingLength && fits(high)) {
+      best = high;
+      high = (high * 2).clamp(1, remainingLength);
+      low = best + 1;
+    }
+
     while (low <= high) {
       final mid = low + ((high - low) >> 1);
       if (fits(mid)) {
@@ -819,6 +928,29 @@ List<String> _paginateText(
     var end = start + best;
     if (end < text.length && _isLowSurrogate(text.codeUnitAt(end))) end--;
     if (end <= start) end = (start + 1).clamp(0, text.length);
+    if (end < text.length) {
+      final pageText = text.substring(start, end);
+      final painter = TextPainter(
+        text: TextSpan(text: pageText, style: style),
+        textDirection: direction,
+        textScaler: textScaler,
+      )..layout(maxWidth: maxWidth);
+      final lines = painter.computeLineMetrics();
+      if (lines.length > 1 && pageText.isNotEmpty) {
+        final lastLine = painter.getLineBoundary(
+          TextPosition(offset: pageText.length - 1),
+        );
+        final visibleTail = pageText
+            .substring(lastLine.start, lastLine.end)
+            .replaceAll(RegExp(r'\s+'), '');
+        if (visibleTail.runes.length <= 2 && lastLine.start > 0) {
+          end = start + lastLine.start;
+          if (end < text.length && _isLowSurrogate(text.codeUnitAt(end))) {
+            end--;
+          }
+        }
+      }
+    }
     pages.add(text.substring(start, end));
     start = end;
   }
@@ -900,7 +1032,22 @@ List<_ReaderPageData> _paginateChapter(
   }
   assert(pages.map((page) => page.text).join() == chapter.plainText,
       'Chapter pagination must preserve every character');
-  return pages;
+  var offset = 0;
+  final anchoredPages = <_ReaderPageData>[];
+  for (final page in pages) {
+    anchoredPages.add(
+      _ReaderPageData(
+        text: page.text,
+        imageBlockIndex: page.imageBlockIndex,
+        startOffset: offset,
+        endOffset: offset + page.text.length,
+      ),
+    );
+    offset += page.text.length;
+  }
+  assert(offset == chapter.plainText.length,
+      'Page boundaries must cover the complete chapter');
+  return anchoredPages;
 }
 
 bool _isLowSurrogate(int codeUnit) => codeUnit >= 0xDC00 && codeUnit <= 0xDFFF;
@@ -945,12 +1092,14 @@ List<String> _paginateTextLegacy(
 
 class _NativeChapter {
   const _NativeChapter({
+    required this.id,
     required this.title,
     required this.plainText,
     required this.blocks,
     this.depth = 0,
   });
 
+  final String id;
   final String title;
   final String plainText;
   final List<_NativeBlock> blocks;
@@ -970,13 +1119,20 @@ class _BookPageRef {
 }
 
 class _ReaderPageData {
-  const _ReaderPageData({required this.text, this.imageBlockIndex});
+  const _ReaderPageData({
+    required this.text,
+    this.imageBlockIndex,
+    this.startOffset = 0,
+    int? endOffset,
+  }) : endOffset = endOffset ?? startOffset + text.length;
 
   const _ReaderPageData.text(String text)
       : this(text: text, imageBlockIndex: null);
 
   final String text;
   final int? imageBlockIndex;
+  final int startOffset;
+  final int endOffset;
 }
 
 class _NativeBlock {
@@ -1057,6 +1213,7 @@ Future<List<Map<String, dynamic>>> _parseEpubChapters(Uint8List bytes) async {
       }
       if (plainText.isNotEmpty || blocks.isNotEmpty) {
         result.add(<String, dynamic>{
+          'id': chapter.ContentFileName ?? 'epub-${result.length}',
           'title': chapter.Title ?? '',
           'depth': depth,
           'plainText': plainText,
@@ -1088,6 +1245,7 @@ List<_NativeChapter> _parseTxtChapters(String text, String fallbackTitle) {
   if (matches.isEmpty) {
     return <_NativeChapter>[
       _NativeChapter(
+        id: 'txt-0',
         title: fallbackTitle,
         plainText: text,
         blocks: <_NativeBlock>[_NativeBlock.text(text)],
@@ -1099,6 +1257,7 @@ List<_NativeChapter> _parseTxtChapters(String text, String fallbackTitle) {
       text.substring(0, matches.first.$1).trim().isNotEmpty) {
     final preface = text.substring(0, matches.first.$1);
     chapters.add(_NativeChapter(
+      id: 'txt-preface',
       title: '正文前',
       plainText: preface,
       blocks: <_NativeBlock>[_NativeBlock.text(preface)],
@@ -1109,6 +1268,7 @@ List<_NativeChapter> _parseTxtChapters(String text, String fallbackTitle) {
     final end = i + 1 < matches.length ? matches[i + 1].$1 : text.length;
     final content = text.substring(start, end);
     chapters.add(_NativeChapter(
+      id: 'txt-$i',
       title: matches[i].$2,
       plainText: content,
       blocks: <_NativeBlock>[_NativeBlock.text(content)],
