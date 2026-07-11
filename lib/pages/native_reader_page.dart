@@ -26,6 +26,9 @@ class NativeReaderPage extends StatefulWidget {
 
 class _NativeReaderPageState extends State<NativeReaderPage> {
   static const _pageModeKey = 'native_reader_page_mode';
+  static const _fontSizeKey = 'native_reader_font_size';
+  static const _horizontalMarginKey = 'native_reader_horizontal_margin';
+  static const _verticalMarginKey = 'native_reader_vertical_margin';
   static const _textStyle = TextStyle(
     fontSize: 19,
     height: 1.75,
@@ -34,12 +37,15 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
 
   late final Future<List<_NativeChapter>> _chaptersFuture;
   final PageController _pageController = PageController();
-  final Map<String, List<String>> _pageCache = {};
+  final Map<String, List<_ReaderPageData>> _pageCache = {};
   int _chapterIndex = 0;
   int _pageIndex = 0;
   bool _openPreviousChapterAtLastPage = false;
   bool _controlsVisible = false;
   NativePageMode _pageMode = NativePageMode.verticalScroll;
+  double _fontSize = 19;
+  double _horizontalMargin = 18;
+  double _verticalMargin = 24;
   Offset? _pointerDownPosition;
   DateTime? _pointerDownTime;
   bool _pointerMoved = false;
@@ -63,15 +69,41 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
   Future<void> _loadPageMode() async {
     final prefs = await SharedPreferences.getInstance();
     final name = prefs.getString(_pageModeKey);
-    if (!mounted || name == null) return;
+    if (!mounted) return;
     setState(() {
-      _pageMode = NativePageMode.values.firstWhere(
-        (mode) => mode.name == name,
-        orElse: () => name == 'horizontalPage'
-            ? NativePageMode.instantPage
-            : NativePageMode.verticalScroll,
-      );
+      if (name != null) {
+        _pageMode = NativePageMode.values.firstWhere(
+          (mode) => mode.name == name,
+          orElse: () => name == 'horizontalPage'
+              ? NativePageMode.instantPage
+              : NativePageMode.verticalScroll,
+        );
+      }
+      _fontSize = prefs.getDouble(_fontSizeKey) ?? 19;
+      _horizontalMargin = prefs.getDouble(_horizontalMarginKey) ?? 18;
+      _verticalMargin = prefs.getDouble(_verticalMarginKey) ?? 24;
+      _pageCache.clear();
     });
+  }
+
+  TextStyle get _readerTextStyle => _textStyle.copyWith(fontSize: _fontSize);
+
+  Future<void> _updateLayout({
+    double? fontSize,
+    double? horizontalMargin,
+    double? verticalMargin,
+  }) async {
+    setState(() {
+      _fontSize = fontSize ?? _fontSize;
+      _horizontalMargin = horizontalMargin ?? _horizontalMargin;
+      _verticalMargin = verticalMargin ?? _verticalMargin;
+      _pageIndex = 0;
+      _pageCache.clear();
+    });
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_fontSizeKey, _fontSize);
+    await prefs.setDouble(_horizontalMarginKey, _horizontalMargin);
+    await prefs.setDouble(_verticalMarginKey, _verticalMargin);
   }
 
   Future<void> _setPageMode(NativePageMode mode) async {
@@ -94,6 +126,8 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
             .map(
               (chapter) => _NativeChapter(
                 title: chapter['title'] as String? ?? '',
+                depth: chapter['depth'] as int? ?? 0,
+                plainText: chapter['plainText'] as String? ?? '',
                 blocks: (chapter['blocks'] as List<dynamic>)
                     .map(
                       (block) => _NativeBlock.fromMap(
@@ -105,14 +139,8 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
             )
             .toList(growable: false);
       case 'txt':
-        return <_NativeChapter>[
-          _NativeChapter(
-            title: widget.book.title,
-            blocks: <_NativeBlock>[
-              _NativeBlock.text(String.fromCharCodes(bytes)),
-            ],
-          ),
-        ];
+        return _parseTxtChapters(
+            String.fromCharCodes(bytes), widget.book.title);
       default:
         throw UnsupportedError('当前原生阅读器仅支持 EPUB 和 TXT');
     }
@@ -131,7 +159,7 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
     }
   }
 
-  void _nextPage(List<String> pages, int chapterCount) {
+  void _nextPage(List<_ReaderPageData> pages, int chapterCount) {
     if (_pageMode == NativePageMode.horizontalSlide &&
         _pageController.hasClients) {
       _pageController.nextPage(
@@ -147,7 +175,7 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
     }
   }
 
-  void _previousPage(List<String> pages, int chapterCount) {
+  void _previousPage(List<_ReaderPageData> pages, int chapterCount) {
     if (_pageMode == NativePageMode.horizontalSlide &&
         _pageController.hasClients) {
       _pageController.previousPage(
@@ -166,7 +194,7 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
 
   void _handleHorizontalSwipe(
     DragEndDetails details,
-    List<String> pages,
+    List<_ReaderPageData> pages,
     int chapterCount,
   ) {
     final velocity = details.primaryVelocity ?? 0;
@@ -189,7 +217,7 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
   void _handleTap(
     Offset localPosition,
     double width,
-    List<String> pages,
+    List<_ReaderPageData> pages,
     int chapterCount,
   ) {
     final fraction = localPosition.dx / width;
@@ -227,7 +255,7 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
   void _onPointerUp(
     PointerUpEvent event,
     double width,
-    List<String> pages,
+    List<_ReaderPageData> pages,
     int chapterCount,
   ) {
     final startedAt = _pointerDownTime;
@@ -248,44 +276,139 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
   }
 
   void _showReadingSettings() {
+    var previewFontSize = _fontSize;
+    var previewHorizontalMargin = _horizontalMargin;
+    var previewVerticalMargin = _verticalMargin;
     showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
+      isScrollControlled: true,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setSheetState) => SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('阅读设置', style: Theme.of(context).textTheme.titleLarge),
+                const SizedBox(height: 12),
+                Text('翻页方式', style: Theme.of(context).textTheme.titleMedium),
+                RadioGroup<NativePageMode>(
+                  groupValue: _pageMode,
+                  onChanged: (mode) {
+                    if (mode == null) return;
+                    Navigator.of(sheetContext).pop();
+                    _setPageMode(mode);
+                  },
+                  child: const Column(
+                    children: [
+                      RadioListTile<NativePageMode>(
+                        value: NativePageMode.verticalScroll,
+                        title: Text('纵向滚动'),
+                        subtitle: Text('上下滚动正文，左右滑动切换章节'),
+                      ),
+                      RadioListTile<NativePageMode>(
+                        value: NativePageMode.instantPage,
+                        title: Text('水平分页'),
+                        subtitle: Text('点击左侧上一页，点击右侧下一页'),
+                      ),
+                      RadioListTile<NativePageMode>(
+                        value: NativePageMode.horizontalSlide,
+                        title: Text('水平滑动'),
+                        subtitle: Text('页面跟随手指横向移动并吸附翻页'),
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 28),
+                Text('字体大小  ${previewFontSize.round()}',
+                    style: Theme.of(context).textTheme.titleMedium),
+                Slider(
+                  value: previewFontSize,
+                  min: 14,
+                  max: 32,
+                  divisions: 18,
+                  onChanged: (value) =>
+                      setSheetState(() => previewFontSize = value),
+                  onChangeEnd: (value) => _updateLayout(fontSize: value),
+                ),
+                Text('左右页边距  ${previewHorizontalMargin.round()}',
+                    style: Theme.of(context).textTheme.titleMedium),
+                Slider(
+                  value: previewHorizontalMargin,
+                  min: 8,
+                  max: 48,
+                  divisions: 40,
+                  onChanged: (value) =>
+                      setSheetState(() => previewHorizontalMargin = value),
+                  onChangeEnd: (value) =>
+                      _updateLayout(horizontalMargin: value),
+                ),
+                Text('上下页边距  ${previewVerticalMargin.round()}',
+                    style: Theme.of(context).textTheme.titleMedium),
+                Slider(
+                  value: previewVerticalMargin,
+                  min: 8,
+                  max: 48,
+                  divisions: 40,
+                  onChanged: (value) =>
+                      setSheetState(() => previewVerticalMargin = value),
+                  onChangeEnd: (value) => _updateLayout(verticalMargin: value),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showTableOfContents(List<_NativeChapter> chapters) {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
       builder: (sheetContext) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+        child: SizedBox(
+          height: MediaQuery.sizeOf(context).height * 0.72,
           child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('阅读设置', style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 12),
-              Text('翻页方式', style: Theme.of(context).textTheme.titleMedium),
-              RadioGroup<NativePageMode>(
-                groupValue: _pageMode,
-                onChanged: (mode) {
-                  if (mode == null) return;
-                  Navigator.of(sheetContext).pop();
-                  _setPageMode(mode);
-                },
-                child: const Column(
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                child: Row(
                   children: [
-                    RadioListTile<NativePageMode>(
-                      value: NativePageMode.verticalScroll,
-                      title: Text('纵向滚动'),
-                      subtitle: Text('上下滚动正文，左右滑动切换章节'),
-                    ),
-                    RadioListTile<NativePageMode>(
-                      value: NativePageMode.instantPage,
-                      title: Text('水平分页'),
-                      subtitle: Text('点击左侧上一页，点击右侧下一页'),
-                    ),
-                    RadioListTile<NativePageMode>(
-                      value: NativePageMode.horizontalSlide,
-                      title: Text('水平滑动'),
-                      subtitle: Text('页面跟随手指横向移动并吸附翻页'),
-                    ),
+                    Text('目录', style: Theme.of(context).textTheme.titleLarge),
+                    const Spacer(),
+                    Text('${chapters.length} 章'),
                   ],
+                ),
+              ),
+              const Divider(height: 1),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: chapters.length,
+                  itemBuilder: (context, index) {
+                    final chapter = chapters[index];
+                    return ListTile(
+                      selected: index == _chapterIndex,
+                      contentPadding: EdgeInsets.only(
+                        left: 20 + chapter.depth * 18,
+                        right: 16,
+                      ),
+                      title: Text(
+                        chapter.title.isEmpty
+                            ? '第 ${index + 1} 章'
+                            : chapter.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      onTap: () {
+                        Navigator.of(sheetContext).pop();
+                        _setChapter(index, chapters.length);
+                      },
+                    );
+                  },
                 ),
               ),
             ],
@@ -295,7 +418,7 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
     );
   }
 
-  List<String> _pagesFor(
+  List<_ReaderPageData> _pagesFor(
     _NativeChapter chapter,
     int chapterIndex,
     Size size,
@@ -303,38 +426,50 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
     TextScaler textScaler,
   ) {
     final scaleKey = textScaler.scale(100).round();
-    final key =
-        '$chapterIndex:${size.width.round()}:${size.height.round()}:$scaleKey';
+    final key = '$chapterIndex:${size.width.round()}:${size.height.round()}:'
+        '$scaleKey:${_fontSize.toStringAsFixed(1)}:'
+        '${_horizontalMargin.toStringAsFixed(1)}:'
+        '${_verticalMargin.toStringAsFixed(1)}';
     return _pageCache.putIfAbsent(
       key,
       () {
-        final pages = _paginateText(
-          chapter.plainText,
-          maxWidth: size.width - 44,
-          maxHeight: size.height - 88,
+        return _paginateChapter(
+          chapter,
+          maxWidth: size.width - (_horizontalMargin * 2),
+          maxHeight: size.height - (_verticalMargin * 2) - 8,
           direction: direction,
           textScaler: textScaler,
+          style: _readerTextStyle,
         );
-        for (var i = 0; i < chapter.blocks.length; i++) {
-          if (chapter.blocks[i].imageBase64 != null) {
-            pages.add('\uFFFC$i');
-          }
-        }
-        return pages;
       },
     );
   }
 
-  Widget _buildPage(_NativeChapter chapter, String page) {
-    if (page.startsWith('\uFFFC')) {
-      final blockIndex = int.tryParse(page.substring(1));
-      final bytes =
-          blockIndex == null ? null : chapter.blocks[blockIndex].imageBytes;
-      if (bytes != null) {
-        return Center(child: Image.memory(bytes, fit: BoxFit.contain));
-      }
-    }
-    return Text(page, style: _textStyle);
+  Widget _buildPage(_NativeChapter chapter, _ReaderPageData page) {
+    final imageIndex = page.imageBlockIndex;
+    if (imageIndex == null) return Text(page.text, style: _readerTextStyle);
+    final bytes = chapter.blocks[imageIndex].imageBytes;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (bytes != null)
+          Expanded(
+            flex: 5,
+            child: Image.memory(
+              bytes,
+              fit: BoxFit.contain,
+              gaplessPlayback: true,
+              filterQuality: FilterQuality.medium,
+            ),
+          ),
+        if (bytes != null && page.text.isNotEmpty) const SizedBox(height: 10),
+        if (page.text.isNotEmpty)
+          Expanded(
+            flex: 6,
+            child: Text(page.text, style: _readerTextStyle),
+          ),
+      ],
+    );
   }
 
   List<_BookPageRef> _bookPagesFor(
@@ -380,14 +515,17 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
   Widget _buildReaderContent(
     List<_NativeChapter> chapters,
     _NativeChapter chapter,
-    List<String> pages,
+    List<_ReaderPageData> pages,
     List<_BookPageRef> bookPages,
   ) {
     if (_pageMode == NativePageMode.verticalScroll) {
       return SelectionArea(
         child: SingleChildScrollView(
           key: ValueKey(_chapterIndex),
-          padding: const EdgeInsets.fromLTRB(22, 42, 22, 56),
+          padding: EdgeInsets.symmetric(
+            horizontal: _horizontalMargin,
+            vertical: _verticalMargin,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: chapter.blocks.map((block) {
@@ -400,6 +538,8 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
                     child: Image.memory(
                       imageBytes,
                       fit: BoxFit.contain,
+                      gaplessPlayback: true,
+                      filterQuality: FilterQuality.medium,
                       errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                     ),
                   ),
@@ -407,7 +547,7 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
               }
               return Padding(
                 padding: const EdgeInsets.only(bottom: 10),
-                child: Text(block.text ?? '', style: _textStyle),
+                child: Text(block.text ?? '', style: _readerTextStyle),
               );
             }).toList(growable: false),
           ),
@@ -422,7 +562,10 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
         itemBuilder: (context, index) {
           final page = bookPages[index];
           return Padding(
-            padding: const EdgeInsets.fromLTRB(22, 42, 22, 46),
+            padding: EdgeInsets.symmetric(
+              horizontal: _horizontalMargin,
+              vertical: _verticalMargin,
+            ),
             child: SizedBox.expand(
               child: _buildPage(
                 chapters[page.chapterIndex],
@@ -434,7 +577,10 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
       );
     }
     return Padding(
-      padding: const EdgeInsets.fromLTRB(22, 42, 22, 46),
+      padding: EdgeInsets.symmetric(
+        horizontal: _horizontalMargin,
+        vertical: _verticalMargin,
+      ),
       child: SizedBox.expand(
         child: KeyedSubtree(
           key: ValueKey('$_chapterIndex:$_pageIndex'),
@@ -573,6 +719,11 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
                                 ),
                               ),
                               IconButton(
+                                onPressed: () => _showTableOfContents(chapters),
+                                tooltip: '目录',
+                                icon: const Icon(Icons.format_list_bulleted),
+                              ),
+                              IconButton(
                                 onPressed: _showReadingSettings,
                                 tooltip: '阅读设置',
                                 icon: const Icon(Icons.tune),
@@ -626,6 +777,7 @@ List<String> _paginateText(
   required double maxHeight,
   required TextDirection direction,
   required TextScaler textScaler,
+  TextStyle style = _NativeReaderPageState._textStyle,
 }) {
   if (text.isEmpty || maxWidth <= 0 || maxHeight <= 0) return <String>[''];
   final pages = <String>[];
@@ -646,7 +798,7 @@ List<String> _paginateText(
       final painter = TextPainter(
         text: TextSpan(
           text: text.substring(start, end),
-          style: _NativeReaderPageState._textStyle,
+          style: style,
         ),
         textDirection: direction,
         textScaler: textScaler,
@@ -674,6 +826,81 @@ List<String> _paginateText(
   assert(
       pages.join() == text, 'Native pagination must preserve every character');
   return pages.isEmpty ? <String>[''] : pages;
+}
+
+List<_ReaderPageData> _paginateChapter(
+  _NativeChapter chapter, {
+  required double maxWidth,
+  required double maxHeight,
+  required TextDirection direction,
+  required TextScaler textScaler,
+  required TextStyle style,
+}) {
+  final imageOffsets = <(int, int)>[];
+  var searchFrom = 0;
+  for (var i = 0; i < chapter.blocks.length; i++) {
+    final block = chapter.blocks[i];
+    if (block.imageBase64 != null) {
+      imageOffsets.add((searchFrom, i));
+      continue;
+    }
+    final text = block.text;
+    if (text == null || text.isEmpty) continue;
+    final found = chapter.plainText.indexOf(text, searchFrom);
+    if (found >= 0) searchFrom = found + text.length;
+  }
+
+  final pages = <_ReaderPageData>[];
+  var cursor = 0;
+  for (final image in imageOffsets) {
+    final offset = image.$1.clamp(cursor, chapter.plainText.length);
+    final before = chapter.plainText.substring(cursor, offset);
+    pages.addAll(
+      _paginateText(
+        before,
+        maxWidth: maxWidth,
+        maxHeight: maxHeight,
+        direction: direction,
+        textScaler: textScaler,
+        style: style,
+      ).where((text) => text.isNotEmpty).map(_ReaderPageData.text),
+    );
+
+    final nextImageOffset =
+        imageOffsets.indexOf(image) + 1 < imageOffsets.length
+            ? imageOffsets[imageOffsets.indexOf(image) + 1].$1
+            : chapter.plainText.length;
+    final available = chapter.plainText.substring(offset, nextImageOffset);
+    final inlineChunks = _paginateText(
+      available,
+      maxWidth: maxWidth,
+      maxHeight: maxHeight * 0.48,
+      direction: direction,
+      textScaler: textScaler,
+      style: style,
+    );
+    final inlineText = inlineChunks.isEmpty ? '' : inlineChunks.first;
+    pages.add(
+      _ReaderPageData(text: inlineText, imageBlockIndex: image.$2),
+    );
+    cursor = offset + inlineText.length;
+  }
+
+  if (cursor < chapter.plainText.length || pages.isEmpty) {
+    pages.addAll(
+      _paginateText(
+        chapter.plainText.substring(cursor),
+        maxWidth: maxWidth,
+        maxHeight: maxHeight,
+        direction: direction,
+        textScaler: textScaler,
+        style: style,
+      ).map(_ReaderPageData.text),
+    );
+  }
+  assert(pages.map((page) => page.text).join() == chapter.plainText,
+      'Chapter pagination must preserve every character');
+  return pages;
 }
 
 bool _isLowSurrogate(int codeUnit) => codeUnit >= 0xDC00 && codeUnit <= 0xDFFF;
@@ -717,15 +944,17 @@ List<String> _paginateTextLegacy(
 }
 
 class _NativeChapter {
-  const _NativeChapter({required this.title, required this.blocks});
+  const _NativeChapter({
+    required this.title,
+    required this.plainText,
+    required this.blocks,
+    this.depth = 0,
+  });
 
   final String title;
+  final String plainText;
   final List<_NativeBlock> blocks;
-
-  String get plainText => blocks
-      .where((block) => block.text != null)
-      .map((block) => block.text!)
-      .join('\n\n');
+  final int depth;
 }
 
 class _BookPageRef {
@@ -737,11 +966,22 @@ class _BookPageRef {
 
   final int chapterIndex;
   final int pageIndex;
-  final String content;
+  final _ReaderPageData content;
+}
+
+class _ReaderPageData {
+  const _ReaderPageData({required this.text, this.imageBlockIndex});
+
+  const _ReaderPageData.text(String text)
+      : this(text: text, imageBlockIndex: null);
+
+  final String text;
+  final int? imageBlockIndex;
 }
 
 class _NativeBlock {
-  const _NativeBlock._({this.text, this.imageBase64});
+  _NativeBlock._({this.text, this.imageBase64})
+      : imageBytes = imageBase64 == null ? null : base64Decode(imageBase64);
 
   factory _NativeBlock.text(String text) => _NativeBlock._(text: text);
 
@@ -752,9 +992,7 @@ class _NativeBlock {
 
   final String? text;
   final String? imageBase64;
-
-  Uint8List? get imageBytes =>
-      imageBase64 == null ? null : base64Decode(imageBase64!);
+  final Uint8List? imageBytes;
 }
 
 Future<List<Map<String, dynamic>>> _parseEpubChapters(Uint8List bytes) async {
@@ -772,10 +1010,15 @@ Future<List<Map<String, dynamic>>> _parseEpubChapters(Uint8List bytes) async {
     }
   }
 
-  void append(List<EpubChapter>? chapters) {
+  void append(List<EpubChapter>? chapters, [int depth = 0]) {
     if (chapters == null) return;
     for (final chapter in chapters) {
       final document = html_parser.parse(chapter.HtmlContent ?? '');
+      final plainText = document.body?.text
+              .replaceAll(RegExp(r'[ \t]+'), ' ')
+              .replaceAll(RegExp(r'\n\s*\n+'), '\n\n')
+              .trim() ??
+          '';
       final blocks = <Map<String, String>>[];
       final elements = document.body?.querySelectorAll(
             'h1,h2,h3,h4,h5,h6,p,li,blockquote,pre,img,svg image',
@@ -812,16 +1055,64 @@ Future<List<Map<String, dynamic>>> _parseEpubChapters(Uint8List bytes) async {
           blocks.add(<String, String>{'type': 'text', 'content': fallback});
         }
       }
-      if (blocks.isNotEmpty) {
+      if (plainText.isNotEmpty || blocks.isNotEmpty) {
         result.add(<String, dynamic>{
           'title': chapter.Title ?? '',
+          'depth': depth,
+          'plainText': plainText,
           'blocks': blocks,
         });
       }
-      append(chapter.SubChapters);
+      append(chapter.SubChapters, depth + 1);
     }
   }
 
   append(epub.Chapters);
   return result;
+}
+
+List<_NativeChapter> _parseTxtChapters(String text, String fallbackTitle) {
+  final heading = RegExp(
+    r'^(?:第[0-9零〇一二三四五六七八九十百千万两]+[章节卷部篇回]|chapter\s+\d+|part\s+\d+|序章|序言|前言|引言|楔子|后记|尾声|番外)(?:[\s　:：.-]+.*)?$',
+    caseSensitive: false,
+  );
+  final matches = <(int, String)>[];
+  var offset = 0;
+  for (final line in text.split('\n')) {
+    final title = line.trim();
+    if (title.length <= 80 && heading.hasMatch(title)) {
+      matches.add((offset, title));
+    }
+    offset += line.length + 1;
+  }
+  if (matches.isEmpty) {
+    return <_NativeChapter>[
+      _NativeChapter(
+        title: fallbackTitle,
+        plainText: text,
+        blocks: <_NativeBlock>[_NativeBlock.text(text)],
+      ),
+    ];
+  }
+  final chapters = <_NativeChapter>[];
+  if (matches.first.$1 > 0 &&
+      text.substring(0, matches.first.$1).trim().isNotEmpty) {
+    final preface = text.substring(0, matches.first.$1);
+    chapters.add(_NativeChapter(
+      title: '正文前',
+      plainText: preface,
+      blocks: <_NativeBlock>[_NativeBlock.text(preface)],
+    ));
+  }
+  for (var i = 0; i < matches.length; i++) {
+    final start = matches[i].$1;
+    final end = i + 1 < matches.length ? matches[i + 1].$1 : text.length;
+    final content = text.substring(start, end);
+    chapters.add(_NativeChapter(
+      title: matches[i].$2,
+      plainText: content,
+      blocks: <_NativeBlock>[_NativeBlock.text(content)],
+    ));
+  }
+  return chapters;
 }
