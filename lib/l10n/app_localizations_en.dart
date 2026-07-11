@@ -18,6 +18,124 @@ class AppLocalizationsEn extends AppLocalizations {
   String get library => 'Library';
 
   @override
+  String get bookSources => 'Sources';
+
+  @override
+  String get bookSourcesSubtitle =>
+      'Connect open sources and search readable content across providers';
+
+  @override
+  String get bookSourcesAdd => 'Add source';
+
+  @override
+  String get bookSourcesSearchHint =>
+      'Search enabled sources by title or author';
+
+  @override
+  String get bookSourcesSearch => 'Search';
+
+  @override
+  String get bookSourcesSearching => 'Searching sources…';
+
+  @override
+  String bookSourcesFailedCount(int count) {
+    return '$count source request(s) failed';
+  }
+
+  @override
+  String get bookSourcesSearchPrompt =>
+      'Add and enable a source to search it here';
+
+  @override
+  String get bookSourcesNoResults => 'No matching books found';
+
+  @override
+  String get bookSourcesNoSourcesTitle => 'No sources yet';
+
+  @override
+  String get bookSourcesNoSourcesDescription =>
+      'Paste the address of a service compatible with the Open Reading Source Protocol.';
+
+  @override
+  String get bookSourcesManageTitle => 'Connected sources';
+
+  @override
+  String get bookSourcesEnabled => 'Enabled';
+
+  @override
+  String get bookSourcesDisabled => 'Disabled';
+
+  @override
+  String get bookSourcesRemove => 'Remove';
+
+  @override
+  String get bookSourcesRemoveTitle => 'Remove source';
+
+  @override
+  String get bookSourcesRemoveMessage =>
+      'This only removes the source configuration. Local books are not affected.';
+
+  @override
+  String get bookSourcesCancel => 'Cancel';
+
+  @override
+  String get bookSourcesConfirm => 'Confirm';
+
+  @override
+  String get bookSourcesAddTitle => 'Add open source';
+
+  @override
+  String get bookSourcesUrlLabel => 'Source address';
+
+  @override
+  String get bookSourcesUrlHint =>
+      'https://example.com or a discovery document URL';
+
+  @override
+  String get bookSourcesConnect => 'Connect and validate';
+
+  @override
+  String get bookSourcesConnecting => 'Validating protocol…';
+
+  @override
+  String get bookSourcesAdded => 'Source added';
+
+  @override
+  String get bookSourcesProtocolTitle => 'Open Reading Source Protocol';
+
+  @override
+  String get bookSourcesProtocolDescription =>
+      'A common contract for discovery, search, book details, catalogs, and chapter content. Developers can host native sources or build adapters for content they are authorized to serve.';
+
+  @override
+  String get bookSourcesProtocolDetails => 'View protocol';
+
+  @override
+  String get bookSourcesProtocolRepository => 'Protocol repository';
+
+  @override
+  String get bookSourcesProtocolRepositoryOpen => 'View on GitHub';
+
+  @override
+  String get bookSourcesProtocolRepositoryOpenFailed =>
+      'Could not open the protocol repository';
+
+  @override
+  String get bookSourcesProtocolDialogTitle => 'Open source protocol v1';
+
+  @override
+  String get bookSourcesProtocolDialogBody =>
+      'A source publishes /.well-known/open-reading-source.json and implements /v1/search plus book details, chapter catalogs, and chapter content endpoints. Version 1 supports public HTTP(S) sources that do not require sign-in.';
+
+  @override
+  String get bookSourcesClose => 'Close';
+
+  @override
+  String bookSourcesIdentity(String sourceId, String bookId) {
+    return 'Source ID: $sourceId\nBook ID: $bookId';
+  }
+
+  @override
   String get settings => 'Settings';
 
   @override
@@ -1285,7 +1403,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsAppName => 'Open Reading';
 
   @override
-  String get settingsAuthor => 'Maintainer: miloquinn';
+  String get settingsAuthor => 'Maintainer: 小元Niki';
 
   @override
   String get settingsGithubRepo => 'GitHub repository';

@@ -63,6 +63,9 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
   Widget _buildNavigationRail() {
     final scheme = Theme.of(context).colorScheme;
     final palette = PageStyleHelper.palette(context);
+    final currentPage = _navigationItems[_selectedIndex].page;
+    final showImportAction =
+        currentPage is HomeDashboardPage || currentPage is LibraryPage;
     final railPanel = Container(
       width: LayoutHelper.getValue(
         context,
@@ -165,7 +168,7 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
           ],
         ),
       ),
-      floatingActionButton: _selectedIndex < 2
+      floatingActionButton: showImportAction
           ? (_isMaterial3Style
               ? FloatingActionButton.extended(
                   onPressed: () => _navigateToImport(),
@@ -271,7 +274,7 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
             pageSnapping: true,
             children: _mobilePages,
           ),
-          RepaintBoundary(child: _buildMobileTopBarOverlay(mediaQuery)),
+          _buildMobileTopBarOverlay(mediaQuery),
           // 悬浮药丸导航栏（RepaintBoundary 隔离：避免 PageView 滑动时
           // 连带重绘毛玻璃导航栏，降低切页动画的每帧绘制成本）
           Positioned(
@@ -393,6 +396,8 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
         icon: Icons.add_rounded,
         onTap: _navigateToImport,
       );
+    } else if (currentPage is BookSourcesPage) {
+      trailing = null;
     } else if (currentPage is SettingsPage) {
       trailing = null;
     } else {
@@ -404,9 +409,11 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
       top: 0,
       left: 0,
       right: 0,
-      child: HomeMobileTopBarWidget(
-        title: title,
-        trailing: trailing,
+      child: RepaintBoundary(
+        child: HomeMobileTopBarWidget(
+          title: title,
+          trailing: trailing,
+        ),
       ),
     );
   }

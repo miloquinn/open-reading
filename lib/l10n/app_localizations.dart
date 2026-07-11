@@ -116,6 +116,216 @@ abstract class AppLocalizations {
   /// **'Library'**
   String get library;
 
+  /// Book sources tab label
+  ///
+  /// In en, this message translates to:
+  /// **'Sources'**
+  String get bookSources;
+
+  /// No description provided for @bookSourcesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect open sources and search readable content across providers'**
+  String get bookSourcesSubtitle;
+
+  /// No description provided for @bookSourcesAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add source'**
+  String get bookSourcesAdd;
+
+  /// No description provided for @bookSourcesSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search enabled sources by title or author'**
+  String get bookSourcesSearchHint;
+
+  /// No description provided for @bookSourcesSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get bookSourcesSearch;
+
+  /// No description provided for @bookSourcesSearching.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching sources…'**
+  String get bookSourcesSearching;
+
+  /// No description provided for @bookSourcesFailedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} source request(s) failed'**
+  String bookSourcesFailedCount(int count);
+
+  /// No description provided for @bookSourcesSearchPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Add and enable a source to search it here'**
+  String get bookSourcesSearchPrompt;
+
+  /// No description provided for @bookSourcesNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching books found'**
+  String get bookSourcesNoResults;
+
+  /// No description provided for @bookSourcesNoSourcesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No sources yet'**
+  String get bookSourcesNoSourcesTitle;
+
+  /// No description provided for @bookSourcesNoSourcesDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste the address of a service compatible with the Open Reading Source Protocol.'**
+  String get bookSourcesNoSourcesDescription;
+
+  /// No description provided for @bookSourcesManageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected sources'**
+  String get bookSourcesManageTitle;
+
+  /// No description provided for @bookSourcesEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Enabled'**
+  String get bookSourcesEnabled;
+
+  /// No description provided for @bookSourcesDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled'**
+  String get bookSourcesDisabled;
+
+  /// No description provided for @bookSourcesRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get bookSourcesRemove;
+
+  /// No description provided for @bookSourcesRemoveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove source'**
+  String get bookSourcesRemoveTitle;
+
+  /// No description provided for @bookSourcesRemoveMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This only removes the source configuration. Local books are not affected.'**
+  String get bookSourcesRemoveMessage;
+
+  /// No description provided for @bookSourcesCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get bookSourcesCancel;
+
+  /// No description provided for @bookSourcesConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get bookSourcesConfirm;
+
+  /// No description provided for @bookSourcesAddTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add open source'**
+  String get bookSourcesAddTitle;
+
+  /// No description provided for @bookSourcesUrlLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Source address'**
+  String get bookSourcesUrlLabel;
+
+  /// No description provided for @bookSourcesUrlHint.
+  ///
+  /// In en, this message translates to:
+  /// **'https://example.com or a discovery document URL'**
+  String get bookSourcesUrlHint;
+
+  /// No description provided for @bookSourcesConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect and validate'**
+  String get bookSourcesConnect;
+
+  /// No description provided for @bookSourcesConnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Validating protocol…'**
+  String get bookSourcesConnecting;
+
+  /// No description provided for @bookSourcesAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Source added'**
+  String get bookSourcesAdded;
+
+  /// No description provided for @bookSourcesProtocolTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Reading Source Protocol'**
+  String get bookSourcesProtocolTitle;
+
+  /// No description provided for @bookSourcesProtocolDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'A common contract for discovery, search, book details, catalogs, and chapter content. Developers can host native sources or build adapters for content they are authorized to serve.'**
+  String get bookSourcesProtocolDescription;
+
+  /// No description provided for @bookSourcesProtocolDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'View protocol'**
+  String get bookSourcesProtocolDetails;
+
+  /// No description provided for @bookSourcesProtocolRepository.
+  ///
+  /// In en, this message translates to:
+  /// **'Protocol repository'**
+  String get bookSourcesProtocolRepository;
+
+  /// No description provided for @bookSourcesProtocolRepositoryOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'View on GitHub'**
+  String get bookSourcesProtocolRepositoryOpen;
+
+  /// No description provided for @bookSourcesProtocolRepositoryOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the protocol repository'**
+  String get bookSourcesProtocolRepositoryOpenFailed;
+
+  /// No description provided for @bookSourcesProtocolDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Open source protocol v1'**
+  String get bookSourcesProtocolDialogTitle;
+
+  /// No description provided for @bookSourcesProtocolDialogBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A source publishes /.well-known/open-reading-source.json and implements /v1/search plus book details, chapter catalogs, and chapter content endpoints. Version 1 supports public HTTP(S) sources that do not require sign-in.'**
+  String get bookSourcesProtocolDialogBody;
+
+  /// No description provided for @bookSourcesClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get bookSourcesClose;
+
+  /// No description provided for @bookSourcesIdentity.
+  ///
+  /// In en, this message translates to:
+  /// **'Source ID: {sourceId}\nBook ID: {bookId}'**
+  String bookSourcesIdentity(String sourceId, String bookId);
+
   /// Settings tab label
   ///
   /// In en, this message translates to:
@@ -2376,7 +2586,7 @@ abstract class AppLocalizations {
   /// Author line in the about card
   ///
   /// In en, this message translates to:
-  /// **'Maintainer: miloquinn'**
+  /// **'Maintainer: 小元Niki'**
   String get settingsAuthor;
 
   /// Link label to the GitHub repository

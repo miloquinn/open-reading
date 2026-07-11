@@ -18,6 +18,118 @@ class AppLocalizationsZh extends AppLocalizations {
   String get library => '书库';
 
   @override
+  String get bookSources => '书源';
+
+  @override
+  String get bookSourcesSubtitle => '连接开放书源，跨来源搜索可阅读内容';
+
+  @override
+  String get bookSourcesAdd => '添加书源';
+
+  @override
+  String get bookSourcesSearchHint => '输入书名或作者，搜索已启用书源';
+
+  @override
+  String get bookSourcesSearch => '搜索';
+
+  @override
+  String get bookSourcesSearching => '正在搜索书源…';
+
+  @override
+  String bookSourcesFailedCount(int count) {
+    return '$count 个书源请求失败';
+  }
+
+  @override
+  String get bookSourcesSearchPrompt => '添加并启用书源后，即可在这里统一搜索';
+
+  @override
+  String get bookSourcesNoResults => '没有找到匹配的书籍';
+
+  @override
+  String get bookSourcesNoSourcesTitle => '还没有书源';
+
+  @override
+  String get bookSourcesNoSourcesDescription =>
+      '粘贴兼容 Open Reading Source Protocol 的服务地址即可接入。';
+
+  @override
+  String get bookSourcesManageTitle => '已接入书源';
+
+  @override
+  String get bookSourcesEnabled => '已启用';
+
+  @override
+  String get bookSourcesDisabled => '已停用';
+
+  @override
+  String get bookSourcesRemove => '移除';
+
+  @override
+  String get bookSourcesRemoveTitle => '移除书源';
+
+  @override
+  String get bookSourcesRemoveMessage => '此操作只移除书源配置，不会删除本地书籍。';
+
+  @override
+  String get bookSourcesCancel => '取消';
+
+  @override
+  String get bookSourcesConfirm => '确认';
+
+  @override
+  String get bookSourcesAddTitle => '添加开放书源';
+
+  @override
+  String get bookSourcesUrlLabel => '书源地址';
+
+  @override
+  String get bookSourcesUrlHint => 'https://example.com 或发现文档 URL';
+
+  @override
+  String get bookSourcesConnect => '连接并校验';
+
+  @override
+  String get bookSourcesConnecting => '正在校验协议…';
+
+  @override
+  String get bookSourcesAdded => '书源已添加';
+
+  @override
+  String get bookSourcesProtocolTitle => 'Open Reading Source Protocol';
+
+  @override
+  String get bookSourcesProtocolDescription =>
+      '统一发现、搜索、书籍详情、目录与章节正文接口。开发者可搭建原生书源，也可为已有合法内容服务编写适配网关。';
+
+  @override
+  String get bookSourcesProtocolDetails => '查看协议';
+
+  @override
+  String get bookSourcesProtocolRepository => '协议开源仓库';
+
+  @override
+  String get bookSourcesProtocolRepositoryOpen => '在 GitHub 查看';
+
+  @override
+  String get bookSourcesProtocolRepositoryOpenFailed => '无法打开书源协议仓库';
+
+  @override
+  String get bookSourcesProtocolDialogTitle => '开放书源协议 v1';
+
+  @override
+  String get bookSourcesProtocolDialogBody =>
+      '服务在 /.well-known/open-reading-source.json 发布发现文档，并实现 /v1/search、书籍详情、章节目录与章节正文接口。首版仅支持公开、无需登录的 HTTP(S) 书源。';
+
+  @override
+  String get bookSourcesClose => '关闭';
+
+  @override
+  String bookSourcesIdentity(String sourceId, String bookId) {
+    return '书源 ID：$sourceId\n书籍 ID：$bookId';
+  }
+
+  @override
   String get settings => '设置';
 
   @override
@@ -1253,7 +1365,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsAppName => '开元阅读';
 
   @override
-  String get settingsAuthor => '维护者：miloquinn';
+  String get settingsAuthor => '维护者：小元Niki';
 
   @override
   String get settingsGithubRepo => 'GitHub 仓库';

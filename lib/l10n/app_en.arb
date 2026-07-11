@@ -12,6 +12,61 @@
   "@library": {
     "description": "Library tab label"
   },
+  "bookSources": "Sources",
+  "@bookSources": {
+    "description": "Book sources tab label"
+  },
+  "bookSourcesSubtitle": "Connect open sources and search readable content across providers",
+  "bookSourcesAdd": "Add source",
+  "bookSourcesSearchHint": "Search enabled sources by title or author",
+  "bookSourcesSearch": "Search",
+  "bookSourcesSearching": "Searching sources…",
+  "bookSourcesFailedCount": "{count} source request(s) failed",
+  "@bookSourcesFailedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bookSourcesSearchPrompt": "Add and enable a source to search it here",
+  "bookSourcesNoResults": "No matching books found",
+  "bookSourcesNoSourcesTitle": "No sources yet",
+  "bookSourcesNoSourcesDescription": "Paste the address of a service compatible with the Open Reading Source Protocol.",
+  "bookSourcesManageTitle": "Connected sources",
+  "bookSourcesEnabled": "Enabled",
+  "bookSourcesDisabled": "Disabled",
+  "bookSourcesRemove": "Remove",
+  "bookSourcesRemoveTitle": "Remove source",
+  "bookSourcesRemoveMessage": "This only removes the source configuration. Local books are not affected.",
+  "bookSourcesCancel": "Cancel",
+  "bookSourcesConfirm": "Confirm",
+  "bookSourcesAddTitle": "Add open source",
+  "bookSourcesUrlLabel": "Source address",
+  "bookSourcesUrlHint": "https://example.com or a discovery document URL",
+  "bookSourcesConnect": "Connect and validate",
+  "bookSourcesConnecting": "Validating protocol…",
+  "bookSourcesAdded": "Source added",
+  "bookSourcesProtocolTitle": "Open Reading Source Protocol",
+  "bookSourcesProtocolDescription": "A common contract for discovery, search, book details, catalogs, and chapter content. Developers can host native sources or build adapters for content they are authorized to serve.",
+  "bookSourcesProtocolDetails": "View protocol",
+  "bookSourcesProtocolRepository": "Protocol repository",
+  "bookSourcesProtocolRepositoryOpen": "View on GitHub",
+  "bookSourcesProtocolRepositoryOpenFailed": "Could not open the protocol repository",
+  "bookSourcesProtocolDialogTitle": "Open source protocol v1",
+  "bookSourcesProtocolDialogBody": "A source publishes /.well-known/open-reading-source.json and implements /v1/search plus book details, chapter catalogs, and chapter content endpoints. Version 1 supports public HTTP(S) sources that do not require sign-in.",
+  "bookSourcesClose": "Close",
+  "bookSourcesIdentity": "Source ID: {sourceId}\nBook ID: {bookId}",
+  "@bookSourcesIdentity": {
+    "placeholders": {
+      "sourceId": {
+        "type": "String"
+      },
+      "bookId": {
+        "type": "String"
+      }
+    }
+  },
   "settings": "Settings",
   "@settings": {
     "description": "Settings tab label"
@@ -1789,7 +1844,7 @@
   "@settingsAppName": {
     "description": "Display name of the app in the about card"
   },
-  "settingsAuthor": "Maintainer: miloquinn",
+  "settingsAuthor": "Maintainer: 小元Niki",
   "@settingsAuthor": {
     "description": "Author line in the about card"
   },

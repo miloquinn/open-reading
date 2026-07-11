@@ -13,6 +13,7 @@ import 'home_widgets/home_navigation_item.dart';
 import 'home_widgets/home_page_wrappers.dart';
 import 'home_widgets/home_mobile_top_bar_widget.dart';
 import 'library_page.dart';
+import 'book_sources_page.dart';
 import 'settings_page.dart';
 import 'import_book_page.dart';
 import '../utils/layout_helper.dart';
@@ -131,6 +132,12 @@ class _HomeShellPageState extends State<HomeShellPage> {
         selectedIcon: Icons.library_books,
         label: l10n.library,
         page: const LibraryPage(),
+      ),
+      HomeNavigationItem(
+        icon: Icons.hub_outlined,
+        selectedIcon: Icons.hub_rounded,
+        label: l10n.bookSources,
+        page: const BookSourcesPage(),
       ),
       HomeNavigationItem(
         icon: Icons.settings_outlined,
