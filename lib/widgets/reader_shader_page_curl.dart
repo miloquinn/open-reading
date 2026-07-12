@@ -60,6 +60,7 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
   ui.Image? _backwardImage;
 
   Size _viewportSize = Size.zero;
+  Offset? _dragStartPosition;
   Offset _startPosition = Offset.zero;
   Offset _curlPosition = Offset.zero;
   Offset _settleFrom = Offset.zero;
@@ -189,6 +190,7 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
   void _onDragStart(DragStartDetails details) {
     if (_settling || _viewportSize.isEmpty) return;
     final normalized = _normalize(details.localPosition);
+    _dragStartPosition = normalized;
     if (normalized.dx >= 0.70 && widget.forwardPage != null) {
       _beginCurl(normalized, reverse: false);
     } else if (normalized.dx <= 0.30 && widget.backwardPage != null) {
@@ -207,16 +209,35 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
   }
 
   void _onDragUpdate(DragUpdateDetails details) {
-    if (!_curling || _settling) return;
-    setState(() => _curlPosition = _normalize(details.localPosition));
+    if (_settling) return;
+    final position = _normalize(details.localPosition);
+    final dragStart = _dragStartPosition;
+    if (!_curling && dragStart != null) {
+      final horizontalDelta = position.dx - dragStart.dx;
+      if (horizontalDelta <= -0.015 && widget.forwardPage != null) {
+        _beginCurl(dragStart, reverse: false);
+      } else if (horizontalDelta >= 0.015 && widget.backwardPage != null) {
+        _beginCurl(dragStart, reverse: true);
+      }
+    }
+    if (!_curling) return;
+    setState(() => _curlPosition = position);
   }
 
   void _onDragEnd(DragEndDetails details) {
+    _dragStartPosition = null;
     if (!_curling || _settling) return;
     final velocity = details.primaryVelocity ?? 0;
     final velocityCommits = _reverse ? velocity > 650 : velocity < -650;
     final commit = _progress >= 0.28 || velocityCommits;
     unawaited(_settleCurl(commit: commit));
+  }
+
+  void _onDragCancel() {
+    _dragStartPosition = null;
+    if (_curling && !_settling) {
+      unawaited(_settleCurl(commit: false));
+    }
   }
 
   Future<void> _turnForward() async {
@@ -285,6 +306,7 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
           onHorizontalDragStart: _onDragStart,
           onHorizontalDragUpdate: _onDragUpdate,
           onHorizontalDragEnd: _onDragEnd,
+          onHorizontalDragCancel: _onDragCancel,
           child: Stack(
             fit: StackFit.expand,
             children: [

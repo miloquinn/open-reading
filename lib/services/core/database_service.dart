@@ -17,7 +17,7 @@ class DatabaseService {
 
   static Database? _database;
   static const String _dbName = 'xxread_v2.db';
-  static const int _dbVersion = 14;
+  static const int _dbVersion = 15;
   static Future<Database>? _openingDatabase;
 
   Future<Database> get database async {
@@ -301,6 +301,29 @@ class DatabaseService {
       // 添加 CanonicalLocator 双轨定位字段
       await ReadingSchemaMigration.migrate(db);
     }
+    if (oldVersion < 15) {
+      final tableInfo = await db.rawQuery('PRAGMA table_info(books)');
+      final columns =
+          tableInfo.map((column) => column['name'] as String).toSet();
+      if (!columns.contains('storage_type')) {
+        await db.execute(
+          "ALTER TABLE books ADD COLUMN storage_type TEXT NOT NULL DEFAULT 'local'",
+        );
+      }
+      if (!columns.contains('source_id')) {
+        await db.execute('ALTER TABLE books ADD COLUMN source_id TEXT');
+      }
+      if (!columns.contains('source_book_id')) {
+        await db.execute('ALTER TABLE books ADD COLUMN source_book_id TEXT');
+      }
+      if (!columns.contains('source_json')) {
+        await db.execute('ALTER TABLE books ADD COLUMN source_json TEXT');
+      }
+      if (!columns.contains('source_book_json')) {
+        await db.execute('ALTER TABLE books ADD COLUMN source_book_json TEXT');
+      }
+      await _createBooksTableIndexes(db);
+    }
   }
 
   Future<void> _createTables(Database db) async {
@@ -323,7 +346,12 @@ class DatabaseService {
         text_encoding TEXT,
         last_canonical_locator TEXT,
         last_rendered_locator TEXT,
-        layout_signature TEXT
+        layout_signature TEXT,
+        storage_type TEXT NOT NULL DEFAULT 'local',
+        source_id TEXT,
+        source_book_id TEXT,
+        source_json TEXT,
+        source_book_json TEXT
       )
     ''');
 
@@ -404,6 +432,15 @@ class DatabaseService {
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_books_author ON books (author)',
     );
+    final tableInfo = await db.rawQuery('PRAGMA table_info(books)');
+    final columns = tableInfo.map((column) => column['name'] as String).toSet();
+    if (columns.contains('source_id') && columns.contains('source_book_id')) {
+      await db.execute(
+        'CREATE UNIQUE INDEX IF NOT EXISTS idx_books_source_identity '
+        'ON books (source_id, source_book_id) '
+        'WHERE source_id IS NOT NULL AND source_book_id IS NOT NULL',
+      );
+    }
   }
 
   /// 创建reading_stats表索引

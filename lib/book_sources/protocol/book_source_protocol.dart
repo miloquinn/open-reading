@@ -234,7 +234,10 @@ class BookSourceChapterContent {
     return BookSourceChapterContent(
       bookId: _requiredString(json, 'bookId'),
       chapterId: _requiredString(json, 'chapterId'),
-      title: _requiredString(json, 'title'),
+      // Some otherwise compatible sources omit the duplicated chapter title
+      // from the content response. The reader can safely fall back to the
+      // title already returned by the chapter catalog.
+      title: (json['title'] as String?)?.trim() ?? '',
       content: _requiredString(json, 'content'),
       contentType: contentType,
     );

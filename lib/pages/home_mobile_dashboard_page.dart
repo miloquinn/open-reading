@@ -338,7 +338,7 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
 
   List<double> _normalizedWeekDots() {
     if (_weeklyData.isEmpty) {
-      return const [1, 1, 1, 0.6, 0, 0, 0];
+      return const [0, 0, 0, 0, 0, 0, 0];
     }
 
     final values = _weeklyData.take(7).map((item) {
@@ -356,7 +356,7 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
     }
 
     final maxValue = values.reduce((a, b) => a > b ? a : b);
-    if (maxValue <= 0) return const [1, 1, 1, 0.6, 0, 0, 0];
+    if (maxValue <= 0) return const [0, 0, 0, 0, 0, 0, 0];
 
     return values
         .map((v) => (v / maxValue).clamp(0.0, 1.0))
@@ -364,7 +364,7 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
   }
 
   int _weekPercent(List<double> dots) {
-    final active = dots.where((v) => v > 0.3).length;
+    final active = dots.where((v) => v > 0).length;
     return ((active / 7) * 100).round();
   }
 

@@ -1131,6 +1131,12 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get readerHorizontalMarginLabel => '左右余白';
+
+  @override
+  String get readerVerticalMarginLabel => '上下余白';
+
+  @override
   String readerVerticalMarginValue(int margin) {
     return '上下余白  $margin';
   }
@@ -1453,6 +1459,41 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsGithubOpenFailed => 'GitHub のリンクを開けませんでした';
 
   @override
+  String get updateCheckNow => 'アップデートを確認';
+
+  @override
+  String get updateCheckNowSubtitle => 'GitHub Releases から最新バージョンを確認します';
+
+  @override
+  String get updateAvailableTitle => '新しいバージョンがあります';
+
+  @override
+  String updateVersionSummary(String currentVersion, String latestVersion) {
+    return '現在のバージョン：$currentVersion\n最新バージョン：$latestVersion';
+  }
+
+  @override
+  String get updateNotesTitle => '更新内容';
+
+  @override
+  String get updateNotesEmpty => 'このバージョンには更新内容がありません。';
+
+  @override
+  String get updateLater => '後で';
+
+  @override
+  String get updateGoToDownload => 'ダウンロードへ';
+
+  @override
+  String get updateAlreadyLatest => '現在のバージョンが最新です';
+
+  @override
+  String get updateCheckFailed => 'アップデートを確認できませんでした。後でもう一度お試しください';
+
+  @override
+  String get updateOpenFailed => 'GitHub Release のダウンロードページを開けませんでした';
+
+  @override
   String get settingsIosOnlyFeature => 'この機能は iOS のみ対応しています';
 
   @override
@@ -1749,6 +1790,68 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get bookSourceAddToShelf => '本棚に追加';
+
+  @override
+  String get bookSourceAddOnline => 'オンラインで追加';
+
+  @override
+  String get bookSourceAddOnlineHint => '読書中にソースから章を取得してキャッシュします';
+
+  @override
+  String get bookSourceDownloadLocal => '端末にダウンロード';
+
+  @override
+  String get bookSourceDownloadLocalHint => '全章をダウンロードしてローカル TXT として追加します';
+
+  @override
+  String get bookSourceAddedOnline => 'オンライン書籍として本棚に追加しました';
+
+  @override
+  String get bookSourceAlreadyOnShelf => 'この本はすでに本棚にあります';
+
+  @override
+  String get bookSourceDownloading => '端末にダウンロード中';
+
+  @override
+  String get bookSourceFetchingCatalog => '章一覧を取得中…';
+
+  @override
+  String bookSourceDownloadProgress(int completed, int total) {
+    return '$completed/$total 章';
+  }
+
+  @override
+  String get bookSourceDownloadComplete => 'ダウンロードしてローカル本棚に追加しました';
+
+  @override
+  String get bookSourceDownloadConverted => 'ダウンロードが完了し、ローカル書籍になりました';
+
+  @override
+  String bookSourceDownloadFailed(String error) {
+    return 'ダウンロード失敗：$error';
+  }
+
+  @override
+  String get bookSourceExitAddTitle => '本棚に追加しますか？';
+
+  @override
+  String bookSourceExitAddMessage(String title) {
+    return '「$title」をオンライン書籍として本棚に追加しますか？読書位置は保持されます。';
+  }
+
+  @override
+  String get bookSourceNotNow => '今はしない';
+
+  @override
+  String get bookSourceOnlineBadge => 'オンライン';
+
+  @override
+  String bookSourceOnlineDataBroken(String error) {
+    return 'オンライン書籍情報が壊れています：$error';
+  }
+
+  @override
   String get readerThemeTitle => '読書テーマ';
 
   @override
@@ -1758,7 +1861,22 @@ class AppLocalizationsJa extends AppLocalizations {
   String get readerThemeDay => '昼';
 
   @override
+  String get readerThemeMist => 'ミスト';
+
+  @override
+  String get readerThemeGreen => 'アイケア';
+
+  @override
+  String get readerThemeRose => 'ローズ';
+
+  @override
+  String get readerThemeNavy => 'ディープブルー';
+
+  @override
   String get readerThemeNight => '夜';
+
+  @override
+  String get readerThemePureBlack => 'ピュアブラック';
 
   @override
   String get readerThemeParchment => '羊皮紙';

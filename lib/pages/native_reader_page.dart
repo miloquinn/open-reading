@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:ui';
 
 import 'package:archive/archive.dart';
 import 'package:crypto/crypto.dart';
@@ -17,16 +16,19 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:xxread/core/reader/canonical_locator.dart';
 import 'package:xxread/core/reader/native_text_paginator.dart';
+import 'package:xxread/core/reader/reader_layout.dart';
 import 'package:xxread/models/book.dart';
 import 'package:xxread/services/books/book_dao.dart';
 import 'package:xxread/services/books/enhanced_txt_import_service.dart';
+import 'package:xxread/services/reading/reading_stats_dao.dart';
 
 import '../utils/localization_extension.dart';
-import '../utils/glass_config.dart';
 import '../utils/reader_themes.dart';
 import '../widgets/reader_shader_page_curl.dart';
+import '../widgets/reader_control_chrome.dart';
+import '../widgets/reader_settings_controls.dart';
 
-enum NativePageMode { verticalScroll, instantPage, horizontalSlide, pageCurl }
+typedef NativePageMode = ReaderPageMode;
 
 const int _largeTxtFileThreshold = 16 * 1024 * 1024;
 const double _imagePageGap = 10;
@@ -42,17 +44,19 @@ class NativeReaderPage extends StatefulWidget {
   State<NativeReaderPage> createState() => _NativeReaderPageState();
 }
 
-class _NativeReaderPageState extends State<NativeReaderPage> {
+class _NativeReaderPageState extends State<NativeReaderPage>
+    with WidgetsBindingObserver {
   static final Map<String, Future<List<_NativeChapter>>> _bookMemoryCache = {};
   static final Map<String, Map<String, List<_ReaderPageData>>>
       _paginationMemoryCache = {};
   static const _pageModeKey = 'native_reader_page_mode';
   static const _scrollByChapterKey = 'native_reader_scroll_by_chapter';
   static const _fontSizeKey = 'native_reader_font_size';
+  static const _lineHeightKey = 'native_reader_line_height';
   static const _horizontalMarginKey = 'native_reader_horizontal_margin';
   static const _verticalMarginKey = 'native_reader_vertical_margin';
   static const _readerThemeKey = 'native_reader_theme';
-  static const _pageNumberReserve = 16.0;
+  static const _pageNumberReserve = 12.0;
   static const _tabletShortestSide = 600.0;
   static const _twoPageMinimumWidth = 720.0;
   static const _spreadGutter = 24.0;
@@ -66,6 +70,7 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
   final PageController _pageController = PageController();
   final ReaderPageCurlController _pageCurlController =
       ReaderPageCurlController();
+  final ValueNotifier<double> _verticalScrollProgress = ValueNotifier(0);
   final Map<int, GlobalKey> _continuousChapterKeys = {};
   late final Map<String, List<_ReaderPageData>> _pageCache;
   bool _readerDependenciesInitialized = false;
@@ -84,6 +89,7 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
   Key _continuousCenterKey = GlobalKey();
   bool _continuousVisibilityUpdateScheduled = false;
   double _fontSize = 19;
+  double _lineHeight = 1.75;
   double _horizontalMargin = 18;
   double _verticalMargin = 28;
   String _readerThemeId = ReaderThemes.day.id;
@@ -92,10 +98,16 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
   bool _pointerMoved = false;
   bool _readerSettingsLoaded = false;
   bool _readerSystemUiApplied = false;
+  final ReadingStatsDao _readingStatsDao = ReadingStatsDao();
+  DateTime? _readingSessionStartedAt;
+  int _sessionPagesRead = 0;
+  bool _allowPop = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _startReadingSession();
     _chapterIndex = widget.book.currentPage;
     _continuousAnchorChapter = _chapterIndex;
     _horizontalFirstChapter = (_chapterIndex - 1).clamp(0, _chapterIndex);
@@ -112,6 +124,51 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
       if (!mounted) return;
       setState(() => _readerSystemUiApplied = true);
     });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _startReadingSession();
+      return;
+    }
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      unawaited(_flushReadingSession());
+    }
+  }
+
+  void _startReadingSession() {
+    _readingSessionStartedAt ??= DateTime.now();
+  }
+
+  Future<void> _flushReadingSession() async {
+    final startedAt = _readingSessionStartedAt;
+    if (startedAt == null) return;
+
+    final endedAt = DateTime.now();
+    final pagesRead = _sessionPagesRead;
+    _readingSessionStartedAt = null;
+    _sessionPagesRead = 0;
+
+    try {
+      await _readingStatsDao.recordReadingSession(
+        startTime: startedAt,
+        endTime: endedAt,
+        bookId: widget.book.id,
+        pagesRead: pagesRead,
+      );
+    } catch (error) {
+      debugPrint('record native reading session failed: $error');
+    }
+  }
+
+  Future<void> _exitReader() async {
+    await _flushReadingSession();
+    if (!mounted) return;
+    setState(() => _allowPop = true);
+    Navigator.of(context).pop();
   }
 
   @override
@@ -166,7 +223,10 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    unawaited(_flushReadingSession());
     _pageController.dispose();
+    _verticalScrollProgress.dispose();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
   }
@@ -178,15 +238,15 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
       if (!mounted) return;
       setState(() {
         if (name != null) {
-          _pageMode = NativePageMode.values.firstWhere(
-            (mode) => mode.name == name,
-            orElse: () => name == 'horizontalPage'
-                ? NativePageMode.instantPage
-                : NativePageMode.horizontalSlide,
+          _pageMode = readerPageModeFromName(
+            name,
+            fallback: NativePageMode.horizontalSlide,
           );
         }
         _fontSize = prefs.getDouble(_fontSizeKey) ?? 19;
-        _horizontalMargin = prefs.getDouble(_horizontalMarginKey) ?? 18;
+        _lineHeight = (prefs.getDouble(_lineHeightKey) ?? 1.75).clamp(1.4, 2.1);
+        _horizontalMargin =
+            (prefs.getDouble(_horizontalMarginKey) ?? 18).clamp(8, 48);
         _verticalMargin =
             (prefs.getDouble(_verticalMarginKey) ?? 28).clamp(28, 48);
         _scrollByChapter = prefs.getBool(_scrollByChapterKey) ?? true;
@@ -212,6 +272,7 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
       (_readerThemeData.textTheme.bodyMedium ?? const TextStyle()).merge(
         _textStyle.copyWith(
           fontSize: _fontSize,
+          height: _lineHeight,
           color: _readerTheme.text,
         ),
       );
@@ -285,23 +346,27 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
 
   Future<void> _updateLayout({
     double? fontSize,
+    double? lineHeight,
     double? horizontalMargin,
     double? verticalMargin,
   }) async {
     setState(() {
       _fontSize = fontSize ?? _fontSize;
-      _horizontalMargin = horizontalMargin ?? _horizontalMargin;
+      _lineHeight = (lineHeight ?? _lineHeight).clamp(1.4, 2.1);
+      _horizontalMargin = (horizontalMargin ?? _horizontalMargin).clamp(8, 48);
       _verticalMargin = (verticalMargin ?? _verticalMargin).clamp(28, 48);
       _pageIndex = 0;
       _restoreAnchorAfterLayout = true;
     });
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble(_fontSizeKey, _fontSize);
+    await prefs.setDouble(_lineHeightKey, _lineHeight);
     await prefs.setDouble(_horizontalMarginKey, _horizontalMargin);
     await prefs.setDouble(_verticalMarginKey, _verticalMargin);
   }
 
   String get _layoutSignature => '${_fontSize.toStringAsFixed(1)}:'
+      '${_lineHeight.toStringAsFixed(2)}:'
       '${_horizontalMargin.toStringAsFixed(1)}:'
       '${_verticalMargin.toStringAsFixed(1)}:${_pageMode.name}';
 
@@ -507,6 +572,7 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
         _continuousCenterKey = GlobalKey();
       }
     });
+    _verticalScrollProgress.value = 0;
     final bookId = widget.book.id;
     if (bookId != null) {
       await BookDao().updateBookProgress(bookId, next);
@@ -532,8 +598,10 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
     }
     final pageStep = usesTwoPageLayout ? 2 : 1;
     if (_pageIndex + pageStep < pages.length) {
+      _sessionPagesRead++;
       setState(() => _pageIndex += pageStep);
     } else if (_chapterIndex < chapterCount - 1) {
+      _sessionPagesRead++;
       _setChapter(_chapterIndex + 1, chapterCount);
     }
   }
@@ -673,8 +741,18 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
 
   String _readerThemeName(BuildContext context, String themeId) {
     switch (themeId) {
+      case 'mist':
+        return context.l10n.readerThemeMist;
+      case 'green':
+        return context.l10n.readerThemeGreen;
+      case 'rose':
+        return context.l10n.readerThemeRose;
+      case 'navy':
+        return context.l10n.readerThemeNavy;
       case 'night':
         return context.l10n.readerThemeNight;
+      case 'pureBlack':
+        return context.l10n.readerThemePureBlack;
       case 'parchment':
         return context.l10n.readerThemeParchment;
       default:
@@ -682,102 +760,9 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
     }
   }
 
-  Widget _buildReaderThemeOption({
-    required BuildContext context,
-    required ReaderThemePalette palette,
-    required bool selected,
-    required VoidCallback onTap,
-  }) {
-    final label = _readerThemeName(context, palette.id);
-    return Expanded(
-      child: Semantics(
-        button: true,
-        selected: selected,
-        label: label,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            padding: const EdgeInsets.all(9),
-            decoration: BoxDecoration(
-              color: palette.background,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: selected ? palette.accent : palette.border,
-                width: selected ? 2 : 1,
-              ),
-              boxShadow: selected
-                  ? [
-                      BoxShadow(
-                        color: palette.shadow.withValues(alpha: 0.16),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ]
-                  : null,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 22,
-                      height: 22,
-                      decoration: BoxDecoration(
-                        color: palette.controlBar,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: palette.border),
-                      ),
-                      child: selected
-                          ? Icon(Icons.check, size: 15, color: palette.text)
-                          : null,
-                    ),
-                    const Spacer(),
-                    Icon(
-                      palette.id == 'night'
-                          ? Icons.dark_mode_outlined
-                          : palette.id == 'parchment'
-                              ? Icons.auto_stories_outlined
-                              : Icons.light_mode_outlined,
-                      size: 18,
-                      color: palette.text,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 13),
-                Text(
-                  'Aa',
-                  style: TextStyle(
-                    color: palette.text,
-                    fontSize: 19,
-                    fontWeight: FontWeight.w700,
-                    height: 1,
-                  ),
-                ),
-                const SizedBox(height: 7),
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: palette.text,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   Future<void> _showReadingSettings() async {
     var previewFontSize = _fontSize;
+    var previewLineHeight = _lineHeight;
     var previewHorizontalMargin = _horizontalMargin;
     var previewVerticalMargin = _verticalMargin;
     var previewThemeId = _readerThemeId;
@@ -786,128 +771,94 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (sheetContext) => StatefulBuilder(
-        builder: (context, setSheetState) => Theme(
-          data: ReaderThemes.byId(previewThemeId).toThemeData(
-            typography: Theme.of(context).textTheme,
-          ),
-          child: Material(
-            color: ReaderThemes.byId(previewThemeId).surface,
-            surfaceTintColor: Colors.transparent,
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(28),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: SafeArea(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 36,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: ReaderThemes.byId(previewThemeId)
-                              .secondaryText
-                              .withValues(alpha: 0.55),
-                          borderRadius: BorderRadius.circular(99),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    Text(context.l10n.readingSettings,
-                        style: _readerThemeData.textTheme.titleLarge),
-                    const SizedBox(height: 12),
-                    Text(
-                      context.l10n.readerThemeTitle,
-                      style: _readerThemeData.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      context.l10n.readerThemeDescription,
-                      style: _readerThemeData.textTheme.bodySmall,
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        for (var index = 0;
-                            index < ReaderThemes.all.length;
-                            index++) ...[
-                          if (index > 0) const SizedBox(width: 8),
-                          _buildReaderThemeOption(
-                            context: context,
-                            palette: ReaderThemes.all[index],
-                            selected:
-                                ReaderThemes.all[index].id == previewThemeId,
-                            onTap: () {
-                              final nextId = ReaderThemes.all[index].id;
-                              setSheetState(() => previewThemeId = nextId);
-                              _setReaderTheme(nextId);
-                            },
-                          ),
-                        ],
-                      ],
-                    ),
-                    const Divider(height: 28),
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.swap_calls),
-                      title: Text(context.l10n.pageTurningMode),
-                      subtitle: Text(_pageModeSummary(context)),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: _showPageModeSettings,
-                    ),
-                    const Divider(height: 28),
-                    Text(
-                        context.l10n
-                            .readerFontSizeValue(previewFontSize.round()),
-                        style: _readerThemeData.textTheme.titleMedium),
-                    Slider(
-                      value: previewFontSize,
-                      min: 14,
-                      max: 32,
-                      divisions: 18,
-                      onChanged: (value) =>
-                          setSheetState(() => previewFontSize = value),
-                      onChangeEnd: (value) => _updateLayout(fontSize: value),
-                    ),
-                    Text(
-                        context.l10n.readerHorizontalMarginValue(
-                            previewHorizontalMargin.round()),
-                        style: _readerThemeData.textTheme.titleMedium),
-                    Slider(
-                      value: previewHorizontalMargin,
-                      min: 8,
-                      max: 48,
-                      divisions: 40,
-                      onChanged: (value) =>
-                          setSheetState(() => previewHorizontalMargin = value),
-                      onChangeEnd: (value) =>
-                          _updateLayout(horizontalMargin: value),
-                    ),
-                    Text(
-                        context.l10n.readerVerticalMarginValue(
-                            previewVerticalMargin.round()),
-                        style: _readerThemeData.textTheme.titleMedium),
-                    Slider(
-                      value: previewVerticalMargin,
-                      min: 28,
-                      max: 48,
-                      divisions: 20,
-                      onChanged: (value) =>
-                          setSheetState(() => previewVerticalMargin = value),
-                      onChangeEnd: (value) =>
-                          _updateLayout(verticalMargin: value),
-                    ),
-                  ],
+        builder: (context, setSheetState) => ReaderSettingsSheetFrame(
+          palette: ReaderThemes.byId(previewThemeId),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ReaderSettingsDragHandle(
+                palette: ReaderThemes.byId(previewThemeId),
+              ),
+              const SizedBox(height: 14),
+              Text(context.l10n.readingSettings,
+                  style: _readerThemeData.textTheme.titleLarge),
+              const SizedBox(height: 12),
+              Text(
+                context.l10n.readerThemeTitle,
+                style: _readerThemeData.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-            ),
+              const SizedBox(height: 4),
+              Text(
+                context.l10n.readerThemeDescription,
+                style: _readerThemeData.textTheme.bodySmall,
+              ),
+              const SizedBox(height: 12),
+              ReaderThemeStrip(
+                selectedThemeId: previewThemeId,
+                labelFor: (id) => _readerThemeName(context, id),
+                onSelected: (nextId) {
+                  setSheetState(() => previewThemeId = nextId);
+                  unawaited(_setReaderTheme(nextId));
+                },
+              ),
+              const Divider(height: 28),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.swap_calls),
+                title: Text(context.l10n.pageTurningMode),
+                subtitle: Text(_pageModeSummary(context)),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: _showPageModeSettings,
+              ),
+              const Divider(height: 28),
+              ReaderSettingSlider(
+                label: context.l10n.fontSizeLabel,
+                value: previewFontSize,
+                valueLabel: previewFontSize.round().toString(),
+                min: 14,
+                max: 32,
+                divisions: 18,
+                onChanged: (value) =>
+                    setSheetState(() => previewFontSize = value),
+                onChangeEnd: (value) => _updateLayout(fontSize: value),
+              ),
+              ReaderSettingSlider(
+                label: context.l10n.lineSpacingLabel,
+                value: previewLineHeight,
+                valueLabel: previewLineHeight.toStringAsFixed(1),
+                min: 1.4,
+                max: 2.1,
+                divisions: 7,
+                onChanged: (value) =>
+                    setSheetState(() => previewLineHeight = value),
+                onChangeEnd: (value) => _updateLayout(lineHeight: value),
+              ),
+              ReaderSettingSlider(
+                label: context.l10n.readerHorizontalMarginLabel,
+                value: previewHorizontalMargin,
+                valueLabel: previewHorizontalMargin.round().toString(),
+                min: 8,
+                max: 48,
+                divisions: 40,
+                onChanged: (value) =>
+                    setSheetState(() => previewHorizontalMargin = value),
+                onChangeEnd: (value) => _updateLayout(horizontalMargin: value),
+              ),
+              ReaderSettingSlider(
+                label: context.l10n.readerVerticalMarginLabel,
+                value: previewVerticalMargin,
+                valueLabel: previewVerticalMargin.round().toString(),
+                min: 28,
+                max: 48,
+                divisions: 20,
+                onChanged: (value) =>
+                    setSheetState(() => previewVerticalMargin = value),
+                onChangeEnd: (value) => _updateLayout(verticalMargin: value),
+              ),
+            ],
           ),
         ),
       ),
@@ -1088,14 +1039,18 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
     TextDirection direction,
     TextScaler textScaler,
   ) {
-    final scaleKey = textScaler.scale(100).round();
-    final localeKey = Localizations.maybeLocaleOf(context)?.toLanguageTag();
-    final key = 'line-v1:${_pageMode.name}:$chapterIndex:'
-        '${size.width.round()}:${size.height.round()}:'
-        '$scaleKey:$localeKey:${_fontSize.toStringAsFixed(1)}:'
-        '${_horizontalMargin.toStringAsFixed(1)}:'
-        '${_verticalMargin.toStringAsFixed(1)}:'
-        '${_effectiveBottomMargin.toStringAsFixed(1)}';
+    final key = ReaderLayoutFingerprint(
+      contentKey: '$chapterIndex',
+      viewport: size,
+      fontSize: _fontSize,
+      lineHeight: _lineHeight,
+      horizontalMargin: _horizontalMargin,
+      verticalMargin: _verticalMargin,
+      textScaler: textScaler,
+      locale: Localizations.maybeLocaleOf(context),
+      pageMode: _pageMode,
+      extra: _effectiveBottomMargin.toStringAsFixed(2),
+    ).cacheKey('native-line-v2');
     if (!_pageCache.containsKey(key) && _pageCache.length >= 96) {
       _pageCache.remove(_pageCache.keys.first);
     }
@@ -1180,7 +1135,6 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
           _BookPageRef(
             chapterIndex: chapterIndex,
             pageIndex: pageIndex,
-            pageCount: chapterPages.length,
             content: chapterPages[pageIndex],
           ),
         );
@@ -1195,7 +1149,10 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
     List<_NativeChapter> chapters,
   ) {
     final page = bookPages[index];
+    final movedForward = page.chapterIndex > _chapterIndex ||
+        (page.chapterIndex == _chapterIndex && page.pageIndex > _pageIndex);
     final chapterChanged = page.chapterIndex != _chapterIndex;
+    if (movedForward) _sessionPagesRead++;
     setState(() {
       _chapterIndex = page.chapterIndex;
       _pageIndex = page.pageIndex;
@@ -1312,6 +1269,17 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
     );
   }
 
+  bool _handleChapterScrollNotification(ScrollNotification notification) {
+    if (notification is! ScrollUpdateNotification &&
+        notification is! ScrollEndNotification) {
+      return false;
+    }
+    final max = notification.metrics.maxScrollExtent;
+    _verticalScrollProgress.value =
+        max <= 0 ? 0 : (notification.metrics.pixels / max).clamp(0.0, 1.0);
+    return false;
+  }
+
   bool _handleContinuousScrollNotification(
     ScrollNotification notification,
     List<_NativeChapter> chapters,
@@ -1349,7 +1317,15 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
           visibleChapter = entry.key;
         }
       }
-      if (visibleChapter == null || visibleChapter == _chapterIndex) return;
+      if (visibleChapter == null) return;
+      final visibleKey = _continuousChapterKeys[visibleChapter];
+      final visibleBox = visibleKey?.currentContext?.findRenderObject();
+      if (visibleBox is RenderBox && visibleBox.attached) {
+        final top = visibleBox.localToGlobal(Offset.zero).dy;
+        _verticalScrollProgress.value =
+            ((targetY - top) / visibleBox.size.height).clamp(0.0, 1.0);
+      }
+      if (visibleChapter == _chapterIndex) return;
       final nextChapter = visibleChapter;
       setState(() {
         _chapterIndex = nextChapter;
@@ -1416,15 +1392,18 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
         return _buildContinuousBook(chapters);
       }
       return SelectionArea(
-        child: SingleChildScrollView(
-          key: ValueKey(_chapterIndex),
-          padding: EdgeInsets.fromLTRB(
-            _horizontalMargin,
-            _verticalMargin,
-            _horizontalMargin,
-            _effectiveBottomMargin,
+        child: NotificationListener<ScrollNotification>(
+          onNotification: _handleChapterScrollNotification,
+          child: SingleChildScrollView(
+            key: ValueKey(_chapterIndex),
+            padding: EdgeInsets.fromLTRB(
+              _horizontalMargin,
+              _verticalMargin,
+              _horizontalMargin,
+              _effectiveBottomMargin,
+            ),
+            child: _buildScrollableChapterBlocks(chapter),
           ),
-          child: _buildScrollableChapterBlocks(chapter),
         ),
       );
     }
@@ -1477,9 +1456,7 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
       final backward = currentIndex > 0 ? bookPages[currentIndex - 1] : null;
       return ReaderShaderPageCurl(
         key: ValueKey(
-          'shader-curl:$_readerThemeId:${_fontSize.toStringAsFixed(1)}:'
-          '${_horizontalMargin.toStringAsFixed(1)}:'
-          '${_verticalMargin.toStringAsFixed(1)}:'
+          'shader-curl:$_readerThemeId:$_layoutSignature:'
           '${current.chapterIndex}:${current.pageIndex}',
         ),
         controller: _pageCurlController,
@@ -1527,15 +1504,11 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
         left: _buildPageLeaf(
           chapter,
           pages[spreadStart],
-          pageNumber: spreadStart + 1,
-          pageCount: pages.length,
         ),
         right: spreadStart + 1 < pages.length
             ? _buildPageLeaf(
                 chapter,
                 pages[spreadStart + 1],
-                pageNumber: spreadStart + 2,
-                pageCount: pages.length,
               )
             : null,
       );
@@ -1563,52 +1536,23 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
       _buildPageLeaf(
         chapters[page.chapterIndex],
         page.content,
-        pageNumber: page.pageIndex + 1,
-        pageCount: page.pageCount,
       );
 
   Widget _buildPageLeaf(
     _NativeChapter chapter,
-    _ReaderPageData page, {
-    int? pageNumber,
-    int? pageCount,
-  }) {
-    final colors = _readerThemeData.colorScheme;
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(
-              _horizontalMargin,
-              _verticalMargin,
-              _horizontalMargin,
-              _effectiveBottomMargin,
-            ),
-            child: SizedBox.expand(
-              child: _buildPage(chapter, page),
-            ),
-          ),
+    _ReaderPageData page,
+  ) =>
+      Padding(
+        padding: EdgeInsets.fromLTRB(
+          _horizontalMargin,
+          _verticalMargin,
+          _horizontalMargin,
+          _effectiveBottomMargin,
         ),
-        if (pageNumber != null && pageCount != null)
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: MediaQuery.viewPaddingOf(context).bottom + 3,
-            child: Center(
-              child: Text(
-                '$pageNumber/$pageCount',
-                style: _readerThemeData.textTheme.labelSmall?.copyWith(
-                  fontSize: 10,
-                  height: 1,
-                  color: colors.onSurfaceVariant.withValues(alpha: 0.58),
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
+        child: SizedBox.expand(
+          child: _buildPage(chapter, page),
+        ),
+      );
 
   Widget _buildSpread({
     required Widget left,
@@ -1644,96 +1588,49 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
     );
   }
 
-  String _pageIndicator(
+  String _readerStatus(
     List<_ReaderPageData> pages,
-    bool usesTwoPageLayout,
+    double verticalProgress,
+    int chapterCount,
   ) {
-    final start = usesTwoPageLayout && _pageMode == NativePageMode.instantPage
-        ? _spreadStartForPage(_pageIndex)
-        : _pageIndex;
-    final end =
-        usesTwoPageLayout ? (start + 1).clamp(0, pages.length - 1) : start;
-    if (end == start) return '${start + 1}/${pages.length}';
-    return '${start + 1}-${end + 1}/${pages.length}';
+    final page = _pageMode == NativePageMode.verticalScroll
+        ? (verticalProgress * (pages.length - 1)).round() + 1
+        : _pageIndex + 1;
+    return context.l10n.readerStatusPaged(
+      _chapterIndex + 1,
+      chapterCount,
+      page.clamp(1, pages.length),
+      pages.length,
+    );
+  }
+
+  Widget _buildReaderStatusText({
+    required List<_ReaderPageData> pages,
+    required int chapterCount,
+    required TextStyle? style,
+    Key? key,
+  }) {
+    return ValueListenableBuilder<double>(
+      valueListenable: _verticalScrollProgress,
+      builder: (context, progress, _) => Text(
+        _readerStatus(pages, progress, chapterCount),
+        key: key,
+        textAlign: TextAlign.center,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: style,
+      ),
+    );
   }
 
   Widget _buildReaderGlassBar({
     required Widget child,
     required bool isTopBar,
   }) {
-    final colors = _readerThemeData.colorScheme;
-    final borderRadius = BorderRadius.circular(999);
-    final blurEnabled = !GlassEffectConfig.shouldDisableBlur;
-    final config = GlassEffectHelper.getReadingControlConfig(
-      preset: GlassEffectConfig.dreamyMode,
+    return ReaderControlBar(
+      palette: _readerTheme,
       isTopBar: isTopBar,
-    );
-    final highlight = Color.lerp(
-      _readerTheme.controlBar,
-      Colors.white,
-      _readerTheme.brightness == Brightness.dark ? 0.06 : 0.18,
-    )!;
-    final panel = DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            highlight.withValues(
-              alpha: blurEnabled ? 0.92 : 1,
-            ),
-            _readerTheme.controlBar.withValues(
-              alpha: blurEnabled ? 0.88 : 1,
-            ),
-          ],
-        ),
-        border: Border.all(
-          color: Color.lerp(
-            colors.outline,
-            Colors.white,
-            _readerTheme.brightness == Brightness.dark ? 0.16 : 0.38,
-          )!
-              .withValues(alpha: blurEnabled ? 0.54 : 0.68),
-          width: 0.9,
-        ),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: child,
-      ),
-    );
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: borderRadius,
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow.withValues(
-              alpha: _readerTheme.brightness == Brightness.dark ? 0.46 : 0.22,
-            ),
-            blurRadius: 32,
-            spreadRadius: -5,
-            offset: const Offset(0, 16),
-          ),
-          BoxShadow(
-            color: colors.shadow.withValues(alpha: 0.10),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: borderRadius,
-        child: blurEnabled
-            ? BackdropFilter(
-                filter: ImageFilter.blur(
-                  sigmaX: config['blur']!,
-                  sigmaY: config['blur']!,
-                ),
-                child: panel,
-              )
-            : panel,
-      ),
+      child: child,
     );
   }
 
@@ -1742,22 +1639,11 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
     required String tooltip,
     required IconData icon,
   }) {
-    return IconButton.filledTonal(
+    return ReaderControlIconButton(
+      palette: _readerTheme,
       onPressed: onPressed,
       tooltip: tooltip,
-      icon: Icon(icon, size: 22),
-      style: IconButton.styleFrom(
-        foregroundColor: _readerTheme.text,
-        backgroundColor: _readerTheme.controlFill.withValues(alpha: 0.78),
-        minimumSize: const Size.square(44),
-        maximumSize: const Size.square(44),
-        padding: EdgeInsets.zero,
-        side: BorderSide(
-          color: _readerTheme.border.withValues(alpha: 0.42),
-          width: 0.8,
-        ),
-        shape: const CircleBorder(),
-      ),
+      icon: icon,
     );
   }
 
@@ -1769,180 +1655,181 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
         child: SizedBox.expand(),
       );
     }
-    return Theme(
-      data: _readerThemeData,
-      child: FutureBuilder<List<_NativeChapter>>(
-        future: _chaptersFuture,
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Scaffold(
-              appBar: AppBar(title: Text(widget.book.title)),
-              body: Center(
-                  child: Text(context.l10n
-                      .readerOpenFailed(snapshot.error.toString()))),
-            );
-          }
-          final chapters = snapshot.data;
-          if (chapters == null) {
-            return const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            );
-          }
-          if (chapters.isEmpty) {
-            return Scaffold(
-                body: Center(child: Text(context.l10n.readerNoContent)));
-          }
+    return PopScope(
+      canPop: _allowPop,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) unawaited(_exitReader());
+      },
+      child: Theme(
+        data: _readerThemeData,
+        child: FutureBuilder<List<_NativeChapter>>(
+          future: _chaptersFuture,
+          builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return Scaffold(
+                appBar: AppBar(title: Text(widget.book.title)),
+                body: Center(
+                    child: Text(context.l10n
+                        .readerOpenFailed(snapshot.error.toString()))),
+              );
+            }
+            final chapters = snapshot.data;
+            if (chapters == null) {
+              return const Scaffold(
+                body: Center(child: CircularProgressIndicator()),
+              );
+            }
+            if (chapters.isEmpty) {
+              return Scaffold(
+                  body: Center(child: Text(context.l10n.readerNoContent)));
+            }
 
-          _chapterIndex = _chapterIndex.clamp(0, chapters.length - 1);
-          final chapter = chapters[_chapterIndex];
-          final colors = _readerThemeData.colorScheme;
+            _chapterIndex = _chapterIndex.clamp(0, chapters.length - 1);
+            final chapter = chapters[_chapterIndex];
+            final colors = _readerThemeData.colorScheme;
 
-          return Scaffold(
-            body: LayoutBuilder(
-              builder: (context, constraints) {
-                final size = constraints.biggest;
-                final usesTwoPageLayout = _usesTwoPageLayout(size);
-                final paginationSize = _paginationSize(
-                  size,
-                  usesTwoPageLayout,
-                );
-                final pages = _pageMode == NativePageMode.verticalScroll
-                    ? const <_ReaderPageData>[
-                        _ReaderPageData(text: '', startOffset: 0),
-                      ]
-                    : _pagesFor(
-                        chapter,
-                        _chapterIndex,
-                        paginationSize,
-                        Directionality.of(context),
-                        MediaQuery.textScalerOf(context),
-                      );
-                final bookPages = _pageMode == NativePageMode.horizontalSlide ||
-                        _pageMode == NativePageMode.pageCurl
-                    ? _bookPagesFor(
-                        chapters,
-                        _horizontalFirstChapter,
-                        _horizontalLastChapter,
-                        paginationSize,
-                        Directionality.of(context),
-                        MediaQuery.textScalerOf(context),
-                      )
-                    : const <_BookPageRef>[];
-                if (_openPreviousChapterAtLastPage) {
-                  _pageIndex = usesTwoPageLayout &&
-                          _pageMode == NativePageMode.instantPage
-                      ? _spreadStartForPage(pages.length - 1)
-                      : pages.length - 1;
-                  _openPreviousChapterAtLastPage = false;
-                }
-                _pageIndex = _pageIndex.clamp(0, pages.length - 1);
-                if (usesTwoPageLayout &&
-                    _pageMode == NativePageMode.instantPage) {
-                  _pageIndex = _spreadStartForPage(_pageIndex);
-                }
-                if (_pageMode != NativePageMode.verticalScroll &&
-                    _restoreAnchorAfterLayout &&
-                    _anchorOffset != null) {
-                  final anchor = _anchorOffset!;
-                  final restoredIndex = pages.indexWhere(
-                    (page) =>
-                        anchor >= page.startOffset && anchor < page.endOffset,
+            return Scaffold(
+              body: LayoutBuilder(
+                builder: (context, constraints) {
+                  final size = constraints.biggest;
+                  final usesTwoPageLayout = _usesTwoPageLayout(size);
+                  final paginationSize = _paginationSize(
+                    size,
+                    usesTwoPageLayout,
                   );
-                  if (restoredIndex >= 0) _pageIndex = restoredIndex;
+                  final pages = _pagesFor(
+                    chapter,
+                    _chapterIndex,
+                    paginationSize,
+                    Directionality.of(context),
+                    MediaQuery.textScalerOf(context),
+                  );
+                  final bookPages =
+                      _pageMode == NativePageMode.horizontalSlide ||
+                              _pageMode == NativePageMode.pageCurl
+                          ? _bookPagesFor(
+                              chapters,
+                              _horizontalFirstChapter,
+                              _horizontalLastChapter,
+                              paginationSize,
+                              Directionality.of(context),
+                              MediaQuery.textScalerOf(context),
+                            )
+                          : const <_BookPageRef>[];
+                  if (_openPreviousChapterAtLastPage) {
+                    _pageIndex = usesTwoPageLayout &&
+                            _pageMode == NativePageMode.instantPage
+                        ? _spreadStartForPage(pages.length - 1)
+                        : pages.length - 1;
+                    _openPreviousChapterAtLastPage = false;
+                  }
+                  _pageIndex = _pageIndex.clamp(0, pages.length - 1);
                   if (usesTwoPageLayout &&
                       _pageMode == NativePageMode.instantPage) {
                     _pageIndex = _spreadStartForPage(_pageIndex);
                   }
-                  _restoreAnchorAfterLayout = false;
-                }
-                if (_pageMode != NativePageMode.verticalScroll) {
-                  final locationKey = '$_chapterIndex:$_pageIndex:'
-                      '${pages[_pageIndex].startOffset}';
-                  if (_lastSavedLocation != locationKey) {
-                    _lastSavedLocation = locationKey;
-                    final pageToSave = pages[_pageIndex];
-                    final chapterToSave = chapter;
-                    final chapterIndexToSave = _chapterIndex;
+                  if (_pageMode != NativePageMode.verticalScroll &&
+                      _restoreAnchorAfterLayout &&
+                      _anchorOffset != null) {
+                    final anchor = _anchorOffset!;
+                    final restoredIndex = pages.indexWhere(
+                      (page) =>
+                          anchor >= page.startOffset && anchor < page.endOffset,
+                    );
+                    if (restoredIndex >= 0) _pageIndex = restoredIndex;
+                    if (usesTwoPageLayout &&
+                        _pageMode == NativePageMode.instantPage) {
+                      _pageIndex = _spreadStartForPage(_pageIndex);
+                    }
+                    _restoreAnchorAfterLayout = false;
+                  }
+                  if (_pageMode != NativePageMode.verticalScroll) {
+                    final locationKey = '$_chapterIndex:$_pageIndex:'
+                        '${pages[_pageIndex].startOffset}';
+                    if (_lastSavedLocation != locationKey) {
+                      _lastSavedLocation = locationKey;
+                      final pageToSave = pages[_pageIndex];
+                      final chapterToSave = chapter;
+                      final chapterIndexToSave = _chapterIndex;
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        _saveCanonicalProgress(
+                          chapterToSave,
+                          pageToSave,
+                          chapterIndexToSave,
+                        );
+                      });
+                    }
+                  }
+                  if (_pageMode == NativePageMode.horizontalSlide) {
+                    final targetPage = bookPages.indexWhere(
+                      (page) =>
+                          page.chapterIndex == _chapterIndex &&
+                          page.pageIndex == _pageIndex,
+                    );
+                    final targetControllerPage =
+                        usesTwoPageLayout ? targetPage ~/ 2 : targetPage;
                     WidgetsBinding.instance.addPostFrameCallback((_) {
-                      _saveCanonicalProgress(
-                        chapterToSave,
-                        pageToSave,
-                        chapterIndexToSave,
-                      );
+                      if (!_pageController.hasClients) return;
+                      final current = _pageController.page?.round();
+                      if (targetPage >= 0 && current != targetControllerPage) {
+                        _pageController.jumpToPage(targetControllerPage);
+                      }
                     });
                   }
-                }
-                if (_pageMode == NativePageMode.horizontalSlide) {
-                  final targetPage = bookPages.indexWhere(
-                    (page) =>
-                        page.chapterIndex == _chapterIndex &&
-                        page.pageIndex == _pageIndex,
-                  );
-                  final targetControllerPage =
-                      usesTwoPageLayout ? targetPage ~/ 2 : targetPage;
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (!_pageController.hasClients) return;
-                    final current = _pageController.page?.round();
-                    if (targetPage >= 0 && current != targetControllerPage) {
-                      _pageController.jumpToPage(targetControllerPage);
-                    }
-                  });
-                }
 
-                return Stack(
-                  children: [
-                    Positioned.fill(
-                      child: Listener(
-                        behavior: HitTestBehavior.translucent,
-                        onPointerDown: _onPointerDown,
-                        onPointerMove: _onPointerMove,
-                        onPointerCancel: _onPointerCancel,
-                        onPointerUp: (event) => _onPointerUp(
-                          event,
-                          size.width,
-                          pages,
-                          chapters.length,
-                          usesTwoPageLayout,
-                        ),
-                        child: GestureDetector(
+                  return Stack(
+                    children: [
+                      Positioned.fill(
+                        child: Listener(
                           behavior: HitTestBehavior.translucent,
-                          onHorizontalDragEnd:
-                              _pageMode == NativePageMode.horizontalSlide ||
-                                      _pageMode == NativePageMode.pageCurl
-                                  ? null
-                                  : (details) => _handleHorizontalSwipe(
-                                        details,
-                                        pages,
-                                        chapters.length,
-                                        usesTwoPageLayout,
-                                      ),
-                          child: _buildReaderContent(
-                            chapters,
-                            chapter,
+                          onPointerDown: _onPointerDown,
+                          onPointerMove: _onPointerMove,
+                          onPointerCancel: _onPointerCancel,
+                          onPointerUp: (event) => _onPointerUp(
+                            event,
+                            size.width,
                             pages,
-                            bookPages,
+                            chapters.length,
                             usesTwoPageLayout,
+                          ),
+                          child: GestureDetector(
+                            behavior: HitTestBehavior.translucent,
+                            onHorizontalDragEnd:
+                                _pageMode == NativePageMode.horizontalSlide ||
+                                        _pageMode == NativePageMode.pageCurl
+                                    ? null
+                                    : (details) => _handleHorizontalSwipe(
+                                          details,
+                                          pages,
+                                          chapters.length,
+                                          usesTwoPageLayout,
+                                        ),
+                            child: _buildReaderContent(
+                              chapters,
+                              chapter,
+                              pages,
+                              bookPages,
+                              usesTwoPageLayout,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    if (_pageMode != NativePageMode.verticalScroll &&
-                        _pageMode != NativePageMode.pageCurl &&
-                        !usesTwoPageLayout)
                       Positioned(
                         left: 0,
                         right: 0,
                         bottom: MediaQuery.viewPaddingOf(context).bottom + 3,
                         child: IgnorePointer(
-                          child: Text(
-                            _pageIndicator(pages, usesTwoPageLayout),
-                            textAlign: TextAlign.center,
+                          child: _buildReaderStatusText(
+                            pages: pages,
+                            chapterCount: chapters.length,
+                            key: const ValueKey('native-reader-status'),
                             style:
                                 _readerThemeData.textTheme.labelSmall?.copyWith(
                               fontSize: 10,
                               height: 1,
-                              color: colors.onSurfaceVariant
-                                  .withValues(alpha: 0.58),
+                              color: colors.onSurfaceVariant.withValues(
+                                alpha: _controlsVisible ? 0 : 0.58,
+                              ),
                               fontFeatures: const [
                                 FontFeature.tabularFigures(),
                               ],
@@ -1950,124 +1837,112 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
                           ),
                         ),
                       ),
-                    AnimatedPositioned(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeOutBack,
-                      left: 20,
-                      right: 20,
-                      top: _controlsVisible ? 10 : -130,
-                      child: SafeArea(
-                        bottom: false,
-                        child: _buildReaderGlassBar(
-                          isTopBar: true,
-                          child: SizedBox(
-                            height: 58,
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 7,
-                                vertical: 7,
-                              ),
-                              child: Row(
-                                children: [
-                                  _buildReaderBarIconButton(
-                                    onPressed: () =>
-                                        Navigator.of(context).pop(),
-                                    tooltip: MaterialLocalizations.of(context)
-                                        .backButtonTooltip,
-                                    icon: Icons.arrow_back_rounded,
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: Text(
-                                      chapter.title.isEmpty
-                                          ? widget.book.title
-                                          : chapter.title,
-                                      textAlign: TextAlign.center,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: _readerThemeData
-                                          .textTheme.titleMedium
-                                          ?.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                        letterSpacing: 0.1,
+                      AnimatedPositioned(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeOutBack,
+                        left: 20,
+                        right: 20,
+                        top: _controlsVisible ? 10 : -130,
+                        child: SafeArea(
+                          bottom: false,
+                          child: _buildReaderGlassBar(
+                            isTopBar: true,
+                            child: SizedBox(
+                              height: 58,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 7,
+                                  vertical: 7,
+                                ),
+                                child: Row(
+                                  children: [
+                                    _buildReaderBarIconButton(
+                                      onPressed: () => unawaited(_exitReader()),
+                                      tooltip: MaterialLocalizations.of(context)
+                                          .backButtonTooltip,
+                                      icon: Icons.arrow_back_rounded,
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Text(
+                                        chapter.title.isEmpty
+                                            ? widget.book.title
+                                            : chapter.title,
+                                        textAlign: TextAlign.center,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: _readerThemeData
+                                            .textTheme.titleMedium
+                                            ?.copyWith(
+                                          fontWeight: FontWeight.w600,
+                                          letterSpacing: 0.1,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  const SizedBox(width: 54),
-                                ],
+                                    const SizedBox(width: 54),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    AnimatedPositioned(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeOutBack,
-                      left: 22,
-                      right: 22,
-                      bottom: _controlsVisible ? 16 : -110,
-                      child: SafeArea(
-                        top: false,
-                        child: _buildReaderGlassBar(
-                          isTopBar: false,
-                          child: SizedBox(
-                            height: 64,
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 9,
-                                vertical: 9,
-                              ),
-                              child: Row(
-                                children: [
-                                  _buildReaderBarIconButton(
-                                    onPressed: () =>
-                                        _showTableOfContents(chapters),
-                                    tooltip: context.l10n.readerToolbarTOC,
-                                    icon: Icons.format_list_bulleted_rounded,
-                                  ),
-                                  Expanded(
-                                    child: Text(
-                                      _pageMode != NativePageMode.verticalScroll
-                                          ? context.l10n.readerStatusPaged(
-                                              _chapterIndex + 1,
-                                              chapters.length,
-                                              _pageIndex + 1,
-                                              pages.length,
-                                            )
-                                          : context.l10n.readerStatusScroll(
-                                              _chapterIndex + 1,
-                                              chapters.length,
-                                            ),
-                                      textAlign: TextAlign.center,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: _readerThemeData
-                                          .textTheme.labelLarge
-                                          ?.copyWith(
-                                        fontWeight: FontWeight.w700,
-                                        letterSpacing: 0.15,
+                      AnimatedPositioned(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeOutBack,
+                        left: 22,
+                        right: 22,
+                        bottom: _controlsVisible ? 16 : -110,
+                        child: SafeArea(
+                          top: false,
+                          child: _buildReaderGlassBar(
+                            isTopBar: false,
+                            child: SizedBox(
+                              height: 64,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 9,
+                                  vertical: 9,
+                                ),
+                                child: Row(
+                                  children: [
+                                    _buildReaderBarIconButton(
+                                      onPressed: () =>
+                                          _showTableOfContents(chapters),
+                                      tooltip: context.l10n.readerToolbarTOC,
+                                      icon: Icons.format_list_bulleted_rounded,
+                                    ),
+                                    Expanded(
+                                      child: _buildReaderStatusText(
+                                        pages: pages,
+                                        chapterCount: chapters.length,
+                                        style: _readerThemeData
+                                            .textTheme.labelLarge
+                                            ?.copyWith(
+                                          fontWeight: FontWeight.w700,
+                                          letterSpacing: 0.15,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  _buildReaderBarIconButton(
-                                    onPressed: _showReadingSettings,
-                                    tooltip: context.l10n.readingSettings,
-                                    icon: Icons.tune_rounded,
-                                  ),
-                                ],
+                                    _buildReaderBarIconButton(
+                                      onPressed: _showReadingSettings,
+                                      tooltip: context.l10n.readingSettings,
+                                      icon: Icons.tune_rounded,
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                );
-              },
-            ),
-          );
-        },
+                    ],
+                  );
+                },
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -2241,13 +2116,11 @@ class _BookPageRef {
   const _BookPageRef({
     required this.chapterIndex,
     required this.pageIndex,
-    required this.pageCount,
     required this.content,
   });
 
   final int chapterIndex;
   final int pageIndex;
-  final int pageCount;
   final _ReaderPageData content;
 }
 

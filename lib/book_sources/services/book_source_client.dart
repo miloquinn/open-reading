@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 
 import '../models/registered_book_source.dart';
 import '../protocol/book_source_protocol.dart';
+import 'book_source_chapter_cache.dart';
 
 class DiscoveredBookSource {
   final Uri manifestUrl;
@@ -17,13 +18,18 @@ class DiscoveredBookSource {
 
 class BookSourceClient {
   final Dio _dio;
+  final BookSourceChapterCache _chapterCache;
 
   /// 单次响应体上限。书源返回的都是 JSON 元数据/章节文本，
   /// 超过该值基本可以判定为异常或恶意响应，中途截断防止 OOM。
   static const int maxResponseBytes = 8 * 1024 * 1024;
+  static const int maxDownloadResponseBytes = 24 * 1024 * 1024;
+  static const Duration downloadReceiveTimeout = Duration(seconds: 90);
+  static const int downloadMaxAttempts = 3;
 
-  BookSourceClient({Dio? dio})
-      : _dio = dio ??
+  BookSourceClient({Dio? dio, BookSourceChapterCache? chapterCache})
+      : _chapterCache = chapterCache ?? const BookSourceChapterCache(),
+        _dio = dio ??
             Dio(
               BaseOptions(
                 connectTimeout: const Duration(seconds: 8),
@@ -54,15 +60,20 @@ class BookSourceClient {
   }
 
   /// 统一的受限 GET：目标地址校验 + 响应体大小上限。
-  Future<Object?> _getBounded(Uri uri) async {
+  Future<Object?> _getBounded(
+    Uri uri, {
+    int maxBytes = maxResponseBytes,
+    Duration? receiveTimeout,
+  }) async {
     ensureSafeTarget(uri);
     final cancelToken = CancelToken();
     final response = await _dio.getUri<Object?>(
       uri,
+      options: Options(receiveTimeout: receiveTimeout),
       cancelToken: cancelToken,
       onReceiveProgress: (received, total) {
-        if (received > maxResponseBytes || total > maxResponseBytes) {
-          cancelToken.cancel('Response exceeds $maxResponseBytes bytes.');
+        if (received > maxBytes || total > maxBytes) {
+          cancelToken.cancel('Response exceeds $maxBytes bytes.');
         }
       },
     );
@@ -172,23 +183,124 @@ class BookSourceClient {
     }
   }
 
+  Future<List<BookSourceChapter>> getChaptersForDownload(
+    RegisteredBookSource source,
+    String bookId,
+  ) async {
+    final uri = _apiUri(
+      source.apiBaseUrl,
+      'v1/books/${Uri.encodeComponent(bookId)}/chapters',
+    );
+    return _withDownloadRetries(() async {
+      final json = decodeBookSourceJson(
+        await _getBounded(
+          uri,
+          maxBytes: maxDownloadResponseBytes,
+          receiveTimeout: downloadReceiveTimeout,
+        ),
+      );
+      final items = json['items'];
+      if (items is! List) {
+        throw const BookSourceProtocolException(
+          'Chapter response must contain an items array.',
+        );
+      }
+      return items
+          .map(
+            (item) => BookSourceChapter.fromJson(decodeBookSourceJson(item)),
+          )
+          .toList(growable: false);
+    });
+  }
+
   Future<BookSourceChapterContent> getChapterContent(
     RegisteredBookSource source, {
     required String bookId,
     required String chapterId,
   }) async {
-    final uri = _apiUri(
-      source.apiBaseUrl,
-      'v1/books/${Uri.encodeComponent(bookId)}/chapters/'
-      '${Uri.encodeComponent(chapterId)}',
+    return _chapterCache.getOrLoad(
+      sourceId: source.id,
+      bookId: bookId,
+      chapterId: chapterId,
+      loader: () async {
+        final uri = _apiUri(
+          source.apiBaseUrl,
+          'v1/books/${Uri.encodeComponent(bookId)}/chapters/'
+          '${Uri.encodeComponent(chapterId)}',
+        );
+        try {
+          return BookSourceChapterContent.fromJson(
+            decodeBookSourceJson(await _getBounded(uri)),
+          );
+        } on DioException catch (error) {
+          throw BookSourceProtocolException(_dioErrorMessage(error));
+        }
+      },
     );
+  }
+
+  Future<BookSourceChapterContent> getChapterContentForDownload(
+    RegisteredBookSource source, {
+    required String bookId,
+    required String chapterId,
+  }) async {
+    return _chapterCache.getOrLoad(
+      sourceId: source.id,
+      bookId: bookId,
+      chapterId: chapterId,
+      loader: () {
+        final uri = _apiUri(
+          source.apiBaseUrl,
+          'v1/books/${Uri.encodeComponent(bookId)}/chapters/'
+          '${Uri.encodeComponent(chapterId)}',
+        );
+        return _withDownloadRetries(
+          () async => BookSourceChapterContent.fromJson(
+            decodeBookSourceJson(
+              await _getBounded(
+                uri,
+                maxBytes: maxDownloadResponseBytes,
+                receiveTimeout: downloadReceiveTimeout,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> prefetchChapterContent(
+    RegisteredBookSource source, {
+    required String bookId,
+    required String chapterId,
+  }) async {
     try {
-      return BookSourceChapterContent.fromJson(
-        decodeBookSourceJson(await _getBounded(uri)),
+      await getChapterContent(
+        source,
+        bookId: bookId,
+        chapterId: chapterId,
       );
-    } on DioException catch (error) {
-      throw BookSourceProtocolException(_dioErrorMessage(error));
+    } catch (_) {
+      // Prefetching is opportunistic and must not surface reader errors.
     }
+  }
+
+  Future<T> _withDownloadRetries<T>(Future<T> Function() request) async {
+    DioException? lastError;
+    for (var attempt = 1; attempt <= downloadMaxAttempts; attempt++) {
+      try {
+        return await request();
+      } on DioException catch (error) {
+        lastError = error;
+        if (attempt == downloadMaxAttempts) break;
+        await Future<void>.delayed(
+          Duration(milliseconds: 500 * attempt * attempt),
+        );
+      }
+    }
+    throw BookSourceProtocolException(
+      _dioErrorMessage(lastError!),
+    );
   }
 
   static Uri _apiUri(Uri baseUrl, String relativePath) {

@@ -59,6 +59,18 @@ void main() {
       expect(page.hasMore, isFalse);
     });
 
+    test('allows chapter content to omit its duplicated title', () {
+      final content = BookSourceChapterContent.fromJson({
+        'bookId': 'book-1',
+        'chapterId': 'chapter-1',
+        'contentType': 'text/html',
+        'content': '<p>Chapter body</p>',
+      });
+
+      expect(content.title, isEmpty);
+      expect(content.content, '<p>Chapter body</p>');
+    });
+
     test('normalizes service and discovery URLs', () {
       expect(
         BookSourceClient.normalizeManifestUri('https://example.org').toString(),

@@ -2177,6 +2177,18 @@ abstract class AppLocalizations {
   /// **'Horizontal margin  {margin}'**
   String readerHorizontalMarginValue(int margin);
 
+  /// No description provided for @readerHorizontalMarginLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Horizontal margin'**
+  String get readerHorizontalMarginLabel;
+
+  /// No description provided for @readerVerticalMarginLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Vertical margin'**
+  String get readerVerticalMarginLabel;
+
   /// Slider label showing the current top/bottom page margin
   ///
   /// In en, this message translates to:
@@ -2748,6 +2760,72 @@ abstract class AppLocalizations {
   /// **'Could not open the GitHub link'**
   String get settingsGithubOpenFailed;
 
+  /// No description provided for @updateCheckNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for updates'**
+  String get updateCheckNow;
+
+  /// No description provided for @updateCheckNowSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Get the latest version from GitHub Releases'**
+  String get updateCheckNowSubtitle;
+
+  /// No description provided for @updateAvailableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A new version is available'**
+  String get updateAvailableTitle;
+
+  /// No description provided for @updateVersionSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Current version: {currentVersion}\nLatest version: {latestVersion}'**
+  String updateVersionSummary(String currentVersion, String latestVersion);
+
+  /// No description provided for @updateNotesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s new'**
+  String get updateNotesTitle;
+
+  /// No description provided for @updateNotesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No release notes were provided for this version.'**
+  String get updateNotesEmpty;
+
+  /// No description provided for @updateLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get updateLater;
+
+  /// No description provided for @updateGoToDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to update'**
+  String get updateGoToDownload;
+
+  /// No description provided for @updateAlreadyLatest.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re already using the latest version'**
+  String get updateAlreadyLatest;
+
+  /// No description provided for @updateCheckFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not check for updates. Please try again later.'**
+  String get updateCheckFailed;
+
+  /// No description provided for @updateOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the GitHub Release download page'**
+  String get updateOpenFailed;
+
   /// Toast when using an iOS-only feature on another platform
   ///
   /// In en, this message translates to:
@@ -3264,6 +3342,114 @@ abstract class AppLocalizations {
   /// **'Week {week}'**
   String statsWeekNumber(Object week);
 
+  /// No description provided for @bookSourceAddToShelf.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to shelf'**
+  String get bookSourceAddToShelf;
+
+  /// No description provided for @bookSourceAddOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Add online'**
+  String get bookSourceAddOnline;
+
+  /// No description provided for @bookSourceAddOnlineHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Read from the source and cache chapters as you go'**
+  String get bookSourceAddOnlineHint;
+
+  /// No description provided for @bookSourceDownloadLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Download locally'**
+  String get bookSourceDownloadLocal;
+
+  /// No description provided for @bookSourceDownloadLocalHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Download every chapter and add a local TXT copy'**
+  String get bookSourceDownloadLocalHint;
+
+  /// No description provided for @bookSourceAddedOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to shelf as an online book'**
+  String get bookSourceAddedOnline;
+
+  /// No description provided for @bookSourceAlreadyOnShelf.
+  ///
+  /// In en, this message translates to:
+  /// **'This book is already on your shelf'**
+  String get bookSourceAlreadyOnShelf;
+
+  /// No description provided for @bookSourceDownloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading locally'**
+  String get bookSourceDownloading;
+
+  /// No description provided for @bookSourceFetchingCatalog.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetching chapter catalog…'**
+  String get bookSourceFetchingCatalog;
+
+  /// No description provided for @bookSourceDownloadProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{completed}/{total} chapters'**
+  String bookSourceDownloadProgress(int completed, int total);
+
+  /// No description provided for @bookSourceDownloadComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Download complete and added to the local shelf'**
+  String get bookSourceDownloadComplete;
+
+  /// No description provided for @bookSourceDownloadConverted.
+  ///
+  /// In en, this message translates to:
+  /// **'Download complete. This is now a local book'**
+  String get bookSourceDownloadConverted;
+
+  /// No description provided for @bookSourceDownloadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Download failed: {error}'**
+  String bookSourceDownloadFailed(String error);
+
+  /// No description provided for @bookSourceExitAddTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to shelf?'**
+  String get bookSourceExitAddTitle;
+
+  /// No description provided for @bookSourceExitAddMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Add “{title}” to your shelf as an online book? Your reading progress will be kept.'**
+  String bookSourceExitAddMessage(String title);
+
+  /// No description provided for @bookSourceNotNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get bookSourceNotNow;
+
+  /// No description provided for @bookSourceOnlineBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
+  String get bookSourceOnlineBadge;
+
+  /// No description provided for @bookSourceOnlineDataBroken.
+  ///
+  /// In en, this message translates to:
+  /// **'Online book data is invalid: {error}'**
+  String bookSourceOnlineDataBroken(String error);
+
   /// Title of the reader-only theme selector
   ///
   /// In en, this message translates to:
@@ -3282,11 +3468,41 @@ abstract class AppLocalizations {
   /// **'Day'**
   String get readerThemeDay;
 
+  /// No description provided for @readerThemeMist.
+  ///
+  /// In en, this message translates to:
+  /// **'Mist'**
+  String get readerThemeMist;
+
+  /// No description provided for @readerThemeGreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Eye care'**
+  String get readerThemeGreen;
+
+  /// No description provided for @readerThemeRose.
+  ///
+  /// In en, this message translates to:
+  /// **'Rose'**
+  String get readerThemeRose;
+
+  /// No description provided for @readerThemeNavy.
+  ///
+  /// In en, this message translates to:
+  /// **'Deep blue'**
+  String get readerThemeNavy;
+
   /// Night reading theme name
   ///
   /// In en, this message translates to:
   /// **'Night'**
   String get readerThemeNight;
+
+  /// Pure black reading theme name
+  ///
+  /// In en, this message translates to:
+  /// **'Pure black'**
+  String get readerThemePureBlack;
 
   /// Parchment reading theme name
   ///

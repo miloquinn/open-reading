@@ -59,4 +59,35 @@ void main() {
       findsNWidgets(3),
     );
   });
+
+  testWidgets('forward curl can start from the middle of the page',
+      (tester) async {
+    var forwardTurns = 0;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SizedBox(
+          width: 400,
+          height: 700,
+          child: ReaderShaderPageCurl(
+            currentPage: const Text('current'),
+            forwardPage: const Text('next'),
+            onTurnForward: () => forwardTurns++,
+            onTurnBackward: () {},
+            paperColor: Colors.white,
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final rect = tester.getRect(find.byType(ReaderShaderPageCurl));
+    await tester.dragFrom(
+      Offset(rect.left + rect.width * 0.5, rect.center.dy),
+      Offset(-rect.width * 0.4, 0),
+    );
+    await tester.pumpAndSettle();
+
+    expect(forwardTurns, 1);
+  });
 }

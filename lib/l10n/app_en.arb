@@ -1482,6 +1482,8 @@
       }
     }
   },
+  "readerHorizontalMarginLabel": "Horizontal margin",
+  "readerVerticalMarginLabel": "Vertical margin",
   "readerVerticalMarginValue": "Vertical margin  {margin}",
   "@readerVerticalMarginValue": {
     "description": "Slider label showing the current top/bottom page margin",
@@ -1947,6 +1949,23 @@
   "@settingsGithubOpenFailed": {
     "description": "Toast when the GitHub link fails to open"
   },
+  "updateCheckNow": "Check for updates",
+  "updateCheckNowSubtitle": "Get the latest version from GitHub Releases",
+  "updateAvailableTitle": "A new version is available",
+  "updateVersionSummary": "Current version: {currentVersion}\nLatest version: {latestVersion}",
+  "@updateVersionSummary": {
+    "placeholders": {
+      "currentVersion": {"type": "String"},
+      "latestVersion": {"type": "String"}
+    }
+  },
+  "updateNotesTitle": "What's new",
+  "updateNotesEmpty": "No release notes were provided for this version.",
+  "updateLater": "Later",
+  "updateGoToDownload": "Go to update",
+  "updateAlreadyLatest": "You're already using the latest version",
+  "updateCheckFailed": "Could not check for updates. Please try again later.",
+  "updateOpenFailed": "Could not open the GitHub Release download page",
   "settingsIosOnlyFeature": "This feature is only available on iOS",
   "@settingsIosOnlyFeature": {
     "description": "Toast when using an iOS-only feature on another platform"
@@ -2361,6 +2380,28 @@
       "week": {}
     }
   },
+  "bookSourceAddToShelf": "Add to shelf",
+  "bookSourceAddOnline": "Add online",
+  "bookSourceAddOnlineHint": "Read from the source and cache chapters as you go",
+  "bookSourceDownloadLocal": "Download locally",
+  "bookSourceDownloadLocalHint": "Download every chapter and add a local TXT copy",
+  "bookSourceAddedOnline": "Added to shelf as an online book",
+  "bookSourceAlreadyOnShelf": "This book is already on your shelf",
+  "bookSourceDownloading": "Downloading locally",
+  "bookSourceFetchingCatalog": "Fetching chapter catalog…",
+  "bookSourceDownloadProgress": "{completed}/{total} chapters",
+  "@bookSourceDownloadProgress": {"placeholders": {"completed": {"type": "int"}, "total": {"type": "int"}}},
+  "bookSourceDownloadComplete": "Download complete and added to the local shelf",
+  "bookSourceDownloadConverted": "Download complete. This is now a local book",
+  "bookSourceDownloadFailed": "Download failed: {error}",
+  "@bookSourceDownloadFailed": {"placeholders": {"error": {"type": "String"}}},
+  "bookSourceExitAddTitle": "Add to shelf?",
+  "bookSourceExitAddMessage": "Add “{title}” to your shelf as an online book? Your reading progress will be kept.",
+  "@bookSourceExitAddMessage": {"placeholders": {"title": {"type": "String"}}},
+  "bookSourceNotNow": "Not now",
+  "bookSourceOnlineBadge": "Online",
+  "bookSourceOnlineDataBroken": "Online book data is invalid: {error}",
+  "@bookSourceOnlineDataBroken": {"placeholders": {"error": {"type": "String"}}},
   "readerThemeTitle": "Reading theme",
   "@readerThemeTitle": {
     "description": "Title of the reader-only theme selector"
@@ -2373,9 +2414,17 @@
   "@readerThemeDay": {
     "description": "Day reading theme name"
   },
+  "readerThemeMist": "Mist",
+  "readerThemeGreen": "Eye care",
+  "readerThemeRose": "Rose",
+  "readerThemeNavy": "Deep blue",
   "readerThemeNight": "Night",
   "@readerThemeNight": {
     "description": "Night reading theme name"
+  },
+  "readerThemePureBlack": "Pure black",
+  "@readerThemePureBlack": {
+    "description": "Pure black reading theme name"
   },
   "readerThemeParchment": "Parchment",
   "@readerThemeParchment": {

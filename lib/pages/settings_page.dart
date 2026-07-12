@@ -17,6 +17,7 @@ import '../services/core/core_services.dart';
 import '../widgets/side_toast.dart';
 import '../widgets/app_brand_icon.dart';
 import '../widgets/contributors_view.dart';
+import '../widgets/update_check_gate.dart';
 import 'home_shell_page.dart';
 import 'home_layout_constants.dart';
 import '../utils/localization_extension.dart';
@@ -149,6 +150,7 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _enableMemoryStats = false;
   bool _showFPS = false;
   String _appVersion = '0.9.1';
+  bool _isCheckingForUpdates = false;
   final Map<AIProviderType, AIProviderSettings> _aiDraftByProvider =
       <AIProviderType, AIProviderSettings>{};
   AIProviderType _selectedAiProvider = AIProviderType.openai;
@@ -2892,9 +2894,26 @@ class _SettingsPageState extends State<SettingsPage> {
           const Divider(height: 1),
           const SizedBox(height: 14),
           _buildAboutLine(l10n.settingsVersionLabel, _appVersion),
-          _buildAboutLine(l10n.settingsMaintainerLabel, '小元Niki'),
           _buildAboutLine(l10n.settingsLicenseLabel, 'MIT'),
           const SizedBox(height: 14),
+          _buildCommunityButton(
+            onPressed: _checkForUpdates,
+            backgroundColor: scheme.primary,
+            foregroundColor: scheme.onPrimary,
+            icon: _isCheckingForUpdates
+                ? SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: scheme.onPrimary,
+                    ),
+                  )
+                : const Icon(Icons.system_update_alt_rounded),
+            title: l10n.updateCheckNow,
+            subtitle: l10n.updateCheckNowSubtitle,
+          ),
+          const SizedBox(height: 10),
           _buildCommunityButton(
             onPressed: _openGithubRepo,
             backgroundColor: const Color(0xFF181717),
@@ -3018,6 +3037,15 @@ class _SettingsPageState extends State<SettingsPage> {
     if (!ok && mounted) {
       showSideToast(context, context.l10n.settingsGithubOpenFailed,
           icon: Icons.error_outline);
+    }
+  }
+
+  Future<void> _checkForUpdates() async {
+    if (_isCheckingForUpdates) return;
+    setState(() => _isCheckingForUpdates = true);
+    await UpdatePromptController.check(context, manual: true);
+    if (mounted) {
+      setState(() => _isCheckingForUpdates = false);
     }
   }
 

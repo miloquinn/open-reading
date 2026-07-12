@@ -23,7 +23,14 @@ double _contrast(Color foreground, Color background) {
 
 void main() {
   test('reader themes remain independent and readable', () {
-    expect(ReaderThemes.all.map((theme) => theme.id).toSet().length, 3);
+    expect(ReaderThemes.all, hasLength(8));
+    expect(
+      ReaderThemes.all.map((theme) => theme.id).toSet(),
+      hasLength(ReaderThemes.all.length),
+    );
+    expect(ReaderThemes.day.background, const Color(0xFFFFFFFF));
+    expect(ReaderThemes.pureBlack.background, const Color(0xFF000000));
+    expect(ReaderThemes.pureBlack.surface, const Color(0xFF000000));
     for (final theme in ReaderThemes.all) {
       expect(
         _contrast(theme.text, theme.background),

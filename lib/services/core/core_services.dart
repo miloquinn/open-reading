@@ -5,3 +5,4 @@ export 'package:xxread/services/core/app_settings_service.dart';
 export 'package:xxread/services/core/app_state_service.dart';
 export 'package:xxread/services/core/data_cache_service.dart';
 export 'package:xxread/services/core/database_service.dart';
+export 'package:xxread/services/core/update_check_service.dart';

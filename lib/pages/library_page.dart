@@ -2,6 +2,7 @@
 // 技术要点：Flutter UI、文件系统、渲染层。
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui';
@@ -9,11 +10,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:flutter/services.dart';
 import '../models/book.dart';
+import '../book_sources/services/book_source_shelf_service.dart';
 import '../services/books/book_services.dart';
 import '../services/library/library_services.dart';
 import '../core/reader/native_reader_service.dart';
 import '../widgets/side_toast.dart';
 import 'import_book_page.dart';
+import 'book_source_reader_page.dart';
 import 'home_layout_constants.dart';
 import 'home_shell_page.dart';
 import '../utils/layout_helper.dart';
@@ -42,6 +45,7 @@ class _LibraryPageState extends State<LibraryPage> {
   List<Book> _books = [];
   bool _isInitialLoading = true;
   final _bookDao = BookDao();
+  final _sourceShelfService = BookSourceShelfService();
   StreamSubscription<void>? _librarySubscription;
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
@@ -53,6 +57,36 @@ class _LibraryPageState extends State<LibraryPage> {
             .extension<UiStyleThemeExtension>()
             ?.isMaterial3Style ??
         false;
+  }
+
+  Future<void> _openBook(Book book) async {
+    final fullBook = await _bookDao.getBookById(book.id!);
+    if (fullBook == null || !mounted) return;
+    if (fullBook.isOnline) {
+      try {
+        final source = _sourceShelfService.sourceFrom(fullBook);
+        final sourceBook = _sourceShelfService.sourceBookFrom(fullBook);
+        await Navigator.of(context).push<void>(
+          MaterialPageRoute<void>(
+            builder: (_) => BookSourceReaderPage(
+              source: source,
+              book: sourceBook,
+              shelfService: _sourceShelfService,
+            ),
+          ),
+        );
+      } catch (error) {
+        if (mounted) {
+          showSideToast(
+            context,
+            context.l10n.bookSourceOnlineDataBroken('$error'),
+          );
+        }
+      }
+    } else {
+      await NativeReaderService.openBook(context, fullBook);
+    }
+    if (mounted) _loadBooks();
   }
 
   BoxDecoration _panelDecoration({
@@ -721,7 +755,7 @@ class _LibraryPageState extends State<LibraryPage> {
                     final fullBook = await _bookDao.getBookById(book.id!);
                     if (fullBook != null && mounted && context.mounted) {
                       // 直接打开沉浸式阅读器
-                      await NativeReaderService.openBook(context, fullBook);
+                      await _openBook(fullBook);
                       _loadBooks();
                     }
                   },
@@ -781,7 +815,7 @@ class _LibraryPageState extends State<LibraryPage> {
               onTap: () async {
                 final fullBook = await _bookDao.getBookById(book.id!);
                 if (fullBook != null && mounted && context.mounted) {
-                  await NativeReaderService.openBook(context, fullBook);
+                  await _openBook(fullBook);
                   _loadBooks();
                 }
               },
@@ -803,12 +837,24 @@ class _LibraryPageState extends State<LibraryPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            book.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.w700),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  book.title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                              if (book.isOnline) ...[
+                                const SizedBox(width: 8),
+                                _onlineBadge(context),
+                              ],
+                            ],
                           ),
                           const SizedBox(height: 2),
                           Text(
@@ -857,6 +903,16 @@ class _LibraryPageState extends State<LibraryPage> {
   }
 
   Widget _buildListCover(BuildContext context, Book book) {
+    final onlineCover = _sourceCoverUrl(book);
+    if (book.isOnline && onlineCover != null) {
+      return Image.network(
+        onlineCover.toString(),
+        fit: BoxFit.cover,
+        cacheWidth: (64 * MediaQuery.of(context).devicePixelRatio).round(),
+        errorBuilder: (context, error, stackTrace) =>
+            _buildListDefaultCover(context, book),
+      );
+    }
     if (book.coverImagePath != null && book.coverImagePath!.isNotEmpty) {
       final fit = Platform.isAndroid ? BoxFit.contain : BoxFit.cover;
       // 列表封面显示宽度固定 64，按屏幕像素密度限制解码尺寸即可
@@ -892,6 +948,79 @@ class _LibraryPageState extends State<LibraryPage> {
         ),
       ),
     );
+  }
+
+  Widget _onlineBadge(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.primaryContainer,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          context.l10n.bookSourceOnlineBadge,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onPrimaryContainer,
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      );
+
+  Future<void> _downloadOnlineBook(Book book) async {
+    final progress = ValueNotifier<(int, int)>((0, 0));
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => PopScope(
+        canPop: false,
+        child: AlertDialog(
+          title: Text(context.l10n.bookSourceDownloading),
+          content: ValueListenableBuilder<(int, int)>(
+            valueListenable: progress,
+            builder: (context, value, _) => Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                LinearProgressIndicator(
+                  value: value.$2 <= 0 ? null : value.$1 / value.$2,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  value.$2 <= 0
+                      ? context.l10n.bookSourceFetchingCatalog
+                      : context.l10n.bookSourceDownloadProgress(
+                          value.$1,
+                          value.$2,
+                        ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    try {
+      final source = _sourceShelfService.sourceFrom(book);
+      final sourceBook = _sourceShelfService.sourceBookFrom(book);
+      await _sourceShelfService.downloadToLocal(
+        source: source,
+        book: sourceBook,
+        onProgress: (completed, total) => progress.value = (completed, total),
+      );
+      if (!mounted) return;
+      Navigator.of(context, rootNavigator: true).pop();
+      showSideToast(context, context.l10n.bookSourceDownloadConverted);
+      await _loadBooks();
+    } catch (error) {
+      if (!mounted) return;
+      Navigator.of(context, rootNavigator: true).pop();
+      showSideToast(
+        context,
+        context.l10n.bookSourceDownloadFailed('$error'),
+      );
+    } finally {
+      progress.dispose();
+    }
   }
 
   void _showBookOptions(Book book) {
@@ -1073,9 +1202,12 @@ class _LibraryPageState extends State<LibraryPage> {
                         icon: Icons.play_circle_outline,
                         iconColor: localScheme.primary,
                         title: context.l10n.continueReading,
-                        subtitle: book.currentPage > 0
-                            ? context.l10n.libraryPageNumber(book.currentPage)
-                            : context.l10n.libraryStartFromBeginning,
+                        subtitle: book.isOnline
+                            ? context.l10n.bookSourceOnlineBadge
+                            : book.currentPage > 0
+                                ? context.l10n
+                                    .libraryPageNumber(book.currentPage)
+                                : context.l10n.libraryStartFromBeginning,
                         backgroundColor:
                             localScheme.primaryContainer.withValues(
                           alpha: isMaterial3Style ? 0.42 : 0.15,
@@ -1084,13 +1216,30 @@ class _LibraryPageState extends State<LibraryPage> {
                           Navigator.pop(context);
                           final fullBook = await _bookDao.getBookById(book.id!);
                           if (fullBook != null && context.mounted) {
-                            await NativeReaderService.openBook(
-                                context, fullBook);
+                            await _openBook(fullBook);
                             _loadBooks();
                           }
                         },
                       ),
                       const SizedBox(height: 8),
+                      if (book.isOnline) ...[
+                        _buildOptionItem(
+                          context: context,
+                          icon: Icons.download_for_offline_outlined,
+                          iconColor: localScheme.secondary,
+                          title: context.l10n.bookSourceDownloadLocal,
+                          subtitle: context.l10n.bookSourceDownloadLocalHint,
+                          backgroundColor:
+                              localScheme.secondaryContainer.withValues(
+                            alpha: isMaterial3Style ? 0.44 : 0.15,
+                          ),
+                          onTap: () {
+                            Navigator.pop(context);
+                            unawaited(_downloadOnlineBook(book));
+                          },
+                        ),
+                        const SizedBox(height: 8),
+                      ],
                       _buildOptionItem(
                         context: context,
                         icon: Icons.info_outline,
@@ -1441,15 +1590,17 @@ class _LibraryPageState extends State<LibraryPage> {
     try {
       // 1. 删除书籍文件
       onProgress?.call(l10n.libraryDeletingBookFile);
-      final file = File(book.filePath);
-      if (await file.exists()) {
-        await file.delete();
-        debugPrint('✅ 已删除书籍文件: ${book.filePath}');
-      } else {
-        debugPrint('⚠️ 书籍文件不存在: ${book.filePath}');
-      }
+      if (book.filePath.isNotEmpty) {
+        final file = File(book.filePath);
+        if (await file.exists()) {
+          await file.delete();
+          debugPrint('✅ 已删除书籍文件: ${book.filePath}');
+        } else {
+          debugPrint('⚠️ 书籍文件不存在: ${book.filePath}');
+        }
 
-      // 2. 删除封面图片文件
+        // 2. 删除封面图片文件
+      }
       onProgress?.call(l10n.libraryDeletingCoverImage);
       if (book.coverImagePath != null && book.coverImagePath!.isNotEmpty) {
         final coverFile = File(book.coverImagePath!);
@@ -1555,6 +1706,29 @@ class _BookCoverItem extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                           child: _buildCoverImage(context, book),
                         ),
+                        if (book.isOnline)
+                          Positioned(
+                            top: 6,
+                            right: 6,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 7,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: scheme.primary,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                context.l10n.bookSourceOnlineBadge,
+                                style: TextStyle(
+                                  color: scheme.onPrimary,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ),
                         // 阅读进度指示器（仅在有进度时显示）
                         if (progress > 0)
                           Positioned(
@@ -1591,7 +1765,8 @@ class _BookCoverItem extends StatelessWidget {
                         if (book.currentPage > 0)
                           Positioned(
                             top: 6,
-                            right: 6,
+                            left: book.isOnline ? 6 : null,
+                            right: book.isOnline ? null : 6,
                             child: Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 6,
@@ -1682,6 +1857,18 @@ class _BookCoverItem extends StatelessWidget {
     final scheme = theme.colorScheme;
     final isMaterial3Style =
         theme.extension<UiStyleThemeExtension>()?.isMaterial3Style ?? false;
+    final onlineCover = _sourceCoverUrl(book);
+    if (book.isOnline && onlineCover != null) {
+      return Image.network(
+        onlineCover.toString(),
+        width: double.infinity,
+        height: double.infinity,
+        fit: BoxFit.cover,
+        cacheWidth: (240 * MediaQuery.of(context).devicePixelRatio).round(),
+        errorBuilder: (context, error, stackTrace) =>
+            _buildDefaultCover(context),
+      );
+    }
     if (book.coverImagePath != null && book.coverImagePath!.isNotEmpty) {
       final fit = Platform.isAndroid ? BoxFit.contain : BoxFit.cover;
       // 有封面图片时，直接显示真实的书籍封面
@@ -1755,5 +1942,18 @@ class _BookCoverItem extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+Uri? _sourceCoverUrl(Book book) {
+  final raw = book.sourceBookJson;
+  if (raw == null || raw.isEmpty) return null;
+  try {
+    final decoded = jsonDecode(raw);
+    if (decoded is! Map) return null;
+    final value = decoded['coverUrl'];
+    return value is String && value.isNotEmpty ? Uri.tryParse(value) : null;
+  } catch (_) {
+    return null;
   }
 }

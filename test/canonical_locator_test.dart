@@ -4,7 +4,7 @@ import 'package:xxread/core/reader/canonical_locator.dart';
 void main() {
   group('RenderedLocator', () {
     test('uses the Flutter-native renderer when stored data is unknown', () {
-      final locator = RenderedLocator.fromJson({
+      final locator = RenderedLocator.fromJson(const {
         'version': 1,
         'format': 'epub',
         'renderer': 'unknown-renderer',

@@ -620,6 +620,8 @@
       }
     }
   },
+  "readerHorizontalMarginLabel": "左右余白",
+  "readerVerticalMarginLabel": "上下余白",
   "readerVerticalMarginValue": "上下余白  {margin}",
   "@readerVerticalMarginValue": {
     "placeholders": {
@@ -828,6 +830,17 @@
   "settingsGithubRepo": "GitHub リポジトリ",
   "settingsNewYearGreeting": "集中と節度を大切にした、自由に改変できるクロスプラットフォームリーダー。",
   "settingsGithubOpenFailed": "GitHub のリンクを開けませんでした",
+  "updateCheckNow": "アップデートを確認",
+  "updateCheckNowSubtitle": "GitHub Releases から最新バージョンを確認します",
+  "updateAvailableTitle": "新しいバージョンがあります",
+  "updateVersionSummary": "現在のバージョン：{currentVersion}\n最新バージョン：{latestVersion}",
+  "updateNotesTitle": "更新内容",
+  "updateNotesEmpty": "このバージョンには更新内容がありません。",
+  "updateLater": "後で",
+  "updateGoToDownload": "ダウンロードへ",
+  "updateAlreadyLatest": "現在のバージョンが最新です",
+  "updateCheckFailed": "アップデートを確認できませんでした。後でもう一度お試しください",
+  "updateOpenFailed": "GitHub Release のダウンロードページを開けませんでした",
   "settingsIosOnlyFeature": "この機能は iOS のみ対応しています",
   "settingsIosSyncResult": "{storage} に同期しました\n書籍 {books} 冊、ファイル {files} 件をコピー",
   "@settingsIosSyncResult": {
@@ -1022,9 +1035,32 @@
       "week": {}
     }
   },
+  "bookSourceAddToShelf": "本棚に追加",
+  "bookSourceAddOnline": "オンラインで追加",
+  "bookSourceAddOnlineHint": "読書中にソースから章を取得してキャッシュします",
+  "bookSourceDownloadLocal": "端末にダウンロード",
+  "bookSourceDownloadLocalHint": "全章をダウンロードしてローカル TXT として追加します",
+  "bookSourceAddedOnline": "オンライン書籍として本棚に追加しました",
+  "bookSourceAlreadyOnShelf": "この本はすでに本棚にあります",
+  "bookSourceDownloading": "端末にダウンロード中",
+  "bookSourceFetchingCatalog": "章一覧を取得中…",
+  "bookSourceDownloadProgress": "{completed}/{total} 章",
+  "bookSourceDownloadComplete": "ダウンロードしてローカル本棚に追加しました",
+  "bookSourceDownloadConverted": "ダウンロードが完了し、ローカル書籍になりました",
+  "bookSourceDownloadFailed": "ダウンロード失敗：{error}",
+  "bookSourceExitAddTitle": "本棚に追加しますか？",
+  "bookSourceExitAddMessage": "「{title}」をオンライン書籍として本棚に追加しますか？読書位置は保持されます。",
+  "bookSourceNotNow": "今はしない",
+  "bookSourceOnlineBadge": "オンライン",
+  "bookSourceOnlineDataBroken": "オンライン書籍情報が壊れています：{error}",
   "readerThemeTitle": "読書テーマ",
   "readerThemeDescription": "読書画面と読書コントロールだけを変更します",
   "readerThemeDay": "昼",
+  "readerThemeMist": "ミスト",
+  "readerThemeGreen": "アイケア",
+  "readerThemeRose": "ローズ",
+  "readerThemeNavy": "ディープブルー",
   "readerThemeNight": "夜",
+  "readerThemePureBlack": "ピュアブラック",
   "readerThemeParchment": "羊皮紙"
 }

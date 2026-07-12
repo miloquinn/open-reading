@@ -24,6 +24,7 @@ import 'utils/localization_extension.dart';
 import 'utils/font_catalog_helper.dart';
 import 'utils/ui_style.dart';
 import 'widgets/app_brand_icon.dart';
+import 'widgets/update_check_gate.dart';
 
 void main() async {
   // 确保可以在 runApp 前安全调用 SystemChrome
@@ -535,7 +536,7 @@ class _XxReadAppState extends State<XxReadApp> {
     }
 
     // 已同意协议，显示主页面
-    return const HomeShellPage();
+    return const UpdateCheckGate(child: HomeShellPage());
   }
 
   Widget _buildBootstrapErrorPage(BuildContext context) {

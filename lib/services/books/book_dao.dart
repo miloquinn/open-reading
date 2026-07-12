@@ -40,6 +40,11 @@ class BookDao {
           'last_canonical_locator',
           'last_rendered_locator',
           'layout_signature',
+          'storage_type',
+          'source_id',
+          'source_book_id',
+          'source_json',
+          'source_book_json',
         ],
         orderBy: 'importDate DESC',
       );
@@ -91,6 +96,20 @@ class BookDao {
     } catch (e) {
       throw Exception('获取书籍详情失败: $e');
     }
+  }
+
+  Future<Book?> getBookBySource({
+    required String sourceId,
+    required String sourceBookId,
+  }) async {
+    final db = await _dbService.database;
+    final maps = await db.query(
+      'books',
+      where: 'source_id = ? AND source_book_id = ?',
+      whereArgs: [sourceId, sourceBookId],
+      limit: 1,
+    );
+    return maps.isEmpty ? null : Book.fromMap(maps.first);
   }
 
   Future<void> updateBookTotalPages(int bookId, int totalPages) async {

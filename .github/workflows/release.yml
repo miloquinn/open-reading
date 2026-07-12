@@ -215,7 +215,20 @@ jobs:
         run: |
           version="${RELEASE_TAG#v}"
           notes_file="${RUNNER_TEMP}/release-notes.md"
-          cat > "$notes_file" <<EOF
+          generated_notes_file="${RUNNER_TEMP}/generated-notes.md"
+          custom_notes_file=".github/release-notes/${RELEASE_TAG}.md"
+          gh api --method POST "repos/${GH_REPO}/releases/generate-notes" \
+            -f tag_name="$RELEASE_TAG" \
+            --jq '.body' > "$generated_notes_file"
+
+          : > "$notes_file"
+          if [[ -f "$custom_notes_file" ]]; then
+            cat "$custom_notes_file" >> "$notes_file"
+            printf '\n\n' >> "$notes_file"
+          fi
+          cat "$generated_notes_file" >> "$notes_file"
+          cat >> "$notes_file" <<EOF
+
           ## 下载说明
 
           - **Android arm64-v8a**：推荐，大多数现代手机和平板使用此版本

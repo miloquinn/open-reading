@@ -42,6 +42,13 @@ class Book {
   /// 旧分页缓存和 rendered locator 失效。
   /// null 表示尚未计算或旧数据兼容。
   final String? layoutSignature;
+  final String storageType;
+  final String? sourceId;
+  final String? sourceBookId;
+  final String? sourceJson;
+  final String? sourceBookJson;
+
+  bool get isOnline => storageType == 'online';
 
   Book({
     this.id,
@@ -62,6 +69,11 @@ class Book {
     this.lastCanonicalLocator,
     this.lastRenderedLocator,
     this.layoutSignature,
+    this.storageType = 'local',
+    this.sourceId,
+    this.sourceBookId,
+    this.sourceJson,
+    this.sourceBookJson,
   }) : importDate = importDate ?? DateTime.now();
 
   // content 字段已被移除
@@ -86,6 +98,11 @@ class Book {
       'last_canonical_locator': lastCanonicalLocator,
       'last_rendered_locator': lastRenderedLocator,
       'layout_signature': layoutSignature,
+      'storage_type': storageType,
+      'source_id': sourceId,
+      'source_book_id': sourceBookId,
+      'source_json': sourceJson,
+      'source_book_json': sourceBookJson,
     };
   }
 
@@ -109,6 +126,11 @@ class Book {
       lastCanonicalLocator: map['last_canonical_locator'],
       lastRenderedLocator: map['last_rendered_locator'],
       layoutSignature: map['layout_signature'],
+      storageType: map['storage_type'] as String? ?? 'local',
+      sourceId: map['source_id'] as String?,
+      sourceBookId: map['source_book_id'] as String?,
+      sourceJson: map['source_json'] as String?,
+      sourceBookJson: map['source_book_json'] as String?,
     );
   }
 
@@ -131,6 +153,12 @@ class Book {
     String? lastCanonicalLocator,
     String? lastRenderedLocator,
     String? layoutSignature,
+    String? storageType,
+    String? sourceId,
+    String? sourceBookId,
+    String? sourceJson,
+    String? sourceBookJson,
+    bool clearSourceMetadata = false,
   }) {
     return Book(
       id: id ?? this.id,
@@ -151,6 +179,13 @@ class Book {
       lastCanonicalLocator: lastCanonicalLocator ?? this.lastCanonicalLocator,
       lastRenderedLocator: lastRenderedLocator ?? this.lastRenderedLocator,
       layoutSignature: layoutSignature ?? this.layoutSignature,
+      storageType: storageType ?? this.storageType,
+      sourceId: clearSourceMetadata ? null : sourceId ?? this.sourceId,
+      sourceBookId:
+          clearSourceMetadata ? null : sourceBookId ?? this.sourceBookId,
+      sourceJson: clearSourceMetadata ? null : sourceJson ?? this.sourceJson,
+      sourceBookJson:
+          clearSourceMetadata ? null : sourceBookJson ?? this.sourceBookJson,
     );
   }
 

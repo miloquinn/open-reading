@@ -111,6 +111,9 @@ class ReaderThemePalette {
         thumbColor: accent,
         inactiveTrackColor: border,
         overlayColor: accent.withValues(alpha: 0.12),
+        trackHeight: 4,
+        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 9),
+        overlayShape: const RoundSliderOverlayShape(overlayRadius: 20),
       ),
     );
   }
@@ -122,16 +125,61 @@ class ReaderThemes {
   static const day = ReaderThemePalette(
     id: 'day',
     brightness: Brightness.light,
-    background: Color(0xFFF8F5ED),
-    text: Color(0xFF26231E),
-    secondaryText: Color(0xFF696257),
-    surface: Color(0xFFFFFCF5),
-    controlBar: Color(0xFFF0EADF),
-    controlFill: Color(0xFFE3D7C7),
-    accent: Color(0xFF765234),
+    background: Color(0xFFFFFFFF),
+    text: Color(0xFF202124),
+    secondaryText: Color(0xFF666A70),
+    surface: Color(0xFFFFFFFF),
+    controlBar: Color(0xFFF7F7F8),
+    controlFill: Color(0xFFE8EAED),
+    accent: Color(0xFF3F63B8),
     onAccent: Color(0xFFFFFFFF),
-    border: Color(0xFFB8AC9C),
-    shadow: Color(0xFF241B13),
+    border: Color(0xFFD5D8DD),
+    shadow: Color(0xFF202124),
+  );
+
+  static const mist = ReaderThemePalette(
+    id: 'mist',
+    brightness: Brightness.light,
+    background: Color(0xFFF3F5F7),
+    text: Color(0xFF27313A),
+    secondaryText: Color(0xFF65717C),
+    surface: Color(0xFFF9FAFB),
+    controlBar: Color(0xFFE8EDF1),
+    controlFill: Color(0xFFD8E0E7),
+    accent: Color(0xFF55758E),
+    onAccent: Color(0xFFFFFFFF),
+    border: Color(0xFFC3CDD5),
+    shadow: Color(0xFF23313D),
+  );
+
+  static const green = ReaderThemePalette(
+    id: 'green',
+    brightness: Brightness.light,
+    background: Color(0xFFE9F1E5),
+    text: Color(0xFF263126),
+    secondaryText: Color(0xFF5F6E5E),
+    surface: Color(0xFFF0F6ED),
+    controlBar: Color(0xFFDDE9D8),
+    controlFill: Color(0xFFC9DBC2),
+    accent: Color(0xFF527451),
+    onAccent: Color(0xFFFFFFFF),
+    border: Color(0xFFAFC2A9),
+    shadow: Color(0xFF213020),
+  );
+
+  static const rose = ReaderThemePalette(
+    id: 'rose',
+    brightness: Brightness.light,
+    background: Color(0xFFF4E8E7),
+    text: Color(0xFF3A292B),
+    secondaryText: Color(0xFF765F62),
+    surface: Color(0xFFFAF1F0),
+    controlBar: Color(0xFFEBDAD9),
+    controlFill: Color(0xFFDEC7C7),
+    accent: Color(0xFF8B5A60),
+    onAccent: Color(0xFFFFFFFF),
+    border: Color(0xFFC9AEAF),
+    shadow: Color(0xFF382326),
   );
 
   static const night = ReaderThemePalette(
@@ -146,6 +194,21 @@ class ReaderThemes {
     accent: Color(0xFFD4B77E),
     onAccent: Color(0xFF2B2112),
     border: Color(0xFF596057),
+    shadow: Color(0xFF000000),
+  );
+
+  static const pureBlack = ReaderThemePalette(
+    id: 'pureBlack',
+    brightness: Brightness.dark,
+    background: Color(0xFF000000),
+    text: Color(0xFFF2F2F2),
+    secondaryText: Color(0xFFB8B8B8),
+    surface: Color(0xFF000000),
+    controlBar: Color(0xFF101010),
+    controlFill: Color(0xFF202020),
+    accent: Color(0xFFE2E2E2),
+    onAccent: Color(0xFF000000),
+    border: Color(0xFF4A4A4A),
     shadow: Color(0xFF000000),
   );
 
@@ -164,7 +227,31 @@ class ReaderThemes {
     shadow: Color(0xFF49331F),
   );
 
-  static const all = <ReaderThemePalette>[day, night, parchment];
+  static const navy = ReaderThemePalette(
+    id: 'navy',
+    brightness: Brightness.dark,
+    background: Color(0xFF15202B),
+    text: Color(0xFFDDE7F0),
+    secondaryText: Color(0xFFAAB9C7),
+    surface: Color(0xFF1B2A38),
+    controlBar: Color(0xFF223443),
+    controlFill: Color(0xFF304A5E),
+    accent: Color(0xFF85B7D6),
+    onAccent: Color(0xFF102330),
+    border: Color(0xFF526A7C),
+    shadow: Color(0xFF000000),
+  );
+
+  static const all = <ReaderThemePalette>[
+    day,
+    mist,
+    green,
+    rose,
+    parchment,
+    navy,
+    night,
+    pureBlack,
+  ];
 
   static ReaderThemePalette byId(String? id) {
     return all.firstWhere(

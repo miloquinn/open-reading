@@ -1156,6 +1156,12 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get readerHorizontalMarginLabel => 'Horizontal margin';
+
+  @override
+  String get readerVerticalMarginLabel => 'Vertical margin';
+
+  @override
   String readerVerticalMarginValue(int margin) {
     return 'Vertical margin  $margin';
   }
@@ -1492,6 +1498,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsGithubOpenFailed => 'Could not open the GitHub link';
 
   @override
+  String get updateCheckNow => 'Check for updates';
+
+  @override
+  String get updateCheckNowSubtitle =>
+      'Get the latest version from GitHub Releases';
+
+  @override
+  String get updateAvailableTitle => 'A new version is available';
+
+  @override
+  String updateVersionSummary(String currentVersion, String latestVersion) {
+    return 'Current version: $currentVersion\nLatest version: $latestVersion';
+  }
+
+  @override
+  String get updateNotesTitle => 'What\'s new';
+
+  @override
+  String get updateNotesEmpty =>
+      'No release notes were provided for this version.';
+
+  @override
+  String get updateLater => 'Later';
+
+  @override
+  String get updateGoToDownload => 'Go to update';
+
+  @override
+  String get updateAlreadyLatest => 'You\'re already using the latest version';
+
+  @override
+  String get updateCheckFailed =>
+      'Could not check for updates. Please try again later.';
+
+  @override
+  String get updateOpenFailed =>
+      'Could not open the GitHub Release download page';
+
+  @override
   String get settingsIosOnlyFeature => 'This feature is only available on iOS';
 
   @override
@@ -1790,6 +1835,72 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get bookSourceAddToShelf => 'Add to shelf';
+
+  @override
+  String get bookSourceAddOnline => 'Add online';
+
+  @override
+  String get bookSourceAddOnlineHint =>
+      'Read from the source and cache chapters as you go';
+
+  @override
+  String get bookSourceDownloadLocal => 'Download locally';
+
+  @override
+  String get bookSourceDownloadLocalHint =>
+      'Download every chapter and add a local TXT copy';
+
+  @override
+  String get bookSourceAddedOnline => 'Added to shelf as an online book';
+
+  @override
+  String get bookSourceAlreadyOnShelf => 'This book is already on your shelf';
+
+  @override
+  String get bookSourceDownloading => 'Downloading locally';
+
+  @override
+  String get bookSourceFetchingCatalog => 'Fetching chapter catalog…';
+
+  @override
+  String bookSourceDownloadProgress(int completed, int total) {
+    return '$completed/$total chapters';
+  }
+
+  @override
+  String get bookSourceDownloadComplete =>
+      'Download complete and added to the local shelf';
+
+  @override
+  String get bookSourceDownloadConverted =>
+      'Download complete. This is now a local book';
+
+  @override
+  String bookSourceDownloadFailed(String error) {
+    return 'Download failed: $error';
+  }
+
+  @override
+  String get bookSourceExitAddTitle => 'Add to shelf?';
+
+  @override
+  String bookSourceExitAddMessage(String title) {
+    return 'Add “$title” to your shelf as an online book? Your reading progress will be kept.';
+  }
+
+  @override
+  String get bookSourceNotNow => 'Not now';
+
+  @override
+  String get bookSourceOnlineBadge => 'Online';
+
+  @override
+  String bookSourceOnlineDataBroken(String error) {
+    return 'Online book data is invalid: $error';
+  }
+
+  @override
   String get readerThemeTitle => 'Reading theme';
 
   @override
@@ -1800,7 +1911,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get readerThemeDay => 'Day';
 
   @override
+  String get readerThemeMist => 'Mist';
+
+  @override
+  String get readerThemeGreen => 'Eye care';
+
+  @override
+  String get readerThemeRose => 'Rose';
+
+  @override
+  String get readerThemeNavy => 'Deep blue';
+
+  @override
   String get readerThemeNight => 'Night';
+
+  @override
+  String get readerThemePureBlack => 'Pure black';
 
   @override
   String get readerThemeParchment => 'Parchment';

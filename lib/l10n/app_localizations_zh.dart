@@ -1129,6 +1129,12 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get readerHorizontalMarginLabel => '左右页边距';
+
+  @override
+  String get readerVerticalMarginLabel => '上下页边距';
+
+  @override
   String readerVerticalMarginValue(int margin) {
     return '上下页边距  $margin';
   }
@@ -1444,6 +1450,41 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsGithubOpenFailed => '无法打开 GitHub 链接';
 
   @override
+  String get updateCheckNow => '检查更新';
+
+  @override
+  String get updateCheckNowSubtitle => '从 GitHub Releases 获取最新版本';
+
+  @override
+  String get updateAvailableTitle => '发现新版本';
+
+  @override
+  String updateVersionSummary(String currentVersion, String latestVersion) {
+    return '当前版本：$currentVersion\n最新版本：$latestVersion';
+  }
+
+  @override
+  String get updateNotesTitle => '更新说明';
+
+  @override
+  String get updateNotesEmpty => '此版本暂未提供更新说明。';
+
+  @override
+  String get updateLater => '稍后';
+
+  @override
+  String get updateGoToDownload => '前往更新';
+
+  @override
+  String get updateAlreadyLatest => '当前已是最新版本';
+
+  @override
+  String get updateCheckFailed => '检查更新失败，请稍后重试';
+
+  @override
+  String get updateOpenFailed => '无法打开 GitHub Release 下载页面';
+
+  @override
   String get settingsIosOnlyFeature => '该功能仅支持 iOS';
 
   @override
@@ -1740,6 +1781,68 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get bookSourceAddToShelf => '加入书架';
+
+  @override
+  String get bookSourceAddOnline => '在线加入书架';
+
+  @override
+  String get bookSourceAddOnlineHint => '不下载全书，阅读时从书源获取并缓存章节';
+
+  @override
+  String get bookSourceDownloadLocal => '下载到本地';
+
+  @override
+  String get bookSourceDownloadLocalHint => '下载全部章节并作为本地 TXT 加入书架';
+
+  @override
+  String get bookSourceAddedOnline => '已在线加入书架';
+
+  @override
+  String get bookSourceAlreadyOnShelf => '这本书已在书架中';
+
+  @override
+  String get bookSourceDownloading => '正在下载到本地';
+
+  @override
+  String get bookSourceFetchingCatalog => '正在获取章节目录…';
+
+  @override
+  String bookSourceDownloadProgress(int completed, int total) {
+    return '$completed/$total 章';
+  }
+
+  @override
+  String get bookSourceDownloadComplete => '下载完成，已加入本地书架';
+
+  @override
+  String get bookSourceDownloadConverted => '下载完成，已转为本地书籍';
+
+  @override
+  String bookSourceDownloadFailed(String error) {
+    return '下载失败：$error';
+  }
+
+  @override
+  String get bookSourceExitAddTitle => '加入书架？';
+
+  @override
+  String bookSourceExitAddMessage(String title) {
+    return '要把《$title》作为在线书籍加入书架吗？阅读进度会继续保留。';
+  }
+
+  @override
+  String get bookSourceNotNow => '暂不';
+
+  @override
+  String get bookSourceOnlineBadge => '在线';
+
+  @override
+  String bookSourceOnlineDataBroken(String error) {
+    return '在线书籍信息损坏：$error';
+  }
+
+  @override
   String get readerThemeTitle => '阅读主题';
 
   @override
@@ -1749,7 +1852,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get readerThemeDay => '白天';
 
   @override
+  String get readerThemeMist => '晨雾';
+
+  @override
+  String get readerThemeGreen => '护眼';
+
+  @override
+  String get readerThemeRose => '豆沙';
+
+  @override
+  String get readerThemeNavy => '深蓝';
+
+  @override
   String get readerThemeNight => '黑夜';
+
+  @override
+  String get readerThemePureBlack => '纯黑';
 
   @override
   String get readerThemeParchment => '牛皮纸';
@@ -2880,6 +2998,12 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   }
 
   @override
+  String get readerHorizontalMarginLabel => '左右頁邊距';
+
+  @override
+  String get readerVerticalMarginLabel => '上下頁邊距';
+
+  @override
   String readerVerticalMarginValue(int margin) {
     return '上下頁面邊界  $margin';
   }
@@ -3195,6 +3319,41 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get settingsGithubOpenFailed => '無法開啟 GitHub 連結';
 
   @override
+  String get updateCheckNow => '檢查更新';
+
+  @override
+  String get updateCheckNowSubtitle => '從 GitHub Releases 取得最新版本';
+
+  @override
+  String get updateAvailableTitle => '發現新版本';
+
+  @override
+  String updateVersionSummary(String currentVersion, String latestVersion) {
+    return '目前版本：$currentVersion\n最新版本：$latestVersion';
+  }
+
+  @override
+  String get updateNotesTitle => '更新說明';
+
+  @override
+  String get updateNotesEmpty => '此版本暫未提供更新說明。';
+
+  @override
+  String get updateLater => '稍後';
+
+  @override
+  String get updateGoToDownload => '前往更新';
+
+  @override
+  String get updateAlreadyLatest => '目前已是最新版本';
+
+  @override
+  String get updateCheckFailed => '檢查更新失敗，請稍後再試';
+
+  @override
+  String get updateOpenFailed => '無法開啟 GitHub Release 下載頁面';
+
+  @override
   String get settingsIosOnlyFeature => '該功能僅支援 iOS';
 
   @override
@@ -3491,6 +3650,68 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   }
 
   @override
+  String get bookSourceAddToShelf => '加入書架';
+
+  @override
+  String get bookSourceAddOnline => '線上加入書架';
+
+  @override
+  String get bookSourceAddOnlineHint => '不下載全書，閱讀時從書源取得並快取章節';
+
+  @override
+  String get bookSourceDownloadLocal => '下載到本機';
+
+  @override
+  String get bookSourceDownloadLocalHint => '下載全部章節並作為本機 TXT 加入書架';
+
+  @override
+  String get bookSourceAddedOnline => '已線上加入書架';
+
+  @override
+  String get bookSourceAlreadyOnShelf => '這本書已在書架中';
+
+  @override
+  String get bookSourceDownloading => '正在下載到本機';
+
+  @override
+  String get bookSourceFetchingCatalog => '正在取得章節目錄…';
+
+  @override
+  String bookSourceDownloadProgress(int completed, int total) {
+    return '$completed/$total 章';
+  }
+
+  @override
+  String get bookSourceDownloadComplete => '下載完成，已加入本機書架';
+
+  @override
+  String get bookSourceDownloadConverted => '下載完成，已轉為本機書籍';
+
+  @override
+  String bookSourceDownloadFailed(String error) {
+    return '下載失敗：$error';
+  }
+
+  @override
+  String get bookSourceExitAddTitle => '加入書架？';
+
+  @override
+  String bookSourceExitAddMessage(String title) {
+    return '要把《$title》作為線上書籍加入書架嗎？閱讀進度會繼續保留。';
+  }
+
+  @override
+  String get bookSourceNotNow => '暫不';
+
+  @override
+  String get bookSourceOnlineBadge => '線上';
+
+  @override
+  String bookSourceOnlineDataBroken(String error) {
+    return '線上書籍資訊損壞：$error';
+  }
+
+  @override
   String get readerThemeTitle => '閱讀主題';
 
   @override
@@ -3500,7 +3721,22 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get readerThemeDay => '白天';
 
   @override
+  String get readerThemeMist => '晨霧';
+
+  @override
+  String get readerThemeGreen => '護眼';
+
+  @override
+  String get readerThemeRose => '豆沙';
+
+  @override
+  String get readerThemeNavy => '深藍';
+
+  @override
   String get readerThemeNight => '黑夜';
+
+  @override
+  String get readerThemePureBlack => '純黑';
 
   @override
   String get readerThemeParchment => '牛皮紙';

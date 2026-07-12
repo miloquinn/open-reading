@@ -4,6 +4,7 @@
 part of 'settings_page.dart';
 
 extension _SettingsPageCoverActions on _SettingsPageState {
+  // ignore: unused_element
   void _showRestartDialog({
     String? reason,
   }) {

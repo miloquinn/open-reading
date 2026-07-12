@@ -620,6 +620,8 @@
       }
     }
   },
+  "readerHorizontalMarginLabel": "左右頁邊距",
+  "readerVerticalMarginLabel": "上下頁邊距",
   "readerVerticalMarginValue": "上下頁面邊界  {margin}",
   "@readerVerticalMarginValue": {
     "placeholders": {
@@ -828,6 +830,17 @@
   "settingsGithubRepo": "GitHub 倉庫",
   "settingsNewYearGreeting": "一個專注、克制、可自由修改的跨平台閱讀器。",
   "settingsGithubOpenFailed": "無法開啟 GitHub 連結",
+  "updateCheckNow": "檢查更新",
+  "updateCheckNowSubtitle": "從 GitHub Releases 取得最新版本",
+  "updateAvailableTitle": "發現新版本",
+  "updateVersionSummary": "目前版本：{currentVersion}\n最新版本：{latestVersion}",
+  "updateNotesTitle": "更新說明",
+  "updateNotesEmpty": "此版本暫未提供更新說明。",
+  "updateLater": "稍後",
+  "updateGoToDownload": "前往更新",
+  "updateAlreadyLatest": "目前已是最新版本",
+  "updateCheckFailed": "檢查更新失敗，請稍後再試",
+  "updateOpenFailed": "無法開啟 GitHub Release 下載頁面",
   "settingsIosOnlyFeature": "該功能僅支援 iOS",
   "settingsIosSyncResult": "已同步到{storage}\n書籍 {books} 本，檔案複製 {files} 個",
   "@settingsIosSyncResult": {
@@ -1022,9 +1035,32 @@
       "week": {}
     }
   },
+  "bookSourceAddToShelf": "加入書架",
+  "bookSourceAddOnline": "線上加入書架",
+  "bookSourceAddOnlineHint": "不下載全書，閱讀時從書源取得並快取章節",
+  "bookSourceDownloadLocal": "下載到本機",
+  "bookSourceDownloadLocalHint": "下載全部章節並作為本機 TXT 加入書架",
+  "bookSourceAddedOnline": "已線上加入書架",
+  "bookSourceAlreadyOnShelf": "這本書已在書架中",
+  "bookSourceDownloading": "正在下載到本機",
+  "bookSourceFetchingCatalog": "正在取得章節目錄…",
+  "bookSourceDownloadProgress": "{completed}/{total} 章",
+  "bookSourceDownloadComplete": "下載完成，已加入本機書架",
+  "bookSourceDownloadConverted": "下載完成，已轉為本機書籍",
+  "bookSourceDownloadFailed": "下載失敗：{error}",
+  "bookSourceExitAddTitle": "加入書架？",
+  "bookSourceExitAddMessage": "要把《{title}》作為線上書籍加入書架嗎？閱讀進度會繼續保留。",
+  "bookSourceNotNow": "暫不",
+  "bookSourceOnlineBadge": "線上",
+  "bookSourceOnlineDataBroken": "線上書籍資訊損壞：{error}",
   "readerThemeTitle": "閱讀主題",
   "readerThemeDescription": "僅改變閱讀頁面與閱讀控制列，不影響應用程式主題",
   "readerThemeDay": "白天",
+  "readerThemeMist": "晨霧",
+  "readerThemeGreen": "護眼",
+  "readerThemeRose": "豆沙",
+  "readerThemeNavy": "深藍",
   "readerThemeNight": "黑夜",
+  "readerThemePureBlack": "純黑",
   "readerThemeParchment": "牛皮紙"
 }
