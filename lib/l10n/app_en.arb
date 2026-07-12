@@ -2352,5 +2352,25 @@
     "placeholders": {
       "week": {}
     }
+  },
+  "readerThemeTitle": "Reading theme",
+  "@readerThemeTitle": {
+    "description": "Title of the reader-only theme selector"
+  },
+  "readerThemeDescription": "Only changes the reading page and its controls",
+  "@readerThemeDescription": {
+    "description": "Explains that reading themes are independent from the app theme"
+  },
+  "readerThemeDay": "Day",
+  "@readerThemeDay": {
+    "description": "Day reading theme name"
+  },
+  "readerThemeNight": "Night",
+  "@readerThemeNight": {
+    "description": "Night reading theme name"
+  },
+  "readerThemeParchment": "Parchment",
+  "@readerThemeParchment": {
+    "description": "Parchment reading theme name"
   }
 }

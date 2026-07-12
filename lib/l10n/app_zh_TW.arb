@@ -1019,5 +1019,10 @@
     "placeholders": {
       "week": {}
     }
-  }
+  },
+  "readerThemeTitle": "閱讀主題",
+  "readerThemeDescription": "僅改變閱讀頁面與閱讀控制列，不影響應用程式主題",
+  "readerThemeDay": "白天",
+  "readerThemeNight": "黑夜",
+  "readerThemeParchment": "牛皮紙"
 }

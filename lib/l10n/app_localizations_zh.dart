@@ -1732,6 +1732,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String statsWeekNumber(Object week) {
     return '第$week周';
   }
+
+  @override
+  String get readerThemeTitle => '阅读主题';
+
+  @override
+  String get readerThemeDescription => '仅改变阅读页面与阅读控制栏，不影响应用主题';
+
+  @override
+  String get readerThemeDay => '白天';
+
+  @override
+  String get readerThemeNight => '黑夜';
+
+  @override
+  String get readerThemeParchment => '牛皮纸';
 }
 
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).
@@ -3462,4 +3477,19 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String statsWeekNumber(Object week) {
     return '第$week週';
   }
+
+  @override
+  String get readerThemeTitle => '閱讀主題';
+
+  @override
+  String get readerThemeDescription => '僅改變閱讀頁面與閱讀控制列，不影響應用程式主題';
+
+  @override
+  String get readerThemeDay => '白天';
+
+  @override
+  String get readerThemeNight => '黑夜';
+
+  @override
+  String get readerThemeParchment => '牛皮紙';
 }

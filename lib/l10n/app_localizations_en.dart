@@ -1781,4 +1781,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String statsWeekNumber(Object week) {
     return 'Week $week';
   }
+
+  @override
+  String get readerThemeTitle => 'Reading theme';
+
+  @override
+  String get readerThemeDescription =>
+      'Only changes the reading page and its controls';
+
+  @override
+  String get readerThemeDay => 'Day';
+
+  @override
+  String get readerThemeNight => 'Night';
+
+  @override
+  String get readerThemeParchment => 'Parchment';
 }

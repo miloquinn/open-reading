@@ -10,11 +10,24 @@ import '../book_sources/services/book_source_registry.dart';
 import '../utils/localization_extension.dart';
 import '../utils/page_style_helper.dart';
 import '../utils/ui_style.dart';
+import 'book_source_reader_page.dart';
 import 'home_layout_constants.dart';
 import 'home_shell_page.dart';
 
 class BookSourcesPage extends StatefulWidget {
   const BookSourcesPage({super.key});
+
+  @visibleForTesting
+  static List<RegisteredBookSource> searchTargets(
+    Iterable<RegisteredBookSource> sources,
+    String? selectedSourceId,
+  ) {
+    final enabled = sources.where((source) => source.enabled);
+    if (selectedSourceId == null) return enabled.toList(growable: false);
+    return enabled
+        .where((source) => source.id == selectedSourceId)
+        .toList(growable: false);
+  }
 
   @override
   State<BookSourcesPage> createState() => _BookSourcesPageState();
@@ -27,6 +40,7 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
 
   List<RegisteredBookSource> _sources = const [];
   List<_SourcedBook> _results = const [];
+  String? _selectedSourceId;
   bool _loadingSources = true;
   bool _searching = false;
   int _failedSourceCount = 0;
@@ -58,9 +72,11 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
 
   Future<void> _search() async {
     final query = _searchController.text.trim();
-    final enabledSources =
-        _sources.where((source) => source.enabled).toList(growable: false);
-    if (query.isEmpty || enabledSources.isEmpty || _searching) return;
+    final targetSources = BookSourcesPage.searchTargets(
+      _sources,
+      _selectedSourceId,
+    );
+    if (query.isEmpty || targetSources.isEmpty || _searching) return;
 
     FocusScope.of(context).unfocus();
     setState(() {
@@ -69,7 +85,7 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
     });
 
     final batches = await Future.wait(
-      enabledSources.map((source) async {
+      targetSources.map((source) async {
         try {
           final page = await _client.search(source, query);
           return _SearchBatch(
@@ -276,41 +292,101 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
   }
 
   Widget _buildSearchPanel() {
-    final enabledCount = _sources.where((source) => source.enabled).length;
+    final enabledSources =
+        _sources.where((source) => source.enabled).toList(growable: false);
     final scheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: _panelDecoration(radius: 20),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(
-            child: TextField(
-              controller: _searchController,
-              enabled: enabledCount > 0 && !_searching,
-              textInputAction: TextInputAction.search,
-              onSubmitted: (_) => _search(),
-              decoration: InputDecoration(
-                hintText: context.l10n.bookSourcesSearchHint,
-                prefixIcon: const Icon(Icons.search_rounded),
-                border: InputBorder.none,
-                isDense: true,
+          Row(
+            children: [
+              Icon(Icons.travel_explore_rounded, color: scheme.primary),
+              const SizedBox(width: 10),
+              Text(
+                context.l10n.bookSources,
+                style: const TextStyle(fontWeight: FontWeight.w700),
               ),
-            ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _selectedSourceId ?? _allSourcesMenuValue,
+                    isExpanded: true,
+                    borderRadius: BorderRadius.circular(16),
+                    onChanged: enabledSources.isEmpty || _searching
+                        ? null
+                        : (value) {
+                            setState(() {
+                              _selectedSourceId =
+                                  value == _allSourcesMenuValue ? null : value;
+                              _results = const [];
+                              _failedSourceCount = 0;
+                            });
+                          },
+                    items: [
+                      DropdownMenuItem(
+                        value: _allSourcesMenuValue,
+                        child: Row(
+                          children: [
+                            const Icon(Icons.hub_outlined, size: 18),
+                            const SizedBox(width: 8),
+                            Text(context.l10n.statsRangeAll),
+                          ],
+                        ),
+                      ),
+                      ...enabledSources.map(
+                        (source) => DropdownMenuItem(
+                          value: source.id,
+                          child: Text(
+                            source.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 8),
-          IconButton.filled(
-            tooltip: context.l10n.bookSourcesSearch,
-            onPressed: enabledCount > 0 && !_searching ? _search : null,
-            icon: _searching
-                ? SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: scheme.onPrimary,
-                    ),
-                  )
-                : const Icon(Icons.arrow_forward_rounded),
+          const Divider(height: 18),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _searchController,
+                  enabled: enabledSources.isNotEmpty && !_searching,
+                  textInputAction: TextInputAction.search,
+                  onSubmitted: (_) => _search(),
+                  decoration: InputDecoration(
+                    hintText: context.l10n.bookSourcesSearchHint,
+                    prefixIcon: const Icon(Icons.search_rounded),
+                    border: InputBorder.none,
+                    isDense: true,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton.filled(
+                tooltip: context.l10n.bookSourcesSearch,
+                onPressed:
+                    enabledSources.isNotEmpty && !_searching ? _search : null,
+                icon: _searching
+                    ? SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: scheme.onPrimary,
+                        ),
+                      )
+                    : const Icon(Icons.arrow_forward_rounded),
+              ),
+            ],
           ),
         ],
       ),
@@ -525,9 +601,16 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
   }
 
   Widget _buildResultHeader() {
+    var scopeLabel = context.l10n.statsRangeAll;
+    for (final source in _sources) {
+      if (source.id == _selectedSourceId) {
+        scopeLabel = source.name;
+        break;
+      }
+    }
     final title = _searching
         ? context.l10n.bookSourcesSearching
-        : '${context.l10n.bookSourcesSearch} · ${_results.length}';
+        : '${context.l10n.bookSourcesSearch} · $scopeLabel · ${_results.length}';
     return Text(
       title,
       style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -674,6 +757,9 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
     if (!mounted) return;
     setState(() {
       _sources = sources;
+      if (!enabled && _selectedSourceId == source.id) {
+        _selectedSourceId = null;
+      }
       _results = const [];
       _failedSourceCount = 0;
     });
@@ -702,6 +788,7 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
     if (!mounted) return;
     setState(() {
       _sources = sources;
+      if (_selectedSourceId == source.id) _selectedSourceId = null;
       _results = _results
           .where((result) => result.source.id != source.id)
           .toList(growable: false);
@@ -901,6 +988,25 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
                 ),
                 style: Theme.of(context).textTheme.bodySmall,
               ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.of(this.context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => BookSourceReaderPage(
+                          source: result.source,
+                          book: book,
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.menu_book_rounded),
+                  label: Text(context.l10n.reading),
+                ),
+              ),
             ],
           ),
         ),
@@ -922,3 +1028,5 @@ class _SearchBatch {
 
   const _SearchBatch({required this.items, this.failed = false});
 }
+
+const String _allSourcesMenuValue = '__all_enabled_sources__';

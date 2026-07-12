@@ -1741,4 +1741,19 @@ class AppLocalizationsJa extends AppLocalizations {
   String statsWeekNumber(Object week) {
     return '第$week週';
   }
+
+  @override
+  String get readerThemeTitle => '読書テーマ';
+
+  @override
+  String get readerThemeDescription => '読書画面と読書コントロールだけを変更します';
+
+  @override
+  String get readerThemeDay => '昼';
+
+  @override
+  String get readerThemeNight => '夜';
+
+  @override
+  String get readerThemeParchment => '羊皮紙';
 }

@@ -1198,5 +1198,10 @@
   "statsCurrentStreak": "当前连读: {days}天",
   "statsHeatmapLess": "少",
   "statsHeatmapMore": "多",
-  "statsWeekNumber": "第{week}周"
+  "statsWeekNumber": "第{week}周",
+  "readerThemeTitle": "阅读主题",
+  "readerThemeDescription": "仅改变阅读页面与阅读控制栏，不影响应用主题",
+  "readerThemeDay": "白天",
+  "readerThemeNight": "黑夜",
+  "readerThemeParchment": "牛皮纸"
 }

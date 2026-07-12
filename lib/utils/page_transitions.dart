@@ -131,61 +131,49 @@ class CustomPageTransitions {
   static Route<T> createSmoothReaderPageRoute<T extends Object?>(Widget page) {
     return PageRouteBuilder<T>(
       pageBuilder: (context, animation, secondaryAnimation) => page,
-      transitionDuration: const Duration(milliseconds: 360),
-      reverseTransitionDuration: const Duration(milliseconds: 300),
-      // Reader pages may contain long text layouts, images and backdrop
-      // filters. A route snapshot avoids repainting them on every frame.
-      allowSnapshotting: true,
+      transitionDuration: const Duration(milliseconds: 420),
+      reverseTransitionDuration: const Duration(milliseconds: 320),
+      opaque: true,
+      barrierColor: Colors.transparent,
+      // Keep the live route responsive while its book-loading future resolves.
+      // The transition itself only animates compositor-friendly properties.
+      allowSnapshotting: false,
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
         final motion = CurvedAnimation(
           parent: animation,
-          curve: Curves.easeOutCubic,
+          curve: const Interval(0.08, 1, curve: Curves.easeOutQuart),
           reverseCurve: Curves.easeInCubic,
         );
         final position = Tween<Offset>(
-          begin: const Offset(0.10, 0.025),
+          begin: const Offset(0.018, 0.012),
           end: Offset.zero,
         ).animate(motion);
         final scale = Tween<double>(
-          begin: 0.965,
+          begin: 0.985,
           end: 1,
         ).animate(motion);
         final opacity = Tween<double>(begin: 0, end: 1).animate(
           CurvedAnimation(
             parent: animation,
-            curve: const Interval(0, 0.72, curve: Curves.easeOut),
+            // The solid route background is visible immediately. Delaying the
+            // page by a few frames gives the immersive inset change time to
+            // settle before any text or tablet spread becomes visible.
+            curve: const Interval(0.12, 0.78, curve: Curves.easeOutCubic),
             reverseCurve: Curves.easeIn,
           ),
         );
 
-        return Stack(
-          fit: StackFit.expand,
-          children: [
-            FadeTransition(
-              opacity: animation.drive(Tween<double>(begin: 0, end: 0.08)),
-              child: const ColoredBox(color: Colors.black),
-            ),
-            SlideTransition(
+        return ColoredBox(
+          color: Theme.of(context).colorScheme.surface,
+          child: RepaintBoundary(
+            child: SlideTransition(
               position: position,
               child: ScaleTransition(
                 scale: scale,
-                alignment: Alignment.centerRight,
-                child: FadeTransition(
-                  opacity: opacity,
-                  child: AnimatedBuilder(
-                    animation: animation,
-                    child: child,
-                    builder: (context, child) => ClipRRect(
-                      borderRadius: BorderRadius.circular(
-                        26 * (1 - animation.value),
-                      ),
-                      child: child,
-                    ),
-                  ),
-                ),
+                child: FadeTransition(opacity: opacity, child: child),
               ),
             ),
-          ],
+          ),
         );
       },
     );

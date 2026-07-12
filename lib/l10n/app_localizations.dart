@@ -3251,6 +3251,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Week {week}'**
   String statsWeekNumber(Object week);
+
+  /// Title of the reader-only theme selector
+  ///
+  /// In en, this message translates to:
+  /// **'Reading theme'**
+  String get readerThemeTitle;
+
+  /// Explains that reading themes are independent from the app theme
+  ///
+  /// In en, this message translates to:
+  /// **'Only changes the reading page and its controls'**
+  String get readerThemeDescription;
+
+  /// Day reading theme name
+  ///
+  /// In en, this message translates to:
+  /// **'Day'**
+  String get readerThemeDay;
+
+  /// Night reading theme name
+  ///
+  /// In en, this message translates to:
+  /// **'Night'**
+  String get readerThemeNight;
+
+  /// Parchment reading theme name
+  ///
+  /// In en, this message translates to:
+  /// **'Parchment'**
+  String get readerThemeParchment;
 }
 
 class _AppLocalizationsDelegate

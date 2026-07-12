@@ -181,5 +181,21 @@ dart run tool/example_book_source_server.dart
 随后在 Open Reading 的“书源”页面添加 `http://127.0.0.1:8787`。Android
 模拟器访问宿主机时通常需要改用 `http://10.0.2.2:8787`，并让服务监听可访问的网卡地址。
 
+如果需要从 Android 模拟器或同一局域网内的真机访问，请运行：
+
+```bash
+dart run tool/example_book_source_server.dart --host 0.0.0.0 --port 8787
+```
+
+服务会输出本机、Android 模拟器和局域网访问地址。真机需要与电脑处于同一局域网，
+并使用输出中的 `LAN source URL`；Windows 防火墙提示时需要允许 Dart 访问专用网络。
+
+需要同时启动多个书源来测试“全部书源”和“指定书源”搜索时，可为不同端口设置不同身份：
+
+```bash
+dart run tool/example_book_source_server.dart --host 0.0.0.0 --port 8788 \
+  --id dev.open-reading.example-source-b --name "Open Reading 示例书源 B"
+```
+
 协议文本与参考实现随 Open Reading 项目按仓库许可证开放。建议第三方实现明确标注支持的
 协议版本，例如 `Open Reading Source Protocol 1.0 compatible`。

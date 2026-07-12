@@ -12,7 +12,14 @@ import 'dart:io';
 ///
 /// Then add `http://127.0.0.1:8787` from the Sources page.
 class ExampleBookSourceServer {
+  final String sourceId;
+  final String sourceName;
   HttpServer? _server;
+
+  ExampleBookSourceServer({
+    this.sourceId = 'dev.open-reading.example-source',
+    this.sourceName = 'Open Reading 示例书源',
+  });
 
   Uri get baseUri {
     final server = _server;
@@ -86,7 +93,7 @@ class ExampleBookSourceServer {
 
     final segments = request.uri.pathSegments;
     if (request.uri.path == '/.well-known/open-reading-source.json') {
-      _json(request.response, HttpStatus.ok, _manifest());
+      _json(request.response, HttpStatus.ok, _manifest(request));
       return;
     }
     if (segments.length == 3 &&
@@ -127,17 +134,24 @@ class ExampleBookSourceServer {
     );
   }
 
-  Map<String, Object> _manifest() => {
-        'protocol': 'open-reading-source',
-        'protocolVersion': '1.0',
-        'id': 'dev.open-reading.example-source',
-        'name': 'Open Reading 示例书源',
-        'description': '仓库内置的本地协议测试书源，仅包含原创示例文本。',
-        'apiBaseUrl': baseUri.resolve('api/').toString(),
-        'websiteUrl': baseUri.toString(),
-        'languages': ['zh-CN', 'en'],
-        'capabilities': ['search', 'detail', 'catalog', 'content'],
-      };
+  Map<String, Object> _manifest(HttpRequest request) {
+    final publicBaseUri = request.requestedUri.replace(
+      path: '/',
+      query: null,
+      fragment: null,
+    );
+    return {
+      'protocol': 'open-reading-source',
+      'protocolVersion': '1.0',
+      'id': sourceId,
+      'name': sourceName,
+      'description': '仓库内置的本地协议测试书源，仅包含原创示例文本。',
+      'apiBaseUrl': publicBaseUri.resolve('api/').toString(),
+      'websiteUrl': publicBaseUri.toString(),
+      'languages': ['zh-CN', 'en'],
+      'capabilities': ['search', 'detail', 'catalog', 'content'],
+    };
+  }
 
   void _search(HttpRequest request) {
     final query = (request.uri.queryParameters['q'] ?? '').trim().toLowerCase();
@@ -344,13 +358,21 @@ const Map<String, _ExampleBook> _books = {
 
 Future<void> main(List<String> arguments) async {
   final port = _readPort(arguments);
-  final server = ExampleBookSourceServer();
-  final uri = await server.start(port: port);
-  stdout.writeln('Open Reading example source is running.');
-  stdout.writeln('Source URL: $uri');
-  stdout.writeln(
-    'Discovery: ${uri.resolve('.well-known/open-reading-source.json')}',
+  final address = _readAddress(arguments);
+  final server = ExampleBookSourceServer(
+    sourceId:
+        _readOption(arguments, '--id') ?? 'dev.open-reading.example-source',
+    sourceName: _readOption(arguments, '--name') ?? 'Open Reading 示例书源',
   );
+  final uri = await server.start(address: address, port: port);
+  stdout.writeln('Open Reading example source is running.');
+  if (address.address == InternetAddress.anyIPv4.address) {
+    stdout.writeln('Local source URL: http://127.0.0.1:$port');
+    stdout.writeln('Android emulator URL: http://10.0.2.2:$port');
+    await _printLanSourceUrls(port);
+  } else {
+    stdout.writeln('Source URL: $uri');
+  }
   stdout.writeln('Press Ctrl+C to stop.');
 
   final stopping = Completer<void>();
@@ -370,6 +392,39 @@ int _readPort(List<String> arguments) {
   final index = arguments.indexOf('--port');
   if (index < 0 || index + 1 >= arguments.length) return 8787;
   return int.tryParse(arguments[index + 1]) ?? 8787;
+}
+
+InternetAddress _readAddress(List<String> arguments) {
+  final index = arguments.indexOf('--host');
+  if (index < 0 || index + 1 >= arguments.length) {
+    return InternetAddress.loopbackIPv4;
+  }
+  final host = arguments[index + 1].trim();
+  if (host == '0.0.0.0' || host == '*') return InternetAddress.anyIPv4;
+  return InternetAddress(host);
+}
+
+String? _readOption(List<String> arguments, String option) {
+  final index = arguments.indexOf(option);
+  if (index < 0 || index + 1 >= arguments.length) return null;
+  final value = arguments[index + 1].trim();
+  return value.isEmpty ? null : value;
+}
+
+Future<void> _printLanSourceUrls(int port) async {
+  final interfaces = await NetworkInterface.list(
+    type: InternetAddressType.IPv4,
+    includeLoopback: false,
+  );
+  final addresses = interfaces
+      .expand((interface) => interface.addresses)
+      .map((address) => address.address)
+      .toSet()
+      .toList()
+    ..sort();
+  for (final address in addresses) {
+    stdout.writeln('LAN source URL: http://$address:$port');
+  }
 }
 
 extension<T> on Iterable<T> {

@@ -1019,5 +1019,10 @@
     "placeholders": {
       "week": {}
     }
-  }
+  },
+  "readerThemeTitle": "読書テーマ",
+  "readerThemeDescription": "読書画面と読書コントロールだけを変更します",
+  "readerThemeDay": "昼",
+  "readerThemeNight": "夜",
+  "readerThemeParchment": "羊皮紙"
 }
