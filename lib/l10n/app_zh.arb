@@ -1016,6 +1016,8 @@
   "readerScrollByChapterOffHint": "所有章节合并为一条连续的纵向内容流",
   "readerModeHorizontalPageHint": "点击左侧上一页，点击右侧下一页",
   "readerModeHorizontalSlideHint": "页面跟随手指横向移动并吸附翻页",
+  "readerModePageCurl": "仿真翻页",
+  "readerModePageCurlHint": "左右拖动卷起页面，松手后完成翻页或回弹",
   "readerFontSizeValue": "字体大小  {size}",
   "readerHorizontalMarginValue": "左右页边距  {margin}",
   "readerVerticalMarginValue": "上下页边距  {margin}",

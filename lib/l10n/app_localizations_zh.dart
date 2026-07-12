@@ -1113,6 +1113,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get readerModeHorizontalSlideHint => '页面跟随手指横向移动并吸附翻页';
 
   @override
+  String get readerModePageCurl => '仿真翻页';
+
+  @override
+  String get readerModePageCurlHint => '左右拖动卷起页面，松手后完成翻页或回弹';
+
+  @override
   String readerFontSizeValue(int size) {
     return '字体大小  $size';
   }
@@ -2856,6 +2862,12 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get readerModeHorizontalSlideHint => '頁面跟隨手指橫向移動並吸附翻頁';
+
+  @override
+  String get readerModePageCurl => '仿真翻頁';
+
+  @override
+  String get readerModePageCurlHint => '左右拖動捲起頁面，放開後完成翻頁或回彈';
 
   @override
   String readerFontSizeValue(int size) {

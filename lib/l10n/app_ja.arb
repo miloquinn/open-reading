@@ -602,6 +602,8 @@
   "readerScrollByChapterOffHint": "全章をひとつの連続した縦の流れとして表示",
   "readerModeHorizontalPageHint": "左側タップで前のページ、右側タップで次のページ",
   "readerModeHorizontalSlideHint": "ページが指に追従して横に動き、離すと吸着します",
+  "readerModePageCurl": "ページカール",
+  "readerModePageCurlHint": "左右にドラッグしてページをめくり、離すと完了または戻ります",
   "readerFontSizeValue": "文字サイズ  {size}",
   "@readerFontSizeValue": {
     "placeholders": {

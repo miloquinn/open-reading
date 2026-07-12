@@ -2153,6 +2153,18 @@ abstract class AppLocalizations {
   /// **'Pages follow your finger horizontally and snap into place'**
   String get readerModeHorizontalSlideHint;
 
+  /// Page mode option with an interactive simulated paper curl
+  ///
+  /// In en, this message translates to:
+  /// **'Page Curl'**
+  String get readerModePageCurl;
+
+  /// Subtitle explaining the simulated page curl mode
+  ///
+  /// In en, this message translates to:
+  /// **'Drag sideways to curl the page, then release to turn or rebound'**
+  String get readerModePageCurlHint;
+
   /// Slider label showing the current reader font size
   ///
   /// In en, this message translates to:

@@ -1456,6 +1456,14 @@
   "@readerModeHorizontalSlideHint": {
     "description": "Subtitle explaining the horizontal slide page mode"
   },
+  "readerModePageCurl": "Page Curl",
+  "@readerModePageCurl": {
+    "description": "Page mode option with an interactive simulated paper curl"
+  },
+  "readerModePageCurlHint": "Drag sideways to curl the page, then release to turn or rebound",
+  "@readerModePageCurlHint": {
+    "description": "Subtitle explaining the simulated page curl mode"
+  },
   "readerFontSizeValue": "Font size  {size}",
   "@readerFontSizeValue": {
     "description": "Slider label showing the current reader font size",

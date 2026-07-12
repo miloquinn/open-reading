@@ -23,8 +23,9 @@ import 'package:xxread/services/books/enhanced_txt_import_service.dart';
 import '../utils/localization_extension.dart';
 import '../utils/glass_config.dart';
 import '../utils/reader_themes.dart';
+import '../widgets/reader_shader_page_curl.dart';
 
-enum NativePageMode { verticalScroll, instantPage, horizontalSlide }
+enum NativePageMode { verticalScroll, instantPage, horizontalSlide, pageCurl }
 
 const int _largeTxtFileThreshold = 16 * 1024 * 1024;
 
@@ -59,6 +60,8 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
 
   late final Future<List<_NativeChapter>> _chaptersFuture;
   final PageController _pageController = PageController();
+  final ReaderPageCurlController _pageCurlController =
+      ReaderPageCurlController();
   final Map<int, GlobalKey> _continuousChapterKeys = {};
   late final Map<String, List<_ReaderPageData>> _pageCache;
   bool _readerDependenciesInitialized = false;
@@ -228,6 +231,7 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
 
   bool _usesTwoPageLayout(Size size) =>
       _pageMode != NativePageMode.verticalScroll &&
+      _pageMode != NativePageMode.pageCurl &&
       size.shortestSide >= _tabletShortestSide &&
       size.width >= _twoPageMinimumWidth;
 
@@ -474,6 +478,10 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
     int chapterCount, {
     required bool usesTwoPageLayout,
   }) {
+    if (_pageMode == NativePageMode.pageCurl) {
+      unawaited(_pageCurlController.turnForward());
+      return;
+    }
     if (_pageMode == NativePageMode.horizontalSlide &&
         _pageController.hasClients) {
       _pageController.nextPage(
@@ -495,6 +503,10 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
     int chapterCount, {
     required bool usesTwoPageLayout,
   }) {
+    if (_pageMode == NativePageMode.pageCurl) {
+      unawaited(_pageCurlController.turnBackward());
+      return;
+    }
     if (_pageMode == NativePageMode.horizontalSlide &&
         _pageController.hasClients) {
       _pageController.previousPage(
@@ -519,7 +531,10 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
     bool usesTwoPageLayout,
   ) {
     final velocity = details.primaryVelocity ?? 0;
-    if (_pageMode == NativePageMode.horizontalSlide) return;
+    if (_pageMode == NativePageMode.horizontalSlide ||
+        _pageMode == NativePageMode.pageCurl) {
+      return;
+    }
     if (_pageMode == NativePageMode.instantPage) {
       if (velocity < -350) {
         _nextPage(
@@ -871,6 +886,8 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
         return context.l10n.readerModeHorizontalPageHint;
       case NativePageMode.horizontalSlide:
         return context.l10n.readerModeHorizontalSlideHint;
+      case NativePageMode.pageCurl:
+        return context.l10n.readerModePageCurlHint;
     }
   }
 
@@ -940,6 +957,11 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
                           title: Text(context.l10n.pageTurningSlide),
                           subtitle:
                               Text(context.l10n.readerModeHorizontalSlideHint),
+                        ),
+                        RadioListTile<NativePageMode>(
+                          value: NativePageMode.pageCurl,
+                          title: Text(context.l10n.readerModePageCurl),
+                          subtitle: Text(context.l10n.readerModePageCurlHint),
                         ),
                       ],
                     ),
@@ -1375,6 +1397,52 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
         },
       );
     }
+    if (_pageMode == NativePageMode.pageCurl) {
+      final currentIndex = bookPages.indexWhere(
+        (page) =>
+            page.chapterIndex == _chapterIndex && page.pageIndex == _pageIndex,
+      );
+      if (currentIndex < 0) {
+        return _buildPageLeaf(chapter, pages[_pageIndex]);
+      }
+      final current = bookPages[currentIndex];
+      return ReaderShaderPageCurl(
+        key: ValueKey(
+          'shader-curl:${current.chapterIndex}:${current.pageIndex}',
+        ),
+        controller: _pageCurlController,
+        currentPage: _buildBookPageLeaf(
+          chapters,
+          current,
+          pageNumberOnLeft: false,
+        ),
+        forwardPage: currentIndex + 1 < bookPages.length
+            ? _buildBookPageLeaf(
+                chapters,
+                bookPages[currentIndex + 1],
+                pageNumberOnLeft: false,
+              )
+            : null,
+        backwardPage: currentIndex > 0
+            ? _buildBookPageLeaf(
+                chapters,
+                bookPages[currentIndex - 1],
+                pageNumberOnLeft: false,
+              )
+            : null,
+        onTurnForward: () => _onBookPageChanged(
+          currentIndex + 1,
+          bookPages,
+          chapters,
+        ),
+        onTurnBackward: () => _onBookPageChanged(
+          currentIndex - 1,
+          bookPages,
+          chapters,
+        ),
+        paperColor: _readerTheme.surface,
+      );
+    }
     if (usesTwoPageLayout) {
       final spreadStart = _spreadStartForPage(_pageIndex);
       return _buildSpread(
@@ -1668,7 +1736,8 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
                         Directionality.of(context),
                         MediaQuery.textScalerOf(context),
                       );
-                final bookPages = _pageMode == NativePageMode.horizontalSlide
+                final bookPages = _pageMode == NativePageMode.horizontalSlide ||
+                        _pageMode == NativePageMode.pageCurl
                     ? _bookPagesFor(
                         chapters,
                         _horizontalFirstChapter,
@@ -1757,7 +1826,8 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
                         child: GestureDetector(
                           behavior: HitTestBehavior.translucent,
                           onHorizontalDragEnd:
-                              _pageMode == NativePageMode.horizontalSlide
+                              _pageMode == NativePageMode.horizontalSlide ||
+                                      _pageMode == NativePageMode.pageCurl
                                   ? null
                                   : (details) => _handleHorizontalSwipe(
                                         details,
@@ -1776,6 +1846,7 @@ class _NativeReaderPageState extends State<NativeReaderPage> {
                       ),
                     ),
                     if (_pageMode != NativePageMode.verticalScroll &&
+                        _pageMode != NativePageMode.pageCurl &&
                         !usesTwoPageLayout)
                       Positioned(
                         left: 0,

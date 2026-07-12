@@ -1115,6 +1115,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get readerModeHorizontalSlideHint => 'ページが指に追従して横に動き、離すと吸着します';
 
   @override
+  String get readerModePageCurl => 'ページカール';
+
+  @override
+  String get readerModePageCurlHint => '左右にドラッグしてページをめくり、離すと完了または戻ります';
+
+  @override
   String readerFontSizeValue(int size) {
     return '文字サイズ  $size';
   }

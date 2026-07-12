@@ -98,6 +98,8 @@ flutter:
   # the material Icons class.
   uses-material-design: true
   generate: true  # 启用国际化生成
+  shaders:
+    - shaders/reader_page_curl.frag
 
   # To add assets to your application, add an assets section, like this:
   assets:

@@ -1139,6 +1139,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Pages follow your finger horizontally and snap into place';
 
   @override
+  String get readerModePageCurl => 'Page Curl';
+
+  @override
+  String get readerModePageCurlHint =>
+      'Drag sideways to curl the page, then release to turn or rebound';
+
+  @override
   String readerFontSizeValue(int size) {
     return 'Font size  $size';
   }
