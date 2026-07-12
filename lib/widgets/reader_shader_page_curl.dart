@@ -30,6 +30,7 @@ class ReaderShaderPageCurl extends StatefulWidget {
     this.forwardPage,
     this.backwardPage,
     this.controller,
+    this.preparePages,
   });
 
   final Widget currentPage;
@@ -39,6 +40,7 @@ class ReaderShaderPageCurl extends StatefulWidget {
   final VoidCallback onTurnBackward;
   final Color paperColor;
   final ReaderPageCurlController? controller;
+  final Future<void> Function()? preparePages;
 
   @override
   State<ReaderShaderPageCurl> createState() => _ReaderShaderPageCurlState();
@@ -72,7 +74,7 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
     super.initState();
     _settleController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 360),
+      duration: const Duration(milliseconds: 190),
     )..addListener(_onSettleTick);
     widget.controller?._attach(this);
     unawaited(_loadShader());
@@ -109,19 +111,13 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
     } catch (error, stackTrace) {
       debugPrint('Reader page curl shader failed to load: $error');
       debugPrintStack(stackTrace: stackTrace);
-      // The live page remains usable on platforms without runtime shaders.
     }
   }
 
   Future<ui.Image?> _capture(GlobalKey key) async {
     final boundary =
         key.currentContext?.findRenderObject() as RenderRepaintBoundary?;
-    // `debugNeedsPaint` is a debug-only diagnostic and throws when accessed in
-    // profile/release builds. A post-frame capture already runs after paint;
-    // if a later capture races a frame, `toImage` reports that safely below.
-    if (boundary == null || !boundary.hasSize) {
-      return null;
-    }
+    if (boundary == null || !boundary.hasSize) return null;
     final deviceRatio = MediaQuery.devicePixelRatioOf(context);
     final captureRatio = deviceRatio.clamp(1.0, 2.5);
     try {
@@ -134,6 +130,18 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
   }
 
   Future<void> _capturePages() async {
+    if (!mounted) return;
+    final preparePages = widget.preparePages;
+    if (preparePages != null) {
+      try {
+        await preparePages();
+        if (!mounted) return;
+        await WidgetsBinding.instance.endOfFrame;
+      } catch (error, stackTrace) {
+        debugPrint('Reader page curl preparation failed: $error');
+        debugPrintStack(stackTrace: stackTrace);
+      }
+    }
     if (!mounted) return;
     final current = await _capture(_currentKey);
     final forward =
@@ -230,9 +238,13 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
   Future<void> _settleCurl({required bool commit}) async {
     if (_settling) return;
     _settling = true;
+    final remaining = commit ? 1.0 - _progress : _progress;
+    _settleController.duration = Duration(
+      milliseconds: (80 + remaining * 140).round().clamp(90, 220),
+    );
     _settleFrom = _curlPosition;
     _settleTo = commit
-        ? (_reverse ? const Offset(1.35, 0.52) : const Offset(-0.35, 0.52))
+        ? Offset(_reverse ? 1.35 : -0.35, _startPosition.dy)
         : _startPosition;
     try {
       await _settleController.forward(from: 0);
@@ -254,7 +266,7 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
 
   void _onSettleTick() {
     if (!mounted) return;
-    final t = Curves.easeOutCubic.transform(_settleController.value);
+    final t = Curves.easeOutQuart.transform(_settleController.value);
     setState(() => _curlPosition = Offset.lerp(_settleFrom, _settleTo, t)!);
   }
 
@@ -288,12 +300,7 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
                       shader: _shader!,
                       currentPage: _reverse ? _backwardImage! : _currentImage!,
                       targetPage: _reverse ? _currentImage! : _forwardImage!,
-                      curlPosition: _reverse
-                          ? Offset(
-                              -0.35 + (_progress * 1.33),
-                              _curlPosition.dy,
-                            )
-                          : _curlPosition,
+                      curlPosition: _curlPosition,
                       curlDirection:
                           _reverse ? const Offset(1, 0) : _curlDirection,
                       paperColor: widget.paperColor,
