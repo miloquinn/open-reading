@@ -219,6 +219,7 @@ jobs:
           custom_notes_file=".github/release-notes/${RELEASE_TAG}.md"
           gh api --method POST "repos/${GH_REPO}/releases/generate-notes" \
             -f tag_name="$RELEASE_TAG" \
+            -f target_commitish="$GITHUB_SHA" \
             --jq '.body' > "$generated_notes_file"
 
           : > "$notes_file"
