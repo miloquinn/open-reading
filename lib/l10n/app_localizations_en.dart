@@ -15,10 +15,66 @@ class AppLocalizationsEn extends AppLocalizations {
   String get home => 'Home';
 
   @override
-  String get library => 'Library';
+  String get library => 'Bookshelf';
 
   @override
   String get bookSources => 'Sources';
+
+  @override
+  String get discover => 'Discover';
+
+  @override
+  String get discoverSubtitle =>
+      'Search and browse enabled providers to find your next book';
+
+  @override
+  String get discoverRecommended => 'For you';
+
+  @override
+  String get discoverCategories => 'Categories';
+
+  @override
+  String get discoverLatest => 'Latest';
+
+  @override
+  String get discoverLoadFailed => 'Could not load discovery content';
+
+  @override
+  String get discoverRetry => 'Try again';
+
+  @override
+  String get discoverUnsupportedTitle =>
+      'Current sources do not support this section';
+
+  @override
+  String discoverUnsupportedMessage(String capability) {
+    return 'A source with the $capability capability is required. Existing sources can still be searched.';
+  }
+
+  @override
+  String get discoverChooseCategory => 'Choose a category';
+
+  @override
+  String get discoverChooseCategoryHint =>
+      'Select a category above to browse books from that provider.';
+
+  @override
+  String get discoverCategoryEmpty =>
+      'There are no books to show in this category yet.';
+
+  @override
+  String get bookSourceManagementTitle => 'Manage sources';
+
+  @override
+  String get bookSourceManagementSubtitle =>
+      'Add, enable, remove, and inspect content providers. Discovery stays focused on finding books.';
+
+  @override
+  String get settingsContentSourcesTitle => 'Content sources';
+
+  @override
+  String get settingsContentSourcesSubtitle =>
+      'Add, enable, or remove open book sources';
 
   @override
   String get bookSourcesSubtitle =>
@@ -121,11 +177,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not open the protocol repository';
 
   @override
-  String get bookSourcesProtocolDialogTitle => 'Open source protocol v1';
+  String get bookSourcesProtocolDialogTitle => 'Open source protocol v1.1';
 
   @override
   String get bookSourcesProtocolDialogBody =>
-      'A source publishes /.well-known/open-reading-source.json and implements /v1/search plus book details, chapter catalogs, and chapter content endpoints. Version 1 supports public HTTP(S) sources that do not require sign-in.';
+      'A source publishes /.well-known/open-reading-source.json and implements search, book details, chapter catalogs, and chapter content. Version 1.1 optionally adds discovery, categories, and browsing for public HTTP(S) sources that do not require sign-in.';
 
   @override
   String get bookSourcesClose => 'Close';

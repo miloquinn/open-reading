@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -7,6 +8,10 @@ import '../protocol/book_source_protocol.dart';
 
 class BookSourceRegistry {
   static const String _storageKey = 'open_reading_book_sources_v1';
+  static final StreamController<void> _changesController =
+      StreamController<void>.broadcast();
+
+  Stream<void> get changes => _changesController.stream;
 
   Future<List<RegisteredBookSource>> load() async {
     final preferences = await SharedPreferences.getInstance();
@@ -73,6 +78,7 @@ class BookSourceRegistry {
       sources.add(source);
     }
     await _save(sources);
+    _changesController.add(null);
     return load();
   }
 
@@ -85,12 +91,14 @@ class BookSourceRegistry {
             source.id == id ? source.copyWith(enabled: enabled) : source)
         .toList(growable: false);
     await _save(sources);
+    _changesController.add(null);
     return load();
   }
 
   Future<List<RegisteredBookSource>> remove(String id) async {
     final sources = (await load()).where((source) => source.id != id).toList();
     await _save(sources);
+    _changesController.add(null);
     return load();
   }
 

@@ -20,6 +20,7 @@ import '../widgets/contributors_view.dart';
 import '../widgets/update_check_gate.dart';
 import 'home_shell_page.dart';
 import 'home_layout_constants.dart';
+import 'book_source_management_page.dart';
 import '../utils/localization_extension.dart';
 import '../utils/page_style_helper.dart';
 import '../utils/system_ui_helper.dart';
@@ -820,6 +821,19 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           const SizedBox(height: 20),
           _buildSectionCard(
+            title: l10n.settingsContentSourcesTitle,
+            icon: Icons.hub_outlined,
+            children: [
+              _buildActionSetting(
+                title: l10n.bookSourceManagementTitle,
+                subtitle: l10n.settingsContentSourcesSubtitle,
+                onTap: _openBookSourceManagement,
+                icon: Icons.travel_explore_outlined,
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          _buildSectionCard(
             title: l10n.settingsAiAssistantTitle,
             icon: Icons.auto_awesome_outlined,
             children: [
@@ -907,6 +921,14 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _openBookSourceManagement() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const BookSourceManagementPage(),
       ),
     );
   }

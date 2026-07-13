@@ -1,6 +1,6 @@
 {
   "protocol": "open-reading-source",
-  "protocolVersion": "1.0",
+  "protocolVersion": "1.1",
   "id": "org.example.public-books",
   "name": "Example Public Books",
   "description": "A minimal Open Reading compatible source",
@@ -8,5 +8,13 @@
   "iconUrl": "https://books.example.org/icon.png",
   "websiteUrl": "https://books.example.org/",
   "languages": ["zh-CN", "en"],
-  "capabilities": ["search", "detail", "catalog", "content"]
+  "capabilities": [
+    "search",
+    "discover",
+    "categories",
+    "browse",
+    "detail",
+    "catalog",
+    "content"
+  ]
 }

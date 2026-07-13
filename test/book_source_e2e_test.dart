@@ -20,7 +20,30 @@ void main() {
     );
 
     expect(source.id, 'dev.open-reading.example-source');
-    expect(source.capabilities, containsAll(['search', 'catalog', 'content']));
+    expect(
+      source.capabilities,
+      containsAll([
+        'search',
+        'discover',
+        'categories',
+        'browse',
+        'catalog',
+        'content',
+      ]),
+    );
+
+    final discovery = await client.getDiscovery(source);
+    expect(discovery.sections, isNotEmpty);
+    expect(discovery.sections.first.items, isNotEmpty);
+
+    final categories = await client.getCategories(source);
+    expect(categories, isNotEmpty);
+
+    final browsePage = await client.browse(
+      source,
+      category: categories.first.id,
+    );
+    expect(browsePage.items, isNotEmpty);
 
     final searchPage = await client.search(source, '协议');
     expect(searchPage.total, 1);

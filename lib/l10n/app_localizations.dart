@@ -116,7 +116,7 @@ abstract class AppLocalizations {
   /// Library tab label
   ///
   /// In en, this message translates to:
-  /// **'Library'**
+  /// **'Bookshelf'**
   String get library;
 
   /// Book sources tab label
@@ -124,6 +124,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sources'**
   String get bookSources;
+
+  /// No description provided for @discover.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover'**
+  String get discover;
+
+  /// No description provided for @discoverSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Search and browse enabled providers to find your next book'**
+  String get discoverSubtitle;
+
+  /// No description provided for @discoverRecommended.
+  ///
+  /// In en, this message translates to:
+  /// **'For you'**
+  String get discoverRecommended;
+
+  /// No description provided for @discoverCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'Categories'**
+  String get discoverCategories;
+
+  /// No description provided for @discoverLatest.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest'**
+  String get discoverLatest;
+
+  /// No description provided for @discoverLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load discovery content'**
+  String get discoverLoadFailed;
+
+  /// No description provided for @discoverRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get discoverRetry;
+
+  /// No description provided for @discoverUnsupportedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Current sources do not support this section'**
+  String get discoverUnsupportedTitle;
+
+  /// No description provided for @discoverUnsupportedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'A source with the {capability} capability is required. Existing sources can still be searched.'**
+  String discoverUnsupportedMessage(String capability);
+
+  /// No description provided for @discoverChooseCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a category'**
+  String get discoverChooseCategory;
+
+  /// No description provided for @discoverChooseCategoryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a category above to browse books from that provider.'**
+  String get discoverChooseCategoryHint;
+
+  /// No description provided for @discoverCategoryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'There are no books to show in this category yet.'**
+  String get discoverCategoryEmpty;
+
+  /// No description provided for @bookSourceManagementTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage sources'**
+  String get bookSourceManagementTitle;
+
+  /// No description provided for @bookSourceManagementSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add, enable, remove, and inspect content providers. Discovery stays focused on finding books.'**
+  String get bookSourceManagementSubtitle;
+
+  /// No description provided for @settingsContentSourcesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Content sources'**
+  String get settingsContentSourcesTitle;
+
+  /// No description provided for @settingsContentSourcesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add, enable, or remove open book sources'**
+  String get settingsContentSourcesSubtitle;
 
   /// No description provided for @bookSourcesSubtitle.
   ///
@@ -308,13 +404,13 @@ abstract class AppLocalizations {
   /// No description provided for @bookSourcesProtocolDialogTitle.
   ///
   /// In en, this message translates to:
-  /// **'Open source protocol v1'**
+  /// **'Open source protocol v1.1'**
   String get bookSourcesProtocolDialogTitle;
 
   /// No description provided for @bookSourcesProtocolDialogBody.
   ///
   /// In en, this message translates to:
-  /// **'A source publishes /.well-known/open-reading-source.json and implements /v1/search plus book details, chapter catalogs, and chapter content endpoints. Version 1 supports public HTTP(S) sources that do not require sign-in.'**
+  /// **'A source publishes /.well-known/open-reading-source.json and implements search, book details, chapter catalogs, and chapter content. Version 1.1 optionally adds discovery, categories, and browsing for public HTTP(S) sources that do not require sign-in.'**
   String get bookSourcesProtocolDialogBody;
 
   /// No description provided for @bookSourcesClose.

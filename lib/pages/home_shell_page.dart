@@ -14,6 +14,7 @@ import 'home_widgets/home_page_wrappers.dart';
 import 'home_widgets/home_mobile_top_bar_widget.dart';
 import 'library_page.dart';
 import 'book_sources_page.dart';
+import 'book_source_management_page.dart';
 import 'settings_page.dart';
 import 'import_book_page.dart';
 import '../utils/layout_helper.dart';
@@ -134,9 +135,9 @@ class _HomeShellPageState extends State<HomeShellPage> {
         page: const LibraryPage(),
       ),
       HomeNavigationItem(
-        icon: Icons.hub_outlined,
-        selectedIcon: Icons.hub_rounded,
-        label: l10n.bookSources,
+        icon: Icons.explore_outlined,
+        selectedIcon: Icons.explore_rounded,
+        label: l10n.discover,
         page: const BookSourcesPage(),
       ),
       HomeNavigationItem(

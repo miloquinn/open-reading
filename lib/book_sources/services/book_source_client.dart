@@ -140,6 +140,81 @@ class BookSourceClient {
     }
   }
 
+  Future<BookSourceDiscoveryPage> getDiscovery(
+    RegisteredBookSource source,
+  ) async {
+    if (!source.capabilities.contains('discover')) {
+      throw const BookSourceProtocolException(
+        'This source does not support discovery.',
+      );
+    }
+    final uri = _apiUri(source.apiBaseUrl, 'v1/discover');
+    try {
+      return BookSourceDiscoveryPage.fromJson(
+        decodeBookSourceJson(await _getBounded(uri)),
+      );
+    } on DioException catch (error) {
+      throw BookSourceProtocolException(_dioErrorMessage(error));
+    }
+  }
+
+  Future<List<BookSourceCategory>> getCategories(
+    RegisteredBookSource source,
+  ) async {
+    if (!source.capabilities.contains('categories')) {
+      throw const BookSourceProtocolException(
+        'This source does not support categories.',
+      );
+    }
+    final uri = _apiUri(source.apiBaseUrl, 'v1/categories');
+    try {
+      final json = decodeBookSourceJson(await _getBounded(uri));
+      final items = json['items'];
+      if (items is! List) {
+        throw const BookSourceProtocolException(
+          'Category response must contain an items array.',
+        );
+      }
+      return items
+          .map((item) => BookSourceCategory.fromJson(
+                decodeBookSourceJson(item),
+              ))
+          .toList(growable: false);
+    } on DioException catch (error) {
+      throw BookSourceProtocolException(_dioErrorMessage(error));
+    }
+  }
+
+  Future<BookSourceSearchPage> browse(
+    RegisteredBookSource source, {
+    String? category,
+    String sort = 'latest',
+    int page = 1,
+    int pageSize = 20,
+  }) async {
+    if (!source.capabilities.contains('browse')) {
+      throw const BookSourceProtocolException(
+        'This source does not support browsing.',
+      );
+    }
+    final uri = _apiUri(source.apiBaseUrl, 'v1/browse').replace(
+      queryParameters: {
+        if (category != null && category.trim().isNotEmpty)
+          'category': category.trim(),
+        'sort': sort,
+        'page': '$page',
+        'pageSize': '$pageSize',
+      },
+    );
+    try {
+      return BookSourceSearchPage.fromJson(
+        decodeBookSourceJson(await _getBounded(uri)),
+      );
+    } on DioException catch (error) {
+      throw BookSourceProtocolException(_dioErrorMessage(error));
+    }
+  }
+
   Future<BookSourceBook> getBook(
     RegisteredBookSource source,
     String bookId,

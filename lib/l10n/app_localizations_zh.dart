@@ -15,10 +15,60 @@ class AppLocalizationsZh extends AppLocalizations {
   String get home => '首页';
 
   @override
-  String get library => '书库';
+  String get library => '书架';
 
   @override
   String get bookSources => '书源';
+
+  @override
+  String get discover => '发现';
+
+  @override
+  String get discoverSubtitle => '从已启用的内容来源中搜索、浏览并发现下一本书';
+
+  @override
+  String get discoverRecommended => '推荐';
+
+  @override
+  String get discoverCategories => '分类';
+
+  @override
+  String get discoverLatest => '最新';
+
+  @override
+  String get discoverLoadFailed => '发现内容加载失败';
+
+  @override
+  String get discoverRetry => '重新加载';
+
+  @override
+  String get discoverUnsupportedTitle => '当前书源暂不支持此栏目';
+
+  @override
+  String discoverUnsupportedMessage(String capability) {
+    return '需要书源提供 $capability 能力；现有书源仍可继续用于搜索。';
+  }
+
+  @override
+  String get discoverChooseCategory => '选择一个分类';
+
+  @override
+  String get discoverChooseCategoryHint => '选择上方分类后查看该书源提供的书籍。';
+
+  @override
+  String get discoverCategoryEmpty => '这个分类暂时没有可展示的书籍。';
+
+  @override
+  String get bookSourceManagementTitle => '书源管理';
+
+  @override
+  String get bookSourceManagementSubtitle => '管理内容来源的添加、启停与协议信息。发现页只保留找书体验。';
+
+  @override
+  String get settingsContentSourcesTitle => '内容来源';
+
+  @override
+  String get settingsContentSourcesSubtitle => '添加、启用或移除开放书源';
 
   @override
   String get bookSourcesSubtitle => '连接开放书源，跨来源搜索可阅读内容';
@@ -115,11 +165,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bookSourcesProtocolRepositoryOpenFailed => '无法打开书源协议仓库';
 
   @override
-  String get bookSourcesProtocolDialogTitle => '开放书源协议 v1';
+  String get bookSourcesProtocolDialogTitle => '开放书源协议 v1.1';
 
   @override
   String get bookSourcesProtocolDialogBody =>
-      '服务在 /.well-known/open-reading-source.json 发布发现文档，并实现 /v1/search、书籍详情、章节目录与章节正文接口。首版仅支持公开、无需登录的 HTTP(S) 书源。';
+      '服务在 /.well-known/open-reading-source.json 发布发现文档，并实现搜索、书籍详情、章节目录与章节正文接口。v1.1 可选支持推荐、分类与浏览，仍仅面向公开、无需登录的 HTTP(S) 书源。';
 
   @override
   String get bookSourcesClose => '关闭';
@@ -1884,10 +1934,60 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get home => '首頁';
 
   @override
-  String get library => '書庫';
+  String get library => '書架';
 
   @override
   String get bookSources => '書源';
+
+  @override
+  String get discover => '探索';
+
+  @override
+  String get discoverSubtitle => '從已啟用的內容來源搜尋、瀏覽並找到下一本書';
+
+  @override
+  String get discoverRecommended => '推薦';
+
+  @override
+  String get discoverCategories => '分類';
+
+  @override
+  String get discoverLatest => '最新';
+
+  @override
+  String get discoverLoadFailed => '探索內容載入失敗';
+
+  @override
+  String get discoverRetry => '重新載入';
+
+  @override
+  String get discoverUnsupportedTitle => '目前書源暫不支援此欄目';
+
+  @override
+  String discoverUnsupportedMessage(String capability) {
+    return '需要書源提供 $capability 能力；現有書源仍可繼續用於搜尋。';
+  }
+
+  @override
+  String get discoverChooseCategory => '選擇一個分類';
+
+  @override
+  String get discoverChooseCategoryHint => '選擇上方分類後查看該書源提供的書籍。';
+
+  @override
+  String get discoverCategoryEmpty => '這個分類暫時沒有可顯示的書籍。';
+
+  @override
+  String get bookSourceManagementTitle => '書源管理';
+
+  @override
+  String get bookSourceManagementSubtitle => '管理內容來源的新增、啟停與協定資訊。探索頁只保留找書體驗。';
+
+  @override
+  String get settingsContentSourcesTitle => '內容來源';
+
+  @override
+  String get settingsContentSourcesSubtitle => '新增、啟用或移除開放書源';
 
   @override
   String get bookSourcesSubtitle => '連接開放書源，跨來源搜尋可閱讀內容';
@@ -1984,11 +2084,11 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get bookSourcesProtocolRepositoryOpenFailed => '無法開啟書源協定倉庫';
 
   @override
-  String get bookSourcesProtocolDialogTitle => '開放書源協定 v1';
+  String get bookSourcesProtocolDialogTitle => '開放書源協定 v1.1';
 
   @override
   String get bookSourcesProtocolDialogBody =>
-      '服務在 /.well-known/open-reading-source.json 發布探索文件，並實作 /v1/search、書籍詳情、章節目錄與章節內文介面。首版僅支援公開、無需登入的 HTTP(S) 書源。';
+      '服務在 /.well-known/open-reading-source.json 發布探索文件，並實作搜尋、書籍詳情、章節目錄與章節內文介面。v1.1 可選支援推薦、分類與瀏覽，仍僅面向公開、無需登入的 HTTP(S) 書源。';
 
   @override
   String get bookSourcesClose => '關閉';
