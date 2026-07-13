@@ -43,13 +43,17 @@ class LegadoCompatibilityScanner {
       final normalizedKey = key.toLowerCase();
       final text = value is String ? value : '';
       final normalizedText = text.toLowerCase();
+      final scriptProbe = normalizedText.replaceAll(
+        RegExp(r'\{\{\s*(key|page)\s*\}\}'),
+        '',
+      );
 
       if (_isNonEmpty(value) &&
           (normalizedKey == 'jslib' ||
               normalizedKey.endsWith('js') ||
-              normalizedText.contains('<js>') ||
-              normalizedText.contains('@js:') ||
-              normalizedText.contains('{{'))) {
+              scriptProbe.contains('<js>') ||
+              scriptProbe.contains('@js:') ||
+              scriptProbe.contains('{{'))) {
         risks.add(LegadoCapabilityRisk.javascript);
       }
       if (_isNonEmpty(value) &&

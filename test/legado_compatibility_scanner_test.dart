@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:xxread/book_sources/legado/legado_book_source.dart';
@@ -33,6 +35,22 @@ void main() {
     expect(report.risks, isEmpty);
   });
 
+  test('does not treat key and page placeholders as JavaScript', () {
+    final source = LegadoBookSource.fromJson({
+      'bookSourceUrl': 'https://example.org',
+      'bookSourceName': 'Placeholders',
+      'searchUrl': 'https://example.org/search?q={{key}}&page={{page}}',
+      'ruleBookInfo': <String, Object?>{},
+      'ruleToc': <String, Object?>{},
+      'ruleContent': <String, Object?>{},
+    });
+
+    final report = scanner.scan(source);
+
+    expect(report.level, LegadoCompatibilityLevel.lite);
+    expect(report.risks, isNot(contains(LegadoCapabilityRisk.javascript)));
+  });
+
   test('requires isolated adapter for JavaScript and cookie sources', () {
     final source = parseLegadoSources(
       _jsonSource(
@@ -60,6 +78,19 @@ void main() {
     expect(report.level, LegadoCompatibilityLevel.unsupported);
     expect(report.risks, contains(LegadoCapabilityRisk.audioSource));
     expect(report.risks, contains(LegadoCapabilityRisk.missingReadingRules));
+  });
+
+  test('bundled Gutenberg public-domain test source stays Lite compatible', () {
+    final source = parseLegadoSources(
+      File('docs/examples/legado-gutenberg-test-source.json')
+          .readAsStringSync(),
+    ).sources.single;
+
+    final report = scanner.scan(source);
+
+    expect(source.name, contains('Project Gutenberg'));
+    expect(report.level, LegadoCompatibilityLevel.lite);
+    expect(report.risks, isEmpty);
   });
 }
 
