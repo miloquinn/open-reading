@@ -44,6 +44,7 @@
   "bookSourcesSearchHint": "输入书名或作者，搜索已启用书源",
   "bookSourcesSearch": "搜索",
   "bookSourcesSearching": "正在搜索书源…",
+  "bookSourcesLoadMore": "加载更多",
   "bookSourcesFailedCount": "{count} 个书源请求失败",
   "@bookSourcesFailedCount": {
     "placeholders": {

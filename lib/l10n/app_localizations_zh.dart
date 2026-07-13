@@ -86,6 +86,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bookSourcesSearching => '正在搜索书源…';
 
   @override
+  String get bookSourcesLoadMore => '加载更多';
+
+  @override
   String bookSourcesFailedCount(int count) {
     return '$count 个书源请求失败';
   }
@@ -2003,6 +2006,9 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get bookSourcesSearching => '正在搜尋書源…';
+
+  @override
+  String get bookSourcesLoadMore => '載入更多';
 
   @override
   String bookSourcesFailedCount(int count) {

@@ -251,6 +251,12 @@ abstract class AppLocalizations {
   /// **'Searching sources…'**
   String get bookSourcesSearching;
 
+  /// No description provided for @bookSourcesLoadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Load more'**
+  String get bookSourcesLoadMore;
+
   /// No description provided for @bookSourcesFailedCount.
   ///
   /// In en, this message translates to:

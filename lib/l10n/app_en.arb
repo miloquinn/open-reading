@@ -44,6 +44,7 @@
   "bookSourcesSearchHint": "Search enabled sources by title or author",
   "bookSourcesSearch": "Search",
   "bookSourcesSearching": "Searching sources…",
+  "bookSourcesLoadMore": "Load more",
   "bookSourcesFailedCount": "{count} source request(s) failed",
   "@bookSourcesFailedCount": {
     "placeholders": {

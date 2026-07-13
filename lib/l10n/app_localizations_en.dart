@@ -94,6 +94,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bookSourcesSearching => 'Searching sources…';
 
   @override
+  String get bookSourcesLoadMore => 'Load more';
+
+  @override
   String bookSourcesFailedCount(int count) {
     return '$count source request(s) failed';
   }

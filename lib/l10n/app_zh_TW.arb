@@ -32,6 +32,7 @@
   "bookSourcesSearchHint": "輸入書名或作者，搜尋已啟用書源",
   "bookSourcesSearch": "搜尋",
   "bookSourcesSearching": "正在搜尋書源…",
+  "bookSourcesLoadMore": "載入更多",
   "bookSourcesFailedCount": "{count} 個書源請求失敗",
   "@bookSourcesFailedCount": {
     "placeholders": {

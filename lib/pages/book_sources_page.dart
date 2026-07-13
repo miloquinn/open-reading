@@ -16,7 +16,9 @@ import 'home_layout_constants.dart';
 import 'home_shell_page.dart';
 
 class BookSourcesPage extends StatefulWidget {
-  const BookSourcesPage({super.key});
+  final BookSourceClient? client;
+
+  const BookSourcesPage({super.key, this.client});
 
   @visibleForTesting
   static List<RegisteredBookSource> searchTargets(
@@ -36,7 +38,8 @@ class BookSourcesPage extends StatefulWidget {
 
 class _BookSourcesPageState extends State<BookSourcesPage> {
   final BookSourceRegistry _registry = BookSourceRegistry();
-  final BookSourceClient _client = BookSourceClient();
+  late final BookSourceClient _client;
+  final ScrollController _scrollController = ScrollController();
   late final BookSourceShelfService _shelfService =
       BookSourceShelfService(client: _client);
   final TextEditingController _searchController = TextEditingController();
@@ -52,10 +55,17 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
   _SourcedCategory? _selectedCategory;
   bool _loadingSources = true;
   bool _searching = false;
+  bool _loadingMoreSearchResults = false;
+  bool _loadMoreSearchFailed = false;
   bool _hasSearched = false;
   bool _loadingDiscovery = false;
   String? _discoveryError;
   int _failedSourceCount = 0;
+  String _activeSearchQuery = '';
+  Map<String, _SearchPageState> _searchPageStates = const {};
+
+  bool get _hasMoreSearchResults =>
+      _searchPageStates.values.any((state) => state.hasMore);
 
   bool get _isMaterial3Style =>
       Theme.of(context).extension<UiStyleThemeExtension>()?.isMaterial3Style ??
@@ -64,6 +74,8 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
   @override
   void initState() {
     super.initState();
+    _client = widget.client ?? BookSourceClient();
+    _scrollController.addListener(_handleSearchScroll);
     _registrySubscription = _registry.changes.listen((_) => _loadSources());
     unawaited(_loadSources());
   }
@@ -71,8 +83,20 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
   @override
   void dispose() {
     _registrySubscription?.cancel();
+    _scrollController
+      ..removeListener(_handleSearchScroll)
+      ..dispose();
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _handleSearchScroll() {
+    if (_loadMoreSearchFailed ||
+        !_scrollController.hasClients ||
+        _scrollController.position.extentAfter > 600) {
+      return;
+    }
+    unawaited(_loadMoreSearchResults());
   }
 
   Future<void> _loadSources() async {
@@ -98,6 +122,11 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
       _searching = true;
       _hasSearched = true;
       _failedSourceCount = 0;
+      _activeSearchQuery = query;
+      _results = const [];
+      _searchPageStates = const {};
+      _loadingMoreSearchResults = false;
+      _loadMoreSearchFailed = false;
     });
 
     final batches = await Future.wait(
@@ -105,12 +134,15 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
         try {
           final page = await _client.search(source, query);
           return _SearchBatch(
+            source: source,
             items: page.items
                 .map((book) => _SourcedBook(source: source, book: book))
                 .toList(growable: false),
+            page: page.page,
+            hasMore: page.hasMore && page.items.isNotEmpty,
           );
         } catch (_) {
-          return const _SearchBatch(items: [], failed: true);
+          return _SearchBatch(source: source, items: const [], failed: true);
         }
       }),
     );
@@ -118,8 +150,91 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
     if (!mounted) return;
     setState(() {
       _results = batches.expand((batch) => batch.items).toList(growable: false);
+      _searchPageStates = {
+        for (final batch in batches)
+          if (!batch.failed)
+            batch.source.id: _SearchPageState(
+              source: batch.source,
+              page: batch.page,
+              hasMore: batch.hasMore,
+            ),
+      };
       _failedSourceCount = batches.where((batch) => batch.failed).length;
       _searching = false;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _handleSearchScroll());
+  }
+
+  Future<void> _loadMoreSearchResults() async {
+    if (_searching ||
+        _loadingMoreSearchResults ||
+        !_hasSearched ||
+        _activeSearchQuery.isEmpty) {
+      return;
+    }
+    final targets = _searchPageStates.values
+        .where((state) => state.hasMore)
+        .toList(growable: false);
+    if (targets.isEmpty) return;
+
+    final query = _activeSearchQuery;
+    setState(() {
+      _loadingMoreSearchResults = true;
+      _loadMoreSearchFailed = false;
+    });
+
+    final batches = await Future.wait(
+      targets.map((state) async {
+        try {
+          final page = await _client.search(
+            state.source,
+            query,
+            page: state.page + 1,
+          );
+          return _SearchBatch(
+            source: state.source,
+            items: page.items
+                .map(
+                  (book) => _SourcedBook(source: state.source, book: book),
+                )
+                .toList(growable: false),
+            page: page.page,
+            hasMore: page.hasMore && page.items.isNotEmpty,
+          );
+        } catch (_) {
+          return _SearchBatch(
+            source: state.source,
+            items: const [],
+            failed: true,
+          );
+        }
+      }),
+    );
+
+    if (!mounted || query != _activeSearchQuery) return;
+    final seen = _results
+        .map((item) => '${item.source.id}\u0000${item.book.id}')
+        .toSet();
+    final appended = <_SourcedBook>[];
+    final nextStates = Map<String, _SearchPageState>.from(_searchPageStates);
+    for (final batch in batches) {
+      if (batch.failed) continue;
+      nextStates[batch.source.id] = _SearchPageState(
+        source: batch.source,
+        page: batch.page,
+        hasMore: batch.hasMore,
+      );
+      for (final item in batch.items) {
+        final key = '${item.source.id}\u0000${item.book.id}';
+        if (seen.add(key)) appended.add(item);
+      }
+    }
+
+    setState(() {
+      _results = [..._results, ...appended];
+      _searchPageStates = nextStates;
+      _loadingMoreSearchResults = false;
+      _loadMoreSearchFailed = batches.any((batch) => batch.failed);
     });
   }
 
@@ -137,6 +252,7 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
       child: SafeArea(
         bottom: false,
         child: CustomScrollView(
+          controller: _scrollController,
           slivers: [
             SliverToBoxAdapter(
               child: Center(
@@ -208,7 +324,16 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
               )
             else
               SliverPadding(
-                padding: EdgeInsets.fromLTRB(16, 0, 16, bottomPadding),
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  0,
+                  16,
+                  _hasMoreSearchResults ||
+                          _loadingMoreSearchResults ||
+                          _loadMoreSearchFailed
+                      ? 12
+                      : bottomPadding,
+                ),
                 sliver: SliverList.separated(
                   itemCount: _results.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 10),
@@ -220,6 +345,38 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
                       ),
                     );
                   },
+                ),
+              ),
+            if (_hasSearched &&
+                _results.isNotEmpty &&
+                (_hasMoreSearchResults ||
+                    _loadingMoreSearchResults ||
+                    _loadMoreSearchFailed))
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(16, 8, 16, bottomPadding),
+                  child: Center(
+                    child: _loadingMoreSearchResults
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2.4),
+                          )
+                        : OutlinedButton.icon(
+                            key: const Key('bookSourceLoadMoreButton'),
+                            onPressed: _loadMoreSearchResults,
+                            icon: Icon(
+                              _loadMoreSearchFailed
+                                  ? Icons.refresh_rounded
+                                  : Icons.expand_more_rounded,
+                            ),
+                            label: Text(
+                              _loadMoreSearchFailed
+                                  ? context.l10n.retry
+                                  : context.l10n.bookSourcesLoadMore,
+                            ),
+                          ),
+                  ),
                 ),
               ),
             SliverToBoxAdapter(
@@ -428,6 +585,10 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
                   _selectedSourceId =
                       value == _allSourcesMenuValue ? null : value;
                   _results = const [];
+                  _searchPageStates = const {};
+                  _activeSearchQuery = '';
+                  _loadingMoreSearchResults = false;
+                  _loadMoreSearchFailed = false;
                   _hasSearched = false;
                   _failedSourceCount = 0;
                 });
@@ -1402,10 +1563,31 @@ class _SourcedBook {
 }
 
 class _SearchBatch {
+  final RegisteredBookSource source;
   final List<_SourcedBook> items;
   final bool failed;
+  final int page;
+  final bool hasMore;
 
-  const _SearchBatch({required this.items, this.failed = false});
+  const _SearchBatch({
+    required this.source,
+    required this.items,
+    this.failed = false,
+    this.page = 1,
+    this.hasMore = false,
+  });
+}
+
+class _SearchPageState {
+  final RegisteredBookSource source;
+  final int page;
+  final bool hasMore;
+
+  const _SearchPageState({
+    required this.source,
+    required this.page,
+    required this.hasMore,
+  });
 }
 
 class _DiscoveryShelf {

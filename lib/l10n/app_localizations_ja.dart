@@ -87,6 +87,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get bookSourcesSearching => 'ソースを検索中…';
 
   @override
+  String get bookSourcesLoadMore => 'さらに読み込む';
+
+  @override
   String bookSourcesFailedCount(int count) {
     return '$count 件のソースリクエストが失敗しました';
   }
