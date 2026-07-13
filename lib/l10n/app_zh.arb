@@ -8,7 +8,7 @@
   "@home": {
     "description": "首页标签"
   },
-  "library": "书库",
+  "library": "书架",
   "@library": {
     "description": "书库标签"
   },
@@ -16,6 +16,29 @@
   "@bookSources": {
     "description": "书源标签"
   },
+  "discover": "发现",
+  "discoverSubtitle": "从已启用的内容来源中搜索、浏览并发现下一本书",
+  "discoverRecommended": "推荐",
+  "discoverCategories": "分类",
+  "discoverLatest": "最新",
+  "discoverLoadFailed": "发现内容加载失败",
+  "discoverRetry": "重新加载",
+  "discoverUnsupportedTitle": "当前书源暂不支持此栏目",
+  "discoverUnsupportedMessage": "需要书源提供 {capability} 能力；现有书源仍可继续用于搜索。",
+  "@discoverUnsupportedMessage": {
+    "placeholders": {
+      "capability": {
+        "type": "String"
+      }
+    }
+  },
+  "discoverChooseCategory": "选择一个分类",
+  "discoverChooseCategoryHint": "选择上方分类后查看该书源提供的书籍。",
+  "discoverCategoryEmpty": "这个分类暂时没有可展示的书籍。",
+  "bookSourceManagementTitle": "书源管理",
+  "bookSourceManagementSubtitle": "管理内容来源的添加、启停与协议信息。发现页只保留找书体验。",
+  "settingsContentSourcesTitle": "内容来源",
+  "settingsContentSourcesSubtitle": "添加、启用或移除开放书源",
   "bookSourcesSubtitle": "连接开放书源，跨来源搜索可阅读内容",
   "bookSourcesAdd": "添加书源",
   "bookSourcesSearchHint": "输入书名或作者，搜索已启用书源",

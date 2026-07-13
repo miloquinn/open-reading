@@ -103,6 +103,27 @@ class ExampleBookSourceServer {
       _search(request);
       return;
     }
+    if (segments.length == 3 &&
+        segments[0] == 'api' &&
+        segments[1] == 'v1' &&
+        segments[2] == 'discover') {
+      _discover(request.response);
+      return;
+    }
+    if (segments.length == 3 &&
+        segments[0] == 'api' &&
+        segments[1] == 'v1' &&
+        segments[2] == 'categories') {
+      _categories(request.response);
+      return;
+    }
+    if (segments.length == 3 &&
+        segments[0] == 'api' &&
+        segments[1] == 'v1' &&
+        segments[2] == 'browse') {
+      _browse(request);
+      return;
+    }
     if (segments.length >= 4 &&
         segments[0] == 'api' &&
         segments[1] == 'v1' &&
@@ -149,7 +170,15 @@ class ExampleBookSourceServer {
       'apiBaseUrl': publicBaseUri.resolve('api/').toString(),
       'websiteUrl': publicBaseUri.toString(),
       'languages': ['zh-CN', 'en'],
-      'capabilities': ['search', 'detail', 'catalog', 'content'],
+      'capabilities': [
+        'search',
+        'discover',
+        'categories',
+        'browse',
+        'detail',
+        'catalog',
+        'content',
+      ],
     };
   }
 
@@ -174,6 +203,71 @@ class ExampleBookSourceServer {
             .map((entry) => entry.book)
             .toList(growable: false);
 
+    _json(request.response, HttpStatus.ok, {
+      'items': items,
+      'page': page,
+      'pageSize': pageSize,
+      'total': matched.length,
+      'hasMore': start + items.length < matched.length,
+    });
+  }
+
+  void _discover(HttpResponse response) {
+    final books = _books.values.map((entry) => entry.book).toList();
+    _json(response, HttpStatus.ok, {
+      'sections': [
+        {
+          'id': 'featured',
+          'title': '编辑精选',
+          'items': books,
+        },
+        {
+          'id': 'recent',
+          'title': '最近更新',
+          'items': books.reversed.toList(growable: false),
+        },
+      ],
+    });
+  }
+
+  void _categories(HttpResponse response) {
+    final categories = <String>{};
+    for (final entry in _books.values) {
+      final values = entry.book['categories'];
+      if (values is List) categories.addAll(values.whereType<String>());
+    }
+    _json(response, HttpStatus.ok, {
+      'items': categories
+          .map((category) => {'id': category, 'name': category})
+          .toList(growable: false),
+    });
+  }
+
+  void _browse(HttpRequest request) {
+    final category = request.uri.queryParameters['category']?.trim();
+    final sort = request.uri.queryParameters['sort'] ?? 'latest';
+    final page = _positiveInt(request.uri.queryParameters['page'], fallback: 1);
+    final pageSize = _positiveInt(
+      request.uri.queryParameters['pageSize'],
+      fallback: 20,
+    ).clamp(1, 100);
+    final matched = _books.values
+        .where((entry) {
+          if (category == null || category.isEmpty) return true;
+          final values = entry.book['categories'];
+          return values is List && values.contains(category);
+        })
+        .map((entry) => entry.book)
+        .toList();
+    if (sort == 'latest') {
+      matched.sort(
+        (a, b) => '${b['updatedAt']}'.compareTo('${a['updatedAt']}'),
+      );
+    }
+    final start = (page - 1) * pageSize;
+    final items = start >= matched.length
+        ? const <Map<String, Object>>[]
+        : matched.skip(start).take(pageSize).toList(growable: false);
     _json(request.response, HttpStatus.ok, {
       'items': items,
       'page': page,

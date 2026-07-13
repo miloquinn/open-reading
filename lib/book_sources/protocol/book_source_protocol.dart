@@ -126,6 +126,70 @@ class BookSourceSearchPage {
   }
 }
 
+/// A curated shelf returned by an optional discovery-capable source.
+class BookSourceDiscoverySection {
+  final String id;
+  final String title;
+  final List<BookSourceBook> items;
+
+  const BookSourceDiscoverySection({
+    required this.id,
+    required this.title,
+    required this.items,
+  });
+
+  factory BookSourceDiscoverySection.fromJson(Map<String, dynamic> json) {
+    final rawItems = json['items'];
+    if (rawItems is! List) {
+      throw const BookSourceProtocolException(
+        'Discovery section must contain an items array.',
+      );
+    }
+    return BookSourceDiscoverySection(
+      id: _requiredString(json, 'id'),
+      title: _requiredString(json, 'title'),
+      items: rawItems
+          .map((item) => BookSourceBook.fromJson(_jsonMap(item)))
+          .toList(growable: false),
+    );
+  }
+}
+
+class BookSourceDiscoveryPage {
+  final List<BookSourceDiscoverySection> sections;
+
+  const BookSourceDiscoveryPage({required this.sections});
+
+  factory BookSourceDiscoveryPage.fromJson(Map<String, dynamic> json) {
+    final rawSections = json['sections'];
+    if (rawSections is! List) {
+      throw const BookSourceProtocolException(
+        'Discovery response must contain a sections array.',
+      );
+    }
+    return BookSourceDiscoveryPage(
+      sections: rawSections
+          .map((section) =>
+              BookSourceDiscoverySection.fromJson(_jsonMap(section)))
+          .toList(growable: false),
+    );
+  }
+}
+
+class BookSourceCategory {
+  final String id;
+  final String name;
+
+  const BookSourceCategory({required this.id, required this.name});
+
+  factory BookSourceCategory.fromJson(Map<String, dynamic> json) {
+    return BookSourceCategory(
+      id: _requiredString(json, 'id'),
+      name: _requiredString(json, 'name'),
+    );
+  }
+}
+
 class BookSourceBook {
   final String id;
   final String title;

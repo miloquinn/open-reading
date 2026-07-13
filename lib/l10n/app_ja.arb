@@ -4,6 +4,29 @@
   "home": "ホーム",
   "library": "本棚",
   "bookSources": "ソース",
+  "discover": "見つける",
+  "discoverSubtitle": "有効な提供元を検索・閲覧して、次に読む本を見つけます",
+  "discoverRecommended": "おすすめ",
+  "discoverCategories": "カテゴリ",
+  "discoverLatest": "新着",
+  "discoverLoadFailed": "コンテンツを読み込めませんでした",
+  "discoverRetry": "再読み込み",
+  "discoverUnsupportedTitle": "現在のソースはこの項目に対応していません",
+  "discoverUnsupportedMessage": "{capability} 機能を持つソースが必要です。既存のソースは引き続き検索できます。",
+  "@discoverUnsupportedMessage": {
+    "placeholders": {
+      "capability": {
+        "type": "String"
+      }
+    }
+  },
+  "discoverChooseCategory": "カテゴリを選択",
+  "discoverChooseCategoryHint": "上のカテゴリを選ぶと、その提供元の書籍を閲覧できます。",
+  "discoverCategoryEmpty": "このカテゴリには表示できる書籍がまだありません。",
+  "bookSourceManagementTitle": "ソース管理",
+  "bookSourceManagementSubtitle": "コンテンツ提供元の追加、有効化、削除、プロトコル情報を管理します。",
+  "settingsContentSourcesTitle": "コンテンツソース",
+  "settingsContentSourcesSubtitle": "オープンな書籍ソースを追加、有効化、削除",
   "bookSourcesSubtitle": "オープンソースに接続し、提供元をまたいで読める本を検索",
   "bookSourcesAdd": "ソースを追加",
   "bookSourcesSearchHint": "書名や著者で有効なソースを検索",

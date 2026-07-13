@@ -36,7 +36,7 @@ GET /.well-known/open-reading-source.json
   "iconUrl": "https://books.example.org/icon.png",
   "websiteUrl": "https://books.example.org/",
   "languages": ["zh-CN", "en"],
-  "capabilities": ["search", "detail", "catalog", "content"]
+  "capabilities": ["search", "discover", "categories", "browse", "detail", "catalog", "content"]
 }
 ```
 
@@ -50,6 +50,9 @@ GET /.well-known/open-reading-source.json
 | `name` | 展示名称 |
 | `apiBaseUrl` | API 根地址，必须是绝对 HTTP(S) URL |
 | `capabilities` | 能力列表；v1 必须包含 `search` |
+
+发现相关能力均为可选能力：`discover` 提供分区推荐，`categories` 提供分类定义，
+`browse` 提供分类或排序浏览。未声明这些能力的旧书源仍可正常参与搜索。
 
 ## 3. 通用约定
 
@@ -93,7 +96,38 @@ GET /v1/search?q={query}&page=1&pageSize=20
 }
 ```
 
-### 4.2 书籍详情
+### 4.2 发现（可选）
+
+声明 `discover` 能力的书源实现：
+
+```text
+GET /v1/discover
+```
+
+响应包含 `sections` 数组，每个分区具有稳定 `id`、展示标题 `title` 和书籍数组 `items`。
+
+### 4.3 分类（可选）
+
+声明 `categories` 能力的书源实现：
+
+```text
+GET /v1/categories
+```
+
+响应格式为 `{"items":[{"id":"literature","name":"文学"}]}`。若分类需要展示书籍，
+该书源还应声明 `browse` 能力。
+
+### 4.4 浏览（可选）
+
+声明 `browse` 能力的书源实现：
+
+```text
+GET /v1/browse?category={categoryId}&sort=latest&page=1&pageSize=20
+```
+
+`category` 可省略；`sort` 首版约定支持 `latest` 和 `popular`。响应沿用搜索分页结构。
+
+### 4.5 书籍详情
 
 ```text
 GET /v1/books/{bookId}
@@ -101,7 +135,7 @@ GET /v1/books/{bookId}
 
 响应使用与搜索项相同的书籍对象，可返回更完整的 `description` 和分类信息。
 
-### 4.3 章节目录
+### 4.6 章节目录
 
 ```text
 GET /v1/books/{bookId}/chapters
@@ -120,7 +154,7 @@ GET /v1/books/{bookId}/chapters
 }
 ```
 
-### 4.4 章节正文
+### 4.7 章节正文
 
 ```text
 GET /v1/books/{bookId}/chapters/{chapterId}

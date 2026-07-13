@@ -397,7 +397,11 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
         onTap: _navigateToImport,
       );
     } else if (currentPage is BookSourcesPage) {
-      trailing = null;
+      trailing = _buildTopBarActionButton(
+        icon: Icons.tune_rounded,
+        tooltip: context.l10n.bookSourceManagementTitle,
+        onTap: _navigateToBookSourceManagement,
+      );
     } else if (currentPage is SettingsPage) {
       trailing = null;
     } else {
@@ -414,6 +418,14 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
           title: title,
           trailing: trailing,
         ),
+      ),
+    );
+  }
+
+  Future<void> _navigateToBookSourceManagement() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const BookSourceManagementPage(),
       ),
     );
   }

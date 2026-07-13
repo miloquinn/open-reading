@@ -6,6 +6,52 @@ info:
 servers:
   - url: https://books.example.org/api
 paths:
+  /v1/discover:
+    get:
+      operationId: discoverBooks
+      responses:
+        '200':
+          description: Curated discovery shelves
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DiscoveryPage' }
+  /v1/categories:
+    get:
+      operationId: listCategories
+      responses:
+        '200':
+          description: Browseable categories
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/Category' }
+  /v1/browse:
+    get:
+      operationId: browseBooks
+      parameters:
+        - name: category
+          in: query
+          schema: { type: string, maxLength: 200 }
+        - name: sort
+          in: query
+          schema: { type: string, enum: [popular, latest], default: latest }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: pageSize
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+      responses:
+        '200':
+          description: Browse results
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SearchPage' }
   /v1/search:
     get:
       operationId: searchBooks
@@ -111,6 +157,28 @@ components:
         pageSize: { type: integer, minimum: 0 }
         total: { type: integer, minimum: 0 }
         hasMore: { type: boolean }
+    DiscoveryPage:
+      type: object
+      required: [sections]
+      properties:
+        sections:
+          type: array
+          items: { $ref: '#/components/schemas/DiscoverySection' }
+    DiscoverySection:
+      type: object
+      required: [id, title, items]
+      properties:
+        id: { type: string, minLength: 1 }
+        title: { type: string, minLength: 1 }
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/Book' }
+    Category:
+      type: object
+      required: [id, name]
+      properties:
+        id: { type: string, minLength: 1 }
+        name: { type: string, minLength: 1 }
     Chapter:
       type: object
       required: [id, title, order]

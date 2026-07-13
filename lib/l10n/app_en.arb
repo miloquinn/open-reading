@@ -8,7 +8,7 @@
   "@home": {
     "description": "Home tab label"
   },
-  "library": "Library",
+  "library": "Bookshelf",
   "@library": {
     "description": "Library tab label"
   },
@@ -16,6 +16,29 @@
   "@bookSources": {
     "description": "Book sources tab label"
   },
+  "discover": "Discover",
+  "discoverSubtitle": "Search and browse enabled providers to find your next book",
+  "discoverRecommended": "For you",
+  "discoverCategories": "Categories",
+  "discoverLatest": "Latest",
+  "discoverLoadFailed": "Could not load discovery content",
+  "discoverRetry": "Try again",
+  "discoverUnsupportedTitle": "Current sources do not support this section",
+  "discoverUnsupportedMessage": "A source with the {capability} capability is required. Existing sources can still be searched.",
+  "@discoverUnsupportedMessage": {
+    "placeholders": {
+      "capability": {
+        "type": "String"
+      }
+    }
+  },
+  "discoverChooseCategory": "Choose a category",
+  "discoverChooseCategoryHint": "Select a category above to browse books from that provider.",
+  "discoverCategoryEmpty": "There are no books to show in this category yet.",
+  "bookSourceManagementTitle": "Manage sources",
+  "bookSourceManagementSubtitle": "Add, enable, remove, and inspect content providers. Discovery stays focused on finding books.",
+  "settingsContentSourcesTitle": "Content sources",
+  "settingsContentSourcesSubtitle": "Add, enable, or remove open book sources",
   "bookSourcesSubtitle": "Connect open sources and search readable content across providers",
   "bookSourcesAdd": "Add source",
   "bookSourcesSearchHint": "Search enabled sources by title or author",

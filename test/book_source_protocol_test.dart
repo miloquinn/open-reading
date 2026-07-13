@@ -59,6 +59,28 @@ void main() {
       expect(page.hasMore, isFalse);
     });
 
+    test('parses optional discovery and category responses', () {
+      final discovery = BookSourceDiscoveryPage.fromJson({
+        'sections': [
+          {
+            'id': 'featured',
+            'title': 'Featured',
+            'items': [
+              {'id': 'book-1', 'title': 'A Book'}
+            ],
+          },
+        ],
+      });
+      final category = BookSourceCategory.fromJson({
+        'id': 'fiction',
+        'name': 'Fiction',
+      });
+
+      expect(discovery.sections.single.id, 'featured');
+      expect(discovery.sections.single.items.single.title, 'A Book');
+      expect(category.name, 'Fiction');
+    });
+
     test('allows chapter content to omit its duplicated title', () {
       final content = BookSourceChapterContent.fromJson({
         'bookId': 'book-1',

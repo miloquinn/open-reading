@@ -2,8 +2,31 @@
   "@@locale": "zh_TW",
   "appTitle": "開元閱讀",
   "home": "首頁",
-  "library": "書庫",
+  "library": "書架",
   "bookSources": "書源",
+  "discover": "探索",
+  "discoverSubtitle": "從已啟用的內容來源搜尋、瀏覽並找到下一本書",
+  "discoverRecommended": "推薦",
+  "discoverCategories": "分類",
+  "discoverLatest": "最新",
+  "discoverLoadFailed": "探索內容載入失敗",
+  "discoverRetry": "重新載入",
+  "discoverUnsupportedTitle": "目前書源暫不支援此欄目",
+  "discoverUnsupportedMessage": "需要書源提供 {capability} 能力；現有書源仍可繼續用於搜尋。",
+  "@discoverUnsupportedMessage": {
+    "placeholders": {
+      "capability": {
+        "type": "String"
+      }
+    }
+  },
+  "discoverChooseCategory": "選擇一個分類",
+  "discoverChooseCategoryHint": "選擇上方分類後查看該書源提供的書籍。",
+  "discoverCategoryEmpty": "這個分類暫時沒有可顯示的書籍。",
+  "bookSourceManagementTitle": "書源管理",
+  "bookSourceManagementSubtitle": "管理內容來源的新增、啟停與協定資訊。探索頁只保留找書體驗。",
+  "settingsContentSourcesTitle": "內容來源",
+  "settingsContentSourcesSubtitle": "新增、啟用或移除開放書源",
   "bookSourcesSubtitle": "連接開放書源，跨來源搜尋可閱讀內容",
   "bookSourcesAdd": "新增書源",
   "bookSourcesSearchHint": "輸入書名或作者，搜尋已啟用書源",

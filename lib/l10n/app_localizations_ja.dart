@@ -21,6 +21,57 @@ class AppLocalizationsJa extends AppLocalizations {
   String get bookSources => 'ソース';
 
   @override
+  String get discover => '見つける';
+
+  @override
+  String get discoverSubtitle => '有効な提供元を検索・閲覧して、次に読む本を見つけます';
+
+  @override
+  String get discoverRecommended => 'おすすめ';
+
+  @override
+  String get discoverCategories => 'カテゴリ';
+
+  @override
+  String get discoverLatest => '新着';
+
+  @override
+  String get discoverLoadFailed => 'コンテンツを読み込めませんでした';
+
+  @override
+  String get discoverRetry => '再読み込み';
+
+  @override
+  String get discoverUnsupportedTitle => '現在のソースはこの項目に対応していません';
+
+  @override
+  String discoverUnsupportedMessage(String capability) {
+    return '$capability 機能を持つソースが必要です。既存のソースは引き続き検索できます。';
+  }
+
+  @override
+  String get discoverChooseCategory => 'カテゴリを選択';
+
+  @override
+  String get discoverChooseCategoryHint => '上のカテゴリを選ぶと、その提供元の書籍を閲覧できます。';
+
+  @override
+  String get discoverCategoryEmpty => 'このカテゴリには表示できる書籍がまだありません。';
+
+  @override
+  String get bookSourceManagementTitle => 'ソース管理';
+
+  @override
+  String get bookSourceManagementSubtitle =>
+      'コンテンツ提供元の追加、有効化、削除、プロトコル情報を管理します。';
+
+  @override
+  String get settingsContentSourcesTitle => 'コンテンツソース';
+
+  @override
+  String get settingsContentSourcesSubtitle => 'オープンな書籍ソースを追加、有効化、削除';
+
+  @override
   String get bookSourcesSubtitle => 'オープンソースに接続し、提供元をまたいで読める本を検索';
 
   @override

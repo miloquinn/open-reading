@@ -39,7 +39,7 @@ void main() {
         greaterThan(tester.getBottomLeft(scope).dy));
   });
 
-  testWidgets('opens the add-source dialog without dependency errors',
+  testWidgets('opens source management and the add-source dialog',
       (tester) async {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = const Size(390, 1000);
@@ -54,7 +54,12 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.add_link_rounded));
+    await tester.tap(find.byIcon(Icons.tune_rounded).first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Manage sources'), findsWidgets);
+
+    await tester.tap(find.byIcon(Icons.add_link_rounded).first);
     await tester.pumpAndSettle();
 
     expect(find.byType(AlertDialog), findsOneWidget);

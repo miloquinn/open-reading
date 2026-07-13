@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../book_sources/models/registered_book_source.dart';
 import '../book_sources/protocol/book_source_protocol.dart';
@@ -11,6 +10,7 @@ import '../book_sources/services/book_source_shelf_service.dart';
 import '../utils/localization_extension.dart';
 import '../utils/page_style_helper.dart';
 import '../utils/ui_style.dart';
+import 'book_source_management_page.dart';
 import 'book_source_reader_page.dart';
 import 'home_layout_constants.dart';
 import 'home_shell_page.dart';
@@ -40,12 +40,21 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
   late final BookSourceShelfService _shelfService =
       BookSourceShelfService(client: _client);
   final TextEditingController _searchController = TextEditingController();
+  StreamSubscription<void>? _registrySubscription;
 
   List<RegisteredBookSource> _sources = const [];
   List<_SourcedBook> _results = const [];
+  List<_DiscoveryShelf> _discoveryShelves = const [];
+  List<_SourcedCategory> _categories = const [];
+  List<_SourcedBook> _browseResults = const [];
   String? _selectedSourceId;
+  _DiscoverSection _discoverSection = _DiscoverSection.recommended;
+  _SourcedCategory? _selectedCategory;
   bool _loadingSources = true;
   bool _searching = false;
+  bool _hasSearched = false;
+  bool _loadingDiscovery = false;
+  String? _discoveryError;
   int _failedSourceCount = 0;
 
   bool get _isMaterial3Style =>
@@ -55,11 +64,13 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
   @override
   void initState() {
     super.initState();
+    _registrySubscription = _registry.changes.listen((_) => _loadSources());
     unawaited(_loadSources());
   }
 
   @override
   void dispose() {
+    _registrySubscription?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -71,6 +82,7 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
       _sources = sources;
       _loadingSources = false;
     });
+    await _loadDiscoverySection();
   }
 
   Future<void> _search() async {
@@ -84,6 +96,7 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
     FocusScope.of(context).unfocus();
     setState(() {
       _searching = true;
+      _hasSearched = true;
       _failedSourceCount = 0;
     });
 
@@ -144,21 +157,21 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
                         const SizedBox(height: 14),
                         _buildSearchPanel(),
                         const SizedBox(height: 18),
-                        _buildSourceSection(),
-                        const SizedBox(height: 18),
-                        _buildProtocolCard(),
-                        const SizedBox(height: 22),
-                        _buildResultHeader(),
-                        if (_failedSourceCount > 0) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            context.l10n
-                                .bookSourcesFailedCount(_failedSourceCount),
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.error,
-                              fontSize: 12,
+                        _buildDiscoveryTabs(),
+                        if (_hasSearched) ...[
+                          const SizedBox(height: 22),
+                          _buildResultHeader(),
+                          if (_failedSourceCount > 0) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              context.l10n
+                                  .bookSourcesFailedCount(_failedSourceCount),
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.error,
+                                fontSize: 12,
+                              ),
                             ),
-                          ),
+                          ],
                         ],
                         const SizedBox(height: 10),
                       ],
@@ -172,6 +185,18 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
                 child: Padding(
                   padding: EdgeInsets.symmetric(vertical: 36),
                   child: Center(child: CircularProgressIndicator()),
+                ),
+              )
+            else if (!_hasSearched)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(16, 4, 16, bottomPadding),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 1048),
+                      child: _buildDiscoveryBody(),
+                    ),
+                  ),
                 ),
               )
             else if (_results.isEmpty)
@@ -213,7 +238,7 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 18),
       child: Text(
-        context.l10n.bookSources,
+        context.l10n.discover,
         style: TextStyle(
           fontSize: 36,
           height: 1.05,
@@ -252,7 +277,7 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      context.l10n.bookSources,
+                      context.l10n.discover,
                       style:
                           Theme.of(context).textTheme.headlineSmall?.copyWith(
                                 fontWeight: FontWeight.w700,
@@ -263,7 +288,7 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
               ),
               const SizedBox(height: 10),
               Text(
-                context.l10n.bookSourcesSubtitle,
+                context.l10n.discoverSubtitle,
                 style: TextStyle(
                   color: scheme.onSurfaceVariant,
                   height: 1.45,
@@ -271,10 +296,10 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
               ),
             ],
           );
-          final button = FilledButton.icon(
-            onPressed: _showAddSourceDialog,
-            icon: const Icon(Icons.add_link_rounded),
-            label: Text(context.l10n.bookSourcesAdd),
+          final button = FilledButton.tonalIcon(
+            onPressed: _openSourceManagement,
+            icon: const Icon(Icons.tune_rounded),
+            label: Text(context.l10n.bookSourceManagementTitle),
           );
           if (compact) {
             return Column(
@@ -403,8 +428,10 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
                   _selectedSourceId =
                       value == _allSourcesMenuValue ? null : value;
                   _results = const [];
+                  _hasSearched = false;
                   _failedSourceCount = 0;
                 });
+                unawaited(_loadDiscoverySection());
               },
         items: [
           DropdownMenuItem(
@@ -500,211 +527,491 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
     );
   }
 
-  Widget _buildSourceSection() {
+  Widget _buildDiscoveryTabs() {
+    final scheme = Theme.of(context).colorScheme;
+    return SegmentedButton<_DiscoverSection>(
+      showSelectedIcon: false,
+      segments: [
+        ButtonSegment(
+          value: _DiscoverSection.recommended,
+          icon: const Icon(Icons.auto_awesome_outlined),
+          label: Text(context.l10n.discoverRecommended),
+        ),
+        ButtonSegment(
+          value: _DiscoverSection.categories,
+          icon: const Icon(Icons.category_outlined),
+          label: Text(context.l10n.discoverCategories),
+        ),
+        ButtonSegment(
+          value: _DiscoverSection.latest,
+          icon: const Icon(Icons.update_rounded),
+          label: Text(context.l10n.discoverLatest),
+        ),
+      ],
+      selected: {_discoverSection},
+      onSelectionChanged: (selection) {
+        if (selection.isEmpty) return;
+        setState(() {
+          _discoverSection = selection.first;
+          _hasSearched = false;
+        });
+        unawaited(_loadDiscoverySection());
+      },
+      style: ButtonStyle(
+        minimumSize: const WidgetStatePropertyAll(Size(44, 48)),
+        side: WidgetStatePropertyAll(
+          BorderSide(color: scheme.outlineVariant),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDiscoveryBody() {
+    if (_loadingSources || _loadingDiscovery) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 44),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (_discoveryError != null) {
+      return _buildDiscoveryMessage(
+        icon: Icons.cloud_off_outlined,
+        title: context.l10n.discoverLoadFailed,
+        message: _discoveryError!,
+        actionLabel: context.l10n.discoverRetry,
+        onAction: _loadDiscoverySection,
+      );
+    }
+
+    return switch (_discoverSection) {
+      _DiscoverSection.recommended => _buildRecommendationContent(),
+      _DiscoverSection.categories => _buildCategoryContent(),
+      _DiscoverSection.latest => _buildLatestContent(),
+    };
+  }
+
+  Widget _buildRecommendationContent() {
+    if (_discoveryShelves.isEmpty) {
+      return _buildUnsupportedDiscoveryMessage('discover');
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: _discoveryShelves.map(_buildDiscoveryShelf).toList(),
+    );
+  }
+
+  Widget _buildDiscoveryShelf(_DiscoveryShelf shelf) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  shelf.title,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                ),
+              ),
+              _buildSourceBadge(shelf.source.name),
+            ],
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 238,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: shelf.items.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              itemBuilder: (context, index) {
+                final result = _SourcedBook(
+                  source: shelf.source,
+                  book: shelf.items[index],
+                );
+                return _buildDiscoveryBookCard(result);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCategoryContent() {
+    if (_categories.isEmpty) {
+      return _buildUnsupportedDiscoveryMessage('categories');
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          context.l10n.bookSourcesManageTitle,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: _categories.map((category) {
+            final selected = _selectedCategory == category;
+            return ChoiceChip(
+              selected: selected,
+              onSelected: (_) => _selectCategory(category),
+              avatar:
+                  selected ? const Icon(Icons.check_rounded, size: 16) : null,
+              label: Text(
+                _hasMultipleCategorySources
+                    ? '${category.name} · ${category.source.name}'
+                    : category.name,
               ),
+            );
+          }).toList(growable: false),
         ),
-        const SizedBox(height: 10),
-        if (_loadingSources)
-          const Center(
-            child: Padding(
-              padding: EdgeInsets.all(20),
-              child: CircularProgressIndicator(),
-            ),
+        const SizedBox(height: 18),
+        if (_selectedCategory == null)
+          _buildDiscoveryMessage(
+            icon: Icons.touch_app_outlined,
+            title: context.l10n.discoverChooseCategory,
+            message: context.l10n.discoverChooseCategoryHint,
           )
-        else if (_sources.isEmpty)
-          _buildNoSourcesCard()
+        else if (_browseResults.isEmpty)
+          _buildDiscoveryMessage(
+            icon: Icons.menu_book_outlined,
+            title: context.l10n.bookSourcesNoResults,
+            message: context.l10n.discoverCategoryEmpty,
+          )
         else
-          ..._sources.map(_buildSourceCard),
+          ..._browseResults.map(
+            (result) => Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: _buildBookResult(result),
+            ),
+          ),
       ],
     );
   }
 
-  Widget _buildNoSourcesCard() {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: _panelDecoration(radius: 20),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.travel_explore_rounded, color: scheme.primary),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  context.l10n.bookSourcesNoSourcesTitle,
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  context.l10n.bookSourcesNoSourcesDescription,
-                  style: TextStyle(
-                    color: scheme.onSurfaceVariant,
-                    height: 1.4,
-                  ),
-                ),
-              ],
+  Widget _buildLatestContent() {
+    if (_browseResults.isEmpty) {
+      return _buildUnsupportedDiscoveryMessage('browse');
+    }
+    return Column(
+      children: _browseResults
+          .map(
+            (result) => Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: _buildBookResult(result),
             ),
-          ),
-        ],
-      ),
+          )
+          .toList(growable: false),
     );
   }
 
-  Widget _buildSourceCard(RegisteredBookSource source) {
+  Widget _buildUnsupportedDiscoveryMessage(String capability) {
+    final hasEnabledSources = _sources.any((source) => source.enabled);
+    return _buildDiscoveryMessage(
+      icon: hasEnabledSources
+          ? Icons.extension_off_outlined
+          : Icons.travel_explore_outlined,
+      title: hasEnabledSources
+          ? context.l10n.discoverUnsupportedTitle
+          : context.l10n.bookSourcesNoSourcesTitle,
+      message: hasEnabledSources
+          ? context.l10n.discoverUnsupportedMessage(capability)
+          : context.l10n.bookSourcesNoSourcesDescription,
+      actionLabel: context.l10n.bookSourceManagementTitle,
+      onAction: _openSourceManagement,
+    );
+  }
+
+  Widget _buildDiscoveryMessage({
+    required IconData icon,
+    required String title,
+    required String message,
+    String? actionLabel,
+    FutureOr<void> Function()? onAction,
+  }) {
     final scheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(14, 12, 8, 12),
-        decoration: _panelDecoration(radius: 18),
-        child: Row(
-          children: [
-            _buildSourceIcon(source),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    source.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    source.description.isEmpty
-                        ? source.apiBaseUrl.host
-                        : source.description,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: scheme.onSurfaceVariant,
-                      fontSize: 12,
-                      height: 1.3,
-                    ),
-                  ),
-                ],
-              ),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: _panelDecoration(radius: 22),
+      child: Column(
+        children: [
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: scheme.primaryContainer,
+              borderRadius: BorderRadius.circular(18),
             ),
-            Switch.adaptive(
-              value: source.enabled,
-              onChanged: (enabled) => _setSourceEnabled(source, enabled),
-            ),
-            PopupMenuButton<String>(
-              tooltip: '',
-              onSelected: (value) {
-                if (value == 'remove') _confirmRemoveSource(source);
-              },
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: 'remove',
-                  child: Row(
-                    children: [
-                      const Icon(Icons.delete_outline_rounded),
-                      const SizedBox(width: 10),
-                      Text(context.l10n.bookSourcesRemove),
-                    ],
-                  ),
+            child: Icon(icon, color: scheme.onPrimaryContainer),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
                 ),
-              ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: scheme.onSurfaceVariant, height: 1.45),
+          ),
+          if (actionLabel != null && onAction != null) ...[
+            const SizedBox(height: 16),
+            FilledButton.tonalIcon(
+              onPressed: () => onAction(),
+              icon: const Icon(Icons.tune_rounded),
+              label: Text(actionLabel),
             ),
           ],
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildSourceIcon(RegisteredBookSource source) {
+  Widget _buildDiscoveryBookCard(_SourcedBook result) {
     final scheme = Theme.of(context).colorScheme;
-    final fallback = Container(
-      width: 44,
-      height: 44,
-      decoration: BoxDecoration(
-        color: scheme.secondaryContainer,
-        borderRadius: BorderRadius.circular(13),
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        source.name.characters.first.toUpperCase(),
-        style: TextStyle(
-          color: scheme.onSecondaryContainer,
-          fontWeight: FontWeight.w800,
-        ),
-      ),
-    );
-    if (source.iconUrl == null) return fallback;
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(13),
-      child: Image.network(
-        source.iconUrl.toString(),
-        width: 44,
-        height: 44,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => fallback,
-      ),
-    );
-  }
-
-  Widget _buildProtocolCard() {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: _panelDecoration(radius: 20),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.api_rounded, color: scheme.primary),
-          const SizedBox(width: 14),
-          Expanded(
+    return SizedBox(
+      width: 132,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: () => _showBookDetails(result),
+          child: Padding(
+            padding: const EdgeInsets.all(4),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  context.l10n.bookSourcesProtocolTitle,
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  context.l10n.bookSourcesProtocolDescription,
-                  style: TextStyle(
-                    color: scheme.onSurfaceVariant,
-                    height: 1.45,
+                AspectRatio(
+                  aspectRatio: 2 / 3,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: result.book.coverUrl == null
+                        ? Container(
+                            color: scheme.secondaryContainer,
+                            child: Icon(
+                              Icons.menu_book_rounded,
+                              color: scheme.onSecondaryContainer,
+                            ),
+                          )
+                        : Image.network(
+                            result.book.coverUrl.toString(),
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                              color: scheme.secondaryContainer,
+                              child: Icon(
+                                Icons.broken_image_outlined,
+                                color: scheme.onSecondaryContainer,
+                              ),
+                            ),
+                          ),
                   ),
                 ),
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 4,
-                  children: [
-                    TextButton.icon(
-                      onPressed: _showProtocolDialog,
-                      icon: const Icon(Icons.schema_outlined, size: 18),
-                      label: Text(context.l10n.bookSourcesProtocolDetails),
-                    ),
-                    TextButton.icon(
-                      onPressed: _openProtocolRepository,
-                      icon: const Icon(Icons.open_in_new_rounded, size: 18),
-                      label: Text(context.l10n.bookSourcesProtocolRepository),
-                    ),
-                  ],
+                const SizedBox(height: 8),
+                Text(
+                  result.book.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  result.book.author.isEmpty
+                      ? result.source.name
+                      : result.book.author,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: scheme.onSurfaceVariant,
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),
           ),
-        ],
+        ),
       ),
     );
+  }
+
+  Widget _buildSourceBadge(String label) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: scheme.secondaryContainer,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: scheme.onSecondaryContainer,
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
+  bool get _hasMultipleCategorySources =>
+      _categories.map((category) => category.source.id).toSet().length > 1;
+
+  List<RegisteredBookSource> _discoveryTargets(String capability) {
+    return BookSourcesPage.searchTargets(_sources, _selectedSourceId)
+        .where((source) => source.capabilities.contains(capability))
+        .toList(growable: false);
+  }
+
+  Future<void> _loadDiscoverySection() async {
+    if (!mounted) return;
+    setState(() {
+      _loadingDiscovery = true;
+      _discoveryError = null;
+      _discoveryShelves = const [];
+      _categories = const [];
+      _browseResults = const [];
+      _selectedCategory = null;
+    });
+
+    try {
+      switch (_discoverSection) {
+        case _DiscoverSection.recommended:
+          await _loadRecommendations();
+        case _DiscoverSection.categories:
+          await _loadCategories();
+        case _DiscoverSection.latest:
+          await _loadLatest();
+      }
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _discoveryError = error.toString());
+    } finally {
+      if (mounted) setState(() => _loadingDiscovery = false);
+    }
+  }
+
+  Future<void> _loadRecommendations() async {
+    final targets = _discoveryTargets('discover');
+    final batches = await Future.wait(
+      targets.map((source) async {
+        try {
+          final page = await _client.getDiscovery(source);
+          return page.sections
+              .where((section) => section.items.isNotEmpty)
+              .map(
+                (section) => _DiscoveryShelf(
+                  source: source,
+                  title: section.title,
+                  items: section.items,
+                ),
+              )
+              .toList(growable: false);
+        } catch (_) {
+          return const <_DiscoveryShelf>[];
+        }
+      }),
+    );
+    if (!mounted) return;
+    setState(() {
+      _discoveryShelves = batches.expand((items) => items).toList();
+    });
+  }
+
+  Future<void> _loadCategories() async {
+    final targets = _discoveryTargets('categories');
+    final batches = await Future.wait(
+      targets.map((source) async {
+        try {
+          final categories = await _client.getCategories(source);
+          return categories
+              .map(
+                (category) => _SourcedCategory(
+                  source: source,
+                  id: category.id,
+                  name: category.name,
+                ),
+              )
+              .toList(growable: false);
+        } catch (_) {
+          return const <_SourcedCategory>[];
+        }
+      }),
+    );
+    if (!mounted) return;
+    setState(() => _categories = batches.expand((items) => items).toList());
+  }
+
+  Future<void> _loadLatest() async {
+    final targets = _discoveryTargets('browse');
+    final batches = await Future.wait(
+      targets.map((source) async {
+        try {
+          final page = await _client.browse(source, sort: 'latest');
+          return page.items
+              .map((book) => _SourcedBook(source: source, book: book))
+              .toList(growable: false);
+        } catch (_) {
+          return const <_SourcedBook>[];
+        }
+      }),
+    );
+    final results = batches.expand((items) => items).toList();
+    results.sort((a, b) {
+      final left = a.book.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+      final right = b.book.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+      return right.compareTo(left);
+    });
+    if (!mounted) return;
+    setState(() => _browseResults = results);
+  }
+
+  Future<void> _selectCategory(_SourcedCategory category) async {
+    if (!category.source.capabilities.contains('browse')) {
+      setState(() {
+        _selectedCategory = category;
+        _browseResults = const [];
+      });
+      return;
+    }
+    setState(() {
+      _selectedCategory = category;
+      _browseResults = const [];
+      _loadingDiscovery = true;
+      _discoveryError = null;
+    });
+    try {
+      final page = await _client.browse(
+        category.source,
+        category: category.id,
+        sort: 'popular',
+      );
+      if (!mounted) return;
+      setState(() {
+        _browseResults = page.items
+            .map(
+              (book) => _SourcedBook(source: category.source, book: book),
+            )
+            .toList(growable: false);
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _discoveryError = error.toString());
+    } finally {
+      if (mounted) setState(() => _loadingDiscovery = false);
+    }
+  }
+
+  Future<void> _openSourceManagement() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const BookSourceManagementPage(),
+      ),
+    );
+    if (mounted) await _loadSources();
   }
 
   Widget _buildResultHeader() {
@@ -854,207 +1161,6 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
         width: 0.8,
       ),
     );
-  }
-
-  Future<void> _setSourceEnabled(
-    RegisteredBookSource source,
-    bool enabled,
-  ) async {
-    final sources = await _registry.setEnabled(source.id, enabled);
-    if (!mounted) return;
-    setState(() {
-      _sources = sources;
-      if (!enabled && _selectedSourceId == source.id) {
-        _selectedSourceId = null;
-      }
-      _results = const [];
-      _failedSourceCount = 0;
-    });
-  }
-
-  Future<void> _confirmRemoveSource(RegisteredBookSource source) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(context.l10n.bookSourcesRemoveTitle),
-        content: Text(context.l10n.bookSourcesRemoveMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(context.l10n.bookSourcesCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(context.l10n.bookSourcesConfirm),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-    final sources = await _registry.remove(source.id);
-    if (!mounted) return;
-    setState(() {
-      _sources = sources;
-      if (_selectedSourceId == source.id) _selectedSourceId = null;
-      _results = _results
-          .where((result) => result.source.id != source.id)
-          .toList(growable: false);
-    });
-  }
-
-  Future<void> _showAddSourceDialog() async {
-    final controller = TextEditingController();
-    var connecting = false;
-    String? errorText;
-    await showDialog<void>(
-      context: context,
-      barrierDismissible: !connecting,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: Text(context.l10n.bookSourcesAddTitle),
-          content: SizedBox(
-            width: 440,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                TextField(
-                  controller: controller,
-                  enabled: !connecting,
-                  autofocus: true,
-                  keyboardType: TextInputType.url,
-                  textInputAction: TextInputAction.done,
-                  decoration: InputDecoration(
-                    labelText: context.l10n.bookSourcesUrlLabel,
-                    hintText: context.l10n.bookSourcesUrlHint,
-                    errorText: errorText,
-                    prefixIcon: const Icon(Icons.link_rounded),
-                  ),
-                ),
-                if (connecting) ...[
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                      const SizedBox(width: 10),
-                      Text(context.l10n.bookSourcesConnecting),
-                    ],
-                  ),
-                ],
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: connecting ? null : () => Navigator.pop(dialogContext),
-              child: Text(context.l10n.bookSourcesCancel),
-            ),
-            FilledButton(
-              onPressed: connecting
-                  ? null
-                  : () async {
-                      setDialogState(() {
-                        connecting = true;
-                        errorText = null;
-                      });
-                      try {
-                        final discovered =
-                            await _client.discover(controller.text);
-                        final source = RegisteredBookSource.fromManifest(
-                          manifest: discovered.manifest,
-                          manifestUrl: discovered.manifestUrl,
-                        );
-                        final sources = await _registry.upsert(source);
-                        if (!mounted || !dialogContext.mounted) return;
-                        Navigator.pop(dialogContext);
-                        setState(() => _sources = sources);
-                        ScaffoldMessenger.of(this.context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              '${this.context.l10n.bookSourcesAdded}: '
-                              '${source.name}',
-                            ),
-                          ),
-                        );
-                      } catch (error) {
-                        if (!dialogContext.mounted) return;
-                        setDialogState(() {
-                          connecting = false;
-                          errorText = error.toString();
-                        });
-                      }
-                    },
-              child: Text(context.l10n.bookSourcesConnect),
-            ),
-          ],
-        ),
-      ),
-    );
-    controller.dispose();
-  }
-
-  void _showProtocolDialog() {
-    showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(context.l10n.bookSourcesProtocolDialogTitle),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                context.l10n.bookSourcesProtocolDialogBody,
-                style: const TextStyle(height: 1.5),
-              ),
-              const SizedBox(height: 18),
-              Text(
-                context.l10n.bookSourcesProtocolRepository,
-                style: const TextStyle(fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 6),
-              SelectableText(
-                openReadingSourceProtocolRepositoryUrl,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.primary,
-                  fontSize: 13,
-                  height: 1.4,
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton.icon(
-            onPressed: _openProtocolRepository,
-            icon: const Icon(Icons.open_in_new_rounded, size: 18),
-            label: Text(context.l10n.bookSourcesProtocolRepositoryOpen),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(context.l10n.bookSourcesClose),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _openProtocolRepository() async {
-    final opened = await launchUrl(
-      Uri.parse(openReadingSourceProtocolRepositoryUrl),
-      mode: LaunchMode.externalApplication,
-    );
-    if (!opened && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.l10n.bookSourcesProtocolRepositoryOpenFailed),
-        ),
-      );
-    }
   }
 
   void _showBookDetails(_SourcedBook result) {
@@ -1286,6 +1392,8 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
 
 enum _ShelfAddMode { online, local }
 
+enum _DiscoverSection { recommended, categories, latest }
+
 class _SourcedBook {
   final RegisteredBookSource source;
   final BookSourceBook book;
@@ -1298,6 +1406,30 @@ class _SearchBatch {
   final bool failed;
 
   const _SearchBatch({required this.items, this.failed = false});
+}
+
+class _DiscoveryShelf {
+  final RegisteredBookSource source;
+  final String title;
+  final List<BookSourceBook> items;
+
+  const _DiscoveryShelf({
+    required this.source,
+    required this.title,
+    required this.items,
+  });
+}
+
+class _SourcedCategory {
+  final RegisteredBookSource source;
+  final String id;
+  final String name;
+
+  const _SourcedCategory({
+    required this.source,
+    required this.id,
+    required this.name,
+  });
 }
 
 const String _allSourcesMenuValue = '__all_enabled_sources__';
