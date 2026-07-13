@@ -2916,7 +2916,7 @@ class _SettingsPageState extends State<SettingsPage> {
           const Divider(height: 1),
           const SizedBox(height: 14),
           _buildAboutLine(l10n.settingsVersionLabel, _appVersion),
-          _buildAboutLine(l10n.settingsLicenseLabel, 'MIT'),
+          _buildAboutLine(l10n.settingsLicenseLabel, 'AGPL-3.0'),
           const SizedBox(height: 14),
           _buildCommunityButton(
             onPressed: _checkForUpdates,

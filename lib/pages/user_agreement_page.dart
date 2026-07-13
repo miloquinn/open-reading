@@ -192,7 +192,7 @@ class _UserAgreementPageState extends State<UserAgreementPage>
             borderRadius: BorderRadius.circular(99),
           ),
           child: Text(
-            'MIT · LOCAL FIRST',
+            'AGPL-3.0 · LOCAL FIRST',
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.8,
@@ -572,7 +572,7 @@ class _PaperGrainPainter extends CustomPainter {
 }
 
 class UserAgreementService {
-  static const String currentAgreementVersion = '2026-07-11.1';
+  static const String currentAgreementVersion = '2026-07-13.1';
   static const String _keyAgreementAccepted = 'userAgreementAccepted';
   static const String _keyAcceptedDate = 'agreementAcceptedDate';
   static const String _keyAcceptedVersion = 'agreementAcceptedVersion';
@@ -672,9 +672,9 @@ class _AgreementCopy {
     heroBody: '开元阅读是一款开源、跨平台、本地优先的电子书阅读工具。它提供阅读能力，但不提供、托管或审核你导入的书籍。',
     localTitle: '本地优先',
     localBody: '书籍、进度与笔记原则上保存在你的设备中，由你自行管理与备份。',
-    openSourceTitle: 'MIT 开源',
-    openSourceBody: '源代码按 MIT License 提供；软件按“原样”交付，不附带任何明示或默示担保。',
-    versionLabel: '条款版本 2026-07-11.1',
+    openSourceTitle: 'AGPL-3.0 开源',
+    openSourceBody: '源代码按 GNU AGPL v3.0 提供；软件按“原样”交付，不附带任何明示或默示担保。',
+    versionLabel: '条款版本 2026-07-13.1',
     agreementTitle: '使用条款与隐私说明',
     agreementSubtitle: '使用前请完整阅读，重点条款已直接说明',
     importantNotice:
@@ -683,7 +683,7 @@ class _AgreementCopy {
       _AgreementSection('协议范围与接受',
           '本协议适用于你对开元阅读软件及其附带功能的下载、安装和使用。点击“同意并继续”即表示你已阅读、理解并同意本协议；如你不同意，请停止使用并退出应用。若你未达到所在地法律规定的独立同意年龄，应由监护人阅读并同意。'),
       _AgreementSection('开源软件与许可',
-          '开元阅读是按 MIT License 发布的开源软件。你可以在该许可证允许的范围内使用、复制、修改、合并、发布、分发、再许可或销售软件副本，但须保留许可证要求的版权与许可声明。本协议仅规范你对已分发应用及相关服务的使用，不限制 MIT License 已授予的权利；第三方组件仍适用各自许可证。'),
+          '开元阅读后续版本按 GNU Affero General Public License v3.0 发布。你可以依许可证使用、复制、修改、分发或销售软件；分发修改版时必须按 AGPL-3.0 提供完整对应源代码，修改版通过网络向用户提供服务时也必须按许可证向这些用户提供对应源代码。v1.0.0 及更早版本已经获得的 MIT 授权继续有效且不会撤回。本协议不限制开源许可证已经授予的权利；第三方组件仍适用各自许可证。'),
       _AgreementSection('用户内容与版权责任',
           '“用户内容”包括你导入、下载、打开、转换、缓存、标注、朗读或以其他方式处理的书籍、文档、图片、元数据及链接。你须确保自己对用户内容拥有合法权利或已取得必要授权，并自行承担因内容引起的版权、商标、隐私、名誉、违法信息、恶意文件及其他争议或损失。软件和开发者不上传、出售、授权、背书或审核你的用户内容，也不因软件能够读取某种格式而表示该内容可以被合法使用。'),
       _AgreementSection('禁止使用',
@@ -718,9 +718,9 @@ class _AgreementCopy {
     heroBody: '開元閱讀是一款開源、跨平台、本機優先的電子書閱讀工具。它提供閱讀能力，但不提供、代管或審核你匯入的書籍。',
     localTitle: '本機優先',
     localBody: '書籍、進度與筆記原則上儲存在你的裝置中，由你自行管理與備份。',
-    openSourceTitle: 'MIT 開源',
-    openSourceBody: '原始碼依 MIT License 提供；軟體按「原樣」交付，不附帶任何明示或默示擔保。',
-    versionLabel: '條款版本 2026-07-11.1',
+    openSourceTitle: 'AGPL-3.0 開源',
+    openSourceBody: '原始碼依 GNU AGPL v3.0 提供；軟體按「原樣」交付，不附帶任何明示或默示擔保。',
+    versionLabel: '條款版本 2026-07-13.1',
     agreementTitle: '使用條款與隱私說明',
     agreementSubtitle: '使用前請完整閱讀，重點條款已直接說明',
     importantNotice:
@@ -729,7 +729,7 @@ class _AgreementCopy {
       _AgreementSection('協議範圍與接受',
           '本協議適用於你對開元閱讀軟體及其附帶功能的下載、安裝和使用。點擊「同意並繼續」即表示你已閱讀、理解並同意本協議；如你不同意，請停止使用並離開應用程式。若你未達到所在地法律規定的獨立同意年齡，應由監護人閱讀並同意。'),
       _AgreementSection('開源軟體與授權',
-          '開元閱讀是依 MIT License 發布的開源軟體。你可以在該授權條款允許的範圍內使用、複製、修改、合併、發布、散布、再授權或銷售軟體副本，但須保留授權條款要求的著作權與授權聲明。本協議僅規範你對已散布應用程式及相關服務的使用，不限制 MIT License 已授予的權利；第三方元件仍適用各自授權條款。'),
+          '開元閱讀後續版本依 GNU Affero General Public License v3.0 發布。你可以依授權條款使用、複製、修改、散布或銷售軟體；散布修改版時必須依 AGPL-3.0 提供完整對應原始碼，修改版透過網路向使用者提供服務時也必須依授權條款向這些使用者提供對應原始碼。v1.0.0 及更早版本已取得的 MIT 授權繼續有效且不會撤回。本協議不限制開源授權已授予的權利；第三方元件仍適用各自授權條款。'),
       _AgreementSection('使用者內容與著作權責任',
           '「使用者內容」包括你匯入、下載、開啟、轉換、快取、標註、朗讀或以其他方式處理的書籍、文件、圖片、詮釋資料及連結。你須確保自己對使用者內容擁有合法權利或已取得必要授權，並自行承擔因內容引起的著作權、商標、隱私、名譽、違法資訊、惡意檔案及其他爭議或損失。軟體和開發者不上傳、出售、授權、背書或審核你的使用者內容，也不因軟體能夠讀取某種格式而表示該內容可以被合法使用。'),
       _AgreementSection('禁止使用',
@@ -765,10 +765,10 @@ class _AgreementCopy {
         'OpenReading はオープンソース・クロスプラットフォーム・ローカルファーストの電子書籍リーダーです。読書のための機能を提供しますが、あなたが取り込んだ書籍を提供・ホスティング・審査することはありません。',
     localTitle: 'ローカルファースト',
     localBody: '書籍・進捗・メモは原則としてあなたの端末に保存され、管理とバックアップはあなた自身が行います。',
-    openSourceTitle: 'MIT ライセンス',
+    openSourceTitle: 'AGPL-3.0 ライセンス',
     openSourceBody:
-        'ソースコードは MIT License の下で提供され、ソフトウェアは「現状のまま」で提供されます。明示・黙示を問わずいかなる保証も付帯しません。',
-    versionLabel: '規約バージョン 2026-07-11.1',
+        'ソースコードは GNU AGPL v3.0 の下で提供され、ソフトウェアは「現状のまま」で提供されます。明示・黙示を問わずいかなる保証も付帯しません。',
+    versionLabel: '規約バージョン 2026-07-13.1',
     agreementTitle: '利用規約とプライバシーについて',
     agreementSubtitle: 'ご利用前に全文をお読みください。重要な条項は直接記載しています',
     importantNotice:
@@ -777,7 +777,7 @@ class _AgreementCopy {
       _AgreementSection('適用範囲と同意',
           '本規約は、OpenReading ソフトウェアおよび付属機能のダウンロード・インストール・使用に適用されます。「同意して続ける」をタップすることで、本規約を読み、理解し、同意したものとみなされます。同意しない場合は、使用を中止しアプリを終了してください。お住まいの地域の法律が定める同意年齢に達していない場合は、保護者が内容を読み同意する必要があります。'),
       _AgreementSection('オープンソースソフトウェアとライセンス',
-          'OpenReading は MIT License の下で公開されているオープンソースソフトウェアです。同ライセンスが許す範囲で、著作権表示とライセンス表示を保持することを条件に、使用・複製・改変・結合・公開・頒布・再許諾・販売が可能です。本規約は頒布済みアプリと関連サービスの利用のみを規律し、MIT License が付与する権利を制限しません。サードパーティコンポーネントには各自のライセンスが適用されます。'),
+          'OpenReading の今後のバージョンは GNU Affero General Public License v3.0 の下で公開されます。ライセンスに従って使用・複製・改変・頒布・販売できますが、改変版を頒布する場合は完全な対応ソースを AGPL-3.0 で提供し、改変版をネットワークサービスとして提供する場合も利用者に対応ソースを提供する必要があります。v1.0.0 以前に付与された MIT License の権利は引き続き有効で撤回されません。本規約はオープンソースライセンスが付与する権利を制限せず、サードパーティコンポーネントには各自のライセンスが適用されます。'),
       _AgreementSection('ユーザーコンテンツと著作権責任',
           '「ユーザーコンテンツ」とは、あなたが取り込み、ダウンロードし、開き、変換し、キャッシュし、注釈を付け、読み上げ、またはその他の方法で処理する書籍・文書・画像・メタデータ・リンク等を指します。あなたはユーザーコンテンツについて適法な権利または必要な許諾を有していることを保証し、著作権・商標・プライバシー・名誉・違法情報・悪意あるファイル等に起因する紛争や損失について自ら責任を負います。ソフトウェアと開発者はユーザーコンテンツをアップロード・販売・許諾・推奨・審査せず、ある形式を読み込めることがそのコンテンツを適法に利用できることを意味するものでもありません。'),
       _AgreementSection('禁止事項',
@@ -815,10 +815,10 @@ class _AgreementCopy {
     localTitle: 'Local first',
     localBody:
         'Books, progress, and notes generally remain on your device for you to manage and back up.',
-    openSourceTitle: 'MIT licensed',
+    openSourceTitle: 'AGPL-3.0 licensed',
     openSourceBody:
-        'Source code is provided under the MIT License and the software is supplied “as is,” without warranties.',
-    versionLabel: 'Terms version 2026-07-11.1',
+        'Source code is provided under GNU AGPL v3.0 and the software is supplied “as is,” without warranties.',
+    versionLabel: 'Terms version 2026-07-13.1',
     agreementTitle: 'Terms of Use & Privacy Notice',
     agreementSubtitle: 'Please read before using OpenReading',
     importantNotice:
@@ -827,7 +827,7 @@ class _AgreementCopy {
       _AgreementSection('Scope and acceptance',
           'These terms apply to your download, installation, and use of OpenReading and its included features. By selecting “Agree and continue,” you confirm that you have read, understood, and accepted them. If you do not agree, stop using and exit the app. A guardian must consent where required by local law.'),
       _AgreementSection('Open-source license',
-          'OpenReading is released under the MIT License. You may use, copy, modify, merge, publish, distribute, sublicense, or sell copies as permitted by that license, provided required copyright and license notices are retained. These terms govern use of the distributed app and related features without restricting rights granted by the MIT License. Third-party components remain subject to their own licenses.'),
+          'Future OpenReading versions are released under the GNU Affero General Public License v3.0. You may use, copy, modify, distribute, or sell the software under that license. A distributed modified version must provide its complete corresponding source under AGPL-3.0, and a modified version used to provide a network service must also offer corresponding source to users interacting with it. MIT rights already granted for v1.0.0 and earlier versions remain valid and are not revoked. These terms do not restrict rights granted by the open-source license. Third-party components remain subject to their own licenses.'),
       _AgreementSection('User content and rights',
           '“User content” includes books, documents, images, metadata, links, and other material you import, download, open, convert, cache, annotate, or read aloud. You must have all rights and permissions required to use it. You are solely responsible for copyright, trademark, privacy, defamation, unlawful-content, malware, and other claims or losses involving user content. The software and its developers do not upload, sell, license, endorse, or review that content, and format support does not imply lawful permission to use a file.'),
       _AgreementSection('Prohibited use',

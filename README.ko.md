@@ -43,4 +43,4 @@ flutter pub get
 flutter run
 ```
 
-라이선스: [MIT](LICENSE). Issue, Pull Request와 번역을 환영합니다.
+라이선스: [GNU AGPL-3.0](LICENSE). 수정 버전을 배포하거나 네트워크 서비스로 제공할 경우 AGPL-3.0에 따라 해당 소스 코드를 제공해야 합니다. `v1.0.0` 이하 버전에는 기존 [MIT 라이선스](LICENSE-MIT-LEGACY)가 계속 적용됩니다. 자세한 내용은 [LICENSING.md](LICENSING.md)를 참조하세요. Issue, Pull Request와 번역을 환영합니다.

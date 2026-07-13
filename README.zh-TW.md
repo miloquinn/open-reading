@@ -43,4 +43,4 @@ flutter pub get
 flutter run
 ```
 
-歡迎提交 Issue、Pull Request 與翻譯。授權條款：[MIT](LICENSE)。
+歡迎提交 Issue、Pull Request 與翻譯。授權條款：[GNU AGPL-3.0](LICENSE)。修改版在散布或透過網路提供服務時，必須依 AGPL-3.0 提供對應原始碼。`v1.0.0` 及更早版本仍適用原有的 [MIT 授權](LICENSE-MIT-LEGACY)，詳見 [LICENSING.md](LICENSING.md)。

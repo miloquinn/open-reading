@@ -11,4 +11,4 @@ PRODUCT_NAME = 开元阅读
 PRODUCT_BUNDLE_IDENTIFIER = com.niki.xxread
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2026 Open Reading contributors. MIT License.
+PRODUCT_COPYRIGHT = Copyright © 2026 Open Reading contributors. AGPL-3.0.
