@@ -89,6 +89,54 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bookSourcesLoadMore => '加载更多';
 
   @override
+  String get legadoCompatibilityTitle => 'Legado 兼容（Beta）';
+
+  @override
+  String get legadoCompatibilitySubtitle => '导入后先扫描规则能力，再决定是否允许兼容运行';
+
+  @override
+  String get legadoImport => '导入 Legado';
+
+  @override
+  String get legadoImportTitle => '导入 Legado 书源';
+
+  @override
+  String get legadoImportNotice =>
+      'Legado JSON 可能包含可执行脚本、Cookie、登录流程或浏览器自动化。导入只会保存并扫描规则，App 不会直接执行高风险能力。';
+
+  @override
+  String get legadoChooseFile => '选择 JSON 文件';
+
+  @override
+  String get legadoJsonLabel => 'Legado 书源 JSON';
+
+  @override
+  String get legadoImportHint => '粘贴单个书源、导出的书源列表，或选择 JSON 文件';
+
+  @override
+  String get legadoFileTooLarge => '书源文件超过 2 MB 导入限制。';
+
+  @override
+  String get legadoFileReadFailed => '无法读取所选文件。';
+
+  @override
+  String legadoImportedCount(int count) {
+    return '已导入 $count 个 Legado 书源';
+  }
+
+  @override
+  String get legadoNoSources => '尚未导入 Legado 书源。这里的导入不会启用脚本，也不会内置第三方内容。';
+
+  @override
+  String get legadoLite => 'Lite 可兼容';
+
+  @override
+  String get legadoAdapterRequired => '需要兼容引擎';
+
+  @override
+  String get legadoUnsupported => '暂不支持';
+
+  @override
   String bookSourcesFailedCount(int count) {
     return '$count 个书源请求失败';
   }
@@ -2009,6 +2057,54 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get bookSourcesLoadMore => '載入更多';
+
+  @override
+  String get legadoCompatibilityTitle => 'Legado 相容（Beta）';
+
+  @override
+  String get legadoCompatibilitySubtitle => '匯入後先掃描規則能力，再決定是否允許相容執行';
+
+  @override
+  String get legadoImport => '匯入 Legado';
+
+  @override
+  String get legadoImportTitle => '匯入 Legado 書源';
+
+  @override
+  String get legadoImportNotice =>
+      'Legado JSON 可能包含可執行腳本、Cookie、登入流程或瀏覽器自動化。匯入只會儲存並掃描規則，App 不會直接執行高風險能力。';
+
+  @override
+  String get legadoChooseFile => '選擇 JSON 檔案';
+
+  @override
+  String get legadoJsonLabel => 'Legado 書源 JSON';
+
+  @override
+  String get legadoImportHint => '貼上單一書源、匯出的書源清單，或選擇 JSON 檔案';
+
+  @override
+  String get legadoFileTooLarge => '書源檔案超過 2 MB 匯入限制。';
+
+  @override
+  String get legadoFileReadFailed => '無法讀取所選檔案。';
+
+  @override
+  String legadoImportedCount(int count) {
+    return '已匯入 $count 個 Legado 書源';
+  }
+
+  @override
+  String get legadoNoSources => '尚未匯入 Legado 書源。這裡的匯入不會啟用腳本，也不會內建第三方內容。';
+
+  @override
+  String get legadoLite => 'Lite 可相容';
+
+  @override
+  String get legadoAdapterRequired => '需要相容引擎';
+
+  @override
+  String get legadoUnsupported => '暫不支援';
 
   @override
   String bookSourcesFailedCount(int count) {
