@@ -5,7 +5,7 @@
   "description": "Please describe the basic information.",
   "main": "",
   "author": "",
-  "license": "",
+  "license": "AGPL-3.0-only",
   "dependencies": {},
   "devDependencies": {
     "@ohos/hypium": "1.0.6"

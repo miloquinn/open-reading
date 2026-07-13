@@ -17,7 +17,7 @@
 
   <p>
     <a href="https://flutter.dev/"><img src="https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white" alt="Flutter"></a>
-    <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-2ea44f" alt="MIT License"></a>
+    <a href="LICENSE"><img src="https://img.shields.io/badge/License-AGPL--3.0-2ea44f" alt="AGPL-3.0 License"></a>
     <img src="https://img.shields.io/badge/Reader_Engine-Flutter_Native-0ea5e9" alt="Flutter Native Reader Engine">
     <img src="https://img.shields.io/badge/Core_Reader-No_WebView-f97316" alt="Core Reader Without WebView">
     <a href="https://github.com/miloquinn/open-reading-source-protocol"><img src="https://img.shields.io/badge/Book_Source-Open_Protocol-7c3aed" alt="Open Reading Source Protocol"></a>
@@ -140,4 +140,4 @@ pirated content, and ORSP must not be used to bypass access controls or terms.
 
 ## License
 
-[MIT](LICENSE) © [miloquinn](https://github.com/miloquinn)
+[GNU AGPL-3.0](LICENSE) © [miloquinn](https://github.com/miloquinn). Modified versions distributed or used to provide network services must offer corresponding source as required by AGPL-3.0. Releases through `v1.0.0` remain available under their original [MIT license](LICENSE-MIT-LEGACY); see the [licensing boundary](LICENSING.md).

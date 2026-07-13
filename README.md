@@ -20,7 +20,7 @@
 
   <p>
     <a href="https://flutter.dev/"><img src="https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white" alt="Flutter"></a>
-    <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-2ea44f" alt="MIT License"></a>
+    <a href="LICENSE"><img src="https://img.shields.io/badge/License-AGPL--3.0-2ea44f" alt="AGPL-3.0 License"></a>
     <img src="https://img.shields.io/badge/Reader_Engine-Flutter_Native-0ea5e9" alt="Flutter Native Reader Engine">
     <img src="https://img.shields.io/badge/Core_Reader-No_WebView-f97316" alt="Core Reader Without WebView">
     <a href="https://github.com/miloquinn/open-reading"><img src="https://img.shields.io/badge/GitHub-open--reading-181717?logo=github" alt="GitHub"></a>
@@ -171,4 +171,4 @@ tool/              # 本地开发与示例服务工具
 
 ## 📄 许可证
 
-[MIT](LICENSE) © [miloquinn](https://github.com/miloquinn)
+[GNU AGPL-3.0](LICENSE) © [miloquinn](https://github.com/miloquinn)。修改版在分发或通过网络提供服务时，须按 AGPL-3.0 提供对应源代码。`v1.0.0` 及更早发布版本仍适用其原有 [MIT 授权](LICENSE-MIT-LEGACY)，详见[授权边界说明](LICENSING.md)。

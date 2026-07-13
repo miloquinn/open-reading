@@ -87,6 +87,58 @@ class AppLocalizationsJa extends AppLocalizations {
   String get bookSourcesSearching => 'ソースを検索中…';
 
   @override
+  String get bookSourcesLoadMore => 'さらに読み込む';
+
+  @override
+  String get legadoCompatibilityTitle => 'Legado 互換（Beta）';
+
+  @override
+  String get legadoCompatibilitySubtitle => 'インポート後にルールを検査し、互換ランタイムで実行可能か判定します';
+
+  @override
+  String get legadoImport => 'Legado をインポート';
+
+  @override
+  String get legadoImportTitle => 'Legado ソースをインポート';
+
+  @override
+  String get legadoImportNotice =>
+      'Legado JSON には実行可能なスクリプト、Cookie、ログイン処理、ブラウザー自動化が含まれる場合があります。インポート時は保存と検査だけを行い、高リスク機能はアプリ内で実行しません。';
+
+  @override
+  String get legadoChooseFile => 'JSON ファイルを選択';
+
+  @override
+  String get legadoJsonLabel => 'Legado ソース JSON';
+
+  @override
+  String get legadoImportHint => '単一ソースまたはエクスポートした一覧を貼り付けるか、JSON ファイルを選択します';
+
+  @override
+  String get legadoFileTooLarge => 'ソースファイルが 2 MB の上限を超えています。';
+
+  @override
+  String get legadoFileReadFailed => '選択したファイルを読み込めませんでした。';
+
+  @override
+  String legadoImportedCount(int count) {
+    return 'Legado ソースを $count 件インポートしました';
+  }
+
+  @override
+  String get legadoNoSources =>
+      'Legado ソースはまだありません。ここでのインポートはスクリプトを有効化せず、第三者コンテンツも同梱しません。';
+
+  @override
+  String get legadoLite => 'Lite 互換';
+
+  @override
+  String get legadoAdapterRequired => 'アダプターが必要';
+
+  @override
+  String get legadoUnsupported => '未対応';
+
+  @override
   String bookSourcesFailedCount(int count) {
     return '$count 件のソースリクエストが失敗しました';
   }

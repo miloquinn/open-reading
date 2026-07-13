@@ -14,6 +14,6 @@
 - [ ] `flutter test` passes.
 - [ ] User-visible text has been added to the localization files.
 - [ ] I checked for data-loss, file-import, privacy, and platform-specific risks.
+- [ ] I have the right to submit this contribution under AGPL-3.0-only and documented any third-party code or assets.
 
 > Passing automation and AI review does not approve or merge this PR. The repository owner performs the final review and merge manually.
-
