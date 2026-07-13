@@ -163,7 +163,7 @@ class ExampleBookSourceServer {
     );
     return {
       'protocol': 'open-reading-source',
-      'protocolVersion': '1.0',
+      'protocolVersion': '1.1',
       'id': sourceId,
       'name': sourceName,
       'description': '仓库内置的本地协议测试书源，仅包含原创示例文本。',

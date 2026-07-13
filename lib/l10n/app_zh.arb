@@ -76,8 +76,8 @@
   "bookSourcesProtocolRepository": "协议开源仓库",
   "bookSourcesProtocolRepositoryOpen": "在 GitHub 查看",
   "bookSourcesProtocolRepositoryOpenFailed": "无法打开书源协议仓库",
-  "bookSourcesProtocolDialogTitle": "开放书源协议 v1",
-  "bookSourcesProtocolDialogBody": "服务在 /.well-known/open-reading-source.json 发布发现文档，并实现 /v1/search、书籍详情、章节目录与章节正文接口。首版仅支持公开、无需登录的 HTTP(S) 书源。",
+  "bookSourcesProtocolDialogTitle": "开放书源协议 v1.1",
+  "bookSourcesProtocolDialogBody": "服务在 /.well-known/open-reading-source.json 发布发现文档，并实现搜索、书籍详情、章节目录与章节正文接口。v1.1 可选支持推荐、分类与浏览，仍仅面向公开、无需登录的 HTTP(S) 书源。",
   "bookSourcesClose": "关闭",
   "bookSourcesIdentity": "书源 ID：{sourceId}\n书籍 ID：{bookId}",
   "@bookSourcesIdentity": {

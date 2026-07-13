@@ -64,8 +64,8 @@
   "bookSourcesProtocolRepository": "協定開源倉庫",
   "bookSourcesProtocolRepositoryOpen": "在 GitHub 檢視",
   "bookSourcesProtocolRepositoryOpenFailed": "無法開啟書源協定倉庫",
-  "bookSourcesProtocolDialogTitle": "開放書源協定 v1",
-  "bookSourcesProtocolDialogBody": "服務在 /.well-known/open-reading-source.json 發布探索文件，並實作 /v1/search、書籍詳情、章節目錄與章節內文介面。首版僅支援公開、無需登入的 HTTP(S) 書源。",
+  "bookSourcesProtocolDialogTitle": "開放書源協定 v1.1",
+  "bookSourcesProtocolDialogBody": "服務在 /.well-known/open-reading-source.json 發布探索文件，並實作搜尋、書籍詳情、章節目錄與章節內文介面。v1.1 可選支援推薦、分類與瀏覽，仍僅面向公開、無需登入的 HTTP(S) 書源。",
   "bookSourcesClose": "關閉",
   "bookSourcesIdentity": "書源 ID：{sourceId}\n書籍 ID：{bookId}",
   "@bookSourcesIdentity": {

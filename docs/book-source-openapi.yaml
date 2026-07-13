@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Open Reading Source Protocol
-  version: 1.0.0
+  version: 1.1.0
   description: Standard API implemented by an Open Reading compatible book source.
 servers:
   - url: https://books.example.org/api

@@ -177,11 +177,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not open the protocol repository';
 
   @override
-  String get bookSourcesProtocolDialogTitle => 'Open source protocol v1';
+  String get bookSourcesProtocolDialogTitle => 'Open source protocol v1.1';
 
   @override
   String get bookSourcesProtocolDialogBody =>
-      'A source publishes /.well-known/open-reading-source.json and implements /v1/search plus book details, chapter catalogs, and chapter content endpoints. Version 1 supports public HTTP(S) sources that do not require sign-in.';
+      'A source publishes /.well-known/open-reading-source.json and implements search, book details, chapter catalogs, and chapter content. Version 1.1 optionally adds discovery, categories, and browsing for public HTTP(S) sources that do not require sign-in.';
 
   @override
   String get bookSourcesClose => 'Close';

@@ -76,8 +76,8 @@
   "bookSourcesProtocolRepository": "Protocol repository",
   "bookSourcesProtocolRepositoryOpen": "View on GitHub",
   "bookSourcesProtocolRepositoryOpenFailed": "Could not open the protocol repository",
-  "bookSourcesProtocolDialogTitle": "Open source protocol v1",
-  "bookSourcesProtocolDialogBody": "A source publishes /.well-known/open-reading-source.json and implements /v1/search plus book details, chapter catalogs, and chapter content endpoints. Version 1 supports public HTTP(S) sources that do not require sign-in.",
+  "bookSourcesProtocolDialogTitle": "Open source protocol v1.1",
+  "bookSourcesProtocolDialogBody": "A source publishes /.well-known/open-reading-source.json and implements search, book details, chapter catalogs, and chapter content. Version 1.1 optionally adds discovery, categories, and browsing for public HTTP(S) sources that do not require sign-in.",
   "bookSourcesClose": "Close",
   "bookSourcesIdentity": "Source ID: {sourceId}\nBook ID: {bookId}",
   "@bookSourcesIdentity": {

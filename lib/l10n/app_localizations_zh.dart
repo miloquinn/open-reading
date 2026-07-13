@@ -165,11 +165,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bookSourcesProtocolRepositoryOpenFailed => '无法打开书源协议仓库';
 
   @override
-  String get bookSourcesProtocolDialogTitle => '开放书源协议 v1';
+  String get bookSourcesProtocolDialogTitle => '开放书源协议 v1.1';
 
   @override
   String get bookSourcesProtocolDialogBody =>
-      '服务在 /.well-known/open-reading-source.json 发布发现文档，并实现 /v1/search、书籍详情、章节目录与章节正文接口。首版仅支持公开、无需登录的 HTTP(S) 书源。';
+      '服务在 /.well-known/open-reading-source.json 发布发现文档，并实现搜索、书籍详情、章节目录与章节正文接口。v1.1 可选支持推荐、分类与浏览，仍仅面向公开、无需登录的 HTTP(S) 书源。';
 
   @override
   String get bookSourcesClose => '关闭';
@@ -2084,11 +2084,11 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get bookSourcesProtocolRepositoryOpenFailed => '無法開啟書源協定倉庫';
 
   @override
-  String get bookSourcesProtocolDialogTitle => '開放書源協定 v1';
+  String get bookSourcesProtocolDialogTitle => '開放書源協定 v1.1';
 
   @override
   String get bookSourcesProtocolDialogBody =>
-      '服務在 /.well-known/open-reading-source.json 發布探索文件，並實作 /v1/search、書籍詳情、章節目錄與章節內文介面。首版僅支援公開、無需登入的 HTTP(S) 書源。';
+      '服務在 /.well-known/open-reading-source.json 發布探索文件，並實作搜尋、書籍詳情、章節目錄與章節內文介面。v1.1 可選支援推薦、分類與瀏覽，仍僅面向公開、無需登入的 HTTP(S) 書源。';
 
   @override
   String get bookSourcesClose => '關閉';

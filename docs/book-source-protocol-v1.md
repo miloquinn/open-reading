@@ -1,4 +1,4 @@
-# Open Reading Source Protocol v1.0
+# Open Reading Source Protocol v1.1
 
 Open Reading Source Protocol（ORSP）是一套面向电子书与连载文本的开放 HTTP
 协议。它把阅读器与具体内容站点解耦：阅读器只实现一次协议客户端，内容提供方或适配器
@@ -28,7 +28,7 @@ GET /.well-known/open-reading-source.json
 ```json
 {
   "protocol": "open-reading-source",
-  "protocolVersion": "1.0",
+  "protocolVersion": "1.1",
   "id": "org.example.public-books",
   "name": "Example Public Books",
   "description": "Public-domain books maintained by Example.org",
@@ -58,7 +58,7 @@ GET /.well-known/open-reading-source.json
 
 - 请求与响应编码为 UTF-8。
 - JSON 响应使用 `application/json`。
-- 客户端发送 `X-Open-Reading-Protocol: 1.0`。
+- 客户端发送 `X-Open-Reading-Protocol: 1.1`。
 - ID 是书源内部稳定、不透明的字符串。客户端不得推断 ID 格式。
 - 时间使用 ISO 8601，例如 `2026-07-11T10:00:00Z`。
 - 章节正文 `contentType` 仅允许 `text/plain`、`text/markdown`、`text/html`。
@@ -232,4 +232,4 @@ dart run tool/example_book_source_server.dart --host 0.0.0.0 --port 8788 \
 ```
 
 协议文本与参考实现随 Open Reading 项目按仓库许可证开放。建议第三方实现明确标注支持的
-协议版本，例如 `Open Reading Source Protocol 1.0 compatible`。
+协议版本，例如 `Open Reading Source Protocol 1.1 compatible`。

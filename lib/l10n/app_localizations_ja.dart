@@ -166,11 +166,11 @@ class AppLocalizationsJa extends AppLocalizations {
   String get bookSourcesProtocolRepositoryOpenFailed => 'プロトコルのリポジトリを開けませんでした';
 
   @override
-  String get bookSourcesProtocolDialogTitle => 'オープンソースプロトコル v1';
+  String get bookSourcesProtocolDialogTitle => 'オープンソースプロトコル v1.1';
 
   @override
   String get bookSourcesProtocolDialogBody =>
-      'サービスは /.well-known/open-reading-source.json でディスカバリードキュメントを公開し、/v1/search、書籍詳細、章の目次、章の本文の各エンドポイントを実装します。バージョン 1 はログイン不要の公開 HTTP(S) ソースのみをサポートします。';
+      'サービスは /.well-known/open-reading-source.json でディスカバリードキュメントを公開し、検索、書籍詳細、章一覧、本文取得を実装します。v1.1 では公開 HTTP(S) ソース向けにディスカバリー、カテゴリ、ブラウズを任意で追加できます。';
 
   @override
   String get bookSourcesClose => '閉じる';

@@ -404,13 +404,13 @@ abstract class AppLocalizations {
   /// No description provided for @bookSourcesProtocolDialogTitle.
   ///
   /// In en, this message translates to:
-  /// **'Open source protocol v1'**
+  /// **'Open source protocol v1.1'**
   String get bookSourcesProtocolDialogTitle;
 
   /// No description provided for @bookSourcesProtocolDialogBody.
   ///
   /// In en, this message translates to:
-  /// **'A source publishes /.well-known/open-reading-source.json and implements /v1/search plus book details, chapter catalogs, and chapter content endpoints. Version 1 supports public HTTP(S) sources that do not require sign-in.'**
+  /// **'A source publishes /.well-known/open-reading-source.json and implements search, book details, chapter catalogs, and chapter content. Version 1.1 optionally adds discovery, categories, and browsing for public HTTP(S) sources that do not require sign-in.'**
   String get bookSourcesProtocolDialogBody;
 
   /// No description provided for @bookSourcesClose.

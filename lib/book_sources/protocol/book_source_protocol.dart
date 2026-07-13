@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 const String openReadingSourceProtocol = 'open-reading-source';
-const String openReadingSourceProtocolVersion = '1.0';
+const String openReadingSourceProtocolVersion = '1.1';
 const String openReadingSourceProtocolRepositoryUrl =
     'https://github.com/miloquinn/open-reading-source-protocol';
 const String openReadingSourceDiscoveryPath =

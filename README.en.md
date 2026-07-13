@@ -93,7 +93,7 @@ chapter-content endpoints. Reader apps implement the protocol once; source
 developers may use any server language or framework.
 
 - Repository: [miloquinn/open-reading-source-protocol](https://github.com/miloquinn/open-reading-source-protocol)
-- Version: `1.0` early public draft
+- Version: `1.1` discovery candidate
 - Intended content: original, public-domain, or properly licensed works
 
 Run the local example source:

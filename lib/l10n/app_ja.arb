@@ -64,8 +64,8 @@
   "bookSourcesProtocolRepository": "プロトコルのリポジトリ",
   "bookSourcesProtocolRepositoryOpen": "GitHub で見る",
   "bookSourcesProtocolRepositoryOpenFailed": "プロトコルのリポジトリを開けませんでした",
-  "bookSourcesProtocolDialogTitle": "オープンソースプロトコル v1",
-  "bookSourcesProtocolDialogBody": "サービスは /.well-known/open-reading-source.json でディスカバリードキュメントを公開し、/v1/search、書籍詳細、章の目次、章の本文の各エンドポイントを実装します。バージョン 1 はログイン不要の公開 HTTP(S) ソースのみをサポートします。",
+  "bookSourcesProtocolDialogTitle": "オープンソースプロトコル v1.1",
+  "bookSourcesProtocolDialogBody": "サービスは /.well-known/open-reading-source.json でディスカバリードキュメントを公開し、検索、書籍詳細、章一覧、本文取得を実装します。v1.1 では公開 HTTP(S) ソース向けにディスカバリー、カテゴリ、ブラウズを任意で追加できます。",
   "bookSourcesClose": "閉じる",
   "bookSourcesIdentity": "ソース ID：{sourceId}\n書籍 ID：{bookId}",
   "@bookSourcesIdentity": {

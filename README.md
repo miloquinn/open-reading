@@ -97,7 +97,7 @@
 
 - 协议仓库：**[miloquinn/open-reading-source-protocol](https://github.com/miloquinn/open-reading-source-protocol)**
 - 协议名称：Open Reading Source Protocol
-- 当前版本：`1.0` 早期公开草案
+- 当前版本：`1.1` 发现能力候选版
 - 适用范围：原创、公共领域或已获得合法授权的内容
 
 开发者可以直接搭建原生 ORSP 服务，也可以为自己有权使用的现有内容服务编写适配网关。
