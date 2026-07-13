@@ -131,12 +131,6 @@ abstract class AppLocalizations {
   /// **'Discover'**
   String get discover;
 
-  /// No description provided for @discoverSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Search and browse enabled providers to find your next book'**
-  String get discoverSubtitle;
-
   /// No description provided for @discoverRecommended.
   ///
   /// In en, this message translates to:
@@ -178,18 +172,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'A source with the {capability} capability is required. Existing sources can still be searched.'**
   String discoverUnsupportedMessage(String capability);
-
-  /// No description provided for @discoverChooseCategory.
-  ///
-  /// In en, this message translates to:
-  /// **'Choose a category'**
-  String get discoverChooseCategory;
-
-  /// No description provided for @discoverChooseCategoryHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Select a category above to browse books from that provider.'**
-  String get discoverChooseCategoryHint;
 
   /// No description provided for @discoverCategoryEmpty.
   ///
@@ -244,12 +226,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Search'**
   String get bookSourcesSearch;
-
-  /// No description provided for @bookSourcesSearching.
-  ///
-  /// In en, this message translates to:
-  /// **'Searching sources…'**
-  String get bookSourcesSearching;
 
   /// No description provided for @bookSourcesLoadMore.
   ///
@@ -514,12 +490,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Close'**
   String get bookSourcesClose;
-
-  /// No description provided for @bookSourcesIdentity.
-  ///
-  /// In en, this message translates to:
-  /// **'Source ID: {sourceId}\nBook ID: {bookId}'**
-  String bookSourcesIdentity(String sourceId, String bookId);
 
   /// Settings tab label
   ///
@@ -2146,6 +2116,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Finished {count}'**
   String libraryFilterFinished(int count);
+
+  /// No description provided for @libraryFilterTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter by reading status'**
+  String get libraryFilterTooltip;
 
   /// Shown when a library search returns no books
   ///

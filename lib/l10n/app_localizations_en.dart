@@ -24,10 +24,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get discover => 'Discover';
 
   @override
-  String get discoverSubtitle =>
-      'Search and browse enabled providers to find your next book';
-
-  @override
   String get discoverRecommended => 'For you';
 
   @override
@@ -50,13 +46,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String discoverUnsupportedMessage(String capability) {
     return 'A source with the $capability capability is required. Existing sources can still be searched.';
   }
-
-  @override
-  String get discoverChooseCategory => 'Choose a category';
-
-  @override
-  String get discoverChooseCategoryHint =>
-      'Select a category above to browse books from that provider.';
 
   @override
   String get discoverCategoryEmpty =>
@@ -89,9 +78,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bookSourcesSearch => 'Search';
-
-  @override
-  String get bookSourcesSearching => 'Searching sources…';
 
   @override
   String get bookSourcesLoadMore => 'Load more';
@@ -240,11 +226,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bookSourcesClose => 'Close';
-
-  @override
-  String bookSourcesIdentity(String sourceId, String bookId) {
-    return 'Source ID: $sourceId\nBook ID: $bookId';
-  }
 
   @override
   String get settings => 'Settings';
@@ -1127,6 +1108,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String libraryFilterFinished(int count) {
     return 'Finished $count';
   }
+
+  @override
+  String get libraryFilterTooltip => 'Filter by reading status';
 
   @override
   String get libraryNoMatchingBooks => 'No matching books';

@@ -5,7 +5,6 @@
   "library": "本棚",
   "bookSources": "ソース",
   "discover": "見つける",
-  "discoverSubtitle": "有効な提供元を検索・閲覧して、次に読む本を見つけます",
   "discoverRecommended": "おすすめ",
   "discoverCategories": "カテゴリ",
   "discoverLatest": "新着",
@@ -20,8 +19,6 @@
       }
     }
   },
-  "discoverChooseCategory": "カテゴリを選択",
-  "discoverChooseCategoryHint": "上のカテゴリを選ぶと、その提供元の書籍を閲覧できます。",
   "discoverCategoryEmpty": "このカテゴリには表示できる書籍がまだありません。",
   "bookSourceManagementTitle": "ソース管理",
   "bookSourceManagementSubtitle": "コンテンツ提供元の追加、有効化、削除、プロトコル情報を管理します。",
@@ -31,7 +28,6 @@
   "bookSourcesAdd": "ソースを追加",
   "bookSourcesSearchHint": "書名や著者で有効なソースを検索",
   "bookSourcesSearch": "検索",
-  "bookSourcesSearching": "ソースを検索中…",
   "bookSourcesLoadMore": "さらに読み込む",
   "legadoCompatibilityTitle": "Legado 互換（Beta）",
   "legadoCompatibilitySubtitle": "インポート後にルールを検査し、互換ランタイムで実行可能か判定します",
@@ -44,7 +40,13 @@
   "legadoFileTooLarge": "ソースファイルが 2 MB の上限を超えています。",
   "legadoFileReadFailed": "選択したファイルを読み込めませんでした。",
   "legadoImportedCount": "Legado ソースを {count} 件インポートしました",
-  "@legadoImportedCount": {"placeholders": {"count": {"type": "int"}}},
+  "@legadoImportedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "legadoNoSources": "Legado ソースはまだありません。ここでのインポートはスクリプトを有効化せず、第三者コンテンツも同梱しません。",
   "legadoLite": "Lite 互換",
   "legadoAdapterRequired": "アダプターが必要",
@@ -84,17 +86,6 @@
   "bookSourcesProtocolDialogTitle": "オープンソースプロトコル v1.1",
   "bookSourcesProtocolDialogBody": "サービスは /.well-known/open-reading-source.json でディスカバリードキュメントを公開し、検索、書籍詳細、章一覧、本文取得を実装します。v1.1 では公開 HTTP(S) ソース向けにディスカバリー、カテゴリ、ブラウズを任意で追加できます。",
   "bookSourcesClose": "閉じる",
-  "bookSourcesIdentity": "ソース ID：{sourceId}\n書籍 ID：{bookId}",
-  "@bookSourcesIdentity": {
-    "placeholders": {
-      "sourceId": {
-        "type": "String"
-      },
-      "bookId": {
-        "type": "String"
-      }
-    }
-  },
   "settings": "設定",
   "statistics": "統計",
   "reading": "読書",
@@ -543,6 +534,7 @@
     }
   },
   "libraryFilterFinished": "読了 {count}",
+  "libraryFilterTooltip": "読書状態で絞り込み",
   "@libraryFilterFinished": {
     "placeholders": {
       "count": {

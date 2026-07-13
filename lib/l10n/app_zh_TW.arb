@@ -5,7 +5,6 @@
   "library": "書架",
   "bookSources": "書源",
   "discover": "探索",
-  "discoverSubtitle": "從已啟用的內容來源搜尋、瀏覽並找到下一本書",
   "discoverRecommended": "推薦",
   "discoverCategories": "分類",
   "discoverLatest": "最新",
@@ -20,8 +19,6 @@
       }
     }
   },
-  "discoverChooseCategory": "選擇一個分類",
-  "discoverChooseCategoryHint": "選擇上方分類後查看該書源提供的書籍。",
   "discoverCategoryEmpty": "這個分類暫時沒有可顯示的書籍。",
   "bookSourceManagementTitle": "書源管理",
   "bookSourceManagementSubtitle": "管理內容來源的新增、啟停與協定資訊。探索頁只保留找書體驗。",
@@ -31,7 +28,6 @@
   "bookSourcesAdd": "新增書源",
   "bookSourcesSearchHint": "輸入書名或作者，搜尋已啟用書源",
   "bookSourcesSearch": "搜尋",
-  "bookSourcesSearching": "正在搜尋書源…",
   "bookSourcesLoadMore": "載入更多",
   "legadoCompatibilityTitle": "Legado 相容（Beta）",
   "legadoCompatibilitySubtitle": "匯入後先掃描規則能力，再決定是否允許相容執行",
@@ -44,7 +40,13 @@
   "legadoFileTooLarge": "書源檔案超過 2 MB 匯入限制。",
   "legadoFileReadFailed": "無法讀取所選檔案。",
   "legadoImportedCount": "已匯入 {count} 個 Legado 書源",
-  "@legadoImportedCount": {"placeholders": {"count": {"type": "int"}}},
+  "@legadoImportedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "legadoNoSources": "尚未匯入 Legado 書源。這裡的匯入不會啟用腳本，也不會內建第三方內容。",
   "legadoLite": "Lite 可相容",
   "legadoAdapterRequired": "需要相容引擎",
@@ -84,17 +86,6 @@
   "bookSourcesProtocolDialogTitle": "開放書源協定 v1.1",
   "bookSourcesProtocolDialogBody": "服務在 /.well-known/open-reading-source.json 發布探索文件，並實作搜尋、書籍詳情、章節目錄與章節內文介面。v1.1 可選支援推薦、分類與瀏覽，仍僅面向公開、無需登入的 HTTP(S) 書源。",
   "bookSourcesClose": "關閉",
-  "bookSourcesIdentity": "書源 ID：{sourceId}\n書籍 ID：{bookId}",
-  "@bookSourcesIdentity": {
-    "placeholders": {
-      "sourceId": {
-        "type": "String"
-      },
-      "bookId": {
-        "type": "String"
-      }
-    }
-  },
   "settings": "設定",
   "statistics": "統計",
   "reading": "閱讀",
@@ -543,6 +534,7 @@
     }
   },
   "libraryFilterFinished": "已讀 {count}",
+  "libraryFilterTooltip": "按閱讀狀態篩選",
   "@libraryFilterFinished": {
     "placeholders": {
       "count": {

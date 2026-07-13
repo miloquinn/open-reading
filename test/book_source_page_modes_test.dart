@@ -43,6 +43,9 @@ void main() {
         .onPressed!();
     await tester.pumpAndSettle();
 
+    await tester.tap(find.text('翻页模式'));
+    await tester.pumpAndSettle();
+
     expect(find.text('上下滚动'), findsOneWidget);
     expect(find.text('水平分页'), findsOneWidget);
     expect(find.text('左右滑动'), findsOneWidget);
@@ -99,6 +102,7 @@ void main() {
     final sliders = tester.widgetList<Slider>(find.byType(Slider)).toList();
     expect(sliders.length, greaterThanOrEqualTo(2));
     sliders[1].onChanged!(2.1);
+    sliders[1].onChangeEnd!(2.1);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 250));
 

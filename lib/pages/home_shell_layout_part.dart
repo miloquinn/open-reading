@@ -392,15 +392,57 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
         );
       }
     } else if (currentPage is LibraryPage) {
-      trailing = _buildTopBarActionButton(
-        icon: Icons.add_rounded,
-        onTap: _navigateToImport,
+      trailing = Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildTopBarActionButton(
+            icon: Icons.search_rounded,
+            tooltip: context.l10n.bookSourcesSearch,
+            onTap: _libraryController.toggleSearch,
+          ),
+          const SizedBox(width: 8),
+          ValueListenableBuilder<bool>(
+            valueListenable: _libraryController.filterActive,
+            builder: (context, active, _) => _LibraryTopBarFilterButton(
+              active: active,
+              buildButton: ({
+                required IconData icon,
+                required VoidCallback onTap,
+                String? tooltip,
+                bool highlighted = false,
+              }) =>
+                  _buildTopBarActionButton(
+                icon: icon,
+                onTap: onTap,
+                tooltip: tooltip,
+                highlighted: highlighted,
+              ),
+              onTapWithRect: _libraryController.showFilterMenu,
+            ),
+          ),
+          const SizedBox(width: 8),
+          _buildTopBarActionButton(
+            icon: Icons.add_rounded,
+            onTap: _navigateToImport,
+          ),
+        ],
       );
     } else if (currentPage is BookSourcesPage) {
-      trailing = _buildTopBarActionButton(
-        icon: Icons.tune_rounded,
-        tooltip: context.l10n.bookSourceManagementTitle,
-        onTap: _navigateToBookSourceManagement,
+      trailing = Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildTopBarActionButton(
+            icon: Icons.search_rounded,
+            tooltip: context.l10n.bookSourcesSearch,
+            onTap: _navigateToBookSourceSearch,
+          ),
+          const SizedBox(width: 8),
+          _buildTopBarActionButton(
+            icon: Icons.tune_rounded,
+            tooltip: context.l10n.bookSourceManagementTitle,
+            onTap: _navigateToBookSourceManagement,
+          ),
+        ],
       );
     } else if (currentPage is SettingsPage) {
       trailing = null;
@@ -430,10 +472,26 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
     );
   }
 
+  Future<void> _navigateToBookSourceSearch() async {
+    final sources = await BookSourceRegistry().load();
+    if (!mounted) return;
+    final client = BookSourceClient();
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => SourceSearchPage(
+          sources: sources,
+          client: client,
+          shelfService: BookSourceShelfService(client: client),
+        ),
+      ),
+    );
+  }
+
   Widget _buildTopBarActionButton({
     required IconData icon,
     required VoidCallback onTap,
     String? tooltip,
+    bool highlighted = false,
   }) {
     final scheme = Theme.of(context).colorScheme;
     final palette = PageStyleHelper.palette(context);
@@ -444,19 +502,26 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
         width: 44,
         height: 44,
         decoration: BoxDecoration(
-          color:
-              _isMaterial3Style ? scheme.surfaceContainer : palette.cardStrong,
+          color: highlighted
+              ? scheme.primaryContainer
+              : (_isMaterial3Style
+                  ? scheme.surfaceContainer
+                  : palette.cardStrong),
           borderRadius: BorderRadius.circular(22),
           border: Border.all(
-            color: scheme.outline
-                .withValues(alpha: _isMaterial3Style ? 0.22 : 0.12),
+            color: highlighted
+                ? scheme.primary.withValues(alpha: 0.35)
+                : scheme.outline
+                    .withValues(alpha: _isMaterial3Style ? 0.22 : 0.12),
             width: 0.6,
           ),
         ),
         child: Icon(
           icon,
           size: 20,
-          color: scheme.onSurface.withValues(alpha: 0.78),
+          color: highlighted
+              ? scheme.onPrimaryContainer
+              : scheme.onSurface.withValues(alpha: 0.78),
         ),
       ),
     );
@@ -600,6 +665,40 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
           ],
           const SizedBox(height: 16),
         ],
+      ),
+    );
+  }
+}
+
+/// 书库筛选按钮：把按钮的屏幕位置传给筛选菜单，菜单贴着按钮弹出。
+class _LibraryTopBarFilterButton extends StatelessWidget {
+  final bool active;
+  final Widget Function({
+    required IconData icon,
+    required VoidCallback onTap,
+    String? tooltip,
+    bool highlighted,
+  }) buildButton;
+  final Future<void> Function(Rect anchor) onTapWithRect;
+
+  const _LibraryTopBarFilterButton({
+    required this.active,
+    required this.buildButton,
+    required this.onTapWithRect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Builder(
+      builder: (buttonContext) => buildButton(
+        icon: active ? Icons.filter_alt_rounded : Icons.filter_alt_outlined,
+        tooltip: buttonContext.l10n.libraryFilterTooltip,
+        highlighted: active,
+        onTap: () {
+          final box = buttonContext.findRenderObject()! as RenderBox;
+          final rect = box.localToGlobal(Offset.zero) & box.size;
+          unawaited(onTapWithRect(rect));
+        },
       ),
     );
   }

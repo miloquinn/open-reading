@@ -17,7 +17,6 @@
     "description": "书源标签"
   },
   "discover": "发现",
-  "discoverSubtitle": "从已启用的内容来源中搜索、浏览并发现下一本书",
   "discoverRecommended": "推荐",
   "discoverCategories": "分类",
   "discoverLatest": "最新",
@@ -32,8 +31,6 @@
       }
     }
   },
-  "discoverChooseCategory": "选择一个分类",
-  "discoverChooseCategoryHint": "选择上方分类后查看该书源提供的书籍。",
   "discoverCategoryEmpty": "这个分类暂时没有可展示的书籍。",
   "bookSourceManagementTitle": "书源管理",
   "bookSourceManagementSubtitle": "管理内容来源的添加、启停与协议信息。发现页只保留找书体验。",
@@ -43,7 +40,6 @@
   "bookSourcesAdd": "添加书源",
   "bookSourcesSearchHint": "输入书名或作者，搜索已启用书源",
   "bookSourcesSearch": "搜索",
-  "bookSourcesSearching": "正在搜索书源…",
   "bookSourcesLoadMore": "加载更多",
   "legadoCompatibilityTitle": "Legado 兼容（Beta）",
   "legadoCompatibilitySubtitle": "导入后先扫描规则能力，再决定是否允许兼容运行",
@@ -56,7 +52,13 @@
   "legadoFileTooLarge": "书源文件超过 2 MB 导入限制。",
   "legadoFileReadFailed": "无法读取所选文件。",
   "legadoImportedCount": "已导入 {count} 个 Legado 书源",
-  "@legadoImportedCount": {"placeholders": {"count": {"type": "int"}}},
+  "@legadoImportedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "legadoNoSources": "尚未导入 Legado 书源。这里的导入不会启用脚本，也不会内置第三方内容。",
   "legadoLite": "Lite 可兼容",
   "legadoAdapterRequired": "需要兼容引擎",
@@ -96,17 +98,6 @@
   "bookSourcesProtocolDialogTitle": "开放书源协议 v1.1",
   "bookSourcesProtocolDialogBody": "服务在 /.well-known/open-reading-source.json 发布发现文档，并实现搜索、书籍详情、章节目录与章节正文接口。v1.1 可选支持推荐、分类与浏览，仍仅面向公开、无需登录的 HTTP(S) 书源。",
   "bookSourcesClose": "关闭",
-  "bookSourcesIdentity": "书源 ID：{sourceId}\n书籍 ID：{bookId}",
-  "@bookSourcesIdentity": {
-    "placeholders": {
-      "sourceId": {
-        "type": "String"
-      },
-      "bookId": {
-        "type": "String"
-      }
-    }
-  },
   "settings": "设置",
   "@settings": {
     "description": "设置标签"
@@ -1023,6 +1014,7 @@
   "libraryFilterAll": "全部 {count}",
   "libraryFilterReading": "在读 {count}",
   "libraryFilterFinished": "已读 {count}",
+  "libraryFilterTooltip": "按阅读状态筛选",
   "libraryNoMatchingBooks": "没有匹配的书籍",
   "libraryNoReadingBooks": "当前没有在读书籍",
   "libraryNoFinishedBooks": "当前没有已读书籍",

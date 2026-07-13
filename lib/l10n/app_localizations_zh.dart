@@ -24,9 +24,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get discover => '发现';
 
   @override
-  String get discoverSubtitle => '从已启用的内容来源中搜索、浏览并发现下一本书';
-
-  @override
   String get discoverRecommended => '推荐';
 
   @override
@@ -48,12 +45,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String discoverUnsupportedMessage(String capability) {
     return '需要书源提供 $capability 能力；现有书源仍可继续用于搜索。';
   }
-
-  @override
-  String get discoverChooseCategory => '选择一个分类';
-
-  @override
-  String get discoverChooseCategoryHint => '选择上方分类后查看该书源提供的书籍。';
 
   @override
   String get discoverCategoryEmpty => '这个分类暂时没有可展示的书籍。';
@@ -81,9 +72,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get bookSourcesSearch => '搜索';
-
-  @override
-  String get bookSourcesSearching => '正在搜索书源…';
 
   @override
   String get bookSourcesLoadMore => '加载更多';
@@ -224,11 +212,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get bookSourcesClose => '关闭';
-
-  @override
-  String bookSourcesIdentity(String sourceId, String bookId) {
-    return '书源 ID：$sourceId\n书籍 ID：$bookId';
-  }
 
   @override
   String get settings => '设置';
@@ -1097,6 +1080,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String libraryFilterFinished(int count) {
     return '已读 $count';
   }
+
+  @override
+  String get libraryFilterTooltip => '按阅读状态筛选';
 
   @override
   String get libraryNoMatchingBooks => '没有匹配的书籍';
@@ -1994,9 +1980,6 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get discover => '探索';
 
   @override
-  String get discoverSubtitle => '從已啟用的內容來源搜尋、瀏覽並找到下一本書';
-
-  @override
   String get discoverRecommended => '推薦';
 
   @override
@@ -2018,12 +2001,6 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String discoverUnsupportedMessage(String capability) {
     return '需要書源提供 $capability 能力；現有書源仍可繼續用於搜尋。';
   }
-
-  @override
-  String get discoverChooseCategory => '選擇一個分類';
-
-  @override
-  String get discoverChooseCategoryHint => '選擇上方分類後查看該書源提供的書籍。';
 
   @override
   String get discoverCategoryEmpty => '這個分類暫時沒有可顯示的書籍。';
@@ -2051,9 +2028,6 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get bookSourcesSearch => '搜尋';
-
-  @override
-  String get bookSourcesSearching => '正在搜尋書源…';
 
   @override
   String get bookSourcesLoadMore => '載入更多';
@@ -2194,11 +2168,6 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get bookSourcesClose => '關閉';
-
-  @override
-  String bookSourcesIdentity(String sourceId, String bookId) {
-    return '書源 ID：$sourceId\n書籍 ID：$bookId';
-  }
 
   @override
   String get settings => '設定';
@@ -3067,6 +3036,9 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String libraryFilterFinished(int count) {
     return '已讀 $count';
   }
+
+  @override
+  String get libraryFilterTooltip => '按閱讀狀態篩選';
 
   @override
   String get libraryNoMatchingBooks => '沒有符合的書籍';

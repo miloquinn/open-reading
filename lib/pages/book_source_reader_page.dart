@@ -636,7 +636,11 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
 
   Future<void> _showReadingSettings() async {
     _controlsTimer?.cancel();
-    await showModalBottomSheet<void>(
+    var previewFontSize = _fontSize;
+    var previewLineHeight = _lineHeight;
+    var previewHorizontalMargin = _horizontalMargin;
+    var previewVerticalMargin = _verticalMargin;
+    final selectedMode = await showModalBottomSheet<BookSourcePageMode>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
@@ -653,13 +657,9 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ReaderSettingsDragHandle(palette: _readerTheme),
-                const SizedBox(height: 14),
                 Text(
                   context.l10n.readingSettings,
-                  style: _readerThemeData.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: _readerThemeData.textTheme.titleLarge,
                 ),
                 const SizedBox(height: 12),
                 Text(
@@ -684,88 +684,63 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
                   ),
                 ),
                 const Divider(height: 28),
-                Text(
-                  context.l10n.pageTurningMode,
-                  style: _readerThemeData.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.swap_calls),
+                  title: Text(context.l10n.pageTurningMode),
+                  subtitle: Text(_pageModeHint(_pageMode)),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: _showPageModeSettings,
                 ),
-                const SizedBox(height: 6),
-                RadioGroup<BookSourcePageMode>(
-                  groupValue: _pageMode,
-                  onChanged: (mode) {
-                    if (mode == null) return;
-                    updateSheet(
-                      () => unawaited(
-                        _updateReadingSettings(pageMode: mode),
-                      ),
-                    );
-                  },
-                  child: Column(
-                    children: BookSourcePageMode.values
-                        .map(
-                          (mode) => RadioListTile<BookSourcePageMode>(
-                            value: mode,
-                            contentPadding: EdgeInsets.zero,
-                            dense: true,
-                            title: Text(_pageModeTitle(mode)),
-                            subtitle: Text(_pageModeHint(mode)),
-                          ),
-                        )
-                        .toList(growable: false),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                _buildSettingSlider(
+                const Divider(height: 28),
+                ReaderSettingSlider(
                   label: context.l10n.fontSizeLabel,
-                  value: _fontSize,
-                  min: 15,
-                  max: 30,
-                  divisions: 15,
-                  valueLabel: _fontSize.round().toString(),
-                  onChanged: (value) => updateSheet(
-                    () => unawaited(
-                      _updateReadingSettings(fontSize: value),
-                    ),
-                  ),
+                  value: previewFontSize,
+                  valueLabel: previewFontSize.round().toString(),
+                  min: 14,
+                  max: 32,
+                  divisions: 18,
+                  onChanged: (value) =>
+                      setSheetState(() => previewFontSize = value),
+                  onChangeEnd: (value) =>
+                      unawaited(_updateReadingSettings(fontSize: value)),
                 ),
-                _buildSettingSlider(
+                ReaderSettingSlider(
                   label: context.l10n.lineSpacingLabel,
-                  value: _lineHeight,
+                  value: previewLineHeight,
+                  valueLabel: previewLineHeight.toStringAsFixed(1),
                   min: 1.4,
                   max: 2.1,
                   divisions: 7,
-                  valueLabel: _lineHeight.toStringAsFixed(1),
-                  onChanged: (value) => updateSheet(
-                    () => unawaited(
-                      _updateReadingSettings(lineHeight: value),
-                    ),
-                  ),
+                  onChanged: (value) =>
+                      setSheetState(() => previewLineHeight = value),
+                  onChangeEnd: (value) =>
+                      unawaited(_updateReadingSettings(lineHeight: value)),
                 ),
-                _buildSettingSlider(
+                ReaderSettingSlider(
                   label: context.l10n.readerHorizontalMarginLabel,
-                  value: _horizontalMargin,
+                  value: previewHorizontalMargin,
+                  valueLabel: previewHorizontalMargin.round().toString(),
                   min: 8,
                   max: 48,
                   divisions: 40,
-                  valueLabel: _horizontalMargin.round().toString(),
-                  onChanged: (value) => updateSheet(
-                    () => unawaited(
-                      _updateReadingSettings(horizontalMargin: value),
-                    ),
+                  onChanged: (value) =>
+                      setSheetState(() => previewHorizontalMargin = value),
+                  onChangeEnd: (value) => unawaited(
+                    _updateReadingSettings(horizontalMargin: value),
                   ),
                 ),
-                _buildSettingSlider(
+                ReaderSettingSlider(
                   label: context.l10n.readerVerticalMarginLabel,
-                  value: _verticalMargin,
+                  value: previewVerticalMargin,
+                  valueLabel: previewVerticalMargin.round().toString(),
                   min: 28,
                   max: 48,
                   divisions: 20,
-                  valueLabel: _verticalMargin.round().toString(),
-                  onChanged: (value) => updateSheet(
-                    () => unawaited(
-                      _updateReadingSettings(verticalMargin: value),
-                    ),
+                  onChanged: (value) =>
+                      setSheetState(() => previewVerticalMargin = value),
+                  onChangeEnd: (value) => unawaited(
+                    _updateReadingSettings(verticalMargin: value),
                   ),
                 ),
               ],
@@ -775,26 +750,60 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       ),
     );
     if (mounted) setState(() => _controlsVisible = false);
+    if (selectedMode == null || !mounted) return;
+    await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    if (!mounted) return;
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
+    await _updateReadingSettings(pageMode: selectedMode);
   }
 
-  Widget _buildSettingSlider({
-    required String label,
-    required double value,
-    required double min,
-    required double max,
-    required int divisions,
-    required String valueLabel,
-    required ValueChanged<double> onChanged,
-  }) {
-    return ReaderSettingSlider(
-      label: label,
-      value: value,
-      min: min,
-      max: max,
-      divisions: divisions,
-      valueLabel: valueLabel,
-      onChanged: onChanged,
+  Future<void> _showPageModeSettings() async {
+    final selectedMode = await showModalBottomSheet<BookSourcePageMode>(
+      context: context,
+      backgroundColor: _readerTheme.surface,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (menuContext) => Theme(
+        data: _readerThemeData,
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context.l10n.pageTurningMode,
+                  style: _readerThemeData.textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+                RadioGroup<BookSourcePageMode>(
+                  groupValue: _pageMode,
+                  onChanged: (mode) {
+                    if (mode == null) return;
+                    Navigator.of(menuContext).pop(mode);
+                  },
+                  child: Column(
+                    children: BookSourcePageMode.values
+                        .map(
+                          (mode) => RadioListTile<BookSourcePageMode>(
+                            value: mode,
+                            title: Text(_pageModeTitle(mode)),
+                            subtitle: Text(_pageModeHint(mode)),
+                          ),
+                        )
+                        .toList(growable: false),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
+    if (selectedMode == null || !mounted) return;
+    Navigator.of(context).pop(selectedMode);
   }
 
   @override

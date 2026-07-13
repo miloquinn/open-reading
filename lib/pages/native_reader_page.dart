@@ -777,10 +777,6 @@ class _NativeReaderPageState extends State<NativeReaderPage>
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ReaderSettingsDragHandle(
-                palette: ReaderThemes.byId(previewThemeId),
-              ),
-              const SizedBox(height: 14),
               Text(context.l10n.readingSettings,
                   style: _readerThemeData.textTheme.titleLarge),
               const SizedBox(height: 12),

@@ -24,9 +24,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get discover => '見つける';
 
   @override
-  String get discoverSubtitle => '有効な提供元を検索・閲覧して、次に読む本を見つけます';
-
-  @override
   String get discoverRecommended => 'おすすめ';
 
   @override
@@ -48,12 +45,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String discoverUnsupportedMessage(String capability) {
     return '$capability 機能を持つソースが必要です。既存のソースは引き続き検索できます。';
   }
-
-  @override
-  String get discoverChooseCategory => 'カテゴリを選択';
-
-  @override
-  String get discoverChooseCategoryHint => '上のカテゴリを選ぶと、その提供元の書籍を閲覧できます。';
 
   @override
   String get discoverCategoryEmpty => 'このカテゴリには表示できる書籍がまだありません。';
@@ -82,9 +73,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get bookSourcesSearch => '検索';
-
-  @override
-  String get bookSourcesSearching => 'ソースを検索中…';
 
   @override
   String get bookSourcesLoadMore => 'さらに読み込む';
@@ -226,11 +214,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get bookSourcesClose => '閉じる';
-
-  @override
-  String bookSourcesIdentity(String sourceId, String bookId) {
-    return 'ソース ID：$sourceId\n書籍 ID：$bookId';
-  }
 
   @override
   String get settings => '設定';
@@ -1101,6 +1084,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String libraryFilterFinished(int count) {
     return '読了 $count';
   }
+
+  @override
+  String get libraryFilterTooltip => '読書状態で絞り込み';
 
   @override
   String get libraryNoMatchingBooks => '該当する本がありません';

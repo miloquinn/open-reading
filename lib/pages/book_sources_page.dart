@@ -1,3 +1,6 @@
+// 文件说明：发现页，聚合展示已启用书源的推荐、分类与最新书籍。
+// 技术要点：Flutter UI、按 Tab 缓存的书源请求、下拉刷新。
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -9,12 +12,15 @@ import '../book_sources/services/book_source_registry.dart';
 import '../book_sources/services/book_source_shelf_service.dart';
 import '../utils/localization_extension.dart';
 import '../utils/page_style_helper.dart';
-import '../utils/ui_style.dart';
 import 'book_source_management_page.dart';
-import 'book_source_reader_page.dart';
+import 'book_source_search_page.dart';
+import 'book_source_widgets.dart';
 import 'home_layout_constants.dart';
 import 'home_shell_page.dart';
 
+/// 发现页：只负责展示书籍内容。
+///
+/// 搜索收纳在顶栏的搜索按钮里（独立页面），书源配置收纳在管理页。
 class BookSourcesPage extends StatefulWidget {
   final BookSourceClient? client;
 
@@ -24,13 +30,8 @@ class BookSourcesPage extends StatefulWidget {
   static List<RegisteredBookSource> searchTargets(
     Iterable<RegisteredBookSource> sources,
     String? selectedSourceId,
-  ) {
-    final enabled = sources.where((source) => source.enabled);
-    if (selectedSourceId == null) return enabled.toList(growable: false);
-    return enabled
-        .where((source) => source.id == selectedSourceId)
-        .toList(growable: false);
-  }
+  ) =>
+      SourceSearchPage.searchTargets(sources, selectedSourceId);
 
   @override
   State<BookSourcesPage> createState() => _BookSourcesPageState();
@@ -39,64 +40,37 @@ class BookSourcesPage extends StatefulWidget {
 class _BookSourcesPageState extends State<BookSourcesPage> {
   final BookSourceRegistry _registry = BookSourceRegistry();
   late final BookSourceClient _client;
-  final ScrollController _scrollController = ScrollController();
   late final BookSourceShelfService _shelfService =
       BookSourceShelfService(client: _client);
-  final TextEditingController _searchController = TextEditingController();
+  late final SourcedBookActions _actions = SourcedBookActions(
+    context: context,
+    client: _client,
+    shelfService: _shelfService,
+  );
   StreamSubscription<void>? _registrySubscription;
 
   List<RegisteredBookSource> _sources = const [];
-  List<_SourcedBook> _results = const [];
-  List<_DiscoveryShelf> _discoveryShelves = const [];
-  List<_SourcedCategory> _categories = const [];
-  List<_SourcedBook> _browseResults = const [];
-  String? _selectedSourceId;
-  _DiscoverSection _discoverSection = _DiscoverSection.recommended;
-  _SourcedCategory? _selectedCategory;
   bool _loadingSources = true;
-  bool _searching = false;
-  bool _loadingMoreSearchResults = false;
-  bool _loadMoreSearchFailed = false;
-  bool _hasSearched = false;
-  bool _loadingDiscovery = false;
-  String? _discoveryError;
-  int _failedSourceCount = 0;
-  String _activeSearchQuery = '';
-  Map<String, _SearchPageState> _searchPageStates = const {};
+  _DiscoverSection _section = _DiscoverSection.recommended;
 
-  bool get _hasMoreSearchResults =>
-      _searchPageStates.values.any((state) => state.hasMore);
-
-  bool get _isMaterial3Style =>
-      Theme.of(context).extension<UiStyleThemeExtension>()?.isMaterial3Style ??
-      false;
+  // 每个 Tab 的内容独立缓存，切换回来不再重新请求。
+  final Map<_DiscoverSection, _SectionCache> _cache = {};
+  _SourcedCategory? _selectedCategory;
+  List<SourcedBook> _categoryBooks = const [];
+  bool _loadingCategoryBooks = false;
 
   @override
   void initState() {
     super.initState();
     _client = widget.client ?? BookSourceClient();
-    _scrollController.addListener(_handleSearchScroll);
-    _registrySubscription = _registry.changes.listen((_) => _loadSources());
+    _registrySubscription = _registry.changes.listen((_) => _reloadAll());
     unawaited(_loadSources());
   }
 
   @override
   void dispose() {
     _registrySubscription?.cancel();
-    _scrollController
-      ..removeListener(_handleSearchScroll)
-      ..dispose();
-    _searchController.dispose();
     super.dispose();
-  }
-
-  void _handleSearchScroll() {
-    if (_loadMoreSearchFailed ||
-        !_scrollController.hasClients ||
-        _scrollController.position.extentAfter > 600) {
-      return;
-    }
-    unawaited(_loadMoreSearchResults());
   }
 
   Future<void> _loadSources() async {
@@ -106,136 +80,165 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
       _sources = sources;
       _loadingSources = false;
     });
-    await _loadDiscoverySection();
+    await _loadSection(_section);
   }
 
-  Future<void> _search() async {
-    final query = _searchController.text.trim();
-    final targetSources = BookSourcesPage.searchTargets(
-      _sources,
-      _selectedSourceId,
-    );
-    if (query.isEmpty || targetSources.isEmpty || _searching) return;
+  Future<void> _reloadAll() async {
+    _cache.clear();
+    _selectedCategory = null;
+    _categoryBooks = const [];
+    await _loadSources();
+  }
 
-    FocusScope.of(context).unfocus();
-    setState(() {
-      _searching = true;
-      _hasSearched = true;
-      _failedSourceCount = 0;
-      _activeSearchQuery = query;
-      _results = const [];
-      _searchPageStates = const {};
-      _loadingMoreSearchResults = false;
-      _loadMoreSearchFailed = false;
-    });
+  List<RegisteredBookSource> _targets(String capability) => _sources
+      .where((source) => source.enabled)
+      .where((source) => source.capabilities.contains(capability))
+      .toList(growable: false);
 
-    final batches = await Future.wait(
-      targetSources.map((source) async {
-        try {
-          final page = await _client.search(source, query);
-          return _SearchBatch(
-            source: source,
-            items: page.items
-                .map((book) => _SourcedBook(source: source, book: book))
-                .toList(growable: false),
-            page: page.page,
-            hasMore: page.hasMore && page.items.isNotEmpty,
-          );
-        } catch (_) {
-          return _SearchBatch(source: source, items: const [], failed: true);
-        }
-      }),
-    );
-
-    if (!mounted) return;
-    setState(() {
-      _results = batches.expand((batch) => batch.items).toList(growable: false);
-      _searchPageStates = {
-        for (final batch in batches)
-          if (!batch.failed)
-            batch.source.id: _SearchPageState(
-              source: batch.source,
-              page: batch.page,
-              hasMore: batch.hasMore,
-            ),
+  Future<void> _loadSection(
+    _DiscoverSection section, {
+    bool force = false,
+  }) async {
+    if (!force && _cache[section] != null) return;
+    setState(() => _cache[section] = const _SectionCache.loading());
+    _SectionCache next;
+    try {
+      next = switch (section) {
+        _DiscoverSection.recommended =>
+          _SectionCache.shelves(await _fetchShelves()),
+        _DiscoverSection.categories =>
+          _SectionCache.categories(await _fetchCategories()),
+        _DiscoverSection.latest => _SectionCache.books(await _fetchLatest()),
       };
-      _failedSourceCount = batches.where((batch) => batch.failed).length;
-      _searching = false;
-    });
-    WidgetsBinding.instance.addPostFrameCallback((_) => _handleSearchScroll());
+    } catch (error) {
+      next = _SectionCache.error(error.toString());
+    }
+    if (!mounted) return;
+    setState(() => _cache[section] = next);
+    if (section == _DiscoverSection.categories) {
+      _autoSelectFirstCategory();
+    }
   }
 
-  Future<void> _loadMoreSearchResults() async {
-    if (_searching ||
-        _loadingMoreSearchResults ||
-        !_hasSearched ||
-        _activeSearchQuery.isEmpty) {
-      return;
-    }
-    final targets = _searchPageStates.values
-        .where((state) => state.hasMore)
-        .toList(growable: false);
-    if (targets.isEmpty) return;
-
-    final query = _activeSearchQuery;
-    setState(() {
-      _loadingMoreSearchResults = true;
-      _loadMoreSearchFailed = false;
-    });
-
+  Future<List<_DiscoveryShelf>> _fetchShelves() async {
     final batches = await Future.wait(
-      targets.map((state) async {
+      _targets('discover').map((source) async {
         try {
-          final page = await _client.search(
-            state.source,
-            query,
-            page: state.page + 1,
-          );
-          return _SearchBatch(
-            source: state.source,
-            items: page.items
-                .map(
-                  (book) => _SourcedBook(source: state.source, book: book),
-                )
-                .toList(growable: false),
-            page: page.page,
-            hasMore: page.hasMore && page.items.isNotEmpty,
-          );
+          final page = await _client.getDiscovery(source);
+          return page.sections
+              .where((section) => section.items.isNotEmpty)
+              .map(
+                (section) => _DiscoveryShelf(
+                  source: source,
+                  title: section.title,
+                  items: section.items,
+                ),
+              )
+              .toList(growable: false);
         } catch (_) {
-          return _SearchBatch(
-            source: state.source,
-            items: const [],
-            failed: true,
-          );
+          return const <_DiscoveryShelf>[];
         }
       }),
     );
+    return batches.expand((items) => items).toList(growable: false);
+  }
 
-    if (!mounted || query != _activeSearchQuery) return;
-    final seen = _results
-        .map((item) => '${item.source.id}\u0000${item.book.id}')
-        .toSet();
-    final appended = <_SourcedBook>[];
-    final nextStates = Map<String, _SearchPageState>.from(_searchPageStates);
-    for (final batch in batches) {
-      if (batch.failed) continue;
-      nextStates[batch.source.id] = _SearchPageState(
-        source: batch.source,
-        page: batch.page,
-        hasMore: batch.hasMore,
-      );
-      for (final item in batch.items) {
-        final key = '${item.source.id}\u0000${item.book.id}';
-        if (seen.add(key)) appended.add(item);
-      }
-    }
+  Future<List<_SourcedCategory>> _fetchCategories() async {
+    final batches = await Future.wait(
+      _targets('categories').map((source) async {
+        try {
+          final categories = await _client.getCategories(source);
+          return categories
+              .map(
+                (category) => _SourcedCategory(
+                  source: source,
+                  id: category.id,
+                  name: category.name,
+                ),
+              )
+              .toList(growable: false);
+        } catch (_) {
+          return const <_SourcedCategory>[];
+        }
+      }),
+    );
+    return batches.expand((items) => items).toList(growable: false);
+  }
 
-    setState(() {
-      _results = [..._results, ...appended];
-      _searchPageStates = nextStates;
-      _loadingMoreSearchResults = false;
-      _loadMoreSearchFailed = batches.any((batch) => batch.failed);
+  Future<List<SourcedBook>> _fetchLatest() async {
+    final batches = await Future.wait(
+      _targets('browse').map((source) async {
+        try {
+          final page = await _client.browse(source, sort: 'latest');
+          return page.items
+              .map((book) => SourcedBook(source: source, book: book))
+              .toList(growable: false);
+        } catch (_) {
+          return const <SourcedBook>[];
+        }
+      }),
+    );
+    final results = batches.expand((items) => items).toList();
+    results.sort((a, b) {
+      final left = a.book.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+      final right = b.book.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+      return right.compareTo(left);
     });
+    return results;
+  }
+
+  void _autoSelectFirstCategory() {
+    final cache = _cache[_DiscoverSection.categories];
+    final categories = cache?.categories ?? const <_SourcedCategory>[];
+    if (_selectedCategory != null || categories.isEmpty) return;
+    unawaited(_selectCategory(categories.first));
+  }
+
+  Future<void> _selectCategory(_SourcedCategory category) async {
+    setState(() {
+      _selectedCategory = category;
+      _categoryBooks = const [];
+      _loadingCategoryBooks = category.source.capabilities.contains('browse');
+    });
+    if (!category.source.capabilities.contains('browse')) return;
+    try {
+      final page = await _client.browse(
+        category.source,
+        category: category.id,
+        sort: 'popular',
+      );
+      if (!mounted || _selectedCategory != category) return;
+      setState(() {
+        _categoryBooks = page.items
+            .map((book) => SourcedBook(source: category.source, book: book))
+            .toList(growable: false);
+        _loadingCategoryBooks = false;
+      });
+    } catch (_) {
+      if (!mounted || _selectedCategory != category) return;
+      setState(() => _loadingCategoryBooks = false);
+    }
+  }
+
+  void _openSearch() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => SourceSearchPage(
+          sources: _sources,
+          client: _client,
+          shelfService: _shelfService,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openSourceManagement() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const BookSourceManagementPage(),
+      ),
+    );
+    if (mounted) await _reloadAll();
   }
 
   @override
@@ -243,7 +246,6 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
     final useRailNavigation =
         NavigationContext.of(context)?.useRailNavigation ?? false;
     final bottomPadding = useRailNavigation ? 32.0 : 118.0;
-    final palette = PageStyleHelper.palette(context);
 
     return Container(
       decoration: BoxDecoration(
@@ -251,141 +253,48 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
       ),
       child: SafeArea(
         bottom: false,
-        child: CustomScrollView(
-          controller: _scrollController,
-          slivers: [
-            SliverToBoxAdapter(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1080),
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      16,
-                      useRailNavigation ? 16 : kHomeMobileTopBarHeight + 8,
-                      16,
-                      0,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        if (useRailNavigation) _buildRailHeader(),
-                        _buildHeroCard(),
-                        const SizedBox(height: 14),
-                        _buildSearchPanel(),
-                        const SizedBox(height: 18),
-                        _buildDiscoveryTabs(),
-                        if (_hasSearched) ...[
-                          const SizedBox(height: 22),
-                          _buildResultHeader(),
-                          if (_failedSourceCount > 0) ...[
-                            const SizedBox(height: 8),
-                            Text(
-                              context.l10n
-                                  .bookSourcesFailedCount(_failedSourceCount),
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.error,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ],
-                        const SizedBox(height: 10),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            if (_searching)
-              const SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 36),
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-              )
-            else if (!_hasSearched)
+        child: RefreshIndicator(
+          edgeOffset: useRailNavigation ? 90 : kHomeMobileTopBarHeight + 8,
+          onRefresh: () => _loadSection(_section, force: true),
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
               SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(16, 4, 16, bottomPadding),
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 1048),
-                      child: _buildDiscoveryBody(),
-                    ),
-                  ),
-                ),
-              )
-            else if (_results.isEmpty)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(24, 20, 24, bottomPadding),
-                  child: _buildResultEmptyState(),
-                ),
-              )
-            else
-              SliverPadding(
-                padding: EdgeInsets.fromLTRB(
-                  16,
-                  0,
-                  16,
-                  _hasMoreSearchResults ||
-                          _loadingMoreSearchResults ||
-                          _loadMoreSearchFailed
-                      ? 12
-                      : bottomPadding,
-                ),
-                sliver: SliverList.separated(
-                  itemCount: _results.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
-                  itemBuilder: (context, index) {
-                    return Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 1048),
-                        child: _buildBookResult(_results[index]),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1080),
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        16,
+                        useRailNavigation ? 16 : kHomeMobileTopBarHeight + 8,
+                        16,
+                        0,
                       ),
-                    );
-                  },
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (useRailNavigation) _buildRailHeader(),
+                          _buildSectionTabs(),
+                          const SizedBox(height: 4),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ),
-            if (_hasSearched &&
-                _results.isNotEmpty &&
-                (_hasMoreSearchResults ||
-                    _loadingMoreSearchResults ||
-                    _loadMoreSearchFailed))
               SliverToBoxAdapter(
                 child: Padding(
                   padding: EdgeInsets.fromLTRB(16, 8, 16, bottomPadding),
                   child: Center(
-                    child: _loadingMoreSearchResults
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(strokeWidth: 2.4),
-                          )
-                        : OutlinedButton.icon(
-                            key: const Key('bookSourceLoadMoreButton'),
-                            onPressed: _loadMoreSearchResults,
-                            icon: Icon(
-                              _loadMoreSearchFailed
-                                  ? Icons.refresh_rounded
-                                  : Icons.expand_more_rounded,
-                            ),
-                            label: Text(
-                              _loadMoreSearchFailed
-                                  ? context.l10n.retry
-                                  : context.l10n.bookSourcesLoadMore,
-                            ),
-                          ),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 1048),
+                      child: _buildSectionBody(),
+                    ),
                   ),
                 ),
               ),
-            SliverToBoxAdapter(
-              child: ColoredBox(
-                color: palette.backgroundEnd.withValues(alpha: 0.01),
-                child: const SizedBox(height: 1),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -394,301 +303,37 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
   Widget _buildRailHeader() {
     return Padding(
       padding: const EdgeInsets.only(bottom: 18),
-      child: Text(
-        context.l10n.discover,
-        style: TextStyle(
-          fontSize: 36,
-          height: 1.05,
-          fontWeight: FontWeight.w700,
-          color: Theme.of(context).colorScheme.onSurface,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeroCard() {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: _panelDecoration(stronger: true, radius: 24),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final compact = constraints.maxWidth < 560;
-          final copy = Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: scheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Icon(
-                      Icons.hub_outlined,
-                      color: scheme.onPrimaryContainer,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      context.l10n.discover,
-                      style:
-                          Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
-                    ),
-                  ),
-                ],
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              context.l10n.discover,
+              style: TextStyle(
+                fontSize: 36,
+                height: 1.05,
+                fontWeight: FontWeight.w700,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
-              const SizedBox(height: 10),
-              Text(
-                context.l10n.discoverSubtitle,
-                style: TextStyle(
-                  color: scheme.onSurfaceVariant,
-                  height: 1.45,
-                ),
-              ),
-            ],
-          );
-          final button = FilledButton.tonalIcon(
+            ),
+          ),
+          IconButton.filledTonal(
+            key: const Key('bookSourceSearchEntry'),
+            tooltip: context.l10n.bookSourcesSearch,
+            onPressed: _openSearch,
+            icon: const Icon(Icons.search_rounded),
+          ),
+          const SizedBox(width: 8),
+          IconButton.filledTonal(
+            tooltip: context.l10n.bookSourceManagementTitle,
             onPressed: _openSourceManagement,
             icon: const Icon(Icons.tune_rounded),
-            label: Text(context.l10n.bookSourceManagementTitle),
-          );
-          if (compact) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [copy, const SizedBox(height: 16), button],
-            );
-          }
-          return Row(
-            children: [
-              Expanded(child: copy),
-              const SizedBox(width: 24),
-              button
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildSearchPanel() {
-    final enabledSources =
-        _sources.where((source) => source.enabled).toList(growable: false);
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: _panelDecoration(radius: 22, stronger: true),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: scheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(13),
-                ),
-                child: Icon(
-                  Icons.manage_search_rounded,
-                  color: scheme.onPrimaryContainer,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.l10n.bookSourcesSearch,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w800,
-                          ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      context.l10n.bookSourcesSearchHint,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: scheme.onSurfaceVariant,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (_searching)
-                const SizedBox(
-                  width: 22,
-                  height: 22,
-                  child: CircularProgressIndicator(strokeWidth: 2.4),
-                ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final compact = constraints.maxWidth < 620;
-              final scopeControl = _buildSearchScopeControl(enabledSources);
-              final queryControl = _buildSearchQueryControl(enabledSources);
-              if (compact) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    scopeControl,
-                    const SizedBox(height: 12),
-                    queryControl,
-                  ],
-                );
-              }
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  SizedBox(width: 280, child: scopeControl),
-                  const SizedBox(width: 12),
-                  Expanded(child: queryControl),
-                ],
-              );
-            },
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSearchScopeControl(
-    List<RegisteredBookSource> enabledSources,
-  ) {
-    return SizedBox(
-      key: const Key('bookSourceScopeControl'),
-      height: 56,
-      child: DropdownButtonFormField<String>(
-        key: ValueKey(_selectedSourceId ?? _allSourcesMenuValue),
-        initialValue: _selectedSourceId ?? _allSourcesMenuValue,
-        isExpanded: true,
-        borderRadius: BorderRadius.circular(16),
-        decoration: _searchControlDecoration(
-          labelText: context.l10n.bookSources,
-          prefixIcon: Icons.hub_outlined,
-        ),
-        onChanged: enabledSources.isEmpty || _searching
-            ? null
-            : (value) {
-                setState(() {
-                  _selectedSourceId =
-                      value == _allSourcesMenuValue ? null : value;
-                  _results = const [];
-                  _searchPageStates = const {};
-                  _activeSearchQuery = '';
-                  _loadingMoreSearchResults = false;
-                  _loadMoreSearchFailed = false;
-                  _hasSearched = false;
-                  _failedSourceCount = 0;
-                });
-                unawaited(_loadDiscoverySection());
-              },
-        items: [
-          DropdownMenuItem(
-            value: _allSourcesMenuValue,
-            child: Text(context.l10n.statsRangeAll),
-          ),
-          ...enabledSources.map(
-            (source) => DropdownMenuItem(
-              value: source.id,
-              child: Text(
-                source.name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSearchQueryControl(
-    List<RegisteredBookSource> enabledSources,
-  ) {
-    final scheme = Theme.of(context).colorScheme;
-    final canSearch = enabledSources.isNotEmpty && !_searching;
-    return SizedBox(
-      key: const Key('bookSourceQueryControl'),
-      height: 56,
-      child: TextField(
-        controller: _searchController,
-        enabled: canSearch,
-        textInputAction: TextInputAction.search,
-        onSubmitted: (_) => _search(),
-        decoration: _searchControlDecoration(
-          hintText: context.l10n.bookSourcesSearchHint,
-          prefixIcon: Icons.search_rounded,
-        ).copyWith(
-          suffixIconConstraints: const BoxConstraints(
-            minWidth: 52,
-            minHeight: 52,
-          ),
-          suffixIcon: Padding(
-            padding: const EdgeInsets.all(4),
-            child: IconButton.filled(
-              tooltip: context.l10n.bookSourcesSearch,
-              onPressed: canSearch ? _search : null,
-              icon: const Icon(Icons.arrow_forward_rounded),
-              style: IconButton.styleFrom(
-                backgroundColor: scheme.primary,
-                foregroundColor: scheme.onPrimary,
-                disabledBackgroundColor:
-                    scheme.onSurface.withValues(alpha: 0.08),
-                disabledForegroundColor:
-                    scheme.onSurface.withValues(alpha: 0.32),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  InputDecoration _searchControlDecoration({
-    String? labelText,
-    String? hintText,
-    required IconData prefixIcon,
-  }) {
-    final scheme = Theme.of(context).colorScheme;
-    final border = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(16),
-      borderSide: BorderSide(
-        color: scheme.outlineVariant.withValues(alpha: 0.72),
-      ),
-    );
-    return InputDecoration(
-      labelText: labelText,
-      hintText: hintText,
-      prefixIcon: Icon(prefixIcon, size: 21),
-      filled: true,
-      fillColor: scheme.surfaceContainerLowest,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-      border: border,
-      enabledBorder: border,
-      disabledBorder: border.copyWith(
-        borderSide: BorderSide(
-          color: scheme.outlineVariant.withValues(alpha: 0.4),
-        ),
-      ),
-      focusedBorder: border.copyWith(
-        borderSide: BorderSide(color: scheme.primary, width: 1.6),
-      ),
-    );
-  }
-
-  Widget _buildDiscoveryTabs() {
+  Widget _buildSectionTabs() {
     final scheme = Theme.of(context).colorScheme;
     return SegmentedButton<_DiscoverSection>(
       showSelectedIcon: false,
@@ -709,14 +354,11 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
           label: Text(context.l10n.discoverLatest),
         ),
       ],
-      selected: {_discoverSection},
+      selected: {_section},
       onSelectionChanged: (selection) {
         if (selection.isEmpty) return;
-        setState(() {
-          _discoverSection = selection.first;
-          _hasSearched = false;
-        });
-        unawaited(_loadDiscoverySection());
+        setState(() => _section = selection.first);
+        unawaited(_loadSection(selection.first));
       },
       style: ButtonStyle(
         minimumSize: const WidgetStatePropertyAll(Size(44, 48)),
@@ -727,41 +369,48 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
     );
   }
 
-  Widget _buildDiscoveryBody() {
-    if (_loadingSources || _loadingDiscovery) {
+  Widget _buildSectionBody() {
+    if (_loadingSources) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 44),
         child: Center(child: CircularProgressIndicator()),
       );
     }
-    if (_discoveryError != null) {
-      return _buildDiscoveryMessage(
-        icon: Icons.cloud_off_outlined,
-        title: context.l10n.discoverLoadFailed,
-        message: _discoveryError!,
-        actionLabel: context.l10n.discoverRetry,
-        onAction: _loadDiscoverySection,
+    final cache = _cache[_section];
+    if (cache == null || cache.loading) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 44),
+        child: Center(child: CircularProgressIndicator()),
       );
     }
-
-    return switch (_discoverSection) {
-      _DiscoverSection.recommended => _buildRecommendationContent(),
-      _DiscoverSection.categories => _buildCategoryContent(),
-      _DiscoverSection.latest => _buildLatestContent(),
+    if (cache.error != null) {
+      return _buildMessageCard(
+        icon: Icons.cloud_off_outlined,
+        title: context.l10n.discoverLoadFailed,
+        message: cache.error!,
+        actionLabel: context.l10n.discoverRetry,
+        onAction: () => _loadSection(_section, force: true),
+      );
+    }
+    return switch (_section) {
+      _DiscoverSection.recommended => _buildShelvesBody(cache),
+      _DiscoverSection.categories => _buildCategoriesBody(cache),
+      _DiscoverSection.latest => _buildLatestBody(cache),
     };
   }
 
-  Widget _buildRecommendationContent() {
-    if (_discoveryShelves.isEmpty) {
-      return _buildUnsupportedDiscoveryMessage('discover');
+  Widget _buildShelvesBody(_SectionCache cache) {
+    final shelves = cache.shelves ?? const <_DiscoveryShelf>[];
+    if (shelves.isEmpty) {
+      return _buildUnsupportedMessage('discover');
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: _discoveryShelves.map(_buildDiscoveryShelf).toList(),
+      children: shelves.map(_buildShelf).toList(growable: false),
     );
   }
 
-  Widget _buildDiscoveryShelf(_DiscoveryShelf shelf) {
+  Widget _buildShelf(_DiscoveryShelf shelf) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 24),
       child: Column(
@@ -788,11 +437,14 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
               itemCount: shelf.items.length,
               separatorBuilder: (_, __) => const SizedBox(width: 12),
               itemBuilder: (context, index) {
-                final result = _SourcedBook(
+                final result = SourcedBook(
                   source: shelf.source,
                   book: shelf.items[index],
                 );
-                return _buildDiscoveryBookCard(result);
+                return SourcedBookCard(
+                  result: result,
+                  onTap: () => _actions.showBookDetails(result),
+                );
               },
             ),
           ),
@@ -801,25 +453,28 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
     );
   }
 
-  Widget _buildCategoryContent() {
-    if (_categories.isEmpty) {
-      return _buildUnsupportedDiscoveryMessage('categories');
+  Widget _buildCategoriesBody(_SectionCache cache) {
+    final categories = cache.categories ?? const <_SourcedCategory>[];
+    if (categories.isEmpty) {
+      return _buildUnsupportedMessage('categories');
     }
+    final multipleSources =
+        categories.map((category) => category.source.id).toSet().length > 1;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: _categories.map((category) {
+          children: categories.map((category) {
             final selected = _selectedCategory == category;
             return ChoiceChip(
               selected: selected,
-              onSelected: (_) => _selectCategory(category),
+              onSelected: (_) => unawaited(_selectCategory(category)),
               avatar:
                   selected ? const Icon(Icons.check_rounded, size: 16) : null,
               label: Text(
-                _hasMultipleCategorySources
+                multipleSources
                     ? '${category.name} · ${category.source.name}'
                     : category.name,
               ),
@@ -827,48 +482,54 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
           }).toList(growable: false),
         ),
         const SizedBox(height: 18),
-        if (_selectedCategory == null)
-          _buildDiscoveryMessage(
-            icon: Icons.touch_app_outlined,
-            title: context.l10n.discoverChooseCategory,
-            message: context.l10n.discoverChooseCategoryHint,
+        if (_loadingCategoryBooks)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 36),
+            child: Center(child: CircularProgressIndicator()),
           )
-        else if (_browseResults.isEmpty)
-          _buildDiscoveryMessage(
+        else if (_categoryBooks.isEmpty)
+          _buildMessageCard(
             icon: Icons.menu_book_outlined,
             title: context.l10n.bookSourcesNoResults,
             message: context.l10n.discoverCategoryEmpty,
           )
         else
-          ..._browseResults.map(
+          ..._categoryBooks.map(
             (result) => Padding(
               padding: const EdgeInsets.only(bottom: 10),
-              child: _buildBookResult(result),
+              child: SourcedBookListTile(
+                result: result,
+                onTap: () => _actions.showBookDetails(result),
+              ),
             ),
           ),
       ],
     );
   }
 
-  Widget _buildLatestContent() {
-    if (_browseResults.isEmpty) {
-      return _buildUnsupportedDiscoveryMessage('browse');
+  Widget _buildLatestBody(_SectionCache cache) {
+    final books = cache.books ?? const <SourcedBook>[];
+    if (books.isEmpty) {
+      return _buildUnsupportedMessage('browse');
     }
     return Column(
-      children: _browseResults
+      children: books
           .map(
             (result) => Padding(
               padding: const EdgeInsets.only(bottom: 10),
-              child: _buildBookResult(result),
+              child: SourcedBookListTile(
+                result: result,
+                onTap: () => _actions.showBookDetails(result),
+              ),
             ),
           )
           .toList(growable: false),
     );
   }
 
-  Widget _buildUnsupportedDiscoveryMessage(String capability) {
+  Widget _buildUnsupportedMessage(String capability) {
     final hasEnabledSources = _sources.any((source) => source.enabled);
-    return _buildDiscoveryMessage(
+    return _buildMessageCard(
       icon: hasEnabledSources
           ? Icons.extension_off_outlined
           : Icons.travel_explore_outlined,
@@ -883,7 +544,7 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
     );
   }
 
-  Widget _buildDiscoveryMessage({
+  Widget _buildMessageCard({
     required IconData icon,
     required String title,
     required String message,
@@ -894,7 +555,7 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
-      decoration: _panelDecoration(radius: 22),
+      decoration: bookSourcePanelDecoration(context, radius: 22),
       child: Column(
         children: [
           Container(
@@ -933,72 +594,6 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
     );
   }
 
-  Widget _buildDiscoveryBookCard(_SourcedBook result) {
-    final scheme = Theme.of(context).colorScheme;
-    return SizedBox(
-      width: 132,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(18),
-          onTap: () => _showBookDetails(result),
-          child: Padding(
-            padding: const EdgeInsets.all(4),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                AspectRatio(
-                  aspectRatio: 2 / 3,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(14),
-                    child: result.book.coverUrl == null
-                        ? Container(
-                            color: scheme.secondaryContainer,
-                            child: Icon(
-                              Icons.menu_book_rounded,
-                              color: scheme.onSecondaryContainer,
-                            ),
-                          )
-                        : Image.network(
-                            result.book.coverUrl.toString(),
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(
-                              color: scheme.secondaryContainer,
-                              child: Icon(
-                                Icons.broken_image_outlined,
-                                color: scheme.onSecondaryContainer,
-                              ),
-                            ),
-                          ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  result.book.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  result.book.author.isEmpty
-                      ? result.source.name
-                      : result.book.author,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: scheme.onSurfaceVariant,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildSourceBadge(String label) {
     final scheme = Theme.of(context).colorScheme;
     return Container(
@@ -1017,577 +612,48 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
       ),
     );
   }
-
-  bool get _hasMultipleCategorySources =>
-      _categories.map((category) => category.source.id).toSet().length > 1;
-
-  List<RegisteredBookSource> _discoveryTargets(String capability) {
-    return BookSourcesPage.searchTargets(_sources, _selectedSourceId)
-        .where((source) => source.capabilities.contains(capability))
-        .toList(growable: false);
-  }
-
-  Future<void> _loadDiscoverySection() async {
-    if (!mounted) return;
-    setState(() {
-      _loadingDiscovery = true;
-      _discoveryError = null;
-      _discoveryShelves = const [];
-      _categories = const [];
-      _browseResults = const [];
-      _selectedCategory = null;
-    });
-
-    try {
-      switch (_discoverSection) {
-        case _DiscoverSection.recommended:
-          await _loadRecommendations();
-        case _DiscoverSection.categories:
-          await _loadCategories();
-        case _DiscoverSection.latest:
-          await _loadLatest();
-      }
-    } catch (error) {
-      if (!mounted) return;
-      setState(() => _discoveryError = error.toString());
-    } finally {
-      if (mounted) setState(() => _loadingDiscovery = false);
-    }
-  }
-
-  Future<void> _loadRecommendations() async {
-    final targets = _discoveryTargets('discover');
-    final batches = await Future.wait(
-      targets.map((source) async {
-        try {
-          final page = await _client.getDiscovery(source);
-          return page.sections
-              .where((section) => section.items.isNotEmpty)
-              .map(
-                (section) => _DiscoveryShelf(
-                  source: source,
-                  title: section.title,
-                  items: section.items,
-                ),
-              )
-              .toList(growable: false);
-        } catch (_) {
-          return const <_DiscoveryShelf>[];
-        }
-      }),
-    );
-    if (!mounted) return;
-    setState(() {
-      _discoveryShelves = batches.expand((items) => items).toList();
-    });
-  }
-
-  Future<void> _loadCategories() async {
-    final targets = _discoveryTargets('categories');
-    final batches = await Future.wait(
-      targets.map((source) async {
-        try {
-          final categories = await _client.getCategories(source);
-          return categories
-              .map(
-                (category) => _SourcedCategory(
-                  source: source,
-                  id: category.id,
-                  name: category.name,
-                ),
-              )
-              .toList(growable: false);
-        } catch (_) {
-          return const <_SourcedCategory>[];
-        }
-      }),
-    );
-    if (!mounted) return;
-    setState(() => _categories = batches.expand((items) => items).toList());
-  }
-
-  Future<void> _loadLatest() async {
-    final targets = _discoveryTargets('browse');
-    final batches = await Future.wait(
-      targets.map((source) async {
-        try {
-          final page = await _client.browse(source, sort: 'latest');
-          return page.items
-              .map((book) => _SourcedBook(source: source, book: book))
-              .toList(growable: false);
-        } catch (_) {
-          return const <_SourcedBook>[];
-        }
-      }),
-    );
-    final results = batches.expand((items) => items).toList();
-    results.sort((a, b) {
-      final left = a.book.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-      final right = b.book.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-      return right.compareTo(left);
-    });
-    if (!mounted) return;
-    setState(() => _browseResults = results);
-  }
-
-  Future<void> _selectCategory(_SourcedCategory category) async {
-    if (!category.source.capabilities.contains('browse')) {
-      setState(() {
-        _selectedCategory = category;
-        _browseResults = const [];
-      });
-      return;
-    }
-    setState(() {
-      _selectedCategory = category;
-      _browseResults = const [];
-      _loadingDiscovery = true;
-      _discoveryError = null;
-    });
-    try {
-      final page = await _client.browse(
-        category.source,
-        category: category.id,
-        sort: 'popular',
-      );
-      if (!mounted) return;
-      setState(() {
-        _browseResults = page.items
-            .map(
-              (book) => _SourcedBook(source: category.source, book: book),
-            )
-            .toList(growable: false);
-      });
-    } catch (error) {
-      if (!mounted) return;
-      setState(() => _discoveryError = error.toString());
-    } finally {
-      if (mounted) setState(() => _loadingDiscovery = false);
-    }
-  }
-
-  Future<void> _openSourceManagement() async {
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => const BookSourceManagementPage(),
-      ),
-    );
-    if (mounted) await _loadSources();
-  }
-
-  Widget _buildResultHeader() {
-    var scopeLabel = context.l10n.statsRangeAll;
-    for (final source in _sources) {
-      if (source.id == _selectedSourceId) {
-        scopeLabel = source.name;
-        break;
-      }
-    }
-    final title = _searching
-        ? context.l10n.bookSourcesSearching
-        : '${context.l10n.bookSourcesSearch} · $scopeLabel · ${_results.length}';
-    return Text(
-      title,
-      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
-    );
-  }
-
-  Widget _buildResultEmptyState() {
-    final scheme = Theme.of(context).colorScheme;
-    final hasQuery = _searchController.text.trim().isNotEmpty;
-    return Column(
-      children: [
-        Icon(
-          hasQuery ? Icons.search_off_rounded : Icons.auto_stories_outlined,
-          size: 42,
-          color: scheme.onSurfaceVariant.withValues(alpha: 0.55),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          hasQuery
-              ? context.l10n.bookSourcesNoResults
-              : context.l10n.bookSourcesSearchPrompt,
-          textAlign: TextAlign.center,
-          style: TextStyle(color: scheme.onSurfaceVariant),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildBookResult(_SourcedBook result) {
-    final scheme = Theme.of(context).colorScheme;
-    final book = result.book;
-    return InkWell(
-      borderRadius: BorderRadius.circular(18),
-      onTap: () => _showBookDetails(result),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: _panelDecoration(radius: 18),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildBookCover(book),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    book.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    [book.author, result.source.name]
-                        .where((item) => item.isNotEmpty)
-                        .join(' · '),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: scheme.primary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  if (book.description.isNotEmpty) ...[
-                    const SizedBox(height: 7),
-                    Text(
-                      book.description,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: scheme.onSurfaceVariant,
-                        fontSize: 13,
-                        height: 1.35,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            const SizedBox(width: 6),
-            const Icon(Icons.chevron_right_rounded),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBookCover(BookSourceBook book) {
-    final scheme = Theme.of(context).colorScheme;
-    final fallback = Container(
-      width: 58,
-      height: 78,
-      decoration: BoxDecoration(
-        color: scheme.tertiaryContainer,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Icon(Icons.menu_book_rounded, color: scheme.onTertiaryContainer),
-    );
-    if (book.coverUrl == null) return fallback;
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(10),
-      child: Image.network(
-        book.coverUrl.toString(),
-        width: 58,
-        height: 78,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => fallback,
-      ),
-    );
-  }
-
-  BoxDecoration _panelDecoration({
-    double radius = 16,
-    bool stronger = false,
-  }) {
-    final scheme = Theme.of(context).colorScheme;
-    final palette = PageStyleHelper.palette(context);
-    return BoxDecoration(
-      color: _isMaterial3Style
-          ? (stronger ? scheme.surfaceContainer : scheme.surfaceContainerLow)
-          : (stronger ? palette.cardStrong : palette.card),
-      borderRadius: BorderRadius.circular(radius),
-      border: Border.all(
-        color: scheme.outline.withValues(
-          alpha: _isMaterial3Style ? 0.22 : 0.12,
-        ),
-        width: 0.8,
-      ),
-    );
-  }
-
-  void _showBookDetails(_SourcedBook result) {
-    final book = result.book;
-    showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      isScrollControlled: true,
-      builder: (context) => SafeArea(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.sizeOf(context).height * 0.9,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Flexible(
-                  child: SingleChildScrollView(
-                    key: const Key('bookSourceDetailsScroll'),
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          book.title,
-                          style: Theme.of(context)
-                              .textTheme
-                              .headlineSmall
-                              ?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          [book.author, result.source.name]
-                              .where((item) => item.isNotEmpty)
-                              .join(' · '),
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                        ),
-                        if (book.description.isNotEmpty) ...[
-                          const SizedBox(height: 16),
-                          Text(
-                            book.description,
-                            style: const TextStyle(height: 1.5),
-                          ),
-                        ],
-                        const SizedBox(height: 18),
-                        Text(
-                          context.l10n.bookSourcesIdentity(
-                            result.source.id,
-                            book.id,
-                          ),
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    Expanded(
-                      child: SizedBox(
-                        height: 52,
-                        child: OutlinedButton.icon(
-                          key: const Key('bookSourceAddToShelfButton'),
-                          onPressed: () {
-                            Navigator.pop(context);
-                            unawaited(_showAddToShelfOptions(result));
-                          },
-                          icon: const Icon(Icons.add_to_photos_outlined),
-                          label: Text(context.l10n.bookSourceAddToShelf),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: SizedBox(
-                        height: 52,
-                        child: FilledButton.icon(
-                          key: const Key('bookSourceReadButton'),
-                          onPressed: () {
-                            Navigator.pop(context);
-                            Navigator.of(this.context).push(
-                              MaterialPageRoute<void>(
-                                builder: (_) => BookSourceReaderPage(
-                                  source: result.source,
-                                  book: book,
-                                  client: _client,
-                                  shelfService: _shelfService,
-                                ),
-                              ),
-                            );
-                          },
-                          icon: const Icon(Icons.menu_book_rounded),
-                          label: Text(context.l10n.reading),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _showAddToShelfOptions(_SourcedBook result) async {
-    final choice = await showModalBottomSheet<_ShelfAddMode>(
-      context: context,
-      showDragHandle: true,
-      builder: (context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.cloud_outlined),
-                title: Text(context.l10n.bookSourceAddOnline),
-                subtitle: Text(context.l10n.bookSourceAddOnlineHint),
-                onTap: () => Navigator.pop(context, _ShelfAddMode.online),
-              ),
-              ListTile(
-                leading: const Icon(Icons.download_for_offline_outlined),
-                title: Text(context.l10n.bookSourceDownloadLocal),
-                subtitle: Text(context.l10n.bookSourceDownloadLocalHint),
-                onTap: () => Navigator.pop(context, _ShelfAddMode.local),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-    if (choice == null || !mounted) return;
-    if (choice == _ShelfAddMode.online) {
-      final existing = await _shelfService.findShelfBook(
-        sourceId: result.source.id,
-        sourceBookId: result.book.id,
-      );
-      if (existing == null) {
-        await _shelfService.addOnline(
-          source: result.source,
-          book: result.book,
-        );
-      }
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            existing == null
-                ? context.l10n.bookSourceAddedOnline
-                : context.l10n.bookSourceAlreadyOnShelf,
-          ),
-        ),
-      );
-      return;
-    }
-    await _downloadSourceBook(result);
-  }
-
-  Future<void> _downloadSourceBook(_SourcedBook result) async {
-    final progress = ValueNotifier<(int, int)>((0, 0));
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) => PopScope(
-        canPop: false,
-        child: AlertDialog(
-          title: Text(context.l10n.bookSourceDownloading),
-          content: ValueListenableBuilder<(int, int)>(
-            valueListenable: progress,
-            builder: (context, value, _) {
-              final total = value.$2;
-              final ratio = total <= 0 ? null : value.$1 / total;
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  LinearProgressIndicator(value: ratio),
-                  const SizedBox(height: 12),
-                  Text(
-                    total <= 0
-                        ? context.l10n.bookSourceFetchingCatalog
-                        : context.l10n.bookSourceDownloadProgress(
-                            value.$1,
-                            total,
-                          ),
-                  ),
-                ],
-              );
-            },
-          ),
-        ),
-      ),
-    );
-    try {
-      await _shelfService.downloadToLocal(
-        source: result.source,
-        book: result.book,
-        onProgress: (completed, total) {
-          progress.value = (completed, total);
-        },
-      );
-      if (!mounted) return;
-      Navigator.of(context, rootNavigator: true).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.bookSourceDownloadComplete)),
-      );
-    } catch (error) {
-      if (!mounted) return;
-      Navigator.of(context, rootNavigator: true).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(context.l10n.bookSourceDownloadFailed('$error'))),
-      );
-    } finally {
-      progress.dispose();
-    }
-  }
 }
-
-enum _ShelfAddMode { online, local }
 
 enum _DiscoverSection { recommended, categories, latest }
 
-class _SourcedBook {
-  final RegisteredBookSource source;
-  final BookSourceBook book;
+/// 一个 Tab 的缓存态：loading / error / 三种内容之一。
+class _SectionCache {
+  final bool loading;
+  final String? error;
+  final List<_DiscoveryShelf>? shelves;
+  final List<_SourcedCategory>? categories;
+  final List<SourcedBook>? books;
 
-  const _SourcedBook({required this.source, required this.book});
-}
+  const _SectionCache.loading()
+      : loading = true,
+        error = null,
+        shelves = null,
+        categories = null,
+        books = null;
 
-class _SearchBatch {
-  final RegisteredBookSource source;
-  final List<_SourcedBook> items;
-  final bool failed;
-  final int page;
-  final bool hasMore;
+  const _SectionCache.error(String this.error)
+      : loading = false,
+        shelves = null,
+        categories = null,
+        books = null;
 
-  const _SearchBatch({
-    required this.source,
-    required this.items,
-    this.failed = false,
-    this.page = 1,
-    this.hasMore = false,
-  });
-}
+  const _SectionCache.shelves(List<_DiscoveryShelf> this.shelves)
+      : loading = false,
+        error = null,
+        categories = null,
+        books = null;
 
-class _SearchPageState {
-  final RegisteredBookSource source;
-  final int page;
-  final bool hasMore;
+  const _SectionCache.categories(List<_SourcedCategory> this.categories)
+      : loading = false,
+        error = null,
+        shelves = null,
+        books = null;
 
-  const _SearchPageState({
-    required this.source,
-    required this.page,
-    required this.hasMore,
-  });
+  const _SectionCache.books(List<SourcedBook> this.books)
+      : loading = false,
+        error = null,
+        shelves = null,
+        categories = null;
 }
 
 class _DiscoveryShelf {
@@ -1613,5 +679,3 @@ class _SourcedCategory {
     required this.name,
   });
 }
-
-const String _allSourcesMenuValue = '__all_enabled_sources__';

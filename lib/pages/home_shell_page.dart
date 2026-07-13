@@ -1,6 +1,7 @@
 // 文件说明：首页壳层页面，负责底部导航、页面装配和桌面/移动端切换。
 // 技术要点：Flutter UI、渲染层。
 
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:ui';
@@ -15,8 +16,12 @@ import 'home_widgets/home_mobile_top_bar_widget.dart';
 import 'library_page.dart';
 import 'book_sources_page.dart';
 import 'book_source_management_page.dart';
+import 'book_source_search_page.dart';
 import 'settings_page.dart';
 import 'import_book_page.dart';
+import '../book_sources/services/book_source_client.dart';
+import '../book_sources/services/book_source_registry.dart';
+import '../book_sources/services/book_source_shelf_service.dart';
 import '../utils/layout_helper.dart';
 import '../utils/glass_config.dart';
 import '../utils/page_style_helper.dart';
@@ -97,6 +102,7 @@ class _HomeShellPageState extends State<HomeShellPage> {
   int? _targetTabIndex;
   late PageController _pageController;
   AppLocalizations? _l10n;
+  final LibraryPageController _libraryController = LibraryPageController();
 
   // 导航项单一数据源：
   // - 底部导航（手机）和侧边栏（平板/桌面）都读这里。
@@ -132,7 +138,7 @@ class _HomeShellPageState extends State<HomeShellPage> {
         icon: Icons.library_books_outlined,
         selectedIcon: Icons.library_books,
         label: l10n.library,
-        page: const LibraryPage(),
+        page: LibraryPage(controller: _libraryController),
       ),
       HomeNavigationItem(
         icon: Icons.explore_outlined,
@@ -182,6 +188,7 @@ class _HomeShellPageState extends State<HomeShellPage> {
   @override
   void dispose() {
     _pageController.dispose();
+    _libraryController.dispose();
     super.dispose();
   }
 

@@ -34,8 +34,26 @@ enum _LibraryFilter {
   finished,
 }
 
+/// 首页壳层顶栏与书库页之间的桥：顶栏按钮触发搜索/筛选，
+/// 书库页把筛选是否生效同步回来点亮按钮。
+class LibraryPageController {
+  _LibraryPageState? _state;
+
+  /// 当前是否有生效的筛选（非“全部”）。顶栏据此点亮筛选按钮。
+  final ValueNotifier<bool> filterActive = ValueNotifier<bool>(false);
+
+  void toggleSearch() => _state?._toggleSearchBar();
+
+  Future<void> showFilterMenu(Rect anchor) async =>
+      _state?._showFilterMenu(anchor);
+
+  void dispose() => filterActive.dispose();
+}
+
 class LibraryPage extends StatefulWidget {
-  const LibraryPage({super.key});
+  final LibraryPageController? controller;
+
+  const LibraryPage({super.key, this.controller});
 
   @override
   State<LibraryPage> createState() => _LibraryPageState();
@@ -48,8 +66,10 @@ class _LibraryPageState extends State<LibraryPage> {
   final _sourceShelfService = BookSourceShelfService();
   StreamSubscription<void>? _librarySubscription;
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocus = FocusNode();
   Timer? _searchDebounce;
   String _searchQuery = '';
+  bool _searchBarVisible = false;
   _LibraryFilter _selectedFilter = _LibraryFilter.all;
 
   bool get _isMaterial3Style {
@@ -134,6 +154,7 @@ class _LibraryPageState extends State<LibraryPage> {
   @override
   void initState() {
     super.initState();
+    widget.controller?._state = this;
     _loadBooks();
     _librarySubscription = LibraryEventBus().stream.listen((_) {
       if (mounted) {
@@ -150,10 +171,89 @@ class _LibraryPageState extends State<LibraryPage> {
 
   @override
   void dispose() {
+    if (widget.controller?._state == this) {
+      widget.controller?._state = null;
+    }
     _librarySubscription?.cancel();
     _searchDebounce?.cancel();
     _searchController.dispose();
+    _searchFocus.dispose();
     super.dispose();
+  }
+
+  void _toggleSearchBar() {
+    setState(() {
+      _searchBarVisible = !_searchBarVisible;
+      if (_searchBarVisible) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _searchFocus.requestFocus();
+        });
+      } else {
+        _searchController.clear();
+        _searchQuery = '';
+      }
+    });
+  }
+
+  Future<void> _showFilterMenu(Rect anchor) async {
+    final overlay =
+        Navigator.of(context).overlay!.context.findRenderObject()! as RenderBox;
+    final selected = await showMenu<_LibraryFilter>(
+      context: context,
+      position: RelativeRect.fromRect(
+        anchor,
+        Offset.zero & overlay.size,
+      ),
+      initialValue: _selectedFilter,
+      items: [
+        _buildFilterMenuItem(
+          _LibraryFilter.all,
+          context.l10n.libraryFilterAll(_books.length),
+        ),
+        _buildFilterMenuItem(
+          _LibraryFilter.reading,
+          context.l10n.libraryFilterReading(
+            _books.where(_isReadingBook).length,
+          ),
+        ),
+        _buildFilterMenuItem(
+          _LibraryFilter.finished,
+          context.l10n.libraryFilterFinished(
+            _books.where(_isFinishedBook).length,
+          ),
+        ),
+      ],
+    );
+    if (selected == null || !mounted) return;
+    setState(() => _selectedFilter = selected);
+    _syncFilterActive();
+  }
+
+  PopupMenuItem<_LibraryFilter> _buildFilterMenuItem(
+    _LibraryFilter filter,
+    String label,
+  ) {
+    final selected = _selectedFilter == filter;
+    final scheme = Theme.of(context).colorScheme;
+    return PopupMenuItem<_LibraryFilter>(
+      value: filter,
+      child: Row(
+        children: [
+          Icon(
+            selected ? Icons.radio_button_checked : Icons.radio_button_off,
+            size: 18,
+            color: selected ? scheme.primary : scheme.onSurfaceVariant,
+          ),
+          const SizedBox(width: 10),
+          Text(label),
+        ],
+      ),
+    );
+  }
+
+  void _syncFilterActive() {
+    widget.controller?.filterActive.value =
+        _selectedFilter != _LibraryFilter.all;
   }
 
   void _onSearchChanged(String value) {
@@ -238,43 +338,49 @@ class _LibraryPageState extends State<LibraryPage> {
       {required bool useRailNavigation}) {
     final books = _visibleBooks;
     final palette = PageStyleHelper.palette(context);
+    // 手机模式：内容从屏幕顶端开始、滚动时穿过毛玻璃顶栏，
+    // 顶栏的模糊层才有真实内容可以取样；用内边距避开首屏遮挡。
+    final mobileTopInset =
+        MediaQuery.paddingOf(context).top + kHomeMobileTopBarHeight + 8;
+    final listTopPadding =
+        useRailNavigation ? 8.0 : (_searchBarVisible ? 10.0 : mobileTopInset);
+    final content = Column(
+      children: [
+        if (useRailNavigation) ...[
+          _buildTopBar(),
+          const SizedBox(height: 10),
+        ],
+        if (_searchBarVisible) ...[
+          if (!useRailNavigation) SizedBox(height: mobileTopInset),
+          _buildSearchBar(),
+        ],
+        Expanded(
+          child: _isInitialLoading
+              ? const Center(child: CircularProgressIndicator())
+              : RefreshIndicator(
+                  onRefresh: _loadBooks,
+                  strokeWidth: 2.5,
+                  displacement: 48,
+                  edgeOffset: useRailNavigation || _searchBarVisible
+                      ? 0
+                      : mobileTopInset,
+                  color: Theme.of(context).colorScheme.primary,
+                  backgroundColor: palette.cardStrong,
+                  child: _books.isEmpty
+                      ? _buildRefreshableState(_buildEmptyLibrary())
+                      : books.isEmpty
+                          ? _buildRefreshableState(_buildNoSearchResult())
+                          : _buildBooksGrid(books, topPadding: listTopPadding),
+                ),
+        ),
+      ],
+    );
     return Container(
       decoration: BoxDecoration(
         gradient: PageStyleHelper.backgroundGradient(context),
       ),
-      child: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            if (useRailNavigation) ...[
-              _buildTopBar(),
-              const SizedBox(height: 10),
-            ] else ...[
-              const SizedBox(height: kHomeMobileTopBarHeight + 8),
-            ],
-            _buildSearchBar(),
-            const SizedBox(height: 10),
-            _buildShelfSummaryCard(),
-            const SizedBox(height: 8),
-            Expanded(
-              child: _isInitialLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : RefreshIndicator(
-                      onRefresh: _loadBooks,
-                      strokeWidth: 2.5,
-                      displacement: 48,
-                      color: Theme.of(context).colorScheme.primary,
-                      backgroundColor: palette.cardStrong,
-                      child: _books.isEmpty
-                          ? _buildRefreshableState(_buildEmptyLibrary())
-                          : books.isEmpty
-                              ? _buildRefreshableState(_buildNoSearchResult())
-                              : _buildBooksGrid(books),
-                    ),
-            ),
-          ],
-        ),
-      ),
+      child:
+          useRailNavigation ? SafeArea(bottom: false, child: content) : content,
     );
   }
 
@@ -328,6 +434,30 @@ class _LibraryPageState extends State<LibraryPage> {
             ),
           ),
           const Spacer(),
+          _buildTopBarIcon(
+            icon: Icons.search_rounded,
+            active: _searchBarVisible,
+            tooltip: context.l10n.bookSourcesSearch,
+            onTap: _toggleSearchBar,
+          ),
+          const SizedBox(width: 8),
+          _LibraryFilterButton(
+            active: _selectedFilter != _LibraryFilter.all,
+            decoration: (active) => _panelDecoration(
+              radius: 22,
+              stronger: true,
+              color: active
+                  ? scheme.primaryContainer
+                  : (_isMaterial3Style
+                      ? scheme.surfaceContainer
+                      : palette.card),
+            ),
+            iconColor: _selectedFilter != _LibraryFilter.all
+                ? scheme.onPrimaryContainer
+                : palette.iconMuted,
+            onTapWithRect: _showFilterMenu,
+          ),
+          const SizedBox(width: 8),
           InkWell(
             borderRadius: BorderRadius.circular(22),
             onTap: () async {
@@ -359,6 +489,38 @@ class _LibraryPageState extends State<LibraryPage> {
     );
   }
 
+  Widget _buildTopBarIcon({
+    required IconData icon,
+    required bool active,
+    required String tooltip,
+    required VoidCallback onTap,
+  }) {
+    final palette = PageStyleHelper.palette(context);
+    final scheme = Theme.of(context).colorScheme;
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(22),
+        onTap: onTap,
+        child: Container(
+          width: 44,
+          height: 44,
+          decoration: _panelDecoration(
+            radius: 22,
+            stronger: true,
+            color: active
+                ? scheme.primaryContainer
+                : (_isMaterial3Style ? scheme.surfaceContainer : palette.card),
+          ),
+          child: Icon(
+            icon,
+            color: active ? scheme.onPrimaryContainer : palette.iconMuted,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildSearchBar() {
     final palette = PageStyleHelper.palette(context);
     final scheme = Theme.of(context).colorScheme;
@@ -383,6 +545,7 @@ class _LibraryPageState extends State<LibraryPage> {
             Expanded(
               child: TextField(
                 controller: _searchController,
+                focusNode: _searchFocus,
                 onChanged: _onSearchChanged,
                 decoration: InputDecoration(
                   hintText: context.l10n.librarySearchHint,
@@ -404,99 +567,6 @@ class _LibraryPageState extends State<LibraryPage> {
                 ),
               ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildShelfSummaryCard() {
-    final palette = PageStyleHelper.palette(context);
-    final scheme = Theme.of(context).colorScheme;
-    final total = _books.length;
-    final inReading = _books.where(_isReadingBook).length;
-    final finished = _books.where(_isFinishedBook).length;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(14),
-        decoration: _panelDecoration(
-          radius: 18,
-          stronger: true,
-          color: _isMaterial3Style ? scheme.surfaceContainerHigh : palette.hero,
-        ),
-        child: Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            _buildStatChip(
-              label: context.l10n.libraryFilterAll(total),
-              active: _selectedFilter == _LibraryFilter.all,
-              onTap: () => setState(() => _selectedFilter = _LibraryFilter.all),
-            ),
-            _buildStatChip(
-              label: context.l10n.libraryFilterReading(inReading),
-              active: _selectedFilter == _LibraryFilter.reading,
-              onTap: () =>
-                  setState(() => _selectedFilter = _LibraryFilter.reading),
-            ),
-            _buildStatChip(
-              label: context.l10n.libraryFilterFinished(finished),
-              active: _selectedFilter == _LibraryFilter.finished,
-              onTap: () =>
-                  setState(() => _selectedFilter = _LibraryFilter.finished),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatChip({
-    required String label,
-    required bool active,
-    required VoidCallback onTap,
-  }) {
-    final palette = PageStyleHelper.palette(context);
-    final scheme = Theme.of(context).colorScheme;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(10),
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          curve: Curves.easeOutCubic,
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          decoration: BoxDecoration(
-            color: active
-                ? (_isMaterial3Style
-                    ? scheme.primaryContainer
-                    : scheme.primary.withValues(alpha: 0.16))
-                : (_isMaterial3Style
-                    ? scheme.surfaceContainerLow
-                    : palette.cardStrong),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: active
-                  ? scheme.primary
-                      .withValues(alpha: _isMaterial3Style ? 0.30 : 0.2)
-                  : scheme.outline
-                      .withValues(alpha: _isMaterial3Style ? 0.18 : 0.08),
-              width: 0.8,
-            ),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: active ? FontWeight.w700 : FontWeight.w600,
-              color: active
-                  ? Theme.of(context).colorScheme.primary
-                  : palette.textMuted,
-            ),
-          ),
         ),
       ),
     );
@@ -652,11 +722,11 @@ class _LibraryPageState extends State<LibraryPage> {
     );
   }
 
-  Widget _buildBooksGrid(List<Book> books) {
+  Widget _buildBooksGrid(List<Book> books, {required double topPadding}) {
     final useRail =
         LayoutHelper.getNavigationType(context) == NavigationType.rail;
     if (!useRail) {
-      return _buildBooksList(books);
+      return _buildBooksList(books, topPadding: topPadding);
     }
 
     final isDesktop = LayoutHelper.isDesktop(context);
@@ -769,7 +839,7 @@ class _LibraryPageState extends State<LibraryPage> {
     );
   }
 
-  Widget _buildBooksList(List<Book> books) {
+  Widget _buildBooksList(List<Book> books, {required double topPadding}) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     return ListView.builder(
@@ -779,7 +849,7 @@ class _LibraryPageState extends State<LibraryPage> {
       ),
       padding: EdgeInsets.fromLTRB(
         16,
-        8,
+        topPadding,
         16,
         68 + 25 + MediaQuery.of(context).padding.bottom.clamp(0.0, 50.0) + 12,
       ),
@@ -1955,5 +2025,46 @@ Uri? _sourceCoverUrl(Book book) {
     return value is String && value.isNotEmpty ? Uri.tryParse(value) : null;
   } catch (_) {
     return null;
+  }
+}
+
+/// 顶栏筛选按钮：点击时把自身在屏幕上的位置传给菜单定位。
+class _LibraryFilterButton extends StatelessWidget {
+  final bool active;
+  final BoxDecoration Function(bool active) decoration;
+  final Color iconColor;
+  final Future<void> Function(Rect anchor) onTapWithRect;
+
+  const _LibraryFilterButton({
+    required this.active,
+    required this.decoration,
+    required this.iconColor,
+    required this.onTapWithRect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: context.l10n.libraryFilterTooltip,
+      child: Builder(
+        builder: (buttonContext) => InkWell(
+          borderRadius: BorderRadius.circular(22),
+          onTap: () {
+            final box = buttonContext.findRenderObject()! as RenderBox;
+            final rect = box.localToGlobal(Offset.zero) & box.size;
+            unawaited(onTapWithRect(rect));
+          },
+          child: Container(
+            width: 44,
+            height: 44,
+            decoration: decoration(active),
+            child: Icon(
+              active ? Icons.filter_alt_rounded : Icons.filter_alt_outlined,
+              color: iconColor,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

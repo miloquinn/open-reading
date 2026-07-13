@@ -17,7 +17,6 @@
     "description": "Book sources tab label"
   },
   "discover": "Discover",
-  "discoverSubtitle": "Search and browse enabled providers to find your next book",
   "discoverRecommended": "For you",
   "discoverCategories": "Categories",
   "discoverLatest": "Latest",
@@ -32,8 +31,6 @@
       }
     }
   },
-  "discoverChooseCategory": "Choose a category",
-  "discoverChooseCategoryHint": "Select a category above to browse books from that provider.",
   "discoverCategoryEmpty": "There are no books to show in this category yet.",
   "bookSourceManagementTitle": "Manage sources",
   "bookSourceManagementSubtitle": "Add, enable, remove, and inspect content providers. Discovery stays focused on finding books.",
@@ -43,7 +40,6 @@
   "bookSourcesAdd": "Add source",
   "bookSourcesSearchHint": "Search enabled sources by title or author",
   "bookSourcesSearch": "Search",
-  "bookSourcesSearching": "Searching sources…",
   "bookSourcesLoadMore": "Load more",
   "legadoCompatibilityTitle": "Legado compatibility (Beta)",
   "legadoCompatibilitySubtitle": "Imported rules are scanned before any compatible runtime is enabled",
@@ -56,7 +52,13 @@
   "legadoFileTooLarge": "The source file exceeds the 2 MB import limit.",
   "legadoFileReadFailed": "The selected file could not be read.",
   "legadoImportedCount": "Imported {count} Legado sources",
-  "@legadoImportedCount": {"placeholders": {"count": {"type": "int"}}},
+  "@legadoImportedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "legadoNoSources": "No Legado sources imported. Importing here does not enable scripts or bundle third-party content.",
   "legadoLite": "Lite compatible",
   "legadoAdapterRequired": "Adapter required",
@@ -96,17 +98,6 @@
   "bookSourcesProtocolDialogTitle": "Open source protocol v1.1",
   "bookSourcesProtocolDialogBody": "A source publishes /.well-known/open-reading-source.json and implements search, book details, chapter catalogs, and chapter content. Version 1.1 optionally adds discovery, categories, and browsing for public HTTP(S) sources that do not require sign-in.",
   "bookSourcesClose": "Close",
-  "bookSourcesIdentity": "Source ID: {sourceId}\nBook ID: {bookId}",
-  "@bookSourcesIdentity": {
-    "placeholders": {
-      "sourceId": {
-        "type": "String"
-      },
-      "bookId": {
-        "type": "String"
-      }
-    }
-  },
   "settings": "Settings",
   "@settings": {
     "description": "Settings tab label"
@@ -1313,6 +1304,7 @@
     }
   },
   "libraryFilterFinished": "Finished {count}",
+  "libraryFilterTooltip": "Filter by reading status",
   "@libraryFilterFinished": {
     "description": "Filter chip showing count of finished books",
     "placeholders": {
@@ -1995,8 +1987,12 @@
   "updateVersionSummary": "Current version: {currentVersion}\nLatest version: {latestVersion}",
   "@updateVersionSummary": {
     "placeholders": {
-      "currentVersion": {"type": "String"},
-      "latestVersion": {"type": "String"}
+      "currentVersion": {
+        "type": "String"
+      },
+      "latestVersion": {
+        "type": "String"
+      }
     }
   },
   "updateNotesTitle": "What's new",
@@ -2430,18 +2426,45 @@
   "bookSourceDownloading": "Downloading locally",
   "bookSourceFetchingCatalog": "Fetching chapter catalog…",
   "bookSourceDownloadProgress": "{completed}/{total} chapters",
-  "@bookSourceDownloadProgress": {"placeholders": {"completed": {"type": "int"}, "total": {"type": "int"}}},
+  "@bookSourceDownloadProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "bookSourceDownloadComplete": "Download complete and added to the local shelf",
   "bookSourceDownloadConverted": "Download complete. This is now a local book",
   "bookSourceDownloadFailed": "Download failed: {error}",
-  "@bookSourceDownloadFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@bookSourceDownloadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "bookSourceExitAddTitle": "Add to shelf?",
   "bookSourceExitAddMessage": "Add “{title}” to your shelf as an online book? Your reading progress will be kept.",
-  "@bookSourceExitAddMessage": {"placeholders": {"title": {"type": "String"}}},
+  "@bookSourceExitAddMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "bookSourceNotNow": "Not now",
   "bookSourceOnlineBadge": "Online",
   "bookSourceOnlineDataBroken": "Online book data is invalid: {error}",
-  "@bookSourceOnlineDataBroken": {"placeholders": {"error": {"type": "String"}}},
+  "@bookSourceOnlineDataBroken": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "readerThemeTitle": "Reading theme",
   "@readerThemeTitle": {
     "description": "Title of the reader-only theme selector"

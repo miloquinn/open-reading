@@ -7,7 +7,7 @@ class ReaderSettingsSheetFrame extends StatelessWidget {
     super.key,
     required this.palette,
     required this.child,
-    this.padding = const EdgeInsets.fromLTRB(16, 10, 16, 20),
+    this.padding = const EdgeInsets.fromLTRB(16, 0, 16, 20),
   });
 
   final ReaderThemePalette palette;
@@ -16,6 +16,8 @@ class ReaderSettingsSheetFrame extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 拖动横条必须留在滚动视图之外：放进滚动区后，下拉手势会被
+    // 滚动视图消费，弹窗无法通过拖动收起。
     return Theme(
       data: palette.toThemeData(typography: Theme.of(context).textTheme),
       child: Material(
@@ -24,9 +26,25 @@ class ReaderSettingsSheetFrame extends StatelessWidget {
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         clipBehavior: Clip.antiAlias,
         child: SafeArea(
-          child: SingleChildScrollView(
-            padding: padding,
-            child: child,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.sizeOf(context).height * 0.85,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: ReaderSettingsDragHandle(palette: palette),
+                ),
+                Flexible(
+                  child: SingleChildScrollView(
+                    padding: padding,
+                    child: child,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
