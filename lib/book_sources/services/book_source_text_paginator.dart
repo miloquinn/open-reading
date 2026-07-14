@@ -61,6 +61,16 @@ List<BookSourceTextPage> paginateBookSourceText(
       ),
     ];
   }
+  if (width <= 0 || firstPageHeight <= 0 || pageHeight <= 0) {
+    return [
+      BookSourceTextPage(
+        text: text,
+        showsChapterTitle: true,
+        startOffset: 0,
+        endOffset: text.length,
+      ),
+    ];
+  }
 
   final flowStyle = NativeTextFlowStyle(
     textDirection: textDirection,

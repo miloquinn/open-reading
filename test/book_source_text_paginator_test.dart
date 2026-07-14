@@ -65,6 +65,45 @@ void main() {
     expect(pages.length, greaterThan(1));
   });
 
+  testWidgets('preserves content when layout dimensions are not ready',
+      (tester) async {
+    const text = 'Chapter content should stay available.';
+
+    final pages = paginateBookSourceText(
+      text,
+      width: 0,
+      firstPageHeight: 360,
+      pageHeight: 480,
+      style: style,
+      textDirection: TextDirection.ltr,
+    );
+
+    expect(pages, hasLength(1));
+    expect(pages.single.text, text);
+    expect(pages.single.showsChapterTitle, isTrue);
+    expect(pages.single.startOffset, 0);
+    expect(pages.single.endOffset, text.length);
+  });
+
+  testWidgets('preserves long content when continuing page height is invalid',
+      (tester) async {
+    final text = List.filled(60, 'Long chapter content.').join('\n');
+
+    final pages = paginateBookSourceText(
+      text,
+      width: 180,
+      firstPageHeight: 120,
+      pageHeight: 0,
+      style: style,
+      textDirection: TextDirection.ltr,
+    );
+
+    expect(pages, hasLength(1));
+    expect(pages.single.text, text);
+    expect(pages.single.startOffset, 0);
+    expect(pages.single.endOffset, text.length);
+  });
+
   testWidgets('does not strand Chinese closing punctuation at a page start',
       (tester) async {
     const sentence =
