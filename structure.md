@@ -69,7 +69,7 @@ lib/
 ├─ reader_core/             AI 阅读等历史阅读核心能力
 ├─ services/
 │  ├─ ai/                   全局 AI 阅读服务
-│  ├─ books/                导入、DAO、封面、图片、修复和文本预处理
+│  ├─ books/                导入、格式注册表、DAO、封面、图片、修复和文本预处理
 │  ├─ core/                 数据库、设置、应用状态、缓存、更新检查与自定义字体存储
 │  ├─ library/              书库事件和聚合服务
 │  ├─ reading/              阅读统计与阅读计划
@@ -100,6 +100,14 @@ lib/
 - 用户字体使用 `custom_<hash>` 稳定 ID 和 `OpenReadingCustom_<hash>` 运行时 family，避免同名字体互相覆盖。
 - 删除正在使用的用户字体时，App 字体与阅读字体分别恢复各自默认值；阅读字体 ID 仍参与分页布局签名。
 - 内置字体的 SIL OFL 1.1 原文保存在 `assets/fonts/licenses/`，通过应用内开源许可页离线展示；用户自行导入的字体仍由用户负责确认授权范围。
+
+## 本地书籍格式
+
+- 单一事实来源：`lib/services/books/book_format_support.dart`（`BookFormatRegistry`）。
+- 设计说明：`docs/book-format-support.md`（含 Lightink 对照与分阶段目标）。
+- **目标架构**：文字书最终都进入 `NativeTextPaginator` 统一分页；ZIP/RAR 为容器解压后再分流；PDF/漫画走专用渲染。
+- 文件选择器扩展名只使用 `BookFormatRegistry.pickerExtensions`（当前含 txt/epub/pdf/mobi/azw/azw3/fb2/rtf/doc/docx/cbz/cbr；zip/rar 为 planned，实现前不进选择器）。
+- Lightink 1.22 对照：TXT/EPUB 完整文本引擎；ZIP/RAR 容器；MOBI/AZW3 仅 UI 级；PDF 无阅读引擎。Open Reading 在 Kindle/PDF/FB2 等上目标不低于并部分超过 Lightink。
 
 ## 阅读器架构
 

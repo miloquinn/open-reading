@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:xxread/services/books/book_format_support.dart';
 import 'package:xxread/services/books/book_import_models.dart';
 import 'package:xxread/services/storage/platform_storage_bridge.dart';
 
@@ -27,20 +28,9 @@ class BookImportSourceService implements BookImportSourcePreparer {
             documentsDirectory ?? getApplicationDocumentsDirectory,
         _temporaryDirectory = temporaryDirectory ?? getTemporaryDirectory;
 
-  static const supportedExtensions = <String>{
-    'txt',
-    'epub',
-    'pdf',
-    'mobi',
-    'azw',
-    'azw3',
-    'fb2',
-    'rtf',
-    'doc',
-    'docx',
-    'cbz',
-    'cbr',
-  };
+  /// 与 [BookFormatRegistry.pickerExtensions] 同步；格式变更只改注册表。
+  static Set<String> get supportedExtensions =>
+      BookFormatRegistry.pickerExtensions;
 
   final Future<FilePickerResult?> Function() _filePicker;
   final PlatformStorageBridge _platformBridge;
@@ -50,7 +40,8 @@ class BookImportSourceService implements BookImportSourcePreparer {
   static Future<FilePickerResult?> _pickSupportedFiles() {
     return FilePicker.platform.pickFiles(
       type: FileType.custom,
-      allowedExtensions: supportedExtensions.toList(growable: false),
+      allowedExtensions:
+          BookFormatRegistry.pickerExtensions.toList(growable: false),
       allowMultiple: true,
       withData: false,
     );

@@ -1,5 +1,6 @@
-// 文件说明：书籍导入总入口，统筹 TXT、EPUB、PDF 和压缩包的导入流程。
-// 技术要点：服务层、File Picker、Path、Path Provider、SharedPreferences、EPUBX。
+// 文件说明：书籍导入总入口，统筹各格式元数据提取与入库。
+// 技术要点：格式列表见 book_format_support.dart；File Picker、EPUBX、PDFX 等。
+// 能力矩阵与后续目标：docs/book-format-support.md
 
 import 'dart:io';
 import 'dart:async';
@@ -19,6 +20,7 @@ import 'package:xxread/services/books/enhanced_txt_import_service.dart';
 import 'package:xxread/services/books/text_preprocessor_helper.dart';
 import 'package:xxread/services/books/cover_generator_service.dart';
 import 'package:xxread/services/books/book_cover_fetcher_service.dart';
+import 'package:xxread/services/books/book_format_support.dart';
 import 'package:xxread/services/books/book_import_isolate_service.dart';
 import 'package:xxread/services/books/book_import_models.dart';
 import 'package:xxread/services/books/epub_image_extractor_service.dart';
@@ -492,20 +494,8 @@ class BookImportService implements BookFileImporter {
       // 使用路径模式而非数据模式，避免大文件加载到内存
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: [
-          'txt',
-          'epub',
-          'pdf',
-          'mobi',
-          'azw',
-          'azw3',
-          'fb2',
-          'rtf',
-          'doc',
-          'docx',
-          'cbz',
-          'cbr',
-        ],
+        allowedExtensions:
+            BookFormatRegistry.pickerExtensions.toList(growable: false),
         withData: false, // 关键修改：使用路径模式
       );
 
