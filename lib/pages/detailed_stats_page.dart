@@ -12,6 +12,7 @@ import '../services/reading/reading_stats_dao.dart';
 import '../utils/glass_config.dart';
 import '../utils/localization_extension.dart';
 import '../models/book.dart';
+import '../widgets/generated_book_cover.dart';
 
 class _StatsBlurScope extends InheritedWidget {
   final bool suspendBlur;
@@ -3282,29 +3283,25 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) {
             // 如果加载失败，显示默认图标
-            return _buildDefaultBookIcon(width, height);
+            return _buildDefaultBookCover(book, width, height);
           },
         ),
       );
     } else {
-      // 没有封面路径，显示默认图标
-      return _buildDefaultBookIcon(width, height);
+      return _buildDefaultBookCover(book, width, height);
     }
   }
 
-  /// 构建默认的书籍图标
-  Widget _buildDefaultBookIcon(double width, double height) {
-    return Container(
+  Widget _buildDefaultBookCover(Book book, double width, double height) {
+    return SizedBox(
       width: width,
       height: height,
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+      child: ClipRRect(
         borderRadius: BorderRadius.circular(8),
-      ),
-      child: Icon(
-        Icons.menu_book,
-        color: Theme.of(context).colorScheme.primary,
-        size: width * 0.5,
+        child: GeneratedBookCover(
+          title: book.title,
+          author: book.author,
+        ),
       ),
     );
   }

@@ -23,25 +23,77 @@ env:
   RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
 
 jobs:
+  verify-release:
+    name: Verify release source
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Check out release source
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+
+      - name: Verify tag matches pubspec version
+        shell: bash
+        run: |
+          release_version="${RELEASE_TAG#v}"
+          pubspec_version="$(sed -n 's/^version:[[:space:]]*\([^+[:space:]]*\).*/\1/p' pubspec.yaml)"
+
+          if [[ "$RELEASE_TAG" != v* || -z "$pubspec_version" ]]; then
+            echo "::error::Release tags must use v<version> and pubspec.yaml must declare a version."
+            exit 1
+          fi
+
+          if [[ "$release_version" != "$pubspec_version" ]]; then
+            echo "::error::Tag ${RELEASE_TAG} does not match pubspec version ${pubspec_version}."
+            exit 1
+          fi
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Install locked dependencies
+        run: flutter pub get --enforce-lockfile
+
+      - name: Generate localizations
+        run: flutter gen-l10n
+
+      - name: Verify generated localizations are current
+        run: git diff --exit-code -- lib/l10n
+
+      - name: Verify formatting
+        run: dart format --output=none --set-exit-if-changed lib test tool
+
+      - name: Analyze source
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+
+      - name: Run tests
+        run: flutter test
+
   android:
     name: Android APKs
+    needs: verify-release
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
       - name: Check out release source
-        uses: actions/checkout@v4
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           ref: ${{ env.RELEASE_TAG }}
 
       - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
 
       - name: Resolve dependencies
-        run: flutter pub get
+        run: flutter pub get --enforce-lockfile
 
       - name: Generate localizations
         run: flutter gen-l10n
@@ -77,6 +129,51 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: flutter build apk --release --split-per-abi
 
+      - name: Verify APK signing identity
+        shell: bash
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          export LC_ALL=C
+          apksigner_path="$(find "${ANDROID_HOME}/build-tools" -type f -name apksigner | sort -V | tail -n 1)"
+          if [[ -z "$apksigner_path" ]]; then
+            echo "::error::apksigner was not found in the Android SDK."
+            exit 1
+          fi
+
+          expected_digest="$(
+            keytool -list -v \
+              -keystore "$ANDROID_KEYSTORE_PATH" \
+              -storepass "$ANDROID_KEYSTORE_PASSWORD" \
+              -alias "$ANDROID_KEY_ALIAS" 2>/dev/null \
+              | sed -n 's/^[[:space:]]*SHA256: //p' \
+              | head -n 1 \
+              | tr -d ':' \
+              | tr '[:upper:]' '[:lower:]'
+          )"
+
+          if [[ -z "$expected_digest" ]]; then
+            echo "::error::Could not read the configured signing certificate."
+            exit 1
+          fi
+
+          for apk in build/app/outputs/flutter-apk/app-*-release.apk; do
+            "$apksigner_path" verify --verbose "$apk" >/dev/null
+            actual_digest="$(
+              "$apksigner_path" verify --print-certs "$apk" \
+                | sed -n 's/^Signer #1 certificate SHA-256 digest: //p' \
+                | head -n 1 \
+                | tr -d ':' \
+                | tr '[:upper:]' '[:lower:]'
+            )"
+
+            if [[ -z "$actual_digest" || "$actual_digest" != "$expected_digest" ]]; then
+              echo "::error::$(basename "$apk") was not signed with the configured identity."
+              exit 1
+            fi
+          done
+
       - name: Name Android packages
         shell: bash
         run: |
@@ -90,32 +187,41 @@ jobs:
             "release-assets/OpenReading-Android-x86_64-${version}.apk"
 
       - name: Upload Android artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: android-release
           path: release-assets/*
           if-no-files-found: error
 
+      - name: Remove temporary signing material
+        if: always()
+        shell: bash
+        run: |
+          if [[ -n "${ANDROID_KEYSTORE_PATH:-}" ]]; then
+            rm -f "$ANDROID_KEYSTORE_PATH"
+          fi
+
   windows:
     name: Windows x64
+    needs: verify-release
     # pdfx's PDFium downloader is not compatible with CMake 4 on windows-latest.
     runs-on: windows-2022
     timeout-minutes: 45
     steps:
       - name: Check out release source
-        uses: actions/checkout@v4
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           ref: ${{ env.RELEASE_TAG }}
 
       - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
 
       - name: Resolve dependencies
-        run: flutter pub get
+        run: flutter pub get --enforce-lockfile
 
       - name: Generate localizations
         run: flutter gen-l10n
@@ -141,7 +247,7 @@ jobs:
             -Force
 
       - name: Upload Windows artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: windows-release
           path: release-assets/*
@@ -149,11 +255,12 @@ jobs:
 
   linux:
     name: Linux x64
+    needs: verify-release
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
       - name: Check out release source
-        uses: actions/checkout@v4
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           ref: ${{ env.RELEASE_TAG }}
 
@@ -165,14 +272,14 @@ jobs:
             liblzma-dev libglu1-mesa libsecret-1-dev
 
       - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
 
       - name: Resolve dependencies
-        run: flutter pub get
+        run: flutter pub get --enforce-lockfile
 
       - name: Generate localizations
         run: flutter gen-l10n
@@ -189,7 +296,7 @@ jobs:
             "release-assets/OpenReading-Linux-x64-${version}.tar.gz" bundle
 
       - name: Upload Linux artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: linux-release
           path: release-assets/*
@@ -201,11 +308,22 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
+      - name: Check out release metadata
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+
       - name: Download all platform artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           path: release-assets
           merge-multiple: true
+
+      - name: Generate SHA-256 checksums
+        shell: bash
+        run: |
+          cd release-assets
+          sha256sum ./* > SHA256SUMS.txt
 
       - name: Create or update release
         env:

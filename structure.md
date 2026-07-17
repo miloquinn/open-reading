@@ -1,6 +1,6 @@
 # Open Reading 项目结构
 
-> 最后更新：2026-07-17  
+> 最后更新：2026-07-18
 > 当前版本：1.2.0  
 > 本文记录稳定的项目结构、模块边界和核心数据结构，不罗列每个实现细节。
 
@@ -34,6 +34,7 @@ open-reading/
 ├─ ohos/                    OpenHarmony 平台工程
 ├─ assets/                  字体、图标、图片等资源
 ├─ docs/                    设计、规范、计划和示例文档
+├─ .github/workflows/       日常验证、跨平台构建和发布自动化
 ├─ lib/                     Flutter 主源码
 ├─ test/                    单元、组件、回归和 Golden 测试
 ├─ tool/                    项目辅助脚本
@@ -44,6 +45,13 @@ open-reading/
 ```
 
 `.dart_tool/`、`build/`、平台生成目录属于构建产物，不是源码结构的一部分。
+
+## 持续集成与发布
+
+- `.github/workflows/pr-checks.yml`：对 Pull Request、`main` 推送和手动运行执行锁定依赖解析、国际化生成一致性、格式检查、静态分析、带覆盖率测试，以及 Android debug 和 Web release 冒烟构建；Pull Request 额外执行依赖安全审查。Web 构建当前为提示性检查，不阻塞合并。
+- `.github/workflows/platform-smoke.yml`：在相关源码或平台工程变更、每周计划任务和手动运行时，构建 Linux、Windows、macOS release 以及不签名的 iOS release，用于尽早发现平台工程漂移。OpenHarmony 仍依赖专用 SDK，不在 GitHub 托管运行器中构建。
+- `.github/workflows/release.yml`：版本 Tag 发布前验证 `pubspec.yaml` 版本、生成文件、格式、分析和测试；随后构建 Android、Windows、Linux 发布包，校验 Android APK 使用配置的签名身份，并生成 `SHA256SUMS.txt` 后发布 GitHub Release。
+- `pubspec.lock` 纳入版本控制，CI 和发布流程均使用 `--enforce-lockfile` 保证依赖解析可复现。
 
 ## lib 目录
 
@@ -74,7 +82,7 @@ lib/
 
 - `home_shell_page.dart`：应用主壳和导航入口。
 - `library_page.dart`：本地与在线书架。
-- `import_book_page.dart`：跨平台书籍导入队列。
+- `import_book_page.dart`：跨平台书籍导入队列；手机确认态采用顶部安全标题栏、独立滚动书目区和页面内底部操作区，并对文件选择器返回的异常窗口 inset 做限幅。
 - `native_reader_page.dart`：本地 TXT、EPUB 等内容适配器。
 - `book_source_reader_page.dart`：在线书源章节内容适配器。
 - `book_source_search_page.dart`：在线书源搜索与发现。
@@ -113,16 +121,18 @@ lib/
 - `core/reader/native_text_paginator.dart`：本地与在线纯文本分页共享实现；正文行高仅作用于行间，首行上方和末行下方的 leading 统一裁剪，配套 strut 不携带 `height`。
 - `core/reader/reader_safe_area.dart`：系统安全区、正文边距和页码位置。
 - `core/reader/canonical_locator.dart`：与排版无关的稳定阅读位置。
+- `core/reader/reader_volume_key_controller.dart`：Android 音量键翻页桥接；读取全局开关，只在非滚动分页模式下启用原生按键拦截，并把上一页/下一页事件路由给当前阅读器。
 - `widgets/reader_settings_controls.dart`：完整阅读设置和翻页模式面板。
 - `widgets/reader_control_chrome.dart`：统一顶部、底部控制栏和状态层。
 - `widgets/reader_navigation_sheet.dart`：目录、书签和定位面板。
+- `widgets/generated_book_cover.dart`：无真实封面时的统一实时封面组件，与持久化 PNG 共用同一绘制器。
 
 支持的翻页模式：
 
-- `verticalScroll`
-- `instantPage`
-- `horizontalSlide`
-- `pageCurl`
+- `verticalScroll`（上下滚动，不拦截音量键）
+- `instantPage`（无动画）
+- `horizontalSlide`（水平滑动）
+- `pageCurl`（仿真翻页）
 
 ## 在线书源结构
 
@@ -142,7 +152,7 @@ lib/
 - `BookSourceRegistry`：注册和启用状态。
 - `BookSourceClient`：协议请求。
 - `BookSourceChapterCache`：章节缓存和并发去重。
-- `BookSourceShelfService`：在线书籍加入本地书架。
+- `BookSourceShelfService`：在线书籍加入本地书架；书源未提供封面时生成并持久化统一封面。
 - `BookSourceReadingProgressStore`：在线章节阅读进度。
 
 ## 核心数据模型
@@ -152,6 +162,7 @@ lib/
 `Book` 同时承载本地书籍和加入书架的在线书籍：
 
 - 基础元数据：标题、作者、格式、导入时间、封面。
+- 封面策略：真实本地封面或书源封面优先；缺失、历史空数据或加载失败时，统一按书名与作者生成简约封面，生成结果不受文件格式和来源影响。
 - 文件数据：`filePath`、编码、修改时间和内容哈希。
 - 阅读数据：当前页、总页数、目录和分页缓存。
 - 稳定定位：`lastCanonicalLocator`。

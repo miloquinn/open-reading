@@ -27,6 +27,7 @@ import '../utils/page_style_helper.dart';
 import '../utils/system_ui_helper.dart';
 import '../utils/ui_style.dart';
 import '../widgets/app_brand_icon.dart';
+import '../widgets/generated_book_cover.dart';
 
 enum _LibraryFilter {
   all,
@@ -116,7 +117,6 @@ class _LibraryPageState extends State<LibraryPage> {
     }
     if (mounted) _loadBooks();
   }
-
 
   BoxDecoration _panelDecoration({
     double radius = 16,
@@ -758,8 +758,9 @@ class _LibraryPageState extends State<LibraryPage> {
         );
         final itemWidth = availableWidth / crossAxisCount;
         // 网格高度为 2:3 封面 + 文本区域预留高度（更接近常见书封比例）
-        final itemHeight =
-            (itemWidth * 3 / 2) + _BookCoverItem.textHeight + _BookCoverItem.gap;
+        final itemHeight = (itemWidth * 3 / 2) +
+            _BookCoverItem.textHeight +
+            _BookCoverItem.gap;
         final childAspectRatio = itemWidth > 0 ? itemWidth / itemHeight : 0.75;
 
         return Container(
@@ -961,16 +962,6 @@ class _LibraryPageState extends State<LibraryPage> {
   }
 
   Widget _buildListCover(BuildContext context, Book book) {
-    final onlineCover = _sourceCoverUrl(book);
-    if (book.isOnline && onlineCover != null) {
-      return Image.network(
-        onlineCover.toString(),
-        fit: BoxFit.cover,
-        cacheWidth: (64 * MediaQuery.of(context).devicePixelRatio).round(),
-        errorBuilder: (context, error, stackTrace) =>
-            _buildListDefaultCover(context, book),
-      );
-    }
     if (book.coverImagePath != null && book.coverImagePath!.isNotEmpty) {
       final fit = Platform.isAndroid ? BoxFit.contain : BoxFit.cover;
       // 列表封面显示宽度固定 64，按屏幕像素密度限制解码尺寸即可
@@ -983,28 +974,23 @@ class _LibraryPageState extends State<LibraryPage> {
             _buildListDefaultCover(context, book),
       );
     }
+    final sourceCover = _sourceCoverUrl(book);
+    if (sourceCover != null) {
+      return Image.network(
+        sourceCover.toString(),
+        fit: BoxFit.cover,
+        cacheWidth: (64 * MediaQuery.of(context).devicePixelRatio).round(),
+        errorBuilder: (context, error, stackTrace) =>
+            _buildListDefaultCover(context, book),
+      );
+    }
     return _buildListDefaultCover(context, book);
   }
 
   Widget _buildListDefaultCover(BuildContext context, Book book) {
-    // 不带圆角：由外层 ClipRRect 或打开动画的飞行图层负责裁剪。
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
-            Theme.of(context).colorScheme.secondary.withValues(alpha: 0.6),
-          ],
-        ),
-      ),
-      child: const Center(
-        child: AppBrandIcon(
-          size: 40,
-          borderRadius: 9,
-        ),
-      ),
+    return GeneratedBookCover(
+      title: book.title,
+      author: book.author,
     );
   }
 
@@ -1164,27 +1150,10 @@ class _LibraryPageState extends State<LibraryPage> {
                                   ),
                                 ],
                         ),
-                        child: book.coverImagePath != null &&
-                                book.coverImagePath!.isNotEmpty
-                            ? ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: Image.file(
-                                  File(book.coverImagePath!),
-                                  fit: Platform.isAndroid
-                                      ? BoxFit.contain
-                                      : BoxFit.cover,
-                                  cacheWidth: (50 *
-                                          MediaQuery.of(context)
-                                              .devicePixelRatio)
-                                      .round(),
-                                ),
-                              )
-                            : const Center(
-                                child: AppBrandIcon(
-                                  size: 24,
-                                  borderRadius: 6,
-                                ),
-                              ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: _buildListCover(context, book),
+                        ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
@@ -1899,7 +1868,6 @@ class _BookCoverItem extends StatelessWidget {
       ),
     );
   }
-
 }
 
 /// 网格封面画面（真实封面或默认设计），不带圆角：
@@ -1909,18 +1877,6 @@ Widget _gridCoverArt(BuildContext context, Book book) {
   final scheme = theme.colorScheme;
   final isMaterial3Style =
       theme.extension<UiStyleThemeExtension>()?.isMaterial3Style ?? false;
-  final onlineCover = _sourceCoverUrl(book);
-  if (book.isOnline && onlineCover != null) {
-    return Image.network(
-      onlineCover.toString(),
-      width: double.infinity,
-      height: double.infinity,
-      fit: BoxFit.cover,
-      cacheWidth: (240 * MediaQuery.of(context).devicePixelRatio).round(),
-      errorBuilder: (context, error, stackTrace) =>
-          _gridDefaultCover(context, book),
-    );
-  }
   if (book.coverImagePath != null && book.coverImagePath!.isNotEmpty) {
     final fit = Platform.isAndroid ? BoxFit.contain : BoxFit.cover;
     // 有封面图片时，直接显示真实的书籍封面
@@ -1945,51 +1901,27 @@ Widget _gridCoverArt(BuildContext context, Book book) {
       ),
     );
   }
+  final sourceCover = _sourceCoverUrl(book);
+  if (sourceCover != null) {
+    return Image.network(
+      sourceCover.toString(),
+      width: double.infinity,
+      height: double.infinity,
+      fit: BoxFit.cover,
+      cacheWidth: (240 * MediaQuery.of(context).devicePixelRatio).round(),
+      errorBuilder: (context, error, stackTrace) =>
+          _gridDefaultCover(context, book),
+    );
+  }
   // 没有封面图片时，显示默认封面设计
   return _gridDefaultCover(context, book);
 }
 
 /// 构建默认封面设计
 Widget _gridDefaultCover(BuildContext context, Book book) {
-  final scheme = Theme.of(context).colorScheme;
-  return Container(
-    width: double.infinity,
-    height: double.infinity,
-    decoration: BoxDecoration(
-      gradient: LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          scheme.primary.withValues(alpha: 0.8),
-          scheme.secondary.withValues(alpha: 0.6),
-        ],
-      ),
-    ),
-    child: Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const AppBrandIcon(
-          size: 48,
-          borderRadius: 12,
-        ),
-        const SizedBox(height: 8),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Text(
-            book.title,
-            textAlign: TextAlign.center,
-            maxLines: 3,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: scheme.onPrimary,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              height: 1.2,
-            ),
-          ),
-        ),
-      ],
-    ),
+  return GeneratedBookCover(
+    title: book.title,
+    author: book.author,
   );
 }
 

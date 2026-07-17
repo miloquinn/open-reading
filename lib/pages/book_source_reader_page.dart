@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as html_parser;
 import 'package:provider/provider.dart';
@@ -12,6 +13,7 @@ import 'package:xxread/core/reader/reader_margin_settings.dart';
 import 'package:xxread/core/reader/reader_safe_area.dart';
 import 'package:xxread/core/reader/reader_settings.dart';
 import 'package:xxread/core/reader/reader_system_ui.dart';
+import 'package:xxread/core/reader/reader_volume_key_controller.dart';
 import 'package:xxread/models/bookmark.dart';
 
 import '../book_sources/models/registered_book_source.dart';
@@ -26,6 +28,7 @@ import '../services/core/app_settings_service.dart';
 import '../utils/font_catalog_helper.dart';
 import '../utils/localization_extension.dart';
 import '../utils/reader_themes.dart';
+import '../utils/system_ui_helper.dart';
 import '../widgets/reader_shader_page_curl.dart';
 import '../widgets/reader_control_chrome.dart';
 import '../widgets/reader_navigation_sheet.dart';
@@ -172,6 +175,9 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     if (state == AppLifecycleState.resumed) {
       _startReadingSession();
       if (_readerSystemUiApplied) unawaited(_applyReaderSystemUi());
+      if (!_loadingCatalog && _error == null) {
+        unawaited(_syncVolumeKeyPaging());
+      }
       return;
     }
     if (state == AppLifecycleState.inactive ||
@@ -219,6 +225,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       ..dispose();
     _pageController.dispose();
     _scrollProgress.dispose();
+    unawaited(ReaderVolumeKeyController.deactivate(this));
     unawaited(ReaderSystemUiController.restore());
     super.dispose();
   }
@@ -270,6 +277,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         _pageMode = settings.pageMode;
         _loadingCatalog = false;
       });
+      unawaited(_syncVolumeKeyPaging());
       if (chapters.isNotEmpty) {
         unawaited(_resolveShelfBook());
         await _loadChapter(
@@ -285,6 +293,50 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         _error = error;
         _controlsVisible = true;
       });
+    }
+  }
+
+  Future<void> _syncVolumeKeyPaging() => ReaderVolumeKeyController.activate(
+        owner: this,
+        pageTurningAvailable: _pageMode != BookSourcePageMode.verticalScroll,
+        onNextPage: () => unawaited(_handleVolumePageTurn(forward: true)),
+        onPreviousPage: () => unawaited(_handleVolumePageTurn(forward: false)),
+      );
+
+  Future<void> _handleVolumePageTurn({required bool forward}) async {
+    if (!mounted ||
+        _loadingCatalog ||
+        _loadingContent ||
+        _pageMode == BookSourcePageMode.verticalScroll) {
+      return;
+    }
+    if (_pageMode == BookSourcePageMode.pageCurl) {
+      if (forward) {
+        await _pageCurlController.turnForward();
+      } else {
+        await _pageCurlController.turnBackward();
+      }
+      return;
+    }
+    if (_pageMode == BookSourcePageMode.horizontalSlide &&
+        _pageController.hasClients) {
+      if (forward) {
+        await _pageController.nextPage(
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeOutCubic,
+        );
+      } else {
+        await _pageController.previousPage(
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeOutCubic,
+        );
+      }
+      return;
+    }
+    if (forward) {
+      await _turnForward();
+    } else {
+      await _turnBackward();
     }
   }
 
@@ -816,6 +868,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       _restorePagedPosition = true;
       _restoreTextOffset = currentTextOffset;
     });
+    unawaited(_syncVolumeKeyPaging());
     await _readerSettingsStore.save(_readerSettings);
     _restoreScrollProgress(currentProgress);
   }
@@ -913,52 +966,58 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: _allowPop,
-      onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) unawaited(_requestExit());
-      },
-      child: Theme(
-        data: _readerThemeData,
-        child: Scaffold(
-          backgroundColor: _readerTheme.background,
-          body: Stack(
-            children: [
-              Positioned.fill(
-                child: Semantics(
-                  label: widget.book.title,
-                  child: _buildBody(),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      key: const ValueKey('reader-system-ui-region'),
+      value: SystemUiHelper.overlayStyleForBackground(
+        _readerTheme.background,
+      ),
+      child: PopScope(
+        canPop: _allowPop,
+        onPopInvokedWithResult: (didPop, _) {
+          if (!didPop) unawaited(_requestExit());
+        },
+        child: Theme(
+          data: _readerThemeData,
+          child: Scaffold(
+            backgroundColor: _readerTheme.background,
+            body: Stack(
+              children: [
+                Positioned.fill(
+                  child: Semantics(
+                    label: widget.book.title,
+                    child: _buildBody(),
+                  ),
                 ),
-              ),
-              ReaderChromeOverlay(
-                palette: _readerTheme,
-                visible: _controlsVisible,
-                title: _chapters.isEmpty
-                    ? widget.book.title
-                    : _chapters[_chapterIndex.clamp(0, _chapters.length - 1)]
-                        .title,
-                statusBottom: _readerSafeArea.pageNumberBottom,
-                statusBuilder: _buildReaderStatusText,
-                onBack: () => unawaited(_requestExit()),
-                onBookmark: _chapters.isEmpty
-                    ? null
-                    : () => unawaited(_toggleCurrentBookmark()),
-                onTableOfContents: _chapters.isEmpty ? null : _showCatalog,
-                onSettings: _showReadingSettings,
-                backTooltip:
-                    MaterialLocalizations.of(context).backButtonTooltip,
-                bookmarkTooltip: _currentPageIsBookmarked
-                    ? context.l10n.bookmarkRemoved
-                    : context.l10n.readerAddBookmark,
-                tableOfContentsTooltip: context.l10n.readerToolbarTOC,
-                settingsTooltip: context.l10n.readingSettings,
-                bookmarked: _currentPageIsBookmarked,
-                bookmarkBusy: _bookmarkBusy,
-                topKey: const ValueKey('book-source-top-controls'),
-                bottomKey: const ValueKey('book-source-bottom-controls'),
-                statusKey: const ValueKey('book-source-reader-status'),
-              ),
-            ],
+                ReaderChromeOverlay(
+                  palette: _readerTheme,
+                  visible: _controlsVisible,
+                  title: _chapters.isEmpty
+                      ? widget.book.title
+                      : _chapters[_chapterIndex.clamp(0, _chapters.length - 1)]
+                          .title,
+                  statusBottom: _readerSafeArea.pageNumberBottom,
+                  statusBuilder: _buildReaderStatusText,
+                  onBack: () => unawaited(_requestExit()),
+                  onBookmark: _chapters.isEmpty
+                      ? null
+                      : () => unawaited(_toggleCurrentBookmark()),
+                  onTableOfContents: _chapters.isEmpty ? null : _showCatalog,
+                  onSettings: _showReadingSettings,
+                  backTooltip:
+                      MaterialLocalizations.of(context).backButtonTooltip,
+                  bookmarkTooltip: _currentPageIsBookmarked
+                      ? context.l10n.bookmarkRemoved
+                      : context.l10n.readerAddBookmark,
+                  tableOfContentsTooltip: context.l10n.readerToolbarTOC,
+                  settingsTooltip: context.l10n.readingSettings,
+                  bookmarked: _currentPageIsBookmarked,
+                  bookmarkBusy: _bookmarkBusy,
+                  topKey: const ValueKey('book-source-top-controls'),
+                  bottomKey: const ValueKey('book-source-bottom-controls'),
+                  statusKey: const ValueKey('book-source-reader-status'),
+                ),
+              ],
+            ),
           ),
         ),
       ),

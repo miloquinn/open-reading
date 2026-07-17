@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 
 import '../../models/book.dart';
 import '../../services/books/book_dao.dart';
+import '../../services/books/cover_generator_service.dart';
 import '../../services/library/library_event_bus_service.dart';
 import '../models/registered_book_source.dart';
 import '../protocol/book_source_protocol.dart';
@@ -44,6 +45,7 @@ class BookSourceShelfService {
       sourceBookId: book.id,
     );
     if (existing != null) return existing;
+    final generatedCoverPath = await _generatedCoverPath(source, book);
     final shelfBook = Book(
       title: book.title,
       author: book.author,
@@ -54,6 +56,7 @@ class BookSourceShelfService {
       sourceBookId: book.id,
       sourceJson: jsonEncode(source.toJson()),
       sourceBookJson: jsonEncode(book.toJson()),
+      coverImagePath: generatedCoverPath,
     );
     final id = await _bookDao.insertBook(shelfBook);
     LibraryEventBus().notifyLibraryChanged();
@@ -142,6 +145,8 @@ class BookSourceShelfService {
       sourceId: source.id,
       sourceBookId: book.id,
     );
+    final generatedCoverPath =
+        existing?.coverImagePath ?? await _generatedCoverPath(source, book);
     if (existing != null) {
       final downloaded = existing.copyWith(
         title: book.title,
@@ -152,6 +157,7 @@ class BookSourceShelfService {
         storageType: 'local',
         sourceJson: jsonEncode(source.toJson()),
         sourceBookJson: jsonEncode(book.toJson()),
+        coverImagePath: generatedCoverPath,
       );
       await _bookDao.updateBook(downloaded);
       LibraryEventBus().notifyLibraryChanged();
@@ -169,6 +175,7 @@ class BookSourceShelfService {
       sourceBookId: book.id,
       sourceJson: jsonEncode(source.toJson()),
       sourceBookJson: jsonEncode(book.toJson()),
+      coverImagePath: generatedCoverPath,
     );
     final id = await _bookDao.insertBook(downloaded);
     LibraryEventBus().notifyLibraryChanged();
@@ -220,5 +227,28 @@ class BookSourceShelfService {
     return paragraphs.isEmpty
         ? (fragment.text ?? '').trim()
         : paragraphs.join('\n');
+  }
+
+  Future<String?> _generatedCoverPath(
+    RegisteredBookSource source,
+    BookSourceBook book,
+  ) async {
+    if (book.coverUrl != null) return null;
+    try {
+      final documents =
+          _downloadDirectory ?? await getApplicationDocumentsDirectory();
+      final bytes = await CoverGenerator.generateTextCover(
+        title: book.title,
+        author: book.author,
+      );
+      return CoverGenerator.saveCover(
+        bytes,
+        '${source.id}_${book.id}.png',
+        documentsDirectory: documents,
+      );
+    } catch (_) {
+      // 持久化失败不应阻止用户加入书架；UI 会继续使用同一绘制器实时兜底。
+      return null;
+    }
   }
 }

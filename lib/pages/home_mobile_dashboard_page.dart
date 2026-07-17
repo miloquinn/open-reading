@@ -19,6 +19,7 @@ import '../utils/localization_extension.dart';
 import '../utils/page_transitions.dart';
 import '../utils/ui_style.dart';
 import '../widgets/app_brand_icon.dart';
+import '../widgets/generated_book_cover.dart';
 import '../widgets/side_toast.dart';
 import 'detailed_stats_page.dart';
 import 'home_layout_constants.dart';
@@ -1523,18 +1524,14 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
                 ),
                 child: Row(
                   children: [
-                    Container(
+                    SizedBox(
                       width: 44,
                       height: 60,
-                      decoration: BoxDecoration(
-                        color: palette.coverPlaceholderColor,
+                      child: ClipRRect(
                         borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: (book.coverImagePath != null &&
-                              book.coverImagePath!.isNotEmpty)
-                          ? ClipRRect(
-                              borderRadius: BorderRadius.circular(10),
-                              child: Image.file(
+                        child: (book.coverImagePath != null &&
+                                book.coverImagePath!.isNotEmpty)
+                            ? Image.file(
                                 File(book.coverImagePath!),
                                 fit: Platform.isAndroid
                                     ? BoxFit.contain
@@ -1543,11 +1540,17 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
                                         MediaQuery.of(context).devicePixelRatio)
                                     .round(),
                                 errorBuilder: (context, error, stackTrace) {
-                                  return const SizedBox.shrink();
+                                  return GeneratedBookCover(
+                                    title: book.title,
+                                    author: book.author,
+                                  );
                                 },
+                              )
+                            : GeneratedBookCover(
+                                title: book.title,
+                                author: book.author,
                               ),
-                            )
-                          : null,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(

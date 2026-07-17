@@ -3321,6 +3321,15 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           const SizedBox(height: 10),
           _buildCommunityButton(
+            onPressed: _openQqChannel,
+            backgroundColor: const Color(0xFF12B7F5),
+            foregroundColor: Colors.white,
+            icon: const _QqMark(),
+            title: l10n.settingsQqChannel,
+            subtitle: l10n.settingsQqChannelSubtitle,
+          ),
+          const SizedBox(height: 10),
+          _buildCommunityButton(
             onPressed: _openQqGroup,
             backgroundColor: const Color(0xFF1677FF),
             foregroundColor: Colors.white,
@@ -3552,6 +3561,18 @@ class _SettingsPageState extends State<SettingsPage> {
       showSideToast(
         context,
         context.l10n.settingsTelegramOpenFailed,
+        icon: Icons.error_outline,
+      );
+    }
+  }
+
+  Future<void> _openQqChannel() async {
+    final uri = Uri.parse('https://pd.qq.com/s/diin97dya?b=9');
+    final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!ok && mounted) {
+      showSideToast(
+        context,
+        context.l10n.settingsQqChannelOpenFailed,
         icon: Icons.error_outline,
       );
     }

@@ -16,11 +16,14 @@ concurrency:
   group: pr-checks-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+env:
+  FLUTTER_VERSION: "3.44.4"
+
 jobs:
   flutter-validation:
     name: Flutter validation
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
 
     steps:
       - name: Check out repository
@@ -29,23 +32,77 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
-          flutter-version: "3.44.4"
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
 
-      - name: Install dependencies
-        run: flutter pub get
+      - name: Install locked dependencies
+        run: flutter pub get --enforce-lockfile
+
+      - name: Generate localizations
+        run: flutter gen-l10n
+
+      - name: Verify generated localizations are current
+        run: git diff --exit-code -- lib/l10n
 
       - name: Verify formatting
-        run: dart format --output=none --set-exit-if-changed lib test
+        run: dart format --output=none --set-exit-if-changed lib test tool
 
       - name: Analyze source
-        # Keep existing warnings visible without making the initial rollout
-        # unusable. Analyzer errors still fail the job.
+        # Keep existing warnings visible without making them fatal. Analyzer
+        # errors still fail the job.
         run: flutter analyze --no-fatal-infos --no-fatal-warnings
 
-      - name: Run tests
-        run: flutter test
+      - name: Run tests with coverage
+        run: flutter test --coverage
+
+      - name: Upload coverage report
+        if: ${{ !cancelled() && hashFiles('coverage/lcov.info') != '' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: flutter-coverage-${{ github.sha }}
+          path: coverage/lcov.info
+          if-no-files-found: error
+          retention-days: 7
+
+  build-smoke:
+    name: Build smoke / ${{ matrix.name }}
+    needs: flutter-validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    continue-on-error: ${{ matrix.advisory }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Android debug APK
+            command: flutter build apk --debug
+            advisory: false
+          - name: Web release
+            command: flutter build web --release
+            # Web currently exposes third-party and 64-bit integer JavaScript
+            # compatibility gaps. Keep the signal visible without blocking PRs.
+            advisory: true
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Install locked dependencies
+        run: flutter pub get --enforce-lockfile
+
+      - name: Generate localizations
+        run: flutter gen-l10n
+
+      - name: Build ${{ matrix.name }}
+        run: ${{ matrix.command }}
 
   dependency-review:
     name: Dependency review

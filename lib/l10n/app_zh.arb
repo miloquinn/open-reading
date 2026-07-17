@@ -418,6 +418,9 @@
   "settingsTelegramChannel": "Telegram",
   "settingsTelegramSubtitle": "Telegram 官方频道",
   "settingsTelegramOpenFailed": "无法打开 Telegram 链接",
+  "settingsQqChannel": "QQ 频道",
+  "settingsQqChannelSubtitle": "开元阅读 · OpenReading6",
+  "settingsQqChannelOpenFailed": "无法打开 QQ 频道邀请链接",
   "languageSystem": "跟随系统",
   "@languageSystem": {
     "description": "跟随系统语言"
@@ -549,7 +552,7 @@
   "@pageTurningMode": {
     "description": "翻页模式"
   },
-  "pageTurningSlide": "左右滑动",
+  "pageTurningSlide": "水平滑动",
   "@pageTurningSlide": {
     "description": "滑动翻页"
   },
@@ -1121,7 +1124,7 @@
   "libraryCleaningDatabase": "清理数据库记录...",
   "libraryDeleteComplete": "删除完成",
   "readerPrefaceTitle": "正文前",
-  "readerModeHorizontalPage": "水平分页",
+  "readerModeHorizontalPage": "无动画",
   "readerModeVerticalScrollHint": "上下滚动正文，左右滑动切换章节",
   "readerModeWholeBookScrollHint": "整本书从头到尾连续向下滚动",
   "readerScrollByChapterTitle": "按章节滚动",
@@ -1160,7 +1163,7 @@
   "settingsAiSettingsSaved": "AI 设置已保存",
   "settingsSaveFailed": "保存失败: {error}",
   "settingsVolumeKeyTurnTitle": "音量键翻页",
-  "settingsVolumeKeyTurnSubtitle": "使用音量键控制翻页",
+  "settingsVolumeKeyTurnSubtitle": "在非滚动翻页模式下使用音量键翻页",
   "settingsShowStatusBarTitle": "阅读时显示系统状态栏",
   "settingsShowStatusBarOnSubtitle": "已隐藏阅读页电量/时间 UI",
   "settingsShowStatusBarOffSubtitle": "使用阅读页电量/时间 UI",

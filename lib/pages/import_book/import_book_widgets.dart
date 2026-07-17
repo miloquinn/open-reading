@@ -398,83 +398,107 @@ class ImportBottomBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Material(
-      color: scheme.surface,
-      elevation: 8,
-      shadowColor: Colors.black.withValues(alpha: 0.12),
+      key: const ValueKey('import-bottom-action-area'),
+      color: scheme.surfaceContainerLow,
       child: SafeArea(
         top: false,
-        child: Padding(
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border(
+              top: BorderSide(
+                color: scheme.outlineVariant.withValues(alpha: 0.65),
+              ),
+            ),
+          ),
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final buttons = <Widget>[
-                if (onRetry != null)
-                  OutlinedButton.icon(
-                    onPressed: isRunning ? null : onRetry,
-                    icon: const Icon(Icons.refresh_rounded),
-                    label: Text(retryLabel),
-                  ),
-                if (onPrimary != null)
-                  FilledButton.icon(
-                    onPressed: isRunning ? null : onPrimary,
-                    icon: isRunning
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.download_done_rounded),
-                    label: Text(primaryLabel),
-                  ),
-                if (onDone != null)
-                  FilledButton(
-                    onPressed: isRunning ? null : onDone,
-                    child: Text(doneLabel),
-                  ),
-              ];
-              if (constraints.maxWidth < 620) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (summary.isNotEmpty) ...[
-                      Text(
-                        summary,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                            ),
-                      ),
-                      const SizedBox(height: 8),
-                    ],
-                    Wrap(
-                      alignment: WrapAlignment.end,
-                      spacing: 10,
-                      runSpacing: 8,
-                      children: buttons,
-                    ),
-                  ],
-                );
-              }
-              return Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      summary,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: scheme.onSurfaceVariant,
+          child: Center(
+            heightFactor: 1,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 720),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final buttons = _buildButtons();
+                  if (constraints.maxWidth < 620) {
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (summary.isNotEmpty) ...[
+                          Text(
+                            summary,
+                            textAlign: TextAlign.center,
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: scheme.onSurfaceVariant,
+                                    ),
                           ),
-                    ),
-                  ),
-                  ...buttons.expand(
-                    (button) => [const SizedBox(width: 10), button],
-                  ),
-                ],
-              );
-            },
+                          const SizedBox(height: 10),
+                        ],
+                        for (var index = 0;
+                            index < buttons.length;
+                            index++) ...[
+                          SizedBox(
+                              width: double.infinity, child: buttons[index]),
+                          if (index != buttons.length - 1)
+                            const SizedBox(height: 8),
+                        ],
+                      ],
+                    );
+                  }
+                  return Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          summary,
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: scheme.onSurfaceVariant,
+                                  ),
+                        ),
+                      ),
+                      for (final button in buttons) ...[
+                        const SizedBox(width: 10),
+                        button,
+                      ],
+                    ],
+                  );
+                },
+              ),
+            ),
           ),
         ),
       ),
     );
+  }
+
+  List<Widget> _buildButtons() {
+    return <Widget>[
+      if (onRetry != null)
+        OutlinedButton.icon(
+          onPressed: isRunning ? null : onRetry,
+          icon: const Icon(Icons.refresh_rounded),
+          label: Text(retryLabel),
+        ),
+      if (onPrimary != null)
+        FilledButton.icon(
+          key: const ValueKey('import-primary-action'),
+          onPressed: isRunning ? null : onPrimary,
+          icon: isRunning
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.download_done_rounded),
+          label: Text(primaryLabel),
+        ),
+      if (onDone != null)
+        FilledButton(
+          key: const ValueKey('import-done-action'),
+          onPressed: isRunning ? null : onDone,
+          child: Text(doneLabel),
+        ),
+    ];
   }
 }
 

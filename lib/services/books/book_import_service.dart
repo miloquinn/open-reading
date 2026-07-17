@@ -377,9 +377,13 @@ class BookImportService implements BookFileImporter {
               progressCallback: progressAdapter,
             );
 
-      if (metadata.coverImage != null) {
+      final resolvedCoverImage = await _resolveCoverImage(
+        metadata,
+        source.extension,
+      );
+      if (resolvedCoverImage != null) {
         createdCoverPath = await _saveCoverImage(
-          metadata.coverImage!,
+          resolvedCoverImage,
           source.displayName,
         );
       }
@@ -675,10 +679,14 @@ class BookImportService implements BookFileImporter {
 
         // 4. Save cover image if available
         String? coverImagePath;
-        if (metadata.coverImage != null) {
+        final resolvedCoverImage = await _resolveCoverImage(
+          metadata,
+          pickedFile.extension ?? 'unknown',
+        );
+        if (resolvedCoverImage != null) {
           progressCallback?.call(0.85, '保存封面图片...');
           coverImagePath = await _saveCoverImage(
-            metadata.coverImage!,
+            resolvedCoverImage,
             pickedFile.name,
           );
         }
@@ -1724,6 +1732,27 @@ class BookImportService implements BookFileImporter {
     );
   }
 
+  /// 所有本地导入格式共用的封面兜底。
+  ///
+  /// 格式解析器只负责尽量提供真实封面；若没有真实封面，则统一根据书名和
+  /// 作者生成，避免不同格式各自维护一套默认封面分支。
+  Future<Uint8List?> _resolveCoverImage(
+    EnhancedBookMetadata metadata,
+    String format,
+  ) async {
+    if (metadata.coverImage != null) return metadata.coverImage;
+    try {
+      return await CoverGenerator.generateTextCover(
+        title: metadata.title,
+        author: metadata.author,
+        format: format,
+      );
+    } catch (error) {
+      debugPrint('生成默认封面失败: $error');
+      return null;
+    }
+  }
+
   /// Save cover image to disk
   Future<String?> _saveCoverImage(
     Uint8List imageBytes,
@@ -1738,7 +1767,7 @@ class BookImportService implements BookFileImporter {
         return null;
       }
 
-      final documentsDir = await getApplicationDocumentsDirectory();
+      final documentsDir = await _documentsDirectory();
       final coversDir = Directory(join(documentsDir.path, 'covers'));
       if (!await coversDir.exists()) {
         await coversDir.create(recursive: true);

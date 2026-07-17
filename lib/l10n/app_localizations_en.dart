@@ -517,6 +517,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsTelegramOpenFailed => 'Could not open the Telegram link';
 
   @override
+  String get settingsQqChannel => 'QQ Channel';
+
+  @override
+  String get settingsQqChannelSubtitle => 'Open Reading · OpenReading6';
+
+  @override
+  String get settingsQqChannelOpenFailed =>
+      'Could not open the QQ Channel invitation link';
+
+  @override
   String get languageSystem => 'Follow System';
 
   @override
@@ -615,7 +625,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pageTurningMode => 'Page Mode';
 
   @override
-  String get pageTurningSlide => 'Slide';
+  String get pageTurningSlide => 'Horizontal Slide';
 
   @override
   String get pageTurningScroll => 'Scroll';
@@ -1338,7 +1348,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get readerPrefaceTitle => 'Front Matter';
 
   @override
-  String get readerModeHorizontalPage => 'Horizontal Paging';
+  String get readerModeHorizontalPage => 'No Animation';
 
   @override
   String get readerModeVerticalScrollHint =>
@@ -1490,7 +1500,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsVolumeKeyTurnTitle => 'Volume key page turning';
 
   @override
-  String get settingsVolumeKeyTurnSubtitle => 'Use volume keys to turn pages';
+  String get settingsVolumeKeyTurnSubtitle =>
+      'Use volume keys in paged reading modes';
 
   @override
   String get settingsShowStatusBarTitle =>

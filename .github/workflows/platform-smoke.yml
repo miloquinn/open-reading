@@ -1,0 +1,139 @@
+name: Cross-platform smoke builds
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/platform-smoke.yml"
+      - "assets/**"
+      - "ios/**"
+      - "lib/**"
+      - "linux/**"
+      - "macos/**"
+      - "pubspec.lock"
+      - "pubspec.yaml"
+      - "shaders/**"
+      - "windows/**"
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/platform-smoke.yml"
+      - "assets/**"
+      - "ios/**"
+      - "lib/**"
+      - "linux/**"
+      - "macos/**"
+      - "pubspec.lock"
+      - "pubspec.yaml"
+      - "shaders/**"
+      - "windows/**"
+  schedule:
+    # Monday 02:17 in Asia/Shanghai (Sunday 18:17 UTC).
+    - cron: "17 18 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: platform-smoke-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: "3.44.4"
+
+jobs:
+  linux:
+    name: Linux x64 release
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            clang cmake ninja-build pkg-config libgtk-3-dev \
+            liblzma-dev libglu1-mesa libsecret-1-dev
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Install locked dependencies
+        run: flutter pub get --enforce-lockfile
+
+      - name: Generate localizations
+        run: flutter gen-l10n
+
+      - name: Build Linux release
+        run: flutter build linux --release
+
+  windows:
+    name: Windows x64 release
+    # pdfx's PDFium downloader is not compatible with CMake 4 on windows-latest.
+    runs-on: windows-2022
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Install locked dependencies
+        run: flutter pub get --enforce-lockfile
+
+      - name: Generate localizations
+        run: flutter gen-l10n
+
+      - name: Ensure NuGet is available
+        shell: pwsh
+        run: |
+          if (-not (Get-Command nuget -ErrorAction SilentlyContinue)) {
+            choco install nuget.commandline -y --no-progress
+          }
+
+      - name: Build Windows release
+        run: flutter build windows --release
+
+  apple:
+    name: Apple release builds (unsigned)
+    runs-on: macos-15
+    timeout-minutes: 55
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Install locked dependencies
+        run: flutter pub get --enforce-lockfile
+
+      - name: Generate localizations
+        run: flutter gen-l10n
+
+      - name: Build macOS release
+        run: flutter build macos --release
+
+      - name: Build iOS release without code signing
+        run: flutter build ios --release --no-codesign

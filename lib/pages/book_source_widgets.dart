@@ -13,6 +13,7 @@ import '../utils/book_open_transition.dart';
 import '../utils/localization_extension.dart';
 import '../utils/page_style_helper.dart';
 import '../utils/ui_style.dart';
+import '../widgets/generated_book_cover.dart';
 import 'book_source_reader_page.dart';
 
 /// 一本来自具体书源的书。
@@ -74,22 +75,16 @@ class SourcedBookCard extends StatelessWidget {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(14),
                     child: result.book.coverUrl == null
-                        ? Container(
-                            color: scheme.secondaryContainer,
-                            child: Icon(
-                              Icons.menu_book_rounded,
-                              color: scheme.onSecondaryContainer,
-                            ),
+                        ? GeneratedBookCover(
+                            title: result.book.title,
+                            author: result.book.author,
                           )
                         : Image.network(
                             result.book.coverUrl.toString(),
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(
-                              color: scheme.secondaryContainer,
-                              child: Icon(
-                                Icons.broken_image_outlined,
-                                color: scheme.onSecondaryContainer,
-                              ),
+                            errorBuilder: (_, __, ___) => GeneratedBookCover(
+                              title: result.book.title,
+                              author: result.book.author,
                             ),
                           ),
                   ),
@@ -206,15 +201,13 @@ class _BookCoverThumb extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final fallback = Container(
+    final fallback = SizedBox(
       width: 58,
       height: 78,
-      decoration: BoxDecoration(
-        color: scheme.tertiaryContainer,
-        borderRadius: BorderRadius.circular(10),
+      child: GeneratedBookCover(
+        title: book.title,
+        author: book.author,
       ),
-      child: Icon(Icons.menu_book_rounded, color: scheme.onTertiaryContainer),
     );
     if (book.coverUrl == null) return fallback;
     return ClipRRect(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -166,6 +167,78 @@ void main() {
       prefs.getDouble(ReaderSettingsStore.bottomMarginKey),
       ReaderMarginSettings.defaultBottom,
     );
+  });
+
+  testWidgets('uses the light reader theme for status bar icon contrast',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({
+      ReaderSettingsStore.themeKey: 'day',
+    });
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData.dark(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: BookSourceReaderPage(
+          source: _testSource(),
+          book: const BookSourceBook(
+            id: 'book-1',
+            title: 'Test book',
+            author: 'Author',
+            description: '',
+            categories: [],
+          ),
+          client: _FakeBookSourceClient(),
+        ),
+      ),
+    );
+    await _pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('reader-system-ui-region')),
+    );
+
+    final region = tester.widget<AnnotatedRegion<SystemUiOverlayStyle>>(
+      find.byKey(const ValueKey('reader-system-ui-region')),
+    );
+    expect(region.value.statusBarIconBrightness, Brightness.dark);
+    expect(region.value.statusBarBrightness, Brightness.light);
+  });
+
+  testWidgets('uses the dark reader theme for status bar icon contrast',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({
+      ReaderSettingsStore.themeKey: 'night',
+    });
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData.light(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: BookSourceReaderPage(
+          source: _testSource(),
+          book: const BookSourceBook(
+            id: 'book-1',
+            title: 'Test book',
+            author: 'Author',
+            description: '',
+            categories: [],
+          ),
+          client: _FakeBookSourceClient(),
+        ),
+      ),
+    );
+    await _pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('reader-system-ui-region')),
+    );
+
+    final region = tester.widget<AnnotatedRegion<SystemUiOverlayStyle>>(
+      find.byKey(const ValueKey('reader-system-ui-region')),
+    );
+    expect(region.value.statusBarIconBrightness, Brightness.light);
+    expect(region.value.statusBarBrightness, Brightness.dark);
   });
 }
 

@@ -1,6 +1,5 @@
-// 文件说明：封面生成服务，基于标题与颜色方案生成默认封面图片。
-// 技术要点：服务层、Path、Path Provider、文件系统、渲染层、Flutter。
-
+// 文件说明：统一的无封面书籍封面绘制与持久化服务。
+// 技术要点：同一绘制器同时服务于 PNG 生成和 UI 实时兜底，样式仅由书名与作者决定。
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
@@ -9,480 +8,299 @@ import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 
-/// 封面生成器
-///
-/// 为没有封面的书籍生成美观的默认封面
+/// 为没有真实封面的书籍生成简约封面。
 class CoverGenerator {
-  /// 生成文本封面
+  /// 生成 PNG 封面。
   ///
-  /// [title] 书名
-  /// [author] 作者
-  /// [format] 文件格式（TXT, MOBI等）
-  /// [width] 封面宽度
-  /// [height] 封面高度
-  /// Returns: 封面图片的字节数据
+  /// [format] 为兼容旧调用保留，但不再影响视觉结果。这样同一本书无论来自
+  /// 本地文件还是在线书源，只要书名和作者一致，就会得到相同封面。
   static Future<Uint8List> generateTextCover({
     required String title,
-    String author = 'Unknown',
-    String format = 'TXT',
+    String author = '',
+    String format = '',
     int width = 400,
     int height = 600,
   }) async {
-    final normalizedTitle = _normalizeTitle(title);
-    final normalizedAuthor = _normalizeAuthor(author);
-    final normalizedFormat = _normalizeFormat(format);
-
-    // 创建画布
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
-    final size = Size(width.toDouble(), height.toDouble());
-    final bounds = Offset.zero & size;
+    final painter = GeneratedBookCoverPainter(title: title, author: author);
+    painter.paint(canvas, Size(width.toDouble(), height.toDouble()));
 
-    final colorScheme = _getColorScheme(
-      format: normalizedFormat,
-      seedText: '$normalizedTitle|$normalizedAuthor|$normalizedFormat',
-    );
-
-    // 背景渐变
-    final backgroundPaint = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: colorScheme.gradientColors,
-        stops: const [0.0, 0.58, 1.0],
-      ).createShader(bounds);
-    canvas.drawRect(bounds, backgroundPaint);
-
-    // 背景氛围光
-    final glowPaint = Paint()
-      ..shader = RadialGradient(
-        center: const Alignment(0.7, -0.85),
-        radius: 1.1,
-        colors: [
-          colorScheme.glowColor.withValues(alpha: 0.42),
-          Colors.transparent,
-        ],
-      ).createShader(bounds);
-    canvas.drawRect(bounds, glowPaint);
-
-    // 左侧书脊
-    final spineRect = Rect.fromLTWH(0, 0, size.width * 0.1, size.height);
-    canvas.drawRect(spineRect, Paint()..color = colorScheme.spineColor);
-    canvas.drawRect(
-      spineRect,
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-          colors: [
-            Colors.white.withValues(alpha: 0.2),
-            Colors.transparent,
-          ],
-        ).createShader(spineRect),
-    );
-
-    // 外框
-    final frameRect = Rect.fromLTWH(
-      size.width * 0.05,
-      size.width * 0.05,
-      size.width * 0.9,
-      size.height - size.width * 0.1,
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(frameRect, const Radius.circular(14)),
-      Paint()
-        ..color = colorScheme.frameColor
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2,
-    );
-
-    // 大号首字母水印
-    _drawMonogram(
-      canvas,
-      _extractMonogram(normalizedTitle, normalizedFormat),
-      size,
-      colorScheme.monogramColor,
-    );
-
-    // 标题区
-    final titlePanelRect = Rect.fromLTWH(
-      size.width * 0.14,
-      size.height * 0.25,
-      size.width * 0.74,
-      size.height * 0.42,
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(titlePanelRect, const Radius.circular(16)),
-      Paint()..color = colorScheme.panelColor,
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(titlePanelRect, const Radius.circular(16)),
-      Paint()
-        ..color = Colors.white.withValues(alpha: 0.16)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.2,
-    );
-
-    _drawTextInRect(
-      canvas: canvas,
-      rect: titlePanelRect.deflate(size.width * 0.055),
-      text: normalizedTitle,
-      fontSize: _calculateTitleFontSize(normalizedTitle),
-      maxLines: 4,
-      color: colorScheme.titleColor,
-      fontWeight: FontWeight.w700,
-      textAlign: TextAlign.left,
-      letterSpacing: 0.3,
-      lineHeight: 1.26,
-    );
-
-    // 作者信息与底部分割线
-    final dividerY = size.height * 0.79;
-    canvas.drawLine(
-      Offset(size.width * 0.14, dividerY),
-      Offset(size.width * 0.88, dividerY),
-      Paint()
-        ..color = Colors.white.withValues(alpha: 0.24)
-        ..strokeWidth = 1.2,
-    );
-    final authorText = normalizedAuthor == '本地文本'
-        ? normalizedAuthor
-        : '作者 · $normalizedAuthor';
-    _drawTextInRect(
-      canvas: canvas,
-      rect: Rect.fromLTWH(
-        size.width * 0.14,
-        dividerY + 14,
-        size.width * 0.74,
-        size.height * 0.1,
-      ),
-      text: authorText,
-      fontSize: 20,
-      maxLines: 1,
-      color: colorScheme.secondaryTextColor,
-      fontWeight: FontWeight.w500,
-      textAlign: TextAlign.left,
-      letterSpacing: 0.25,
-      lineHeight: 1.2,
-    );
-
-    // 顶部格式标签
-    _drawFormatTag(
-      canvas: canvas,
-      size: size,
-      format: normalizedFormat,
-      backgroundColor: colorScheme.tagBackgroundColor,
-      textColor: colorScheme.tagTextColor,
-    );
-
-    // 轻微纹理
-    _drawTextureLines(canvas, size);
-
-    // 转换为图片
     final picture = recorder.endRecording();
     final image = await picture.toImage(width, height);
     final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-
-    return byteData!.buffer.asUint8List();
-  }
-
-  static String _normalizeTitle(String title) {
-    var normalized = title.trim().replaceAll(RegExp(r'\s+'), ' ');
-    if (normalized.isEmpty) {
-      return '未命名文本';
+    image.dispose();
+    picture.dispose();
+    if (byteData == null) {
+      throw StateError('无法编码生成的书籍封面');
     }
-    if (normalized.length > 72) {
-      normalized = '${normalized.substring(0, 72)}…';
-    }
-    return normalized;
+    return byteData.buffer.asUint8List();
   }
 
-  static String _normalizeAuthor(String author) {
-    final normalized = author.trim();
-    if (normalized.isEmpty) {
-      return '本地文本';
-    }
-    final lower = normalized.toLowerCase();
-    if (lower == 'unknown' || lower == 'null' || lower == 'none') {
-      return '本地文本';
-    }
-    if (normalized.length > 18) {
-      return '${normalized.substring(0, 18)}…';
-    }
-    return normalized;
-  }
-
-  static String _normalizeFormat(String format) {
-    final normalized = format.trim().toUpperCase();
-    return normalized.isEmpty ? 'TXT' : normalized;
-  }
-
-  static void _drawMonogram(
-    Canvas canvas,
-    String monogram,
-    Size size,
-    Color color,
-  ) {
-    final textPainter = TextPainter(
-      text: TextSpan(
-        text: monogram,
-        style: TextStyle(
-          fontFamily: 'SourceHanSansCN',
-          fontSize: size.width * 0.62,
-          fontWeight: FontWeight.w700,
-          color: color,
-          height: 1.0,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-      textAlign: TextAlign.center,
-    )..layout();
-
-    final offset = Offset(
-      size.width * 0.56 - textPainter.width / 2,
-      size.height * 0.14,
-    );
-    textPainter.paint(canvas, offset);
-  }
-
-  static void _drawTextInRect({
-    required Canvas canvas,
-    required Rect rect,
-    required String text,
-    required double fontSize,
-    required int maxLines,
-    required Color color,
-    required FontWeight fontWeight,
-    required TextAlign textAlign,
-    required double lineHeight,
-    double? letterSpacing,
-  }) {
-    final textPainter = TextPainter(
-      text: TextSpan(
-        text: text,
-        style: TextStyle(
-          fontFamily: 'SourceHanSansCN',
-          fontSize: fontSize,
-          fontWeight: fontWeight,
-          color: color,
-          height: lineHeight,
-          letterSpacing: letterSpacing,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-      textAlign: textAlign,
-      maxLines: maxLines,
-      ellipsis: '…',
-    )..layout(maxWidth: rect.width);
-
-    final y = rect.top + (rect.height - textPainter.height) / 2;
-    final maxY = rect.bottom - textPainter.height;
-    final dy =
-        (maxY >= rect.top ? y.clamp(rect.top, maxY) : rect.top).toDouble();
-    textPainter.paint(canvas, Offset(rect.left, dy));
-  }
-
-  static void _drawTextureLines(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.08)
-      ..strokeWidth = 1
-      ..style = PaintingStyle.stroke;
-
-    for (var i = 0; i < 7; i++) {
-      final y = size.height * (0.13 + i * 0.12);
-      canvas.drawLine(
-        Offset(size.width * 0.12, y),
-        Offset(size.width * 0.9, y + (i.isEven ? 3 : -3)),
-        paint,
-      );
-    }
-  }
-
-  static String _extractMonogram(String title, String format) {
-    for (final rune in title.runes) {
-      if (_isVisibleCharacter(rune)) {
-        return String.fromCharCode(rune).toUpperCase();
-      }
-    }
-    return format.isEmpty ? 'B' : format[0];
-  }
-
-  static bool _isVisibleCharacter(int rune) {
-    final isAsciiAlphaNum = (rune >= 0x30 && rune <= 0x39) ||
-        (rune >= 0x41 && rune <= 0x5A) ||
-        (rune >= 0x61 && rune <= 0x7A);
-    final isCjk = (rune >= 0x4E00 && rune <= 0x9FFF) ||
-        (rune >= 0x3400 && rune <= 0x4DBF);
-    return isAsciiAlphaNum || isCjk;
-  }
-
-  /// 保存封面到磁盘
-  ///
-  /// [imageBytes] 图片字节数据
-  /// [bookFileName] 书籍文件名（用于生成封面文件名）
-  /// Returns: 保存的封面路径
+  /// 将封面保存到应用文档目录下的 `covers/`。
   static Future<String> saveCover(
     Uint8List imageBytes,
-    String bookFileName,
-  ) async {
-    try {
-      final documentsDir = await getApplicationDocumentsDirectory();
-      final coversDir = Directory(join(documentsDir.path, 'covers'));
-      if (!await coversDir.exists()) {
-        await coversDir.create(recursive: true);
-      }
+    String bookFileName, {
+    Directory? documentsDirectory,
+  }) async {
+    final documentsDir =
+        documentsDirectory ?? await getApplicationDocumentsDirectory();
+    final coversDir = Directory(join(documentsDir.path, 'covers'));
+    await coversDir.create(recursive: true);
 
-      // 生成唯一的封面文件名
-      final coverFileName =
-          '${basenameWithoutExtension(bookFileName)}_${DateTime.now().millisecondsSinceEpoch}.png';
-      final coverPath = join(coversDir.path, coverFileName);
-
-      // 保存文件
-      final file = File(coverPath);
-      await file.writeAsBytes(imageBytes);
-
-      return coverPath;
-    } catch (e) {
-      debugPrint('保存封面失败: $e');
-      rethrow;
-    }
+    final safeBaseName = _safeFileName(basenameWithoutExtension(bookFileName));
+    final fingerprint = _stableHash(bookFileName).toRadixString(16);
+    final coverPath = join(
+      coversDir.path,
+      '${safeBaseName}_${fingerprint}_generated.png',
+    );
+    await File(coverPath).writeAsBytes(imageBytes, flush: true);
+    return coverPath;
   }
 
-  /// 计算标题字体大小
-  static double _calculateTitleFontSize(String title) {
-    final length = title.runes.length;
-    if (length <= 8) {
-      return 50;
-    } else if (length <= 14) {
-      return 44;
-    } else if (length <= 24) {
-      return 36;
-    } else if (length <= 36) {
-      return 31;
-    } else if (length <= 50) {
-      return 27;
-    } else {
-      return 24;
-    }
-  }
-
-  /// 绘制格式标签
-  static void _drawFormatTag({
-    required Canvas canvas,
-    required Size size,
-    required String format,
-    required Color backgroundColor,
-    required Color textColor,
-  }) {
-    final tagRect = Rect.fromLTWH(size.width - 112, 24, 88, 40);
-
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(tagRect, const Radius.circular(12)),
-      Paint()..color = backgroundColor,
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(tagRect, const Radius.circular(12)),
-      Paint()
-        ..color = Colors.white.withValues(alpha: 0.18)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1,
-    );
-
-    final textPainter = TextPainter(
-      text: TextSpan(
-        text: format,
-        style: TextStyle(
-          fontFamily: 'SourceHanSansCN',
-          fontSize: 16,
-          fontWeight: FontWeight.w700,
-          color: textColor,
-          letterSpacing: 0.8,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-      textAlign: TextAlign.center,
-    )..layout();
-
-    final xCenter = tagRect.center.dx - textPainter.width / 2;
-    final yCenter = tagRect.center.dy - textPainter.height / 2;
-    textPainter.paint(canvas, Offset(xCenter, yCenter));
-  }
-
-  /// 获取配色方案
-  static _ColorScheme _getColorScheme({
-    required String format,
-    required String seedText,
-  }) {
-    final palettes = switch (format) {
-      'TXT' => const [
-          [Color(0xFF17365C), Color(0xFF2A6F97), Color(0xFF61A5C2)],
-          [Color(0xFF4A1E30), Color(0xFF7A2846), Color(0xFFB94B72)],
-          [Color(0xFF1F3A2B), Color(0xFF2D6A4F), Color(0xFF52B788)],
-          [Color(0xFF3A2A68), Color(0xFF5E4FA2), Color(0xFF7E77D2)],
-          [Color(0xFF462D21), Color(0xFF8A4F2A), Color(0xFFD47A3C)],
-        ],
-      'MOBI' || 'AZW' || 'AZW3' => const [
-          [Color(0xFF42275A), Color(0xFF734B6D), Color(0xFFA77FA8)],
-          [Color(0xFF3B2F2F), Color(0xFF7D5A50), Color(0xFFD6A77A)],
-          [Color(0xFF1B3B5F), Color(0xFF365D8D), Color(0xFF5D8FC2)],
-        ],
-      'FB2' => const [
-          [Color(0xFF0B3C5D), Color(0xFF328CC1), Color(0xFF7DB9DE)],
-          [Color(0xFF1D3557), Color(0xFF457B9D), Color(0xFF7FAFD1)],
-          [Color(0xFF264653), Color(0xFF2A9D8F), Color(0xFF73C9BC)],
-        ],
-      'RTF' => const [
-          [Color(0xFF49243E), Color(0xFF704264), Color(0xFFBB8493)],
-          [Color(0xFF3E2723), Color(0xFF6D4C41), Color(0xFFBCAAA4)],
-          [Color(0xFF303F60), Color(0xFF536B9B), Color(0xFF8CA6DB)],
-        ],
-      _ => const [
-          [Color(0xFF243B55), Color(0xFF3C5F8A), Color(0xFF6B8FB2)],
-          [Color(0xFF35477D), Color(0xFF6C5B7B), Color(0xFFC06C84)],
-          [Color(0xFF2A2D43), Color(0xFF4E5679), Color(0xFF8F9BB3)],
-        ],
-    };
-
-    final index = seedText.hashCode.abs() % palettes.length;
-    final selected = palettes[index];
-    return _ColorScheme(
-      gradientColors: selected,
-      glowColor: selected[2],
-      spineColor: Colors.black.withValues(alpha: 0.18),
-      frameColor: Colors.white.withValues(alpha: 0.24),
-      panelColor: Colors.black.withValues(alpha: 0.22),
-      monogramColor: Colors.white.withValues(alpha: 0.1),
-      titleColor: Colors.white,
-      secondaryTextColor: Colors.white.withValues(alpha: 0.9),
-      tagBackgroundColor: Colors.black.withValues(alpha: 0.26),
-      tagTextColor: Colors.white.withValues(alpha: 0.96),
-    );
+  static String _safeFileName(String value) {
+    final safe = value
+        .replaceAll(RegExp(r'[<>:"/\\|?*\x00-\x1F]'), '_')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+    return safe.isEmpty ? 'book' : safe.substring(0, safe.length.clamp(0, 80));
   }
 }
 
-/// 配色方案
-class _ColorScheme {
-  final List<Color> gradientColors;
-  final Color glowColor;
-  final Color spineColor;
-  final Color frameColor;
-  final Color panelColor;
-  final Color monogramColor;
-  final Color titleColor;
-  final Color secondaryTextColor;
-  final Color tagBackgroundColor;
-  final Color tagTextColor;
+/// 可供图片生成器与 Flutter UI 共同复用的封面绘制器。
+class GeneratedBookCoverPainter extends CustomPainter {
+  GeneratedBookCoverPainter({required String title, required String author})
+      : title = _normalizeTitle(title),
+        author = _normalizeAuthor(author),
+        palette = GeneratedBookCoverPalette.resolve(title, author);
 
-  _ColorScheme({
-    required this.gradientColors,
-    required this.glowColor,
-    required this.spineColor,
-    required this.frameColor,
-    required this.panelColor,
-    required this.monogramColor,
-    required this.titleColor,
-    required this.secondaryTextColor,
-    required this.tagBackgroundColor,
-    required this.tagTextColor,
+  final String title;
+  final String author;
+  final GeneratedBookCoverPalette palette;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final bounds = Offset.zero & size;
+    canvas.drawRect(bounds, Paint()..color = palette.background);
+
+    // 克制的装饰元素：只保留细书脊与短横线。
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, size.width * 0.045, size.height),
+      Paint()..color = palette.accent,
+    );
+    canvas.drawRect(
+      Rect.fromLTWH(
+        size.width * 0.14,
+        size.height * 0.115,
+        size.width * 0.18,
+        size.height * 0.012,
+      ),
+      Paint()..color = palette.accent,
+    );
+    _paintText(
+      canvas: canvas,
+      rect: Rect.fromLTWH(
+        size.width * 0.14,
+        size.height * 0.235,
+        size.width * 0.72,
+        size.height * 0.47,
+      ),
+      text: title,
+      fontSize: _titleFontSize(title, size.width),
+      maxLines: 4,
+      color: palette.foreground,
+      fontWeight: FontWeight.w700,
+      textAlign: TextAlign.left,
+      height: 1.2,
+      verticallyCenter: true,
+    );
+
+    if (author.isNotEmpty) {
+      canvas.drawLine(
+        Offset(size.width * 0.14, size.height * 0.79),
+        Offset(size.width * 0.45, size.height * 0.79),
+        Paint()
+          ..color = palette.accent
+          ..strokeWidth = (size.width * 0.006).clamp(1, 3),
+      );
+      _paintText(
+        canvas: canvas,
+        rect: Rect.fromLTWH(
+          size.width * 0.14,
+          size.height * 0.82,
+          size.width * 0.72,
+          size.height * 0.1,
+        ),
+        text: author,
+        fontSize: size.width * 0.052,
+        maxLines: 1,
+        color: palette.secondaryForeground,
+        fontWeight: FontWeight.w500,
+        textAlign: TextAlign.left,
+        height: 1.1,
+        verticallyCenter: true,
+      );
+    }
+
+    canvas.drawRect(
+      bounds.deflate((size.width * 0.018).clamp(1, 5)),
+      Paint()
+        ..color = palette.border
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = (size.width * 0.004).clamp(0.8, 2),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant GeneratedBookCoverPainter oldDelegate) {
+    return oldDelegate.title != title || oldDelegate.author != author;
+  }
+}
+
+@immutable
+class GeneratedBookCoverPalette {
+  const GeneratedBookCoverPalette({
+    required this.background,
+    required this.foreground,
+    required this.secondaryForeground,
+    required this.accent,
+    required this.border,
   });
+
+  final Color background;
+  final Color foreground;
+  final Color secondaryForeground;
+  final Color accent;
+  final Color border;
+
+  static const values = <GeneratedBookCoverPalette>[
+    GeneratedBookCoverPalette(
+      background: Color(0xFFF2EBDD),
+      foreground: Color(0xFF25231F),
+      secondaryForeground: Color(0xFF625C52),
+      accent: Color(0xFFB5523C),
+      border: Color(0x3325231F),
+    ),
+    GeneratedBookCoverPalette(
+      background: Color(0xFFE8EEF0),
+      foreground: Color(0xFF1E2A30),
+      secondaryForeground: Color(0xFF56666D),
+      accent: Color(0xFF3F7180),
+      border: Color(0x331E2A30),
+    ),
+    GeneratedBookCoverPalette(
+      background: Color(0xFFEAE9E1),
+      foreground: Color(0xFF24271F),
+      secondaryForeground: Color(0xFF5E6354),
+      accent: Color(0xFF63724B),
+      border: Color(0x3324271F),
+    ),
+    GeneratedBookCoverPalette(
+      background: Color(0xFFF0E8EC),
+      foreground: Color(0xFF2C2228),
+      secondaryForeground: Color(0xFF695760),
+      accent: Color(0xFF8A526B),
+      border: Color(0x332C2228),
+    ),
+    GeneratedBookCoverPalette(
+      background: Color(0xFFE9E7F0),
+      foreground: Color(0xFF262331),
+      secondaryForeground: Color(0xFF5D586D),
+      accent: Color(0xFF66588E),
+      border: Color(0x33262331),
+    ),
+    GeneratedBookCoverPalette(
+      background: Color(0xFFF1E9DF),
+      foreground: Color(0xFF2B241E),
+      secondaryForeground: Color(0xFF6A5D51),
+      accent: Color(0xFF9A673D),
+      border: Color(0x332B241E),
+    ),
+  ];
+
+  static GeneratedBookCoverPalette resolve(String title, String author) {
+    final seed = '${_normalizeTitle(title)}|${_normalizeAuthor(author)}';
+    return values[_stableHash(seed) % values.length];
+  }
+}
+
+void _paintText({
+  required Canvas canvas,
+  required Rect rect,
+  required String text,
+  required double fontSize,
+  required int maxLines,
+  required Color color,
+  required FontWeight fontWeight,
+  required TextAlign textAlign,
+  double height = 1.0,
+  bool verticallyCenter = false,
+}) {
+  final painter = TextPainter(
+    text: TextSpan(
+      text: text,
+      style: TextStyle(
+        fontFamily: 'SourceHanSansCN',
+        fontSize: fontSize,
+        fontWeight: fontWeight,
+        color: color,
+        height: height,
+      ),
+    ),
+    textDirection: TextDirection.ltr,
+    textAlign: textAlign,
+    maxLines: maxLines,
+    ellipsis: '…',
+  )..layout(maxWidth: rect.width);
+
+  final dy = verticallyCenter
+      ? rect.top + ((rect.height - painter.height) / 2).clamp(0, rect.height)
+      : rect.top;
+  painter.paint(canvas, Offset(rect.left, dy));
+}
+
+String _normalizeTitle(String title) {
+  final normalized = title.trim().replaceAll(RegExp(r'\s+'), ' ');
+  if (normalized.isEmpty) return '未命名';
+  return normalized.runes.length <= 72
+      ? normalized
+      : '${String.fromCharCodes(normalized.runes.take(72))}…';
+}
+
+String _normalizeAuthor(String author) {
+  final normalized = author.trim().replaceAll(RegExp(r'\s+'), ' ');
+  final lower = normalized.toLowerCase();
+  if (normalized.isEmpty ||
+      lower == 'unknown' ||
+      lower == 'unknown author' ||
+      lower == 'null' ||
+      lower == 'none' ||
+      normalized == '未知' ||
+      normalized == '未知作者') {
+    return '';
+  }
+  return normalized.runes.length <= 28
+      ? normalized
+      : '${String.fromCharCodes(normalized.runes.take(28))}…';
+}
+
+double _titleFontSize(String title, double width) {
+  final length = title.runes.length;
+  final scale = switch (length) {
+    <= 8 => 0.14,
+    <= 16 => 0.115,
+    <= 28 => 0.09,
+    <= 44 => 0.075,
+    _ => 0.065,
+  };
+  return width * scale;
+}
+
+int _stableHash(String value) {
+  var hash = 0x811C9DC5;
+  for (final byte in value.codeUnits) {
+    hash ^= byte;
+    hash = (hash * 0x01000193) & 0x7FFFFFFF;
+  }
+  return hash;
 }

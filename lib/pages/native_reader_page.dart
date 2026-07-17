@@ -23,6 +23,7 @@ import 'package:xxread/core/reader/reader_margin_settings.dart';
 import 'package:xxread/core/reader/reader_safe_area.dart';
 import 'package:xxread/core/reader/reader_settings.dart';
 import 'package:xxread/core/reader/reader_system_ui.dart';
+import 'package:xxread/core/reader/reader_volume_key_controller.dart';
 import 'package:xxread/models/book.dart';
 import 'package:xxread/models/bookmark.dart';
 import 'package:xxread/services/books/book_dao.dart';
@@ -34,6 +35,7 @@ import 'package:xxread/services/reading/reading_stats_dao.dart';
 import '../utils/font_catalog_helper.dart';
 import '../utils/localization_extension.dart';
 import '../utils/reader_themes.dart';
+import '../utils/system_ui_helper.dart';
 import '../widgets/reader_shader_page_curl.dart';
 import '../widgets/reader_control_chrome.dart';
 import '../widgets/reader_navigation_sheet.dart';
@@ -116,6 +118,9 @@ class _NativeReaderPageState extends State<NativeReaderPage>
   DateTime? _readingSessionStartedAt;
   int _sessionPagesRead = 0;
   bool _allowPop = false;
+  List<_ReaderPageData> _visiblePages = const [];
+  int _visibleChapterCount = 0;
+  bool _visibleUsesTwoPageLayout = false;
 
   @override
   void initState() {
@@ -150,6 +155,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     if (state == AppLifecycleState.resumed) {
       _startReadingSession();
       if (_readerSystemUiApplied) unawaited(_applyReaderSystemUi());
+      if (_readerSettingsLoaded) unawaited(_syncVolumeKeyPaging());
       return;
     }
     if (state == AppLifecycleState.inactive ||
@@ -273,6 +279,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     _chapterScrollController.dispose();
     _continuousScrollController.dispose();
     _verticalScrollProgress.dispose();
+    unawaited(ReaderVolumeKeyController.deactivate(this));
     unawaited(ReaderSystemUiController.restore());
     super.dispose();
   }
@@ -299,10 +306,43 @@ class _NativeReaderPageState extends State<NativeReaderPage>
         _readerThemeId = ReaderThemes.byId(settings.themeId).id;
         _readerSettingsLoaded = true;
       });
+      unawaited(_syncVolumeKeyPaging());
     } catch (error, stackTrace) {
       debugPrint('Reader settings failed to load: $error');
       debugPrintStack(stackTrace: stackTrace);
-      if (mounted) setState(() => _readerSettingsLoaded = true);
+      if (mounted) {
+        setState(() => _readerSettingsLoaded = true);
+        unawaited(_syncVolumeKeyPaging());
+      }
+    }
+  }
+
+  Future<void> _syncVolumeKeyPaging() => ReaderVolumeKeyController.activate(
+        owner: this,
+        pageTurningAvailable: _pageMode != NativePageMode.verticalScroll,
+        onNextPage: () => _handleVolumePageTurn(forward: true),
+        onPreviousPage: () => _handleVolumePageTurn(forward: false),
+      );
+
+  void _handleVolumePageTurn({required bool forward}) {
+    if (!mounted ||
+        _pageMode == NativePageMode.verticalScroll ||
+        _visiblePages.isEmpty ||
+        _visibleChapterCount <= 0) {
+      return;
+    }
+    if (forward) {
+      _nextPage(
+        _visiblePages,
+        _visibleChapterCount,
+        usesTwoPageLayout: _visibleUsesTwoPageLayout,
+      );
+    } else {
+      _previousPage(
+        _visiblePages,
+        _visibleChapterCount,
+        usesTwoPageLayout: _visibleUsesTwoPageLayout,
+      );
     }
   }
 
@@ -482,6 +522,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
       _horizontalLastChapter = _chapterIndex + 1;
       _controlsVisible = false;
     });
+    unawaited(_syncVolumeKeyPaging());
     await _readerSettingsStore.save(_readerSettings);
   }
 
@@ -1750,219 +1791,234 @@ class _NativeReaderPageState extends State<NativeReaderPage>
 
   @override
   Widget build(BuildContext context) {
+    final systemUiOverlayStyle =
+        SystemUiHelper.overlayStyleForBackground(_readerTheme.background);
     if (!_readerSettingsLoaded || !_readerSystemUiApplied) {
-      return const ColoredBox(
-        color: Color(0xFFFAF8F3),
-        child: SizedBox.expand(),
+      return AnnotatedRegion<SystemUiOverlayStyle>(
+        key: const ValueKey('reader-system-ui-region'),
+        value: systemUiOverlayStyle,
+        child: const ColoredBox(
+          color: Color(0xFFFAF8F3),
+          child: SizedBox.expand(),
+        ),
       );
     }
-    return PopScope(
-      canPop: _allowPop,
-      onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) unawaited(_exitReader());
-      },
-      child: Theme(
-        data: _readerThemeData,
-        child: FutureBuilder<List<_NativeChapter>>(
-          future: _chaptersFuture,
-          builder: (context, snapshot) {
-            if (snapshot.hasError) {
-              return Scaffold(
-                appBar: AppBar(title: Text(widget.book.title)),
-                body: Center(
-                    child: Text(context.l10n
-                        .readerOpenFailed(snapshot.error.toString()))),
-              );
-            }
-            final chapters = snapshot.data;
-            if (chapters == null) {
-              return const Scaffold(
-                body: Center(child: CircularProgressIndicator()),
-              );
-            }
-            if (chapters.isEmpty) {
-              return Scaffold(
-                  body: Center(child: Text(context.l10n.readerNoContent)));
-            }
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      key: const ValueKey('reader-system-ui-region'),
+      value: systemUiOverlayStyle,
+      child: PopScope(
+        canPop: _allowPop,
+        onPopInvokedWithResult: (didPop, _) {
+          if (!didPop) unawaited(_exitReader());
+        },
+        child: Theme(
+          data: _readerThemeData,
+          child: FutureBuilder<List<_NativeChapter>>(
+            future: _chaptersFuture,
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return Scaffold(
+                  appBar: AppBar(title: Text(widget.book.title)),
+                  body: Center(
+                      child: Text(context.l10n
+                          .readerOpenFailed(snapshot.error.toString()))),
+                );
+              }
+              final chapters = snapshot.data;
+              if (chapters == null) {
+                return const Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
+                );
+              }
+              if (chapters.isEmpty) {
+                return Scaffold(
+                    body: Center(child: Text(context.l10n.readerNoContent)));
+              }
 
-            _chapterIndex = _chapterIndex.clamp(0, chapters.length - 1);
-            final chapter = chapters[_chapterIndex];
-            return Scaffold(
-              body: LayoutBuilder(
-                builder: (context, constraints) {
-                  final size = constraints.biggest;
-                  final usesTwoPageLayout = _usesTwoPageLayout(size);
-                  final paginationSize = _paginationSize(
-                    size,
-                    usesTwoPageLayout,
-                  );
-                  final pages = _pagesFor(
-                    chapter,
-                    _chapterIndex,
-                    paginationSize,
-                    Directionality.of(context),
-                    MediaQuery.textScalerOf(context),
-                  );
-                  final bookPages =
-                      _pageMode == NativePageMode.horizontalSlide ||
-                              _pageMode == NativePageMode.pageCurl
-                          ? _bookPagesFor(
-                              chapters,
-                              _horizontalFirstChapter,
-                              _horizontalLastChapter,
-                              paginationSize,
-                              Directionality.of(context),
-                              MediaQuery.textScalerOf(context),
-                            )
-                          : const <_BookPageRef>[];
-                  if (_openPreviousChapterAtLastPage) {
-                    _pageIndex = usesTwoPageLayout &&
-                            _pageMode == NativePageMode.instantPage
-                        ? _spreadStartForPage(pages.length - 1)
-                        : pages.length - 1;
-                    _openPreviousChapterAtLastPage = false;
-                  }
-                  _pageIndex = _pageIndex.clamp(0, pages.length - 1);
-                  if (usesTwoPageLayout &&
-                      _pageMode == NativePageMode.instantPage) {
-                    _pageIndex = _spreadStartForPage(_pageIndex);
-                  }
-                  if (_pageMode != NativePageMode.verticalScroll &&
-                      _restoreAnchorAfterLayout &&
-                      _anchorOffset != null) {
-                    final anchor = _anchorOffset!;
-                    final restoredIndex = pages.indexWhere(
-                      (page) =>
-                          anchor >= page.startOffset && anchor < page.endOffset,
+              _chapterIndex = _chapterIndex.clamp(0, chapters.length - 1);
+              final chapter = chapters[_chapterIndex];
+              return Scaffold(
+                body: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final size = constraints.biggest;
+                    final usesTwoPageLayout = _usesTwoPageLayout(size);
+                    final paginationSize = _paginationSize(
+                      size,
+                      usesTwoPageLayout,
                     );
-                    if (restoredIndex >= 0) _pageIndex = restoredIndex;
+                    final pages = _pagesFor(
+                      chapter,
+                      _chapterIndex,
+                      paginationSize,
+                      Directionality.of(context),
+                      MediaQuery.textScalerOf(context),
+                    );
+                    _visiblePages = pages;
+                    _visibleChapterCount = chapters.length;
+                    _visibleUsesTwoPageLayout = usesTwoPageLayout;
+                    final bookPages =
+                        _pageMode == NativePageMode.horizontalSlide ||
+                                _pageMode == NativePageMode.pageCurl
+                            ? _bookPagesFor(
+                                chapters,
+                                _horizontalFirstChapter,
+                                _horizontalLastChapter,
+                                paginationSize,
+                                Directionality.of(context),
+                                MediaQuery.textScalerOf(context),
+                              )
+                            : const <_BookPageRef>[];
+                    if (_openPreviousChapterAtLastPage) {
+                      _pageIndex = usesTwoPageLayout &&
+                              _pageMode == NativePageMode.instantPage
+                          ? _spreadStartForPage(pages.length - 1)
+                          : pages.length - 1;
+                      _openPreviousChapterAtLastPage = false;
+                    }
+                    _pageIndex = _pageIndex.clamp(0, pages.length - 1);
                     if (usesTwoPageLayout &&
                         _pageMode == NativePageMode.instantPage) {
                       _pageIndex = _spreadStartForPage(_pageIndex);
                     }
-                    _restoreAnchorAfterLayout = false;
-                  }
-                  if (_pageMode != NativePageMode.verticalScroll) {
-                    final locationKey = '$_chapterIndex:$_pageIndex:'
-                        '${pages[_pageIndex].startOffset}';
-                    if (_lastSavedLocation != locationKey) {
-                      _lastSavedLocation = locationKey;
-                      final pageToSave = pages[_pageIndex];
-                      final chapterToSave = chapter;
-                      final chapterIndexToSave = _chapterIndex;
+                    if (_pageMode != NativePageMode.verticalScroll &&
+                        _restoreAnchorAfterLayout &&
+                        _anchorOffset != null) {
+                      final anchor = _anchorOffset!;
+                      final restoredIndex = pages.indexWhere(
+                        (page) =>
+                            anchor >= page.startOffset &&
+                            anchor < page.endOffset,
+                      );
+                      if (restoredIndex >= 0) _pageIndex = restoredIndex;
+                      if (usesTwoPageLayout &&
+                          _pageMode == NativePageMode.instantPage) {
+                        _pageIndex = _spreadStartForPage(_pageIndex);
+                      }
+                      _restoreAnchorAfterLayout = false;
+                    }
+                    if (_pageMode != NativePageMode.verticalScroll) {
+                      final locationKey = '$_chapterIndex:$_pageIndex:'
+                          '${pages[_pageIndex].startOffset}';
+                      if (_lastSavedLocation != locationKey) {
+                        _lastSavedLocation = locationKey;
+                        final pageToSave = pages[_pageIndex];
+                        final chapterToSave = chapter;
+                        final chapterIndexToSave = _chapterIndex;
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          _saveCanonicalProgress(
+                            chapterToSave,
+                            pageToSave,
+                            chapterIndexToSave,
+                          );
+                        });
+                      }
+                    }
+                    if (_pageMode == NativePageMode.horizontalSlide) {
+                      final targetPage = bookPages.indexWhere(
+                        (page) =>
+                            page.chapterIndex == _chapterIndex &&
+                            page.pageIndex == _pageIndex,
+                      );
+                      final targetControllerPage =
+                          usesTwoPageLayout ? targetPage ~/ 2 : targetPage;
                       WidgetsBinding.instance.addPostFrameCallback((_) {
-                        _saveCanonicalProgress(
-                          chapterToSave,
-                          pageToSave,
-                          chapterIndexToSave,
-                        );
+                        if (!_pageController.hasClients) return;
+                        final current = _pageController.page?.round();
+                        if (targetPage >= 0 &&
+                            current != targetControllerPage) {
+                          _pageController.jumpToPage(targetControllerPage);
+                        }
                       });
                     }
-                  }
-                  if (_pageMode == NativePageMode.horizontalSlide) {
-                    final targetPage = bookPages.indexWhere(
-                      (page) =>
-                          page.chapterIndex == _chapterIndex &&
-                          page.pageIndex == _pageIndex,
+
+                    final bookmarkPage = _bookmarkPageFor(pages);
+                    final currentBookmarkAnchorKey =
+                        _bookmarkAnchorKey(chapter, bookmarkPage);
+                    final currentPageIsBookmarked = _bookmarks.any(
+                      (bookmark) =>
+                          bookmark.anchorKey == currentBookmarkAnchorKey,
                     );
-                    final targetControllerPage =
-                        usesTwoPageLayout ? targetPage ~/ 2 : targetPage;
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      if (!_pageController.hasClients) return;
-                      final current = _pageController.page?.round();
-                      if (targetPage >= 0 && current != targetControllerPage) {
-                        _pageController.jumpToPage(targetControllerPage);
-                      }
-                    });
-                  }
 
-                  final bookmarkPage = _bookmarkPageFor(pages);
-                  final currentBookmarkAnchorKey =
-                      _bookmarkAnchorKey(chapter, bookmarkPage);
-                  final currentPageIsBookmarked = _bookmarks.any(
-                    (bookmark) =>
-                        bookmark.anchorKey == currentBookmarkAnchorKey,
-                  );
-
-                  return Stack(
-                    children: [
-                      Positioned.fill(
-                        child: Listener(
-                          behavior: HitTestBehavior.translucent,
-                          onPointerDown: _onPointerDown,
-                          onPointerMove: _onPointerMove,
-                          onPointerCancel: _onPointerCancel,
-                          onPointerUp: (event) => _onPointerUp(
-                            event,
-                            size.width,
-                            pages,
-                            chapters.length,
-                            usesTwoPageLayout,
-                          ),
-                          child: GestureDetector(
+                    return Stack(
+                      children: [
+                        Positioned.fill(
+                          child: Listener(
                             behavior: HitTestBehavior.translucent,
-                            onHorizontalDragEnd:
-                                _pageMode == NativePageMode.horizontalSlide ||
-                                        _pageMode == NativePageMode.pageCurl
-                                    ? null
-                                    : (details) => _handleHorizontalSwipe(
-                                          details,
-                                          pages,
-                                          chapters.length,
-                                          usesTwoPageLayout,
-                                        ),
-                            child: _buildReaderContent(
-                              chapters,
-                              chapter,
+                            onPointerDown: _onPointerDown,
+                            onPointerMove: _onPointerMove,
+                            onPointerCancel: _onPointerCancel,
+                            onPointerUp: (event) => _onPointerUp(
+                              event,
+                              size.width,
                               pages,
-                              bookPages,
+                              chapters.length,
                               usesTwoPageLayout,
+                            ),
+                            child: GestureDetector(
+                              behavior: HitTestBehavior.translucent,
+                              onHorizontalDragEnd:
+                                  _pageMode == NativePageMode.horizontalSlide ||
+                                          _pageMode == NativePageMode.pageCurl
+                                      ? null
+                                      : (details) => _handleHorizontalSwipe(
+                                            details,
+                                            pages,
+                                            chapters.length,
+                                            usesTwoPageLayout,
+                                          ),
+                              child: _buildReaderContent(
+                                chapters,
+                                chapter,
+                                pages,
+                                bookPages,
+                                usesTwoPageLayout,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      ReaderChromeOverlay(
-                        palette: _readerTheme,
-                        visible: _controlsVisible,
-                        title: chapter.title.isEmpty
-                            ? widget.book.title
-                            : chapter.title,
-                        statusBottom: _readerSafeArea.pageNumberBottom,
-                        statusBuilder: (context, style, key) =>
-                            _buildReaderStatusText(
-                          pages: pages,
-                          chapterCount: chapters.length,
-                          style: style,
-                          key: key,
-                        ),
-                        onBack: () => unawaited(_exitReader()),
-                        onBookmark: () => unawaited(
-                          _toggleBookmark(chapter, bookmarkPage),
-                        ),
-                        onTableOfContents: () => unawaited(
-                          _showTableOfContents(
-                            chapters,
-                            currentAnchorKey: currentBookmarkAnchorKey,
+                        ReaderChromeOverlay(
+                          palette: _readerTheme,
+                          visible: _controlsVisible,
+                          title: chapter.title.isEmpty
+                              ? widget.book.title
+                              : chapter.title,
+                          statusBottom: _readerSafeArea.pageNumberBottom,
+                          statusBuilder: (context, style, key) =>
+                              _buildReaderStatusText(
+                            pages: pages,
+                            chapterCount: chapters.length,
+                            style: style,
+                            key: key,
                           ),
+                          onBack: () => unawaited(_exitReader()),
+                          onBookmark: () => unawaited(
+                            _toggleBookmark(chapter, bookmarkPage),
+                          ),
+                          onTableOfContents: () => unawaited(
+                            _showTableOfContents(
+                              chapters,
+                              currentAnchorKey: currentBookmarkAnchorKey,
+                            ),
+                          ),
+                          onSettings: _showReadingSettings,
+                          backTooltip: MaterialLocalizations.of(context)
+                              .backButtonTooltip,
+                          bookmarkTooltip: currentPageIsBookmarked
+                              ? context.l10n.bookmarkRemoved
+                              : context.l10n.readerAddBookmark,
+                          tableOfContentsTooltip: context.l10n.readerToolbarTOC,
+                          settingsTooltip: context.l10n.readingSettings,
+                          bookmarked: currentPageIsBookmarked,
+                          bookmarkBusy: _bookmarkBusy,
+                          statusKey: const ValueKey('native-reader-status'),
                         ),
-                        onSettings: _showReadingSettings,
-                        backTooltip:
-                            MaterialLocalizations.of(context).backButtonTooltip,
-                        bookmarkTooltip: currentPageIsBookmarked
-                            ? context.l10n.bookmarkRemoved
-                            : context.l10n.readerAddBookmark,
-                        tableOfContentsTooltip: context.l10n.readerToolbarTOC,
-                        settingsTooltip: context.l10n.readingSettings,
-                        bookmarked: currentPageIsBookmarked,
-                        bookmarkBusy: _bookmarkBusy,
-                        statusKey: const ValueKey('native-reader-status'),
-                      ),
-                    ],
-                  );
-                },
-              ),
-            );
-          },
+                      ],
+                    );
+                  },
+                ),
+              );
+            },
+          ),
         ),
       ),
     );

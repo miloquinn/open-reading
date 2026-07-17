@@ -12,8 +12,13 @@ import 'package:xxread/services/books/book_dao.dart';
 void main() {
   test('adds a source book as an online shelf record without a local file',
       () async {
+    final directory = await Directory.systemTemp.createTemp('source-shelf-');
+    addTearDown(() => directory.delete(recursive: true));
     final dao = _MemoryBookDao();
-    final service = BookSourceShelfService(bookDao: dao);
+    final service = BookSourceShelfService(
+      bookDao: dao,
+      downloadDirectory: directory,
+    );
     final added = await service.addOnline(
       source: _source,
       book: _sourceBook,
@@ -25,6 +30,8 @@ void main() {
 
     expect(added.isOnline, isTrue);
     expect(added.filePath, isEmpty);
+    expect(added.coverImagePath, isNotNull);
+    expect(await File(added.coverImagePath!).exists(), isTrue);
     expect(added.sourceId, _source.id);
     expect(service.sourceFrom(added).apiBaseUrl, _source.apiBaseUrl);
     expect(service.sourceBookFrom(added).title, _sourceBook.title);
@@ -56,8 +63,32 @@ void main() {
     expect(progress.last, (7, 7));
     expect(downloaded.isOnline, isFalse);
     expect(await File(downloaded.filePath).exists(), isTrue);
+    expect(downloaded.coverImagePath, isNotNull);
+    expect(await File(downloaded.coverImagePath!).exists(), isTrue);
     final text = await File(downloaded.filePath).readAsString();
     expect(text.indexOf('正文0'), lessThan(text.indexOf('正文6')));
+  });
+
+  test('keeps a source-provided cover instead of generating a replacement',
+      () async {
+    final directory = await Directory.systemTemp.createTemp('source-cover-');
+    addTearDown(() => directory.delete(recursive: true));
+    final dao = _MemoryBookDao();
+    final service = BookSourceShelfService(
+      bookDao: dao,
+      downloadDirectory: directory,
+    );
+
+    final added = await service.addOnline(
+      source: _source,
+      book: _sourceBookWithCover,
+    );
+
+    expect(added.coverImagePath, isNull);
+    expect(
+      service.sourceBookFrom(added).coverUrl,
+      _sourceBookWithCover.coverUrl,
+    );
   });
 }
 
@@ -80,6 +111,15 @@ const _sourceBook = BookSourceBook(
   author: '作者',
   description: '简介',
   categories: [],
+);
+
+final _sourceBookWithCover = BookSourceBook(
+  id: 'book-with-cover',
+  title: '有封面的书',
+  author: '作者',
+  description: '简介',
+  coverUrl: Uri.parse('https://example.org/cover.jpg'),
+  categories: const [],
 );
 
 class _MemoryBookDao extends BookDao {

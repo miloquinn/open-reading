@@ -3,6 +3,7 @@
 
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -16,7 +17,12 @@ import 'package:xxread/utils/system_ui_helper.dart';
 import 'package:xxread/widgets/side_toast.dart';
 
 class ImportBookPage extends StatefulWidget {
-  const ImportBookPage({super.key});
+  const ImportBookPage({
+    super.key,
+    this.initialSources = const [],
+  });
+
+  final List<BookImportSource> initialSources;
 
   @override
   State<ImportBookPage> createState() => _ImportBookPageState();
@@ -41,6 +47,7 @@ class _ImportBookPageState extends State<ImportBookPage> {
       importer: BookImportService(),
       sourcePreparer: _sourceService,
     );
+    _controller.addSources(widget.initialSources);
     if (!kIsWeb && Platform.isIOS) {
       unawaited(_loadICloudAvailability());
     }
@@ -116,83 +123,211 @@ class _ImportBookPageState extends State<ImportBookPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final mediaQuery = _sanitizedMediaQuery(MediaQuery.of(context));
     final overlayStyle = SystemUiHelper.overlayStyleForBrightness(
       theme.brightness,
     );
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: overlayStyle,
-      child: AnimatedBuilder(
-        animation: _controller,
-        builder: (context, _) {
-          return PopScope(
-            canPop: !_controller.isRunning,
-            onPopInvokedWithResult: (didPop, _) {
-              if (!didPop && !_controller.isRunning) {
-                unawaited(_requestExit());
-              }
-            },
-            child: Scaffold(
-              // Some Android document pickers can leave a stale IME inset
-              // behind when returning to Flutter. This page has no text input,
-              // so resizing for that inset only risks pushing the import action
-              // bar into the status bar.
-              resizeToAvoidBottomInset: false,
-              backgroundColor: scheme.surface,
-              appBar: AppBar(
+      child: MediaQuery(
+        data: mediaQuery,
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, _) {
+            return PopScope(
+              canPop: !_controller.isRunning,
+              onPopInvokedWithResult: (didPop, _) {
+                if (!didPop && !_controller.isRunning) {
+                  unawaited(_requestExit());
+                }
+              },
+              child: Scaffold(
+                // This page has no text input. File pickers on a few Android
+                // variants can return stale keyboard/window insets, so the page
+                // owns a stable safe-area layout instead of using Scaffold's
+                // bottomNavigationBar slot.
+                resizeToAvoidBottomInset: false,
                 backgroundColor: scheme.surface,
-                scrolledUnderElevation: 0,
-                title: Text(context.l10n.importBooks),
-              ),
-              body: SafeArea(
-                bottom: false,
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final sourcePanel = _buildSourcePanel();
-                    final queue = _buildQueuePane();
-                    if (constraints.maxWidth >= 840) {
-                      return Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            SizedBox(
-                              width: 330,
-                              child: SingleChildScrollView(child: sourcePanel),
-                            ),
-                            const SizedBox(width: 24),
-                            Expanded(child: queue),
-                          ],
+                body: SafeArea(
+                  bottom: false,
+                  child: Column(
+                    children: [
+                      _buildPageHeader(),
+                      Expanded(
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            if (constraints.maxWidth >= 840) {
+                              return _buildWideLayout();
+                            }
+                            return _buildCompactLayout();
+                          },
                         ),
-                      );
-                    }
-                    return Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-                      child: Column(
-                        children: [
-                          sourcePanel,
-                          const SizedBox(height: 18),
-                          Expanded(child: queue),
-                        ],
                       ),
-                    );
-                  },
+                      if (_buildBottomBar() case final bottomBar?) bottomBar,
+                    ],
+                  ),
                 ),
               ),
-              bottomNavigationBar: _buildBottomBar(),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
 
-  Widget _buildSourcePanel() {
+  MediaQueryData _sanitizedMediaQuery(MediaQueryData mediaQuery) {
+    double clampInset(double value, double maximum) =>
+        math.min(math.max(value, 0), maximum);
+
+    EdgeInsets clampPadding(EdgeInsets padding) => EdgeInsets.fromLTRB(
+          clampInset(padding.left, 96),
+          clampInset(padding.top, 96),
+          clampInset(padding.right, 96),
+          clampInset(padding.bottom, 64),
+        );
+
+    return mediaQuery.copyWith(
+      padding: clampPadding(mediaQuery.padding),
+      viewPadding: clampPadding(mediaQuery.viewPadding),
+      viewInsets: EdgeInsets.zero,
+    );
+  }
+
+  Widget _buildPageHeader() {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Container(
+      key: const ValueKey('import-page-header'),
+      height: 64,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        border: Border(
+          bottom: BorderSide(
+            color: scheme.outlineVariant.withValues(alpha: 0.55),
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+            onPressed: _controller.isRunning ? null : _requestExit,
+            icon: const Icon(Icons.arrow_back_rounded),
+          ),
+          const SizedBox(width: 4),
+          Expanded(
+            child: Text(
+              context.l10n.importBooks,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWideLayout() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            width: 330,
+            child: SingleChildScrollView(child: _buildSourcePanel()),
+          ),
+          const SizedBox(width: 28),
+          Expanded(child: _buildQueuePane()),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompactLayout() {
+    if (_controller.totalCount == 0) {
+      return SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(16, 18, 16, 28),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildSourcePanel(),
+            const SizedBox(height: 28),
+            ImportQueueEmptyState(
+              title: context.l10n.importQueueEmptyTitle,
+              body: context.l10n.importQueueEmptyBody,
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 12),
+      child: _buildQueuePane(onAddMore: _showSourcePicker),
+    );
+  }
+
+  Future<void> _showSourcePicker() async {
+    if (_controller.isRunning) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: false,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return MediaQuery(
+          data: _sanitizedMediaQuery(MediaQuery.of(sheetContext)),
+          child: SafeArea(
+            top: false,
+            child: DraggableScrollableSheet(
+              expand: false,
+              initialChildSize: 0.78,
+              minChildSize: 0.5,
+              maxChildSize: 0.94,
+              builder: (context, scrollController) {
+                return Material(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(28),
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: ListView(
+                    controller: scrollController,
+                    padding: const EdgeInsets.fromLTRB(16, 20, 16, 28),
+                    children: [
+                      _buildSourcePanel(dismissContext: sheetContext),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSourcePanel({BuildContext? dismissContext}) {
+    VoidCallback? sourceAction(VoidCallback? action) {
+      if (action == null) return null;
+      if (dismissContext == null) return action;
+      return () {
+        Navigator.of(dismissContext).pop();
+        action();
+      };
+    }
+
     final actions = <ImportSourceAction>[
       ImportSourceAction(
         icon: Icons.file_open_rounded,
         label: context.l10n.importSelectFiles,
-        onPressed: () => _discover(_sourceService.pickFiles),
+        onPressed: sourceAction(() => _discover(_sourceService.pickFiles)),
       ),
     ];
     if (!kIsWeb && Platform.isIOS) {
@@ -200,13 +335,17 @@ class _ImportBookPageState extends State<ImportBookPage> {
         ImportSourceAction(
           icon: Icons.phone_iphone_rounded,
           label: context.l10n.importIosSharedDocuments,
-          onPressed: () => _discover(_sourceService.scanIosSharedDocuments),
+          onPressed: sourceAction(
+            () => _discover(_sourceService.scanIosSharedDocuments),
+          ),
         ),
         if (_iCloudAvailable == true)
           ImportSourceAction(
             icon: Icons.cloud_outlined,
             label: context.l10n.importICloudDrive,
-            onPressed: () => _discover(_sourceService.scanICloudDocuments),
+            onPressed: sourceAction(
+              () => _discover(_sourceService.scanICloudDocuments),
+            ),
           )
         else if (_iCloudAvailable == false)
           ImportSourceAction(
@@ -221,13 +360,14 @@ class _ImportBookPageState extends State<ImportBookPage> {
         ImportSourceAction(
           icon: Icons.create_new_folder_outlined,
           label: context.l10n.importAndroidFolder,
-          onPressed: _pickAndroidFolder,
+          onPressed: sourceAction(_pickAndroidFolder),
         ),
         ImportSourceAction(
           icon: Icons.folder_copy_outlined,
           label: context.l10n.importAndroidRescan,
-          onPressed: () =>
-              _discover(_androidFolderRegistry.scanRegisteredDirectories),
+          onPressed: sourceAction(
+            () => _discover(_androidFolderRegistry.scanRegisteredDirectories),
+          ),
         ),
       ]);
     }
@@ -247,18 +387,20 @@ class _ImportBookPageState extends State<ImportBookPage> {
               available: folder.permissionAvailable,
               removeTooltip: context.l10n.importRemoveFolder,
               onScan: folder.permissionAvailable
-                  ? () => _discover(
+                  ? sourceAction(
+                      () => _discover(
                         () => _sourceService.scanAndroidTree(folder.treeUri),
-                      )
+                      ),
+                    )
                   : null,
-              onRemove: () => _removeAndroidFolder(folder),
+              onRemove: sourceAction(() => _removeAndroidFolder(folder)),
             ),
           )
           .toList(growable: false),
     );
   }
 
-  Widget _buildQueuePane() {
+  Widget _buildQueuePane({VoidCallback? onAddMore}) {
     final items = _controller.items;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -275,6 +417,12 @@ class _ImportBookPageState extends State<ImportBookPage> {
               TextButton(
                 onPressed: _controller.clearCompleted,
                 child: Text(context.l10n.importClearCompleted),
+              )
+            else if (onAddMore != null)
+              TextButton.icon(
+                onPressed: _controller.isRunning ? null : onAddMore,
+                icon: const Icon(Icons.add_rounded, size: 19),
+                label: Text(context.l10n.importSelectFiles),
               ),
           ],
         ),

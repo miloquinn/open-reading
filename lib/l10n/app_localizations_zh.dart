@@ -492,6 +492,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsTelegramOpenFailed => '无法打开 Telegram 链接';
 
   @override
+  String get settingsQqChannel => 'QQ 频道';
+
+  @override
+  String get settingsQqChannelSubtitle => '开元阅读 · OpenReading6';
+
+  @override
+  String get settingsQqChannelOpenFailed => '无法打开 QQ 频道邀请链接';
+
+  @override
   String get languageSystem => '跟随系统';
 
   @override
@@ -590,7 +599,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pageTurningMode => '翻页模式';
 
   @override
-  String get pageTurningSlide => '左右滑动';
+  String get pageTurningSlide => '水平滑动';
 
   @override
   String get pageTurningScroll => '上下滚动';
@@ -1296,7 +1305,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get readerPrefaceTitle => '正文前';
 
   @override
-  String get readerModeHorizontalPage => '水平分页';
+  String get readerModeHorizontalPage => '无动画';
 
   @override
   String get readerModeVerticalScrollHint => '上下滚动正文，左右滑动切换章节';
@@ -1437,7 +1446,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsVolumeKeyTurnTitle => '音量键翻页';
 
   @override
-  String get settingsVolumeKeyTurnSubtitle => '使用音量键控制翻页';
+  String get settingsVolumeKeyTurnSubtitle => '在非滚动翻页模式下使用音量键翻页';
 
   @override
   String get settingsShowStatusBarTitle => '阅读时显示系统状态栏';
@@ -2757,6 +2766,15 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get settingsTelegramOpenFailed => '無法開啟 Telegram 連結';
 
   @override
+  String get settingsQqChannel => 'QQ 頻道';
+
+  @override
+  String get settingsQqChannelSubtitle => '開元閱讀 · OpenReading6';
+
+  @override
+  String get settingsQqChannelOpenFailed => '無法開啟 QQ 頻道邀請連結';
+
+  @override
   String get languageSystem => '跟隨系統';
 
   @override
@@ -2855,7 +2873,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get pageTurningMode => '翻頁模式';
 
   @override
-  String get pageTurningSlide => '左右滑動';
+  String get pageTurningSlide => '水平滑動';
 
   @override
   String get pageTurningScroll => '上下捲動';
@@ -3561,7 +3579,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get readerPrefaceTitle => '內文前';
 
   @override
-  String get readerModeHorizontalPage => '水平分頁';
+  String get readerModeHorizontalPage => '無動畫';
 
   @override
   String get readerModeVerticalScrollHint => '上下捲動內文，左右滑動切換章節';
@@ -3702,7 +3720,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get settingsVolumeKeyTurnTitle => '音量鍵翻頁';
 
   @override
-  String get settingsVolumeKeyTurnSubtitle => '使用音量鍵控制翻頁';
+  String get settingsVolumeKeyTurnSubtitle => '在非捲動翻頁模式下使用音量鍵翻頁';
 
   @override
   String get settingsShowStatusBarTitle => '閱讀時顯示系統狀態列';

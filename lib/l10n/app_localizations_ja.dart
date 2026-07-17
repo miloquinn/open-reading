@@ -494,6 +494,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsTelegramOpenFailed => 'Telegram リンクを開けませんでした';
 
   @override
+  String get settingsQqChannel => 'QQ チャンネル';
+
+  @override
+  String get settingsQqChannelSubtitle => '開元閱讀 · OpenReading6';
+
+  @override
+  String get settingsQqChannelOpenFailed => 'QQ チャンネルの招待リンクを開けませんでした';
+
+  @override
   String get languageSystem => 'システムに従う';
 
   @override
@@ -592,7 +601,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get pageTurningMode => 'ページめくり';
 
   @override
-  String get pageTurningSlide => '左右スワイプ';
+  String get pageTurningSlide => '横スライド';
 
   @override
   String get pageTurningScroll => '縦スクロール';
@@ -1300,7 +1309,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get readerPrefaceTitle => '前付';
 
   @override
-  String get readerModeHorizontalPage => '横めくり';
+  String get readerModeHorizontalPage => 'アニメーションなし';
 
   @override
   String get readerModeVerticalScrollHint => '本文は縦スクロール、左右スワイプで章を切り替え';
@@ -1444,7 +1453,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsVolumeKeyTurnTitle => '音量キーでページめくり';
 
   @override
-  String get settingsVolumeKeyTurnSubtitle => '音量キーでページをめくります';
+  String get settingsVolumeKeyTurnSubtitle => 'ページ表示モードで音量キーを使ってページをめくります';
 
   @override
   String get settingsShowStatusBarTitle => '読書中にステータスバーを表示';

@@ -418,6 +418,9 @@
   "settingsTelegramChannel": "Telegram",
   "settingsTelegramSubtitle": "Official Telegram channel",
   "settingsTelegramOpenFailed": "Could not open the Telegram link",
+  "settingsQqChannel": "QQ Channel",
+  "settingsQqChannelSubtitle": "Open Reading · OpenReading6",
+  "settingsQqChannelOpenFailed": "Could not open the QQ Channel invitation link",
   "languageSystem": "Follow System",
   "@languageSystem": {
     "description": "Follow system language"
@@ -549,7 +552,7 @@
   "@pageTurningMode": {
     "description": "Page turning mode"
   },
-  "pageTurningSlide": "Slide",
+  "pageTurningSlide": "Horizontal Slide",
   "@pageTurningSlide": {
     "description": "Slide page turning"
   },
@@ -1537,7 +1540,7 @@
   "@readerPrefaceTitle": {
     "description": "Chapter title for TXT content that appears before the first detected chapter heading"
   },
-  "readerModeHorizontalPage": "Horizontal Paging",
+  "readerModeHorizontalPage": "No Animation",
   "@readerModeHorizontalPage": {
     "description": "Page mode option: content split into pages turned instantly by tapping"
   },
@@ -1748,7 +1751,7 @@
   "@settingsVolumeKeyTurnTitle": {
     "description": "Switch title for volume-key page turning"
   },
-  "settingsVolumeKeyTurnSubtitle": "Use volume keys to turn pages",
+  "settingsVolumeKeyTurnSubtitle": "Use volume keys in paged reading modes",
   "@settingsVolumeKeyTurnSubtitle": {
     "description": "Switch subtitle for volume-key page turning"
   },

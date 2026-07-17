@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -47,8 +49,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('上下滚动'), findsOneWidget);
-    expect(find.text('水平分页'), findsOneWidget);
-    expect(find.text('左右滑动'), findsOneWidget);
+    expect(find.text('无动画'), findsOneWidget);
+    expect(find.text('水平滑动'), findsOneWidget);
     expect(find.text('仿真翻页'), findsOneWidget);
   });
 
@@ -188,6 +190,50 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(currentPage(), initialPage);
+  });
+
+  testWidgets('volume keys turn pages in a paged reader mode', (tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    const channel = MethodChannel('com.niki.xxread/reader_keys');
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (_) async => null);
+    try {
+      SharedPreferences.setMockInitialValues({
+        'native_reader_page_mode': 'instantPage',
+        'enableVolumeKeyTurn': true,
+      });
+
+      await tester.pumpWidget(_testApp());
+      final statusFinder = find.byKey(
+        const ValueKey('book-source-reader-status'),
+      );
+      await _pumpUntilFound(tester, statusFinder);
+      int currentPage() => int.parse(
+            RegExp(r'(\d+)/(\d+)')
+                .allMatches(tester.widget<Text>(statusFinder).data!)
+                .toList()[1]
+                .group(1)!,
+          );
+      final initialPage = currentPage();
+
+      await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .handlePlatformMessage(
+        channel.name,
+        channel.codec.encodeMethodCall(
+          const MethodCall('onVolumeKey', {'direction': 'next'}),
+        ),
+        (_) {},
+      );
+      await tester.pumpAndSettle();
+
+      expect(currentPage(), initialPage + 1);
+    } finally {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, null);
+      debugDefaultTargetPlatformOverride = null;
+    }
   });
 
   testWidgets('asks to add a directly opened source book on exit',

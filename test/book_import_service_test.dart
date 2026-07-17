@@ -2,15 +2,19 @@ import 'dart:io';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:xxread/models/book.dart';
 import 'package:xxread/services/books/book_import_models.dart';
 import 'package:xxread/services/books/book_import_service.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   late Directory sandbox;
   late Directory documentsDirectory;
 
   setUp(() async {
+    SharedPreferences.setMockInitialValues(<String, Object>{});
     sandbox = await Directory.systemTemp.createTemp('book-import-test-');
     documentsDirectory = Directory('${sandbox.path}/documents');
     await documentsDirectory.create(recursive: true);
@@ -49,8 +53,13 @@ void main() {
 
     expect(result.outcome, BookImportOutcome.imported);
     expect(result.book.filePath, managed.path);
+    expect(result.book.coverImagePath, isNotNull);
+    expect(await File(result.book.coverImagePath!).exists(), isTrue);
     expect(await managed.exists(), isTrue);
-    expect(await _filesUnder(documentsDirectory), isEmpty);
+    expect(
+      await _filesUnder(Directory('${documentsDirectory.path}/books')),
+      isEmpty,
+    );
   });
 
   test('外部来源导入失败时只清理本次创建的文件', () async {

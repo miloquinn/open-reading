@@ -1043,6 +1043,24 @@ abstract class AppLocalizations {
   /// **'Could not open the Telegram link'**
   String get settingsTelegramOpenFailed;
 
+  /// No description provided for @settingsQqChannel.
+  ///
+  /// In en, this message translates to:
+  /// **'QQ Channel'**
+  String get settingsQqChannel;
+
+  /// No description provided for @settingsQqChannelSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Reading · OpenReading6'**
+  String get settingsQqChannelSubtitle;
+
+  /// No description provided for @settingsQqChannelOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the QQ Channel invitation link'**
+  String get settingsQqChannelOpenFailed;
+
   /// Follow system language
   ///
   /// In en, this message translates to:
@@ -1238,7 +1256,7 @@ abstract class AppLocalizations {
   /// Slide page turning
   ///
   /// In en, this message translates to:
-  /// **'Slide'**
+  /// **'Horizontal Slide'**
   String get pageTurningSlide;
 
   /// Scroll page turning
@@ -2510,7 +2528,7 @@ abstract class AppLocalizations {
   /// Page mode option: content split into pages turned instantly by tapping
   ///
   /// In en, this message translates to:
-  /// **'Horizontal Paging'**
+  /// **'No Animation'**
   String get readerModeHorizontalPage;
 
   /// Subtitle explaining the vertical scroll page mode
@@ -2745,7 +2763,7 @@ abstract class AppLocalizations {
   /// Switch subtitle for volume-key page turning
   ///
   /// In en, this message translates to:
-  /// **'Use volume keys to turn pages'**
+  /// **'Use volume keys in paged reading modes'**
   String get settingsVolumeKeyTurnSubtitle;
 
   /// Switch title for showing system status bar in reader
