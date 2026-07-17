@@ -26,6 +26,7 @@ import '../utils/font_catalog_helper.dart';
 import '../utils/page_style_helper.dart';
 import '../utils/system_ui_helper.dart';
 import '../utils/ui_style.dart';
+import 'changelog_page.dart';
 
 part 'settings_page_cover_actions_part.dart';
 
@@ -3152,6 +3153,8 @@ class _SettingsPageState extends State<SettingsPage> {
           const SizedBox(height: 14),
           _buildAboutLine(l10n.settingsVersionLabel, _appVersion),
           _buildAboutLine(l10n.settingsLicenseLabel, 'AGPL-3.0'),
+          const SizedBox(height: 8),
+          _buildChangelogLink(),
           const SizedBox(height: 14),
           _buildCommunityButton(
             onPressed: _checkForUpdates,
@@ -3189,6 +3192,60 @@ class _SettingsPageState extends State<SettingsPage> {
             subtitle: '1003560209',
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildChangelogLink() {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: scheme.surfaceContainerHighest.withValues(alpha: 0.58),
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        key: const ValueKey('settings-changelog-link'),
+        onTap: _openChangelogHistory,
+        borderRadius: BorderRadius.circular(14),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 13),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.changelogHistoryTitle,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      l10n.changelogHistorySubtitle,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: scheme.onSurfaceVariant,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _openChangelogHistory() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const ChangelogPage(),
       ),
     );
   }

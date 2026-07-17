@@ -1512,6 +1512,36 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsVersionLabel => 'バージョン';
 
   @override
+  String get changelogHistoryTitle => '更新履歴';
+
+  @override
+  String get changelogHistorySubtitle => '各バージョンの変更内容を表示';
+
+  @override
+  String get changelogPageTitle => 'バージョン更新履歴';
+
+  @override
+  String get changelogCurrentVersion => '現在のバージョン';
+
+  @override
+  String get changelog110CustomFonts => 'カスタムフォントを追加';
+
+  @override
+  String get changelog110Bookmarks => 'ブックマーク追加機能を追加';
+
+  @override
+  String get changelog102Summary => '発見ページ、独立検索、読書設定を改善';
+
+  @override
+  String get changelog101Summary => '発見機能、ページ検索、オープンソースライセンス案内を追加';
+
+  @override
+  String get changelog100Summary => 'オープン書籍ソース、複数テーマ、ページめくり効果を追加';
+
+  @override
+  String get changelog091Summary => 'タブレット見開き表示とクロスプラットフォーム配布に対応';
+
+  @override
   String get settingsMaintainerLabel => 'メンテナー';
 
   @override

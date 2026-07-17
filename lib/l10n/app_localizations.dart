@@ -2868,6 +2868,66 @@ abstract class AppLocalizations {
   /// **'Version'**
   String get settingsVersionLabel;
 
+  /// No description provided for @changelogHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Version history'**
+  String get changelogHistoryTitle;
+
+  /// No description provided for @changelogHistorySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'View changes from every release'**
+  String get changelogHistorySubtitle;
+
+  /// No description provided for @changelogPageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Release history'**
+  String get changelogPageTitle;
+
+  /// No description provided for @changelogCurrentVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Current version'**
+  String get changelogCurrentVersion;
+
+  /// No description provided for @changelog110CustomFonts.
+  ///
+  /// In en, this message translates to:
+  /// **'Added custom fonts'**
+  String get changelog110CustomFonts;
+
+  /// No description provided for @changelog110Bookmarks.
+  ///
+  /// In en, this message translates to:
+  /// **'Added bookmark support'**
+  String get changelog110Bookmarks;
+
+  /// No description provided for @changelog102Summary.
+  ///
+  /// In en, this message translates to:
+  /// **'Improved discovery, standalone search, and reading settings'**
+  String get changelog102Summary;
+
+  /// No description provided for @changelog101Summary.
+  ///
+  /// In en, this message translates to:
+  /// **'Added discovery, paginated search, and open-source licensing notes'**
+  String get changelog101Summary;
+
+  /// No description provided for @changelog100Summary.
+  ///
+  /// In en, this message translates to:
+  /// **'Added open book sources, reading themes, and page-turn animation'**
+  String get changelog100Summary;
+
+  /// No description provided for @changelog091Summary.
+  ///
+  /// In en, this message translates to:
+  /// **'Added tablet spreads and cross-platform release support'**
+  String get changelog091Summary;
+
   /// Maintainer label in the about card
   ///
   /// In en, this message translates to:

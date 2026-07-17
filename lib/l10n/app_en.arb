@@ -1890,6 +1890,16 @@
   "@settingsVersionLabel": {
     "description": "Version label in the about card"
   },
+  "changelogHistoryTitle": "Version history",
+  "changelogHistorySubtitle": "View changes from every release",
+  "changelogPageTitle": "Release history",
+  "changelogCurrentVersion": "Current version",
+  "changelog110CustomFonts": "Added custom fonts",
+  "changelog110Bookmarks": "Added bookmark support",
+  "changelog102Summary": "Improved discovery, standalone search, and reading settings",
+  "changelog101Summary": "Added discovery, paginated search, and open-source licensing notes",
+  "changelog100Summary": "Added open book sources, reading themes, and page-turn animation",
+  "changelog091Summary": "Added tablet spreads and cross-platform release support",
   "settingsMaintainerLabel": "Maintainer",
   "@settingsMaintainerLabel": {
     "description": "Maintainer label in the about card"

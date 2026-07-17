@@ -1560,6 +1560,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsVersionLabel => 'Version';
 
   @override
+  String get changelogHistoryTitle => 'Version history';
+
+  @override
+  String get changelogHistorySubtitle => 'View changes from every release';
+
+  @override
+  String get changelogPageTitle => 'Release history';
+
+  @override
+  String get changelogCurrentVersion => 'Current version';
+
+  @override
+  String get changelog110CustomFonts => 'Added custom fonts';
+
+  @override
+  String get changelog110Bookmarks => 'Added bookmark support';
+
+  @override
+  String get changelog102Summary =>
+      'Improved discovery, standalone search, and reading settings';
+
+  @override
+  String get changelog101Summary =>
+      'Added discovery, paginated search, and open-source licensing notes';
+
+  @override
+  String get changelog100Summary =>
+      'Added open book sources, reading themes, and page-turn animation';
+
+  @override
+  String get changelog091Summary =>
+      'Added tablet spreads and cross-platform release support';
+
+  @override
   String get settingsMaintainerLabel => 'Maintainer';
 
   @override

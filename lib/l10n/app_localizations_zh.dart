@@ -1503,6 +1503,36 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsVersionLabel => '版本';
 
   @override
+  String get changelogHistoryTitle => '历史更新日志';
+
+  @override
+  String get changelogHistorySubtitle => '查看各版本更新内容';
+
+  @override
+  String get changelogPageTitle => '版本更新记录';
+
+  @override
+  String get changelogCurrentVersion => '当前版本';
+
+  @override
+  String get changelog110CustomFonts => '新增自定义字体';
+
+  @override
+  String get changelog110Bookmarks => '新增加入书签';
+
+  @override
+  String get changelog102Summary => '优化发现页、独立搜索和阅读设置';
+
+  @override
+  String get changelog101Summary => '新增发现功能、分页搜索和开源许可说明';
+
+  @override
+  String get changelog100Summary => '新增开放书源、多主题和仿真翻页';
+
+  @override
+  String get changelog091Summary => '新增平板双页布局和跨平台发布支持';
+
+  @override
   String get settingsMaintainerLabel => '维护者';
 
   @override
@@ -3638,6 +3668,36 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get settingsVersionLabel => '版本';
+
+  @override
+  String get changelogHistoryTitle => '歷史更新日誌';
+
+  @override
+  String get changelogHistorySubtitle => '查看各版本更新內容';
+
+  @override
+  String get changelogPageTitle => '版本更新記錄';
+
+  @override
+  String get changelogCurrentVersion => '目前版本';
+
+  @override
+  String get changelog110CustomFonts => '新增自訂字型';
+
+  @override
+  String get changelog110Bookmarks => '新增加入書籤';
+
+  @override
+  String get changelog102Summary => '最佳化發現頁、獨立搜尋和閱讀設定';
+
+  @override
+  String get changelog101Summary => '新增發現功能、分頁搜尋和開源授權說明';
+
+  @override
+  String get changelog100Summary => '新增開放書源、多主題和仿真翻頁';
+
+  @override
+  String get changelog091Summary => '新增平板雙頁版面和跨平台發布支援';
 
   @override
   String get settingsMaintainerLabel => '維護者';
