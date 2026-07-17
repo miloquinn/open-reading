@@ -160,9 +160,10 @@ jobs:
 
           for apk in build/app/outputs/flutter-apk/app-*-release.apk; do
             "$apksigner_path" verify --verbose "$apk" >/dev/null
+            # Newer build-tools print "V2 Signer:"; older ones print "Signer #1".
             actual_digest="$(
               "$apksigner_path" verify --print-certs "$apk" \
-                | sed -n 's/^Signer #1 certificate SHA-256 digest: //p' \
+                | sed -n -E 's/^.*(Signer #[0-9]+|V[0-9]+ Signer): certificate SHA-256 digest: //p' \
                 | head -n 1 \
                 | tr -d ':' \
                 | tr '[:upper:]' '[:lower:]'
@@ -170,6 +171,8 @@ jobs:
 
             if [[ -z "$actual_digest" || "$actual_digest" != "$expected_digest" ]]; then
               echo "::error::$(basename "$apk") was not signed with the configured identity."
+              echo "expected=${expected_digest}"
+              echo "actual=${actual_digest}"
               exit 1
             fi
           done
