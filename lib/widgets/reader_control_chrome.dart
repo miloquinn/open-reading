@@ -5,6 +5,186 @@ import 'package:flutter/material.dart';
 import '../utils/glass_config.dart';
 import '../utils/reader_themes.dart';
 
+typedef ReaderStatusBuilder = Widget Function(
+  BuildContext context,
+  TextStyle? style,
+  Key? key,
+);
+
+class ReaderChromeOverlay extends StatelessWidget {
+  const ReaderChromeOverlay({
+    super.key,
+    required this.palette,
+    required this.visible,
+    required this.title,
+    required this.statusBottom,
+    required this.statusBuilder,
+    required this.onBack,
+    required this.onBookmark,
+    required this.onTableOfContents,
+    required this.onSettings,
+    required this.backTooltip,
+    required this.bookmarkTooltip,
+    required this.tableOfContentsTooltip,
+    required this.settingsTooltip,
+    required this.bookmarked,
+    this.bookmarkBusy = false,
+    this.topKey,
+    this.bottomKey,
+    this.statusKey,
+  });
+
+  final ReaderThemePalette palette;
+  final bool visible;
+  final String title;
+  final double statusBottom;
+  final ReaderStatusBuilder statusBuilder;
+  final VoidCallback onBack;
+  final VoidCallback? onBookmark;
+  final VoidCallback? onTableOfContents;
+  final VoidCallback onSettings;
+  final String backTooltip;
+  final String bookmarkTooltip;
+  final String tableOfContentsTooltip;
+  final String settingsTooltip;
+  final bool bookmarked;
+  final bool bookmarkBusy;
+  final Key? topKey;
+  final Key? bottomKey;
+  final Key? statusKey;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colors = Theme.of(context).colorScheme;
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: statusBottom,
+          child: IgnorePointer(
+            child: statusBuilder(
+              context,
+              textTheme.labelSmall?.copyWith(
+                fontSize: 10,
+                height: 1,
+                color: colors.onSurfaceVariant.withValues(
+                  alpha: visible ? 0 : 0.58,
+                ),
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+              statusKey,
+            ),
+          ),
+        ),
+        AnimatedPositioned(
+          key: topKey,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutBack,
+          left: 20,
+          right: 20,
+          top: visible ? 10 : -130,
+          child: SafeArea(
+            bottom: false,
+            child: ReaderControlBar(
+              palette: palette,
+              isTopBar: true,
+              child: SizedBox(
+                height: 58,
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 7, vertical: 7),
+                  child: Row(
+                    children: [
+                      ReaderControlIconButton(
+                        palette: palette,
+                        onPressed: onBack,
+                        tooltip: backTooltip,
+                        icon: Icons.arrow_back_rounded,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          title,
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.1,
+                          ),
+                        ),
+                      ),
+                      ReaderControlIconButton(
+                        palette: palette,
+                        onPressed: bookmarkBusy ? null : onBookmark,
+                        tooltip: bookmarkTooltip,
+                        icon: bookmarked
+                            ? Icons.bookmark_rounded
+                            : Icons.bookmark_border_rounded,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        AnimatedPositioned(
+          key: bottomKey,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutBack,
+          left: 22,
+          right: 22,
+          bottom: visible ? 16 : -110,
+          child: SafeArea(
+            top: false,
+            child: ReaderControlBar(
+              palette: palette,
+              isTopBar: false,
+              child: SizedBox(
+                height: 64,
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 9, vertical: 9),
+                  child: Row(
+                    children: [
+                      ReaderControlIconButton(
+                        palette: palette,
+                        onPressed: onTableOfContents,
+                        tooltip: tableOfContentsTooltip,
+                        icon: Icons.format_list_bulleted_rounded,
+                      ),
+                      Expanded(
+                        child: statusBuilder(
+                          context,
+                          textTheme.labelLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.15,
+                          ),
+                          null,
+                        ),
+                      ),
+                      ReaderControlIconButton(
+                        palette: palette,
+                        onPressed: onSettings,
+                        tooltip: settingsTooltip,
+                        icon: Icons.tune_rounded,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class ReaderControlBar extends StatelessWidget {
   const ReaderControlBar({
     super.key,

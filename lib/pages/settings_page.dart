@@ -898,11 +898,11 @@ class _SettingsPageState extends State<SettingsPage> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
             width: 4,
-            height: 52,
+            height: 32,
             decoration: BoxDecoration(
               color: scheme.primary,
               borderRadius: BorderRadius.circular(99),
@@ -910,25 +910,12 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           const SizedBox(width: 14),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  context.l10n.settings,
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.4,
-                      ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  context.l10n.settingsPageIntro,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                        height: 1.45,
-                      ),
-                ),
-              ],
+            child: Text(
+              context.l10n.settingsPageIntro,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    height: 1.45,
+                  ),
             ),
           ),
         ],

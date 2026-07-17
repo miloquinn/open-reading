@@ -1,6 +1,238 @@
 import 'package:flutter/material.dart';
 
+import '../core/reader/reader_layout.dart';
 import '../utils/reader_themes.dart';
+
+class ReaderSettingsSheet extends StatefulWidget {
+  const ReaderSettingsSheet({
+    super.key,
+    required this.title,
+    required this.themeTitle,
+    required this.themeDescription,
+    required this.pageModeTitle,
+    required this.pageModeSummary,
+    required this.fontSizeLabel,
+    required this.lineHeightLabel,
+    required this.horizontalMarginLabel,
+    required this.topMarginLabel,
+    required this.bottomMarginLabel,
+    required this.themeId,
+    required this.fontSize,
+    required this.lineHeight,
+    required this.horizontalMargin,
+    required this.topMargin,
+    required this.bottomMargin,
+    required this.themeLabelFor,
+    required this.onThemeChanged,
+    required this.onPageModeTap,
+    required this.onFontSizeChanged,
+    required this.onLineHeightChanged,
+    required this.onHorizontalMarginChanged,
+    required this.onTopMarginChanged,
+    required this.onBottomMarginChanged,
+  });
+
+  final String title;
+  final String themeTitle;
+  final String themeDescription;
+  final String pageModeTitle;
+  final String pageModeSummary;
+  final String fontSizeLabel;
+  final String lineHeightLabel;
+  final String horizontalMarginLabel;
+  final String topMarginLabel;
+  final String bottomMarginLabel;
+  final String themeId;
+  final double fontSize;
+  final double lineHeight;
+  final double horizontalMargin;
+  final double topMargin;
+  final double bottomMargin;
+  final String Function(String themeId) themeLabelFor;
+  final ValueChanged<String> onThemeChanged;
+  final VoidCallback onPageModeTap;
+  final ValueChanged<double> onFontSizeChanged;
+  final ValueChanged<double> onLineHeightChanged;
+  final ValueChanged<double> onHorizontalMarginChanged;
+  final ValueChanged<double> onTopMarginChanged;
+  final ValueChanged<double> onBottomMarginChanged;
+
+  @override
+  State<ReaderSettingsSheet> createState() => _ReaderSettingsSheetState();
+}
+
+class _ReaderSettingsSheetState extends State<ReaderSettingsSheet> {
+  late String _themeId = widget.themeId;
+  late double _fontSize = widget.fontSize;
+  late double _lineHeight = widget.lineHeight;
+  late double _horizontalMargin = widget.horizontalMargin;
+  late double _topMargin = widget.topMargin;
+  late double _bottomMargin = widget.bottomMargin;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = ReaderThemes.byId(_themeId);
+    final theme = palette.toThemeData(typography: Theme.of(context).textTheme);
+    return ReaderSettingsSheetFrame(
+      palette: palette,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(widget.title, style: theme.textTheme.titleLarge),
+          const SizedBox(height: 12),
+          Text(
+            widget.themeTitle,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(widget.themeDescription, style: theme.textTheme.bodySmall),
+          const SizedBox(height: 12),
+          ReaderThemeStrip(
+            selectedThemeId: _themeId,
+            labelFor: widget.themeLabelFor,
+            onSelected: (themeId) {
+              setState(() => _themeId = themeId);
+              widget.onThemeChanged(themeId);
+            },
+          ),
+          const Divider(height: 28),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.swap_calls),
+            title: Text(widget.pageModeTitle),
+            subtitle: Text(widget.pageModeSummary),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: widget.onPageModeTap,
+          ),
+          const Divider(height: 28),
+          ReaderSettingSlider(
+            label: widget.fontSizeLabel,
+            value: _fontSize,
+            valueLabel: _fontSize.round().toString(),
+            min: 14,
+            max: 32,
+            divisions: 18,
+            onChanged: (value) => setState(() => _fontSize = value),
+            onChangeEnd: widget.onFontSizeChanged,
+          ),
+          ReaderSettingSlider(
+            label: widget.lineHeightLabel,
+            value: _lineHeight,
+            valueLabel: _lineHeight.toStringAsFixed(1),
+            min: 1.4,
+            max: 2.1,
+            divisions: 7,
+            onChanged: (value) => setState(() => _lineHeight = value),
+            onChangeEnd: widget.onLineHeightChanged,
+          ),
+          ReaderSettingSlider(
+            label: widget.horizontalMarginLabel,
+            value: _horizontalMargin,
+            valueLabel: _horizontalMargin.round().toString(),
+            min: 8,
+            max: 48,
+            divisions: 40,
+            onChanged: (value) => setState(() => _horizontalMargin = value),
+            onChangeEnd: widget.onHorizontalMarginChanged,
+          ),
+          ReaderMarginControls(
+            topLabel: widget.topMarginLabel,
+            bottomLabel: widget.bottomMarginLabel,
+            topMargin: _topMargin,
+            bottomMargin: _bottomMargin,
+            onTopChanged: (value) => setState(() => _topMargin = value),
+            onBottomChanged: (value) => setState(() => _bottomMargin = value),
+            onTopChangeEnd: widget.onTopMarginChanged,
+            onBottomChangeEnd: widget.onBottomMarginChanged,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ReaderPageModeSheet extends StatelessWidget {
+  const ReaderPageModeSheet({
+    super.key,
+    required this.palette,
+    required this.title,
+    required this.selectedMode,
+    required this.titleFor,
+    required this.hintFor,
+    required this.onSelected,
+    this.scrollByChapter,
+    this.scrollByChapterTitle,
+    this.scrollByChapterOnHint,
+    this.scrollByChapterOffHint,
+    this.onScrollByChapterChanged,
+  });
+
+  final ReaderThemePalette palette;
+  final String title;
+  final ReaderPageMode selectedMode;
+  final String Function(ReaderPageMode mode) titleFor;
+  final String Function(ReaderPageMode mode) hintFor;
+  final ValueChanged<ReaderPageMode> onSelected;
+  final bool? scrollByChapter;
+  final String? scrollByChapterTitle;
+  final String? scrollByChapterOnHint;
+  final String? scrollByChapterOffHint;
+  final ValueChanged<bool>? onScrollByChapterChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = palette.toThemeData(typography: Theme.of(context).textTheme);
+    return Theme(
+      data: theme,
+      child: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: theme.textTheme.titleLarge),
+              const SizedBox(height: 8),
+              RadioGroup<ReaderPageMode>(
+                groupValue: selectedMode,
+                onChanged: (mode) {
+                  if (mode != null) onSelected(mode);
+                },
+                child: Column(
+                  children: ReaderPageMode.values.expand((mode) sync* {
+                    yield RadioListTile<ReaderPageMode>(
+                      value: mode,
+                      title: Text(titleFor(mode)),
+                      subtitle: Text(hintFor(mode)),
+                    );
+                    if (mode == ReaderPageMode.verticalScroll &&
+                        selectedMode == ReaderPageMode.verticalScroll &&
+                        scrollByChapter != null) {
+                      yield SwitchListTile(
+                        contentPadding: const EdgeInsets.only(left: 24),
+                        value: scrollByChapter!,
+                        title: Text(scrollByChapterTitle!),
+                        subtitle: Text(
+                          scrollByChapter!
+                              ? scrollByChapterOnHint!
+                              : scrollByChapterOffHint!,
+                        ),
+                        onChanged: onScrollByChapterChanged,
+                      );
+                    }
+                  }).toList(growable: false),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 class ReaderSettingsSheetFrame extends StatelessWidget {
   const ReaderSettingsSheetFrame({

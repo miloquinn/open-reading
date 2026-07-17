@@ -5,10 +5,12 @@ import 'package:flutter/services.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as html_parser;
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:xxread/core/reader/canonical_locator.dart';
 import 'package:xxread/core/reader/reader_layout.dart';
+import 'package:xxread/core/reader/reader_margin_settings.dart';
+import 'package:xxread/core/reader/reader_safe_area.dart';
+import 'package:xxread/core/reader/reader_settings.dart';
 import 'package:xxread/models/bookmark.dart';
 
 import '../book_sources/models/registered_book_source.dart';
@@ -54,14 +56,6 @@ class BookSourceReaderPage extends StatefulWidget {
 
 class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     with WidgetsBindingObserver {
-  static const _fontSizeKey = 'native_reader_font_size';
-  static const _lineHeightKey = 'native_reader_line_height';
-  static const _horizontalMarginKey = 'native_reader_horizontal_margin';
-  static const _verticalMarginKey = 'native_reader_vertical_margin';
-  static const _readerThemeKey = 'native_reader_theme';
-  static const _pageModeKey = 'native_reader_page_mode';
-  static const _remoteLineHeightKey = 'book_source_reader_line_height';
-
   late final BookSourceClient _client = widget.client ?? BookSourceClient();
   late final BookSourceShelfService _shelfService =
       widget.shelfService ?? BookSourceShelfService(client: _client);
@@ -82,8 +76,9 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   double _fontSize = 19;
   double _lineHeight = 1.75;
   FontOption _readerFont = FontCatalog.defaultReaderFont;
-  double _horizontalMargin = 22;
-  double _verticalMargin = 28;
+  double _horizontalMargin = ReaderSettings.defaultHorizontalMargin;
+  double _topMargin = ReaderMarginSettings.defaultTop;
+  double _bottomMargin = ReaderMarginSettings.defaultBottom;
   String _readerThemeId = ReaderThemes.day.id;
   BookSourcePageMode _pageMode = BookSourcePageMode.verticalScroll;
   int _pageIndex = 0;
@@ -106,6 +101,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   Timer? _controlsTimer;
   final ReadingStatsDao _readingStatsDao = ReadingStatsDao();
   final BookmarkDao _bookmarkDao = BookmarkDao();
+  final ReaderSettingsStore _readerSettingsStore = const ReaderSettingsStore();
   List<Bookmark> _bookmarks = const [];
   bool _bookmarkBusy = false;
   DateTime? _readingSessionStartedAt;
@@ -115,6 +111,22 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
 
   ThemeData get _readerThemeData => _readerTheme.toThemeData(
         typography: Theme.of(context).textTheme,
+      );
+
+  ReaderSettings get _readerSettings => ReaderSettings(
+        fontSize: _fontSize,
+        lineHeight: _lineHeight,
+        horizontalMargin: _horizontalMargin,
+        topMargin: _topMargin,
+        bottomMargin: _bottomMargin,
+        themeId: _readerThemeId,
+        pageMode: _pageMode,
+      );
+
+  ReaderSafeAreaMetrics get _readerSafeArea => ReaderSafeAreaMetrics(
+        viewPadding: MediaQuery.viewPaddingOf(context),
+        topMargin: _topMargin,
+        bottomMargin: _bottomMargin,
       );
 
   @override
@@ -207,17 +219,20 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       _error = null;
     });
     try {
-      final prefs = await SharedPreferences.getInstance();
       final results = await Future.wait<Object?>([
         _client.getChapters(widget.source, widget.book.id),
         widget.progressStore.load(
           sourceId: widget.source.id,
           bookId: widget.book.id,
         ),
+        _readerSettingsStore.load(
+          fallbackPageMode: BookSourcePageMode.verticalScroll,
+        ),
       ]);
       final chapters = [...results[0]! as List<BookSourceChapter>]
         ..sort((a, b) => a.order.compareTo(b.order));
       final saved = results[1] as BookSourceReadingProgress?;
+      final settings = results[2]! as ReaderSettings;
       var initialIndex = saved?.chapterIndex ?? 0;
       if (saved != null && saved.chapterId.isNotEmpty) {
         final byId = chapters.indexWhere(
@@ -232,19 +247,13 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       setState(() {
         _chapters = chapters;
         _chapterIndex = initialIndex;
-        _fontSize = prefs.getDouble(_fontSizeKey) ?? 19;
-        _horizontalMargin =
-            (prefs.getDouble(_horizontalMarginKey) ?? 22).clamp(8, 48);
-        _verticalMargin =
-            (prefs.getDouble(_verticalMarginKey) ?? 28).clamp(28, 48);
-        _lineHeight = (prefs.getDouble(_lineHeightKey) ??
-                prefs.getDouble(_remoteLineHeightKey) ??
-                1.75)
-            .clamp(1.4, 2.1);
-        _readerThemeId = ReaderThemes.byId(
-          prefs.getString(_readerThemeKey),
-        ).id;
-        _pageMode = _pageModeFromName(prefs.getString(_pageModeKey));
+        _fontSize = settings.fontSize;
+        _horizontalMargin = settings.horizontalMargin;
+        _topMargin = settings.topMargin;
+        _bottomMargin = settings.bottomMargin;
+        _lineHeight = settings.lineHeight;
+        _readerThemeId = ReaderThemes.byId(settings.themeId).id;
+        _pageMode = settings.pageMode;
         _loadingCatalog = false;
       });
       if (chapters.isNotEmpty) {
@@ -766,7 +775,8 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     double? fontSize,
     double? lineHeight,
     double? horizontalMargin,
-    double? verticalMargin,
+    double? topMargin,
+    double? bottomMargin,
     String? themeId,
     BookSourcePageMode? pageMode,
   }) async {
@@ -780,7 +790,10 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       _fontSize = fontSize ?? _fontSize;
       _lineHeight = (lineHeight ?? _lineHeight).clamp(1.4, 2.1);
       _horizontalMargin = (horizontalMargin ?? _horizontalMargin).clamp(8, 48);
-      _verticalMargin = (verticalMargin ?? _verticalMargin).clamp(28, 48);
+      _topMargin = (topMargin ?? _topMargin)
+          .clamp(ReaderMarginSettings.min, ReaderMarginSettings.max);
+      _bottomMargin = (bottomMargin ?? _bottomMargin)
+          .clamp(ReaderMarginSettings.min, ReaderMarginSettings.max);
       _readerThemeId = ReaderThemes.byId(themeId ?? _readerThemeId).id;
       _pageMode = pageMode ?? _pageMode;
       _paginationKey = null;
@@ -789,15 +802,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       _restorePagedPosition = true;
       _restoreTextOffset = currentTextOffset;
     });
-    final prefs = await SharedPreferences.getInstance();
-    await Future.wait([
-      prefs.setDouble(_fontSizeKey, _fontSize),
-      prefs.setDouble(_lineHeightKey, _lineHeight),
-      prefs.setDouble(_horizontalMarginKey, _horizontalMargin),
-      prefs.setDouble(_verticalMarginKey, _verticalMargin),
-      prefs.setString(_readerThemeKey, _readerThemeId),
-      prefs.setString(_pageModeKey, _pageMode.name),
-    ]);
+    await _readerSettingsStore.save(_readerSettings);
     _restoreScrollProgress(currentProgress);
   }
 
@@ -820,117 +825,47 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
 
   Future<void> _showReadingSettings() async {
     _controlsTimer?.cancel();
-    var previewFontSize = _fontSize;
-    var previewLineHeight = _lineHeight;
-    var previewHorizontalMargin = _horizontalMargin;
-    var previewVerticalMargin = _verticalMargin;
     final selectedMode = await showModalBottomSheet<BookSourcePageMode>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (sheetContext) => StatefulBuilder(
-        builder: (context, setSheetState) {
-          void updateSheet(VoidCallback callback) {
-            callback();
-            setSheetState(() {});
-          }
-
-          return ReaderSettingsSheetFrame(
-            palette: _readerTheme,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  context.l10n.readingSettings,
-                  style: _readerThemeData.textTheme.titleLarge,
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  context.l10n.readerThemeTitle,
-                  style: _readerThemeData.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  context.l10n.readerThemeDescription,
-                  style: _readerThemeData.textTheme.bodySmall,
-                ),
-                const SizedBox(height: 12),
-                ReaderThemeStrip(
-                  selectedThemeId: _readerThemeId,
-                  labelFor: _readerThemeName,
-                  onSelected: (themeId) => updateSheet(
-                    () => unawaited(
-                      _updateReadingSettings(themeId: themeId),
-                    ),
-                  ),
-                ),
-                const Divider(height: 28),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.swap_calls),
-                  title: Text(context.l10n.pageTurningMode),
-                  subtitle: Text(_pageModeHint(_pageMode)),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: _showPageModeSettings,
-                ),
-                const Divider(height: 28),
-                ReaderSettingSlider(
-                  label: context.l10n.fontSizeLabel,
-                  value: previewFontSize,
-                  valueLabel: previewFontSize.round().toString(),
-                  min: 14,
-                  max: 32,
-                  divisions: 18,
-                  onChanged: (value) =>
-                      setSheetState(() => previewFontSize = value),
-                  onChangeEnd: (value) =>
-                      unawaited(_updateReadingSettings(fontSize: value)),
-                ),
-                ReaderSettingSlider(
-                  label: context.l10n.lineSpacingLabel,
-                  value: previewLineHeight,
-                  valueLabel: previewLineHeight.toStringAsFixed(1),
-                  min: 1.4,
-                  max: 2.1,
-                  divisions: 7,
-                  onChanged: (value) =>
-                      setSheetState(() => previewLineHeight = value),
-                  onChangeEnd: (value) =>
-                      unawaited(_updateReadingSettings(lineHeight: value)),
-                ),
-                ReaderSettingSlider(
-                  label: context.l10n.readerHorizontalMarginLabel,
-                  value: previewHorizontalMargin,
-                  valueLabel: previewHorizontalMargin.round().toString(),
-                  min: 8,
-                  max: 48,
-                  divisions: 40,
-                  onChanged: (value) =>
-                      setSheetState(() => previewHorizontalMargin = value),
-                  onChangeEnd: (value) => unawaited(
-                    _updateReadingSettings(horizontalMargin: value),
-                  ),
-                ),
-                ReaderSettingSlider(
-                  label: context.l10n.readerVerticalMarginLabel,
-                  value: previewVerticalMargin,
-                  valueLabel: previewVerticalMargin.round().toString(),
-                  min: 28,
-                  max: 48,
-                  divisions: 20,
-                  onChanged: (value) =>
-                      setSheetState(() => previewVerticalMargin = value),
-                  onChangeEnd: (value) => unawaited(
-                    _updateReadingSettings(verticalMargin: value),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
+      builder: (sheetContext) => ReaderSettingsSheet(
+        title: context.l10n.readingSettings,
+        themeTitle: context.l10n.readerThemeTitle,
+        themeDescription: context.l10n.readerThemeDescription,
+        pageModeTitle: context.l10n.pageTurningMode,
+        pageModeSummary: _pageModeHint(_pageMode),
+        fontSizeLabel: context.l10n.fontSizeLabel,
+        lineHeightLabel: context.l10n.lineSpacingLabel,
+        horizontalMarginLabel: context.l10n.readerHorizontalMarginLabel,
+        topMarginLabel: context.l10n.readerTopMarginLabel,
+        bottomMarginLabel: context.l10n.readerBottomMarginLabel,
+        themeId: _readerThemeId,
+        fontSize: _fontSize,
+        lineHeight: _lineHeight,
+        horizontalMargin: _horizontalMargin,
+        topMargin: _topMargin,
+        bottomMargin: _bottomMargin,
+        themeLabelFor: _readerThemeName,
+        onThemeChanged: (themeId) => unawaited(
+          _updateReadingSettings(themeId: themeId),
+        ),
+        onPageModeTap: _showPageModeSettings,
+        onFontSizeChanged: (value) => unawaited(
+          _updateReadingSettings(fontSize: value),
+        ),
+        onLineHeightChanged: (value) => unawaited(
+          _updateReadingSettings(lineHeight: value),
+        ),
+        onHorizontalMarginChanged: (value) => unawaited(
+          _updateReadingSettings(horizontalMargin: value),
+        ),
+        onTopMarginChanged: (value) => unawaited(
+          _updateReadingSettings(topMargin: value),
+        ),
+        onBottomMarginChanged: (value) => unawaited(
+          _updateReadingSettings(bottomMargin: value),
+        ),
       ),
     );
     if (mounted) setState(() => _controlsVisible = false);
@@ -948,42 +883,13 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       backgroundColor: _readerTheme.surface,
       showDragHandle: true,
       isScrollControlled: true,
-      builder: (menuContext) => Theme(
-        data: _readerThemeData,
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  context.l10n.pageTurningMode,
-                  style: _readerThemeData.textTheme.titleLarge,
-                ),
-                const SizedBox(height: 8),
-                RadioGroup<BookSourcePageMode>(
-                  groupValue: _pageMode,
-                  onChanged: (mode) {
-                    if (mode == null) return;
-                    Navigator.of(menuContext).pop(mode);
-                  },
-                  child: Column(
-                    children: BookSourcePageMode.values
-                        .map(
-                          (mode) => RadioListTile<BookSourcePageMode>(
-                            value: mode,
-                            title: Text(_pageModeTitle(mode)),
-                            subtitle: Text(_pageModeHint(mode)),
-                          ),
-                        )
-                        .toList(growable: false),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+      builder: (menuContext) => ReaderPageModeSheet(
+        palette: _readerTheme,
+        title: context.l10n.pageTurningMode,
+        selectedMode: _pageMode,
+        titleFor: _pageModeTitle,
+        hintFor: _pageModeHint,
+        onSelected: (mode) => Navigator.of(menuContext).pop(mode),
       ),
     );
     if (selectedMode == null || !mounted) return;
@@ -1009,53 +915,34 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
                   child: _buildBody(),
                 ),
               ),
-              if (_chapters.isNotEmpty && _content != null)
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: MediaQuery.viewPaddingOf(context).bottom + 3,
-                  child: IgnorePointer(
-                    child: ValueListenableBuilder<double>(
-                      valueListenable: _scrollProgress,
-                      builder: (context, progress, _) => Center(
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: _readerTheme.background,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            child: Text(
-                              _readerStatus(),
-                              key: const ValueKey(
-                                'book-source-reader-status',
-                              ),
-                              textAlign: TextAlign.center,
-                              style: _readerThemeData.textTheme.labelSmall
-                                  ?.copyWith(
-                                fontSize: 10,
-                                height: 1,
-                                color: _readerThemeData
-                                    .colorScheme.onSurfaceVariant
-                                    .withValues(
-                                  alpha: _controlsVisible ? 0 : 0.58,
-                                ),
-                                fontFeatures: const [
-                                  FontFeature.tabularFigures(),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              _buildTopControls(),
-              _buildBottomControls(),
+              ReaderChromeOverlay(
+                palette: _readerTheme,
+                visible: _controlsVisible,
+                title: _chapters.isEmpty
+                    ? widget.book.title
+                    : _chapters[_chapterIndex.clamp(0, _chapters.length - 1)]
+                        .title,
+                statusBottom: _readerSafeArea.pageNumberBottom,
+                statusBuilder: _buildReaderStatusText,
+                onBack: () => unawaited(_requestExit()),
+                onBookmark: _chapters.isEmpty
+                    ? null
+                    : () => unawaited(_toggleCurrentBookmark()),
+                onTableOfContents: _chapters.isEmpty ? null : _showCatalog,
+                onSettings: _showReadingSettings,
+                backTooltip:
+                    MaterialLocalizations.of(context).backButtonTooltip,
+                bookmarkTooltip: _currentPageIsBookmarked
+                    ? context.l10n.bookmarkRemoved
+                    : context.l10n.readerAddBookmark,
+                tableOfContentsTooltip: context.l10n.readerToolbarTOC,
+                settingsTooltip: context.l10n.readingSettings,
+                bookmarked: _currentPageIsBookmarked,
+                bookmarkBusy: _bookmarkBusy,
+                topKey: const ValueKey('book-source-top-controls'),
+                bottomKey: const ValueKey('book-source-bottom-controls'),
+                statusKey: const ValueKey('book-source-reader-status'),
+              ),
             ],
           ),
         ),
@@ -1127,9 +1014,9 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
               controller: _scrollController,
               padding: EdgeInsets.fromLTRB(
                 _horizontalMargin,
-                MediaQuery.viewPaddingOf(context).top + _verticalMargin,
+                _readerSafeArea.contentTop,
                 _horizontalMargin,
-                MediaQuery.viewPaddingOf(context).bottom + _verticalMargin,
+                _readerSafeArea.contentBottom,
               ),
               child: Center(
                 child: ConstrainedBox(
@@ -1233,8 +1120,8 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     required String chapterTitle,
     required String text,
   }) {
-    final top = MediaQuery.viewPaddingOf(context).top + _verticalMargin;
-    final bottom = MediaQuery.viewPaddingOf(context).bottom + _verticalMargin;
+    final top = _readerSafeArea.contentTop;
+    final bottom = _readerSafeArea.contentBottom;
     final width = (viewport.width - _horizontalMargin * 2).clamp(80.0, 760.0);
     final height = (viewport.height - top - bottom).clamp(120.0, 1600.0);
     final textScaler = MediaQuery.textScalerOf(context);
@@ -1255,11 +1142,12 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       fontSize: _fontSize,
       lineHeight: _lineHeight,
       horizontalMargin: _horizontalMargin,
-      verticalMargin: _verticalMargin,
+      verticalMargin: _topMargin + _bottomMargin,
       textScaler: textScaler,
       locale: locale,
       pageMode: _pageMode,
-      extra: '${firstHeight.toStringAsFixed(2)}:${_readerFont.id}',
+      extra: '${firstHeight.toStringAsFixed(2)}:'
+          '${_readerSafeArea.paginationSignature}:${_readerFont.id}',
     ).cacheKey('book-source-line-v2');
     if (_paginationKey == key && _paginatedPages.isNotEmpty) return;
     final pages = paginateBookSourceText(
@@ -1320,9 +1208,9 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       child: Padding(
         padding: EdgeInsets.fromLTRB(
           _horizontalMargin,
-          MediaQuery.viewPaddingOf(context).top + _verticalMargin,
+          _readerSafeArea.contentTop,
           _horizontalMargin,
-          MediaQuery.viewPaddingOf(context).bottom + _verticalMargin,
+          _readerSafeArea.contentBottom,
         ),
         child: Align(
           alignment: Alignment.topLeft,
@@ -1354,9 +1242,8 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     return LayoutBuilder(
       builder: (context, constraints) {
         final viewport = constraints.biggest;
-        final top = MediaQuery.viewPaddingOf(context).top + _verticalMargin;
-        final bottom =
-            MediaQuery.viewPaddingOf(context).bottom + _verticalMargin;
+        final top = _readerSafeArea.contentTop;
+        final bottom = _readerSafeArea.contentBottom;
         final width =
             (viewport.width - _horizontalMargin * 2).clamp(80.0, 760.0);
         final height = (viewport.height - top - bottom).clamp(120.0, 1600.0);
@@ -1528,148 +1415,30 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     );
   }
 
-  Widget _buildTopControls() {
-    final title = _chapters.isEmpty
-        ? widget.book.title
-        : _chapters[_chapterIndex.clamp(0, _chapters.length - 1)].title;
+  bool get _currentPageIsBookmarked {
     final anchorKey = _currentBookmarkAnchorKey;
-    final isBookmarked = anchorKey != null &&
+    return anchorKey != null &&
         _bookmarks.any((bookmark) => bookmark.anchorKey == anchorKey);
-    return AnimatedPositioned(
-      key: const ValueKey('book-source-top-controls'),
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeOutBack,
-      left: 20,
-      right: 20,
-      top: _controlsVisible ? 10 : -130,
-      child: SafeArea(
-        bottom: false,
-        child: _buildReaderBar(
-          isTopBar: true,
-          child: SizedBox(
-            height: 58,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 7),
-              child: Row(
-                children: [
-                  _readerIconButton(
-                    onPressed: _requestExit,
-                    tooltip:
-                        MaterialLocalizations.of(context).backButtonTooltip,
-                    icon: Icons.arrow_back_rounded,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      title,
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: _readerThemeData.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.1,
-                      ),
-                    ),
-                  ),
-                  _readerIconButton(
-                    onPressed:
-                        _bookmarkBusy ? null : () => _toggleCurrentBookmark(),
-                    tooltip: isBookmarked
-                        ? context.l10n.bookmarkRemoved
-                        : context.l10n.readerAddBookmark,
-                    icon: isBookmarked
-                        ? Icons.bookmark_rounded
-                        : Icons.bookmark_border_rounded,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
   }
 
-  Widget _buildBottomControls() {
-    return AnimatedPositioned(
-      key: const ValueKey('book-source-bottom-controls'),
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeOutBack,
-      left: 22,
-      right: 22,
-      bottom: _controlsVisible ? 16 : -110,
-      child: SafeArea(
-        top: false,
-        child: _buildReaderBar(
-          isTopBar: false,
-          child: SizedBox(
-            height: 64,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 9),
-              child: Row(
-                children: [
-                  _readerIconButton(
-                    onPressed: _chapters.isEmpty ? null : _showCatalog,
-                    tooltip: context.l10n.readerToolbarTOC,
-                    icon: Icons.format_list_bulleted_rounded,
-                  ),
-                  Expanded(
-                    child: ValueListenableBuilder<double>(
-                      valueListenable: _scrollProgress,
-                      builder: (context, progress, _) => Text(
-                        _chapters.isEmpty ? widget.book.title : _readerStatus(),
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: _readerThemeData.textTheme.labelLarge?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.15,
-                        ),
-                      ),
-                    ),
-                  ),
-                  _readerIconButton(
-                    onPressed: _showReadingSettings,
-                    tooltip: context.l10n.readingSettings,
-                    icon: Icons.tune_rounded,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
+  Widget _buildReaderStatusText(
+    BuildContext context,
+    TextStyle? style,
+    Key? key,
+  ) {
+    return ValueListenableBuilder<double>(
+      valueListenable: _scrollProgress,
+      builder: (context, progress, _) => Text(
+        _chapters.isEmpty ? widget.book.title : _readerStatus(),
+        key: key,
+        textAlign: TextAlign.center,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: style,
       ),
-    );
-  }
-
-  Widget _buildReaderBar({
-    required Widget child,
-    required bool isTopBar,
-  }) =>
-      ReaderControlBar(
-        palette: _readerTheme,
-        isTopBar: isTopBar,
-        child: child,
-      );
-
-  Widget _readerIconButton({
-    required VoidCallback? onPressed,
-    required String tooltip,
-    required IconData icon,
-  }) {
-    return ReaderControlIconButton(
-      palette: _readerTheme,
-      onPressed: onPressed,
-      tooltip: tooltip,
-      icon: icon,
     );
   }
 }
-
-BookSourcePageMode _pageModeFromName(String? name) => readerPageModeFromName(
-      name,
-      fallback: BookSourcePageMode.verticalScroll,
-    );
 
 String _readableChapterText(BookSourceChapterContent content) {
   final paragraphs = <String>[];

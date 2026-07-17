@@ -6,6 +6,8 @@ import 'package:xxread/book_sources/models/registered_book_source.dart';
 import 'package:xxread/book_sources/protocol/book_source_protocol.dart';
 import 'package:xxread/book_sources/services/book_source_client.dart';
 import 'package:xxread/book_sources/services/book_source_reading_progress.dart';
+import 'package:xxread/core/reader/reader_margin_settings.dart';
+import 'package:xxread/core/reader/reader_settings.dart';
 import 'package:xxread/l10n/app_localizations.dart';
 import 'package:xxread/pages/book_source_reader_page.dart';
 
@@ -98,6 +100,72 @@ void main() {
     }
 
     expect(client.requestedChapterIds.first, 'chapter-2');
+  });
+
+  testWidgets('uses the shared reader settings with independent margins',
+      (tester) async {
+    final source = _testSource();
+    const book = BookSourceBook(
+      id: 'book-1',
+      title: 'Test book',
+      author: 'Author',
+      description: '',
+      categories: [],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: BookSourceReaderPage(
+          source: source,
+          book: book,
+          client: _FakeBookSourceClient(),
+        ),
+      ),
+    );
+    await _pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('book-source-reader-surface')),
+    );
+
+    await tester.tapAt(const Offset(400, 300));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
+    final bottomControls = tester.widget<AnimatedPositioned>(
+      find.byKey(const ValueKey('book-source-bottom-controls')),
+    );
+    expect(bottomControls.bottom, 16);
+    await tester.tap(find.byIcon(Icons.tune_rounded));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('reader-top-margin-slider')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('reader-bottom-margin-slider')),
+      findsOneWidget,
+    );
+
+    final topSlider = find.descendant(
+      of: find.byKey(const ValueKey('reader-top-margin-slider')),
+      matching: find.byType(Slider),
+    );
+    await tester.ensureVisible(topSlider);
+    await tester.pumpAndSettle();
+    await tester.drag(topSlider, const Offset(80, 0));
+    await tester.pumpAndSettle();
+
+    final prefs = await SharedPreferences.getInstance();
+    expect(
+      prefs.getDouble(ReaderSettingsStore.topMarginKey),
+      isNot(ReaderMarginSettings.defaultTop),
+    );
+    expect(
+      prefs.getDouble(ReaderSettingsStore.bottomMarginKey),
+      ReaderMarginSettings.defaultBottom,
+    );
   });
 }
 
