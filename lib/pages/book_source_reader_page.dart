@@ -60,6 +60,8 @@ class BookSourceReaderPage extends StatefulWidget {
 
 class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     with WidgetsBindingObserver {
+  static const double _maxReaderContentWidth = 760;
+
   late final BookSourceClient _client = widget.client ?? BookSourceClient();
   late final BookSourceShelfService _shelfService =
       widget.shelfService ?? BookSourceShelfService(client: _client);
@@ -855,7 +857,10 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     setState(() {
       _fontSize = fontSize ?? _fontSize;
       _lineHeight = (lineHeight ?? _lineHeight).clamp(1.4, 2.1);
-      _horizontalMargin = (horizontalMargin ?? _horizontalMargin).clamp(8, 48);
+      _horizontalMargin = (horizontalMargin ?? _horizontalMargin).clamp(
+        ReaderMarginSettings.horizontalMin,
+        ReaderMarginSettings.horizontalMax,
+      );
       _topMargin = (topMargin ?? _topMargin)
           .clamp(ReaderMarginSettings.min, ReaderMarginSettings.max);
       _bottomMargin = (bottomMargin ?? _bottomMargin)
@@ -1094,25 +1099,30 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
               ),
               child: Center(
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 760),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildChapterTitle(chapterTitle),
-                      const SizedBox(height: 26),
-                      Text(
-                        text,
-                        style: _bodyTextStyle,
-                        strutStyle: readerStrutStyle(_bodyTextStyle),
-                        textHeightBehavior: readerTextHeightBehavior,
-                      ),
-                      const SizedBox(height: 34),
-                      Divider(
-                        color: _readerTheme.border.withValues(alpha: 0.48),
-                      ),
-                      const SizedBox(height: 8),
-                      _buildChapterButtons(),
-                    ],
+                  constraints: const BoxConstraints(
+                    maxWidth: _maxReaderContentWidth,
+                  ),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildChapterTitle(chapterTitle),
+                        const SizedBox(height: 26),
+                        Text(
+                          text,
+                          style: _bodyTextStyle,
+                          strutStyle: readerStrutStyle(_bodyTextStyle),
+                          textHeightBehavior: readerTextHeightBehavior,
+                        ),
+                        const SizedBox(height: 34),
+                        Divider(
+                          color: _readerTheme.border.withValues(alpha: 0.48),
+                        ),
+                        const SizedBox(height: 8),
+                        _buildChapterButtons(),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -1201,7 +1211,8 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   }) {
     final top = _readerSafeArea.contentTop;
     final bottom = _readerSafeArea.contentBottom;
-    final width = (viewport.width - _horizontalMargin * 2).clamp(80.0, 760.0);
+    final width = (viewport.width - _horizontalMargin * 2)
+        .clamp(80.0, _maxReaderContentWidth);
     final height = (viewport.height - top - bottom).clamp(120.0, 1600.0);
     final textScaler = MediaQuery.textScalerOf(context);
     final locale = Localizations.maybeLocaleOf(context);
@@ -1291,26 +1302,34 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
           _horizontalMargin,
           _readerSafeArea.contentBottom,
         ),
-        child: Align(
-          alignment: Alignment.topLeft,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (page.showsChapterTitle) ...[
-                _buildChapterTitle(
-                  resolvedContent.title.isEmpty
-                      ? _chapters[resolvedIndex].title
-                      : resolvedContent.title,
-                ),
-                const SizedBox(height: 26),
-              ],
-              Text(
-                page.text,
-                style: _bodyTextStyle,
-                strutStyle: readerStrutStyle(_bodyTextStyle),
-                textHeightBehavior: readerTextHeightBehavior,
+        child: Center(
+          child: ConstrainedBox(
+            key: const ValueKey('book-source-reader-page-content'),
+            constraints: const BoxConstraints(
+              maxWidth: _maxReaderContentWidth,
+            ),
+            child: SizedBox(
+              width: double.infinity,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (page.showsChapterTitle) ...[
+                    _buildChapterTitle(
+                      resolvedContent.title.isEmpty
+                          ? _chapters[resolvedIndex].title
+                          : resolvedContent.title,
+                    ),
+                    const SizedBox(height: 26),
+                  ],
+                  Text(
+                    page.text,
+                    style: _bodyTextStyle,
+                    strutStyle: readerStrutStyle(_bodyTextStyle),
+                    textHeightBehavior: readerTextHeightBehavior,
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -1328,8 +1347,8 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         final viewport = constraints.biggest;
         final top = _readerSafeArea.contentTop;
         final bottom = _readerSafeArea.contentBottom;
-        final width =
-            (viewport.width - _horizontalMargin * 2).clamp(80.0, 760.0);
+        final width = (viewport.width - _horizontalMargin * 2)
+            .clamp(80.0, _maxReaderContentWidth);
         final height = (viewport.height - top - bottom).clamp(120.0, 1600.0);
         final scaler = MediaQuery.textScalerOf(context);
         final titlePainter = TextPainter(

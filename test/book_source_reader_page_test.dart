@@ -169,6 +169,42 @@ void main() {
     );
   });
 
+  testWidgets('centers paged content with equal horizontal whitespace',
+      (tester) async {
+    tester.view.physicalSize = const Size(1200, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    SharedPreferences.setMockInitialValues({
+      ReaderSettingsStore.pageModeKey: BookSourcePageMode.instantPage.name,
+      ReaderSettingsStore.horizontalMarginKey: 0.0,
+    });
+
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: BookSourceReaderPage(
+          source: _testSource(),
+          book: const BookSourceBook(
+            id: 'book-1',
+            title: 'Test book',
+            author: 'Author',
+            description: '',
+            categories: [],
+          ),
+          client: _FakeBookSourceClient(),
+        ),
+      ),
+    );
+    const contentKey = ValueKey('book-source-reader-page-content');
+    await _pumpUntilFound(tester, find.byKey(contentKey));
+
+    final rect = tester.getRect(find.byKey(contentKey));
+    expect(rect.width, 760);
+    expect(rect.left, closeTo(1200 - rect.right, 0.01));
+  });
+
   testWidgets('uses the light reader theme for status bar icon contrast',
       (tester) async {
     SharedPreferences.setMockInitialValues({

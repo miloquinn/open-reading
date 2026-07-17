@@ -46,4 +46,17 @@ void main() {
     expect(restored.themeId, 'mist');
     expect(restored.pageMode, ReaderPageMode.pageCurl);
   });
+
+  test('allows a zero horizontal page margin', () async {
+    SharedPreferences.setMockInitialValues({
+      ReaderSettingsStore.horizontalMarginKey: 0.0,
+    });
+
+    final restored = await const ReaderSettingsStore().load(
+      fallbackPageMode: ReaderPageMode.verticalScroll,
+    );
+
+    expect(restored.horizontalMargin, 0);
+    expect(restored.copyWith(horizontalMargin: -1).horizontalMargin, 0);
+  });
 }

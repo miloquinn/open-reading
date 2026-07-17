@@ -41,8 +41,10 @@ class ReaderSettings {
     return ReaderSettings(
       fontSize: (fontSize ?? this.fontSize).clamp(14, 32),
       lineHeight: (lineHeight ?? this.lineHeight).clamp(1.4, 2.1),
-      horizontalMargin:
-          (horizontalMargin ?? this.horizontalMargin).clamp(8, 48),
+      horizontalMargin: (horizontalMargin ?? this.horizontalMargin).clamp(
+        ReaderMarginSettings.horizontalMin,
+        ReaderMarginSettings.horizontalMax,
+      ),
       topMargin: (topMargin ?? this.topMargin)
           .clamp(ReaderMarginSettings.min, ReaderMarginSettings.max),
       bottomMargin: (bottomMargin ?? this.bottomMargin)
@@ -93,7 +95,10 @@ class ReaderSettingsStore {
           .clamp(1.4, 2.1),
       horizontalMargin: (prefs.getDouble(horizontalMarginKey) ??
               ReaderSettings.defaultHorizontalMargin)
-          .clamp(8, 48),
+          .clamp(
+        ReaderMarginSettings.horizontalMin,
+        ReaderMarginSettings.horizontalMax,
+      ),
       topMargin: margins.top,
       bottomMargin: margins.bottom,
       themeId: prefs.getString(themeKey) ?? ReaderSettings.defaultThemeId,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/reader/reader_layout.dart';
+import '../core/reader/reader_margin_settings.dart';
 import '../utils/reader_themes.dart';
 
 class ReaderSettingsSheet extends StatefulWidget {
@@ -129,12 +130,13 @@ class _ReaderSettingsSheetState extends State<ReaderSettingsSheet> {
             onChangeEnd: widget.onLineHeightChanged,
           ),
           ReaderSettingSlider(
+            key: const ValueKey('reader-horizontal-margin-slider'),
             label: widget.horizontalMarginLabel,
             value: _horizontalMargin,
             valueLabel: _horizontalMargin.round().toString(),
-            min: 8,
-            max: 48,
-            divisions: 40,
+            min: ReaderMarginSettings.horizontalMin,
+            max: ReaderMarginSettings.horizontalMax,
+            divisions: 48,
             onChanged: (value) => setState(() => _horizontalMargin = value),
             onChangeEnd: widget.onHorizontalMarginChanged,
           ),

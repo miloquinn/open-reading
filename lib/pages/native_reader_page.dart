@@ -464,7 +464,10 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     setState(() {
       _fontSize = fontSize ?? _fontSize;
       _lineHeight = (lineHeight ?? _lineHeight).clamp(1.4, 2.1);
-      _horizontalMargin = (horizontalMargin ?? _horizontalMargin).clamp(8, 48);
+      _horizontalMargin = (horizontalMargin ?? _horizontalMargin).clamp(
+        ReaderMarginSettings.horizontalMin,
+        ReaderMarginSettings.horizontalMax,
+      );
       _topMargin = (topMargin ?? _topMargin)
           .clamp(ReaderMarginSettings.min, ReaderMarginSettings.max);
       _bottomMargin = (bottomMargin ?? _bottomMargin)
