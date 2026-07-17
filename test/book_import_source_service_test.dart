@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/services.dart';
+import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:xxread/services/books/book_import_models.dart';
 import 'package:xxread/services/books/book_import_source_service.dart';
@@ -49,7 +50,7 @@ void main() {
     final sources = await service.scanIosSharedDocuments();
 
     expect(sources, hasLength(1));
-    expect(sources.single.localPath, book.path);
+    expect(p.normalize(sources.single.localPath!), p.normalize(book.path));
     expect(sources.single.ownership, BookImportOwnership.managedInPlace);
     expect(sources.single.kind, BookImportSourceKind.iosSharedDocuments);
   });

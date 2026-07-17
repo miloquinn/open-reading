@@ -19,7 +19,9 @@ void main() {
     expect(find.text('版本更新记录'), findsOneWidget);
     expect(find.text('v1.2.0'), findsOneWidget);
     expect(find.text('当前版本'), findsOneWidget);
-    expect(find.text('更新自定义字体'), findsOneWidget);
+    expect(find.text('优化阅读排版，支持零边距与同页更多文字'), findsOneWidget);
+    expect(find.text('接入音量键翻页'), findsOneWidget);
+    expect(find.text('完善自定义字体，支持导入与管理'), findsOneWidget);
     expect(find.text('v1.1.0'), findsOneWidget);
     expect(find.text('新增自定义字体'), findsOneWidget);
     expect(find.text('新增加入书签'), findsOneWidget);

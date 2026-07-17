@@ -42,10 +42,15 @@ class ChangelogPage extends StatelessWidget {
         version: 'v1.2.0',
         current: true,
         items: [
+          l10n.changelog120Typography,
+          l10n.changelog120VolumeKeys,
           l10n.changelog120CustomFonts,
           l10n.changelog120SystemBars,
           l10n.changelog120BookAnimations,
           l10n.changelog120TabletLibrary,
+          l10n.changelog120Import,
+          l10n.changelog120Covers,
+          l10n.changelog120Licenses,
         ],
       ),
       _ChangelogEntry(

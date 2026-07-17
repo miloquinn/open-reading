@@ -1677,11 +1677,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get changelogCurrentVersion => 'Current version';
 
   @override
-  String get changelog120CustomFonts => 'Updated custom fonts';
+  String get changelog120CustomFonts =>
+      'Improved custom fonts with import and management';
 
   @override
   String get changelog120SystemBars =>
-      'Polished the status bar and control bar';
+      'Polished the status bar and reading controls';
 
   @override
   String get changelog120BookAnimations =>
@@ -1689,6 +1690,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get changelog120TabletLibrary => 'Improved the tablet library layout';
+
+  @override
+  String get changelog120Typography =>
+      'Improved reader layout with zero margins and more text per page';
+
+  @override
+  String get changelog120VolumeKeys =>
+      'Added volume-key page turning on Android';
+
+  @override
+  String get changelog120Import =>
+      'Redesigned book import with safer bottom controls';
+
+  @override
+  String get changelog120Covers =>
+      'Generated simple covers for books without artwork';
+
+  @override
+  String get changelog120Licenses =>
+      'Added offline open-source license viewing';
 
   @override
   String get changelog110CustomFonts => 'Added custom fonts';

@@ -1610,16 +1610,31 @@ class AppLocalizationsZh extends AppLocalizations {
   String get changelogCurrentVersion => '当前版本';
 
   @override
-  String get changelog120CustomFonts => '更新自定义字体';
+  String get changelog120CustomFonts => '完善自定义字体，支持导入与管理';
 
   @override
-  String get changelog120SystemBars => '美化状态栏与控制栏';
+  String get changelog120SystemBars => '美化状态栏与阅读控制栏';
 
   @override
   String get changelog120BookAnimations => '重做书籍打开与关闭动画';
 
   @override
   String get changelog120TabletLibrary => '优化平板书库布局';
+
+  @override
+  String get changelog120Typography => '优化阅读排版，支持零边距与同页更多文字';
+
+  @override
+  String get changelog120VolumeKeys => '接入音量键翻页';
+
+  @override
+  String get changelog120Import => '重构书籍导入，适配安全区更易用';
+
+  @override
+  String get changelog120Covers => '无封面书籍统一生成简约封面';
+
+  @override
+  String get changelog120Licenses => '新增应用内开源许可查看';
 
   @override
   String get changelog110CustomFonts => '新增自定义字体';
@@ -3884,16 +3899,31 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get changelogCurrentVersion => '目前版本';
 
   @override
-  String get changelog120CustomFonts => '更新自訂字型';
+  String get changelog120CustomFonts => '完善自訂字型，支援匯入與管理';
 
   @override
-  String get changelog120SystemBars => '美化狀態列與控制列';
+  String get changelog120SystemBars => '美化狀態列與閱讀控制列';
 
   @override
   String get changelog120BookAnimations => '重做書籍開啟與關閉動畫';
 
   @override
   String get changelog120TabletLibrary => '優化平板書庫版面';
+
+  @override
+  String get changelog120Typography => '優化閱讀排版，支援零邊距與同頁更多文字';
+
+  @override
+  String get changelog120VolumeKeys => '接入音量鍵翻頁';
+
+  @override
+  String get changelog120Import => '重構書籍匯入，適配安全區更易用';
+
+  @override
+  String get changelog120Covers => '無封面書籍統一產生簡約封面';
+
+  @override
+  String get changelog120Licenses => '新增應用內開源授權檢視';
 
   @override
   String get changelog110CustomFonts => '新增自訂字型';

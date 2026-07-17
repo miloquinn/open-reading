@@ -3081,13 +3081,13 @@ abstract class AppLocalizations {
   /// No description provided for @changelog120CustomFonts.
   ///
   /// In en, this message translates to:
-  /// **'Updated custom fonts'**
+  /// **'Improved custom fonts with import and management'**
   String get changelog120CustomFonts;
 
   /// No description provided for @changelog120SystemBars.
   ///
   /// In en, this message translates to:
-  /// **'Polished the status bar and control bar'**
+  /// **'Polished the status bar and reading controls'**
   String get changelog120SystemBars;
 
   /// No description provided for @changelog120BookAnimations.
@@ -3101,6 +3101,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Improved the tablet library layout'**
   String get changelog120TabletLibrary;
+
+  /// No description provided for @changelog120Typography.
+  ///
+  /// In en, this message translates to:
+  /// **'Improved reader layout with zero margins and more text per page'**
+  String get changelog120Typography;
+
+  /// No description provided for @changelog120VolumeKeys.
+  ///
+  /// In en, this message translates to:
+  /// **'Added volume-key page turning on Android'**
+  String get changelog120VolumeKeys;
+
+  /// No description provided for @changelog120Import.
+  ///
+  /// In en, this message translates to:
+  /// **'Redesigned book import with safer bottom controls'**
+  String get changelog120Import;
+
+  /// No description provided for @changelog120Covers.
+  ///
+  /// In en, this message translates to:
+  /// **'Generated simple covers for books without artwork'**
+  String get changelog120Covers;
+
+  /// No description provided for @changelog120Licenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Added offline open-source license viewing'**
+  String get changelog120Licenses;
 
   /// No description provided for @changelog110CustomFonts.
   ///
