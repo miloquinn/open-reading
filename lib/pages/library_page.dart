@@ -369,10 +369,13 @@ class _LibraryPageState extends State<LibraryPage> {
               : RefreshIndicator(
                   onRefresh: _loadBooks,
                   strokeWidth: 2.5,
-                  displacement: 48,
+                  displacement: 40,
+                  // 与首页/发现页对齐：出场裁剪线贴住毛玻璃顶栏下边缘，
+                  // 圆圈看起来从顶栏底下滑出；用 pageTopPadding 会让裁剪线
+                  // 悬在顶栏下方 8dp，圆圈在半空被“隐形层”切头。
                   edgeOffset: useRailNavigation || _searchBarVisible
                       ? 0
-                      : mobileTopInset,
+                      : mobileChrome.topBarHeight,
                   color: Theme.of(context).colorScheme.primary,
                   backgroundColor: palette.cardStrong,
                   child: _books.isEmpty

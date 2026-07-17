@@ -1611,6 +1611,18 @@ class AppLocalizationsJa extends AppLocalizations {
   String get changelogCurrentVersion => '現在のバージョン';
 
   @override
+  String get changelog120CustomFonts => 'カスタムフォントを更新';
+
+  @override
+  String get changelog120SystemBars => 'ステータスバーとコントロールバーのデザインを改善';
+
+  @override
+  String get changelog120BookAnimations => '本を開く・閉じるアニメーションを刷新';
+
+  @override
+  String get changelog120TabletLibrary => 'タブレットの本棚レイアウトを最適化';
+
+  @override
   String get changelog110CustomFonts => 'カスタムフォントを追加';
 
   @override

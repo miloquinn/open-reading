@@ -202,8 +202,8 @@ class ReaderControlBar extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     final borderRadius = BorderRadius.circular(999);
     final blurEnabled = !GlassEffectConfig.shouldDisableBlur;
+    // 不叠加预设，直接使用与悬浮导航栏/首页顶栏一致的标准玻璃参数
     final config = GlassEffectHelper.getReadingControlConfig(
-      preset: GlassEffectConfig.dreamyMode,
       isTopBar: isTopBar,
     );
     final surfaceOpacity = blurEnabled ? config['opacity']! : 1.0;

@@ -1666,6 +1666,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get changelogCurrentVersion => 'Current version';
 
   @override
+  String get changelog120CustomFonts => 'Updated custom fonts';
+
+  @override
+  String get changelog120SystemBars =>
+      'Polished the status bar and control bar';
+
+  @override
+  String get changelog120BookAnimations =>
+      'Redesigned book open and close animations';
+
+  @override
+  String get changelog120TabletLibrary => 'Improved the tablet library layout';
+
+  @override
   String get changelog110CustomFonts => 'Added custom fonts';
 
   @override

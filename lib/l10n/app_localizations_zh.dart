@@ -1601,6 +1601,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get changelogCurrentVersion => '当前版本';
 
   @override
+  String get changelog120CustomFonts => '更新自定义字体';
+
+  @override
+  String get changelog120SystemBars => '美化状态栏与控制栏';
+
+  @override
+  String get changelog120BookAnimations => '重做书籍打开与关闭动画';
+
+  @override
+  String get changelog120TabletLibrary => '优化平板书库布局';
+
+  @override
   String get changelog110CustomFonts => '新增自定义字体';
 
   @override
@@ -3852,6 +3864,18 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get changelogCurrentVersion => '目前版本';
+
+  @override
+  String get changelog120CustomFonts => '更新自訂字型';
+
+  @override
+  String get changelog120SystemBars => '美化狀態列與控制列';
+
+  @override
+  String get changelog120BookAnimations => '重做書籍開啟與關閉動畫';
+
+  @override
+  String get changelog120TabletLibrary => '優化平板書庫版面';
 
   @override
   String get changelog110CustomFonts => '新增自訂字型';

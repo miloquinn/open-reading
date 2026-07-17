@@ -9,10 +9,9 @@ import 'progressive_blur.dart';
 
 class GlassEffectConfig {
   // ============ 模糊强度配置 (sigmaX/sigmaY) ============
-  static const double _appBarBlurBase = 15.0; // 首页、书库、设置页顶栏
-  static const double _navigationBarBlurBase = 15.0; // 底部悬浮式导航栏
-  static const double _readingTopBarBlurBase = 15.0; // 阅读页顶部控制栏
-  static const double _readingBottomBarBlurBase = 15.0; // 阅读页底部控制栏
+  // 悬浮 chrome（顶栏、悬浮导航栏、阅读页控制栏）共用同一组参数，
+  // 保证全应用玻璃观感一致；调整这里即可全局生效。
+  static const double _chromeBlurBase = 15.0;
   static const double _cardBlurBase = 20.0; // 一般卡片容器
   static const double _lightCardBlurBase = 8.0; // 轻量级容器（图标背景等）
   static const double _dialogBlurBase = 30.0; // 对话框和弹窗
@@ -47,14 +46,14 @@ class GlassEffectConfig {
   static double _scaled(double value) => value * _blurScale;
 
   // 顶部应用栏 (AppBar)
-  static double get appBarBlur => _scaled(_appBarBlurBase);
+  static double get appBarBlur => _scaled(_chromeBlurBase);
 
   // 导航栏
-  static double get navigationBarBlur => _scaled(_navigationBarBlurBase);
+  static double get navigationBarBlur => _scaled(_chromeBlurBase);
 
-  // 阅读页面控制栏
-  static double get readingTopBarBlur => _scaled(_readingTopBarBlurBase);
-  static double get readingBottomBarBlur => _scaled(_readingBottomBarBlurBase);
+  // 阅读页面控制栏（与顶栏/导航栏保持一致）
+  static double get readingTopBarBlur => _scaled(_chromeBlurBase);
+  static double get readingBottomBarBlur => _scaled(_chromeBlurBase);
 
   // 卡片和容器
   static double get cardBlur => _scaled(_cardBlurBase);
@@ -64,22 +63,21 @@ class GlassEffectConfig {
 
   // ============ 透明度配置 (alpha值: 0.0-1.0) ============
 
+  // 悬浮 chrome 共用透明度（顶栏、悬浮导航栏、阅读页控制栏）
+  static const double _chromeOpacityBase = 0.3;
+
   // 顶部应用栏透明度
-  static const double _appBarOpacityBase = 0.3;
-  static double get appBarOpacity => effectiveOpacity(_appBarOpacityBase);
+  static double get appBarOpacity => effectiveOpacity(_chromeOpacityBase);
 
   // 导航栏透明度
-  static const double _navigationBarOpacityBase = 0.3;
   static double get navigationBarOpacity =>
-      effectiveOpacity(_navigationBarOpacityBase);
+      effectiveOpacity(_chromeOpacityBase);
 
-  // 阅读页面控制栏透明度
-  static const double _readingTopBarOpacityBase = 0.9;
-  static const double _readingBottomBarOpacityBase = 0.9;
+  // 阅读页面控制栏透明度（与顶栏/导航栏保持一致）
   static double get readingTopBarOpacity =>
-      effectiveOpacity(_readingTopBarOpacityBase);
+      effectiveOpacity(_chromeOpacityBase);
   static double get readingBottomBarOpacity =>
-      effectiveOpacity(_readingBottomBarOpacityBase);
+      effectiveOpacity(_chromeOpacityBase);
 
   // 卡片透明度
   static const double _cardOpacityBase = 0.8;

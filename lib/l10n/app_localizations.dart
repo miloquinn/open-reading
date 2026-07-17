@@ -3060,6 +3060,30 @@ abstract class AppLocalizations {
   /// **'Current version'**
   String get changelogCurrentVersion;
 
+  /// No description provided for @changelog120CustomFonts.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated custom fonts'**
+  String get changelog120CustomFonts;
+
+  /// No description provided for @changelog120SystemBars.
+  ///
+  /// In en, this message translates to:
+  /// **'Polished the status bar and control bar'**
+  String get changelog120SystemBars;
+
+  /// No description provided for @changelog120BookAnimations.
+  ///
+  /// In en, this message translates to:
+  /// **'Redesigned book open and close animations'**
+  String get changelog120BookAnimations;
+
+  /// No description provided for @changelog120TabletLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Improved the tablet library layout'**
+  String get changelog120TabletLibrary;
+
   /// No description provided for @changelog110CustomFonts.
   ///
   /// In en, this message translates to:
