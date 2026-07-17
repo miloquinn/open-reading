@@ -20,12 +20,28 @@ class BookmarkDao {
       'bookmarks',
       where: 'bookId = ?',
       whereArgs: [bookId],
-      orderBy: 'pageNumber ASC',
+      orderBy: 'COALESCE(chapter_index, pageNumber) ASC, createDate ASC',
     );
 
     return List.generate(maps.length, (i) {
       return Bookmark.fromMap(maps[i]);
     });
+  }
+
+  Future<Bookmark?> getBookmarkByAnchorKey(
+    int bookId,
+    String anchorKey,
+  ) async {
+    final normalizedAnchorKey = anchorKey.trim();
+    if (normalizedAnchorKey.isEmpty) return null;
+    final db = await _databaseService.database;
+    final maps = await db.query(
+      'bookmarks',
+      where: 'bookId = ? AND anchor_key = ?',
+      whereArgs: [bookId, normalizedAnchorKey],
+      limit: 1,
+    );
+    return maps.isEmpty ? null : Bookmark.fromMap(maps.first);
   }
 
   // 检查指定页面是否已有书签
@@ -102,6 +118,20 @@ class BookmarkDao {
       'bookmarks',
       where: 'bookId = ? AND cfi = ?',
       whereArgs: [bookId, normalizedCfi],
+    );
+  }
+
+  Future<int> deleteBookmarkByAnchorKey(
+    int bookId,
+    String anchorKey,
+  ) async {
+    final normalizedAnchorKey = anchorKey.trim();
+    if (normalizedAnchorKey.isEmpty) return 0;
+    final db = await _databaseService.database;
+    return db.delete(
+      'bookmarks',
+      where: 'bookId = ? AND anchor_key = ?',
+      whereArgs: [bookId, normalizedAnchorKey],
     );
   }
 

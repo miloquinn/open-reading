@@ -1,13 +1,19 @@
-// 文件说明：书籍导入页面，处理本地文件导入。
-// 技术要点：Flutter UI、文件系统。
+// 文件说明：多书籍暂存与顺序导入页面。
+// 技术要点：自适应布局、导入队列、单书状态、失败重试。
 
+import 'dart:async';
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
-import '../services/books/book_services.dart';
-import '../utils/localization_extension.dart';
-import '../utils/system_ui_helper.dart';
-import '../widgets/side_toast.dart';
+import 'package:xxread/pages/import_book/import_book_controller.dart';
+import 'package:xxread/pages/import_book/import_book_widgets.dart';
+import 'package:xxread/services/books/book_services.dart';
+import 'package:xxread/services/storage/android_book_folder_registry.dart';
+import 'package:xxread/utils/localization_extension.dart';
+import 'package:xxread/utils/system_ui_helper.dart';
+import 'package:xxread/widgets/side_toast.dart';
 
 class ImportBookPage extends StatefulWidget {
   const ImportBookPage({super.key});
@@ -17,108 +23,355 @@ class ImportBookPage extends StatefulWidget {
 }
 
 class _ImportBookPageState extends State<ImportBookPage> {
-  bool _isLoading = false;
-  double _progress = 0.0;
-  String _progressMessage = '';
+  late final BookImportSourceService _sourceService;
+  late final ImportBookController _controller;
+  late final AndroidBookFolderRegistry _androidFolderRegistry;
+  bool _isDiscovering = false;
+  bool? _iCloudAvailable;
+  List<AndroidBookFolder> _androidFolders = const [];
 
-  Future<void> _pickFile() async {
-    setState(() {
-      _isLoading = true;
-      _progress = 0.0;
-      _progressMessage = context.l10n.importPreparing;
-    });
-
-    try {
-      final book = await BookImportService().importBook(
-        progressCallback: (progress, message) {
-          if (mounted) {
-            setState(() {
-              _progress = progress;
-              _progressMessage = message;
-            });
-          }
-        },
-      );
-
-      if (book != null && mounted) {
-        Navigator.pop(context, true);
-      }
-    } catch (e) {
-      if (mounted) {
-        showSideToast(
-            context, context.l10n.importFailedWithError(e.toString()));
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _progress = 0.0;
-          _progressMessage = '';
-        });
-      }
+  @override
+  void initState() {
+    super.initState();
+    _sourceService = BookImportSourceService();
+    _androidFolderRegistry = AndroidBookFolderRegistry(
+      sourceService: _sourceService,
+    );
+    _controller = ImportBookController(
+      importer: BookImportService(),
+      sourcePreparer: _sourceService,
+    );
+    if (!kIsWeb && Platform.isIOS) {
+      unawaited(_loadICloudAvailability());
+    }
+    if (!kIsWeb && Platform.isAndroid) {
+      unawaited(_loadAndroidFolders());
     }
   }
 
   @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _discover(
+    Future<List<BookImportSource>> Function() operation,
+  ) async {
+    if (_isDiscovering || _controller.isRunning) return;
+    setState(() => _isDiscovering = true);
+    try {
+      final sources = await operation();
+      if (!mounted) return;
+      _controller.addSources(sources);
+      if (sources.isEmpty) {
+        showSideToast(context, context.l10n.importNoSupportedFiles);
+      }
+    } catch (error) {
+      if (mounted) {
+        showSideToast(
+          context,
+          context.l10n.importFailedWithError(error.toString()),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isDiscovering = false);
+    }
+  }
+
+  Future<void> _requestExit() async {
+    if (_controller.isRunning) return;
+    Navigator.of(context).pop(_controller.succeededCount > 0);
+  }
+
+  Future<void> _loadICloudAvailability() async {
+    try {
+      final available = await _sourceService.isICloudAvailable();
+      if (mounted) setState(() => _iCloudAvailable = available);
+    } catch (_) {
+      if (mounted) setState(() => _iCloudAvailable = false);
+    }
+  }
+
+  Future<void> _loadAndroidFolders() async {
+    try {
+      final folders = await _androidFolderRegistry.registeredDirectories();
+      if (mounted) setState(() => _androidFolders = folders);
+    } catch (_) {
+      if (mounted) setState(() => _androidFolders = const []);
+    }
+  }
+
+  Future<void> _pickAndroidFolder() async {
+    await _discover(_androidFolderRegistry.pickAndScan);
+    await _loadAndroidFolders();
+  }
+
+  Future<void> _removeAndroidFolder(AndroidBookFolder folder) async {
+    await _androidFolderRegistry.removeDirectory(folder.treeUri);
+    await _loadAndroidFolders();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final overlayStyle = SystemUiHelper.overlayStyleForBrightness(
-      Theme.of(context).brightness,
+      theme.brightness,
     );
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: overlayStyle,
-      child: Scaffold(
-        backgroundColor: scheme.surface,
-        appBar: AppBar(
-          backgroundColor: scheme.surface,
-          scrolledUnderElevation: 0,
-          title: Text(context.l10n.importBooks),
-        ),
-        body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _buildImportButton(
-                  icon: Icons.file_open_rounded,
-                  label: context.l10n.importLocalFile,
-                  onTap: _pickFile,
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, _) {
+          return PopScope(
+            canPop: !_controller.isRunning,
+            onPopInvokedWithResult: (didPop, _) {
+              if (!didPop && !_controller.isRunning) {
+                unawaited(_requestExit());
+              }
+            },
+            child: Scaffold(
+              backgroundColor: scheme.surface,
+              appBar: AppBar(
+                backgroundColor: scheme.surface,
+                scrolledUnderElevation: 0,
+                title: Text(context.l10n.importBooks),
+              ),
+              body: SafeArea(
+                bottom: false,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final sourcePanel = _buildSourcePanel();
+                    final queue = _buildQueuePane();
+                    if (constraints.maxWidth >= 840) {
+                      return Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            SizedBox(
+                              width: 330,
+                              child: SingleChildScrollView(child: sourcePanel),
+                            ),
+                            const SizedBox(width: 24),
+                            Expanded(child: queue),
+                          ],
+                        ),
+                      );
+                    }
+                    return Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                      child: Column(
+                        children: [
+                          sourcePanel,
+                          const SizedBox(height: 18),
+                          Expanded(child: queue),
+                        ],
+                      ),
+                    );
+                  },
                 ),
-                if (_isLoading) ...[
-                  const SizedBox(height: 24),
-                  LinearProgressIndicator(value: _progress),
-                  const SizedBox(height: 8),
-                  Text(
-                    _progressMessage,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ],
+              ),
+              bottomNavigationBar: _buildBottomBar(),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildImportButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return FilledButton.tonalIcon(
-      onPressed: _isLoading ? null : onTap,
-      icon: Icon(icon, size: 20),
-      label: Text(label, style: const TextStyle(fontSize: 15)),
-      style: FilledButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+  Widget _buildSourcePanel() {
+    final actions = <ImportSourceAction>[
+      ImportSourceAction(
+        icon: Icons.file_open_rounded,
+        label: context.l10n.importSelectFiles,
+        onPressed: () => _discover(_sourceService.pickFiles),
       ),
+    ];
+    if (!kIsWeb && Platform.isIOS) {
+      actions.addAll(<ImportSourceAction>[
+        ImportSourceAction(
+          icon: Icons.phone_iphone_rounded,
+          label: context.l10n.importIosSharedDocuments,
+          onPressed: () => _discover(_sourceService.scanIosSharedDocuments),
+        ),
+        if (_iCloudAvailable == true)
+          ImportSourceAction(
+            icon: Icons.cloud_outlined,
+            label: context.l10n.importICloudDrive,
+            onPressed: () => _discover(_sourceService.scanICloudDocuments),
+          )
+        else if (_iCloudAvailable == false)
+          ImportSourceAction(
+            icon: Icons.cloud_off_outlined,
+            label: context.l10n.importICloudUnavailable,
+            onPressed: null,
+          ),
+      ]);
+    }
+    if (!kIsWeb && Platform.isAndroid) {
+      actions.addAll(<ImportSourceAction>[
+        ImportSourceAction(
+          icon: Icons.create_new_folder_outlined,
+          label: context.l10n.importAndroidFolder,
+          onPressed: _pickAndroidFolder,
+        ),
+        ImportSourceAction(
+          icon: Icons.folder_copy_outlined,
+          label: context.l10n.importAndroidRescan,
+          onPressed: () =>
+              _discover(_androidFolderRegistry.scanRegisteredDirectories),
+        ),
+      ]);
+    }
+    return ImportSourcePanel(
+      title: context.l10n.importSourceTitle,
+      description: context.l10n.importSourceDescription,
+      actions: actions,
+      isBusy: _isDiscovering,
+      busyLabel: context.l10n.importScanning,
+      folderEntries: _androidFolders
+          .map(
+            (folder) => ImportFolderEntry(
+              name: folder.displayName,
+              status: folder.permissionAvailable
+                  ? context.l10n.importFolderPermissionAvailable
+                  : context.l10n.importFolderPermissionLost,
+              available: folder.permissionAvailable,
+              removeTooltip: context.l10n.importRemoveFolder,
+              onScan: folder.permissionAvailable
+                  ? () => _discover(
+                        () => _sourceService.scanAndroidTree(folder.treeUri),
+                      )
+                  : null,
+              onRemove: () => _removeAndroidFolder(folder),
+            ),
+          )
+          .toList(growable: false),
     );
+  }
+
+  Widget _buildQueuePane() {
+    final items = _controller.items;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                context.l10n.importQueueTitle(items.length),
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+            ),
+            if (_controller.completedCount > 0 && !_controller.isRunning)
+              TextButton(
+                onPressed: _controller.clearCompleted,
+                child: Text(context.l10n.importClearCompleted),
+              ),
+          ],
+        ),
+        const SizedBox(height: 2),
+        Text(
+          context.l10n.importQueueHint,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+        ),
+        const SizedBox(height: 12),
+        Expanded(
+          child: items.isEmpty
+              ? ImportQueueEmptyState(
+                  title: context.l10n.importQueueEmptyTitle,
+                  body: context.l10n.importQueueEmptyBody,
+                )
+              : ListView.separated(
+                  itemCount: items.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 10),
+                  itemBuilder: (context, index) {
+                    final item = items[index];
+                    return ImportQueueCard(
+                      key: ValueKey(item.source.id),
+                      item: item,
+                      statusLabel: _statusLabel(item),
+                      sizeLabel: _formatBytes(item.source.sizeBytes),
+                      removeLabel: context.l10n.importRemove,
+                      retryLabel: context.l10n.importRetry,
+                      onRemove: !_controller.isRunning &&
+                              (item.status == ImportQueueItemStatus.queued ||
+                                  item.status == ImportQueueItemStatus.failed)
+                          ? () => _controller.removeQueued(item.source.id)
+                          : null,
+                      onRetry: !_controller.isRunning &&
+                              item.status == ImportQueueItemStatus.failed
+                          ? () => _controller.retryOne(item.source.id)
+                          : null,
+                    );
+                  },
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget? _buildBottomBar() {
+    if (_controller.totalCount == 0) return null;
+    final hasCompleted = _controller.completedCount > 0;
+    final primaryLabel = _controller.isRunning
+        ? context.l10n.importProcessing
+        : context.l10n.importAction(_controller.queuedCount);
+    return ImportBottomBar(
+      summary: hasCompleted
+          ? context.l10n.importSummary(
+              _controller.succeededCount,
+              _controller.skippedCount,
+              _controller.failedCount,
+            )
+          : '',
+      primaryLabel: primaryLabel,
+      retryLabel: context.l10n.importRetryFailed(_controller.failedCount),
+      doneLabel: context.l10n.importDone,
+      isRunning: _controller.isRunning,
+      onPrimary: _controller.isRunning
+          ? () {}
+          : _controller.queuedCount == 0
+              ? null
+              : () => _controller.start(),
+      onRetry: !_controller.isRunning && _controller.failedCount > 0
+          ? () => _controller.retryFailed()
+          : null,
+      onDone: !_controller.isRunning &&
+              _controller.queuedCount == 0 &&
+              _controller.completedCount > 0
+          ? _requestExit
+          : null,
+    );
+  }
+
+  String _statusLabel(ImportQueueItem item) {
+    return switch (item.status) {
+      ImportQueueItemStatus.queued => context.l10n.importStatusQueued,
+      ImportQueueItemStatus.preparing => context.l10n.importStatusPreparing,
+      ImportQueueItemStatus.importing => switch (item.phase) {
+          BookImportPhase.queued => context.l10n.importStatusQueued,
+          BookImportPhase.checking => context.l10n.importStatusChecking,
+          BookImportPhase.copying => context.l10n.importStatusCopying,
+          BookImportPhase.analyzing => context.l10n.importStatusAnalyzing,
+          BookImportPhase.saving => context.l10n.importStatusSaving,
+        },
+      ImportQueueItemStatus.imported => context.l10n.importStatusImported,
+      ImportQueueItemStatus.skipped => context.l10n.importStatusSkipped,
+      ImportQueueItemStatus.failed => context.l10n.importStatusFailed,
+    };
+  }
+
+  String _formatBytes(int? bytes) {
+    if (bytes == null || bytes <= 0) return '';
+    if (bytes < 1024) return '$bytes B';
+    final kilobytes = bytes / 1024;
+    if (kilobytes < 1024) return '${kilobytes.toStringAsFixed(1)} KB';
+    return '${(kilobytes / 1024).toStringAsFixed(1)} MB';
   }
 }

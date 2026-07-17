@@ -219,7 +219,7 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
   Widget _buildBottomNavigation() {
     final mediaQuery = MediaQuery.of(context);
     final scheme = Theme.of(context).colorScheme;
-    final metrics = _computeBottomNavMetrics(mediaQuery);
+    final metrics = HomeMobileChromeMetrics.fromMediaQuery(mediaQuery);
     final navigationCount = _navigationItems.length;
     const desiredItemWidth = 72.0;
     final desiredNavWidth = navigationCount * desiredItemWidth + 28;
@@ -244,134 +244,137 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
           Theme.of(context).brightness,
         ),
       ),
-      body: Stack(
-        children: [
-          // 主内容 - 优化的PageView，减少卡顿
-          PageView(
-            controller: _pageController,
-            // 预构建相邻页面，避免首次滑动时页面构建/数据加载挤在动画帧里造成掉帧
-            allowImplicitScrolling: true,
-            onPageChanged: (index) {
-              // animateToPage 跨两页时会先经过中间页。程序化切换期间忽略
-              // 这个中间回调，避免底部导航出现“首页 -> 书库 -> 设置”的闪跳。
-              final targetIndex = _targetTabIndex;
-              if (targetIndex != null && index != targetIndex) {
-                return;
-              }
-              if (targetIndex == index) {
-                _targetTabIndex = null;
-              }
-              if (mounted && _selectedIndex != index) {
-                _updateSelectedIndex(index);
-              }
-            },
-            // PageScrollPhysics 保留整页吸附，同时减少 Bouncing 在页面落位时
-            // 额外的回弹帧，让三页之间的切换更干净。
-            physics: const PageScrollPhysics(
-              parent: ClampingScrollPhysics(),
+      body: HomeMobileChromeScope(
+        metrics: metrics,
+        child: Stack(
+          children: [
+            // 主内容 - 优化的PageView，减少卡顿
+            PageView(
+              controller: _pageController,
+              // 预构建相邻页面，避免首次滑动时页面构建/数据加载挤在动画帧里造成掉帧
+              allowImplicitScrolling: true,
+              onPageChanged: (index) {
+                // animateToPage 跨两页时会先经过中间页。程序化切换期间忽略
+                // 这个中间回调，避免底部导航出现“首页 -> 书库 -> 设置”的闪跳。
+                final targetIndex = _targetTabIndex;
+                if (targetIndex != null && index != targetIndex) {
+                  return;
+                }
+                if (targetIndex == index) {
+                  _targetTabIndex = null;
+                }
+                if (mounted && _selectedIndex != index) {
+                  _updateSelectedIndex(index);
+                }
+              },
+              // PageScrollPhysics 保留整页吸附，同时减少 Bouncing 在页面落位时
+              // 额外的回弹帧，让三页之间的切换更干净。
+              physics: const PageScrollPhysics(
+                parent: ClampingScrollPhysics(),
+              ),
+              // 禁用页面捕捉以减少卡顿
+              pageSnapping: true,
+              children: _mobilePages,
             ),
-            // 禁用页面捕捉以减少卡顿
-            pageSnapping: true,
-            children: _mobilePages,
-          ),
-          _buildMobileTopBarOverlay(mediaQuery),
-          // 悬浮药丸导航栏（RepaintBoundary 隔离：避免 PageView 滑动时
-          // 连带重绘毛玻璃导航栏，降低切页动画的每帧绘制成本）
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: RepaintBoundary(
-              child: SizedBox(
-                height: metrics.navContainerHeight,
-                child: Center(
-                  child: Padding(
-                    padding: EdgeInsets.only(bottom: metrics.navBottomInset),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(60),
-                      child: (() {
-                        final navBar = Container(
-                          width: navWidth,
-                          height: kHomeMobileFloatingNavHeight,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: _isMaterial3Style
-                                ? scheme.surfaceContainerHigh
-                                : GlassEffectConfig.surfaceColor(
-                                    context,
-                                    opacity:
-                                        GlassEffectConfig.navigationBarOpacity,
-                                  ),
-                            borderRadius: BorderRadius.circular(60),
-                            border: Border.all(
-                              color: scheme.outline.withValues(
-                                alpha: _isMaterial3Style ? 0.22 : 0.15,
-                              ),
-                              width: 0.6,
+            _buildMobileTopBarOverlay(),
+            // 悬浮药丸导航栏（RepaintBoundary 隔离：避免 PageView 滑动时
+            // 连带重绘毛玻璃导航栏，降低切页动画的每帧绘制成本）
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: RepaintBoundary(
+                child: SizedBox(
+                  height: metrics.navContainerHeight,
+                  child: Center(
+                    child: Padding(
+                      padding: EdgeInsets.only(bottom: metrics.navBottomInset),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(60),
+                        child: (() {
+                          final navBar = Container(
+                            width: navWidth,
+                            height: metrics.floatingNavHeight,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
                             ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: scheme.shadow.withValues(
-                                  alpha: _isMaterial3Style ? 0.07 : 0.12,
+                            decoration: BoxDecoration(
+                              color: _isMaterial3Style
+                                  ? scheme.surfaceContainerHigh
+                                  : GlassEffectConfig.surfaceColor(
+                                      context,
+                                      opacity: GlassEffectConfig
+                                          .navigationBarOpacity,
+                                    ),
+                              borderRadius: BorderRadius.circular(60),
+                              border: Border.all(
+                                color: scheme.outline.withValues(
+                                  alpha: _isMaterial3Style ? 0.22 : 0.15,
                                 ),
-                                blurRadius: _isMaterial3Style ? 12 : 30,
-                                offset: const Offset(0, 8),
+                                width: 0.6,
                               ),
-                              if (!_isMaterial3Style)
+                              boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.06),
-                                  blurRadius: 60,
-                                  offset: const Offset(0, 16),
+                                  color: scheme.shadow.withValues(
+                                    alpha: _isMaterial3Style ? 0.07 : 0.12,
+                                  ),
+                                  blurRadius: _isMaterial3Style ? 12 : 30,
+                                  offset: const Offset(0, 8),
                                 ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.max,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children:
-                                _navigationItems.asMap().entries.map((entry) {
-                              final index = entry.key;
-                              final item = entry.value;
-                              final isSelected = _selectedIndex == index;
+                                if (!_isMaterial3Style)
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.06),
+                                    blurRadius: 60,
+                                    offset: const Offset(0, 16),
+                                  ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.max,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children:
+                                  _navigationItems.asMap().entries.map((entry) {
+                                final index = entry.key;
+                                final item = entry.value;
+                                final isSelected = _selectedIndex == index;
 
-                              return Expanded(
-                                child: HomeBounceNavigationItem(
-                                  item: item,
-                                  isSelected: isSelected,
-                                  onTap: () => _switchToTab(index),
-                                ),
-                              );
-                            }).toList(),
-                          ),
-                        );
+                                return Expanded(
+                                  child: HomeBounceNavigationItem(
+                                    item: item,
+                                    isSelected: isSelected,
+                                    onTap: () => _switchToTab(index),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          );
 
-                        if (_disableShellBlur) {
-                          return navBar;
-                        }
-                        return BackdropFilter(
-                          enabled: !_disableShellBlur,
-                          filter: ImageFilter.blur(
-                            sigmaX: GlassEffectConfig.navigationBarBlur,
-                            sigmaY: GlassEffectConfig.navigationBarBlur,
-                          ),
-                          child: navBar,
-                        );
-                      })(),
+                          if (_disableShellBlur) {
+                            return navBar;
+                          }
+                          return BackdropFilter(
+                            enabled: !_disableShellBlur,
+                            filter: ImageFilter.blur(
+                              sigmaX: GlassEffectConfig.navigationBarBlur,
+                              sigmaY: GlassEffectConfig.navigationBarBlur,
+                            ),
+                            child: navBar,
+                          );
+                        })(),
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildMobileTopBarOverlay(MediaQueryData mediaQuery) {
+  Widget _buildMobileTopBarOverlay() {
     if (_navigationItems.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -546,21 +549,6 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
       // 的视觉感受；相邻页则保持轻快响应。
       duration: Duration(milliseconds: pageDistance > 1 ? 420 : 260),
       curve: Curves.easeInOutCubicEmphasized,
-    );
-  }
-
-  /// 统一计算手机底部导航相关尺寸，避免多处重复公式导致错位。
-  _BottomNavMetrics _computeBottomNavMetrics(MediaQueryData mediaQuery) {
-    final safeBottom = mediaQuery.padding.bottom.clamp(
-      0.0,
-      kHomeMobileSafeBottomMax,
-    );
-    final navBottomInset = safeBottom + kHomeMobileFloatingNavBottomGap;
-    final navContainerHeight = kHomeMobileFloatingNavHeight + navBottomInset;
-    return _BottomNavMetrics(
-      safeBottom: safeBottom,
-      navBottomInset: navBottomInset,
-      navContainerHeight: navContainerHeight,
     );
   }
 

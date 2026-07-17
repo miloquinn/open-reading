@@ -31,13 +31,14 @@ class HomeMobileTopBarWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final metrics = HomeMobileChromeScope.of(context);
     final isMaterial3Style = Theme.of(context)
             .extension<UiStyleThemeExtension>()
             ?.isMaterial3Style ??
         false;
     final useBlur = !isMaterial3Style && !GlassEffectConfig.shouldDisableBlur;
     final content = Container(
-      height: MediaQuery.of(context).padding.top + kHomeMobileTopBarHeight,
+      height: metrics.topBarHeight,
       decoration: BoxDecoration(
         color: isMaterial3Style
             ? scheme.surfaceContainerHigh
@@ -56,7 +57,7 @@ class HomeMobileTopBarWidget extends StatelessWidget {
       child: Padding(
         padding: EdgeInsets.fromLTRB(
           horizontalPadding,
-          MediaQuery.of(context).padding.top + 8,
+          metrics.systemTopInset + 8,
           horizontalPadding,
           8,
         ),

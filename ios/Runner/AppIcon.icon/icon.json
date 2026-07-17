@@ -1,0 +1,74 @@
+{
+  "fill" : {
+    "linear-gradient" : [
+      "display-p3:0.99608,0.99216,0.97647,1.00000",
+      "display-p3:0.96863,0.95686,0.99608,1.00000"
+    ],
+    "orientation" : {
+      "start" : {
+        "x" : 0.16,
+        "y" : 0.08
+      },
+      "stop" : {
+        "x" : 0.84,
+        "y" : 0.92
+      }
+    }
+  },
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "image-name" : "origo-star.png",
+          "name" : "Reading Spark",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              -24.1875,
+              9.8359375
+            ]
+          }
+        }
+      ],
+      "name" : "Reading Spark",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.12
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.12
+      }
+    },
+    {
+      "layers" : [
+        {
+          "image-name" : "origo-book.png",
+          "name" : "Book Artwork",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              -26,
+              18.4921875
+            ]
+          }
+        }
+      ],
+      "name" : "Book Artwork",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.12
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.12
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}

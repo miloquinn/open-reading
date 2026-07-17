@@ -55,20 +55,6 @@ part 'home_shell_layout_part.dart';
 ///    - 统一顶栏构建逻辑
 /// ============================================================================
 
-/// 手机底部导航布局计算结果。
-/// 把原来散落的公式收口在一个结构里，后续改尺寸更安全。
-class _BottomNavMetrics {
-  final double safeBottom;
-  final double navBottomInset;
-  final double navContainerHeight;
-
-  const _BottomNavMetrics({
-    required this.safeBottom,
-    required this.navBottomInset,
-    required this.navContainerHeight,
-  });
-}
-
 /// 导航上下文 - 用于通知子页面是否在侧边导航栏模式下
 class NavigationContext extends InheritedWidget {
   final bool useRailNavigation;

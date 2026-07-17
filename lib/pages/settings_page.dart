@@ -22,6 +22,7 @@ import 'home_shell_page.dart';
 import 'home_layout_constants.dart';
 import 'book_source_management_page.dart';
 import '../utils/localization_extension.dart';
+import '../utils/font_catalog_helper.dart';
 import '../utils/page_style_helper.dart';
 import '../utils/system_ui_helper.dart';
 import '../utils/ui_style.dart';
@@ -762,6 +763,8 @@ class _SettingsPageState extends State<SettingsPage> {
     final l10n = context.l10n;
     final useRailNavigation =
         NavigationContext.of(context)?.useRailNavigation ?? false;
+    final mobileChrome = HomeMobileChromeScope.of(context);
+    final viewPadding = MediaQuery.viewPaddingOf(context);
     return Container(
       decoration: BoxDecoration(
         gradient: PageStyleHelper.backgroundGradient(context),
@@ -769,13 +772,11 @@ class _SettingsPageState extends State<SettingsPage> {
       child: ListView(
         padding: EdgeInsets.fromLTRB(
           16,
-          useRailNavigation
-              ? MediaQuery.of(context).padding.top + 8
-              : MediaQuery.of(context).padding.top +
-                  kHomeMobileTopBarHeight +
-                  8,
+          useRailNavigation ? viewPadding.top + 8 : mobileChrome.pageTopPadding,
           16,
-          24,
+          useRailNavigation
+              ? viewPadding.bottom + 24
+              : mobileChrome.pageBottomPadding,
         ),
         children: [
           if (useRailNavigation) ...[
@@ -792,6 +793,15 @@ class _SettingsPageState extends State<SettingsPage> {
               _buildThemeToggle(themeNotifier),
               _buildAppThemeSelector(themeNotifier),
               _buildAccentColorSelector(themeNotifier),
+            ],
+          ),
+          const SizedBox(height: 20),
+          _buildSectionCard(
+            title: l10n.typographySettings,
+            icon: Icons.text_fields_rounded,
+            children: [
+              _buildAppFontSelector(appSettings),
+              _buildReaderFontSelector(appSettings),
             ],
           ),
           const SizedBox(height: 20),
@@ -2217,6 +2227,231 @@ class _SettingsPageState extends State<SettingsPage> {
                   );
                 }),
                 const SizedBox(height: 12),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildAppFontSelector(AppSettingsNotifier appSettings) {
+    final l10n = context.l10n;
+    final selected = appSettings.appFont;
+    return _buildActionSetting(
+      title: l10n.appFont,
+      subtitle:
+          '${FontCatalog.labelFor(l10n, selected)} · ${l10n.appFontDescription}',
+      icon: Icons.font_download_outlined,
+      onTap: () => _showFontModal(
+        title: l10n.appFont,
+        description: l10n.appFontDescription,
+        options: FontCatalog.appFonts,
+        selectedId: selected.id,
+        onSelected: appSettings.setAppFontId,
+      ),
+    );
+  }
+
+  Widget _buildReaderFontSelector(AppSettingsNotifier appSettings) {
+    final l10n = context.l10n;
+    final selected = appSettings.readerFont;
+    return _buildActionSetting(
+      title: l10n.readerFont,
+      subtitle:
+          '${FontCatalog.labelFor(l10n, selected)} · ${l10n.readerFontDescription}',
+      icon: Icons.chrome_reader_mode_outlined,
+      onTap: () => _showFontModal(
+        title: l10n.readerFont,
+        description: l10n.readerFontDescription,
+        options: FontCatalog.readerFonts,
+        selectedId: selected.id,
+        onSelected: appSettings.setReaderFontId,
+      ),
+    );
+  }
+
+  void _showFontModal({
+    required String title,
+    required String description,
+    required List<FontOption> options,
+    required String selectedId,
+    required Future<void> Function(String id) onSelected,
+  }) {
+    final l10n = context.l10n;
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (modalContext) {
+        return Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(modalContext).height * 0.82,
+          ),
+          decoration: BoxDecoration(
+            color: Theme.of(modalContext).colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  margin: const EdgeInsets.only(top: 12, bottom: 14),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Theme.of(modalContext)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 2, 24, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.text_fields_rounded,
+                            color: Theme.of(modalContext).colorScheme.primary,
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            title,
+                            style: Theme.of(modalContext)
+                                .textTheme
+                                .titleLarge
+                                ?.copyWith(fontWeight: FontWeight.w700),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        description,
+                        style: Theme.of(modalContext)
+                            .textTheme
+                            .bodySmall
+                            ?.copyWith(
+                              color: Theme.of(modalContext)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                              height: 1.45,
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+                Flexible(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    itemCount: options.length,
+                    itemBuilder: (context, index) {
+                      final option = options[index];
+                      final selected = option.id == selectedId;
+                      final colorScheme = Theme.of(context).colorScheme;
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(14),
+                            onTap: () async {
+                              await onSelected(option.id);
+                              if (modalContext.mounted) {
+                                Navigator.of(modalContext).pop();
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 12,
+                              ),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                  color: selected
+                                      ? colorScheme.primary
+                                      : colorScheme.outline
+                                          .withValues(alpha: 0.35),
+                                  width: selected ? 1.6 : 1,
+                                ),
+                                color: selected
+                                    ? colorScheme.primary
+                                        .withValues(alpha: 0.08)
+                                    : Colors.transparent,
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          FontCatalog.labelFor(l10n, option),
+                                          style: TextStyle(
+                                            inherit: false,
+                                            fontFamily: option.family,
+                                            fontFamilyFallback:
+                                                option.fallbackFamilies.isEmpty
+                                                    ? null
+                                                    : option.fallbackFamilies,
+                                            color: selected
+                                                ? colorScheme.primary
+                                                : colorScheme.onSurface,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 3),
+                                        Text(
+                                          FontCatalog.descriptionFor(
+                                            l10n,
+                                            option,
+                                          ),
+                                          style: TextStyle(
+                                            color: colorScheme.onSurfaceVariant,
+                                            fontSize: 12,
+                                            height: 1.35,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 7),
+                                        Text(
+                                          l10n.fontPreviewText,
+                                          style: TextStyle(
+                                            inherit: false,
+                                            fontFamily: option.family,
+                                            fontFamilyFallback:
+                                                option.fallbackFamilies.isEmpty
+                                                    ? null
+                                                    : option.fallbackFamilies,
+                                            color: colorScheme.onSurface,
+                                            fontSize: 15,
+                                            height: 1.3,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  if (selected)
+                                    Icon(
+                                      Icons.check_circle,
+                                      color: colorScheme.primary,
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
               ],
             ),
           ),

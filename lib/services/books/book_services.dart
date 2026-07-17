@@ -9,6 +9,8 @@ export 'package:xxread/services/books/book_dao.dart';
 export 'package:xxread/services/books/book_image_map_service.dart';
 export 'package:xxread/services/books/book_image_service.dart';
 export 'package:xxread/services/books/book_import_isolate_service.dart';
+export 'package:xxread/services/books/book_import_models.dart';
+export 'package:xxread/services/books/book_import_source_service.dart';
 export 'package:xxread/services/books/book_import_service.dart';
 export 'package:xxread/services/books/book_note_dao.dart';
 export 'package:xxread/services/books/book_storage_repair_service.dart';

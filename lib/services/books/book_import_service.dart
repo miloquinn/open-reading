@@ -20,6 +20,7 @@ import 'package:xxread/services/books/text_preprocessor_helper.dart';
 import 'package:xxread/services/books/cover_generator_service.dart';
 import 'package:xxread/services/books/book_cover_fetcher_service.dart';
 import 'package:xxread/services/books/book_import_isolate_service.dart';
+import 'package:xxread/services/books/book_import_models.dart';
 import 'package:xxread/services/books/epub_image_extractor_service.dart';
 import 'package:xxread/services/books/book_image_map_service.dart';
 import 'package:xxread/services/library/library_event_bus_service.dart';
@@ -58,13 +59,38 @@ class EnhancedBookMetadata {
 /// 导入进度回调函数类型
 typedef ImportProgressCallback = void Function(double progress, String message);
 
+typedef ImportMetadataExtractor = Future<EnhancedBookMetadata> Function(
+  String filePath,
+  String fileName,
+  String extension,
+  ImportProgressCallback? onProgress,
+);
+
 /// 顶层函数：在 isolate 中解析 EPUB（zip 解压 + XML 解析是 CPU
 /// 密集操作，放主线程会掉帧）。
 Future<EpubBook> parseEpubBookInIsolate(Uint8List bytes) {
   return EpubReader.readBook(bytes);
 }
 
-class BookImportService {
+class BookImportService implements BookFileImporter {
+  BookImportService({
+    BookImportStore? store,
+    Future<Directory> Function()? documentsDirectory,
+    ImportMetadataExtractor? metadataExtractor,
+    Future<void> Function(Book book)? scheduleAnalysis,
+  })  : _store = store ?? BookDao(),
+        _documentsDirectory =
+            documentsDirectory ?? getApplicationDocumentsDirectory,
+        _metadataExtractorOverride = metadataExtractor,
+        _scheduleAnalysis = scheduleAnalysis ??
+            ((book) => GlobalAIReadingService()
+                .scheduleImportedBookAnalysis(book: book));
+
+  final BookImportStore _store;
+  final Future<Directory> Function() _documentsDirectory;
+  final ImportMetadataExtractor? _metadataExtractorOverride;
+  final Future<void> Function(Book book) _scheduleAnalysis;
+  // 旧的单文件选择入口暂时保留给尚未迁移的调用方；新队列只使用 _store。
   final _bookDao = BookDao();
   final _enhancedTxtService = EnhancedTxtImportService();
   final _preprocessor = TextPreprocessor();
@@ -122,28 +148,23 @@ class BookImportService {
     }
   }
 
-  /// 计算文件的MD5哈希值（使用isolate优化）
-  ///
-  /// 参数 [filePath] 文件的完整路径
-  /// 返回计算出的MD5哈希值字符串，失败返回null
-  Future<String?> _calculateFileHash(String filePath) async {
+  /// 计算文件的 MD5 哈希。导入队列不能在哈希未知时继续写库。
+  Future<String> _calculateRequiredHash(String filePath) async {
     try {
       final file = File(filePath);
       if (!await file.exists()) {
-        debugPrint('File does not exist: $filePath');
-        return null;
+        throw const BookImportFailure(
+          code: 'source_missing',
+          message: '源文件不存在',
+        );
       }
 
-      // 小文件直接在主线程处理
       final fileSize = await file.length();
       if (fileSize < 5 * 1024 * 1024) {
-        // 小于5MB，直接处理
         final bytes = await file.readAsBytes();
-        final digest = md5.convert(bytes);
-        return digest.toString();
+        return md5.convert(bytes).toString();
       }
 
-      // 大文件使用isolate分块处理
       debugPrint('使用isolate处理大文件哈希计算: ${fileSize / 1024 / 1024} MB');
       final result = await compute(
         calculateFileHashInIsolate,
@@ -151,22 +172,306 @@ class BookImportService {
       );
       debugPrint('哈希计算完成: ${result.hash}');
       return result.hash;
-    } catch (e) {
-      debugPrint('Error calculating file hash: $e');
+    } on BookImportFailure {
+      rethrow;
+    } catch (error) {
+      throw BookImportFailure(
+        code: 'hash_failed',
+        message: '无法校验文件内容',
+        cause: error,
+      );
+    }
+  }
+
+  Future<Directory> _managedBooksDirectory() async {
+    final documentsDir = await _documentsDirectory();
+    final booksDir = Directory(join(documentsDir.path, 'books'));
+    if (!await booksDir.exists()) {
+      await booksDir.create(recursive: true);
+    }
+    return booksDir;
+  }
+
+  Future<File> _allocateTarget(Directory booksDir, String displayName) async {
+    final safeName = basename(displayName);
+    final fileExtension = extension(safeName);
+    final baseName = basenameWithoutExtension(safeName);
+
+    for (var counter = 0; counter < 1000; counter++) {
+      final suffix = counter == 0 ? '' : '_$counter';
+      final candidateName = fileExtension.isEmpty
+          ? '$baseName$suffix'
+          : '$baseName$suffix$fileExtension';
+      final candidate = File(join(booksDir.path, candidateName));
+      if (!await candidate.exists() &&
+          !await File('${candidate.path}.partial').exists()) {
+        return candidate;
+      }
+    }
+
+    throw const BookImportFailure(
+      code: 'target_name_exhausted',
+      message: '无法为导入文件分配可用名称',
+    );
+  }
+
+  Future<_PreparedImportFile> _prepareFile(
+    BookImportSource source,
+    String sourceHash,
+    BookImportProgress? onProgress,
+  ) async {
+    final sourcePath = source.localPath;
+    if (sourcePath == null) {
+      throw const BookImportFailure(
+        code: 'source_not_materialized',
+        message: '源文件尚未准备到本地',
+      );
+    }
+
+    final sourceFile = File(sourcePath);
+    if (!await sourceFile.exists()) {
+      throw const BookImportFailure(
+        code: 'source_missing',
+        message: '源文件不存在',
+      );
+    }
+
+    if (source.ownership == BookImportOwnership.managedInPlace) {
+      return _PreparedImportFile(
+        file: sourceFile,
+        ownsFile: false,
+        contentHash: sourceHash,
+      );
+    }
+
+    final booksDir = await _managedBooksDirectory();
+    final finalFile = await _allocateTarget(booksDir, source.displayName);
+    final partial = File('${finalFile.path}.partial');
+    try {
+      await _copyFileWithProgress(
+        sourceFile,
+        partial,
+        progressCallback: (value) => onProgress?.call(
+          BookImportPhase.copying,
+          value,
+          'copying',
+        ),
+      );
+      final copiedHash = await _calculateRequiredHash(partial.path);
+      if (copiedHash != sourceHash) {
+        throw const BookImportFailure(
+          code: 'copy_verification_failed',
+          message: '复制后的文件与源文件不一致',
+        );
+      }
+      await partial.rename(finalFile.path);
+      return _PreparedImportFile(
+        file: finalFile,
+        ownsFile: true,
+        contentHash: copiedHash,
+      );
+    } catch (_) {
+      if (await partial.exists()) {
+        await partial.delete();
+      }
+      rethrow;
+    }
+  }
+
+  Future<String?> _calculateFileHash(String filePath) async {
+    try {
+      return await _calculateRequiredHash(filePath);
+    } catch (error) {
+      debugPrint('Error calculating file hash: $error');
       return null;
     }
   }
 
-  /// 检查书籍是否已通过哈希值导入
-  ///
-  /// 参数 [hash] 文件的MD5哈希值
-  /// 返回已存在的书籍对象，如果不存在返回null
   Future<Book?> _checkDuplicateByHash(String hash) async {
     try {
       return await _bookDao.getBookByHash(hash);
-    } catch (e) {
-      debugPrint('Error checking duplicate by hash: $e');
+    } catch (error) {
+      debugPrint('Error checking duplicate by hash: $error');
       return null;
+    }
+  }
+
+  @override
+  Future<BookImportResult> importFile(
+    BookImportSource source, {
+    BookImportProgress? onProgress,
+  }) async {
+    _PreparedImportFile? prepared;
+    String? createdCoverPath;
+    var databaseCommitted = false;
+
+    try {
+      onProgress?.call(BookImportPhase.checking, 0, 'checking');
+      final localPath = source.localPath;
+      if (localPath == null) {
+        throw const BookImportFailure(
+          code: 'source_not_materialized',
+          message: '源文件尚未准备到本地',
+        );
+      }
+
+      final sourceFile = File(localPath);
+      if (!await sourceFile.exists()) {
+        throw const BookImportFailure(
+          code: 'source_missing',
+          message: '源文件不存在',
+        );
+      }
+      final size = await sourceFile.length();
+      if (size > 100 * 1024 * 1024) {
+        throw const BookImportFailure(
+          code: 'file_too_large',
+          message: '文件超过 100 MB 导入限制',
+        );
+      }
+
+      final sourceHash = await _calculateRequiredHash(localPath);
+      final duplicate = await _store.getBookByHash(sourceHash);
+      if (duplicate != null && await File(duplicate.filePath).exists()) {
+        return BookImportResult(
+          source: source,
+          outcome: BookImportOutcome.duplicateSkipped,
+          book: duplicate,
+        );
+      }
+
+      prepared = await _prepareFile(source, sourceHash, onProgress);
+      if (duplicate != null) {
+        final repaired = await _store.updateBookStorageLocation(
+          book: duplicate,
+          filePath: prepared.file.path,
+          sourceKind: source.kind.storageValue,
+          sourceLocator: source.locator,
+          sourceModifiedTime: source.modifiedTime,
+        );
+        databaseCommitted = true;
+        LibraryEventBus().notifyLibraryChanged();
+        return BookImportResult(
+          source: source,
+          outcome: BookImportOutcome.existingRepaired,
+          book: repaired,
+        );
+      }
+
+      onProgress?.call(BookImportPhase.analyzing, 0, 'analyzing');
+      void progressAdapter(double progress, String _) {
+        onProgress?.call(BookImportPhase.analyzing, progress, 'analyzing');
+      }
+
+      final metadata = _metadataExtractorOverride != null
+          ? await _metadataExtractorOverride(
+              prepared.file.path,
+              source.displayName,
+              source.extension,
+              progressAdapter,
+            )
+          : await _extractEnhancedMetadataFromFile(
+              prepared.file.path,
+              source.displayName,
+              source.extension,
+              progressCallback: progressAdapter,
+            );
+
+      if (metadata.coverImage != null) {
+        createdCoverPath = await _saveCoverImage(
+          metadata.coverImage!,
+          source.displayName,
+        );
+      }
+
+      final candidate = Book(
+        title: metadata.title,
+        author: metadata.author,
+        filePath: prepared.file.path,
+        format: source.extension.toUpperCase(),
+        totalPages: metadata.estimatedPages,
+        coverImagePath: createdCoverPath,
+        contentHash: prepared.contentHash,
+        textEncoding: metadata.textEncoding,
+        sourceKind: source.kind.storageValue,
+        sourceLocator: source.locator,
+        sourceModifiedTime: source.modifiedTime,
+      );
+
+      onProgress?.call(BookImportPhase.saving, 0, 'saving');
+      final decision = await _store.insertIfAbsentByHash(candidate);
+      if (!decision.inserted) {
+        return BookImportResult(
+          source: source,
+          outcome: BookImportOutcome.duplicateSkipped,
+          book: decision.book,
+        );
+      }
+
+      databaseCommitted = true;
+      await _saveImageMapAfterInsert(
+        source: source,
+        metadata: metadata,
+        book: decision.book,
+      );
+      LibraryEventBus().notifyLibraryChanged();
+      unawaited(_scheduleAnalysis(decision.book));
+      return BookImportResult(
+        source: source,
+        outcome: BookImportOutcome.imported,
+        book: decision.book,
+      );
+    } on BookImportFailure {
+      rethrow;
+    } catch (error) {
+      throw BookImportFailure(
+        code: 'import_failed',
+        message: '书籍导入失败',
+        cause: error,
+      );
+    } finally {
+      if (!databaseCommitted && prepared?.ownsFile == true) {
+        final file = prepared!.file;
+        if (await file.exists()) {
+          await file.delete();
+        }
+      }
+      if (!databaseCommitted && createdCoverPath != null) {
+        final cover = File(createdCoverPath);
+        if (await cover.exists()) {
+          await cover.delete();
+        }
+      }
+    }
+  }
+
+  Future<void> _saveImageMapAfterInsert({
+    required BookImportSource source,
+    required EnhancedBookMetadata metadata,
+    required Book book,
+  }) async {
+    final bookId = book.id;
+    final imageMapValue = metadata.additionalInfo?['imageMap'];
+    if (source.extension.toLowerCase() != 'epub' ||
+        bookId == null ||
+        imageMapValue is! Map<String, String> ||
+        imageMapValue.isEmpty) {
+      return;
+    }
+
+    try {
+      final normalized = <String, String>{};
+      for (final entry in imageMapValue.entries) {
+        final parts = entry.key.split('_');
+        final fileName =
+            parts.length >= 2 ? parts.sublist(1).join('_') : entry.key;
+        normalized['${bookId}_$fileName'] =
+            entry.value.replaceAll(RegExp(r'[\r\n\t]'), '').trim();
+      }
+      await _imageMapService.saveImageMap(bookId, normalized);
+    } catch (error) {
+      // 书籍记录已经提交，图片映射属于可恢复的派生产物，不能把导入误报为失败。
+      debugPrint('保存 EPUB 图片映射失败，书籍导入仍视为成功: $error');
     }
   }
 
@@ -1685,4 +1990,16 @@ class BookImportService {
       } catch (_) {}
     }
   }
+}
+
+class _PreparedImportFile {
+  const _PreparedImportFile({
+    required this.file,
+    required this.ownsFile,
+    required this.contentHash,
+  });
+
+  final File file;
+  final bool ownsFile;
+  final String contentHash;
 }

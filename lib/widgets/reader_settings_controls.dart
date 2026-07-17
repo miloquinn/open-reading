@@ -291,3 +291,54 @@ class ReaderSettingSlider extends StatelessWidget {
     );
   }
 }
+
+class ReaderMarginControls extends StatelessWidget {
+  const ReaderMarginControls({
+    super.key,
+    required this.topLabel,
+    required this.bottomLabel,
+    required this.topMargin,
+    required this.bottomMargin,
+    required this.onTopChanged,
+    required this.onBottomChanged,
+    this.onTopChangeEnd,
+    this.onBottomChangeEnd,
+  });
+
+  final String topLabel;
+  final String bottomLabel;
+  final double topMargin;
+  final double bottomMargin;
+  final ValueChanged<double> onTopChanged;
+  final ValueChanged<double> onBottomChanged;
+  final ValueChanged<double>? onTopChangeEnd;
+  final ValueChanged<double>? onBottomChangeEnd;
+
+  @override
+  Widget build(BuildContext context) => Column(
+        children: [
+          ReaderSettingSlider(
+            key: const ValueKey('reader-top-margin-slider'),
+            label: topLabel,
+            value: topMargin,
+            valueLabel: topMargin.round().toString(),
+            min: 0,
+            max: 40,
+            divisions: 40,
+            onChanged: onTopChanged,
+            onChangeEnd: onTopChangeEnd,
+          ),
+          ReaderSettingSlider(
+            key: const ValueKey('reader-bottom-margin-slider'),
+            label: bottomLabel,
+            value: bottomMargin,
+            valueLabel: bottomMargin.round().toString(),
+            min: 0,
+            max: 40,
+            divisions: 40,
+            onChanged: onBottomChanged,
+            onChangeEnd: onBottomChangeEnd,
+          ),
+        ],
+      );
+}

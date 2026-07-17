@@ -8,6 +8,11 @@ class Bookmark {
   final String note;
   final DateTime createDate;
   final String? cfi;
+  final String? canonicalLocator;
+  final String? anchorKey;
+  final int? chapterIndex;
+  final String? chapterTitle;
+  final String? excerpt;
 
   Bookmark({
     this.id,
@@ -16,6 +21,11 @@ class Bookmark {
     this.note = '',
     DateTime? createDate,
     this.cfi,
+    this.canonicalLocator,
+    this.anchorKey,
+    this.chapterIndex,
+    this.chapterTitle,
+    this.excerpt,
   }) : createDate = createDate ?? DateTime.now();
 
   Map<String, dynamic> toMap() {
@@ -26,6 +36,11 @@ class Bookmark {
       'note': note,
       'createDate': createDate.millisecondsSinceEpoch,
       'cfi': cfi,
+      'canonical_locator': canonicalLocator,
+      'anchor_key': anchorKey,
+      'chapter_index': chapterIndex,
+      'chapter_title': chapterTitle,
+      'excerpt': excerpt,
     };
   }
 
@@ -62,6 +77,12 @@ class Bookmark {
       note: map['note'] ?? '',
       createDate: parsedCreateDate,
       cfi: map['cfi'],
+      canonicalLocator: map['canonical_locator'],
+      anchorKey: map['anchor_key'],
+      chapterIndex:
+          map['chapter_index'] == null ? null : toInt(map['chapter_index']),
+      chapterTitle: map['chapter_title'],
+      excerpt: map['excerpt'],
     );
   }
 
@@ -72,6 +93,11 @@ class Bookmark {
     String? note,
     DateTime? createDate,
     String? cfi,
+    String? canonicalLocator,
+    String? anchorKey,
+    int? chapterIndex,
+    String? chapterTitle,
+    String? excerpt,
   }) {
     return Bookmark(
       id: id ?? this.id,
@@ -80,6 +106,11 @@ class Bookmark {
       note: note ?? this.note,
       createDate: createDate ?? this.createDate,
       cfi: cfi ?? this.cfi,
+      canonicalLocator: canonicalLocator ?? this.canonicalLocator,
+      anchorKey: anchorKey ?? this.anchorKey,
+      chapterIndex: chapterIndex ?? this.chapterIndex,
+      chapterTitle: chapterTitle ?? this.chapterTitle,
+      excerpt: excerpt ?? this.excerpt,
     );
   }
 }

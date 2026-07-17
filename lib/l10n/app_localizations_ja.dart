@@ -400,13 +400,46 @@ class AppLocalizationsJa extends AppLocalizations {
   String get appFont => 'アプリのフォント';
 
   @override
+  String get appFontDescription => 'ナビゲーション、ボタン、設定などの画面表示に使用します。書籍本文には影響しません。';
+
+  @override
+  String get readerFont => '読書フォント';
+
+  @override
+  String get readerFontDescription => '書籍本文と章見出しだけに使用します。アプリ画面には影響しません。';
+
+  @override
   String get fontSystem => 'システム標準';
+
+  @override
+  String get fontSourceHanSerif => '源ノ明朝';
 
   @override
   String get fontSourceHanSans => '源ノ角ゴシック';
 
   @override
   String get fontJetBrainsMono => 'JetBrains Mono';
+
+  @override
+  String get fontInstrumentSans => 'Instrument Sans';
+
+  @override
+  String get fontNewsreader => 'Newsreader';
+
+  @override
+  String get fontSystemDescription => '現在の端末と OS の標準フォントを使用します。';
+
+  @override
+  String get fontSerifDescription => '落ち着いた出版物らしいセリフ体で、長時間の読書に適しています。';
+
+  @override
+  String get fontSansSerifDescription => '明瞭なサンセリフ体で、コンパクトな画面と日常の読書に適しています。';
+
+  @override
+  String get fontMonospaceDescription => 'コードや技術文書、集中しやすい組版に適した等幅フォントです。';
+
+  @override
+  String get fontPreviewText => 'Open Reading · 自由に読む 開卷有益';
 
   @override
   String get languageSystem => 'システムに従う';
@@ -712,6 +745,41 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get bookmarkRemoved => 'ブックマークを削除しました';
+
+  @override
+  String get readerNavigationTitle => '読書ナビゲーション';
+
+  @override
+  String readerNavigationPosition(int current, int total) {
+    return '第 $current/$total 章';
+  }
+
+  @override
+  String get readerSearchChapters => '章を検索';
+
+  @override
+  String get readerBackToCurrentChapter => '現在の章に戻る';
+
+  @override
+  String get readerCurrentChapter => '現在';
+
+  @override
+  String get readerCurrentPosition => '現在位置';
+
+  @override
+  String get readerNoChapterResults => '一致する章がありません';
+
+  @override
+  String get readerNoChapterResultsHint => '章タイトルの別のキーワードを試してください。';
+
+  @override
+  String get readerNoBookmarks => 'ブックマークはまだありません';
+
+  @override
+  String get readerNoBookmarksHint => '右上のブックマークボタンをタップして現在位置を保存できます。';
+
+  @override
+  String get readerBookmarkRequiresShelf => 'ブックマークを保存するには本棚に追加してください';
 
   @override
   String get themeBlue => 'オーシャンブルー';
@@ -1221,6 +1289,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get readerHorizontalMarginLabel => '左右余白';
+
+  @override
+  String get readerTopMarginLabel => '上余白';
+
+  @override
+  String get readerBottomMarginLabel => '下余白';
 
   @override
   String get readerVerticalMarginLabel => '上下余白';
@@ -1969,4 +2043,111 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get readerThemeParchment => '羊皮紙';
+
+  @override
+  String get importSourceTitle => '本を追加';
+
+  @override
+  String get importSourceDescription => '複数の本を選択し、キューを確認してから読み込みを開始できます。';
+
+  @override
+  String get importSelectFiles => 'ファイルを選択';
+
+  @override
+  String get importIosSharedDocuments => 'このiPhone内 · Open Reading';
+
+  @override
+  String get importICloudDrive => 'iCloud Drive · Open Reading';
+
+  @override
+  String get importICloudUnavailable => 'iCloud Drive を利用できません';
+
+  @override
+  String get importAndroidFolder => '本のフォルダーを許可';
+
+  @override
+  String get importAndroidRescan => '許可済みフォルダーを検索';
+
+  @override
+  String get importFolderPermissionAvailable => '許可済み · タップして検索';
+
+  @override
+  String get importFolderPermissionLost => '権限が失われました · 再度許可してください';
+
+  @override
+  String get importRemoveFolder => 'フォルダーを削除';
+
+  @override
+  String importQueueTitle(int count) {
+    return '読み込みキュー（$count）';
+  }
+
+  @override
+  String get importQueueHint => '誤って選んだ項目を削除してから、1冊ずつ読み込みます。';
+
+  @override
+  String get importQueueEmptyTitle => '本が選択されていません';
+
+  @override
+  String get importQueueEmptyBody => 'EPUB、PDF、TXT、MOBI など対応する本のファイルを選択してください。';
+
+  @override
+  String importAction(int count) {
+    return '$count 冊を読み込む';
+  }
+
+  @override
+  String importRetryFailed(int count) {
+    return '失敗した $count 冊を再試行';
+  }
+
+  @override
+  String get importStatusQueued => '待機中';
+
+  @override
+  String get importStatusPreparing => 'ファイルを準備中';
+
+  @override
+  String get importStatusChecking => '確認中';
+
+  @override
+  String get importStatusCopying => 'コピー中';
+
+  @override
+  String get importStatusAnalyzing => '解析中';
+
+  @override
+  String get importStatusSaving => '保存中';
+
+  @override
+  String get importStatusImported => '読み込み完了';
+
+  @override
+  String get importStatusSkipped => '追加済みのためスキップ';
+
+  @override
+  String get importStatusFailed => '読み込み失敗';
+
+  @override
+  String get importRemove => '削除';
+
+  @override
+  String get importRetry => '再試行';
+
+  @override
+  String get importClearCompleted => '完了項目を消去';
+
+  @override
+  String get importDone => '完了';
+
+  @override
+  String importSummary(int succeeded, int skipped, int failed) {
+    return '成功 $succeeded 冊 · スキップ $skipped 冊 · 失敗 $failed 冊';
+  }
+
+  @override
+  String get importNoSupportedFiles => '対応する本のファイルが見つかりません';
+
+  @override
+  String get importScanning => 'ファイルを検索中…';
 }

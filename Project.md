@@ -19,7 +19,8 @@
 
 ## 主要工作流
 
-- 导入书籍：`ImportBookPage` → `BookImportService` → 本地数据库与文件存储。
+- 导入书籍：多文件/平台目录发现 → `ImportBookController` 暂存队列 →
+  `BookImportService.importFile()` 顺序导入 → 本地数据库与文件存储。
 - 打开书籍：书库或首页 → `NativeReaderService` → `NativeReaderPage`。
 - 原生分页：章节内容 → 样式构建 → `TextPainter` 测量 → 页面计划与缓存。
 - 保存进度：字符偏移阅读锚点 → `CanonicalLocator` → `BookDao`。
@@ -33,4 +34,11 @@
 - 明确边界：联网书源与 AI 功能均由用户主动配置。
 - 可验证：协议、解析和关键状态逻辑由自动化测试覆盖。
 
-更新时间：2026-07-11
+## 跨平台本地书籍来源
+
+- 通用文件选择：一次选择多本，导入前可移除误选项。
+- Android：通过 SAF 授权一个或多个目录，系统持久保存访问权限。
+- iOS 本地：`我的 iPhone → Open Reading → books`，文件由应用原地管理。
+- iCloud：`iCloud Drive → Open Reading → books`，仅同步源文件，按队列项延迟下载。
+
+更新时间：2026-07-17

@@ -23,4 +23,8 @@ Third-party dependencies and separately identified files remain subject to
 their own licenses. The Open Reading Source Protocol repository is a separate
 project and remains licensed under the MIT License.
 
+Bundled font files remain under the SIL Open Font License 1.1. Their source,
+purpose, and license files are documented in
+[`assets/fonts/README.md`](assets/fonts/README.md).
+
 This document is an explanatory summary and does not replace the license text.

@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.2+4009
+version: 1.1.0+10000
 
 environment:
   sdk: '>=3.4.0 <4.0.0'
@@ -61,7 +61,7 @@ dependencies:
   intl: ^0.20.2
 
   # TTS 朗读
-  flutter_tts: ^4.2.3
+  flutter_tts: ^4.2.5
 
   # 网络请求（AI 与封面检索）
   dio: ^5.9.0
@@ -104,6 +104,8 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/images/
+    - assets/fonts/licenses/
+    - assets/icons/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
@@ -117,11 +119,42 @@ flutter:
   # list giving the asset and other descriptors for the font. For
   # example:
   fonts:
+    - family: SourceHanSerifCN
+      fonts:
+        - asset: assets/fonts/app/NotoSerifSC-Variable.ttf
+          weight: 300
+        - asset: assets/fonts/app/NotoSerifSC-Variable.ttf
+          weight: 400
+        - asset: assets/fonts/app/NotoSerifSC-Variable.ttf
+          weight: 500
+        - asset: assets/fonts/app/NotoSerifSC-Variable.ttf
+          weight: 600
+        - asset: assets/fonts/app/NotoSerifSC-Variable.ttf
+          weight: 700
     - family: SourceHanSansCN
       fonts:
         - asset: assets/fonts/app/SourceHanSansCN-Regular.otf
         - asset: assets/fonts/app/SourceHanSansCN-Bold.otf
           weight: 700
+    - family: InstrumentSans
+      fonts:
+        - asset: assets/fonts/app/InstrumentSans-Regular.ttf
+        - asset: assets/fonts/app/InstrumentSans-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/app/InstrumentSans-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/app/InstrumentSans-Bold.ttf
+          weight: 700
+    - family: Newsreader
+      fonts:
+        - asset: assets/fonts/reader/Newsreader-Regular.ttf
+        - asset: assets/fonts/reader/Newsreader-Italic.ttf
+          style: italic
+        - asset: assets/fonts/reader/Newsreader-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/reader/Newsreader-BoldItalic.ttf
+          weight: 700
+          style: italic
     - family: JetBrainsMono
       fonts:
         - asset: assets/fonts/reader/JetBrainsMono-Regular.ttf

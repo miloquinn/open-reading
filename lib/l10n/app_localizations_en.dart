@@ -409,16 +409,55 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appSettings => 'App Settings';
 
   @override
-  String get appFont => 'App Font';
+  String get appFont => 'App font';
+
+  @override
+  String get appFontDescription =>
+      'Used by navigation, buttons, settings, and other interface text. It does not change book content.';
+
+  @override
+  String get readerFont => 'Reading font';
+
+  @override
+  String get readerFontDescription =>
+      'Used only for book text and chapter headings. It does not change the app interface.';
 
   @override
   String get fontSystem => 'System Default';
+
+  @override
+  String get fontSourceHanSerif => 'Source Han Serif';
 
   @override
   String get fontSourceHanSans => 'Source Han Sans';
 
   @override
   String get fontJetBrainsMono => 'JetBrains Mono';
+
+  @override
+  String get fontInstrumentSans => 'Instrument Sans';
+
+  @override
+  String get fontNewsreader => 'Newsreader';
+
+  @override
+  String get fontSystemDescription =>
+      'Follows the native font of the current device and operating system.';
+
+  @override
+  String get fontSerifDescription =>
+      'Serif type with a calm, editorial character for sustained reading.';
+
+  @override
+  String get fontSansSerifDescription =>
+      'Clear sans serif type suited to compact interfaces and everyday reading.';
+
+  @override
+  String get fontMonospaceDescription =>
+      'Fixed-width type suited to code, technical material, and focused layouts.';
+
+  @override
+  String get fontPreviewText => 'Open Reading · Read freely 开卷有益';
 
   @override
   String get languageSystem => 'Follow System';
@@ -724,6 +763,44 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bookmarkRemoved => 'Bookmark removed';
+
+  @override
+  String get readerNavigationTitle => 'Reading navigation';
+
+  @override
+  String readerNavigationPosition(int current, int total) {
+    return 'Chapter $current of $total';
+  }
+
+  @override
+  String get readerSearchChapters => 'Search chapters';
+
+  @override
+  String get readerBackToCurrentChapter => 'Back to current chapter';
+
+  @override
+  String get readerCurrentChapter => 'Current';
+
+  @override
+  String get readerCurrentPosition => 'Current position';
+
+  @override
+  String get readerNoChapterResults => 'No matching chapters';
+
+  @override
+  String get readerNoChapterResultsHint =>
+      'Try another word from the chapter title.';
+
+  @override
+  String get readerNoBookmarks => 'No bookmarks yet';
+
+  @override
+  String get readerNoBookmarksHint =>
+      'Tap the bookmark button in the top-right corner to save your place.';
+
+  @override
+  String get readerBookmarkRequiresShelf =>
+      'Add this book to the shelf before saving bookmarks';
 
   @override
   String get themeBlue => 'Ocean Blue';
@@ -1252,6 +1329,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get readerHorizontalMarginLabel => 'Horizontal margin';
+
+  @override
+  String get readerTopMarginLabel => 'Top margin';
+
+  @override
+  String get readerBottomMarginLabel => 'Bottom margin';
 
   @override
   String get readerVerticalMarginLabel => 'Vertical margin';
@@ -2025,4 +2108,115 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get readerThemeParchment => 'Parchment';
+
+  @override
+  String get importSourceTitle => 'Add books';
+
+  @override
+  String get importSourceDescription =>
+      'Choose several files first. Review the queue before starting the import.';
+
+  @override
+  String get importSelectFiles => 'Choose files';
+
+  @override
+  String get importIosSharedDocuments => 'On My iPhone · Open Reading';
+
+  @override
+  String get importICloudDrive => 'iCloud Drive · Open Reading';
+
+  @override
+  String get importICloudUnavailable => 'iCloud Drive is unavailable';
+
+  @override
+  String get importAndroidFolder => 'Authorize a book folder';
+
+  @override
+  String get importAndroidRescan => 'Scan authorized folders';
+
+  @override
+  String get importFolderPermissionAvailable => 'Authorized · tap to scan';
+
+  @override
+  String get importFolderPermissionLost =>
+      'Permission lost · authorize again to restore access';
+
+  @override
+  String get importRemoveFolder => 'Remove folder';
+
+  @override
+  String importQueueTitle(int count) {
+    return 'Import queue ($count)';
+  }
+
+  @override
+  String get importQueueHint =>
+      'Remove files selected by mistake, then import them one at a time.';
+
+  @override
+  String get importQueueEmptyTitle => 'No books selected';
+
+  @override
+  String get importQueueEmptyBody =>
+      'Choose EPUB, PDF, TXT, MOBI or another supported book file.';
+
+  @override
+  String importAction(int count) {
+    return 'Import $count books';
+  }
+
+  @override
+  String importRetryFailed(int count) {
+    return 'Retry $count failed';
+  }
+
+  @override
+  String get importStatusQueued => 'Waiting';
+
+  @override
+  String get importStatusPreparing => 'Preparing file';
+
+  @override
+  String get importStatusChecking => 'Checking';
+
+  @override
+  String get importStatusCopying => 'Copying';
+
+  @override
+  String get importStatusAnalyzing => 'Analyzing';
+
+  @override
+  String get importStatusSaving => 'Saving';
+
+  @override
+  String get importStatusImported => 'Imported';
+
+  @override
+  String get importStatusSkipped => 'Already exists, skipped';
+
+  @override
+  String get importStatusFailed => 'Import failed';
+
+  @override
+  String get importRemove => 'Remove';
+
+  @override
+  String get importRetry => 'Retry';
+
+  @override
+  String get importClearCompleted => 'Clear completed';
+
+  @override
+  String get importDone => 'Done';
+
+  @override
+  String importSummary(int succeeded, int skipped, int failed) {
+    return '$succeeded imported · $skipped skipped · $failed failed';
+  }
+
+  @override
+  String get importNoSupportedFiles => 'No supported book files were found';
+
+  @override
+  String get importScanning => 'Scanning files…';
 }

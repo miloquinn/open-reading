@@ -245,16 +245,19 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
   Widget build(BuildContext context) {
     final useRailNavigation =
         NavigationContext.of(context)?.useRailNavigation ?? false;
-    final bottomPadding = useRailNavigation ? 32.0 : 118.0;
+    final mobileChrome = HomeMobileChromeScope.of(context);
+    final bottomPadding =
+        useRailNavigation ? 32.0 : mobileChrome.pageBottomPadding;
 
     return Container(
       decoration: BoxDecoration(
         gradient: PageStyleHelper.backgroundGradient(context),
       ),
       child: SafeArea(
+        top: useRailNavigation,
         bottom: false,
         child: RefreshIndicator(
-          edgeOffset: useRailNavigation ? 90 : kHomeMobileTopBarHeight + 8,
+          edgeOffset: useRailNavigation ? 90 : mobileChrome.topBarHeight,
           onRefresh: () => _loadSection(_section, force: true),
           child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -266,7 +269,7 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
                     child: Padding(
                       padding: EdgeInsets.fromLTRB(
                         16,
-                        useRailNavigation ? 16 : kHomeMobileTopBarHeight + 8,
+                        useRailNavigation ? 16 : mobileChrome.pageTopPadding,
                         16,
                         0,
                       ),

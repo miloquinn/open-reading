@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <title>Open Reading current reading position</title>
+  <path fill="#000000" d="M2.75 6.35c3.58-.42 6.58.73 8.61 3.88-1.02.78-1.73 1.96-2.14 3.57-2.13-.72-4.29-.72-6.47-.06V6.35Z"/>
+  <path fill="#000000" d="M21.25 6.35c-3.58-.42-6.58.73-8.61 3.88 1.02.78 1.73 1.96 2.14 3.57 2.13-.72 4.29-.72 6.47-.06V6.35Z"/>
+  <circle cx="12" cy="14.42" r="1.42" fill="#000000"/>
+</svg>

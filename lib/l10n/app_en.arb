@@ -338,13 +338,29 @@
   "@appSettings": {
     "description": "App settings section"
   },
-  "appFont": "App Font",
+  "appFont": "App font",
   "@appFont": {
     "description": "App font setting"
+  },
+  "appFontDescription": "Used by navigation, buttons, settings, and other interface text. It does not change book content.",
+  "@appFontDescription": {
+    "description": "Explains the scope of the app font"
+  },
+  "readerFont": "Reading font",
+  "@readerFont": {
+    "description": "Reader content font setting"
+  },
+  "readerFontDescription": "Used only for book text and chapter headings. It does not change the app interface.",
+  "@readerFontDescription": {
+    "description": "Explains the scope of the reading font"
   },
   "fontSystem": "System Default",
   "@fontSystem": {
     "description": "System default font"
+  },
+  "fontSourceHanSerif": "Source Han Serif",
+  "@fontSourceHanSerif": {
+    "description": "Source Han Serif font"
   },
   "fontSourceHanSans": "Source Han Sans",
   "@fontSourceHanSans": {
@@ -353,6 +369,34 @@
   "fontJetBrainsMono": "JetBrains Mono",
   "@fontJetBrainsMono": {
     "description": "JetBrains Mono font"
+  },
+  "fontInstrumentSans": "Instrument Sans",
+  "@fontInstrumentSans": {
+    "description": "Instrument Sans font"
+  },
+  "fontNewsreader": "Newsreader",
+  "@fontNewsreader": {
+    "description": "Newsreader font"
+  },
+  "fontSystemDescription": "Follows the native font of the current device and operating system.",
+  "@fontSystemDescription": {
+    "description": "System font option description"
+  },
+  "fontSerifDescription": "Serif type with a calm, editorial character for sustained reading.",
+  "@fontSerifDescription": {
+    "description": "Serif font option description"
+  },
+  "fontSansSerifDescription": "Clear sans serif type suited to compact interfaces and everyday reading.",
+  "@fontSansSerifDescription": {
+    "description": "Sans serif font option description"
+  },
+  "fontMonospaceDescription": "Fixed-width type suited to code, technical material, and focused layouts.",
+  "@fontMonospaceDescription": {
+    "description": "Monospace font option description"
+  },
+  "fontPreviewText": "Open Reading · Read freely 开卷有益",
+  "@fontPreviewText": {
+    "description": "Bilingual font preview sample"
   },
   "languageSystem": "Follow System",
   "@languageSystem": {
@@ -762,6 +806,23 @@
   "@bookmarkRemoved": {
     "description": "Bookmark removed message"
   },
+  "readerNavigationTitle": "Reading navigation",
+  "readerNavigationPosition": "Chapter {current} of {total}",
+  "@readerNavigationPosition": {
+    "placeholders": {
+      "current": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "readerSearchChapters": "Search chapters",
+  "readerBackToCurrentChapter": "Back to current chapter",
+  "readerCurrentChapter": "Current",
+  "readerCurrentPosition": "Current position",
+  "readerNoChapterResults": "No matching chapters",
+  "readerNoChapterResultsHint": "Try another word from the chapter title.",
+  "readerNoBookmarks": "No bookmarks yet",
+  "readerNoBookmarksHint": "Tap the bookmark button in the top-right corner to save your place.",
+  "readerBookmarkRequiresShelf": "Add this book to the shelf before saving bookmarks",
   "themeBlue": "Ocean Blue",
   "@themeBlue": {
     "description": "Blue theme name"
@@ -1515,6 +1576,8 @@
     }
   },
   "readerHorizontalMarginLabel": "Horizontal margin",
+  "readerTopMarginLabel": "Top margin",
+  "readerBottomMarginLabel": "Bottom margin",
   "readerVerticalMarginLabel": "Vertical margin",
   "readerVerticalMarginValue": "Vertical margin  {margin}",
   "@readerVerticalMarginValue": {
@@ -2492,5 +2555,42 @@
   "readerThemeParchment": "Parchment",
   "@readerThemeParchment": {
     "description": "Parchment reading theme name"
-  }
+  },
+  "importSourceTitle": "Add books",
+  "importSourceDescription": "Choose several files first. Review the queue before starting the import.",
+  "importSelectFiles": "Choose files",
+  "importIosSharedDocuments": "On My iPhone · Open Reading",
+  "importICloudDrive": "iCloud Drive · Open Reading",
+  "importICloudUnavailable": "iCloud Drive is unavailable",
+  "importAndroidFolder": "Authorize a book folder",
+  "importAndroidRescan": "Scan authorized folders",
+  "importFolderPermissionAvailable": "Authorized · tap to scan",
+  "importFolderPermissionLost": "Permission lost · authorize again to restore access",
+  "importRemoveFolder": "Remove folder",
+  "importQueueTitle": "Import queue ({count})",
+  "@importQueueTitle": {"placeholders": {"count": {"type": "int"}}},
+  "importQueueHint": "Remove files selected by mistake, then import them one at a time.",
+  "importQueueEmptyTitle": "No books selected",
+  "importQueueEmptyBody": "Choose EPUB, PDF, TXT, MOBI or another supported book file.",
+  "importAction": "Import {count} books",
+  "@importAction": {"placeholders": {"count": {"type": "int"}}},
+  "importRetryFailed": "Retry {count} failed",
+  "@importRetryFailed": {"placeholders": {"count": {"type": "int"}}},
+  "importStatusQueued": "Waiting",
+  "importStatusPreparing": "Preparing file",
+  "importStatusChecking": "Checking",
+  "importStatusCopying": "Copying",
+  "importStatusAnalyzing": "Analyzing",
+  "importStatusSaving": "Saving",
+  "importStatusImported": "Imported",
+  "importStatusSkipped": "Already exists, skipped",
+  "importStatusFailed": "Import failed",
+  "importRemove": "Remove",
+  "importRetry": "Retry",
+  "importClearCompleted": "Clear completed",
+  "importDone": "Done",
+  "importSummary": "{succeeded} imported · {skipped} skipped · {failed} failed",
+  "@importSummary": {"placeholders": {"succeeded": {"type": "int"}, "skipped": {"type": "int"}, "failed": {"type": "int"}}},
+  "importNoSupportedFiles": "No supported book files were found",
+  "importScanning": "Scanning files…"
 }

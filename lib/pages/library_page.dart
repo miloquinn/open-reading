@@ -7,7 +7,6 @@ import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:flutter/services.dart';
 import '../models/book.dart';
 import '../book_sources/services/book_source_shelf_service.dart';
@@ -338,10 +337,10 @@ class _LibraryPageState extends State<LibraryPage> {
       {required bool useRailNavigation}) {
     final books = _visibleBooks;
     final palette = PageStyleHelper.palette(context);
+    final mobileChrome = HomeMobileChromeScope.of(context);
     // 手机模式：内容从屏幕顶端开始、滚动时穿过毛玻璃顶栏，
     // 顶栏的模糊层才有真实内容可以取样；用内边距避开首屏遮挡。
-    final mobileTopInset =
-        MediaQuery.paddingOf(context).top + kHomeMobileTopBarHeight + 8;
+    final mobileTopInset = mobileChrome.pageTopPadding;
     final listTopPadding =
         useRailNavigation ? 8.0 : (_searchBarVisible ? 10.0 : mobileTopInset);
     final content = Column(
@@ -576,14 +575,15 @@ class _LibraryPageState extends State<LibraryPage> {
     final isTablet = LayoutHelper.isTablet(context);
     final isDesktop = LayoutHelper.isDesktop(context);
     final useRailNav = isTablet || isDesktop;
-    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    final bottomPadding = MediaQuery.viewPaddingOf(context).bottom;
+    final mobileChrome = HomeMobileChromeScope.of(context);
     final scheme = Theme.of(context).colorScheme;
 
     // 侧边导航栏模式：FAB 在右下角，边距较小
     // 底部导航栏模式：FAB 需要避开导航栏
     final double bottomMargin = useRailNav
         ? bottomPadding + 16 // 侧边导航：只需避开安全区域
-        : 68 + 25 + bottomPadding.clamp(0.0, 50.0) + 15; // 底部导航：避开悬浮导航栏
+        : mobileChrome.floatingActionBottomMargin; // 底部导航：避开悬浮导航栏
 
     if (_isMaterial3Style) {
       return Container(
@@ -795,7 +795,7 @@ class _LibraryPageState extends State<LibraryPage> {
             ),
           ),
           child: GridView.builder(
-            scrollCacheExtent: const ScrollCacheExtent.pixels(720),
+            cacheExtent: 720,
             physics: const AlwaysScrollableScrollPhysics(
               parent: BouncingScrollPhysics(),
             ),
@@ -803,11 +803,7 @@ class _LibraryPageState extends State<LibraryPage> {
               16,
               12,
               16,
-              // 精确计算悬浮导航栏占用空间：导航栏68px + 边距25px + 底部安全区域(限制最大值) + 10px缓冲
-              68 +
-                  25 +
-                  (MediaQuery.of(context).padding.bottom).clamp(0.0, 50.0) +
-                  10,
+              MediaQuery.viewPaddingOf(context).bottom + 24,
             ),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: crossAxisCount,
@@ -843,7 +839,7 @@ class _LibraryPageState extends State<LibraryPage> {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     return ListView.builder(
-      scrollCacheExtent: const ScrollCacheExtent.pixels(720),
+      cacheExtent: 720,
       physics: const AlwaysScrollableScrollPhysics(
         parent: BouncingScrollPhysics(),
       ),
@@ -851,7 +847,7 @@ class _LibraryPageState extends State<LibraryPage> {
         16,
         topPadding,
         16,
-        68 + 25 + MediaQuery.of(context).padding.bottom.clamp(0.0, 50.0) + 12,
+        HomeMobileChromeScope.of(context).pageBottomPadding,
       ),
       itemCount: books.length,
       itemBuilder: (context, index) {

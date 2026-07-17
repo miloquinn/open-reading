@@ -6,8 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:xxread/models/book.dart';
 import 'package:xxread/services/core/database_service.dart';
 import 'package:xxread/services/books/book_image_map_service.dart';
+import 'package:xxread/services/books/book_import_models.dart';
 
-class BookDao {
+class BookDao implements BookImportStore {
   final _dbService = DatabaseService();
 
   Future<int> insertBook(Book book) async {
@@ -45,6 +46,9 @@ class BookDao {
           'source_book_id',
           'source_json',
           'source_book_json',
+          'source_kind',
+          'source_locator',
+          'source_modified_time',
         ],
         orderBy: 'importDate DESC',
       );
@@ -261,6 +265,7 @@ class BookDao {
   /// 用于检查是否已导入相同内容的书籍
   /// 参数 [contentHash] 书籍文件的MD5哈希值
   /// 返回找到的书籍，如果不存在则返回null
+  @override
   Future<Book?> getBookByHash(String contentHash) async {
     try {
       final db = await _dbService.database;
@@ -276,6 +281,79 @@ class BookDao {
     } catch (e) {
       throw Exception('通过哈希值查找书籍失败: $e');
     }
+  }
+
+  @override
+  Future<Book?> getBookBySourceLocator({
+    required String sourceKind,
+    required String sourceLocator,
+  }) async {
+    final db = await _dbService.database;
+    final maps = await db.query(
+      'books',
+      where: 'source_kind = ? AND source_locator = ?',
+      whereArgs: [sourceKind, sourceLocator],
+      limit: 1,
+    );
+    return maps.isEmpty ? null : Book.fromMap(maps.first);
+  }
+
+  @override
+  Future<Book?> getBookByFilePath(String filePath) async {
+    final db = await _dbService.database;
+    final maps = await db.query(
+      'books',
+      where: 'filePath = ?',
+      whereArgs: [filePath],
+      limit: 1,
+    );
+    return maps.isEmpty ? null : Book.fromMap(maps.first);
+  }
+
+  @override
+  Future<BookInsertDecision> insertIfAbsentByHash(Book book) async {
+    final contentHash = book.contentHash;
+    if (contentHash == null || contentHash.isEmpty) {
+      throw ArgumentError.value(
+        contentHash,
+        'book.contentHash',
+        '原子导入前必须先计算内容哈希',
+      );
+    }
+
+    final db = await _dbService.database;
+    return db.transaction((txn) async {
+      final maps = await txn.query(
+        'books',
+        where: 'content_hash = ?',
+        whereArgs: [contentHash],
+        limit: 1,
+      );
+      if (maps.isNotEmpty) {
+        return BookInsertDecision.existing(Book.fromMap(maps.first));
+      }
+
+      final id = await txn.insert('books', book.toMap());
+      return BookInsertDecision.inserted(book.copyWith(id: id));
+    });
+  }
+
+  @override
+  Future<Book> updateBookStorageLocation({
+    required Book book,
+    required String filePath,
+    required String sourceKind,
+    required String sourceLocator,
+    required int? sourceModifiedTime,
+  }) async {
+    final updated = book.copyWith(
+      filePath: filePath,
+      sourceKind: sourceKind,
+      sourceLocator: sourceLocator,
+      sourceModifiedTime: sourceModifiedTime,
+    );
+    await updateBook(updated);
+    return updated;
   }
 
   // We can add other DAOs (e.g., BookmarkDao) in separate files

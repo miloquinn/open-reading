@@ -9,6 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:xxread/data/migration/reading_schema_migration.dart';
+import 'package:xxread/data/migration/book_import_schema_migration.dart';
 
 class DatabaseService {
   static final DatabaseService _instance = DatabaseService._internal();
@@ -17,7 +18,7 @@ class DatabaseService {
 
   static Database? _database;
   static const String _dbName = 'xxread_v2.db';
-  static const int _dbVersion = 15;
+  static const int _dbVersion = 17;
   static Future<Database>? _openingDatabase;
 
   Future<Database> get database async {
@@ -324,6 +325,28 @@ class DatabaseService {
       }
       await _createBooksTableIndexes(db);
     }
+    if (oldVersion < 16) {
+      final bookmarkInfo = await db.rawQuery('PRAGMA table_info(bookmarks)');
+      final columns =
+          bookmarkInfo.map((column) => column['name'] as String).toSet();
+      final additions = <String, String>{
+        'anchor_key': 'TEXT',
+        'chapter_index': 'INTEGER',
+        'chapter_title': 'TEXT',
+        'excerpt': 'TEXT',
+      };
+      for (final entry in additions.entries) {
+        if (!columns.contains(entry.key)) {
+          await db.execute(
+            'ALTER TABLE bookmarks ADD COLUMN ${entry.key} ${entry.value}',
+          );
+        }
+      }
+      await _createBookmarksIndexes(db);
+    }
+    if (oldVersion < 17) {
+      await BookImportSchemaMigration.migrate(db);
+    }
   }
 
   Future<void> _createTables(Database db) async {
@@ -351,7 +374,10 @@ class DatabaseService {
         source_id TEXT,
         source_book_id TEXT,
         source_json TEXT,
-        source_book_json TEXT
+        source_book_json TEXT,
+        source_kind TEXT,
+        source_locator TEXT,
+        source_modified_time INTEGER
       )
     ''');
 
@@ -364,6 +390,10 @@ class DatabaseService {
         createDate INTEGER NOT NULL,
         cfi TEXT,
         canonical_locator TEXT,
+        anchor_key TEXT,
+        chapter_index INTEGER,
+        chapter_title TEXT,
+        excerpt TEXT,
         FOREIGN KEY (bookId) REFERENCES books (id) ON DELETE CASCADE
       )
     ''');
@@ -441,6 +471,13 @@ class DatabaseService {
         'WHERE source_id IS NOT NULL AND source_book_id IS NOT NULL',
       );
     }
+    if (columns.contains('source_kind') && columns.contains('source_locator')) {
+      await db.execute(
+        'CREATE UNIQUE INDEX IF NOT EXISTS idx_books_source_locator '
+        'ON books (source_kind, source_locator) '
+        'WHERE source_kind IS NOT NULL AND source_locator IS NOT NULL',
+      );
+    }
   }
 
   /// 创建reading_stats表索引
@@ -459,6 +496,14 @@ class DatabaseService {
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_bookmarks_book_create ON bookmarks (bookId, createDate DESC)',
     );
+    final tableInfo = await db.rawQuery('PRAGMA table_info(bookmarks)');
+    final columns = tableInfo.map((column) => column['name'] as String).toSet();
+    if (columns.contains('anchor_key')) {
+      await db.execute(
+        'CREATE UNIQUE INDEX IF NOT EXISTS idx_bookmarks_book_anchor '
+        'ON bookmarks (bookId, anchor_key) WHERE anchor_key IS NOT NULL',
+      );
+    }
   }
 
   /// 创建reading_sessions表索引

@@ -4,9 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as html_parser;
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:xxread/core/reader/canonical_locator.dart';
 import 'package:xxread/core/reader/reader_layout.dart';
+import 'package:xxread/models/bookmark.dart';
 
 import '../book_sources/models/registered_book_source.dart';
 import '../book_sources/protocol/book_source_protocol.dart';
@@ -15,11 +18,16 @@ import '../book_sources/services/book_source_reading_progress.dart';
 import '../book_sources/services/book_source_shelf_service.dart';
 import '../book_sources/services/book_source_text_paginator.dart';
 import '../services/reading/reading_stats_dao.dart';
+import '../services/books/bookmark_dao.dart';
+import '../services/core/app_settings_service.dart';
+import '../utils/font_catalog_helper.dart';
 import '../utils/localization_extension.dart';
 import '../utils/reader_themes.dart';
 import '../widgets/reader_shader_page_curl.dart';
 import '../widgets/reader_control_chrome.dart';
+import '../widgets/reader_navigation_sheet.dart';
 import '../widgets/reader_settings_controls.dart';
+import '../widgets/side_toast.dart';
 
 typedef BookSourcePageMode = ReaderPageMode;
 
@@ -73,6 +81,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   Object? _error;
   double _fontSize = 19;
   double _lineHeight = 1.75;
+  FontOption _readerFont = FontCatalog.defaultReaderFont;
   double _horizontalMargin = 22;
   double _verticalMargin = 28;
   String _readerThemeId = ReaderThemes.day.id;
@@ -96,6 +105,9 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   Timer? _progressSaveTimer;
   Timer? _controlsTimer;
   final ReadingStatsDao _readingStatsDao = ReadingStatsDao();
+  final BookmarkDao _bookmarkDao = BookmarkDao();
+  List<Bookmark> _bookmarks = const [];
+  bool _bookmarkBusy = false;
   DateTime? _readingSessionStartedAt;
   int _sessionPagesRead = 0;
 
@@ -116,6 +128,22 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     });
     unawaited(_initialize());
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    var nextReaderFont = FontCatalog.defaultReaderFont;
+    try {
+      nextReaderFont = context.watch<AppSettingsNotifier>().readerFont;
+    } on ProviderNotFoundException {
+      // Reader widgets remain embeddable in tests and isolated previews.
+    }
+    if (_readerFont.id == nextReaderFont.id) return;
+    _readerFont = nextReaderFont;
+    _paginationKey = null;
+    _paginatedPages = const [];
+    _restorePagedPosition = true;
   }
 
   @override
@@ -294,7 +322,16 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       sourceId: widget.source.id,
       sourceBookId: widget.book.id,
     );
-    if (mounted) _shelfBookId = shelfBook?.id;
+    if (!mounted) return;
+    _shelfBookId = shelfBook?.id;
+    final shelfBookId = _shelfBookId;
+    if (shelfBookId == null) return;
+    try {
+      final bookmarks = await _bookmarkDao.getBookmarksForBook(shelfBookId);
+      if (mounted) setState(() => _bookmarks = bookmarks);
+    } catch (error) {
+      debugPrint('load source bookmarks failed: $error');
+    }
   }
 
   Future<void> _loadChapter(
@@ -406,8 +443,10 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
 
   Future<void> _requestExit() async {
     if (_exitPromptVisible) return;
+    _exitPromptVisible = true;
     await _saveProgress();
-    await _flushReadingSession();
+    // 阅读统计是退出后的派生写入，不应阻塞“加入书架？”确认弹窗。
+    unawaited(_flushReadingSession());
     final shelfBook = await _shelfService.findShelfBook(
       sourceId: widget.source.id,
       sourceBookId: widget.book.id,
@@ -419,7 +458,6 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       return;
     }
 
-    _exitPromptVisible = true;
     final shouldAdd = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -527,42 +565,188 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     }
   }
 
+  int _currentBookmarkOffset(String text) {
+    if (_pageMode != BookSourcePageMode.verticalScroll &&
+        _paginatedPages.isNotEmpty) {
+      return _paginatedPages[_pageIndex.clamp(0, _paginatedPages.length - 1)]
+          .startOffset;
+    }
+    return (_scrollProgress.value * text.length).round().clamp(0, text.length);
+  }
+
+  String? get _currentBookmarkAnchorKey {
+    final content = _content;
+    if (content == null || _chapters.isEmpty) return null;
+    final text = _readableChapterText(content);
+    final offset = _currentBookmarkOffset(text);
+    return '${_chapters[_chapterIndex].id}:$offset';
+  }
+
+  Future<void> _toggleCurrentBookmark() async {
+    final shelfBookId = _shelfBookId;
+    final content = _content;
+    if (_bookmarkBusy || content == null || _chapters.isEmpty) return;
+    if (shelfBookId == null) {
+      showSideToast(
+        context,
+        context.l10n.readerBookmarkRequiresShelf,
+        duration: const Duration(milliseconds: 1900),
+        icon: Icons.library_add_rounded,
+      );
+      return;
+    }
+    final text = _readableChapterText(content);
+    final offset = _currentBookmarkOffset(text);
+    final anchorKey = '${_chapters[_chapterIndex].id}:$offset';
+    Bookmark? existing;
+    for (final bookmark in _bookmarks) {
+      if (bookmark.anchorKey == anchorKey) {
+        existing = bookmark;
+        break;
+      }
+    }
+    setState(() => _bookmarkBusy = true);
+    try {
+      if (existing != null) {
+        final existingId = existing.id!;
+        await _bookmarkDao.deleteBookmark(existingId);
+        if (!mounted) return;
+        setState(() {
+          _bookmarks = _bookmarks
+              .where((bookmark) => bookmark.id != existingId)
+              .toList(growable: false);
+        });
+        showSideToast(
+          context,
+          context.l10n.bookmarkRemoved,
+          duration: const Duration(milliseconds: 1600),
+          icon: Icons.bookmark_remove_rounded,
+        );
+        return;
+      }
+      final excerptEnd = (offset + 120).clamp(offset, text.length);
+      final excerpt = text
+          .substring(offset, excerptEnd)
+          .replaceAll(RegExp(r'\s+'), ' ')
+          .trim();
+      final locator = CanonicalLocator.fromComponents(
+        format: content.contentType == 'text/html'
+            ? BookFormat.html
+            : BookFormat.txt,
+        chapterId: _chapters[_chapterIndex].id,
+        offset: offset,
+        excerpt: excerpt,
+        progression: text.isEmpty ? 0 : offset / text.length,
+      );
+      final bookmark = Bookmark(
+        bookId: shelfBookId,
+        pageNumber: _chapterIndex,
+        canonicalLocator: LocatorCodec.encodeCanonicalLocator(locator),
+        anchorKey: anchorKey,
+        chapterIndex: _chapterIndex,
+        chapterTitle: _chapters[_chapterIndex].title,
+        excerpt: excerpt,
+      );
+      final id = await _bookmarkDao.insertBookmark(bookmark);
+      if (!mounted) return;
+      setState(() {
+        _bookmarks = [..._bookmarks, bookmark.copyWith(id: id)]..sort((a, b) =>
+            (a.chapterIndex ?? a.pageNumber)
+                .compareTo(b.chapterIndex ?? b.pageNumber));
+      });
+      showSideToast(
+        context,
+        context.l10n.bookmarkAdded,
+        duration: const Duration(milliseconds: 1600),
+        icon: Icons.bookmark_added_rounded,
+      );
+    } catch (error) {
+      debugPrint('toggle source bookmark failed: $error');
+    } finally {
+      if (mounted) setState(() => _bookmarkBusy = false);
+    }
+  }
+
+  Future<void> _deleteBookmark(Bookmark bookmark) async {
+    final id = bookmark.id;
+    if (id == null) return;
+    await _bookmarkDao.deleteBookmark(id);
+    if (!mounted) return;
+    setState(() {
+      _bookmarks = _bookmarks
+          .where((candidate) => candidate.id != id)
+          .toList(growable: false);
+    });
+    showSideToast(
+      context,
+      context.l10n.bookmarkRemoved,
+      duration: const Duration(milliseconds: 1600),
+      icon: Icons.bookmark_remove_rounded,
+    );
+  }
+
+  Future<void> _jumpToBookmark(Bookmark bookmark) async {
+    final raw = bookmark.canonicalLocator;
+    final locator =
+        raw == null ? null : LocatorCodec.decodeCanonicalLocator(raw);
+    final chapterId = locator?.chapterId ?? locator?.textAnchor?.chapterId;
+    var chapterIndex = chapterId == null
+        ? -1
+        : _chapters.indexWhere((chapter) => chapter.id == chapterId);
+    if (chapterIndex < 0) {
+      chapterIndex = (bookmark.chapterIndex ?? bookmark.pageNumber)
+          .clamp(0, _chapters.length - 1);
+    }
+    _restoreTextOffset = locator?.textAnchor?.startOffsetUtf16;
+    await _loadChapter(
+      chapterIndex,
+      restoreProgress: locator?.progression ?? 0,
+    );
+  }
+
   Future<void> _showCatalog() async {
     if (_chapters.isEmpty) return;
     _controlsTimer?.cancel();
-    final selected = await showModalBottomSheet<int>(
+    await showModalBottomSheet<void>(
       context: context,
-      showDragHandle: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: _readerTheme.shadow.withValues(
+        alpha: _readerTheme.brightness == Brightness.dark ? 0.72 : 0.38,
+      ),
+      showDragHandle: false,
       isScrollControlled: true,
-      builder: (context) => Theme(
-        data: _readerThemeData,
-        child: SafeArea(
-          child: SizedBox(
-            height: MediaQuery.sizeOf(context).height * 0.76,
-            child: ListView.builder(
-              itemCount: _chapters.length,
-              itemBuilder: (context, index) {
-                final isSelected = index == _chapterIndex;
-                return ListTile(
-                  selected: isSelected,
-                  leading: isSelected
-                      ? Icon(
-                          Icons.play_arrow_rounded,
-                          color: _readerTheme.accent,
-                        )
-                      : Text('${index + 1}'),
-                  title: Text(_chapters[index].title),
-                  onTap: () => Navigator.pop(context, index),
-                );
-              },
-            ),
+      constraints: const BoxConstraints(maxWidth: 620),
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setSheetState) => SizedBox(
+          height: MediaQuery.sizeOf(context).height * 0.86,
+          child: ReaderNavigationSheet(
+            palette: _readerTheme,
+            chapters: [
+              for (var index = 0; index < _chapters.length; index++)
+                ReaderNavigationChapter(
+                  title: _chapters[index].title,
+                  index: index,
+                ),
+            ],
+            currentChapterIndex: _chapterIndex,
+            bookmarks: _bookmarks,
+            currentAnchorKey: _currentBookmarkAnchorKey,
+            onChapterSelected: (index) {
+              Navigator.of(sheetContext).pop();
+              unawaited(_loadChapter(index));
+            },
+            onBookmarkSelected: (bookmark) {
+              Navigator.of(sheetContext).pop();
+              unawaited(_jumpToBookmark(bookmark));
+            },
+            onBookmarkDeleted: (bookmark) async {
+              await _deleteBookmark(bookmark);
+              if (mounted) setSheetState(() {});
+            },
           ),
         ),
       ),
     );
-    if (selected != null && selected != _chapterIndex) {
-      await _loadChapter(selected);
-    }
   }
 
   String _readerThemeName(String themeId) {
@@ -988,27 +1172,36 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     );
   }
 
-  TextStyle get _bodyTextStyle =>
-      _readerThemeData.textTheme.bodyLarge?.copyWith(
-        fontFamily: 'SourceHanSansCN',
+  TextStyle get _bodyTextStyle => TextStyle(
+        inherit: false,
+        fontFamily: _readerFont.family,
+        fontFamilyFallback: _readerFont.fallbackFamilies.isEmpty
+            ? null
+            : _readerFont.fallbackFamilies,
         color: _readerTheme.text,
         fontSize: _fontSize,
         height: _lineHeight,
         letterSpacing: 0.2,
-      ) ??
-      TextStyle(
-        color: _readerTheme.text,
-        fontSize: _fontSize,
-        height: _lineHeight,
       );
+
+  TextStyle get _chapterTitleStyle {
+    final base = _readerThemeData.textTheme.headlineSmall;
+    return TextStyle(
+      inherit: false,
+      fontFamily: _readerFont.family,
+      fontFamilyFallback: _readerFont.fallbackFamilies.isEmpty
+          ? null
+          : _readerFont.fallbackFamilies,
+      color: _readerTheme.text,
+      fontSize: base?.fontSize,
+      fontWeight: FontWeight.w700,
+      height: 1.35,
+    );
+  }
 
   Widget _buildChapterTitle(String title) => Text(
         title,
-        style: _readerThemeData.textTheme.headlineSmall?.copyWith(
-          color: _readerTheme.text,
-          fontWeight: FontWeight.w700,
-          height: 1.35,
-        ),
+        style: _chapterTitleStyle,
       );
 
   Widget _buildChapterButtons() => Row(
@@ -1049,10 +1242,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     final titlePainter = TextPainter(
       text: TextSpan(
         text: chapterTitle,
-        style: _readerThemeData.textTheme.headlineSmall?.copyWith(
-          fontWeight: FontWeight.w700,
-          height: 1.35,
-        ),
+        style: _chapterTitleStyle,
       ),
       textDirection: Directionality.of(context),
       textScaler: textScaler,
@@ -1069,7 +1259,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       textScaler: textScaler,
       locale: locale,
       pageMode: _pageMode,
-      extra: firstHeight.toStringAsFixed(2),
+      extra: '${firstHeight.toStringAsFixed(2)}:${_readerFont.id}',
     ).cacheKey('book-source-line-v2');
     if (_paginationKey == key && _paginatedPages.isNotEmpty) return;
     final pages = paginateBookSourceText(
@@ -1174,10 +1364,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         final titlePainter = TextPainter(
           text: TextSpan(
             text: title,
-            style: _readerThemeData.textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-              height: 1.35,
-            ),
+            style: _chapterTitleStyle,
           ),
           textDirection: Directionality.of(context),
           textScaler: scaler,
@@ -1345,6 +1532,9 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     final title = _chapters.isEmpty
         ? widget.book.title
         : _chapters[_chapterIndex.clamp(0, _chapters.length - 1)].title;
+    final anchorKey = _currentBookmarkAnchorKey;
+    final isBookmarked = anchorKey != null &&
+        _bookmarks.any((bookmark) => bookmark.anchorKey == anchorKey);
     return AnimatedPositioned(
       key: const ValueKey('book-source-top-controls'),
       duration: const Duration(milliseconds: 300),
@@ -1381,7 +1571,16 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
                       ),
                     ),
                   ),
-                  const SizedBox(width: 54),
+                  _readerIconButton(
+                    onPressed:
+                        _bookmarkBusy ? null : () => _toggleCurrentBookmark(),
+                    tooltip: isBookmarked
+                        ? context.l10n.bookmarkRemoved
+                        : context.l10n.readerAddBookmark,
+                    icon: isBookmarked
+                        ? Icons.bookmark_rounded
+                        : Icons.bookmark_border_rounded,
+                  ),
                 ],
               ),
             ),

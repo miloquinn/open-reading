@@ -46,8 +46,9 @@ import UIKit
 }
 
 @main
-@objc class AppDelegate: FlutterAppDelegate {
+@objc class AppDelegate: FlutterAppDelegate, FlutterPluginRegistrant {
   private var readerImmersiveEnabled = false
+  private var storageBridge: StorageBridge?
 
   override func application(
     _ application: UIApplication,
@@ -60,15 +61,16 @@ import UIKit
       UIApplication.shared.statusBarStyle = .default
     }
 
-    GeneratedPluginRegistrant.register(with: self)
+    pluginRegistrant = self
+    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
 
-    let messenger: FlutterBinaryMessenger? =
-      (window?.rootViewController as? FlutterViewController)?.binaryMessenger
-      ?? self.registrar(forPlugin: "ReaderUIBridge")?.messenger()
+  func register(with registry: FlutterPluginRegistry) {
+    GeneratedPluginRegistrant.register(with: registry)
 
-    guard let messenger else {
+    guard let messenger = registry.registrar(forPlugin: "ReaderUIBridge")?.messenger() else {
       NSLog("Reader bridge init failed: binaryMessenger unavailable")
-      return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+      return
     }
 
     let readerUIChannel = FlutterMethodChannel(
@@ -97,7 +99,8 @@ import UIKit
       }
     }
 
-    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+    storageBridge = StorageBridge(messenger: messenger)
+
   }
 
   override func applicationDidBecomeActive(_ application: UIApplication) {

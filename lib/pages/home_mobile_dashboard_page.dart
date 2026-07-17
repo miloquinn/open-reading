@@ -5,7 +5,6 @@ import 'dart:io';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 
 import '../models/book.dart';
 import '../services/ai/global_ai_reading_service.dart';
@@ -305,23 +304,21 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
     final horizontalPadding = useRailNavigation
         ? (mediaQuery.size.width >= 1440 ? 34.0 : 24.0)
         : 16.0;
-    final safeBottom =
-        mediaQuery.padding.bottom.clamp(0.0, kHomeMobileSafeBottomMax);
-    final contentBottomPadding = safeBottom +
-        kHomeMobileFloatingNavHeight +
-        kHomeMobileFloatingNavBottomGap +
-        kHomeMobileContentBottomExtra;
+    final mobileChrome = HomeMobileChromeScope.of(context);
+    final contentBottomPadding = useRailNavigation
+        ? mediaQuery.viewPadding.bottom + 24
+        : mobileChrome.pageBottomPadding;
 
     final refreshEdgeOffset = useRailNavigation
-        ? mediaQuery.padding.top
-        : mediaQuery.padding.top + kHomeMobileTopBarHeight;
+        ? mediaQuery.viewPadding.top
+        : mobileChrome.topBarHeight;
 
     return _HomeContentMetrics(
       refreshEdgeOffset: refreshEdgeOffset,
       horizontalPadding: horizontalPadding,
       contentTopPadding: useRailNavigation
-          ? mediaQuery.padding.top + 8
-          : mediaQuery.padding.top + kHomeMobileTopBarHeight + 8,
+          ? mediaQuery.viewPadding.top + 8
+          : mobileChrome.pageTopPadding,
       contentBottomPadding: contentBottomPadding,
       sectionSpacing: useRailNavigation ? 12 : 10,
     );
@@ -537,7 +534,7 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
               backgroundColor: palette.refreshBackgroundColor,
               edgeOffset: metrics.refreshEdgeOffset,
               child: ListView(
-                scrollCacheExtent: const ScrollCacheExtent.pixels(900),
+                cacheExtent: 900,
                 physics: const AlwaysScrollableScrollPhysics(
                   parent: BouncingScrollPhysics(),
                 ),

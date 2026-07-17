@@ -47,6 +47,9 @@ class Book {
   final String? sourceBookId;
   final String? sourceJson;
   final String? sourceBookJson;
+  final String? sourceKind;
+  final String? sourceLocator;
+  final int? sourceModifiedTime;
 
   bool get isOnline => storageType == 'online';
 
@@ -74,6 +77,9 @@ class Book {
     this.sourceBookId,
     this.sourceJson,
     this.sourceBookJson,
+    this.sourceKind,
+    this.sourceLocator,
+    this.sourceModifiedTime,
   }) : importDate = importDate ?? DateTime.now();
 
   // content 字段已被移除
@@ -103,6 +109,9 @@ class Book {
       'source_book_id': sourceBookId,
       'source_json': sourceJson,
       'source_book_json': sourceBookJson,
+      'source_kind': sourceKind,
+      'source_locator': sourceLocator,
+      'source_modified_time': sourceModifiedTime,
     };
   }
 
@@ -131,6 +140,9 @@ class Book {
       sourceBookId: map['source_book_id'] as String?,
       sourceJson: map['source_json'] as String?,
       sourceBookJson: map['source_book_json'] as String?,
+      sourceKind: map['source_kind'] as String?,
+      sourceLocator: map['source_locator'] as String?,
+      sourceModifiedTime: map['source_modified_time'] as int?,
     );
   }
 
@@ -158,6 +170,9 @@ class Book {
     String? sourceBookId,
     String? sourceJson,
     String? sourceBookJson,
+    String? sourceKind,
+    String? sourceLocator,
+    int? sourceModifiedTime,
     bool clearSourceMetadata = false,
   }) {
     return Book(
@@ -186,6 +201,12 @@ class Book {
       sourceJson: clearSourceMetadata ? null : sourceJson ?? this.sourceJson,
       sourceBookJson:
           clearSourceMetadata ? null : sourceBookJson ?? this.sourceBookJson,
+      sourceKind: clearSourceMetadata ? null : sourceKind ?? this.sourceKind,
+      sourceLocator:
+          clearSourceMetadata ? null : sourceLocator ?? this.sourceLocator,
+      sourceModifiedTime: clearSourceMetadata
+          ? null
+          : sourceModifiedTime ?? this.sourceModifiedTime,
     );
   }
 

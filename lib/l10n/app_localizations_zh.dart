@@ -395,16 +395,49 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appSettings => '应用设置';
 
   @override
-  String get appFont => '全局字体';
+  String get appFont => 'App 字体';
+
+  @override
+  String get appFontDescription => '用于导航、按钮、设置等界面文字，不影响书籍正文。';
+
+  @override
+  String get readerFont => '阅读字体';
+
+  @override
+  String get readerFontDescription => '仅用于书籍正文和章节标题，不影响 App 界面。';
 
   @override
   String get fontSystem => '系统默认';
+
+  @override
+  String get fontSourceHanSerif => '思源宋体';
 
   @override
   String get fontSourceHanSans => '思源黑体';
 
   @override
   String get fontJetBrainsMono => 'JetBrains Mono';
+
+  @override
+  String get fontInstrumentSans => 'Instrument Sans';
+
+  @override
+  String get fontNewsreader => 'Newsreader';
+
+  @override
+  String get fontSystemDescription => '跟随当前设备和操作系统的原生字体。';
+
+  @override
+  String get fontSerifDescription => '沉静、有出版物气质的衬线字体，适合长时间阅读。';
+
+  @override
+  String get fontSansSerifDescription => '清晰简洁的无衬线字体，适合紧凑界面和日常阅读。';
+
+  @override
+  String get fontMonospaceDescription => '等宽字体，适合代码、技术内容和专注排版。';
+
+  @override
+  String get fontPreviewText => 'Open Reading · 自由阅读，开卷有益';
 
   @override
   String get languageSystem => '跟随系统';
@@ -710,6 +743,41 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get bookmarkRemoved => '已移除书签';
+
+  @override
+  String get readerNavigationTitle => '阅读导航';
+
+  @override
+  String readerNavigationPosition(int current, int total) {
+    return '第 $current/$total 章';
+  }
+
+  @override
+  String get readerSearchChapters => '搜索章节';
+
+  @override
+  String get readerBackToCurrentChapter => '回到当前章节';
+
+  @override
+  String get readerCurrentChapter => '当前';
+
+  @override
+  String get readerCurrentPosition => '当前位置';
+
+  @override
+  String get readerNoChapterResults => '没有找到相关章节';
+
+  @override
+  String get readerNoChapterResultsHint => '尝试使用章节标题中的其他关键词。';
+
+  @override
+  String get readerNoBookmarks => '还没有书签';
+
+  @override
+  String get readerNoBookmarksHint => '阅读时点击右上角的书签按钮，即可保存当前位置。';
+
+  @override
+  String get readerBookmarkRequiresShelf => '加入书架后才能保存书签';
 
   @override
   String get themeBlue => '海洋蓝';
@@ -1217,6 +1285,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get readerHorizontalMarginLabel => '左右页边距';
+
+  @override
+  String get readerTopMarginLabel => '上页边距';
+
+  @override
+  String get readerBottomMarginLabel => '下页边距';
 
   @override
   String get readerVerticalMarginLabel => '上下页边距';
@@ -1958,6 +2032,113 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get readerThemeParchment => '牛皮纸';
+
+  @override
+  String get importSourceTitle => '添加书籍';
+
+  @override
+  String get importSourceDescription => '可以一次选择多本书，确认队列后再开始导入。';
+
+  @override
+  String get importSelectFiles => '选择文件';
+
+  @override
+  String get importIosSharedDocuments => '我的 iPhone · Open Reading';
+
+  @override
+  String get importICloudDrive => 'iCloud Drive · Open Reading';
+
+  @override
+  String get importICloudUnavailable => 'iCloud Drive 当前不可用';
+
+  @override
+  String get importAndroidFolder => '授权书籍目录';
+
+  @override
+  String get importAndroidRescan => '扫描已授权目录';
+
+  @override
+  String get importFolderPermissionAvailable => '已授权 · 点击扫描';
+
+  @override
+  String get importFolderPermissionLost => '权限已失效 · 请重新授权';
+
+  @override
+  String get importRemoveFolder => '移除目录';
+
+  @override
+  String importQueueTitle(int count) {
+    return '导入队列（$count）';
+  }
+
+  @override
+  String get importQueueHint => '可先删除误选项，导入时将逐本处理。';
+
+  @override
+  String get importQueueEmptyTitle => '还没有选择书籍';
+
+  @override
+  String get importQueueEmptyBody => '请选择 EPUB、PDF、TXT、MOBI 或其他支持的书籍文件。';
+
+  @override
+  String importAction(int count) {
+    return '导入 $count 本';
+  }
+
+  @override
+  String importRetryFailed(int count) {
+    return '重试失败的 $count 本';
+  }
+
+  @override
+  String get importStatusQueued => '等待中';
+
+  @override
+  String get importStatusPreparing => '正在准备文件';
+
+  @override
+  String get importStatusChecking => '正在检查';
+
+  @override
+  String get importStatusCopying => '正在复制';
+
+  @override
+  String get importStatusAnalyzing => '正在解析';
+
+  @override
+  String get importStatusSaving => '正在保存';
+
+  @override
+  String get importStatusImported => '导入成功';
+
+  @override
+  String get importStatusSkipped => '已存在，已跳过';
+
+  @override
+  String get importStatusFailed => '导入失败';
+
+  @override
+  String get importRemove => '移除';
+
+  @override
+  String get importRetry => '重试';
+
+  @override
+  String get importClearCompleted => '清除已完成';
+
+  @override
+  String get importDone => '完成';
+
+  @override
+  String importSummary(int succeeded, int skipped, int failed) {
+    return '成功 $succeeded 本 · 跳过 $skipped 本 · 失败 $failed 本';
+  }
+
+  @override
+  String get importNoSupportedFiles => '没有发现支持的书籍文件';
+
+  @override
+  String get importScanning => '正在扫描文件…';
 }
 
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).
@@ -2351,16 +2532,49 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get appSettings => '應用程式設定';
 
   @override
-  String get appFont => '全域字體';
+  String get appFont => 'App 字體';
+
+  @override
+  String get appFontDescription => '用於導覽、按鈕、設定等介面文字，不影響書籍正文。';
+
+  @override
+  String get readerFont => '閱讀字體';
+
+  @override
+  String get readerFontDescription => '僅用於書籍正文和章節標題，不影響 App 介面。';
 
   @override
   String get fontSystem => '系統預設';
+
+  @override
+  String get fontSourceHanSerif => '思源宋體';
 
   @override
   String get fontSourceHanSans => '思源黑體';
 
   @override
   String get fontJetBrainsMono => 'JetBrains Mono';
+
+  @override
+  String get fontInstrumentSans => 'Instrument Sans';
+
+  @override
+  String get fontNewsreader => 'Newsreader';
+
+  @override
+  String get fontSystemDescription => '跟隨目前裝置和作業系統的原生字體。';
+
+  @override
+  String get fontSerifDescription => '沉靜、具出版物氣質的襯線字體，適合長時間閱讀。';
+
+  @override
+  String get fontSansSerifDescription => '清晰簡潔的無襯線字體，適合緊湊介面和日常閱讀。';
+
+  @override
+  String get fontMonospaceDescription => '等寬字體，適合程式碼、技術內容和專注排版。';
+
+  @override
+  String get fontPreviewText => 'Open Reading · 自由閱讀，開卷有益';
 
   @override
   String get languageSystem => '跟隨系統';
@@ -2666,6 +2880,41 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get bookmarkRemoved => '已移除書籤';
+
+  @override
+  String get readerNavigationTitle => '閱讀導覽';
+
+  @override
+  String readerNavigationPosition(int current, int total) {
+    return '第 $current/$total 章';
+  }
+
+  @override
+  String get readerSearchChapters => '搜尋章節';
+
+  @override
+  String get readerBackToCurrentChapter => '回到目前章節';
+
+  @override
+  String get readerCurrentChapter => '目前';
+
+  @override
+  String get readerCurrentPosition => '目前位置';
+
+  @override
+  String get readerNoChapterResults => '找不到相關章節';
+
+  @override
+  String get readerNoChapterResultsHint => '請嘗試章節標題中的其他關鍵字。';
+
+  @override
+  String get readerNoBookmarks => '還沒有書籤';
+
+  @override
+  String get readerNoBookmarksHint => '閱讀時點擊右上角的書籤按鈕，即可儲存目前位置。';
+
+  @override
+  String get readerBookmarkRequiresShelf => '加入書架後才能儲存書籤';
 
   @override
   String get themeBlue => '海洋藍';
@@ -3173,6 +3422,12 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get readerHorizontalMarginLabel => '左右頁邊距';
+
+  @override
+  String get readerTopMarginLabel => '上頁邊距';
+
+  @override
+  String get readerBottomMarginLabel => '下頁邊距';
 
   @override
   String get readerVerticalMarginLabel => '上下頁邊距';
@@ -3914,4 +4169,111 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get readerThemeParchment => '牛皮紙';
+
+  @override
+  String get importSourceTitle => '加入書籍';
+
+  @override
+  String get importSourceDescription => '可以一次選擇多本書，確認佇列後再開始匯入。';
+
+  @override
+  String get importSelectFiles => '選擇檔案';
+
+  @override
+  String get importIosSharedDocuments => '我的 iPhone · Open Reading';
+
+  @override
+  String get importICloudDrive => 'iCloud Drive · Open Reading';
+
+  @override
+  String get importICloudUnavailable => 'iCloud Drive 目前無法使用';
+
+  @override
+  String get importAndroidFolder => '授權書籍目錄';
+
+  @override
+  String get importAndroidRescan => '掃描已授權目錄';
+
+  @override
+  String get importFolderPermissionAvailable => '已授權 · 點擊掃描';
+
+  @override
+  String get importFolderPermissionLost => '權限已失效 · 請重新授權';
+
+  @override
+  String get importRemoveFolder => '移除目錄';
+
+  @override
+  String importQueueTitle(int count) {
+    return '匯入佇列（$count）';
+  }
+
+  @override
+  String get importQueueHint => '可先移除誤選項，匯入時會逐本處理。';
+
+  @override
+  String get importQueueEmptyTitle => '尚未選擇書籍';
+
+  @override
+  String get importQueueEmptyBody => '請選擇 EPUB、PDF、TXT、MOBI 或其他支援的書籍檔案。';
+
+  @override
+  String importAction(int count) {
+    return '匯入 $count 本';
+  }
+
+  @override
+  String importRetryFailed(int count) {
+    return '重試失敗的 $count 本';
+  }
+
+  @override
+  String get importStatusQueued => '等待中';
+
+  @override
+  String get importStatusPreparing => '正在準備檔案';
+
+  @override
+  String get importStatusChecking => '正在檢查';
+
+  @override
+  String get importStatusCopying => '正在複製';
+
+  @override
+  String get importStatusAnalyzing => '正在解析';
+
+  @override
+  String get importStatusSaving => '正在儲存';
+
+  @override
+  String get importStatusImported => '匯入成功';
+
+  @override
+  String get importStatusSkipped => '已存在，已略過';
+
+  @override
+  String get importStatusFailed => '匯入失敗';
+
+  @override
+  String get importRemove => '移除';
+
+  @override
+  String get importRetry => '重試';
+
+  @override
+  String get importClearCompleted => '清除已完成';
+
+  @override
+  String get importDone => '完成';
+
+  @override
+  String importSummary(int succeeded, int skipped, int failed) {
+    return '成功 $succeeded 本 · 略過 $skipped 本 · 失敗 $failed 本';
+  }
+
+  @override
+  String get importNoSupportedFiles => '沒有找到支援的書籍檔案';
+
+  @override
+  String get importScanning => '正在掃描檔案…';
 }

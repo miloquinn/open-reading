@@ -4,14 +4,19 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../utils/font_catalog_helper.dart';
+
 class AppSettingsNotifier extends ChangeNotifier {
   static const String _keyAppLocale = 'app_locale';
   static const String _keyLegacyLocale = 'language';
-  static const String _keyAppFontFamily = 'app_font_family';
+  static const String _keyAppFontId = 'app_font_id_v2';
+  static const String _keyReaderFontId = 'reader_font_id_v2';
+  static const String _keyLegacyAppFontFamily = 'app_font_family';
 
   Locale? _locale;
   String _localeCode = 'system';
-  String? _appFontFamily;
+  String _appFontId = FontCatalog.defaultAppFont.id;
+  String _readerFontId = FontCatalog.defaultReaderFont.id;
   bool _isInitialized = false;
 
   AppSettingsNotifier() {
@@ -20,7 +25,11 @@ class AppSettingsNotifier extends ChangeNotifier {
 
   Locale? get locale => _locale;
   String get localeCode => _localeCode;
-  String? get appFontFamily => _appFontFamily;
+  String get appFontId => _appFontId;
+  String get readerFontId => _readerFontId;
+  FontOption get appFont => FontCatalog.appFontForId(_appFontId);
+  FontOption get readerFont => FontCatalog.readerFontForId(_readerFontId);
+  String? get appFontFamily => appFont.family;
   bool get isInitialized => _isInitialized;
 
   Future<void> _loadSettings() async {
@@ -28,10 +37,19 @@ class AppSettingsNotifier extends ChangeNotifier {
     final storedLocale =
         prefs.getString(_keyAppLocale) ?? prefs.getString(_keyLegacyLocale);
     _applyLocaleCode(storedLocale ?? 'system', notify: false);
-    final storedFontFamily = prefs.getString(_keyAppFontFamily);
-    _appFontFamily = (storedFontFamily == null || storedFontFamily.isEmpty)
-        ? null
-        : storedFontFamily;
+    final storedAppFontId = prefs.getString(_keyAppFontId);
+    if (storedAppFontId != null) {
+      _appFontId = FontCatalog.appFontForId(storedAppFontId).id;
+    } else {
+      final legacyFamily = prefs.getString(_keyLegacyAppFontFamily);
+      if (legacyFamily != null && legacyFamily.isNotEmpty) {
+        _appFontId = FontCatalog.appFontForFamily(legacyFamily).id;
+        await prefs.setString(_keyAppFontId, _appFontId);
+      }
+    }
+    _readerFontId = FontCatalog.readerFontForId(
+      prefs.getString(_keyReaderFontId),
+    ).id;
     _isInitialized = true;
     notifyListeners();
   }
@@ -63,14 +81,21 @@ class AppSettingsNotifier extends ChangeNotifier {
     await prefs.setString(_keyLegacyLocale, code);
   }
 
-  Future<void> setAppFontFamily(String? family) async {
-    _appFontFamily = family;
+  Future<void> setAppFontId(String id) async {
+    final normalized = FontCatalog.appFontForId(id).id;
+    if (_appFontId == normalized) return;
+    _appFontId = normalized;
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
-    if (family == null || family.isEmpty) {
-      await prefs.remove(_keyAppFontFamily);
-    } else {
-      await prefs.setString(_keyAppFontFamily, family);
-    }
+    await prefs.setString(_keyAppFontId, normalized);
+  }
+
+  Future<void> setReaderFontId(String id) async {
+    final normalized = FontCatalog.readerFontForId(id).id;
+    if (_readerFontId == normalized) return;
+    _readerFontId = normalized;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyReaderFontId, normalized);
   }
 }

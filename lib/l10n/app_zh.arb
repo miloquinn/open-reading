@@ -338,13 +338,29 @@
   "@appSettings": {
     "description": "应用设置部分"
   },
-  "appFont": "全局字体",
+  "appFont": "App 字体",
   "@appFont": {
     "description": "应用字体设置"
+  },
+  "appFontDescription": "用于导航、按钮、设置等界面文字，不影响书籍正文。",
+  "@appFontDescription": {
+    "description": "说明 App 字体的作用范围"
+  },
+  "readerFont": "阅读字体",
+  "@readerFont": {
+    "description": "阅读正文的字体设置"
+  },
+  "readerFontDescription": "仅用于书籍正文和章节标题，不影响 App 界面。",
+  "@readerFontDescription": {
+    "description": "说明阅读字体的作用范围"
   },
   "fontSystem": "系统默认",
   "@fontSystem": {
     "description": "系统默认字体"
+  },
+  "fontSourceHanSerif": "思源宋体",
+  "@fontSourceHanSerif": {
+    "description": "思源宋体"
   },
   "fontSourceHanSans": "思源黑体",
   "@fontSourceHanSans": {
@@ -353,6 +369,34 @@
   "fontJetBrainsMono": "JetBrains Mono",
   "@fontJetBrainsMono": {
     "description": "JetBrains Mono字体"
+  },
+  "fontInstrumentSans": "Instrument Sans",
+  "@fontInstrumentSans": {
+    "description": "Instrument Sans 字体"
+  },
+  "fontNewsreader": "Newsreader",
+  "@fontNewsreader": {
+    "description": "Newsreader 字体"
+  },
+  "fontSystemDescription": "跟随当前设备和操作系统的原生字体。",
+  "@fontSystemDescription": {
+    "description": "系统字体选项说明"
+  },
+  "fontSerifDescription": "沉静、有出版物气质的衬线字体，适合长时间阅读。",
+  "@fontSerifDescription": {
+    "description": "衬线字体选项说明"
+  },
+  "fontSansSerifDescription": "清晰简洁的无衬线字体，适合紧凑界面和日常阅读。",
+  "@fontSansSerifDescription": {
+    "description": "无衬线字体选项说明"
+  },
+  "fontMonospaceDescription": "等宽字体，适合代码、技术内容和专注排版。",
+  "@fontMonospaceDescription": {
+    "description": "等宽字体选项说明"
+  },
+  "fontPreviewText": "Open Reading · 自由阅读，开卷有益",
+  "@fontPreviewText": {
+    "description": "中英文字体预览文本"
   },
   "languageSystem": "跟随系统",
   "@languageSystem": {
@@ -762,6 +806,23 @@
   "@bookmarkRemoved": {
     "description": "移除书签消息"
   },
+  "readerNavigationTitle": "阅读导航",
+  "readerNavigationPosition": "第 {current}/{total} 章",
+  "@readerNavigationPosition": {
+    "placeholders": {
+      "current": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "readerSearchChapters": "搜索章节",
+  "readerBackToCurrentChapter": "回到当前章节",
+  "readerCurrentChapter": "当前",
+  "readerCurrentPosition": "当前位置",
+  "readerNoChapterResults": "没有找到相关章节",
+  "readerNoChapterResultsHint": "尝试使用章节标题中的其他关键词。",
+  "readerNoBookmarks": "还没有书签",
+  "readerNoBookmarksHint": "阅读时点击右上角的书签按钮，即可保存当前位置。",
+  "readerBookmarkRequiresShelf": "加入书架后才能保存书签",
   "themeBlue": "海洋蓝",
   "@themeBlue": {
     "description": "蓝色主题"
@@ -1053,6 +1114,8 @@
   "readerFontSizeValue": "字体大小  {size}",
   "readerHorizontalMarginValue": "左右页边距  {margin}",
   "readerHorizontalMarginLabel": "左右页边距",
+  "readerTopMarginLabel": "上页边距",
+  "readerBottomMarginLabel": "下页边距",
   "readerVerticalMarginLabel": "上下页边距",
   "readerVerticalMarginValue": "上下页边距  {margin}",
   "readerChapterCount": "{count} 章",
@@ -1273,5 +1336,38 @@
   "readerThemeNavy": "深蓝",
   "readerThemeNight": "黑夜",
   "readerThemePureBlack": "纯黑",
-  "readerThemeParchment": "牛皮纸"
+  "readerThemeParchment": "牛皮纸",
+  "importSourceTitle": "添加书籍",
+  "importSourceDescription": "可以一次选择多本书，确认队列后再开始导入。",
+  "importSelectFiles": "选择文件",
+  "importIosSharedDocuments": "我的 iPhone · Open Reading",
+  "importICloudDrive": "iCloud Drive · Open Reading",
+  "importICloudUnavailable": "iCloud Drive 当前不可用",
+  "importAndroidFolder": "授权书籍目录",
+  "importAndroidRescan": "扫描已授权目录",
+  "importFolderPermissionAvailable": "已授权 · 点击扫描",
+  "importFolderPermissionLost": "权限已失效 · 请重新授权",
+  "importRemoveFolder": "移除目录",
+  "importQueueTitle": "导入队列（{count}）",
+  "importQueueHint": "可先删除误选项，导入时将逐本处理。",
+  "importQueueEmptyTitle": "还没有选择书籍",
+  "importQueueEmptyBody": "请选择 EPUB、PDF、TXT、MOBI 或其他支持的书籍文件。",
+  "importAction": "导入 {count} 本",
+  "importRetryFailed": "重试失败的 {count} 本",
+  "importStatusQueued": "等待中",
+  "importStatusPreparing": "正在准备文件",
+  "importStatusChecking": "正在检查",
+  "importStatusCopying": "正在复制",
+  "importStatusAnalyzing": "正在解析",
+  "importStatusSaving": "正在保存",
+  "importStatusImported": "导入成功",
+  "importStatusSkipped": "已存在，已跳过",
+  "importStatusFailed": "导入失败",
+  "importRemove": "移除",
+  "importRetry": "重试",
+  "importClearCompleted": "清除已完成",
+  "importDone": "完成",
+  "importSummary": "成功 {succeeded} 本 · 跳过 {skipped} 本 · 失败 {failed} 本",
+  "importNoSupportedFiles": "没有发现支持的书籍文件",
+  "importScanning": "正在扫描文件…"
 }

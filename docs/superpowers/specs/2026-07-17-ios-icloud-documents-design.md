@@ -1,5 +1,9 @@
 # iOS iCloud Documents Capability Design
 
+> 实现更新（2026-07-17）：Runner entitlements、公开 iCloud Documents 作用域、
+> `StorageBridge`、延迟下载/物化以及导入队列 UI 已落地。plist、pbxproj 与 Swift 语法检查
+> 已通过；由于当前机器未安装完整 Xcode，签名构建和真机 iCloud Drive 可见性仍待验证。
+
 ## Goal
 
 Enable the iOS Runner target to use an app-owned iCloud Documents container for book files while preserving the existing local Files integration under `On My iPhone/Open Reading`.

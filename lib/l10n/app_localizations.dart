@@ -854,14 +854,38 @@ abstract class AppLocalizations {
   /// App font setting
   ///
   /// In en, this message translates to:
-  /// **'App Font'**
+  /// **'App font'**
   String get appFont;
+
+  /// Explains the scope of the app font
+  ///
+  /// In en, this message translates to:
+  /// **'Used by navigation, buttons, settings, and other interface text. It does not change book content.'**
+  String get appFontDescription;
+
+  /// Reader content font setting
+  ///
+  /// In en, this message translates to:
+  /// **'Reading font'**
+  String get readerFont;
+
+  /// Explains the scope of the reading font
+  ///
+  /// In en, this message translates to:
+  /// **'Used only for book text and chapter headings. It does not change the app interface.'**
+  String get readerFontDescription;
 
   /// System default font
   ///
   /// In en, this message translates to:
   /// **'System Default'**
   String get fontSystem;
+
+  /// Source Han Serif font
+  ///
+  /// In en, this message translates to:
+  /// **'Source Han Serif'**
+  String get fontSourceHanSerif;
 
   /// Source Han Sans font
   ///
@@ -874,6 +898,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'JetBrains Mono'**
   String get fontJetBrainsMono;
+
+  /// Instrument Sans font
+  ///
+  /// In en, this message translates to:
+  /// **'Instrument Sans'**
+  String get fontInstrumentSans;
+
+  /// Newsreader font
+  ///
+  /// In en, this message translates to:
+  /// **'Newsreader'**
+  String get fontNewsreader;
+
+  /// System font option description
+  ///
+  /// In en, this message translates to:
+  /// **'Follows the native font of the current device and operating system.'**
+  String get fontSystemDescription;
+
+  /// Serif font option description
+  ///
+  /// In en, this message translates to:
+  /// **'Serif type with a calm, editorial character for sustained reading.'**
+  String get fontSerifDescription;
+
+  /// Sans serif font option description
+  ///
+  /// In en, this message translates to:
+  /// **'Clear sans serif type suited to compact interfaces and everyday reading.'**
+  String get fontSansSerifDescription;
+
+  /// Monospace font option description
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed-width type suited to code, technical material, and focused layouts.'**
+  String get fontMonospaceDescription;
+
+  /// Bilingual font preview sample
+  ///
+  /// In en, this message translates to:
+  /// **'Open Reading · Read freely 开卷有益'**
+  String get fontPreviewText;
 
   /// Follow system language
   ///
@@ -1468,6 +1534,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Bookmark removed'**
   String get bookmarkRemoved;
+
+  /// No description provided for @readerNavigationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading navigation'**
+  String get readerNavigationTitle;
+
+  /// No description provided for @readerNavigationPosition.
+  ///
+  /// In en, this message translates to:
+  /// **'Chapter {current} of {total}'**
+  String readerNavigationPosition(int current, int total);
+
+  /// No description provided for @readerSearchChapters.
+  ///
+  /// In en, this message translates to:
+  /// **'Search chapters'**
+  String get readerSearchChapters;
+
+  /// No description provided for @readerBackToCurrentChapter.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to current chapter'**
+  String get readerBackToCurrentChapter;
+
+  /// No description provided for @readerCurrentChapter.
+  ///
+  /// In en, this message translates to:
+  /// **'Current'**
+  String get readerCurrentChapter;
+
+  /// No description provided for @readerCurrentPosition.
+  ///
+  /// In en, this message translates to:
+  /// **'Current position'**
+  String get readerCurrentPosition;
+
+  /// No description provided for @readerNoChapterResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching chapters'**
+  String get readerNoChapterResults;
+
+  /// No description provided for @readerNoChapterResultsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Try another word from the chapter title.'**
+  String get readerNoChapterResultsHint;
+
+  /// No description provided for @readerNoBookmarks.
+  ///
+  /// In en, this message translates to:
+  /// **'No bookmarks yet'**
+  String get readerNoBookmarks;
+
+  /// No description provided for @readerNoBookmarksHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the bookmark button in the top-right corner to save your place.'**
+  String get readerNoBookmarksHint;
+
+  /// No description provided for @readerBookmarkRequiresShelf.
+  ///
+  /// In en, this message translates to:
+  /// **'Add this book to the shelf before saving bookmarks'**
+  String get readerBookmarkRequiresShelf;
 
   /// Blue theme name
   ///
@@ -2350,6 +2482,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Horizontal margin'**
   String get readerHorizontalMarginLabel;
+
+  /// No description provided for @readerTopMarginLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Top margin'**
+  String get readerTopMarginLabel;
+
+  /// No description provided for @readerBottomMarginLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Bottom margin'**
+  String get readerBottomMarginLabel;
 
   /// No description provided for @readerVerticalMarginLabel.
   ///
@@ -3677,6 +3821,204 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Parchment'**
   String get readerThemeParchment;
+
+  /// No description provided for @importSourceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add books'**
+  String get importSourceTitle;
+
+  /// No description provided for @importSourceDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose several files first. Review the queue before starting the import.'**
+  String get importSourceDescription;
+
+  /// No description provided for @importSelectFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose files'**
+  String get importSelectFiles;
+
+  /// No description provided for @importIosSharedDocuments.
+  ///
+  /// In en, this message translates to:
+  /// **'On My iPhone · Open Reading'**
+  String get importIosSharedDocuments;
+
+  /// No description provided for @importICloudDrive.
+  ///
+  /// In en, this message translates to:
+  /// **'iCloud Drive · Open Reading'**
+  String get importICloudDrive;
+
+  /// No description provided for @importICloudUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'iCloud Drive is unavailable'**
+  String get importICloudUnavailable;
+
+  /// No description provided for @importAndroidFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Authorize a book folder'**
+  String get importAndroidFolder;
+
+  /// No description provided for @importAndroidRescan.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan authorized folders'**
+  String get importAndroidRescan;
+
+  /// No description provided for @importFolderPermissionAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Authorized · tap to scan'**
+  String get importFolderPermissionAvailable;
+
+  /// No description provided for @importFolderPermissionLost.
+  ///
+  /// In en, this message translates to:
+  /// **'Permission lost · authorize again to restore access'**
+  String get importFolderPermissionLost;
+
+  /// No description provided for @importRemoveFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove folder'**
+  String get importRemoveFolder;
+
+  /// No description provided for @importQueueTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import queue ({count})'**
+  String importQueueTitle(int count);
+
+  /// No description provided for @importQueueHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove files selected by mistake, then import them one at a time.'**
+  String get importQueueHint;
+
+  /// No description provided for @importQueueEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No books selected'**
+  String get importQueueEmptyTitle;
+
+  /// No description provided for @importQueueEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose EPUB, PDF, TXT, MOBI or another supported book file.'**
+  String get importQueueEmptyBody;
+
+  /// No description provided for @importAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Import {count} books'**
+  String importAction(int count);
+
+  /// No description provided for @importRetryFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry {count} failed'**
+  String importRetryFailed(int count);
+
+  /// No description provided for @importStatusQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting'**
+  String get importStatusQueued;
+
+  /// No description provided for @importStatusPreparing.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing file'**
+  String get importStatusPreparing;
+
+  /// No description provided for @importStatusChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking'**
+  String get importStatusChecking;
+
+  /// No description provided for @importStatusCopying.
+  ///
+  /// In en, this message translates to:
+  /// **'Copying'**
+  String get importStatusCopying;
+
+  /// No description provided for @importStatusAnalyzing.
+  ///
+  /// In en, this message translates to:
+  /// **'Analyzing'**
+  String get importStatusAnalyzing;
+
+  /// No description provided for @importStatusSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving'**
+  String get importStatusSaving;
+
+  /// No description provided for @importStatusImported.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported'**
+  String get importStatusImported;
+
+  /// No description provided for @importStatusSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'Already exists, skipped'**
+  String get importStatusSkipped;
+
+  /// No description provided for @importStatusFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Import failed'**
+  String get importStatusFailed;
+
+  /// No description provided for @importRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get importRemove;
+
+  /// No description provided for @importRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get importRetry;
+
+  /// No description provided for @importClearCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear completed'**
+  String get importClearCompleted;
+
+  /// No description provided for @importDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get importDone;
+
+  /// No description provided for @importSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{succeeded} imported · {skipped} skipped · {failed} failed'**
+  String importSummary(int succeeded, int skipped, int failed);
+
+  /// No description provided for @importNoSupportedFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'No supported book files were found'**
+  String get importNoSupportedFiles;
+
+  /// No description provided for @importScanning.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanning files…'**
+  String get importScanning;
 }
 
 class _AppLocalizationsDelegate

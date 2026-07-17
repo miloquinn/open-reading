@@ -11,11 +11,13 @@ import androidx.core.view.WindowCompat
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import android.util.Log
+import android.content.Intent
 
 class MainActivity : FlutterActivity() {
     private val CHANNEL = "com.niki.xxread/fullscreen"
     private val READER_KEYS_CHANNEL = "com.niki.xxread/reader_keys"
     private var readerKeysChannel: MethodChannel? = null
+    private var safDirectoryBridge: SafDirectoryBridge? = null
     @Volatile private var volumePagingEnabled: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -73,6 +75,18 @@ class MainActivity : FlutterActivity() {
             }
         }
 
+        safDirectoryBridge = SafDirectoryBridge(
+            this,
+            flutterEngine.dartExecutor.binaryMessenger,
+        )
+
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (safDirectoryBridge?.onActivityResult(requestCode, resultCode, data) == true) {
+            return
+        }
+        super.onActivityResult(requestCode, resultCode, data)
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {

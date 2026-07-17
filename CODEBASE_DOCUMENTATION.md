@@ -57,6 +57,17 @@ NativeReaderPage
 书籍领域服务，处理文件导入、编码识别、元数据、封面与图片、数据库访问、书签、笔记、
 分页缓存清理和存储修复。
 
+本地书籍导入采用“来源发现 → 暂存队列 → 顺序导入”结构：
+
+- `book_import_models.dart` 定义来源、所有权、进度阶段和结果；
+- `book_import_source_service.dart` 负责多文件、Android SAF、iOS Files 与 iCloud 来源；
+- `book_import_service.dart` 每次只导入一本，验证哈希并回滚本次拥有的失败产物；
+- `pages/import_book/` 管理页面生命周期内的队列、单书进度和失败重试。
+
+Android 目录只使用 SAF 持久化 URI 权限，不申请广泛存储权限。iOS 的本地
+`Documents/books` 原地注册；iCloud `Documents/books` 仅同步书籍文件，导入时再物化到
+本地书库。SQLite、阅读进度、书签和笔记不会放入 iCloud Documents。
+
 ### `lib/book_sources/`
 
 开放书源协议实现：
@@ -109,4 +120,4 @@ flutter test test/book_source_protocol_test.dart test/book_source_e2e_test.dart
 - 删除功能时同步删除失效文档、平台桥接、构建依赖和资源。
 - 生成文件由对应工具更新，不手工添加业务说明。
 
-更新时间：2026-07-11
+更新时间：2026-07-17
