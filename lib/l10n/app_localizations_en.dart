@@ -83,58 +83,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bookSourcesLoadMore => 'Load more';
 
   @override
-  String get legadoCompatibilityTitle => 'Legado compatibility (Beta)';
-
-  @override
-  String get legadoCompatibilitySubtitle =>
-      'Imported rules are scanned before any compatible runtime is enabled';
-
-  @override
-  String get legadoImport => 'Import Legado';
-
-  @override
-  String get legadoImportTitle => 'Import Legado sources';
-
-  @override
-  String get legadoImportNotice =>
-      'Legado JSON may contain executable scripts, cookies, login flows, or browser automation. Importing only stores and scans rules; high-risk capabilities are not executed in the app.';
-
-  @override
-  String get legadoChooseFile => 'Choose JSON file';
-
-  @override
-  String get legadoJsonLabel => 'Legado source JSON';
-
-  @override
-  String get legadoImportHint =>
-      'Paste one source object, an exported source list, or choose a JSON file';
-
-  @override
-  String get legadoFileTooLarge =>
-      'The source file exceeds the 2 MB import limit.';
-
-  @override
-  String get legadoFileReadFailed => 'The selected file could not be read.';
-
-  @override
-  String legadoImportedCount(int count) {
-    return 'Imported $count Legado sources';
-  }
-
-  @override
-  String get legadoNoSources =>
-      'No Legado sources imported. Importing here does not enable scripts or bundle third-party content.';
-
-  @override
-  String get legadoLite => 'Lite compatible';
-
-  @override
-  String get legadoAdapterRequired => 'Adapter required';
-
-  @override
-  String get legadoUnsupported => 'Unsupported';
-
-  @override
   String bookSourcesFailedCount(int count) {
     return '$count source request(s) failed';
   }

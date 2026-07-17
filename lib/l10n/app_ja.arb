@@ -29,28 +29,6 @@
   "bookSourcesSearchHint": "書名や著者で有効なソースを検索",
   "bookSourcesSearch": "検索",
   "bookSourcesLoadMore": "さらに読み込む",
-  "legadoCompatibilityTitle": "Legado 互換（Beta）",
-  "legadoCompatibilitySubtitle": "インポート後にルールを検査し、互換ランタイムで実行可能か判定します",
-  "legadoImport": "Legado をインポート",
-  "legadoImportTitle": "Legado ソースをインポート",
-  "legadoImportNotice": "Legado JSON には実行可能なスクリプト、Cookie、ログイン処理、ブラウザー自動化が含まれる場合があります。インポート時は保存と検査だけを行い、高リスク機能はアプリ内で実行しません。",
-  "legadoChooseFile": "JSON ファイルを選択",
-  "legadoJsonLabel": "Legado ソース JSON",
-  "legadoImportHint": "単一ソースまたはエクスポートした一覧を貼り付けるか、JSON ファイルを選択します",
-  "legadoFileTooLarge": "ソースファイルが 2 MB の上限を超えています。",
-  "legadoFileReadFailed": "選択したファイルを読み込めませんでした。",
-  "legadoImportedCount": "Legado ソースを {count} 件インポートしました",
-  "@legadoImportedCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "legadoNoSources": "Legado ソースはまだありません。ここでのインポートはスクリプトを有効化せず、第三者コンテンツも同梱しません。",
-  "legadoLite": "Lite 互換",
-  "legadoAdapterRequired": "アダプターが必要",
-  "legadoUnsupported": "未対応",
   "bookSourcesFailedCount": "{count} 件のソースリクエストが失敗しました",
   "@bookSourcesFailedCount": {
     "placeholders": {
