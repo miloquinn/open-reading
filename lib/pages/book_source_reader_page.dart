@@ -6,6 +6,7 @@ import 'package:html/parser.dart' as html_parser;
 import 'package:provider/provider.dart';
 
 import 'package:xxread/core/reader/canonical_locator.dart';
+import 'package:xxread/core/reader/native_text_paginator.dart';
 import 'package:xxread/core/reader/reader_layout.dart';
 import 'package:xxread/core/reader/reader_margin_settings.dart';
 import 'package:xxread/core/reader/reader_safe_area.dart';
@@ -1040,7 +1041,12 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
                     children: [
                       _buildChapterTitle(chapterTitle),
                       const SizedBox(height: 26),
-                      Text(text, style: _bodyTextStyle),
+                      Text(
+                        text,
+                        style: _bodyTextStyle,
+                        strutStyle: readerStrutStyle(_bodyTextStyle),
+                        textHeightBehavior: readerTextHeightBehavior,
+                      ),
                       const SizedBox(height: 34),
                       Divider(
                         color: _readerTheme.border.withValues(alpha: 0.48),
@@ -1162,7 +1168,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       pageMode: _pageMode,
       extra: '${firstHeight.toStringAsFixed(2)}:'
           '${_readerSafeArea.paginationSignature}:${_readerFont.id}',
-    ).cacheKey('book-source-line-v2');
+    ).cacheKey('book-source-line-v3');
     if (_paginationKey == key && _paginatedPages.isNotEmpty) return;
     final pages = paginateBookSourceText(
       text,
@@ -1239,7 +1245,12 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
                 ),
                 const SizedBox(height: 26),
               ],
-              Text(page.text, style: _bodyTextStyle),
+              Text(
+                page.text,
+                style: _bodyTextStyle,
+                strutStyle: readerStrutStyle(_bodyTextStyle),
+                textHeightBehavior: readerTextHeightBehavior,
+              ),
             ],
           ),
         ),

@@ -5,6 +5,25 @@ import 'package:flutter/painting.dart';
 
 typedef NativeTextSpanBuilder = TextSpan Function(int start, int end);
 
+/// 行高只作用于行与行之间：首行上方、末行下方不再垫行距，
+/// 这样"上/下边距"就是从字形边缘量起，不随行高设置漂移。
+const TextHeightBehavior readerTextHeightBehavior = TextHeightBehavior(
+  applyHeightToFirstAscent: false,
+  applyHeightToLastDescent: false,
+  leadingDistribution: TextLeadingDistribution.proportional,
+);
+
+/// 与 [readerTextHeightBehavior] 配套的 strut：只兜底字体回退时的
+/// 行高一致性，不携带 height——strut 不受 TextHeightBehavior 裁剪，
+/// 带上 height 会把首行行距原样加回来。
+StrutStyle readerStrutStyle(TextStyle style) => StrutStyle(
+      fontFamily: style.fontFamily,
+      fontFamilyFallback: style.fontFamilyFallback,
+      fontSize: style.fontSize,
+      fontWeight: style.fontWeight,
+      fontStyle: style.fontStyle,
+    );
+
 @immutable
 class NativeTextFlowStyle {
   const NativeTextFlowStyle({

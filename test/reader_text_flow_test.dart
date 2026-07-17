@@ -1,0 +1,118 @@
+import 'package:flutter/painting.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:xxread/core/reader/native_text_paginator.dart';
+
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  const fontSize = 20.0;
+  const lineHeight = 1.8;
+  const style = TextStyle(
+    fontSize: fontSize,
+    height: lineHeight,
+    color: Color(0xFF000000),
+  );
+  const twoLines = TextSpan(text: 'First line\nSecond line', style: style);
+
+  TextPainter layout({
+    StrutStyle? strut,
+    TextHeightBehavior? behavior,
+  }) {
+    return TextPainter(
+      text: twoLines,
+      textDirection: TextDirection.ltr,
+      strutStyle: strut,
+      textHeightBehavior: behavior,
+    )..layout(maxWidth: 500);
+  }
+
+  test('trimmed behavior removes exactly the first/last line leading', () {
+    final full = layout();
+    final trimmed = layout(
+      strut: readerStrutStyle(style),
+      behavior: readerTextHeightBehavior,
+    );
+    expect(
+      full.height - trimmed.height,
+      moreOrLessEquals((lineHeight - 1) * fontSize, epsilon: 0.01),
+    );
+    full.dispose();
+    trimmed.dispose();
+  });
+
+  test('line pitch between lines is unchanged by trimming', () {
+    final full = layout();
+    final trimmed = layout(
+      strut: readerStrutStyle(style),
+      behavior: readerTextHeightBehavior,
+    );
+    double pitch(TextPainter painter) {
+      final metrics = painter.computeLineMetrics();
+      expect(metrics, hasLength(2));
+      return metrics[1].baseline - metrics[0].baseline;
+    }
+
+    expect(pitch(full), moreOrLessEquals(lineHeight * fontSize, epsilon: 0.01));
+    expect(pitch(trimmed), moreOrLessEquals(pitch(full), epsilon: 0.01));
+    full.dispose();
+    trimmed.dispose();
+  });
+
+  test('readerStrutStyle does not re-add the trimmed leading', () {
+    // StrutStyle.fromTextStyle carries the height multiplier, and struts
+    // ignore TextHeightBehavior entirely — guard against regressing to it.
+    final withLegacyStrut = layout(
+      strut: StrutStyle.fromTextStyle(style),
+      behavior: readerTextHeightBehavior,
+    );
+    final withReaderStrut = layout(
+      strut: readerStrutStyle(style),
+      behavior: readerTextHeightBehavior,
+    );
+    final noStrut = layout(behavior: readerTextHeightBehavior);
+
+    expect(
+      withReaderStrut.height,
+      moreOrLessEquals(noStrut.height, epsilon: 0.01),
+    );
+    expect(withLegacyStrut.height, greaterThan(withReaderStrut.height));
+    withLegacyStrut.dispose();
+    withReaderStrut.dispose();
+    noStrut.dispose();
+  });
+
+  test('paginator fits one extra line per page thanks to trimming', () {
+    const text = 'line one\nline two\nline three\nline four';
+    TextSpan buildSpan(int start, int end) => TextSpan(
+          text: text.substring(start, end),
+          style: style,
+        );
+    List<NativeTextPageRange> paginate(NativeTextFlowStyle flowStyle) {
+      return NativeTextPaginator(
+        maxWidth: 500,
+        // Two full line boxes (72) minus a hair: without trimming only one
+        // line fits, with trimming the first page gains the leading back.
+        maxHeight: 2 * lineHeight * fontSize - 10,
+        flowStyle: flowStyle,
+      ).paginate(text: text, spanBuilder: buildSpan);
+    }
+
+    final untrimmed = paginate(const NativeTextFlowStyle(
+      textDirection: TextDirection.ltr,
+      textScaler: TextScaler.noScaling,
+      locale: null,
+      strutStyle: null,
+      textHeightBehavior: null,
+    ));
+    final trimmed = paginate(NativeTextFlowStyle(
+      textDirection: TextDirection.ltr,
+      textScaler: TextScaler.noScaling,
+      locale: null,
+      strutStyle: readerStrutStyle(style),
+      textHeightBehavior: readerTextHeightBehavior,
+    ));
+
+    expect(untrimmed.first.lineCount, 1);
+    expect(trimmed.first.lineCount, 2);
+  });
+}

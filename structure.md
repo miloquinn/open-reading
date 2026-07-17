@@ -110,6 +110,7 @@ lib/
 
 - `core/reader/reader_settings.dart`：统一字号、行高、主题、翻页模式和独立上下边距。
 - `core/reader/reader_layout.dart`：翻页模式和分页缓存指纹。
+- `core/reader/native_text_paginator.dart`：本地与在线纯文本分页共享实现；正文行高仅作用于行间，首行上方和末行下方的 leading 统一裁剪，配套 strut 不携带 `height`。
 - `core/reader/reader_safe_area.dart`：系统安全区、正文边距和页码位置。
 - `core/reader/canonical_locator.dart`：与排版无关的稳定阅读位置。
 - `widgets/reader_settings_controls.dart`：完整阅读设置和翻页模式面板。

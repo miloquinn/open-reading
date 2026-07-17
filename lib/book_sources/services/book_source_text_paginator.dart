@@ -76,8 +76,8 @@ List<BookSourceTextPage> paginateBookSourceText(
     textDirection: textDirection,
     textScaler: textScaler,
     locale: locale,
-    strutStyle: null,
-    textHeightBehavior: null,
+    strutStyle: readerStrutStyle(style),
+    textHeightBehavior: readerTextHeightBehavior,
   );
   TextSpan buildSpan(int start, int end) => TextSpan(
         text: text.substring(start, end),

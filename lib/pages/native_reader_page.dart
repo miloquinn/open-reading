@@ -358,12 +358,8 @@ class _NativeReaderPageState extends State<NativeReaderPage>
       textDirection: direction ?? Directionality.of(context),
       textScaler: textScaler ?? MediaQuery.textScalerOf(context),
       locale: Localizations.maybeLocaleOf(context),
-      strutStyle: StrutStyle.fromTextStyle(style),
-      textHeightBehavior: const TextHeightBehavior(
-        applyHeightToFirstAscent: true,
-        applyHeightToLastDescent: true,
-        leadingDistribution: TextLeadingDistribution.proportional,
-      ),
+      strutStyle: readerStrutStyle(style),
+      textHeightBehavior: readerTextHeightBehavior,
     );
   }
 
@@ -1179,7 +1175,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
       locale: Localizations.maybeLocaleOf(context),
       pageMode: _pageMode,
       extra: '${_readerSafeArea.paginationSignature}:${_readerFont.id}',
-    ).cacheKey('native-line-v2');
+    ).cacheKey('native-line-v3');
     if (!_pageCache.containsKey(key) && _pageCache.length >= 96) {
       _pageCache.remove(_pageCache.keys.first);
     }
