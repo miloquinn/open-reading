@@ -22,6 +22,7 @@ import 'package:xxread/core/reader/reader_layout.dart';
 import 'package:xxread/core/reader/reader_margin_settings.dart';
 import 'package:xxread/core/reader/reader_safe_area.dart';
 import 'package:xxread/core/reader/reader_settings.dart';
+import 'package:xxread/core/reader/reader_system_ui.dart';
 import 'package:xxread/models/book.dart';
 import 'package:xxread/models/bookmark.dart';
 import 'package:xxread/services/books/book_dao.dart';
@@ -106,6 +107,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
   bool _pointerMoved = false;
   bool _readerSettingsLoaded = false;
   bool _readerSystemUiApplied = false;
+  bool _showSystemStatusBarInReader = false;
   final ReadingStatsDao _readingStatsDao = ReadingStatsDao();
   final BookmarkDao _bookmarkDao = BookmarkDao();
   final ReaderSettingsStore _readerSettingsStore = const ReaderSettingsStore();
@@ -133,9 +135,13 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     // tablets visibly relayout underneath the opening transition.
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted || _readerSystemUiApplied) return;
-      await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+      final showStatusBar =
+          await ReaderSystemUiController.applySavedPreference();
       if (!mounted) return;
-      setState(() => _readerSystemUiApplied = true);
+      setState(() {
+        _showSystemStatusBarInReader = showStatusBar;
+        _readerSystemUiApplied = true;
+      });
     });
   }
 
@@ -143,6 +149,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _startReadingSession();
+      if (_readerSystemUiApplied) unawaited(_applyReaderSystemUi());
       return;
     }
     if (state == AppLifecycleState.inactive ||
@@ -266,9 +273,13 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     _chapterScrollController.dispose();
     _continuousScrollController.dispose();
     _verticalScrollProgress.dispose();
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    unawaited(ReaderSystemUiController.restore());
     super.dispose();
   }
+
+  Future<void> _applyReaderSystemUi() => ReaderSystemUiController.apply(
+        showStatusBar: _showSystemStatusBarInReader,
+      );
 
   Future<void> _loadPageMode() async {
     try {
@@ -860,8 +871,9 @@ class _NativeReaderPageState extends State<NativeReaderPage>
             unawaited(_updateLayout(bottomMargin: value)),
       ),
     );
+    if (!mounted) return;
+    await _applyReaderSystemUi();
     if (selectedMode == null || !mounted) return;
-    await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     if (!mounted) return;
     await WidgetsBinding.instance.endOfFrame;
     if (!mounted) return;

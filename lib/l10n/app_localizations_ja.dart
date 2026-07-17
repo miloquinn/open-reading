@@ -393,6 +393,107 @@ class AppLocalizationsJa extends AppLocalizations {
   String get fontPreviewText => 'Open Reading · 自由に読む 開卷有益';
 
   @override
+  String get customFonts => 'マイフォント';
+
+  @override
+  String get customFontsEmpty => 'インポートしたフォントはありません';
+
+  @override
+  String get customFontsEmptyHint => 'TTF または OTF を一度インポートすると、アプリ画面や本文に使用できます。';
+
+  @override
+  String customFontsCount(int count) {
+    return '$count 個のフォントをインポート済み';
+  }
+
+  @override
+  String get customFontsLocalOnly => 'インポートしたフォントはこの端末だけに保存され、自動同期されません。';
+
+  @override
+  String get builtInFonts => '内蔵フォント';
+
+  @override
+  String get importFont => 'フォントをインポート';
+
+  @override
+  String get importingFont => 'フォントをインポート中…';
+
+  @override
+  String get customFontImported => 'フォントをインポートしました';
+
+  @override
+  String get customFontAlreadyImported => 'このフォントはすでにインポートされています';
+
+  @override
+  String get customFontApplied => 'フォント設定を更新しました';
+
+  @override
+  String get customFontAppliedToApp => 'インポートしてアプリフォントに設定しました';
+
+  @override
+  String get customFontAppliedToReader => 'インポートして読書フォントに設定しました';
+
+  @override
+  String get customFontImportUnsupported =>
+      'このプラットフォームではフォントの永続インポートにまだ対応していません。';
+
+  @override
+  String get customFontUnsupportedFormat => 'TTF または OTF ファイルを選択してください。';
+
+  @override
+  String get customFontInvalid => '有効または対応しているフォントファイルではありません。';
+
+  @override
+  String get customFontTooLarge => 'フォントファイルは 50 MB 以下にしてください。';
+
+  @override
+  String get customFontReadFailed => 'フォントファイルを読み取れませんでした。';
+
+  @override
+  String get customFontLoadFailed => 'フォントを読み込めませんでした。';
+
+  @override
+  String get customFontStorageFailed => 'フォントをこの端末に保存できませんでした。';
+
+  @override
+  String get customFontUnavailable => 'フォントファイルを利用できません。削除して再インポートしてください。';
+
+  @override
+  String get setAsAppFont => 'アプリフォントに設定';
+
+  @override
+  String get setAsReaderFont => '読書フォントに設定';
+
+  @override
+  String get setAsBothFonts => '両方に使用';
+
+  @override
+  String get renameFont => 'フォント名を変更';
+
+  @override
+  String deleteCustomFontTitle(String name) {
+    return '「$name」を削除しますか？';
+  }
+
+  @override
+  String get deleteCustomFontMessage => 'フォントファイルをこの端末から削除します。';
+
+  @override
+  String get deleteCustomFontInUse => 'このフォントは使用中です。削除すると影響する設定は初期値に戻ります。';
+
+  @override
+  String get deleteAndReset => '削除して初期値に戻す';
+
+  @override
+  String get settingsTelegramChannel => 'Telegram';
+
+  @override
+  String get settingsTelegramSubtitle => 'Telegram 公式チャンネル';
+
+  @override
+  String get settingsTelegramOpenFailed => 'Telegram リンクを開けませんでした';
+
+  @override
   String get languageSystem => 'システムに従う';
 
   @override
@@ -1467,6 +1568,41 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get changelogHistorySubtitle => '各バージョンの変更内容を表示';
+
+  @override
+  String get openSourceLicensesTitle => 'オープンソースライセンス';
+
+  @override
+  String get openSourceLicensesSubtitle => 'アプリ、内蔵フォント、サードパーティ製品のライセンスを表示';
+
+  @override
+  String get openSourceLicensesIntro =>
+      '以下のライセンス文はアプリ内でオフライン表示できます。Open Reading、内蔵フォント、サードパーティソフトウェアには、それぞれのライセンスが適用されます。';
+
+  @override
+  String get openSourceProjectSection => 'プロジェクト';
+
+  @override
+  String get openSourceLegacyLicenseTitle => '旧バージョン';
+
+  @override
+  String get openSourceFontsSection => '内蔵フォント';
+
+  @override
+  String get openSourceDependenciesSection => 'サードパーティソフトウェア';
+
+  @override
+  String get openSourceDependenciesTitle => 'Flutter / Dart 依存パッケージ';
+
+  @override
+  String get openSourceDependenciesSubtitle => 'Flutter が自動収集したサードパーティライセンスを表示';
+
+  @override
+  String get openSourceLicenseLegalese =>
+      'Open Reading とサードパーティコンポーネントには、それぞれのライセンスが適用されます。';
+
+  @override
+  String get openSourceLicenseLoadFailed => 'ライセンス文を読み込めませんでした。';
 
   @override
   String get changelogPageTitle => 'バージョン更新履歴';

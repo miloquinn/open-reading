@@ -1,12 +1,18 @@
 import 'dart:async';
+import 'dart:io';
+import 'dart:typed_data';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:xxread/services/core/app_settings_service.dart';
+import 'package:xxread/services/core/custom_font_service.dart';
 import 'package:xxread/utils/font_catalog_helper.dart';
 
-Future<AppSettingsNotifier> _loadNotifier() async {
-  final notifier = AppSettingsNotifier();
+Future<AppSettingsNotifier> _loadNotifier({
+  CustomFontService? customFontService,
+}) async {
+  final notifier = AppSettingsNotifier(customFontService: customFontService);
   if (notifier.isInitialized) return notifier;
 
   final initialized = Completer<void>();
@@ -89,5 +95,43 @@ void main() {
       FontCatalog.appFonts.map((font) => font.id),
       contains(FontCatalog.instrumentSansId),
     );
+  });
+
+  test('an imported font is shared by both domains but applied independently',
+      () async {
+    final sandbox =
+        await Directory.systemTemp.createTemp('font-settings-test-');
+    addTearDown(() => sandbox.delete(recursive: true));
+    final bytes = Uint8List.fromList(<int>[0, 1, 0, 0, 1, 2, 3, 4]);
+    final service = CustomFontService(
+      supportDirectory: () async => sandbox,
+      filePicker: () async => FilePickerResult(<PlatformFile>[
+        PlatformFile(
+          name: 'Reader Custom.ttf',
+          size: bytes.length,
+          bytes: bytes,
+        ),
+      ]),
+      registrar: (family, bytes) async {},
+    );
+    final notifier = await _loadNotifier(customFontService: service);
+    addTearDown(notifier.dispose);
+
+    final result = await notifier.importCustomFont(FontDomain.reader);
+    final customId = result.font!.id;
+
+    expect(notifier.readerFontId, customId);
+    expect(notifier.appFontId, FontCatalog.defaultAppFont.id);
+    expect(notifier.appFontOptions.map((font) => font.id), contains(customId));
+    expect(
+      notifier.readerFontOptions.map((font) => font.id),
+      contains(customId),
+    );
+
+    await notifier.setAppFontId(customId);
+    expect(notifier.appFontId, customId);
+    await notifier.deleteCustomFont(customId);
+    expect(notifier.appFontId, FontCatalog.defaultAppFont.id);
+    expect(notifier.readerFontId, FontCatalog.defaultReaderFont.id);
   });
 }

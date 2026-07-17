@@ -376,6 +376,48 @@
   "@fontPreviewText": {
     "description": "Bilingual font preview sample"
   },
+  "customFonts": "My fonts",
+  "customFontsEmpty": "No custom fonts yet",
+  "customFontsEmptyHint": "Import a TTF or OTF file once, then use it for the app interface or reading.",
+  "customFontsCount": "{count} imported fonts",
+  "@customFontsCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "customFontsLocalOnly": "Imported fonts are stored only on this device and are not synced automatically.",
+  "builtInFonts": "Built-in fonts",
+  "importFont": "Import font",
+  "importingFont": "Importing font…",
+  "customFontImported": "Font imported",
+  "customFontAlreadyImported": "This font was already imported and is ready to use",
+  "customFontApplied": "Font selection updated",
+  "customFontAppliedToApp": "Imported and set as the app font",
+  "customFontAppliedToReader": "Imported and set as the reading font",
+  "customFontImportUnsupported": "Persistent font import is not supported on this platform yet.",
+  "customFontUnsupportedFormat": "Choose a TTF or OTF font file.",
+  "customFontInvalid": "This file is not a valid or supported font.",
+  "customFontTooLarge": "The font file is larger than 50 MB.",
+  "customFontReadFailed": "The font file could not be read.",
+  "customFontLoadFailed": "The font could not be loaded.",
+  "customFontStorageFailed": "The font could not be saved on this device.",
+  "customFontUnavailable": "Font file is unavailable. Delete it and import it again.",
+  "setAsAppFont": "Use as app font",
+  "setAsReaderFont": "Use as reading font",
+  "setAsBothFonts": "Use for both",
+  "renameFont": "Rename font",
+  "deleteCustomFontTitle": "Delete “{name}”?",
+  "@deleteCustomFontTitle": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "deleteCustomFontMessage": "The font file will be removed from this device.",
+  "deleteCustomFontInUse": "This font is currently in use. Deleting it will restore the affected font settings to their defaults.",
+  "deleteAndReset": "Delete and reset",
+  "settingsTelegramChannel": "Telegram",
+  "settingsTelegramSubtitle": "Official Telegram channel",
+  "settingsTelegramOpenFailed": "Could not open the Telegram link",
   "languageSystem": "Follow System",
   "@languageSystem": {
     "description": "Follow system language"
@@ -1870,6 +1912,17 @@
   },
   "changelogHistoryTitle": "Version history",
   "changelogHistorySubtitle": "View changes from every release",
+  "openSourceLicensesTitle": "Open-source licenses",
+  "openSourceLicensesSubtitle": "View licenses for the app, bundled fonts, and third-party software",
+  "openSourceLicensesIntro": "These license texts are available offline in the app. Open Reading, bundled fonts, and third-party software remain subject to their respective licenses.",
+  "openSourceProjectSection": "Project licenses",
+  "openSourceLegacyLicenseTitle": "Earlier releases",
+  "openSourceFontsSection": "Bundled fonts",
+  "openSourceDependenciesSection": "Third-party software",
+  "openSourceDependenciesTitle": "Flutter and Dart dependencies",
+  "openSourceDependenciesSubtitle": "View third-party licenses collected automatically by Flutter",
+  "openSourceLicenseLegalese": "Open Reading and third-party components remain subject to their respective licenses.",
+  "openSourceLicenseLoadFailed": "Could not load the license text.",
   "changelogPageTitle": "Release history",
   "changelogCurrentVersion": "Current version",
   "changelog110CustomFonts": "Added custom fonts",

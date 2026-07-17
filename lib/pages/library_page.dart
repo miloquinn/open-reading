@@ -13,6 +13,7 @@ import '../book_sources/services/book_source_shelf_service.dart';
 import '../services/books/book_services.dart';
 import '../services/library/library_services.dart';
 import '../core/reader/native_reader_service.dart';
+import '../utils/book_open_transition.dart';
 import '../widgets/side_toast.dart';
 import 'import_book_page.dart';
 import 'book_source_reader_page.dart';
@@ -71,6 +72,12 @@ class _LibraryPageState extends State<LibraryPage> {
   bool _searchBarVisible = false;
   _LibraryFilter _selectedFilter = _LibraryFilter.all;
 
+  /// 每本书封面组件的 key，用于打开/退出动画捕获与回溯封面位置。
+  final Map<int, GlobalKey> _coverKeys = <int, GlobalKey>{};
+
+  GlobalKey _coverKeyFor(Book book) =>
+      _coverKeys.putIfAbsent(book.id!, () => GlobalKey());
+
   bool get _isMaterial3Style {
     return Theme.of(context)
             .extension<UiStyleThemeExtension>()
@@ -78,7 +85,7 @@ class _LibraryPageState extends State<LibraryPage> {
         false;
   }
 
-  Future<void> _openBook(Book book) async {
+  Future<void> _openBook(Book book, {BookOpenAnimation? animation}) async {
     final fullBook = await _bookDao.getBookById(book.id!);
     if (fullBook == null || !mounted) return;
     if (fullBook.isOnline) {
@@ -86,12 +93,13 @@ class _LibraryPageState extends State<LibraryPage> {
         final source = _sourceShelfService.sourceFrom(fullBook);
         final sourceBook = _sourceShelfService.sourceBookFrom(fullBook);
         await Navigator.of(context).push<void>(
-          MaterialPageRoute<void>(
-            builder: (_) => BookSourceReaderPage(
+          BookOpenTransition.createRoute<void>(
+            BookSourceReaderPage(
               source: source,
               book: sourceBook,
               shelfService: _sourceShelfService,
             ),
+            animation: animation,
           ),
         );
       } catch (error) {
@@ -103,10 +111,12 @@ class _LibraryPageState extends State<LibraryPage> {
         }
       }
     } else {
-      await NativeReaderService.openBook(context, fullBook);
+      await NativeReaderService.openBook(context, fullBook,
+          animation: animation);
     }
     if (mounted) _loadBooks();
   }
+
 
   BoxDecoration _panelDecoration({
     double radius = 16,
@@ -729,51 +739,24 @@ class _LibraryPageState extends State<LibraryPage> {
       return _buildBooksList(books, topPadding: topPadding);
     }
 
-    final isDesktop = LayoutHelper.isDesktop(context);
-    final isTablet = LayoutHelper.isTablet(context);
-    final media = MediaQuery.of(context);
-    final isTabletLandscape = isTablet && media.size.width > media.size.height;
-
-    // 毛玻璃效果增强 - 网格容器背景
-    // 为整个书籍网格添加细微的毛玻璃背景层
-
-    // 使用 LayoutHelper 获取响应式列数和纵横比
-    int crossAxisCount = LayoutHelper.getBookGridColumns(context);
-
-    // 根据屏幕类型调整间距
-    double spacing;
-    if (isDesktop) {
-      spacing = 16;
-    } else if (isTablet) {
-      spacing = 14;
-    } else {
-      spacing = 12;
-    }
-
-    final gap = isTabletLandscape
-        ? 6.0
-        : isTablet
-            ? 5.0
-            : 6.0;
-    final textHeight = isTabletLandscape
-        ? 50.0
-        : isTablet
-            ? 40.0
-            : 36.0;
-    final coverWidthScale = isTabletLandscape ? 0.75 : 1.0;
+    final spacing = LayoutHelper.isDesktop(context) ? 16.0 : 14.0;
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // 让网格高度为 2:3 封面 + 文本区域预留高度（更接近常见书封比例）
+        // 列数由可用宽度和目标封面宽度推导：旋转屏幕时封面大小基本不变，
+        // 只是列数重排，不再按断点写死列数。
         const double horizontalPadding = 32.0;
+        final crossAxisCount =
+            LayoutHelper.bookGridColumnsForWidth(constraints.maxWidth);
         final totalSpacing = spacing * (crossAxisCount - 1);
         final availableWidth = math.max(
           0.0,
           constraints.maxWidth - horizontalPadding - totalSpacing,
         );
         final itemWidth = availableWidth / crossAxisCount;
+        // 网格高度为 2:3 封面 + 文本区域预留高度（更接近常见书封比例）
         final itemHeight =
-            ((itemWidth * coverWidthScale) * 3 / 2) + textHeight + gap;
+            (itemWidth * 3 / 2) + _BookCoverItem.textHeight + _BookCoverItem.gap;
         final childAspectRatio = itemWidth > 0 ? itemWidth / itemHeight : 0.75;
 
         return Container(
@@ -814,16 +797,19 @@ class _LibraryPageState extends State<LibraryPage> {
             itemCount: books.length,
             itemBuilder: (context, index) {
               final book = books[index];
+              final coverKey = _coverKeyFor(book);
               return RepaintBoundary(
                 child: _BookCoverItem(
                   book: book,
+                  coverKey: coverKey,
                   onTap: () async {
-                    final fullBook = await _bookDao.getBookById(book.id!);
-                    if (fullBook != null && mounted && context.mounted) {
-                      // 直接打开沉浸式阅读器
-                      await _openBook(fullBook);
-                      _loadBooks();
-                    }
+                    // 在点击瞬间捕获封面位置，随后直接打开沉浸式阅读器
+                    final animation = BookOpenAnimation.fromCoverKey(
+                      coverKey,
+                      radius: BorderRadius.circular(12),
+                      coverBuilder: (context) => _gridCoverArt(context, book),
+                    );
+                    await _openBook(book, animation: animation);
                   },
                   onLongPress: () => _showBookOptions(book),
                 ),
@@ -852,6 +838,7 @@ class _LibraryPageState extends State<LibraryPage> {
       itemCount: books.length,
       itemBuilder: (context, index) {
         final book = books[index];
+        final coverKey = _coverKeyFor(book);
         final progress = book.totalPages > 0
             ? (book.currentPage / book.totalPages).clamp(0.0, 1.0)
             : 0.0;
@@ -879,11 +866,12 @@ class _LibraryPageState extends State<LibraryPage> {
             child: InkWell(
               borderRadius: BorderRadius.circular(16),
               onTap: () async {
-                final fullBook = await _bookDao.getBookById(book.id!);
-                if (fullBook != null && mounted && context.mounted) {
-                  await _openBook(fullBook);
-                  _loadBooks();
-                }
+                final animation = BookOpenAnimation.fromCoverKey(
+                  coverKey,
+                  radius: BorderRadius.circular(11),
+                  coverBuilder: (context) => _buildListCover(context, book),
+                );
+                await _openBook(book, animation: animation);
               },
               onLongPress: () => _showBookOptions(book),
               child: Padding(
@@ -891,6 +879,7 @@ class _LibraryPageState extends State<LibraryPage> {
                 child: Row(
                   children: [
                     SizedBox(
+                      key: coverKey,
                       width: 64,
                       height: 92,
                       child: ClipRRect(
@@ -995,9 +984,9 @@ class _LibraryPageState extends State<LibraryPage> {
   }
 
   Widget _buildListDefaultCover(BuildContext context, Book book) {
+    // 不带圆角：由外层 ClipRRect 或打开动画的飞行图层负责裁剪。
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(11),
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -1694,14 +1683,20 @@ class _LibraryPageState extends State<LibraryPage> {
 
 class _BookCoverItem extends StatelessWidget {
   final Book book;
+  final GlobalKey coverKey;
   final Future<void> Function() onTap;
   final VoidCallback onLongPress;
 
   const _BookCoverItem({
     required this.book,
+    required this.coverKey,
     required this.onTap,
     required this.onLongPress,
   });
+
+  /// 封面下方文本区域高度与间距，网格计算格子高度时复用。
+  static const double textHeight = 44.0;
+  static const double gap = 6.0;
 
   @override
   Widget build(BuildContext context) {
@@ -1719,27 +1714,10 @@ class _BookCoverItem extends StatelessWidget {
           final isMaterial3Style =
               theme.extension<UiStyleThemeExtension>()?.isMaterial3Style ??
                   false;
-          final isTablet = LayoutHelper.isTablet(context);
-          final media = MediaQuery.of(context);
-          final isTabletLandscape =
-              isTablet && media.size.width > media.size.height;
-          final gap = isTabletLandscape
-              ? 6.0
-              : isTablet
-                  ? 5.0
-                  : 6.0;
-          final textHeight = isTabletLandscape
-              ? 50.0
-              : isTablet
-                  ? 40.0
-                  : 36.0;
-          final coverWidthScale = isTabletLandscape ? 0.75 : 1.0;
-          final maxWidth = constraints.maxWidth;
-          final maxHeight = constraints.maxHeight;
-          final coverWidth = maxWidth * coverWidthScale;
+          final coverWidth = constraints.maxWidth;
           final targetCoverHeight = coverWidth * 3 / 2;
           final availableCoverHeight =
-              math.max(0.0, maxHeight - textHeight - gap);
+              math.max(0.0, constraints.maxHeight - textHeight - gap);
           final coverHeight = math.min(availableCoverHeight, targetCoverHeight);
 
           return Column(
@@ -1749,6 +1727,7 @@ class _BookCoverItem extends StatelessWidget {
               Align(
                 alignment: Alignment.topCenter,
                 child: SizedBox(
+                  key: coverKey,
                   width: coverWidth,
                   height: coverHeight,
                   child: Container(
@@ -1770,7 +1749,7 @@ class _BookCoverItem extends StatelessWidget {
                         // 封面图片或默认图标
                         ClipRRect(
                           borderRadius: BorderRadius.circular(12),
-                          child: _buildCoverImage(context, book),
+                          child: _gridCoverArt(context, book),
                         ),
                         if (book.isOnline)
                           Positioned(
@@ -1867,7 +1846,7 @@ class _BookCoverItem extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(height: gap),
+              const SizedBox(height: gap),
               // 书籍信息区域 - 固定高度
               Align(
                 alignment: Alignment.topCenter,
@@ -1893,7 +1872,7 @@ class _BookCoverItem extends StatelessWidget {
                             pauseDuration: const Duration(milliseconds: 1200),
                           ),
                         ),
-                        SizedBox(height: isTabletLandscape ? 1.5 : 2),
+                        const SizedBox(height: 2),
                         // 作者信息
                         Text(
                           book.author,
@@ -1918,97 +1897,97 @@ class _BookCoverItem extends StatelessWidget {
     );
   }
 
-  Widget _buildCoverImage(BuildContext context, Book book) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final isMaterial3Style =
-        theme.extension<UiStyleThemeExtension>()?.isMaterial3Style ?? false;
-    final onlineCover = _sourceCoverUrl(book);
-    if (book.isOnline && onlineCover != null) {
-      return Image.network(
-        onlineCover.toString(),
-        width: double.infinity,
-        height: double.infinity,
-        fit: BoxFit.cover,
-        cacheWidth: (240 * MediaQuery.of(context).devicePixelRatio).round(),
-        errorBuilder: (context, error, stackTrace) =>
-            _buildDefaultCover(context),
-      );
-    }
-    if (book.coverImagePath != null && book.coverImagePath!.isNotEmpty) {
-      final fit = Platform.isAndroid ? BoxFit.contain : BoxFit.cover;
-      // 有封面图片时，直接显示真实的书籍封面
-      // cacheWidth 限制解码分辨率：网格封面显示宽度不会超过 ~240 逻辑像素，
-      // 全分辨率解码原图会占用大量内存并在滑动切页时造成掉帧。
-      final cacheWidth =
-          (240 * MediaQuery.of(context).devicePixelRatio).round();
-      return SizedBox(
-        width: double.infinity,
-        height: double.infinity,
-        child: ColoredBox(
-          color:
-              scheme.surface.withValues(alpha: isMaterial3Style ? 0.2 : 0.12),
-          child: Image.file(
-            File(book.coverImagePath!),
-            fit: fit,
-            cacheWidth: cacheWidth,
-            gaplessPlayback: true,
-            errorBuilder: (context, error, stackTrace) {
-              return _buildDefaultCover(context);
-            },
-          ),
-        ),
-      );
-    } else {
-      // 没有封面图片时，显示默认封面设计
-      return _buildDefaultCover(context);
-    }
-  }
+}
 
-  /// 构建默认封面设计
-  Widget _buildDefaultCover(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
+/// 网格封面画面（真实封面或默认设计），不带圆角：
+/// 由格子里的 ClipRRect 或打开动画的飞行图层负责裁剪。
+Widget _gridCoverArt(BuildContext context, Book book) {
+  final theme = Theme.of(context);
+  final scheme = theme.colorScheme;
+  final isMaterial3Style =
+      theme.extension<UiStyleThemeExtension>()?.isMaterial3Style ?? false;
+  final onlineCover = _sourceCoverUrl(book);
+  if (book.isOnline && onlineCover != null) {
+    return Image.network(
+      onlineCover.toString(),
       width: double.infinity,
       height: double.infinity,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
-            Theme.of(context).colorScheme.secondary.withValues(alpha: 0.6),
-          ],
+      fit: BoxFit.cover,
+      cacheWidth: (240 * MediaQuery.of(context).devicePixelRatio).round(),
+      errorBuilder: (context, error, stackTrace) =>
+          _gridDefaultCover(context, book),
+    );
+  }
+  if (book.coverImagePath != null && book.coverImagePath!.isNotEmpty) {
+    final fit = Platform.isAndroid ? BoxFit.contain : BoxFit.cover;
+    // 有封面图片时，直接显示真实的书籍封面
+    // cacheWidth 限制解码分辨率：网格封面显示宽度不会超过 ~240 逻辑像素，
+    // 全分辨率解码原图会占用大量内存并在滑动切页时造成掉帧。
+    // 打开动画复用同一 provider，展开时无需重新解码即可立即上屏。
+    final cacheWidth = (240 * MediaQuery.of(context).devicePixelRatio).round();
+    return SizedBox(
+      width: double.infinity,
+      height: double.infinity,
+      child: ColoredBox(
+        color: scheme.surface.withValues(alpha: isMaterial3Style ? 0.2 : 0.12),
+        child: Image.file(
+          File(book.coverImagePath!),
+          fit: fit,
+          cacheWidth: cacheWidth,
+          gaplessPlayback: true,
+          errorBuilder: (context, error, stackTrace) {
+            return _gridDefaultCover(context, book);
+          },
         ),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const AppBrandIcon(
-            size: 48,
-            borderRadius: 12,
-          ),
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Text(
-              book.title,
-              textAlign: TextAlign.center,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: scheme.onPrimary,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                height: 1.2,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
+  // 没有封面图片时，显示默认封面设计
+  return _gridDefaultCover(context, book);
+}
+
+/// 构建默认封面设计
+Widget _gridDefaultCover(BuildContext context, Book book) {
+  final scheme = Theme.of(context).colorScheme;
+  return Container(
+    width: double.infinity,
+    height: double.infinity,
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          scheme.primary.withValues(alpha: 0.8),
+          scheme.secondary.withValues(alpha: 0.6),
+        ],
+      ),
+    ),
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const AppBrandIcon(
+          size: 48,
+          borderRadius: 12,
+        ),
+        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Text(
+            book.title,
+            textAlign: TextAlign.center,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: scheme.onPrimary,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              height: 1.2,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 Uri? _sourceCoverUrl(Book book) {

@@ -392,6 +392,106 @@ class AppLocalizationsZh extends AppLocalizations {
   String get fontPreviewText => 'Open Reading · 自由阅读，开卷有益';
 
   @override
+  String get customFonts => '我的字体';
+
+  @override
+  String get customFontsEmpty => '还没有导入字体';
+
+  @override
+  String get customFontsEmptyHint => '导入一次 TTF 或 OTF 文件，即可用于 App 界面或阅读正文。';
+
+  @override
+  String customFontsCount(int count) {
+    return '已导入 $count 款字体';
+  }
+
+  @override
+  String get customFontsLocalOnly => '导入的字体只保存在当前设备，不会自动同步。';
+
+  @override
+  String get builtInFonts => '内置字体';
+
+  @override
+  String get importFont => '导入字体';
+
+  @override
+  String get importingFont => '正在导入字体…';
+
+  @override
+  String get customFontImported => '字体已导入';
+
+  @override
+  String get customFontAlreadyImported => '该字体已经导入，可以直接使用';
+
+  @override
+  String get customFontApplied => '字体设置已更新';
+
+  @override
+  String get customFontAppliedToApp => '已导入并设为 App 字体';
+
+  @override
+  String get customFontAppliedToReader => '已导入并设为阅读字体';
+
+  @override
+  String get customFontImportUnsupported => '当前平台暂不支持持久化导入字体。';
+
+  @override
+  String get customFontUnsupportedFormat => '请选择 TTF 或 OTF 字体文件。';
+
+  @override
+  String get customFontInvalid => '该文件不是有效或受支持的字体。';
+
+  @override
+  String get customFontTooLarge => '字体文件不能超过 50 MB。';
+
+  @override
+  String get customFontReadFailed => '无法读取字体文件。';
+
+  @override
+  String get customFontLoadFailed => '无法加载该字体。';
+
+  @override
+  String get customFontStorageFailed => '无法将字体保存到当前设备。';
+
+  @override
+  String get customFontUnavailable => '字体文件不可用，请删除后重新导入。';
+
+  @override
+  String get setAsAppFont => '设为 App 字体';
+
+  @override
+  String get setAsReaderFont => '设为阅读字体';
+
+  @override
+  String get setAsBothFonts => '同时用于两者';
+
+  @override
+  String get renameFont => '重命名字体';
+
+  @override
+  String deleteCustomFontTitle(String name) {
+    return '删除“$name”？';
+  }
+
+  @override
+  String get deleteCustomFontMessage => '字体文件将从当前设备删除。';
+
+  @override
+  String get deleteCustomFontInUse => '该字体正在使用。删除后，受影响的字体设置将恢复为默认值。';
+
+  @override
+  String get deleteAndReset => '删除并恢复默认';
+
+  @override
+  String get settingsTelegramChannel => 'Telegram';
+
+  @override
+  String get settingsTelegramSubtitle => 'Telegram 官方频道';
+
+  @override
+  String get settingsTelegramOpenFailed => '无法打开 Telegram 链接';
+
+  @override
   String get languageSystem => '跟随系统';
 
   @override
@@ -1461,6 +1561,40 @@ class AppLocalizationsZh extends AppLocalizations {
   String get changelogHistorySubtitle => '查看各版本更新内容';
 
   @override
+  String get openSourceLicensesTitle => '开源许可';
+
+  @override
+  String get openSourceLicensesSubtitle => '查看应用、内置字体与第三方组件的许可';
+
+  @override
+  String get openSourceLicensesIntro =>
+      '以下许可文本随应用离线提供。Open Reading、内置字体及第三方软件分别遵循各自的许可条款。';
+
+  @override
+  String get openSourceProjectSection => '项目许可';
+
+  @override
+  String get openSourceLegacyLicenseTitle => '历史版本';
+
+  @override
+  String get openSourceFontsSection => '内置字体';
+
+  @override
+  String get openSourceDependenciesSection => '第三方软件';
+
+  @override
+  String get openSourceDependenciesTitle => 'Flutter 与 Dart 依赖';
+
+  @override
+  String get openSourceDependenciesSubtitle => '查看由 Flutter 自动收集的第三方软件许可';
+
+  @override
+  String get openSourceLicenseLegalese => 'Open Reading 与第三方组件分别遵循各自的许可条款。';
+
+  @override
+  String get openSourceLicenseLoadFailed => '无法加载许可文本。';
+
+  @override
   String get changelogPageTitle => '版本更新记录';
 
   @override
@@ -2509,6 +2643,106 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get fontPreviewText => 'Open Reading · 自由閱讀，開卷有益';
+
+  @override
+  String get customFonts => '我的字體';
+
+  @override
+  String get customFontsEmpty => '尚未匯入字體';
+
+  @override
+  String get customFontsEmptyHint => '匯入一次 TTF 或 OTF 檔案，即可用於 App 介面或閱讀正文。';
+
+  @override
+  String customFontsCount(int count) {
+    return '已匯入 $count 款字體';
+  }
+
+  @override
+  String get customFontsLocalOnly => '匯入的字體只儲存在目前裝置，不會自動同步。';
+
+  @override
+  String get builtInFonts => '內建字體';
+
+  @override
+  String get importFont => '匯入字體';
+
+  @override
+  String get importingFont => '正在匯入字體…';
+
+  @override
+  String get customFontImported => '字體已匯入';
+
+  @override
+  String get customFontAlreadyImported => '該字體已經匯入，可以直接使用';
+
+  @override
+  String get customFontApplied => '字體設定已更新';
+
+  @override
+  String get customFontAppliedToApp => '已匯入並設為 App 字體';
+
+  @override
+  String get customFontAppliedToReader => '已匯入並設為閱讀字體';
+
+  @override
+  String get customFontImportUnsupported => '目前平台暫不支援持久化匯入字體。';
+
+  @override
+  String get customFontUnsupportedFormat => '請選擇 TTF 或 OTF 字體檔案。';
+
+  @override
+  String get customFontInvalid => '此檔案不是有效或支援的字體。';
+
+  @override
+  String get customFontTooLarge => '字體檔案不可超過 50 MB。';
+
+  @override
+  String get customFontReadFailed => '無法讀取字體檔案。';
+
+  @override
+  String get customFontLoadFailed => '無法載入此字體。';
+
+  @override
+  String get customFontStorageFailed => '無法將字體儲存到目前裝置。';
+
+  @override
+  String get customFontUnavailable => '字體檔案不可用，請刪除後重新匯入。';
+
+  @override
+  String get setAsAppFont => '設為 App 字體';
+
+  @override
+  String get setAsReaderFont => '設為閱讀字體';
+
+  @override
+  String get setAsBothFonts => '同時用於兩者';
+
+  @override
+  String get renameFont => '重新命名字體';
+
+  @override
+  String deleteCustomFontTitle(String name) {
+    return '刪除「$name」？';
+  }
+
+  @override
+  String get deleteCustomFontMessage => '字體檔案將從目前裝置刪除。';
+
+  @override
+  String get deleteCustomFontInUse => '此字體正在使用。刪除後，受影響的字體設定將恢復為預設值。';
+
+  @override
+  String get deleteAndReset => '刪除並恢復預設';
+
+  @override
+  String get settingsTelegramChannel => 'Telegram';
+
+  @override
+  String get settingsTelegramSubtitle => 'Telegram 官方頻道';
+
+  @override
+  String get settingsTelegramOpenFailed => '無法開啟 Telegram 連結';
 
   @override
   String get languageSystem => '跟隨系統';
@@ -3578,6 +3812,40 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get changelogHistorySubtitle => '查看各版本更新內容';
+
+  @override
+  String get openSourceLicensesTitle => '開源授權';
+
+  @override
+  String get openSourceLicensesSubtitle => '查看應用程式、內建字型與第三方元件的授權';
+
+  @override
+  String get openSourceLicensesIntro =>
+      '以下授權文字隨應用程式離線提供。Open Reading、內建字型及第三方軟體分別適用各自的授權條款。';
+
+  @override
+  String get openSourceProjectSection => '專案授權';
+
+  @override
+  String get openSourceLegacyLicenseTitle => '歷史版本';
+
+  @override
+  String get openSourceFontsSection => '內建字型';
+
+  @override
+  String get openSourceDependenciesSection => '第三方軟體';
+
+  @override
+  String get openSourceDependenciesTitle => 'Flutter 與 Dart 相依套件';
+
+  @override
+  String get openSourceDependenciesSubtitle => '查看由 Flutter 自動彙整的第三方軟體授權';
+
+  @override
+  String get openSourceLicenseLegalese => 'Open Reading 與第三方元件分別適用各自的授權條款。';
+
+  @override
+  String get openSourceLicenseLoadFailed => '無法載入授權文字。';
 
   @override
   String get changelogPageTitle => '版本更新記錄';

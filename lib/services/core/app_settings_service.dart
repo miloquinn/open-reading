@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../utils/font_catalog_helper.dart';
+import 'custom_font_service.dart';
 
 class AppSettingsNotifier extends ChangeNotifier {
   static const String _keyAppLocale = 'app_locale';
@@ -18,8 +19,10 @@ class AppSettingsNotifier extends ChangeNotifier {
   String _appFontId = FontCatalog.defaultAppFont.id;
   String _readerFontId = FontCatalog.defaultReaderFont.id;
   bool _isInitialized = false;
+  final CustomFontService _customFontService;
 
-  AppSettingsNotifier() {
+  AppSettingsNotifier({CustomFontService? customFontService})
+      : _customFontService = customFontService ?? CustomFontService() {
     _loadSettings();
   }
 
@@ -27,19 +30,55 @@ class AppSettingsNotifier extends ChangeNotifier {
   String get localeCode => _localeCode;
   String get appFontId => _appFontId;
   String get readerFontId => _readerFontId;
-  FontOption get appFont => FontCatalog.appFontForId(_appFontId);
-  FontOption get readerFont => FontCatalog.readerFontForId(_readerFontId);
+  List<FontOption> get customFonts => _customFontService.fonts
+      .map(
+        (font) => FontOption(
+          id: font.id,
+          family: font.runtimeFamily,
+          fallbackFamilies: const <String>['SourceHanSansCN'],
+          tone: FontTone.sansSerif,
+          displayName: font.displayName,
+          sourceFileName: font.fileName,
+          fileSize: font.fileSize,
+          isCustom: true,
+          isAvailable: font.available,
+        ),
+      )
+      .toList(growable: false);
+  List<FontOption> get availableCustomFonts =>
+      customFonts.where((font) => font.isAvailable).toList(growable: false);
+  List<FontOption> get appFontOptions => <FontOption>[
+        ...FontCatalog.appFonts,
+        ...availableCustomFonts,
+      ];
+  List<FontOption> get readerFontOptions => <FontOption>[
+        ...FontCatalog.readerFonts,
+        ...availableCustomFonts,
+      ];
+  FontOption get appFont => FontCatalog.appFontForId(
+        _appFontId,
+        customFonts: availableCustomFonts,
+      );
+  FontOption get readerFont => FontCatalog.readerFontForId(
+        _readerFontId,
+        customFonts: availableCustomFonts,
+      );
   String? get appFontFamily => appFont.family;
+  bool get customFontImportSupported => _customFontService.isSupported;
   bool get isInitialized => _isInitialized;
 
   Future<void> _loadSettings() async {
+    await _customFontService.initialize();
     final prefs = await SharedPreferences.getInstance();
     final storedLocale =
         prefs.getString(_keyAppLocale) ?? prefs.getString(_keyLegacyLocale);
     _applyLocaleCode(storedLocale ?? 'system', notify: false);
     final storedAppFontId = prefs.getString(_keyAppFontId);
     if (storedAppFontId != null) {
-      _appFontId = FontCatalog.appFontForId(storedAppFontId).id;
+      _appFontId = FontCatalog.appFontForId(
+        storedAppFontId,
+        customFonts: availableCustomFonts,
+      ).id;
     } else {
       final legacyFamily = prefs.getString(_keyLegacyAppFontFamily);
       if (legacyFamily != null && legacyFamily.isNotEmpty) {
@@ -49,9 +88,24 @@ class AppSettingsNotifier extends ChangeNotifier {
     }
     _readerFontId = FontCatalog.readerFontForId(
       prefs.getString(_keyReaderFontId),
+      customFonts: availableCustomFonts,
     ).id;
+    await _restoreSelectedCustomFonts(prefs);
     _isInitialized = true;
     notifyListeners();
+  }
+
+  Future<void> _restoreSelectedCustomFonts(SharedPreferences prefs) async {
+    if (appFont.isCustom &&
+        !await _customFontService.ensureLoaded(_appFontId)) {
+      _appFontId = FontCatalog.defaultAppFont.id;
+      await prefs.setString(_keyAppFontId, _appFontId);
+    }
+    if (readerFont.isCustom &&
+        !await _customFontService.ensureLoaded(_readerFontId)) {
+      _readerFontId = FontCatalog.defaultReaderFont.id;
+      await prefs.setString(_keyReaderFontId, _readerFontId);
+    }
   }
 
   void _applyLocaleCode(String code, {bool notify = true}) {
@@ -82,7 +136,14 @@ class AppSettingsNotifier extends ChangeNotifier {
   }
 
   Future<void> setAppFontId(String id) async {
-    final normalized = FontCatalog.appFontForId(id).id;
+    final normalized = FontCatalog.appFontForId(
+      id,
+      customFonts: availableCustomFonts,
+    ).id;
+    if (normalized.startsWith('custom_') &&
+        !await _customFontService.ensureLoaded(normalized)) {
+      return;
+    }
     if (_appFontId == normalized) return;
     _appFontId = normalized;
     notifyListeners();
@@ -91,11 +152,66 @@ class AppSettingsNotifier extends ChangeNotifier {
   }
 
   Future<void> setReaderFontId(String id) async {
-    final normalized = FontCatalog.readerFontForId(id).id;
+    final normalized = FontCatalog.readerFontForId(
+      id,
+      customFonts: availableCustomFonts,
+    ).id;
+    if (normalized.startsWith('custom_') &&
+        !await _customFontService.ensureLoaded(normalized)) {
+      return;
+    }
     if (_readerFontId == normalized) return;
     _readerFontId = normalized;
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_keyReaderFontId, normalized);
   }
+
+  Future<void> prepareCustomFontPreviews() async {
+    await _customFontService.loadAvailableFonts();
+  }
+
+  Future<CustomFontImportResult> importCustomFont([FontDomain? domain]) async {
+    final result = await _customFontService.importFont();
+    final imported = result.font;
+    if (imported == null) return result;
+    notifyListeners();
+    switch (domain) {
+      case FontDomain.app:
+        await setAppFontId(imported.id);
+        break;
+      case FontDomain.reader:
+        await setReaderFontId(imported.id);
+        break;
+      case null:
+        break;
+    }
+    return result;
+  }
+
+  Future<void> renameCustomFont(String id, String displayName) async {
+    await _customFontService.renameFont(id, displayName);
+    notifyListeners();
+  }
+
+  Future<void> deleteCustomFont(String id) async {
+    final prefs = await SharedPreferences.getInstance();
+    var selectionChanged = false;
+    if (_appFontId == id) {
+      _appFontId = FontCatalog.defaultAppFont.id;
+      await prefs.setString(_keyAppFontId, _appFontId);
+      selectionChanged = true;
+    }
+    if (_readerFontId == id) {
+      _readerFontId = FontCatalog.defaultReaderFont.id;
+      await prefs.setString(_keyReaderFontId, _readerFontId);
+      selectionChanged = true;
+    }
+    if (selectionChanged) notifyListeners();
+    await _customFontService.deleteFont(id);
+    notifyListeners();
+  }
+
+  bool isAppFont(String id) => _appFontId == id;
+  bool isReaderFont(String id) => _readerFontId == id;
 }

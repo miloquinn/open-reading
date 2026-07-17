@@ -851,6 +851,198 @@ abstract class AppLocalizations {
   /// **'Open Reading · Read freely 开卷有益'**
   String get fontPreviewText;
 
+  /// No description provided for @customFonts.
+  ///
+  /// In en, this message translates to:
+  /// **'My fonts'**
+  String get customFonts;
+
+  /// No description provided for @customFontsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No custom fonts yet'**
+  String get customFontsEmpty;
+
+  /// No description provided for @customFontsEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Import a TTF or OTF file once, then use it for the app interface or reading.'**
+  String get customFontsEmptyHint;
+
+  /// No description provided for @customFontsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} imported fonts'**
+  String customFontsCount(int count);
+
+  /// No description provided for @customFontsLocalOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported fonts are stored only on this device and are not synced automatically.'**
+  String get customFontsLocalOnly;
+
+  /// No description provided for @builtInFonts.
+  ///
+  /// In en, this message translates to:
+  /// **'Built-in fonts'**
+  String get builtInFonts;
+
+  /// No description provided for @importFont.
+  ///
+  /// In en, this message translates to:
+  /// **'Import font'**
+  String get importFont;
+
+  /// No description provided for @importingFont.
+  ///
+  /// In en, this message translates to:
+  /// **'Importing font…'**
+  String get importingFont;
+
+  /// No description provided for @customFontImported.
+  ///
+  /// In en, this message translates to:
+  /// **'Font imported'**
+  String get customFontImported;
+
+  /// No description provided for @customFontAlreadyImported.
+  ///
+  /// In en, this message translates to:
+  /// **'This font was already imported and is ready to use'**
+  String get customFontAlreadyImported;
+
+  /// No description provided for @customFontApplied.
+  ///
+  /// In en, this message translates to:
+  /// **'Font selection updated'**
+  String get customFontApplied;
+
+  /// No description provided for @customFontAppliedToApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported and set as the app font'**
+  String get customFontAppliedToApp;
+
+  /// No description provided for @customFontAppliedToReader.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported and set as the reading font'**
+  String get customFontAppliedToReader;
+
+  /// No description provided for @customFontImportUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Persistent font import is not supported on this platform yet.'**
+  String get customFontImportUnsupported;
+
+  /// No description provided for @customFontUnsupportedFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a TTF or OTF font file.'**
+  String get customFontUnsupportedFormat;
+
+  /// No description provided for @customFontInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'This file is not a valid or supported font.'**
+  String get customFontInvalid;
+
+  /// No description provided for @customFontTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'The font file is larger than 50 MB.'**
+  String get customFontTooLarge;
+
+  /// No description provided for @customFontReadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The font file could not be read.'**
+  String get customFontReadFailed;
+
+  /// No description provided for @customFontLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The font could not be loaded.'**
+  String get customFontLoadFailed;
+
+  /// No description provided for @customFontStorageFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The font could not be saved on this device.'**
+  String get customFontStorageFailed;
+
+  /// No description provided for @customFontUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Font file is unavailable. Delete it and import it again.'**
+  String get customFontUnavailable;
+
+  /// No description provided for @setAsAppFont.
+  ///
+  /// In en, this message translates to:
+  /// **'Use as app font'**
+  String get setAsAppFont;
+
+  /// No description provided for @setAsReaderFont.
+  ///
+  /// In en, this message translates to:
+  /// **'Use as reading font'**
+  String get setAsReaderFont;
+
+  /// No description provided for @setAsBothFonts.
+  ///
+  /// In en, this message translates to:
+  /// **'Use for both'**
+  String get setAsBothFonts;
+
+  /// No description provided for @renameFont.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename font'**
+  String get renameFont;
+
+  /// No description provided for @deleteCustomFontTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete “{name}”?'**
+  String deleteCustomFontTitle(String name);
+
+  /// No description provided for @deleteCustomFontMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The font file will be removed from this device.'**
+  String get deleteCustomFontMessage;
+
+  /// No description provided for @deleteCustomFontInUse.
+  ///
+  /// In en, this message translates to:
+  /// **'This font is currently in use. Deleting it will restore the affected font settings to their defaults.'**
+  String get deleteCustomFontInUse;
+
+  /// No description provided for @deleteAndReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete and reset'**
+  String get deleteAndReset;
+
+  /// No description provided for @settingsTelegramChannel.
+  ///
+  /// In en, this message translates to:
+  /// **'Telegram'**
+  String get settingsTelegramChannel;
+
+  /// No description provided for @settingsTelegramSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Official Telegram channel'**
+  String get settingsTelegramSubtitle;
+
+  /// No description provided for @settingsTelegramOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the Telegram link'**
+  String get settingsTelegramOpenFailed;
+
   /// Follow system language
   ///
   /// In en, this message translates to:
@@ -2789,6 +2981,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'View changes from every release'**
   String get changelogHistorySubtitle;
+
+  /// No description provided for @openSourceLicensesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Open-source licenses'**
+  String get openSourceLicensesTitle;
+
+  /// No description provided for @openSourceLicensesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'View licenses for the app, bundled fonts, and third-party software'**
+  String get openSourceLicensesSubtitle;
+
+  /// No description provided for @openSourceLicensesIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'These license texts are available offline in the app. Open Reading, bundled fonts, and third-party software remain subject to their respective licenses.'**
+  String get openSourceLicensesIntro;
+
+  /// No description provided for @openSourceProjectSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Project licenses'**
+  String get openSourceProjectSection;
+
+  /// No description provided for @openSourceLegacyLicenseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Earlier releases'**
+  String get openSourceLegacyLicenseTitle;
+
+  /// No description provided for @openSourceFontsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Bundled fonts'**
+  String get openSourceFontsSection;
+
+  /// No description provided for @openSourceDependenciesSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Third-party software'**
+  String get openSourceDependenciesSection;
+
+  /// No description provided for @openSourceDependenciesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Flutter and Dart dependencies'**
+  String get openSourceDependenciesTitle;
+
+  /// No description provided for @openSourceDependenciesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'View third-party licenses collected automatically by Flutter'**
+  String get openSourceDependenciesSubtitle;
+
+  /// No description provided for @openSourceLicenseLegalese.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Reading and third-party components remain subject to their respective licenses.'**
+  String get openSourceLicenseLegalese;
+
+  /// No description provided for @openSourceLicenseLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the license text.'**
+  String get openSourceLicenseLoadFailed;
 
   /// No description provided for @changelogPageTitle.
   ///

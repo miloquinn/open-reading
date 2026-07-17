@@ -5,17 +5,29 @@ import '../l10n/app_localizations.dart';
 
 enum FontTone { system, serif, sansSerif, monospace }
 
+enum FontDomain { app, reader }
+
 class FontOption {
   final String id;
   final String? family;
   final List<String> fallbackFamilies;
   final FontTone tone;
+  final String? displayName;
+  final String? sourceFileName;
+  final int? fileSize;
+  final bool isCustom;
+  final bool isAvailable;
 
   const FontOption({
     required this.id,
     required this.family,
     required this.fallbackFamilies,
     required this.tone,
+    this.displayName,
+    this.sourceFileName,
+    this.fileSize,
+    this.isCustom = false,
+    this.isAvailable = true,
   });
 }
 
@@ -83,15 +95,23 @@ class FontCatalog {
     jetBrainsMono,
   ];
 
-  static FontOption appFontForId(String? id) => _fontForId(
+  static FontOption appFontForId(
+    String? id, {
+    List<FontOption> customFonts = const <FontOption>[],
+  }) =>
+      _fontForId(
         id,
-        options: appFonts,
+        options: <FontOption>[...appFonts, ...customFonts],
         fallback: defaultAppFont,
       );
 
-  static FontOption readerFontForId(String? id) => _fontForId(
+  static FontOption readerFontForId(
+    String? id, {
+    List<FontOption> customFonts = const <FontOption>[],
+  }) =>
+      _fontForId(
         id,
-        options: readerFonts,
+        options: <FontOption>[...readerFonts, ...customFonts],
         fallback: defaultReaderFont,
       );
 
@@ -133,6 +153,9 @@ class FontCatalog {
       appFontForFamily(family).fallbackFamilies;
 
   static String labelFor(AppLocalizations l10n, FontOption option) {
+    if (option.displayName != null && option.displayName!.isNotEmpty) {
+      return option.displayName!;
+    }
     switch (option.id) {
       case systemId:
         return l10n.fontSystem;

@@ -34,6 +34,24 @@ void main() {
     expect(find.text('导入队列（0）'), findsOneWidget);
     expect(find.text('还没有选择书籍'), findsOneWidget);
   });
+
+  testWidgets('does not resize for stale file-picker keyboard insets',
+      (tester) async {
+    tester.view.physicalSize = const Size(430, 900);
+    tester.view.devicePixelRatio = 1;
+    tester.view.viewInsets = const FakeViewPadding(bottom: 760);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetViewInsets);
+
+    await tester.pumpWidget(_testApp());
+    await tester.pumpAndSettle();
+
+    final scaffold = tester.widget<Scaffold>(find.byType(Scaffold));
+    expect(scaffold.resizeToAvoidBottomInset, isFalse);
+    expect(tester.getTopLeft(find.byType(AppBar)).dy, greaterThanOrEqualTo(0));
+    expect(find.byType(ImportSourcePanel), findsOneWidget);
+  });
 }
 
 Widget _testApp() {

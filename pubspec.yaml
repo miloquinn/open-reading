@@ -106,6 +106,8 @@ flutter:
     - assets/images/
     - assets/fonts/licenses/
     - assets/icons/
+    - LICENSE
+    - LICENSE-MIT-LEGACY
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

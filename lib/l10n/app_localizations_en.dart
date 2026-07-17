@@ -408,6 +408,115 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fontPreviewText => 'Open Reading · Read freely 开卷有益';
 
   @override
+  String get customFonts => 'My fonts';
+
+  @override
+  String get customFontsEmpty => 'No custom fonts yet';
+
+  @override
+  String get customFontsEmptyHint =>
+      'Import a TTF or OTF file once, then use it for the app interface or reading.';
+
+  @override
+  String customFontsCount(int count) {
+    return '$count imported fonts';
+  }
+
+  @override
+  String get customFontsLocalOnly =>
+      'Imported fonts are stored only on this device and are not synced automatically.';
+
+  @override
+  String get builtInFonts => 'Built-in fonts';
+
+  @override
+  String get importFont => 'Import font';
+
+  @override
+  String get importingFont => 'Importing font…';
+
+  @override
+  String get customFontImported => 'Font imported';
+
+  @override
+  String get customFontAlreadyImported =>
+      'This font was already imported and is ready to use';
+
+  @override
+  String get customFontApplied => 'Font selection updated';
+
+  @override
+  String get customFontAppliedToApp => 'Imported and set as the app font';
+
+  @override
+  String get customFontAppliedToReader =>
+      'Imported and set as the reading font';
+
+  @override
+  String get customFontImportUnsupported =>
+      'Persistent font import is not supported on this platform yet.';
+
+  @override
+  String get customFontUnsupportedFormat => 'Choose a TTF or OTF font file.';
+
+  @override
+  String get customFontInvalid => 'This file is not a valid or supported font.';
+
+  @override
+  String get customFontTooLarge => 'The font file is larger than 50 MB.';
+
+  @override
+  String get customFontReadFailed => 'The font file could not be read.';
+
+  @override
+  String get customFontLoadFailed => 'The font could not be loaded.';
+
+  @override
+  String get customFontStorageFailed =>
+      'The font could not be saved on this device.';
+
+  @override
+  String get customFontUnavailable =>
+      'Font file is unavailable. Delete it and import it again.';
+
+  @override
+  String get setAsAppFont => 'Use as app font';
+
+  @override
+  String get setAsReaderFont => 'Use as reading font';
+
+  @override
+  String get setAsBothFonts => 'Use for both';
+
+  @override
+  String get renameFont => 'Rename font';
+
+  @override
+  String deleteCustomFontTitle(String name) {
+    return 'Delete “$name”?';
+  }
+
+  @override
+  String get deleteCustomFontMessage =>
+      'The font file will be removed from this device.';
+
+  @override
+  String get deleteCustomFontInUse =>
+      'This font is currently in use. Deleting it will restore the affected font settings to their defaults.';
+
+  @override
+  String get deleteAndReset => 'Delete and reset';
+
+  @override
+  String get settingsTelegramChannel => 'Telegram';
+
+  @override
+  String get settingsTelegramSubtitle => 'Official Telegram channel';
+
+  @override
+  String get settingsTelegramOpenFailed => 'Could not open the Telegram link';
+
+  @override
   String get languageSystem => 'Follow System';
 
   @override
@@ -1512,6 +1621,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get changelogHistorySubtitle => 'View changes from every release';
+
+  @override
+  String get openSourceLicensesTitle => 'Open-source licenses';
+
+  @override
+  String get openSourceLicensesSubtitle =>
+      'View licenses for the app, bundled fonts, and third-party software';
+
+  @override
+  String get openSourceLicensesIntro =>
+      'These license texts are available offline in the app. Open Reading, bundled fonts, and third-party software remain subject to their respective licenses.';
+
+  @override
+  String get openSourceProjectSection => 'Project licenses';
+
+  @override
+  String get openSourceLegacyLicenseTitle => 'Earlier releases';
+
+  @override
+  String get openSourceFontsSection => 'Bundled fonts';
+
+  @override
+  String get openSourceDependenciesSection => 'Third-party software';
+
+  @override
+  String get openSourceDependenciesTitle => 'Flutter and Dart dependencies';
+
+  @override
+  String get openSourceDependenciesSubtitle =>
+      'View third-party licenses collected automatically by Flutter';
+
+  @override
+  String get openSourceLicenseLegalese =>
+      'Open Reading and third-party components remain subject to their respective licenses.';
+
+  @override
+  String get openSourceLicenseLoadFailed => 'Could not load the license text.';
 
   @override
   String get changelogPageTitle => 'Release history';

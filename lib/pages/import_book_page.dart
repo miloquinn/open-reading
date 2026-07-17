@@ -133,6 +133,11 @@ class _ImportBookPageState extends State<ImportBookPage> {
               }
             },
             child: Scaffold(
+              // Some Android document pickers can leave a stale IME inset
+              // behind when returning to Flutter. This page has no text input,
+              // so resizing for that inset only risks pushing the import action
+              // bar into the status bar.
+              resizeToAvoidBottomInset: false,
               backgroundColor: scheme.surface,
               appBar: AppBar(
                 backgroundColor: scheme.surface,

@@ -117,24 +117,16 @@ class LayoutHelper {
     return baseFontSize * scale;
   }
 
-  // 获取书库网格的纵横比
-  static double getBookGridAspectRatio(BuildContext context) {
-    return getValue(
-      context,
-      mobile: 0.7,
-      tablet: 0.5, // 平板封面再高一点
-      desktop: 0.8, // 桌面也相应调整
-    );
-  }
-
-  // 获取书库网格的列数
-  static int getBookGridColumns(BuildContext context) {
-    return getValue(
-      context,
-      mobile: 2,
-      tablet: 3, // 平板减为3列，封面更高更接近3:4
-      desktop: 5, // 桌面增加到5列
-    );
+  // 书库网格按可用宽度推导列数（网格仅在平板/桌面显示）。
+  // 目标是每个格子约 168 逻辑像素宽（封面 ~150），旋转屏幕时封面大小
+  // 基本不变、只重排列数，避免大屏上封面过大。
+  static int bookGridColumnsForWidth(double width) {
+    const double targetItemExtent = 168.0;
+    const double horizontalPadding = 32.0;
+    if (width <= 0) return 3;
+    return ((width - horizontalPadding) / targetItemExtent)
+        .round()
+        .clamp(3, 10);
   }
 
   // 判断是否应该显示双页布局

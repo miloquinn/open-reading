@@ -9,6 +9,7 @@ import '../book_sources/models/registered_book_source.dart';
 import '../book_sources/protocol/book_source_protocol.dart';
 import '../book_sources/services/book_source_client.dart';
 import '../book_sources/services/book_source_shelf_service.dart';
+import '../utils/book_open_transition.dart';
 import '../utils/localization_extension.dart';
 import '../utils/page_style_helper.dart';
 import '../utils/ui_style.dart';
@@ -319,9 +320,10 @@ class SourcedBookActions {
                           key: const Key('bookSourceReadButton'),
                           onPressed: () {
                             Navigator.pop(sheetContext);
+                            // 弹窗里拿不到封面位置，走统一路由的淡入兜底。
                             Navigator.of(context).push(
-                              MaterialPageRoute<void>(
-                                builder: (_) => BookSourceReaderPage(
+                              BookOpenTransition.createRoute<void>(
+                                BookSourceReaderPage(
                                   source: result.source,
                                   book: book,
                                   client: client,

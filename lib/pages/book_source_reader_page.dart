@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as html_parser;
 import 'package:provider/provider.dart';
@@ -11,6 +10,7 @@ import 'package:xxread/core/reader/reader_layout.dart';
 import 'package:xxread/core/reader/reader_margin_settings.dart';
 import 'package:xxread/core/reader/reader_safe_area.dart';
 import 'package:xxread/core/reader/reader_settings.dart';
+import 'package:xxread/core/reader/reader_system_ui.dart';
 import 'package:xxread/models/bookmark.dart';
 
 import '../book_sources/models/registered_book_source.dart';
@@ -106,6 +106,8 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   bool _bookmarkBusy = false;
   DateTime? _readingSessionStartedAt;
   int _sessionPagesRead = 0;
+  bool _readerSystemUiApplied = false;
+  bool _showSystemStatusBarInReader = false;
 
   ReaderThemePalette get _readerTheme => ReaderThemes.byId(_readerThemeId);
 
@@ -135,9 +137,15 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     WidgetsBinding.instance.addObserver(this);
     _startReadingSession();
     _scrollController.addListener(_onScroll);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted || _readerSystemUiApplied) return;
+      final showStatusBar =
+          await ReaderSystemUiController.applySavedPreference();
       if (!mounted) return;
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+      setState(() {
+        _showSystemStatusBarInReader = showStatusBar;
+        _readerSystemUiApplied = true;
+      });
     });
     unawaited(_initialize());
   }
@@ -162,6 +170,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _startReadingSession();
+      if (_readerSystemUiApplied) unawaited(_applyReaderSystemUi());
       return;
     }
     if (state == AppLifecycleState.inactive ||
@@ -209,9 +218,13 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       ..dispose();
     _pageController.dispose();
     _scrollProgress.dispose();
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    unawaited(ReaderSystemUiController.restore());
     super.dispose();
   }
+
+  Future<void> _applyReaderSystemUi() => ReaderSystemUiController.apply(
+        showStatusBar: _showSystemStatusBarInReader,
+      );
 
   Future<void> _initialize() async {
     setState(() {
@@ -869,8 +882,9 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       ),
     );
     if (mounted) setState(() => _controlsVisible = false);
+    if (!mounted) return;
+    await _applyReaderSystemUi();
     if (selectedMode == null || !mounted) return;
-    await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     if (!mounted) return;
     await WidgetsBinding.instance.endOfFrame;
     if (!mounted) return;

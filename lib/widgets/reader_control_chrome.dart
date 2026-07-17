@@ -206,6 +206,7 @@ class ReaderControlBar extends StatelessWidget {
       preset: GlassEffectConfig.dreamyMode,
       isTopBar: isTopBar,
     );
+    final surfaceOpacity = blurEnabled ? config['opacity']! : 1.0;
     final highlight = Color.lerp(
       palette.controlBar,
       Colors.white,
@@ -218,8 +219,14 @@ class ReaderControlBar extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            highlight.withValues(alpha: blurEnabled ? 0.92 : 1),
-            palette.controlBar.withValues(alpha: blurEnabled ? 0.88 : 1),
+            highlight.withValues(
+              alpha:
+                  (surfaceOpacity + (blurEnabled ? 0.08 : 0.0)).clamp(0.0, 1.0),
+            ),
+            palette.controlBar.withValues(
+              alpha:
+                  (surfaceOpacity - (blurEnabled ? 0.02 : 0.0)).clamp(0.0, 1.0),
+            ),
           ],
         ),
         border: Border.all(
@@ -286,18 +293,26 @@ class ReaderControlIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final glassEnabled = !GlassEffectConfig.shouldDisableBlur;
     return IconButton.filledTonal(
       onPressed: onPressed,
       tooltip: tooltip,
       icon: Icon(icon, size: 22),
       style: IconButton.styleFrom(
         foregroundColor: palette.text,
-        backgroundColor: palette.controlFill.withValues(alpha: 0.78),
+        backgroundColor: palette.controlFill.withValues(
+          alpha: glassEnabled ? 0.58 : 1.0,
+        ),
         minimumSize: const Size.square(44),
         maximumSize: const Size.square(44),
         padding: EdgeInsets.zero,
         side: BorderSide(
-          color: palette.border.withValues(alpha: 0.42),
+          color: Color.lerp(
+            palette.border,
+            Colors.white,
+            palette.brightness == Brightness.dark ? 0.12 : 0.32,
+          )!
+              .withValues(alpha: glassEnabled ? 0.48 : 0.42),
           width: 0.8,
         ),
         shape: const CircleBorder(),
