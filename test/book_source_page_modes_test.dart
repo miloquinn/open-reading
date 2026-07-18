@@ -223,8 +223,7 @@ void main() {
     );
   });
 
-  testWidgets('source reader persists typography and page turn style settings',
-      (tester) async {
+  testWidgets('source reader persists typography settings', (tester) async {
     SharedPreferences.setMockInitialValues({
       ReaderSettingsStore.pageModeKey: ReaderPageMode.instantPage.name,
     });
@@ -260,33 +259,10 @@ void main() {
     tester.widget<Slider>(spacingFinder).onChangeEnd!(2);
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.auto_stories_outlined));
-    await tester.pumpAndSettle();
-    expect(
-      tester
-          .widget<RadioGroup<ReaderPageTurnStyle>>(
-            find.byType(RadioGroup<ReaderPageTurnStyle>),
-          )
-          .groupValue,
-      ReaderPageTurnStyle.cylinder,
-    );
-
-    final classicFold = find.byWidgetPredicate(
-      (widget) =>
-          widget is RadioListTile<ReaderPageTurnStyle> &&
-          widget.value == ReaderPageTurnStyle.classicFold,
-    );
-    expect(classicFold, findsOneWidget);
-    await tester.tap(classicFold);
-    await tester.pumpAndSettle();
-
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getInt(ReaderSettingsStore.firstLineIndentKey), 4);
     expect(prefs.getInt(ReaderSettingsStore.paragraphSpacingKey), 2);
-    expect(
-      prefs.getString(ReaderSettingsStore.pageTurnStyleKey),
-      ReaderPageTurnStyle.classicFold.name,
-    );
+    expect(find.byIcon(Icons.auto_stories_outlined), findsNothing);
   });
 
   testWidgets('day reader settings stay light under system dark mode',

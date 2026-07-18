@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -31,6 +33,58 @@ void main() {
     });
 
     expect(await const ReaderCustomThemeStore().load(), isNull);
+  });
+
+  test('custom reader themes persist order, names, and image metadata',
+      () async {
+    SharedPreferences.setMockInitialValues({});
+    const themes = [
+      ReaderCustomTheme(
+        id: 'custom:first',
+        name: 'Rain',
+        background: Color(0xFF102030),
+        text: Color(0xFFF0E0D0),
+        controlBar: Color(0xFF203040),
+        backgroundImagePath: r'C:\themes\rain.webp',
+        backgroundImageOpacity: 0.42,
+      ),
+      ReaderCustomTheme(
+        id: 'custom:second',
+        name: 'Paper',
+        background: Color(0xFFF4EBD8),
+        text: Color(0xFF30271F),
+        controlBar: Color(0xFFE1D0B4),
+      ),
+    ];
+    const store = ReaderCustomThemeStore();
+
+    await store.saveAll(themes);
+    final restored = await store.loadAll();
+
+    expect(
+        restored.map((theme) => theme.id), ['custom:first', 'custom:second']);
+    expect(restored.first.name, 'Rain');
+    expect(restored.first.backgroundImagePath, r'C:\themes\rain.webp');
+    expect(restored.first.backgroundImageOpacity, 0.42);
+  });
+
+  test('legacy single custom theme migrates into the ordered library',
+      () async {
+    SharedPreferences.setMockInitialValues({
+      ReaderCustomThemeStore.legacyStorageKey: jsonEncode({
+        'background': const Color(0xFF102030).toARGB32(),
+        'text': const Color(0xFFF0E0D0).toARGB32(),
+        'controlBar': const Color(0xFF203040).toARGB32(),
+      }),
+    });
+    const store = ReaderCustomThemeStore();
+
+    final restored = await store.loadAll();
+    final prefs = await SharedPreferences.getInstance();
+
+    expect(restored, hasLength(1));
+    expect(restored.single.id, ReaderCustomTheme.legacyThemeId);
+    expect(prefs.getString(ReaderCustomThemeStore.storageKey), isNotNull);
   });
 
   testWidgets('editing a preview does not mutate the active saved palette',

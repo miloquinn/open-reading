@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:xxread/core/reader/reader_layout.dart';
 import 'package:xxread/widgets/reader_shader_page_curl.dart';
 import 'package:xxread/widgets/reader_paper_page_leaf.dart';
 
@@ -99,6 +98,24 @@ void main() {
     );
   });
 
+  testWidgets('phone leaf keeps the physical binding on the left',
+      (tester) async {
+    late ReaderShaderPageCurl curl;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: curl = ReaderShaderPageCurl(
+          currentPage: _snapshot('current'),
+          backwardPage: _snapshot('previous'),
+          onTurnForward: () {},
+          onTurnBackward: () {},
+          paperColor: Colors.white,
+        ),
+      ),
+    );
+
+    expect(curl.bindingEdge, ReaderPageBindingEdge.left);
+  });
+
   testWidgets('forward curl can start from the middle of the page',
       (tester) async {
     var forwardTurns = 0;
@@ -130,6 +147,101 @@ void main() {
     expect(forwardTurns, 1);
   });
 
+  testWidgets('middle forward drag catches up from the right edge',
+      (tester) async {
+    final controller = ReaderPageCurlController();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SizedBox(
+          width: 400,
+          height: 700,
+          child: ReaderShaderPageCurl(
+            controller: controller,
+            currentPage: _snapshot('current'),
+            forwardPage: _snapshot('next'),
+            onTurnForward: () {},
+            onTurnBackward: () {},
+            paperColor: Colors.white,
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final rect = tester.getRect(find.byType(ReaderShaderPageCurl));
+    final gesture = await tester.startGesture(rect.center);
+    await gesture.moveBy(const Offset(-30, 0));
+    await tester.pump();
+
+    expect(controller.debugIsCatchingUp, isTrue);
+    expect(
+      controller.debugTouchPosition!.dx,
+      greaterThan(rect.width - 5),
+    );
+
+    await tester.pump(const Duration(milliseconds: 40));
+    final middle = controller.debugTouchPosition!.dx;
+    expect(middle, greaterThan(rect.width / 2 - 30));
+    expect(middle, lessThan(rect.width - 0.5));
+
+    await gesture.moveBy(const Offset(-35, 0));
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(controller.debugIsCatchingUp, isFalse);
+    expect(
+      controller.debugTouchPosition!.dx,
+      closeTo(rect.width / 2 - 65, 1),
+    );
+
+    await gesture.cancel();
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('middle backward drag catches up from the left edge',
+      (tester) async {
+    final controller = ReaderPageCurlController();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SizedBox(
+          width: 400,
+          height: 700,
+          child: ReaderShaderPageCurl(
+            controller: controller,
+            currentPage: _snapshot('current'),
+            backwardPage: _snapshot('previous'),
+            onTurnForward: () {},
+            onTurnBackward: () {},
+            paperColor: Colors.white,
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final rect = tester.getRect(find.byType(ReaderShaderPageCurl));
+    final gesture = await tester.startGesture(rect.center);
+    await gesture.moveBy(const Offset(30, 0));
+    await tester.pump();
+
+    expect(controller.debugIsCatchingUp, isTrue);
+    expect(controller.debugTouchPosition!.dx, lessThan(5));
+
+    await tester.pump(const Duration(milliseconds: 40));
+    final middle = controller.debugTouchPosition!.dx;
+    expect(middle, greaterThan(0.5));
+    expect(middle, lessThan(rect.width / 2 + 30));
+
+    await gesture.moveBy(const Offset(35, 0));
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(controller.debugIsCatchingUp, isFalse);
+    expect(
+      controller.debugTouchPosition!.dx,
+      closeTo(rect.width / 2 + 65, 1),
+    );
+
+    await gesture.cancel();
+    await tester.pumpAndSettle();
+  });
+
   testWidgets('classic fold accepts a horizontal drag below page center',
       (tester) async {
     var forwardTurns = 0;
@@ -140,7 +252,6 @@ void main() {
           width: 400,
           height: 700,
           child: ReaderShaderPageCurl(
-            turnStyle: ReaderPageTurnStyle.classicFold,
             currentPage: _snapshot('current'),
             forwardPage: _snapshot('next'),
             onTurnForward: () => forwardTurns++,
@@ -160,6 +271,42 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(forwardTurns, 1);
+  });
+
+  testWidgets('classic fold turns backward with the phone binding on the left',
+      (tester) async {
+    var backwardTurns = 0;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SizedBox(
+          width: 400,
+          height: 700,
+          child: ReaderShaderPageCurl(
+            currentPage: _snapshot('current'),
+            backwardPage: _snapshot('previous'),
+            onTurnForward: () {},
+            onTurnBackward: () => backwardTurns++,
+            paperColor: Colors.white,
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final curl = tester.widget<ReaderShaderPageCurl>(
+      find.byType(ReaderShaderPageCurl),
+    );
+    expect(curl.bindingEdge, ReaderPageBindingEdge.left);
+
+    final rect = tester.getRect(find.byType(ReaderShaderPageCurl));
+    await tester.dragFrom(
+      Offset(rect.left + 2, rect.top + rect.height * 0.68),
+      Offset(rect.width * 0.42, 0),
+    );
+    await tester.pumpAndSettle();
+
+    expect(backwardTurns, 1);
   });
 
   testWidgets('edge-only forward turn cannot start from its binding edge',

@@ -39,8 +39,17 @@ class ChangelogPage extends StatelessWidget {
   List<_ChangelogEntry> _entries(AppLocalizations l10n) {
     return [
       _ChangelogEntry(
-        version: 'v1.2.4',
+        version: 'v2.0.0',
         current: true,
+        items: [
+          l10n.changelog200ReaderExperience,
+          l10n.changelog200CustomThemes,
+          l10n.changelog200Navigation,
+          l10n.changelog200KeepScreenOn,
+        ],
+      ),
+      _ChangelogEntry(
+        version: 'v1.2.4',
         items: [l10n.changelog124PaperLeaf],
       ),
       _ChangelogEntry(

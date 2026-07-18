@@ -1584,11 +1584,6 @@
   "@readerModePageCurlHint": {
     "description": "Subtitle explaining the simulated page curl mode"
   },
-  "readerPageTurnStyleTitle": "Page-turn Animation",
-  "readerPageTurnStyleCylinder": "Cylinder Curl",
-  "readerPageTurnStyleCylinderHint": "A soft rolling sheet with continuous curvature",
-  "readerPageTurnStyleClassicFold": "Classic Fold",
-  "readerPageTurnStyleClassicFoldHint": "A crisp diagonal fold with reflected paper and a real spring",
   "readerFontSizeValue": "Font size  {size}",
   "@readerFontSizeValue": {
     "description": "Slider label showing the current reader font size",
@@ -1776,6 +1771,16 @@
   "@settingsShowStatusBarOffSubtitle": {
     "description": "Subtitle when system status bar is hidden in reader"
   },
+  "readerTopBarStyleTitle": "Top information",
+  "@readerTopBarStyleTitle": {
+    "description": "Title for selecting the reader top information style"
+  },
+  "readerTopBarStyleSystem": "System status bar",
+  "readerTopBarStyleSystemHint": "Show the system time, signal, and battery",
+  "readerTopBarStyleReader": "Reader information bar",
+  "readerTopBarStyleReaderHint": "Show time, chapter title, and battery",
+  "readerTopBarStyleHidden": "Fully immersive",
+  "readerTopBarStyleHiddenHint": "Show no information at the top",
   "settingsAiAssistantTitle": "AI Reading Assistant",
   "@settingsAiAssistantTitle": {
     "description": "Section title for AI assistant settings"
@@ -1950,6 +1955,10 @@
   "changelog121Typography": "Fixed asymmetric Chinese text margins and aligned pagination with rendering",
   "changelog124PaperLeaf": "Added paper-bound page chrome, classic fold animation, and reader typography controls",
   "changelog122ContinuousTap": "Restored center-tap reader controls during continuous online scrolling",
+  "changelog200ReaderExperience": "Upgraded top information, page numbering, and simulated page turns",
+  "changelog200CustomThemes": "Added multiple custom reading themes, image backgrounds, and drag sorting",
+  "changelog200Navigation": "Improved EPUB pagination and collapsible nested contents",
+  "changelog200KeepScreenOn": "Enabled real keep-screen-on behavior while reading on Android",
   "changelog110CustomFonts": "Added custom fonts",
   "changelog110Bookmarks": "Added bookmark support",
   "changelog102Summary": "Improved discovery, standalone search, and reading settings",
@@ -2647,6 +2656,33 @@
   "readerCustomThemePreviewBody": "This is your reading space. Tune the text, paper, and control colors until every page feels distinctly yours.",
   "readerCustomThemeHexInvalid": "Enter a 6-digit hex color, such as #F6F0E4",
   "readerCustomThemeHexLabel": "Hex color",
+  "readerCustomThemesTitle": "Custom reading themes",
+  "readerCustomThemeAdd": "Add theme",
+  "readerCustomThemeReorderHint": "Hold the handle on the right to reorder themes. The same order appears in reading settings.",
+  "readerCustomThemeUse": "Use selected theme",
+  "readerCustomThemeDeleteTitle": "Delete reading theme?",
+  "readerCustomThemeDeleteMessage": "“{name}” will be removed from your themes, along with its saved background image.",
+  "@readerCustomThemeDeleteMessage": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "readerCustomThemeEmptyTitle": "No custom themes yet",
+  "readerCustomThemeEmptyHint": "Create your own combination of type, paper color, and background image.",
+  "readerCustomThemeNewTitle": "New reading theme",
+  "readerCustomThemeEditTitle": "Edit reading theme",
+  "readerCustomThemeName": "Theme name",
+  "readerCustomThemeNameHint": "For example, Rainy night or Afternoon paper",
+  "readerCustomThemeBackgroundImage": "Background image",
+  "readerCustomThemeBackgroundImageHint": "Supports JPG, PNG, and WebP. The image is copied into app storage.",
+  "readerCustomThemeChooseImage": "Upload image",
+  "readerCustomThemeReplaceImage": "Replace image",
+  "readerCustomThemeRemoveImage": "Remove image",
+  "readerCustomThemeImageStrength": "Background image strength",
+  "readerCustomThemeImageUnsupported": "Background image import is not supported on this platform",
+  "readerCustomThemeImageTooLarge": "The image must be no larger than 20 MB",
+  "readerCustomThemeImageFormat": "Choose a JPG, PNG, or WebP image",
+  "readerCustomThemeImageFailed": "Could not import the background image. Try again.",
   "importSourceTitle": "Add books",
   "importSourceDescription": "Choose several files first. Review the queue before starting the import.",
   "importSelectFiles": "Choose files",

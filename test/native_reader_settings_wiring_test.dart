@@ -24,8 +24,6 @@ void main() {
       ReaderSettingsStore.pageModeKey: ReaderPageMode.pageCurl.name,
       ReaderSettingsStore.firstLineIndentKey: 3,
       ReaderSettingsStore.paragraphSpacingKey: 1,
-      ReaderSettingsStore.pageTurnStyleKey:
-          ReaderPageTurnStyle.classicFold.name,
     });
     bookFile = File('test/fixtures/reader_settings_test.html');
     final messenger =
@@ -48,7 +46,7 @@ void main() {
   });
 
   testWidgets(
-      'native reader loads and persists shared typography and turn style',
+      'native reader loads and persists shared typography with classic fold',
       (tester) async {
     debugDefaultTargetPlatformOverride = TargetPlatform.android;
     try {
@@ -75,17 +73,6 @@ void main() {
         }
       });
       await _pumpUntilFound(tester, find.byType(ReaderShaderPageCurl));
-
-      expect(
-        tester
-            .widgetList<ReaderShaderPageCurl>(
-              find.byType(ReaderShaderPageCurl),
-            )
-            .every(
-              (curl) => curl.turnStyle == ReaderPageTurnStyle.classicFold,
-            ),
-        isTrue,
-      );
 
       tester
           .widget<IconButton>(
@@ -116,42 +103,10 @@ void main() {
       tester.widget<Slider>(spacingFinder).onChangeEnd!(2);
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.auto_stories_outlined));
-      await tester.pumpAndSettle();
-      expect(
-        tester
-            .widget<RadioGroup<ReaderPageTurnStyle>>(
-              find.byType(RadioGroup<ReaderPageTurnStyle>),
-            )
-            .groupValue,
-        ReaderPageTurnStyle.classicFold,
-      );
-
-      final cylinder = find.byWidgetPredicate(
-        (widget) =>
-            widget is RadioListTile<ReaderPageTurnStyle> &&
-            widget.value == ReaderPageTurnStyle.cylinder,
-      );
-      await tester.tap(cylinder);
-      await tester.pumpAndSettle();
-
       final prefs = await SharedPreferences.getInstance();
       expect(prefs.getInt(ReaderSettingsStore.firstLineIndentKey), 4);
       expect(prefs.getInt(ReaderSettingsStore.paragraphSpacingKey), 2);
-      expect(
-        prefs.getString(ReaderSettingsStore.pageTurnStyleKey),
-        ReaderPageTurnStyle.cylinder.name,
-      );
-      expect(
-        tester
-            .widgetList<ReaderShaderPageCurl>(
-              find.byType(ReaderShaderPageCurl),
-            )
-            .every(
-              (curl) => curl.turnStyle == ReaderPageTurnStyle.cylinder,
-            ),
-        isTrue,
-      );
+      expect(find.byIcon(Icons.auto_stories_outlined), findsNothing);
     } finally {
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump();
@@ -442,6 +397,8 @@ void main() {
       final curls =
           tester.widgetList<ReaderShaderPageCurl>(curlFinder).toList();
       expect(curls.every((curl) => curl.edgeDragOnly), isTrue);
+      expect(curls[0].bindingEdge, ReaderPageBindingEdge.right);
+      expect(curls[1].bindingEdge, ReaderPageBindingEdge.left);
 
       final rects = curlFinder
           .evaluate()

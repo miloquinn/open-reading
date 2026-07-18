@@ -35,7 +35,6 @@ void main() {
       pageMode: ReaderPageMode.pageCurl,
       firstLineIndent: 3,
       paragraphSpacing: 1,
-      pageTurnStyle: ReaderPageTurnStyle.classicFold,
       pullBookmarkEnabled: true,
       tapPageAnimationEnabled: false,
     );
@@ -52,7 +51,6 @@ void main() {
     expect(restored.pageMode, ReaderPageMode.pageCurl);
     expect(restored.firstLineIndent, 3);
     expect(restored.paragraphSpacing, 1);
-    expect(restored.pageTurnStyle, ReaderPageTurnStyle.classicFold);
     expect(restored.pullBookmarkEnabled, isTrue);
     expect(restored.tapPageAnimationEnabled, isFalse);
   });
@@ -87,10 +85,11 @@ void main() {
     );
   });
 
-  test('clamps typography settings and defaults to cylinder turns', () async {
+  test('clamps typography and interaction settings', () async {
     SharedPreferences.setMockInitialValues({
       ReaderSettingsStore.firstLineIndentKey: 20,
       ReaderSettingsStore.paragraphSpacingKey: -3,
+      'native_reader_page_turn_style': 'cylinder',
     });
 
     final restored = await const ReaderSettingsStore().load(
@@ -99,10 +98,11 @@ void main() {
 
     expect(restored.firstLineIndent, 4);
     expect(restored.paragraphSpacing, 0);
-    expect(restored.pageTurnStyle, ReaderPageTurnStyle.cylinder);
     expect(restored.pullBookmarkEnabled, isFalse);
     expect(restored.tapPageAnimationEnabled, isTrue);
     expect(restored.copyWith(firstLineIndent: -1).firstLineIndent, 0);
     expect(restored.copyWith(paragraphSpacing: 9).paragraphSpacing, 2);
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString('native_reader_page_turn_style'), isNull);
   });
 }

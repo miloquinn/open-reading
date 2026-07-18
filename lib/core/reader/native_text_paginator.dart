@@ -100,25 +100,33 @@ class NativeTextPaginator {
     required String text,
     required NativeTextSpanBuilder spanBuilder,
     int sourceOffset = 0,
+    double? firstPageHeight,
   }) {
-    if (text.isEmpty || maxWidth <= 0 || maxHeight <= 0) {
+    final resolvedFirstPageHeight = firstPageHeight ?? maxHeight;
+    if (text.isEmpty ||
+        maxWidth <= 0 ||
+        maxHeight <= 0 ||
+        resolvedFirstPageHeight <= 0) {
       return const <NativeTextPageRange>[];
     }
 
     final pages = <NativeTextPageRange>[];
     var pageStart = 0;
     while (pageStart < text.length) {
+      final pageMaxHeight = pages.isEmpty ? resolvedFirstPageHeight : maxHeight;
       final candidates = _lineEndCandidates(
         text: text,
         pageStart: pageStart,
         sourceOffset: sourceOffset,
         spanBuilder: spanBuilder,
+        pageMaxHeight: pageMaxHeight,
       );
       var selected = _selectVerifiedCandidate(
         candidates: candidates,
         pageStart: pageStart,
         sourceOffset: sourceOffset,
         spanBuilder: spanBuilder,
+        pageMaxHeight: pageMaxHeight,
       );
 
       if (avoidShortContinuingLine &&
@@ -136,6 +144,7 @@ class NativeTextPaginator {
                   pageEnd: previousEnd,
                   sourceOffset: sourceOffset,
                   spanBuilder: spanBuilder,
+                  pageMaxHeight: pageMaxHeight,
                 ) ??
                 selected;
           }
@@ -160,6 +169,7 @@ class NativeTextPaginator {
     required int pageStart,
     required int sourceOffset,
     required NativeTextSpanBuilder spanBuilder,
+    required double pageMaxHeight,
   }) {
     var probeLength = math.min(initialProbeLength, text.length - pageStart);
     while (true) {
@@ -198,7 +208,7 @@ class NativeTextPaginator {
           // tighter than full line height with leading; verification still
           // decides. If already past maxHeight, further lines will not fit.
           final inkBottom = metric.baseline + metric.descent;
-          if (inkBottom > maxHeight + 0.5) {
+          if (inkBottom > pageMaxHeight + 0.5) {
             observedOverflowLine = true;
             break;
           }
@@ -207,7 +217,7 @@ class NativeTextPaginator {
       }
       // If the probe itself is taller than the page, we have enough lines to
       // binary-walk; mark overflow so the outer loop can stop growing probe.
-      if (!observedOverflowLine && painter.height > maxHeight + 0.5) {
+      if (!observedOverflowLine && painter.height > pageMaxHeight + 0.5) {
         observedOverflowLine = true;
       }
       painter.dispose();
@@ -229,6 +239,7 @@ class NativeTextPaginator {
     required int pageStart,
     required int sourceOffset,
     required NativeTextSpanBuilder spanBuilder,
+    required double pageMaxHeight,
   }) {
     for (var index = candidates.length - 1; index >= 0; index--) {
       final verified = _verifiedRange(
@@ -236,6 +247,7 @@ class NativeTextPaginator {
         pageEnd: candidates[index],
         sourceOffset: sourceOffset,
         spanBuilder: spanBuilder,
+        pageMaxHeight: pageMaxHeight,
       );
       if (verified != null) return verified;
     }
@@ -252,12 +264,13 @@ class NativeTextPaginator {
     required int pageEnd,
     required int sourceOffset,
     required NativeTextSpanBuilder spanBuilder,
+    required double pageMaxHeight,
   }) {
     if (pageEnd <= pageStart) return null;
     final painter = flowStyle.createPainter(
       spanBuilder(sourceOffset + pageStart, sourceOffset + pageEnd),
     )..layout(maxWidth: maxWidth);
-    final fits = painter.height <= maxHeight;
+    final fits = painter.height <= pageMaxHeight;
     final actualLineCount = painter.computeLineMetrics().length;
     painter.dispose();
     if (!fits) return null;

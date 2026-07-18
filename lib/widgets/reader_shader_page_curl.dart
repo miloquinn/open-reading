@@ -8,11 +8,12 @@ import 'package:flutter/physics.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 
-import '../core/reader/reader_layout.dart';
 import '../core/reader/reader_page_turn_geometry.dart';
 import 'reader_paper_page_leaf.dart';
 
 typedef ReaderPageTurnCallback = FutureOr<void> Function();
+
+enum ReaderPageBindingEdge { left, right }
 
 @immutable
 class ReaderPageSnapshot {
@@ -38,6 +39,15 @@ class ReaderPageCurlController {
       _state?._requestProgrammaticTurn(ReaderPageTurnDirection.backward) ??
       Future<void>.value();
 
+  @visibleForTesting
+  Offset? get debugTouchPosition {
+    final geometry = _state?._geometry;
+    return geometry?.screenPoint(geometry.canonicalTouch);
+  }
+
+  @visibleForTesting
+  bool get debugIsCatchingUp => _state?._catchUpStartPointer != null;
+
   void _attach(_ReaderShaderPageCurlState state) => _state = state;
 
   void _detach(_ReaderShaderPageCurlState state) {
@@ -45,7 +55,7 @@ class ReaderPageCurlController {
   }
 }
 
-/// A reader page-turn surface shared by the cylinder and classic fold styles.
+/// A shader-backed classic paper-fold page-turn surface.
 ///
 /// Gesture geometry and spring physics live outside either renderer. Page
 /// snapshots use a bounded, byte-aware session cache keyed by page identity,
@@ -62,8 +72,8 @@ class ReaderShaderPageCurl extends StatefulWidget {
     this.backwardPage,
     this.controller,
     this.preparePages,
-    this.turnStyle = ReaderPageTurnStyle.cylinder,
     this.edgeDragOnly = false,
+    this.bindingEdge = ReaderPageBindingEdge.left,
   });
 
   final ReaderPageSnapshot currentPage;
@@ -74,7 +84,13 @@ class ReaderShaderPageCurl extends StatefulWidget {
   final Color paperColor;
   final ReaderPageCurlController? controller;
   final Future<void> Function()? preparePages;
-  final ReaderPageTurnStyle turnStyle;
+
+  /// The physical spine edge of this leaf in screen coordinates.
+  ///
+  /// Turn direction and binding placement are intentionally independent:
+  /// phone leaves remain bound on the left for both directions, while the
+  /// left leaf of a two-page spread is bound on the right.
+  final ReaderPageBindingEdge bindingEdge;
 
   /// Restricts interactive turns to the free outer edge.
   ///
@@ -96,7 +112,7 @@ enum _PageTurnPhase {
 }
 
 class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
-    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   static const int _snapshotBudgetBytes = 48 * 1024 * 1024;
   static const int _perSnapshotBudgetBytes = 8 * 1024 * 1024;
   static const int _maxQueuedProgrammaticTurns = 2;
@@ -105,6 +121,7 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
   static const double _horizontalIntentRatio = 1.12;
   static const double _predictionHorizonSeconds = 0.14;
   static const double _commitProjection = 0.28;
+  static const Duration _middleDragCatchUpDuration = Duration(milliseconds: 85);
 
   final GlobalKey _currentKey = GlobalKey(debugLabel: 'curl-current');
   final GlobalKey _forwardKey = GlobalKey(debugLabel: 'curl-forward');
@@ -117,7 +134,7 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
   final Queue<_QueuedProgrammaticTurn> _programmaticTurns = Queue();
 
   late final Ticker _springTicker;
-  ui.FragmentShader? _cylinderShader;
+  late final Ticker _catchUpTicker;
   ui.FragmentShader? _classicFoldShader;
   SpringSimulation? _springX;
   SpringSimulation? _springY;
@@ -127,6 +144,8 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
   Size _viewportSize = Size.zero;
   Offset? _pointerDown;
   Offset? _dragOrigin;
+  Offset? _catchUpStartPointer;
+  Offset? _latestDragPointer;
   ReaderPageTurnDirection? _direction;
   ReaderPageTurnGeometry? _geometry;
   ReaderPageSnapshot? _activeSourcePage;
@@ -146,8 +165,8 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _springTicker = createTicker(_onSpringTick);
+    _catchUpTicker = createTicker(_onCatchUpTick);
     widget.controller?._attach(this);
-    unawaited(_loadCylinderShader());
     unawaited(_loadClassicFoldShader());
     _scheduleWarmSnapshots();
   }
@@ -192,24 +211,11 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
       if (!turn.completer.isCompleted) turn.completer.complete();
     }
     _programmaticTurns.clear();
+    _catchUpTicker.dispose();
     _springTicker.dispose();
     _snapshotCache.dispose();
-    _cylinderShader?.dispose();
     _classicFoldShader?.dispose();
     super.dispose();
-  }
-
-  Future<void> _loadCylinderShader() async {
-    try {
-      final program = await ui.FragmentProgram.fromAsset(
-        'shaders/reader_page_curl.frag',
-      );
-      if (!mounted) return;
-      setState(() => _cylinderShader = program.fragmentShader());
-    } catch (error, stackTrace) {
-      debugPrint('Reader cylinder page curl shader failed to load: $error');
-      debugPrintStack(stackTrace: stackTrace);
-    }
   }
 
   Future<void> _loadClassicFoldShader() async {
@@ -431,10 +437,15 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
         direction,
         pointer: details.localPosition,
         origin: origin,
+        catchUpFromEdge: true,
       );
       return;
     }
     if (_phase != _PageTurnPhase.dragging || _direction == null) return;
+    if (_catchUpStartPointer != null) {
+      _latestDragPointer = details.localPosition;
+      return;
+    }
     setState(() {
       _geometry = ReaderPageTurnGeometry.fromPointer(
         size: _viewportSize,
@@ -450,6 +461,7 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
     ReaderPageTurnDirection direction, {
     required Offset pointer,
     required Offset origin,
+    bool catchUpFromEdge = false,
   }) {
     final source = direction == ReaderPageTurnDirection.forward
         ? widget.currentPage
@@ -460,19 +472,98 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
     if (source == null || target == null) return;
     _direction = direction;
     _dragOrigin = origin;
+    _latestDragPointer = pointer;
     _activeSourcePage = source;
     _activeTargetPage = target;
+    final initialPointer = catchUpFromEdge
+        ? Offset(
+            direction == ReaderPageTurnDirection.forward
+                ? _viewportSize.width - 0.5
+                : 0.5,
+            pointer.dy,
+          )
+        : pointer;
+    _catchUpStartPointer = catchUpFromEdge ? initialPointer : null;
     setState(() {
       _geometry = ReaderPageTurnGeometry.fromPointer(
         size: _viewportSize,
         direction: direction,
-        pointer: pointer,
+        pointer: initialPointer,
         dragOrigin: origin,
         anchorMode: _pageTurnAnchorMode,
       );
       _phase = _PageTurnPhase.dragging;
     });
-    unawaited(_ensureActiveSnapshots(direction));
+    final snapshotsReady = _ensureActiveSnapshots(direction);
+    if (catchUpFromEdge) {
+      unawaited(_startCatchUpAfterSnapshots(snapshotsReady));
+    } else {
+      unawaited(snapshotsReady);
+    }
+  }
+
+  Future<void> _startCatchUpAfterSnapshots(Future<void> snapshotsReady) async {
+    await snapshotsReady;
+    if (!mounted ||
+        _phase != _PageTurnPhase.dragging ||
+        _catchUpStartPointer == null) {
+      return;
+    }
+    if (_catchUpTicker.isActive) _catchUpTicker.stop();
+    _catchUpTicker.start();
+  }
+
+  void _onCatchUpTick(Duration elapsed) {
+    final start = _catchUpStartPointer;
+    final target = _latestDragPointer;
+    final direction = _direction;
+    final origin = _dragOrigin;
+    if (_phase != _PageTurnPhase.dragging ||
+        start == null ||
+        target == null ||
+        direction == null ||
+        origin == null) {
+      _stopCatchUp();
+      return;
+    }
+    final linearProgress =
+        (elapsed.inMicroseconds / _middleDragCatchUpDuration.inMicroseconds)
+            .clamp(0.0, 1.0);
+    final progress = Curves.easeOutCubic.transform(linearProgress);
+    final pointer = Offset.lerp(start, target, progress)!;
+    if (mounted) {
+      setState(() {
+        _geometry = ReaderPageTurnGeometry.fromPointer(
+          size: _viewportSize,
+          direction: direction,
+          pointer: pointer,
+          dragOrigin: origin,
+          anchorMode: _pageTurnAnchorMode,
+        );
+      });
+    }
+    if (linearProgress >= 1) _stopCatchUp();
+  }
+
+  void _stopCatchUp() {
+    if (_catchUpTicker.isActive) _catchUpTicker.stop();
+    _catchUpStartPointer = null;
+  }
+
+  void _finishCatchUpAtLatestPointer() {
+    if (_catchUpStartPointer == null) return;
+    final pointer = _latestDragPointer;
+    final direction = _direction;
+    final origin = _dragOrigin;
+    _stopCatchUp();
+    if (pointer == null || direction == null || origin == null) return;
+    _geometry = ReaderPageTurnGeometry.fromPointer(
+      size: _viewportSize,
+      direction: direction,
+      pointer: pointer,
+      dragOrigin: origin,
+      anchorMode: _pageTurnAnchorMode,
+    );
   }
 
   Future<void> _ensureActiveSnapshots(
@@ -505,6 +596,7 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
         _direction == null) {
       return;
     }
+    _finishCatchUpAtLatestPointer();
     final canonicalVelocity = ReaderPageTurnGeometry.canonicalVelocity(
       details.velocity.pixelsPerSecond,
       _direction!,
@@ -523,6 +615,7 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
     if (_phase == _PageTurnPhase.pointerPending) {
       _resetToIdle();
     } else if (_phase == _PageTurnPhase.dragging && _geometry != null) {
+      _stopCatchUp();
       _startSpring(commit: false, canonicalVelocity: Offset.zero);
     }
   }
@@ -598,9 +691,7 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
           : widget.backwardPage != null;
 
   ReaderPageTurnAnchorMode get _pageTurnAnchorMode =>
-      widget.turnStyle == ReaderPageTurnStyle.classicFold
-          ? ReaderPageTurnAnchorMode.followEdge
-          : ReaderPageTurnAnchorMode.nearestCorner;
+      ReaderPageTurnAnchorMode.followEdge;
 
   void _startSpring({
     required bool commit,
@@ -609,17 +700,9 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
     final geometry = _geometry;
     final direction = _direction;
     if (geometry == null || direction == null) return;
+    _stopCatchUp();
     final anchor = geometry.canonicalAnchor;
-    final target = commit
-        ? widget.turnStyle == ReaderPageTurnStyle.classicFold
-            ? Offset(-_viewportSize.width, anchor.dy)
-            : Offset(
-                -_viewportSize.width * 0.18,
-                geometry.corner == ReaderPageTurnCorner.top
-                    ? _viewportSize.height * 0.18
-                    : _viewportSize.height * 0.82,
-              )
-        : anchor;
+    final target = commit ? Offset(-_viewportSize.width, anchor.dy) : anchor;
     final spring = SpringDescription.withDampingRatio(
       mass: 1,
       stiffness: commit ? 420 : 400,
@@ -716,6 +799,7 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
   }
 
   void _resetToIdle() {
+    _stopCatchUp();
     if (_springTicker.isActive) _springTicker.stop();
     if (!mounted) return;
     setState(() {
@@ -726,6 +810,7 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
       _activeTargetPage = null;
       _dragOrigin = null;
       _pointerDown = null;
+      _latestDragPointer = null;
       _springX = null;
       _springY = null;
     });
@@ -818,24 +903,14 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
     required ui.Image sourceImage,
     required ui.Image targetImage,
   }) {
-    if (widget.turnStyle == ReaderPageTurnStyle.classicFold &&
-        _classicFoldShader != null) {
+    if (_classicFoldShader != null) {
       return _ReaderClassicFoldPainter(
         shader: _classicFoldShader!,
         currentPage: sourceImage,
         targetPage: targetImage,
         geometry: geometry,
         paperColor: widget.paperColor,
-      );
-    }
-    if (widget.turnStyle == ReaderPageTurnStyle.cylinder &&
-        _cylinderShader != null) {
-      return _ReaderCylinderCurlPainter(
-        shader: _cylinderShader!,
-        currentPage: sourceImage,
-        targetPage: targetImage,
-        geometry: geometry,
-        paperColor: widget.paperColor,
+        bindingEdge: widget.bindingEdge,
       );
     }
     return _ReaderFallbackTurnPainter(
@@ -1017,60 +1092,6 @@ class _SnapshotRequestKey {
       );
 }
 
-class _ReaderCylinderCurlPainter extends CustomPainter {
-  const _ReaderCylinderCurlPainter({
-    required this.shader,
-    required this.currentPage,
-    required this.targetPage,
-    required this.geometry,
-    required this.paperColor,
-  });
-
-  final ui.FragmentShader shader;
-  final ui.Image currentPage;
-  final ui.Image targetPage;
-  final ReaderPageTurnGeometry geometry;
-  final Color paperColor;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final touch = geometry.screenPoint(geometry.canonicalTouch);
-    final curlPosition = Offset(
-      (touch.dx / size.width).clamp(0.0, 1.0),
-      (touch.dy / size.height).clamp(0.0, 1.0),
-    );
-    final direction = geometry.turnAxis;
-    final bindingGuard = math.min(4.0, math.max(1.5, size.width * 0.006));
-    var index = 0;
-    shader
-      ..setFloat(index++, size.width)
-      ..setFloat(index++, size.height)
-      ..setFloat(index++, curlPosition.dx)
-      ..setFloat(index++, curlPosition.dy)
-      ..setFloat(index++, direction.dx)
-      ..setFloat(index++, direction.dy)
-      ..setFloat(index++, 0.07)
-      ..setFloat(index++, 0.065)
-      ..setFloat(index++, 0.30)
-      ..setFloat(index++, geometry.reverse ? 1 : 0)
-      ..setFloat(index++, bindingGuard)
-      ..setFloat(index++, paperColor.r)
-      ..setFloat(index++, paperColor.g)
-      ..setFloat(index++, paperColor.b)
-      ..setFloat(index++, paperColor.a)
-      ..setImageSampler(0, currentPage)
-      ..setImageSampler(1, targetPage);
-    canvas.drawRect(Offset.zero & size, Paint()..shader = shader);
-  }
-
-  @override
-  bool shouldRepaint(covariant _ReaderCylinderCurlPainter oldDelegate) =>
-      oldDelegate.geometry != geometry ||
-      oldDelegate.paperColor != paperColor ||
-      !identical(oldDelegate.currentPage, currentPage) ||
-      !identical(oldDelegate.targetPage, targetPage);
-}
-
 class _ReaderClassicFoldPainter extends CustomPainter {
   const _ReaderClassicFoldPainter({
     required this.shader,
@@ -1078,6 +1099,7 @@ class _ReaderClassicFoldPainter extends CustomPainter {
     required this.targetPage,
     required this.geometry,
     required this.paperColor,
+    required this.bindingEdge,
   });
 
   final ui.FragmentShader shader;
@@ -1085,6 +1107,7 @@ class _ReaderClassicFoldPainter extends CustomPainter {
   final ui.Image targetPage;
   final ReaderPageTurnGeometry geometry;
   final Color paperColor;
+  final ReaderPageBindingEdge bindingEdge;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1103,6 +1126,10 @@ class _ReaderClassicFoldPainter extends CustomPainter {
       ..setFloat(index++, math.min(28, size.shortestSide * 0.045))
       ..setFloat(index++, 0.34)
       ..setFloat(index++, geometry.reverse ? 1 : 0)
+      ..setFloat(
+        index++,
+        bindingEdge == ReaderPageBindingEdge.right ? 1 : 0,
+      )
       ..setFloat(index++, bindingGuard)
       ..setFloat(index++, paperColor.r)
       ..setFloat(index++, paperColor.g)
@@ -1116,6 +1143,7 @@ class _ReaderClassicFoldPainter extends CustomPainter {
   bool shouldRepaint(covariant _ReaderClassicFoldPainter oldDelegate) =>
       oldDelegate.geometry != geometry ||
       oldDelegate.paperColor != paperColor ||
+      oldDelegate.bindingEdge != bindingEdge ||
       !identical(oldDelegate.currentPage, currentPage) ||
       !identical(oldDelegate.targetPage, targetPage);
 }

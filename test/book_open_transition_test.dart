@@ -91,6 +91,51 @@ void main() {
     expect(find.text('cover'), findsOneWidget);
   });
 
+  testWidgets('退出：前段缓慢、后段加速，且起步时正文不闪白', (tester) async {
+    final coverKey = GlobalKey();
+    final navKey = GlobalKey<NavigatorState>();
+    await tester.pumpWidget(buildShelf(coverKey, navKey));
+
+    final animation = BookOpenAnimation.fromCoverKey(
+      coverKey,
+      radius: BorderRadius.circular(12),
+      coverBuilder: (_) => const ColoredBox(color: Colors.brown),
+    );
+    navKey.currentState!.push(
+      BookOpenTransition.createRoute<void>(
+        const Scaffold(body: Text('reader')),
+        animation: animation,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    navKey.currentState!.pop();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 30));
+
+    final initialOpacity = tester.widget<Opacity>(
+      find.byKey(const ValueKey('book-open-transition-reader-opacity')),
+    );
+    expect(initialOpacity.opacity, 1.0);
+
+    await tester.pump(const Duration(milliseconds: 60));
+    final earlyRect = tester.getRect(
+      find.byKey(const ValueKey('book-open-transition-reader-flight')),
+    );
+    await tester.pump(const Duration(milliseconds: 90));
+    final middleRect = tester.getRect(
+      find.byKey(const ValueKey('book-open-transition-reader-flight')),
+    );
+
+    final earlyInset = earlyRect.left;
+    final middleStep = middleRect.left - earlyRect.left;
+    expect(earlyInset, greaterThan(0));
+    expect(middleStep, greaterThan(earlyInset * 2));
+
+    await tester.pumpAndSettle();
+    expect(find.text('cover'), findsOneWidget);
+  });
+
   testWidgets('无动画上下文时退化为平滑淡入路由', (tester) async {
     final navKey = GlobalKey<NavigatorState>();
     await tester.pumpWidget(MaterialApp(

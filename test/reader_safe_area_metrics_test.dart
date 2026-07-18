@@ -52,5 +52,17 @@ void main() {
       expect(metrics.pageNumberBottom, 8);
       expect(metrics.contentBottom, 24);
     });
+
+    test('reserves a compact row for reader-owned top information', () {
+      const metrics = ReaderSafeAreaMetrics(
+        viewPadding: EdgeInsets.only(top: 24, bottom: 24),
+        topMargin: 4,
+        bottomMargin: 0,
+        topChromeReserve: ReaderSafeAreaMetrics.readerTopBarReserve,
+      );
+
+      expect(metrics.readerTopBarTop, 28);
+      expect(metrics.contentTop, 52);
+    });
   });
 }

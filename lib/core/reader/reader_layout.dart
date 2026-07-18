@@ -8,11 +8,6 @@ enum ReaderPageMode {
   pageCurl,
 }
 
-enum ReaderPageTurnStyle {
-  cylinder,
-  classicFold,
-}
-
 ReaderPageMode readerPageModeFromName(
   String? name, {
   required ReaderPageMode fallback,
@@ -20,16 +15,6 @@ ReaderPageMode readerPageModeFromName(
   if (name == 'horizontalPage') return ReaderPageMode.instantPage;
   return ReaderPageMode.values.firstWhere(
     (mode) => mode.name == name,
-    orElse: () => fallback,
-  );
-}
-
-ReaderPageTurnStyle readerPageTurnStyleFromName(
-  String? name, {
-  ReaderPageTurnStyle fallback = ReaderPageTurnStyle.cylinder,
-}) {
-  return ReaderPageTurnStyle.values.firstWhere(
-    (style) => style.name == name,
     orElse: () => fallback,
   );
 }

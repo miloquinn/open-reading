@@ -2591,36 +2591,6 @@ abstract class AppLocalizations {
   /// **'Drag sideways to curl the page, then release to turn or rebound'**
   String get readerModePageCurlHint;
 
-  /// No description provided for @readerPageTurnStyleTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Page-turn Animation'**
-  String get readerPageTurnStyleTitle;
-
-  /// No description provided for @readerPageTurnStyleCylinder.
-  ///
-  /// In en, this message translates to:
-  /// **'Cylinder Curl'**
-  String get readerPageTurnStyleCylinder;
-
-  /// No description provided for @readerPageTurnStyleCylinderHint.
-  ///
-  /// In en, this message translates to:
-  /// **'A soft rolling sheet with continuous curvature'**
-  String get readerPageTurnStyleCylinderHint;
-
-  /// No description provided for @readerPageTurnStyleClassicFold.
-  ///
-  /// In en, this message translates to:
-  /// **'Classic Fold'**
-  String get readerPageTurnStyleClassicFold;
-
-  /// No description provided for @readerPageTurnStyleClassicFoldHint.
-  ///
-  /// In en, this message translates to:
-  /// **'A crisp diagonal fold with reflected paper and a real spring'**
-  String get readerPageTurnStyleClassicFoldHint;
-
   /// Slider label showing the current reader font size
   ///
   /// In en, this message translates to:
@@ -2819,6 +2789,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Using reader battery/time UI'**
   String get settingsShowStatusBarOffSubtitle;
+
+  /// Title for selecting the reader top information style
+  ///
+  /// In en, this message translates to:
+  /// **'Top information'**
+  String get readerTopBarStyleTitle;
+
+  /// No description provided for @readerTopBarStyleSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System status bar'**
+  String get readerTopBarStyleSystem;
+
+  /// No description provided for @readerTopBarStyleSystemHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Show the system time, signal, and battery'**
+  String get readerTopBarStyleSystemHint;
+
+  /// No description provided for @readerTopBarStyleReader.
+  ///
+  /// In en, this message translates to:
+  /// **'Reader information bar'**
+  String get readerTopBarStyleReader;
+
+  /// No description provided for @readerTopBarStyleReaderHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Show time, chapter title, and battery'**
+  String get readerTopBarStyleReaderHint;
+
+  /// No description provided for @readerTopBarStyleHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Fully immersive'**
+  String get readerTopBarStyleHidden;
+
+  /// No description provided for @readerTopBarStyleHiddenHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Show no information at the top'**
+  String get readerTopBarStyleHiddenHint;
 
   /// Section title for AI assistant settings
   ///
@@ -3191,6 +3203,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Restored center-tap reader controls during continuous online scrolling'**
   String get changelog122ContinuousTap;
+
+  /// No description provided for @changelog200ReaderExperience.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgraded top information, page numbering, and simulated page turns'**
+  String get changelog200ReaderExperience;
+
+  /// No description provided for @changelog200CustomThemes.
+  ///
+  /// In en, this message translates to:
+  /// **'Added multiple custom reading themes, image backgrounds, and drag sorting'**
+  String get changelog200CustomThemes;
+
+  /// No description provided for @changelog200Navigation.
+  ///
+  /// In en, this message translates to:
+  /// **'Improved EPUB pagination and collapsible nested contents'**
+  String get changelog200Navigation;
+
+  /// No description provided for @changelog200KeepScreenOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Enabled real keep-screen-on behavior while reading on Android'**
+  String get changelog200KeepScreenOn;
 
   /// No description provided for @changelog110CustomFonts.
   ///
@@ -4331,6 +4367,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hex color'**
   String get readerCustomThemeHexLabel;
+
+  /// No description provided for @readerCustomThemesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom reading themes'**
+  String get readerCustomThemesTitle;
+
+  /// No description provided for @readerCustomThemeAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add theme'**
+  String get readerCustomThemeAdd;
+
+  /// No description provided for @readerCustomThemeReorderHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold the handle on the right to reorder themes. The same order appears in reading settings.'**
+  String get readerCustomThemeReorderHint;
+
+  /// No description provided for @readerCustomThemeUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Use selected theme'**
+  String get readerCustomThemeUse;
+
+  /// No description provided for @readerCustomThemeDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete reading theme?'**
+  String get readerCustomThemeDeleteTitle;
+
+  /// No description provided for @readerCustomThemeDeleteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'“{name}” will be removed from your themes, along with its saved background image.'**
+  String readerCustomThemeDeleteMessage(String name);
+
+  /// No description provided for @readerCustomThemeEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No custom themes yet'**
+  String get readerCustomThemeEmptyTitle;
+
+  /// No description provided for @readerCustomThemeEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your own combination of type, paper color, and background image.'**
+  String get readerCustomThemeEmptyHint;
+
+  /// No description provided for @readerCustomThemeNewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New reading theme'**
+  String get readerCustomThemeNewTitle;
+
+  /// No description provided for @readerCustomThemeEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit reading theme'**
+  String get readerCustomThemeEditTitle;
+
+  /// No description provided for @readerCustomThemeName.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme name'**
+  String get readerCustomThemeName;
+
+  /// No description provided for @readerCustomThemeNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For example, Rainy night or Afternoon paper'**
+  String get readerCustomThemeNameHint;
+
+  /// No description provided for @readerCustomThemeBackgroundImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Background image'**
+  String get readerCustomThemeBackgroundImage;
+
+  /// No description provided for @readerCustomThemeBackgroundImageHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Supports JPG, PNG, and WebP. The image is copied into app storage.'**
+  String get readerCustomThemeBackgroundImageHint;
+
+  /// No description provided for @readerCustomThemeChooseImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload image'**
+  String get readerCustomThemeChooseImage;
+
+  /// No description provided for @readerCustomThemeReplaceImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace image'**
+  String get readerCustomThemeReplaceImage;
+
+  /// No description provided for @readerCustomThemeRemoveImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove image'**
+  String get readerCustomThemeRemoveImage;
+
+  /// No description provided for @readerCustomThemeImageStrength.
+  ///
+  /// In en, this message translates to:
+  /// **'Background image strength'**
+  String get readerCustomThemeImageStrength;
+
+  /// No description provided for @readerCustomThemeImageUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Background image import is not supported on this platform'**
+  String get readerCustomThemeImageUnsupported;
+
+  /// No description provided for @readerCustomThemeImageTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'The image must be no larger than 20 MB'**
+  String get readerCustomThemeImageTooLarge;
+
+  /// No description provided for @readerCustomThemeImageFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a JPG, PNG, or WebP image'**
+  String get readerCustomThemeImageFormat;
+
+  /// No description provided for @readerCustomThemeImageFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not import the background image. Try again.'**
+  String get readerCustomThemeImageFailed;
 
   /// No description provided for @importSourceTitle.
   ///

@@ -7,6 +7,7 @@ import android.view.View
 import android.view.WindowInsets
 import android.view.WindowInsetsController
 import android.view.KeyEvent
+import android.view.WindowManager
 import androidx.core.view.WindowCompat
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -58,6 +59,11 @@ class MainActivity : FlutterActivity() {
                 }
                 "enableHighRefreshRate" -> {
                     enableHighRefreshRate()
+                    result.success(null)
+                }
+                "setKeepScreenOn" -> {
+                    val enabled = call.argument<Boolean>("enabled") ?: false
+                    setKeepScreenOn(enabled)
                     result.success(null)
                 }
                 else -> {
@@ -222,6 +228,14 @@ class MainActivity : FlutterActivity() {
             }
         } catch (e: Exception) {
             Log.w("xxread", "enableHighRefreshRate failed: ${e.message}")
+        }
+    }
+
+    private fun setKeepScreenOn(enabled: Boolean) {
+        if (enabled) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        } else {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
     }
 

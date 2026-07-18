@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 
-import '../core/reader/reader_leaf_status.dart';
 import '../core/reader/reader_safe_area.dart';
 import '../utils/reader_themes.dart';
+import 'reader_theme_background.dart';
+
+enum ReaderPageNumberPlacement {
+  bottomLeft,
+  bottomRight,
+}
 
 @immutable
 class ReaderPageSnapshotKey {
@@ -59,8 +64,8 @@ class ReaderPaperPageMetadata {
 
 /// A complete sheet of reader paper: body and quiet editorial footer.
 ///
-/// The footer is deliberately inside the leaf so PageView, cylinder curl and
-/// classic fold all move the same pixels. Floating reader controls remain a
+/// The footer is deliberately inside the leaf so PageView and classic fold
+/// move the same pixels. Floating reader controls remain a
 /// separate HUD.
 class ReaderPaperPageLeaf extends StatelessWidget {
   const ReaderPaperPageLeaf({
@@ -68,18 +73,16 @@ class ReaderPaperPageLeaf extends StatelessWidget {
     required this.palette,
     required this.safeArea,
     required this.metadata,
-    required this.status,
     required this.child,
-    this.showDeviceStatus = true,
+    this.pageNumberPlacement = ReaderPageNumberPlacement.bottomRight,
     this.horizontalPadding = 14,
   });
 
   final ReaderThemePalette palette;
   final ReaderSafeAreaMetrics safeArea;
   final ReaderPaperPageMetadata metadata;
-  final ReaderLeafStatusData status;
   final Widget child;
-  final bool showDeviceStatus;
+  final ReaderPageNumberPlacement pageNumberPlacement;
   final double horizontalPadding;
 
   @override
@@ -104,8 +107,8 @@ class ReaderPaperPageLeaf extends StatelessWidget {
     return Semantics(
       label: semanticsLabel,
       container: true,
-      child: ColoredBox(
-        color: palette.background,
+      child: ReaderThemeBackground(
+        palette: palette,
         child: Stack(
           fit: StackFit.expand,
           children: [
@@ -115,45 +118,22 @@ class ReaderPaperPageLeaf extends StatelessWidget {
               right: horizontalPadding,
               bottom: safeArea.pageNumberBottom,
               height: ReaderSafeAreaMetrics.pageNumberReserve,
-              child: DefaultTextStyle(
-                style: footerStyle,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                child: Stack(
+              child: Align(
+                key: ValueKey(
+                  'reader-leaf-footer:${metadata.pageIdentity}',
+                ),
+                alignment:
+                    pageNumberPlacement == ReaderPageNumberPlacement.bottomLeft
+                        ? Alignment.centerLeft
+                        : Alignment.centerRight,
+                child: Text(
+                  metadata.pageLabel,
                   key: ValueKey(
-                    'reader-leaf-footer:${metadata.pageIdentity}',
+                    'reader-leaf-page:${metadata.pageIdentity}',
                   ),
-                  fit: StackFit.expand,
-                  children: [
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: FractionallySizedBox(
-                        widthFactor: 0.38,
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          metadata.chapterTitle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ),
-                    Center(
-                      child: Text(
-                        metadata.pageLabel,
-                        key: ValueKey(
-                          'reader-leaf-page:${metadata.pageIdentity}',
-                        ),
-                      ),
-                    ),
-                    if (showDeviceStatus)
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: _ReaderLeafDeviceStatus(
-                          status: status,
-                          style: footerStyle,
-                        ),
-                      ),
-                  ],
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: footerStyle,
                 ),
               ),
             ),
@@ -162,50 +142,4 @@ class ReaderPaperPageLeaf extends StatelessWidget {
       ),
     );
   }
-}
-
-class _ReaderLeafDeviceStatus extends StatelessWidget {
-  const _ReaderLeafDeviceStatus({
-    required this.status,
-    required this.style,
-  });
-
-  final ReaderLeafStatusData status;
-  final TextStyle style;
-
-  @override
-  Widget build(BuildContext context) {
-    final time = MaterialLocalizations.of(context).formatTimeOfDay(
-      TimeOfDay.fromDateTime(status.time),
-      alwaysUse24HourFormat: MediaQuery.alwaysUse24HourFormatOf(context),
-    );
-    final battery = status.battery;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(time, style: style),
-        if (battery != null) ...[
-          const SizedBox(width: 6),
-          Icon(
-            battery.charging
-                ? Icons.battery_charging_full_rounded
-                : _batteryIcon(battery.level),
-            size: 11,
-            color: style.color,
-          ),
-          const SizedBox(width: 1),
-          Text('${battery.level}%', style: style),
-        ],
-      ],
-    );
-  }
-}
-
-IconData _batteryIcon(int level) {
-  if (level <= 15) return Icons.battery_1_bar_rounded;
-  if (level <= 35) return Icons.battery_2_bar_rounded;
-  if (level <= 55) return Icons.battery_3_bar_rounded;
-  if (level <= 75) return Icons.battery_5_bar_rounded;
-  if (level <= 90) return Icons.battery_6_bar_rounded;
-  return Icons.battery_full_rounded;
 }

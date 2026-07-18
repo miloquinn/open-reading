@@ -17,6 +17,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('版本更新记录'), findsOneWidget);
+    expect(find.text('v2.0.0'), findsOneWidget);
+    expect(find.text('升级顶部信息、纸页页码与仿真翻页体验'), findsOneWidget);
+    expect(find.text('支持多套自定义阅读主题、图片背景与拖拽排序'), findsOneWidget);
+    expect(find.text('优化 EPUB 分页与可折叠多级目录'), findsOneWidget);
+    expect(find.text('Android 阅读时保持屏幕常亮正式生效'), findsOneWidget);
     expect(find.text('v1.2.4'), findsOneWidget);
     expect(find.text('新增纸页化页脚、经典折页动画与阅读排版设置'), findsOneWidget);
     expect(find.text('v1.2.2'), findsOneWidget);
@@ -25,6 +30,13 @@ void main() {
     expect(find.text('v1.2.1'), findsOneWidget);
     expect(find.text('在线书源补齐按章节滚动与整书连续滚动'), findsOneWidget);
     expect(find.text('修复中文正文左右留白不对称并统一分页绘制'), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.text('v1.2.0'),
+      300,
+      scrollable: find.byType(Scrollable),
+    );
+
     expect(find.text('v1.2.0'), findsOneWidget);
     expect(find.text('优化阅读排版，支持零边距与同页更多文字'), findsOneWidget);
     expect(find.text('接入音量键翻页'), findsOneWidget);

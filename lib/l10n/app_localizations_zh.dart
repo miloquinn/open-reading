@@ -1338,21 +1338,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get readerModePageCurlHint => '左右拖动卷起页面，松手后完成翻页或回弹';
 
   @override
-  String get readerPageTurnStyleTitle => '仿真样式';
-
-  @override
-  String get readerPageTurnStyleCylinder => '圆柱卷页';
-
-  @override
-  String get readerPageTurnStyleCylinderHint => '连续曲面的柔和卷页效果';
-
-  @override
-  String get readerPageTurnStyleClassicFold => '经典折页';
-
-  @override
-  String get readerPageTurnStyleClassicFoldHint => '对角折线、纸背反射与真实弹簧回弹';
-
-  @override
   String readerFontSizeValue(int size) {
     return '字体大小  $size';
   }
@@ -1474,6 +1459,27 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsShowStatusBarOffSubtitle => '使用阅读页电量/时间 UI';
+
+  @override
+  String get readerTopBarStyleTitle => '顶部信息';
+
+  @override
+  String get readerTopBarStyleSystem => '系统状态栏';
+
+  @override
+  String get readerTopBarStyleSystemHint => '显示系统时间、信号与电量';
+
+  @override
+  String get readerTopBarStyleReader => '阅读信息栏';
+
+  @override
+  String get readerTopBarStyleReaderHint => '显示时间、章节标题与电量';
+
+  @override
+  String get readerTopBarStyleHidden => '完全沉浸';
+
+  @override
+  String get readerTopBarStyleHiddenHint => '顶部不显示任何信息';
 
   @override
   String get settingsAiAssistantTitle => 'AI 阅读助手';
@@ -1665,6 +1671,18 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get changelog122ContinuousTap => '修复在线连续滚动无法中间点击呼出控制栏';
+
+  @override
+  String get changelog200ReaderExperience => '升级顶部信息、纸页页码与仿真翻页体验';
+
+  @override
+  String get changelog200CustomThemes => '支持多套自定义阅读主题、图片背景与拖拽排序';
+
+  @override
+  String get changelog200Navigation => '优化 EPUB 分页与可折叠多级目录';
+
+  @override
+  String get changelog200KeepScreenOn => 'Android 阅读时保持屏幕常亮正式生效';
 
   @override
   String get changelog110CustomFonts => '新增自定义字体';
@@ -2290,6 +2308,75 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get readerCustomThemeHexLabel => '十六进制颜色';
+
+  @override
+  String get readerCustomThemesTitle => '自定义阅读主题';
+
+  @override
+  String get readerCustomThemeAdd => '添加主题';
+
+  @override
+  String get readerCustomThemeReorderHint => '长按右侧拖动柄调整顺序，排序会同步到阅读设置的主题列表。';
+
+  @override
+  String get readerCustomThemeUse => '使用选中的主题';
+
+  @override
+  String get readerCustomThemeDeleteTitle => '删除阅读主题？';
+
+  @override
+  String readerCustomThemeDeleteMessage(String name) {
+    return '“$name”将从主题列表中删除，已保存的背景图片也会一并清理。';
+  }
+
+  @override
+  String get readerCustomThemeEmptyTitle => '还没有自定义主题';
+
+  @override
+  String get readerCustomThemeEmptyHint => '添加一套属于自己的文字、纸张与背景图片组合。';
+
+  @override
+  String get readerCustomThemeNewTitle => '新建阅读主题';
+
+  @override
+  String get readerCustomThemeEditTitle => '编辑阅读主题';
+
+  @override
+  String get readerCustomThemeName => '主题名称';
+
+  @override
+  String get readerCustomThemeNameHint => '例如：雨夜、午后纸张';
+
+  @override
+  String get readerCustomThemeBackgroundImage => '背景图片';
+
+  @override
+  String get readerCustomThemeBackgroundImageHint =>
+      '支持 JPG、PNG、WebP，图片会复制到应用存储中。';
+
+  @override
+  String get readerCustomThemeChooseImage => '上传图片';
+
+  @override
+  String get readerCustomThemeReplaceImage => '更换图片';
+
+  @override
+  String get readerCustomThemeRemoveImage => '移除图片';
+
+  @override
+  String get readerCustomThemeImageStrength => '背景图片强度';
+
+  @override
+  String get readerCustomThemeImageUnsupported => '当前平台暂不支持导入背景图片';
+
+  @override
+  String get readerCustomThemeImageTooLarge => '图片不能超过 20 MB';
+
+  @override
+  String get readerCustomThemeImageFormat => '请选择 JPG、PNG 或 WebP 图片';
+
+  @override
+  String get readerCustomThemeImageFailed => '背景图片导入失败，请重试';
 
   @override
   String get importSourceTitle => '添加书籍';
@@ -3733,21 +3820,6 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get readerModePageCurlHint => '左右拖動捲起頁面，放開後完成翻頁或回彈';
 
   @override
-  String get readerPageTurnStyleTitle => '仿真樣式';
-
-  @override
-  String get readerPageTurnStyleCylinder => '圓柱捲頁';
-
-  @override
-  String get readerPageTurnStyleCylinderHint => '連續曲面的柔和捲頁效果';
-
-  @override
-  String get readerPageTurnStyleClassicFold => '經典摺頁';
-
-  @override
-  String get readerPageTurnStyleClassicFoldHint => '對角摺線、紙背反射與真實彈簧回彈';
-
-  @override
   String readerFontSizeValue(int size) {
     return '字體大小  $size';
   }
@@ -3869,6 +3941,27 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get settingsShowStatusBarOffSubtitle => '使用閱讀頁電量/時間 UI';
+
+  @override
+  String get readerTopBarStyleTitle => '頂部資訊';
+
+  @override
+  String get readerTopBarStyleSystem => '系統狀態列';
+
+  @override
+  String get readerTopBarStyleSystemHint => '顯示系統時間、訊號與電量';
+
+  @override
+  String get readerTopBarStyleReader => '閱讀資訊列';
+
+  @override
+  String get readerTopBarStyleReaderHint => '顯示時間、章節標題與電量';
+
+  @override
+  String get readerTopBarStyleHidden => '完全沉浸';
+
+  @override
+  String get readerTopBarStyleHiddenHint => '頂部不顯示任何資訊';
 
   @override
   String get settingsAiAssistantTitle => 'AI 閱讀助手';
@@ -4060,6 +4153,18 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get changelog122ContinuousTap => '修正線上連續捲動無法點擊中央叫出控制列';
+
+  @override
+  String get changelog200ReaderExperience => '升級頂部資訊、紙頁頁碼與擬真翻頁體驗';
+
+  @override
+  String get changelog200CustomThemes => '支援多套自訂閱讀主題、圖片背景與拖曳排序';
+
+  @override
+  String get changelog200Navigation => '最佳化 EPUB 分頁與可摺疊多層目錄';
+
+  @override
+  String get changelog200KeepScreenOn => 'Android 閱讀時保持螢幕常亮正式生效';
 
   @override
   String get changelog110CustomFonts => '新增自訂字型';
@@ -4685,6 +4790,75 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get readerCustomThemeHexLabel => '十六進位顏色';
+
+  @override
+  String get readerCustomThemesTitle => '自訂閱讀主題';
+
+  @override
+  String get readerCustomThemeAdd => '新增主題';
+
+  @override
+  String get readerCustomThemeReorderHint => '長按右側拖曳柄調整順序，排序會同步到閱讀設定的主題列表。';
+
+  @override
+  String get readerCustomThemeUse => '使用選取的主題';
+
+  @override
+  String get readerCustomThemeDeleteTitle => '刪除閱讀主題？';
+
+  @override
+  String readerCustomThemeDeleteMessage(String name) {
+    return '「$name」將從主題列表中刪除，已儲存的背景圖片也會一併清理。';
+  }
+
+  @override
+  String get readerCustomThemeEmptyTitle => '還沒有自訂主題';
+
+  @override
+  String get readerCustomThemeEmptyHint => '新增一套屬於自己的文字、紙張與背景圖片組合。';
+
+  @override
+  String get readerCustomThemeNewTitle => '新增閱讀主題';
+
+  @override
+  String get readerCustomThemeEditTitle => '編輯閱讀主題';
+
+  @override
+  String get readerCustomThemeName => '主題名稱';
+
+  @override
+  String get readerCustomThemeNameHint => '例如：雨夜、午後紙張';
+
+  @override
+  String get readerCustomThemeBackgroundImage => '背景圖片';
+
+  @override
+  String get readerCustomThemeBackgroundImageHint =>
+      '支援 JPG、PNG、WebP，圖片會複製到應用程式儲存空間。';
+
+  @override
+  String get readerCustomThemeChooseImage => '上傳圖片';
+
+  @override
+  String get readerCustomThemeReplaceImage => '更換圖片';
+
+  @override
+  String get readerCustomThemeRemoveImage => '移除圖片';
+
+  @override
+  String get readerCustomThemeImageStrength => '背景圖片強度';
+
+  @override
+  String get readerCustomThemeImageUnsupported => '目前平台暫不支援匯入背景圖片';
+
+  @override
+  String get readerCustomThemeImageTooLarge => '圖片不能超過 20 MB';
+
+  @override
+  String get readerCustomThemeImageFormat => '請選擇 JPG、PNG 或 WebP 圖片';
+
+  @override
+  String get readerCustomThemeImageFailed => '背景圖片匯入失敗，請再試一次';
 
   @override
   String get importSourceTitle => '加入書籍';

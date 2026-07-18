@@ -18,6 +18,8 @@ class ReaderThemePalette {
     required this.onAccent,
     required this.border,
     required this.shadow,
+    this.backgroundImagePath,
+    this.backgroundImageOpacity = 0,
   });
 
   final String id;
@@ -32,11 +34,18 @@ class ReaderThemePalette {
   final Color onAccent;
   final Color border;
   final Color shadow;
+  final String? backgroundImagePath;
+  final double backgroundImageOpacity;
+
+  bool get hasBackgroundImage =>
+      backgroundImagePath != null && backgroundImagePath!.isNotEmpty;
 
   String get cacheKey => '$id:'
       '${background.toARGB32()}:'
       '${text.toARGB32()}:'
-      '${controlBar.toARGB32()}';
+      '${controlBar.toARGB32()}:'
+      '${backgroundImagePath ?? ''}:'
+      '${backgroundImageOpacity.toStringAsFixed(3)}';
 
   ThemeData toThemeData({TextTheme? typography}) {
     final baseScheme = ColorScheme.fromSeed(
@@ -129,15 +138,26 @@ class ReaderThemePalette {
 class ReaderThemes {
   ReaderThemes._();
 
-  static ReaderCustomTheme? _customTheme;
+  static List<ReaderCustomTheme> _customThemes = const [];
 
-  static ReaderCustomTheme? get customTheme => _customTheme;
+  static List<ReaderCustomTheme> get customThemes =>
+      List<ReaderCustomTheme>.unmodifiable(_customThemes);
+
+  static ReaderCustomTheme? get customTheme =>
+      _customThemes.isEmpty ? null : _customThemes.first;
 
   static ReaderThemePalette? get custom =>
-      _customTheme == null ? null : fromCustomTheme(_customTheme!);
+      customTheme == null ? null : fromCustomTheme(customTheme!);
+
+  static List<ReaderThemePalette> get customPalettes =>
+      _customThemes.map(fromCustomTheme).toList(growable: false);
+
+  static void setCustomThemes(List<ReaderCustomTheme> themes) {
+    _customThemes = List<ReaderCustomTheme>.unmodifiable(themes);
+  }
 
   static void setCustomTheme(ReaderCustomTheme? theme) {
-    _customTheme = theme;
+    _customThemes = theme == null ? const [] : [theme];
   }
 
   static const day = ReaderThemePalette(
@@ -272,7 +292,12 @@ class ReaderThemes {
   ];
 
   static ReaderThemePalette byId(String? id) {
-    if (id == ReaderCustomTheme.themeId && custom != null) return custom!;
+    for (final theme in _customThemes) {
+      if (theme.id == id) return fromCustomTheme(theme);
+    }
+    if (id == ReaderCustomTheme.legacyThemeId && _customThemes.isNotEmpty) {
+      return fromCustomTheme(_customThemes.first);
+    }
     return all.firstWhere(
       (theme) => theme.id == id,
       orElse: () => day,
@@ -303,7 +328,7 @@ class ReaderThemes {
       background,
     );
     return ReaderThemePalette(
-      id: ReaderCustomTheme.themeId,
+      id: custom.id,
       brightness: brightness,
       background: background,
       text: text,
@@ -315,6 +340,15 @@ class ReaderThemes {
       onAccent: background,
       border: border,
       shadow: const Color(0xFF000000),
+      backgroundImagePath: custom.backgroundImagePath,
+      backgroundImageOpacity: custom.backgroundImageOpacity.clamp(0.0, 0.75),
     );
+  }
+
+  static ReaderCustomTheme? customThemeById(String? id) {
+    for (final theme in _customThemes) {
+      if (theme.id == id) return theme;
+    }
+    return null;
   }
 }

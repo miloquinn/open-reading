@@ -29,22 +29,37 @@ void main() {
 
   test('shows only the Android reader status bar when enabled', () async {
     SharedPreferences.setMockInitialValues({
-      ReaderSystemUiController.preferenceKey: true,
+      ReaderSystemUiController.preferenceKey: ReaderTopBarStyle.system.name,
     });
 
-    final enabled = await ReaderSystemUiController.applySavedPreference();
+    final style = await ReaderSystemUiController.applySavedPreference();
 
-    expect(enabled, isTrue);
+    expect(style, ReaderTopBarStyle.system);
     expect(calls, hasLength(1));
     expect(calls.single.method, 'showReaderStatusBar');
   });
 
   test('keeps the Android reader immersive when disabled', () async {
-    final enabled = await ReaderSystemUiController.applySavedPreference();
+    final style = await ReaderSystemUiController.applySavedPreference();
 
-    expect(enabled, isFalse);
+    expect(style, ReaderTopBarStyle.reader);
     expect(calls, hasLength(1));
     expect(calls.single.method, 'hideSystemUI');
+  });
+
+  test('migrates the legacy boolean preference', () async {
+    SharedPreferences.setMockInitialValues({
+      ReaderSystemUiController.legacyPreferenceKey: true,
+    });
+
+    final style = await ReaderSystemUiController.loadPreference();
+    final prefs = await SharedPreferences.getInstance();
+
+    expect(style, ReaderTopBarStyle.system);
+    expect(
+      prefs.getString(ReaderSystemUiController.preferenceKey),
+      ReaderTopBarStyle.system.name,
+    );
   });
 
   test('restores all Android system bars after leaving the reader', () async {

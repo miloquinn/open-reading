@@ -1,13 +1,23 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../core/reader/reader_custom_theme.dart';
+import '../services/core/reader_theme_background_service.dart';
 import '../utils/localization_extension.dart';
 import '../utils/reader_themes.dart';
+import '../widgets/reader_settings_controls.dart';
+import '../widgets/reader_theme_background.dart';
 
 class ReaderCustomThemePage extends StatefulWidget {
-  const ReaderCustomThemePage({super.key, required this.initialTheme});
+  const ReaderCustomThemePage({
+    super.key,
+    required this.initialTheme,
+    this.isNewTheme = false,
+  });
 
   final ReaderCustomTheme initialTheme;
+  final bool isNewTheme;
 
   @override
   State<ReaderCustomThemePage> createState() => _ReaderCustomThemePageState();
@@ -15,6 +25,13 @@ class ReaderCustomThemePage extends StatefulWidget {
 
 class _ReaderCustomThemePageState extends State<ReaderCustomThemePage> {
   late ReaderCustomTheme _theme = widget.initialTheme;
+  late final TextEditingController _nameController = TextEditingController(
+    text: widget.initialTheme.name,
+  );
+  final ReaderThemeBackgroundService _backgroundService =
+      ReaderThemeBackgroundService();
+  final Set<String> _stagedBackgrounds = <String>{};
+  bool _committed = false;
 
   ReaderThemePalette get _palette {
     return ReaderThemes.fromCustomTheme(_theme);
@@ -39,6 +56,87 @@ class _ReaderCustomThemePageState extends State<ReaderCustomThemePage> {
     if (selected != null && mounted) setState(() => onChanged(selected));
   }
 
+  Future<void> _pickBackgroundImage() async {
+    if (!_backgroundService.isSupported) {
+      _showMessage(context.l10n.readerCustomThemeImageUnsupported);
+      return;
+    }
+    try {
+      final imagePath = await _backgroundService.pickAndStore();
+      if (imagePath == null || !mounted) return;
+      final previous = _theme.backgroundImagePath;
+      setState(() {
+        _stagedBackgrounds.add(imagePath);
+        _theme = _theme.copyWith(backgroundImagePath: imagePath);
+      });
+      if (previous != null && _stagedBackgrounds.remove(previous)) {
+        await _backgroundService.delete(previous);
+      }
+    } on ReaderThemeBackgroundException catch (error) {
+      if (!mounted) return;
+      _showMessage(switch (error.code) {
+        ReaderThemeBackgroundError.fileTooLarge =>
+          context.l10n.readerCustomThemeImageTooLarge,
+        ReaderThemeBackgroundError.unsupportedFormat =>
+          context.l10n.readerCustomThemeImageFormat,
+        _ => context.l10n.readerCustomThemeImageFailed,
+      });
+    } catch (_) {
+      if (mounted) _showMessage(context.l10n.readerCustomThemeImageFailed);
+    }
+  }
+
+  Future<void> _removeBackgroundImage() async {
+    final previous = _theme.backgroundImagePath;
+    setState(() => _theme = _theme.copyWith(backgroundImagePath: null));
+    if (previous != null && _stagedBackgrounds.remove(previous)) {
+      await _backgroundService.delete(previous);
+    }
+  }
+
+  void _resetTheme() {
+    final staged = [..._stagedBackgrounds];
+    _stagedBackgrounds.clear();
+    setState(() {
+      _theme = ReaderCustomTheme.defaults.copyWith(
+        id: _theme.id,
+        name: _nameController.text,
+      );
+    });
+    for (final imagePath in staged) {
+      unawaited(_backgroundService.delete(imagePath));
+    }
+  }
+
+  void _saveTheme() {
+    final normalizedName = _nameController.text.trim();
+    _committed = true;
+    Navigator.of(context).pop(
+      _theme.copyWith(
+        name: normalizedName.isEmpty
+            ? context.l10n.readerThemeCustom
+            : normalizedName,
+      ),
+    );
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    if (!_committed) {
+      for (final imagePath in _stagedBackgrounds) {
+        unawaited(_backgroundService.delete(imagePath));
+      }
+    }
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final palette = _palette;
@@ -51,11 +149,14 @@ class _ReaderCustomThemePageState extends State<ReaderCustomThemePage> {
       child: Scaffold(
         backgroundColor: palette.background,
         appBar: AppBar(
-          title: Text(context.l10n.readerCustomThemeTitle),
+          title: Text(
+            widget.isNewTheme
+                ? context.l10n.readerCustomThemeNewTitle
+                : context.l10n.readerCustomThemeEditTitle,
+          ),
           actions: [
             TextButton(
-              onPressed: () =>
-                  setState(() => _theme = ReaderCustomTheme.defaults),
+              onPressed: _resetTheme,
               child: Text(context.l10n.readerCustomThemeReset),
             ),
             const SizedBox(width: 6),
@@ -65,6 +166,22 @@ class _ReaderCustomThemePageState extends State<ReaderCustomThemePage> {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(18, 18, 18, 120),
             children: [
+              TextField(
+                key: const ValueKey('custom-theme-name'),
+                controller: _nameController,
+                maxLength: 24,
+                textInputAction: TextInputAction.done,
+                decoration: InputDecoration(
+                  labelText: context.l10n.readerCustomThemeName,
+                  hintText: context.l10n.readerCustomThemeNameHint,
+                  counterText: '',
+                  prefixIcon: const Icon(Icons.label_outline_rounded),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
               _ReaderThemePreview(palette: palette),
               const SizedBox(height: 24),
               Text(
@@ -87,6 +204,31 @@ class _ReaderCustomThemePageState extends State<ReaderCustomThemePage> {
                   onChanged: (color) => _theme = _theme.copyWith(text: color),
                 ),
               ),
+              const SizedBox(height: 10),
+              _BackgroundImageSetting(
+                palette: palette,
+                hasImage: _theme.hasBackgroundImage,
+                supported: _backgroundService.isSupported,
+                onChoose: _pickBackgroundImage,
+                onRemove: _removeBackgroundImage,
+              ),
+              if (_theme.hasBackgroundImage) ...[
+                const SizedBox(height: 8),
+                ReaderSettingSlider(
+                  label: context.l10n.readerCustomThemeImageStrength,
+                  value: _theme.backgroundImageOpacity,
+                  valueLabel:
+                      '${(_theme.backgroundImageOpacity * 100).round()}%',
+                  min: 0.1,
+                  max: 0.75,
+                  divisions: 13,
+                  onChanged: (value) => setState(
+                    () => _theme = _theme.copyWith(
+                      backgroundImageOpacity: value,
+                    ),
+                  ),
+                ),
+              ],
               const SizedBox(height: 10),
               _ColorSettingTile(
                 key: const ValueKey('custom-theme-background-color'),
@@ -170,7 +312,7 @@ class _ReaderCustomThemePageState extends State<ReaderCustomThemePage> {
           minimum: const EdgeInsets.fromLTRB(18, 10, 18, 14),
           child: FilledButton.icon(
             key: const ValueKey('save-custom-reader-theme'),
-            onPressed: () => Navigator.of(context).pop(_theme),
+            onPressed: _saveTheme,
             icon: const Icon(Icons.check_rounded),
             label: Text(context.l10n.readerCustomThemeSave),
             style: FilledButton.styleFrom(
@@ -193,11 +335,11 @@ class _ReaderThemePreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final radius = BorderRadius.circular(24);
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: palette.background,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: radius,
         border: Border.all(color: palette.border),
         boxShadow: [
           BoxShadow(
@@ -207,61 +349,162 @@ class _ReaderThemePreview extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
+      child: ReaderThemeBackground(
+        palette: palette,
+        child: Column(
+          children: [
+            Container(
+              height: 46,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              color: palette.controlBar.withValues(alpha: 0.94),
+              child: Row(
+                children: [
+                  Icon(Icons.arrow_back_rounded, size: 19, color: palette.text),
+                  const Spacer(),
+                  Text(
+                    context.l10n.readerCustomThemePreview,
+                    style: TextStyle(
+                      color: palette.text,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const Spacer(),
+                  Icon(Icons.more_horiz_rounded, size: 19, color: palette.text),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 26),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.l10n.readerCustomThemePreviewChapter,
+                    style: TextStyle(
+                      color: palette.text,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 15),
+                  Text(
+                    context.l10n.readerCustomThemePreviewBody,
+                    textAlign: TextAlign.justify,
+                    style: TextStyle(
+                      color: palette.text,
+                      fontSize: 16,
+                      height: 1.75,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Align(
+                    alignment: Alignment.center,
+                    child: Text(
+                      '12 / 36',
+                      style: TextStyle(
+                        color: palette.secondaryText,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _BackgroundImageSetting extends StatelessWidget {
+  const _BackgroundImageSetting({
+    required this.palette,
+    required this.hasImage,
+    required this.supported,
+    required this.onChoose,
+    required this.onRemove,
+  });
+
+  final ReaderThemePalette palette;
+  final bool hasImage;
+  final bool supported;
+  final VoidCallback onChoose;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: palette.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: palette.border.withValues(alpha: 0.75)),
+      ),
+      child: Row(
         children: [
-          Container(
-            height: 46,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            color: palette.controlBar,
-            child: Row(
-              children: [
-                Icon(Icons.arrow_back_rounded, size: 19, color: palette.text),
-                const Spacer(),
-                Text(
-                  context.l10n.readerCustomThemePreview,
-                  style: TextStyle(
-                    color: palette.text,
-                    fontWeight: FontWeight.w700,
+          SizedBox(
+            width: 58,
+            height: 58,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: palette.background,
+                borderRadius: BorderRadius.circular(15),
+                border: Border.all(color: palette.border),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(14),
+                child: ReaderThemeBackground(
+                  palette: palette,
+                  child: Icon(
+                    hasImage ? Icons.image_rounded : Icons.add_photo_alternate,
+                    color: palette.text.withValues(alpha: 0.78),
                   ),
                 ),
-                const Spacer(),
-                Icon(Icons.more_horiz_rounded, size: 19, color: palette.text),
-              ],
+              ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 24, 24, 26),
+          const SizedBox(width: 13),
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  context.l10n.readerCustomThemePreviewChapter,
-                  style: TextStyle(
-                    color: palette.text,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                  ),
+                  context.l10n.readerCustomThemeBackgroundImage,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
                 ),
-                const SizedBox(height: 15),
+                const SizedBox(height: 2),
                 Text(
-                  context.l10n.readerCustomThemePreviewBody,
-                  textAlign: TextAlign.justify,
-                  style: TextStyle(
-                    color: palette.text,
-                    fontSize: 16,
-                    height: 1.75,
-                  ),
+                  supported
+                      ? context.l10n.readerCustomThemeBackgroundImageHint
+                      : context.l10n.readerCustomThemeImageUnsupported,
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
-                const SizedBox(height: 18),
-                Align(
-                  alignment: Alignment.center,
-                  child: Text(
-                    '12 / 36',
-                    style: TextStyle(
-                      color: palette.secondaryText,
-                      fontSize: 11,
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: [
+                    FilledButton.tonalIcon(
+                      onPressed: supported ? onChoose : null,
+                      icon: Icon(hasImage
+                          ? Icons.swap_horiz_rounded
+                          : Icons.upload_rounded),
+                      label: Text(
+                        hasImage
+                            ? context.l10n.readerCustomThemeReplaceImage
+                            : context.l10n.readerCustomThemeChooseImage,
+                      ),
                     ),
-                  ),
+                    if (hasImage)
+                      TextButton.icon(
+                        onPressed: onRemove,
+                        icon: const Icon(Icons.delete_outline_rounded),
+                        label: Text(context.l10n.readerCustomThemeRemoveImage),
+                      ),
+                  ],
                 ),
               ],
             ),

@@ -10,6 +10,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../main.dart';
+import '../core/reader/reader_keep_screen_on.dart';
+import '../core/reader/reader_settings.dart';
+import '../core/reader/reader_system_ui.dart';
 import '../utils/app_themes.dart';
 import '../l10n/app_localizations.dart';
 import '../reader_core/ai/ai_service.dart';
@@ -18,12 +21,14 @@ import '../widgets/side_toast.dart';
 import '../widgets/app_brand_icon.dart';
 import '../widgets/contributors_view.dart';
 import '../widgets/update_check_gate.dart';
+import '../widgets/reader_settings_controls.dart';
 import 'home_shell_page.dart';
 import 'home_layout_constants.dart';
 import 'book_source_management_page.dart';
 import '../utils/localization_extension.dart';
 import '../utils/font_catalog_helper.dart';
 import '../utils/page_style_helper.dart';
+import '../utils/reader_themes.dart';
 import '../utils/system_ui_helper.dart';
 import '../utils/ui_style.dart';
 import 'changelog_page.dart';
@@ -141,7 +146,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   // 阅读设置
   bool _enableVolumeKeyTurn = true;
-  bool _showSystemStatusBarInReader = false;
+  ReaderTopBarStyle _readerTopBarStyle = ReaderTopBarStyle.reader;
 
   bool _enableAutoExtractCover = true;
 
@@ -196,6 +201,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
+    final readerTopBarStyle = await ReaderSystemUiController.loadPreference();
     final activeAiSettings = await _aiService.loadSettings();
     final aiSettingsByProvider = <AIProviderType, AIProviderSettings>{
       for (final provider in AIProviderType.values)
@@ -222,14 +228,14 @@ class _SettingsPageState extends State<SettingsPage> {
     }
     setState(() {
       _enableAutoSave = prefs.getBool('enableAutoSave') ?? true;
-      _keepScreenOn = prefs.getBool('keepScreenOn') ?? false;
+      _keepScreenOn =
+          prefs.getBool(ReaderKeepScreenOnController.preferenceKey) ?? false;
       _autoSaveInterval = prefs.getInt('autoSaveInterval') ?? 30;
 
       _enableAutoExtractCover = prefs.getBool('enableAutoExtractCover') ?? true;
 
       _enableVolumeKeyTurn = prefs.getBool('enableVolumeKeyTurn') ?? true;
-      _showSystemStatusBarInReader =
-          prefs.getBool('readerShowSystemStatusBar') ?? false;
+      _readerTopBarStyle = readerTopBarStyle;
       // 其他设置
       _enableFullscreen = prefs.getBool('enableFullscreen') ?? false;
 
@@ -366,16 +372,12 @@ class _SettingsPageState extends State<SettingsPage> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setBool('enableAnimations', true);
     await prefs.setBool('enableAutoSave', _enableAutoSave);
-    await prefs.setBool('keepScreenOn', _keepScreenOn);
     await prefs.setInt('autoSaveInterval', _autoSaveInterval);
 
     await prefs.setBool('enableAutoExtractCover', _enableAutoExtractCover);
 
     await prefs.setBool('enableVolumeKeyTurn', _enableVolumeKeyTurn);
-    await prefs.setBool(
-      'readerShowSystemStatusBar',
-      _showSystemStatusBarInReader,
-    );
+    await ReaderSystemUiController.savePreference(_readerTopBarStyle);
     // 其他设置
     await prefs.setBool('enableFullscreen', _enableFullscreen);
 
@@ -385,6 +387,49 @@ class _SettingsPageState extends State<SettingsPage> {
     await prefs.setBool('enablePerformanceMonitor', _enablePerformanceMonitor);
     await prefs.setBool('enableMemoryStats', _enableMemoryStats);
     await prefs.setBool('showFPS', _showFPS);
+  }
+
+  void _setKeepScreenOn(bool value) {
+    setState(() => _keepScreenOn = value);
+    unawaited(ReaderKeepScreenOnController.setPreference(value));
+  }
+
+  String _readerTopBarStyleTitle(ReaderTopBarStyle style) => switch (style) {
+        ReaderTopBarStyle.system => context.l10n.readerTopBarStyleSystem,
+        ReaderTopBarStyle.reader => context.l10n.readerTopBarStyleReader,
+        ReaderTopBarStyle.hidden => context.l10n.readerTopBarStyleHidden,
+      };
+
+  String _readerTopBarStyleHint(ReaderTopBarStyle style) => switch (style) {
+        ReaderTopBarStyle.system => context.l10n.readerTopBarStyleSystemHint,
+        ReaderTopBarStyle.reader => context.l10n.readerTopBarStyleReaderHint,
+        ReaderTopBarStyle.hidden => context.l10n.readerTopBarStyleHiddenHint,
+      };
+
+  Future<void> _showReaderTopBarStylePicker() async {
+    final prefs = await SharedPreferences.getInstance();
+    final palette = ReaderThemes.byId(
+      prefs.getString(ReaderSettingsStore.themeKey) ??
+          ReaderSettings.defaultThemeId,
+    );
+    if (!mounted) return;
+    final selected = await showModalBottomSheet<ReaderTopBarStyle>(
+      context: context,
+      backgroundColor: palette.surface,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (sheetContext) => ReaderTopBarStyleSheet(
+        palette: palette,
+        title: context.l10n.readerTopBarStyleTitle,
+        selectedStyle: _readerTopBarStyle,
+        titleFor: _readerTopBarStyleTitle,
+        hintFor: _readerTopBarStyleHint,
+        onSelected: (style) => Navigator.of(sheetContext).pop(style),
+      ),
+    );
+    if (selected == null || !mounted) return;
+    setState(() => _readerTopBarStyle = selected);
+    await ReaderSystemUiController.savePreference(selected);
   }
 
   void _applyAiDraft(AIProviderSettings settings) {
@@ -819,14 +864,10 @@ class _SettingsPageState extends State<SettingsPage> {
                     setState(() => _enableVolumeKeyTurn = value),
                 icon: Icons.volume_up,
               ),
-              _buildSwitchSetting(
-                title: l10n.settingsShowStatusBarTitle,
-                subtitle: _showSystemStatusBarInReader
-                    ? l10n.settingsShowStatusBarOnSubtitle
-                    : l10n.settingsShowStatusBarOffSubtitle,
-                value: _showSystemStatusBarInReader,
-                onChanged: (value) =>
-                    setState(() => _showSystemStatusBarInReader = value),
+              _buildActionSetting(
+                title: l10n.readerTopBarStyleTitle,
+                subtitle: _readerTopBarStyleTitle(_readerTopBarStyle),
+                onTap: _showReaderTopBarStylePicker,
                 icon: Icons.vertical_align_top_rounded,
               ),
             ],
@@ -869,7 +910,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 title: l10n.settingsKeepScreenOnTitle,
                 subtitle: l10n.settingsKeepScreenOnSubtitle,
                 value: _keepScreenOn,
-                onChanged: (value) => setState(() => _keepScreenOn = value),
+                onChanged: _setKeepScreenOn,
                 icon: Icons.stay_current_portrait,
               ),
               _buildSwitchSetting(

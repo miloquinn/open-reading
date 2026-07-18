@@ -6,6 +6,7 @@ uniform vec2 uFoldNormal;
 uniform float uShadowWidth;
 uniform float uBackInkOpacity;
 uniform float uReverse;
+uniform float uBindingOnRight;
 uniform float uBindingGuard;
 uniform vec4 uPaperColor;
 uniform sampler2D uCurrentPage;
@@ -21,16 +22,16 @@ void main() {
     vec2 point = FlutterFragCoord().xy;
     vec2 normal = normalize(uFoldNormal);
 
-    // The source sheet is glued to the left edge on a forward turn. During a
-    // backward turn the current target sheet owns the mirrored right edge.
-    // Keep that narrow physical seam unchanged even when a steep reflected
-    // fold would otherwise sample across it.
-    if (uReverse < 0.5 && point.x <= uBindingGuard) {
-        fragColor = texture(uCurrentPage, point / uSize);
-        return;
-    }
-    if (uReverse >= 0.5 && point.x >= uSize.x - uBindingGuard) {
-        fragColor = vec4(0.0);
+    // Direction decides whether the source or the target owns the seam;
+    // binding placement comes from the leaf itself, not from mirroring the
+    // turn. Returning transparent reveals the target already painted below.
+    bool inBindingGuard = uBindingOnRight < 0.5
+        ? point.x <= uBindingGuard
+        : point.x >= uSize.x - uBindingGuard;
+    if (inBindingGuard) {
+        fragColor = uReverse < 0.5
+            ? texture(uCurrentPage, point / uSize)
+            : vec4(0.0);
         return;
     }
 

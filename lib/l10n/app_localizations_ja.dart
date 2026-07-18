@@ -1342,21 +1342,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get readerModePageCurlHint => '左右にドラッグしてページをめくり、離すと完了または戻ります';
 
   @override
-  String get readerPageTurnStyleTitle => 'ページめくり表現';
-
-  @override
-  String get readerPageTurnStyleCylinder => '円筒カール';
-
-  @override
-  String get readerPageTurnStyleCylinderHint => '連続した曲面で紙を柔らかく巻き上げます';
-
-  @override
-  String get readerPageTurnStyleClassicFold => 'クラシック折り';
-
-  @override
-  String get readerPageTurnStyleClassicFoldHint => '斜めの折り線、紙裏の反射、実スプリングで動きます';
-
-  @override
   String readerFontSizeValue(int size) {
     return '文字サイズ  $size';
   }
@@ -1481,6 +1466,27 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get settingsShowStatusBarOffSubtitle => 'リーダーの電池／時刻表示を使用します';
+
+  @override
+  String get readerTopBarStyleTitle => '上部の情報表示';
+
+  @override
+  String get readerTopBarStyleSystem => 'システムステータスバー';
+
+  @override
+  String get readerTopBarStyleSystemHint => 'システムの時刻、通信状態、電池残量を表示します';
+
+  @override
+  String get readerTopBarStyleReader => 'リーダー情報バー';
+
+  @override
+  String get readerTopBarStyleReaderHint => '時刻、章タイトル、電池残量を表示します';
+
+  @override
+  String get readerTopBarStyleHidden => '完全没入';
+
+  @override
+  String get readerTopBarStyleHiddenHint => '上部には何も表示しません';
 
   @override
   String get settingsAiAssistantTitle => 'AI 読書アシスタント';
@@ -1675,6 +1681,18 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get changelog122ContinuousTap => 'オンライン連続スクロールで中央タップの操作バー表示を復元';
+
+  @override
+  String get changelog200ReaderExperience => '上部情報、ページ番号、紙面めくり体験を刷新';
+
+  @override
+  String get changelog200CustomThemes => '複数のカスタム読書テーマ、画像背景、ドラッグ並べ替えに対応';
+
+  @override
+  String get changelog200Navigation => 'EPUB のページ分割と折りたたみ可能な階層目次を改善';
+
+  @override
+  String get changelog200KeepScreenOn => 'Android で読書中の画面常時点灯を実際に有効化';
 
   @override
   String get changelog110CustomFonts => 'カスタムフォントを追加';
@@ -2303,6 +2321,77 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get readerCustomThemeHexLabel => '16進カラー';
+
+  @override
+  String get readerCustomThemesTitle => 'カスタム読書テーマ';
+
+  @override
+  String get readerCustomThemeAdd => 'テーマを追加';
+
+  @override
+  String get readerCustomThemeReorderHint =>
+      '右側のハンドルを長押しして並べ替えます。順序は読書設定にも反映されます。';
+
+  @override
+  String get readerCustomThemeUse => '選択したテーマを使用';
+
+  @override
+  String get readerCustomThemeDeleteTitle => '読書テーマを削除しますか？';
+
+  @override
+  String readerCustomThemeDeleteMessage(String name) {
+    return '「$name」をテーマ一覧から削除し、保存された背景画像も消去します。';
+  }
+
+  @override
+  String get readerCustomThemeEmptyTitle => 'カスタムテーマはまだありません';
+
+  @override
+  String get readerCustomThemeEmptyHint =>
+      '文字、紙面の色、背景画像を組み合わせて自分だけのテーマを作成しましょう。';
+
+  @override
+  String get readerCustomThemeNewTitle => '読書テーマを作成';
+
+  @override
+  String get readerCustomThemeEditTitle => '読書テーマを編集';
+
+  @override
+  String get readerCustomThemeName => 'テーマ名';
+
+  @override
+  String get readerCustomThemeNameHint => '例：雨の夜、午後の紙';
+
+  @override
+  String get readerCustomThemeBackgroundImage => '背景画像';
+
+  @override
+  String get readerCustomThemeBackgroundImageHint =>
+      'JPG、PNG、WebP に対応。画像はアプリの保存領域にコピーされます。';
+
+  @override
+  String get readerCustomThemeChooseImage => '画像をアップロード';
+
+  @override
+  String get readerCustomThemeReplaceImage => '画像を変更';
+
+  @override
+  String get readerCustomThemeRemoveImage => '画像を削除';
+
+  @override
+  String get readerCustomThemeImageStrength => '背景画像の濃さ';
+
+  @override
+  String get readerCustomThemeImageUnsupported => 'このプラットフォームでは背景画像を読み込めません';
+
+  @override
+  String get readerCustomThemeImageTooLarge => '画像は 20 MB 以下にしてください';
+
+  @override
+  String get readerCustomThemeImageFormat => 'JPG、PNG、WebP の画像を選択してください';
+
+  @override
+  String get readerCustomThemeImageFailed => '背景画像を読み込めませんでした。もう一度お試しください。';
 
   @override
   String get importSourceTitle => '本を追加';

@@ -201,6 +201,57 @@ void main() {
     }
   });
 
+  test('only the first page uses a reduced text height beside an image', () {
+    const style = TextStyle(fontSize: 24, height: 1.75);
+    final flow = NativeTextFlowStyle(
+      textDirection: TextDirection.ltr,
+      textScaler: TextScaler.noScaling,
+      locale: const Locale('zh', 'CN'),
+      strutStyle: readerStrutStyle(style),
+      textHeightBehavior: readerTextHeightBehavior,
+    );
+    final text = List.generate(
+      60,
+      (index) => '图片后的第$index段正文继续排版，只有图片所在页应使用较小的文字区域。',
+    ).join();
+    const width = 320.0;
+    const firstPageHeight = 260.0;
+    const pageHeight = 620.0;
+    TextSpan buildSpan(int start, int end) => TextSpan(
+          text: text.substring(start, end),
+          style: style,
+        );
+
+    final pages = NativeTextPaginator(
+      maxWidth: width,
+      maxHeight: pageHeight,
+      flowStyle: flow,
+    ).paginate(
+      text: text,
+      spanBuilder: buildSpan,
+      firstPageHeight: firstPageHeight,
+    );
+
+    expect(pages.length, greaterThan(2));
+    expect(
+        pages.map((page) => text.substring(page.start, page.end)).join(), text);
+    for (var index = 0; index < pages.length; index++) {
+      final page = pages[index];
+      final painter = flow.createPainter(buildSpan(page.start, page.end))
+        ..layout(maxWidth: width);
+      final limit = index == 0 ? firstPageHeight : pageHeight;
+      expect(painter.height, lessThanOrEqualTo(limit + 0.5));
+      if (index > 0 && index < pages.length - 1) {
+        expect(
+          painter.height,
+          greaterThan(pageHeight * 0.72),
+          reason: 'continuing page $index should use the full text height',
+        );
+      }
+      painter.dispose();
+    }
+  });
+
   testWidgets('measured page and RenderParagraph share identical constraints',
       (tester) async {
     const style = TextStyle(fontSize: 32, height: 1.75, letterSpacing: 0.2);

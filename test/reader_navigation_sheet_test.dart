@@ -22,6 +22,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('zh'),
+        theme: ThemeData.dark(),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
@@ -53,12 +54,20 @@ void main() {
       find.byKey(const ValueKey('reader-navigation-drag-handle')),
     );
     final handleDecoration = handle.decoration! as BoxDecoration;
+    final navigationTitle = tester.widget<Text>(find.text('阅读导航'));
 
     expect(themed, isTrue);
+    expect(navigationTitle.style?.color, ReaderThemes.green.text);
     expect(
       handleDecoration.color,
       ReaderThemes.green.secondaryText.withValues(alpha: 0.32),
     );
+
+    await tester.tap(find.text('书签'));
+    await tester.pumpAndSettle();
+    final emptyBookmarksTitle =
+        tester.widget<Text>(find.text('还没有书签'));
+    expect(emptyBookmarksTitle.style?.color, ReaderThemes.green.text);
   });
 
   testWidgets('navigation sheet catalog marks the current chapter',
@@ -120,10 +129,93 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(OpenReadingCurrentIcon), findsOneWidget);
-    expect(find.byType(Icon), findsNothing);
-    expect(find.byType(IconButton), findsNothing);
+    expect(find.byIcon(Icons.chevron_right_rounded), findsOneWidget);
+    expect(find.byType(IconButton), findsOneWidget);
+    expect(find.text('01'), findsNothing);
+    expect(find.text('04'), findsNothing);
     expect(find.text('第三章 雨夜重逢'), findsWidgets);
     expect(find.text('序章 远方的灯火'), findsWidgets);
+  });
+
+  testWidgets('navigation sheet collapses nested chapter branches',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(430, 760));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: ReaderNavigationSheet(
+            palette: ReaderThemes.day,
+            chapters: const [
+              ReaderNavigationChapter(title: '第一部', index: 0),
+              ReaderNavigationChapter(
+                title: '第一章',
+                index: 1,
+                depth: 1,
+              ),
+              ReaderNavigationChapter(
+                title: '深层小节',
+                index: 2,
+                depth: 2,
+              ),
+              ReaderNavigationChapter(
+                title: '同级章节',
+                index: 3,
+                depth: 1,
+              ),
+              ReaderNavigationChapter(title: '第二部', index: 4),
+            ],
+            currentChapterIndex: 2,
+            bookmarks: const [],
+            onChapterSelected: (_) {},
+            onBookmarkSelected: (_) {},
+            onBookmarkDeleted: (_) {},
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('深层小节'), findsOneWidget);
+    expect(find.text('同级章节'), findsOneWidget);
+    expect(find.text('01'), findsNothing);
+
+    await tester.tap(
+      find.byKey(const ValueKey('reader-navigation-toggle-0')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('第一部'), findsOneWidget);
+    expect(find.text('深层小节'), findsNothing);
+    expect(find.text('同级章节'), findsNothing);
+    expect(find.text('第二部'), findsOneWidget);
+
+    await tester.tap(
+      find.byKey(
+        const ValueKey('reader-navigation-current-chapter-button'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('深层小节'), findsOneWidget);
+    expect(find.text('同级章节'), findsOneWidget);
+
+    await tester.tap(
+      find.byKey(const ValueKey('reader-navigation-toggle-0')),
+    );
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), '深层');
+    await tester.pumpAndSettle();
+
+    expect(find.text('第一部'), findsOneWidget);
+    expect(find.text('第一章'), findsOneWidget);
+    expect(find.text('深层小节'), findsOneWidget);
+    expect(find.text('同级章节'), findsNothing);
+    expect(find.text('第二部'), findsNothing);
   });
 
   testWidgets('navigation sheet exposes catalog search and bookmarks',

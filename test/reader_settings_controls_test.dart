@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:xxread/core/reader/reader_layout.dart';
+import 'package:xxread/core/reader/reader_system_ui.dart';
 import 'package:xxread/utils/reader_themes.dart';
 import 'package:xxread/widgets/reader_settings_controls.dart';
 
@@ -20,8 +20,8 @@ void main() {
           themeDescription: 'Choose a theme',
           pageModeTitle: 'Page mode',
           pageModeSummary: 'Page curl',
-          pageTurnStyleTitle: 'Page turn style',
-          pageTurnStyleSummary: 'Cylinder',
+          topBarStyleTitle: 'Top information',
+          topBarStyleSummary: 'Reader information bar',
           pullBookmarkTitle: 'Pull bookmark',
           pullBookmarkHint: 'Pull down from the top',
           tapPageAnimationTitle: 'Tap animation',
@@ -47,7 +47,7 @@ void main() {
           onThemeChanged: (_) {},
           onCustomThemeTap: () {},
           onPageModeTap: () {},
-          onPageTurnStyleTap: () {},
+          onTopBarStyleTap: () {},
           onFontSizeChanged: (_) {},
           onLineHeightChanged: (_) {},
           onFirstLineIndentChanged: (value) => changedIndent = value,
@@ -113,26 +113,20 @@ void main() {
     expect(tapAnimation, isFalse);
   });
 
-  testWidgets('page turn style sheet offers and selects both renderers',
+  testWidgets('top bar style sheet offers all three shared reader styles',
       (tester) async {
-    var selectedStyle = ReaderPageTurnStyle.cylinder;
+    var selectedStyle = ReaderTopBarStyle.reader;
 
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
           body: StatefulBuilder(
-            builder: (context, setState) => ReaderPageTurnStyleSheet(
+            builder: (context, setState) => ReaderTopBarStyleSheet(
               palette: ReaderThemes.day,
-              title: 'Page turn style',
+              title: 'Top information',
               selectedStyle: selectedStyle,
-              titleFor: (style) => switch (style) {
-                ReaderPageTurnStyle.cylinder => 'Cylinder',
-                ReaderPageTurnStyle.classicFold => 'Classic fold',
-              },
-              hintFor: (style) => switch (style) {
-                ReaderPageTurnStyle.cylinder => 'Curved paper roll',
-                ReaderPageTurnStyle.classicFold => 'Angular paper fold',
-              },
+              titleFor: (style) => style.name,
+              hintFor: (style) => '${style.name} hint',
               onSelected: (style) {
                 setState(() => selectedStyle = style);
               },
@@ -142,33 +136,15 @@ void main() {
       ),
     );
 
-    expect(find.text('Cylinder'), findsOneWidget);
-    expect(find.text('Classic fold'), findsOneWidget);
-    expect(find.text('Curved paper roll'), findsOneWidget);
-    expect(find.text('Angular paper fold'), findsOneWidget);
-    expect(
-      tester
-          .widget<RadioGroup<ReaderPageTurnStyle>>(
-            find.byType(RadioGroup<ReaderPageTurnStyle>),
-          )
-          .groupValue,
-      ReaderPageTurnStyle.cylinder,
-    );
+    for (final style in ReaderTopBarStyle.values) {
+      expect(
+        find.byKey(ValueKey('reader-top-bar-style-${style.name}')),
+        findsOneWidget,
+      );
+    }
 
-    await tester.tap(find.text('Classic fold'));
+    await tester.tap(find.text('hidden'));
     await tester.pump();
-    expect(selectedStyle, ReaderPageTurnStyle.classicFold);
-    expect(
-      tester
-          .widget<RadioGroup<ReaderPageTurnStyle>>(
-            find.byType(RadioGroup<ReaderPageTurnStyle>),
-          )
-          .groupValue,
-      ReaderPageTurnStyle.classicFold,
-    );
-
-    await tester.tap(find.text('Cylinder'));
-    await tester.pump();
-    expect(selectedStyle, ReaderPageTurnStyle.cylinder);
+    expect(selectedStyle, ReaderTopBarStyle.hidden);
   });
 }

@@ -1388,23 +1388,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Drag sideways to curl the page, then release to turn or rebound';
 
   @override
-  String get readerPageTurnStyleTitle => 'Page-turn Animation';
-
-  @override
-  String get readerPageTurnStyleCylinder => 'Cylinder Curl';
-
-  @override
-  String get readerPageTurnStyleCylinderHint =>
-      'A soft rolling sheet with continuous curvature';
-
-  @override
-  String get readerPageTurnStyleClassicFold => 'Classic Fold';
-
-  @override
-  String get readerPageTurnStyleClassicFoldHint =>
-      'A crisp diagonal fold with reflected paper and a real spring';
-
-  @override
   String readerFontSizeValue(int size) {
     return 'Font size  $size';
   }
@@ -1532,6 +1515,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsShowStatusBarOffSubtitle => 'Using reader battery/time UI';
+
+  @override
+  String get readerTopBarStyleTitle => 'Top information';
+
+  @override
+  String get readerTopBarStyleSystem => 'System status bar';
+
+  @override
+  String get readerTopBarStyleSystemHint =>
+      'Show the system time, signal, and battery';
+
+  @override
+  String get readerTopBarStyleReader => 'Reader information bar';
+
+  @override
+  String get readerTopBarStyleReaderHint =>
+      'Show time, chapter title, and battery';
+
+  @override
+  String get readerTopBarStyleHidden => 'Fully immersive';
+
+  @override
+  String get readerTopBarStyleHiddenHint => 'Show no information at the top';
 
   @override
   String get settingsAiAssistantTitle => 'AI Reading Assistant';
@@ -1746,6 +1752,22 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get changelog122ContinuousTap =>
       'Restored center-tap reader controls during continuous online scrolling';
+
+  @override
+  String get changelog200ReaderExperience =>
+      'Upgraded top information, page numbering, and simulated page turns';
+
+  @override
+  String get changelog200CustomThemes =>
+      'Added multiple custom reading themes, image backgrounds, and drag sorting';
+
+  @override
+  String get changelog200Navigation =>
+      'Improved EPUB pagination and collapsible nested contents';
+
+  @override
+  String get changelog200KeepScreenOn =>
+      'Enabled real keep-screen-on behavior while reading on Android';
 
   @override
   String get changelog110CustomFonts => 'Added custom fonts';
@@ -2403,6 +2425,81 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get readerCustomThemeHexLabel => 'Hex color';
+
+  @override
+  String get readerCustomThemesTitle => 'Custom reading themes';
+
+  @override
+  String get readerCustomThemeAdd => 'Add theme';
+
+  @override
+  String get readerCustomThemeReorderHint =>
+      'Hold the handle on the right to reorder themes. The same order appears in reading settings.';
+
+  @override
+  String get readerCustomThemeUse => 'Use selected theme';
+
+  @override
+  String get readerCustomThemeDeleteTitle => 'Delete reading theme?';
+
+  @override
+  String readerCustomThemeDeleteMessage(String name) {
+    return '“$name” will be removed from your themes, along with its saved background image.';
+  }
+
+  @override
+  String get readerCustomThemeEmptyTitle => 'No custom themes yet';
+
+  @override
+  String get readerCustomThemeEmptyHint =>
+      'Create your own combination of type, paper color, and background image.';
+
+  @override
+  String get readerCustomThemeNewTitle => 'New reading theme';
+
+  @override
+  String get readerCustomThemeEditTitle => 'Edit reading theme';
+
+  @override
+  String get readerCustomThemeName => 'Theme name';
+
+  @override
+  String get readerCustomThemeNameHint =>
+      'For example, Rainy night or Afternoon paper';
+
+  @override
+  String get readerCustomThemeBackgroundImage => 'Background image';
+
+  @override
+  String get readerCustomThemeBackgroundImageHint =>
+      'Supports JPG, PNG, and WebP. The image is copied into app storage.';
+
+  @override
+  String get readerCustomThemeChooseImage => 'Upload image';
+
+  @override
+  String get readerCustomThemeReplaceImage => 'Replace image';
+
+  @override
+  String get readerCustomThemeRemoveImage => 'Remove image';
+
+  @override
+  String get readerCustomThemeImageStrength => 'Background image strength';
+
+  @override
+  String get readerCustomThemeImageUnsupported =>
+      'Background image import is not supported on this platform';
+
+  @override
+  String get readerCustomThemeImageTooLarge =>
+      'The image must be no larger than 20 MB';
+
+  @override
+  String get readerCustomThemeImageFormat => 'Choose a JPG, PNG, or WebP image';
+
+  @override
+  String get readerCustomThemeImageFailed =>
+      'Could not import the background image. Try again.';
 
   @override
   String get importSourceTitle => 'Add books';

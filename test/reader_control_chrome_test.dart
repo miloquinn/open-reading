@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:xxread/core/reader/reader_leaf_status.dart';
 import 'package:xxread/utils/glass_config.dart';
 import 'package:xxread/utils/reader_themes.dart';
 import 'package:xxread/widgets/reader_control_chrome.dart';
@@ -25,6 +26,62 @@ void main() {
     expect(
         _panelGradient(tester).colors.every((color) => color.a == 1), isTrue);
     expect(_iconBackground(tester).a, 1);
+  });
+
+  testWidgets('reader-owned top information shows time title and battery',
+      (tester) async {
+    final status = ReaderLeafStatusData(
+      time: DateTime(2026, 7, 18, 9, 5),
+      battery: const ReaderBatteryStatus(level: 73, charging: false),
+      revision: 1,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MediaQuery(
+          data: const MediaQueryData(alwaysUse24HourFormat: true),
+          child: Scaffold(
+            body: ReaderChromeOverlay(
+              palette: ReaderThemes.day,
+              visible: false,
+              title: 'Chapter 4',
+              statusBottom: 8,
+              statusBuilder: (context, style, key) => Text(
+                '4 / 12',
+                key: key,
+                style: style,
+              ),
+              onBack: () {},
+              onBookmark: () {},
+              onTableOfContents: () {},
+              onSettings: () {},
+              backTooltip: 'Back',
+              bookmarkTooltip: 'Bookmark',
+              tableOfContentsTooltip: 'Contents',
+              settingsTooltip: 'Settings',
+              bookmarked: false,
+              showViewportStatus: false,
+              showViewportTitle: true,
+              viewportTitleTop: 24,
+              viewportTitleKey: const ValueKey('reader-top-information'),
+              readerStatus: status,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('09:05'), findsOneWidget);
+    expect(find.text('Chapter 4'), findsNWidgets(2));
+    expect(find.text('73%'), findsOneWidget);
+    expect(
+      tester
+          .widget<AnimatedOpacity>(
+            find.byKey(const ValueKey('reader-top-information')),
+          )
+          .opacity,
+      1,
+    );
   });
 }
 

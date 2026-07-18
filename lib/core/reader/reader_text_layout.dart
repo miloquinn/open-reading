@@ -13,6 +13,12 @@ typedef ReaderSourceSpanBuilder = InlineSpan Function(
 /// every display boundary keeps a monotonic mapping back to the original UTF-16
 /// boundary. Pagination still runs through [NativeTextPaginator]; this class is
 /// only the projection shared by its measurement span and the rendered span.
+///
+/// When `normalizeParagraphBreaks` is enabled, runs of two or more source line
+/// breaks are treated as paragraph separators and projected to exactly one
+/// structural line break plus the configured additional spacing. This lets
+/// EPUB rendering remove parser-generated blank rows without changing canonical
+/// source offsets.
 @immutable
 class ReaderTextLayout {
   const ReaderTextLayout._({
@@ -30,6 +36,7 @@ class ReaderTextLayout {
     int firstLineIndent = 0,
     int paragraphSpacing = 0,
     bool indentFirstParagraph = true,
+    bool normalizeParagraphBreaks = false,
   }) {
     final indent = firstLineIndent.clamp(0, 4);
     final spacing = paragraphSpacing.clamp(0, 2);
@@ -112,6 +119,7 @@ class ReaderTextLayout {
       if (sourceCursor >= sourceText.length) break;
 
       final breakStart = sourceCursor;
+      var logicalBreakCount = 0;
       while (sourceCursor < sourceText.length &&
           _isLineBreakCodeUnit(sourceText.codeUnitAt(sourceCursor))) {
         if (sourceText.codeUnitAt(sourceCursor) == 0x0D &&
@@ -121,16 +129,30 @@ class ReaderTextLayout {
         } else {
           sourceCursor++;
         }
+        logicalBreakCount++;
       }
-      appendSource(breakStart, sourceCursor);
+      if (normalizeParagraphBreaks && logicalBreakCount > 1) {
+        // A paragraph separator at the beginning of a projection commonly
+        // follows an inline EPUB image. The image/text gap already separates
+        // the blocks, so rendering a leading newline would create a blank row.
+        if (displayOffset > 0) {
+          appendGenerated(
+            List.filled(spacing + 1, '\n').join(),
+            replacedSourceStart: breakStart,
+            replacedSourceEnd: sourceCursor,
+          );
+        }
+      } else {
+        appendSource(breakStart, sourceCursor);
+        if (sourceCursor < sourceText.length && spacing > 0) {
+          appendGenerated(
+            List.filled(spacing, '\n').join(),
+            replacedSourceStart: sourceCursor,
+            replacedSourceEnd: sourceCursor,
+          );
+        }
+      }
       atParagraphStart = true;
-      if (sourceCursor < sourceText.length && spacing > 0) {
-        appendGenerated(
-          List.filled(spacing, '\n').join(),
-          replacedSourceStart: sourceCursor,
-          replacedSourceEnd: sourceCursor,
-        );
-      }
     }
 
     if (sourceCursor == sourceText.length && boundaries.isNotEmpty) {

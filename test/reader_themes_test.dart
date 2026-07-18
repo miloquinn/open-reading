@@ -70,4 +70,33 @@ void main() {
     expect(changed.cacheKey, isNot(palette.cacheKey));
     ReaderThemes.setCustomTheme(null);
   });
+
+  test('multiple custom palettes keep independent ids and display order', () {
+    const first = ReaderCustomTheme(
+      id: 'custom:first',
+      name: 'First',
+      background: Color(0xFFF4EBD8),
+      text: Color(0xFF30271F),
+      controlBar: Color(0xFFE1D0B4),
+    );
+    const second = ReaderCustomTheme(
+      id: 'custom:second',
+      name: 'Second',
+      background: Color(0xFF101820),
+      text: Color(0xFFF5F5F5),
+      controlBar: Color(0xFF1E2A34),
+      backgroundImagePath: '/themes/night.webp',
+      backgroundImageOpacity: 0.5,
+    );
+
+    ReaderThemes.setCustomThemes(const [first, second]);
+
+    expect(ReaderThemes.customThemes.map((theme) => theme.id),
+        ['custom:first', 'custom:second']);
+    expect(ReaderThemes.byId(second.id).background, second.background);
+    expect(ReaderThemes.byId(second.id).backgroundImagePath,
+        second.backgroundImagePath);
+    expect(ReaderThemes.byId(second.id).cacheKey, contains('night.webp'));
+    ReaderThemes.setCustomThemes(const []);
+  });
 }

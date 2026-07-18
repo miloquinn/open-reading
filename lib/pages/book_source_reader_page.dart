@@ -13,6 +13,7 @@ import 'package:xxread/core/reader/native_text_paginator.dart';
 import 'package:xxread/core/reader/reader_custom_theme.dart';
 import 'package:xxread/core/reader/reader_leaf_status.dart';
 import 'package:xxread/core/reader/reader_layout.dart';
+import 'package:xxread/core/reader/reader_keep_screen_on.dart';
 import 'package:xxread/core/reader/reader_margin_settings.dart';
 import 'package:xxread/core/reader/reader_safe_area.dart';
 import 'package:xxread/core/reader/reader_settings.dart';
@@ -30,7 +31,7 @@ import '../book_sources/services/book_source_text_paginator.dart';
 import '../services/reading/reading_stats_dao.dart';
 import '../services/books/bookmark_dao.dart';
 import '../services/core/app_settings_service.dart';
-import 'reader_custom_theme_page.dart';
+import 'reader_custom_themes_page.dart';
 import '../utils/font_catalog_helper.dart';
 import '../utils/localization_extension.dart';
 import '../utils/reader_themes.dart';
@@ -41,6 +42,7 @@ import '../widgets/reader_navigation_sheet.dart';
 import '../widgets/reader_paper_page_leaf.dart';
 import '../widgets/reader_pull_bookmark.dart';
 import '../widgets/reader_settings_controls.dart';
+import '../widgets/reader_theme_background.dart';
 import '../widgets/reader_vertical_paging_surface.dart';
 import '../widgets/side_toast.dart';
 
@@ -108,7 +110,6 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   double _bottomMargin = ReaderMarginSettings.defaultBottom;
   String _readerThemeId = ReaderThemes.day.id;
   BookSourcePageMode _pageMode = BookSourcePageMode.verticalScroll;
-  ReaderPageTurnStyle _pageTurnStyle = ReaderPageTurnStyle.cylinder;
   bool _pullBookmarkEnabled = false;
   bool _tapPageAnimationEnabled = true;
   int _pageIndex = 0;
@@ -143,7 +144,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   DateTime? _readingSessionStartedAt;
   int _sessionPagesRead = 0;
   bool _readerSystemUiApplied = false;
-  bool _showSystemStatusBarInReader = false;
+  ReaderTopBarStyle _topBarStyle = ReaderTopBarStyle.reader;
 
   ReaderThemePalette get _readerTheme => ReaderThemes.byId(_readerThemeId);
 
@@ -161,7 +162,6 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         pageMode: _pageMode,
         firstLineIndent: _firstLineIndent,
         paragraphSpacing: _paragraphSpacing,
-        pageTurnStyle: _pageTurnStyle,
         pullBookmarkEnabled: _pullBookmarkEnabled,
         tapPageAnimationEnabled: _tapPageAnimationEnabled,
       );
@@ -170,6 +170,9 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         viewPadding: MediaQuery.viewPaddingOf(context),
         topMargin: _topMargin,
         bottomMargin: _bottomMargin,
+        topChromeReserve: _topBarStyle == ReaderTopBarStyle.reader
+            ? ReaderSafeAreaMetrics.readerTopBarReserve
+            : 0,
       );
 
   @override
@@ -179,6 +182,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     _leafStatusController
       ..addListener(_onLeafStatusChanged)
       ..start();
+    unawaited(ReaderKeepScreenOnController.activate(this));
     _startReadingSession();
     _verticalPagePositionsListener.itemPositions
         .addListener(_onVerticalPagePositionsChanged);
@@ -186,11 +190,10 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         .addListener(_onVerticalChapterPositionsChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted || _readerSystemUiApplied) return;
-      final showStatusBar =
-          await ReaderSystemUiController.applySavedPreference();
+      final topBarStyle = await ReaderSystemUiController.applySavedPreference();
       if (!mounted) return;
       setState(() {
-        _showSystemStatusBarInReader = showStatusBar;
+        _topBarStyle = topBarStyle;
         _readerSystemUiApplied = true;
       });
     });
@@ -218,6 +221,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _startReadingSession();
+      unawaited(ReaderKeepScreenOnController.reapply(this));
       if (_readerSystemUiApplied) unawaited(_applyReaderSystemUi());
       if (!_loadingCatalog && _error == null) {
         unawaited(_syncVolumeKeyPaging());
@@ -274,12 +278,13 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       ..removeListener(_onLeafStatusChanged)
       ..dispose();
     unawaited(ReaderVolumeKeyController.deactivate(this));
+    unawaited(ReaderKeepScreenOnController.deactivate(this));
     unawaited(ReaderSystemUiController.restore());
     super.dispose();
   }
 
   Future<void> _applyReaderSystemUi() => ReaderSystemUiController.apply(
-        showStatusBar: _showSystemStatusBarInReader,
+        style: _topBarStyle,
       );
 
   void _onLeafStatusChanged() {
@@ -302,14 +307,14 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
           fallbackPageMode: BookSourcePageMode.verticalScroll,
         ),
         _readerSettingsStore.loadScrollByChapter(),
-        _customThemeStore.load(),
+        _customThemeStore.loadAll(),
       ]);
       final chapters = [...results[0]! as List<BookSourceChapter>]
         ..sort((a, b) => a.order.compareTo(b.order));
       final saved = results[1] as BookSourceReadingProgress?;
       final settings = results[2]! as ReaderSettings;
       final scrollByChapter = results[3]! as bool;
-      final customTheme = results[4] as ReaderCustomTheme?;
+      final customThemes = results[4] as List<ReaderCustomTheme>;
       var initialIndex = saved?.chapterIndex ?? 0;
       if (saved != null && saved.chapterId.isNotEmpty) {
         final byId = chapters.indexWhere(
@@ -321,7 +326,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         initialIndex = initialIndex.clamp(0, chapters.length - 1);
       }
       if (!mounted) return;
-      ReaderThemes.setCustomTheme(customTheme);
+      ReaderThemes.setCustomThemes(customThemes);
       setState(() {
         _chapters = chapters;
         _chapterIndex = initialIndex;
@@ -334,7 +339,6 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         _paragraphSpacing = settings.paragraphSpacing;
         _readerThemeId = ReaderThemes.byId(settings.themeId).id;
         _pageMode = settings.pageMode;
-        _pageTurnStyle = settings.pageTurnStyle;
         _pullBookmarkEnabled = settings.pullBookmarkEnabled;
         _tapPageAnimationEnabled = settings.tapPageAnimationEnabled;
         _scrollByChapter = scrollByChapter;
@@ -952,6 +956,8 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   }
 
   String _readerThemeName(String themeId) {
+    final customName = ReaderThemes.customThemeById(themeId)?.name.trim();
+    if (customName != null && customName.isNotEmpty) return customName;
     return switch (themeId) {
       'mist' => context.l10n.readerThemeMist,
       'green' => context.l10n.readerThemeGreen,
@@ -975,7 +981,6 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     double? bottomMargin,
     String? themeId,
     BookSourcePageMode? pageMode,
-    ReaderPageTurnStyle? pageTurnStyle,
     bool? pullBookmarkEnabled,
     bool? tapPageAnimationEnabled,
   }) async {
@@ -1004,7 +1009,6 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
           .clamp(ReaderMarginSettings.min, ReaderMarginSettings.max);
       _readerThemeId = ReaderThemes.byId(themeId ?? _readerThemeId).id;
       _pageMode = pageMode ?? _pageMode;
-      _pageTurnStyle = pageTurnStyle ?? _pageTurnStyle;
       _pullBookmarkEnabled = pullBookmarkEnabled ?? _pullBookmarkEnabled;
       _tapPageAnimationEnabled =
           tapPageAnimationEnabled ?? _tapPageAnimationEnabled;
@@ -1019,6 +1023,28 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     });
     unawaited(_syncVolumeKeyPaging());
     await _readerSettingsStore.save(_readerSettings);
+    if (repaginate) _restoreScrollProgress(currentProgress);
+  }
+
+  Future<void> _setTopBarStyle(ReaderTopBarStyle style) async {
+    if (_topBarStyle == style) return;
+    final repaginate = (_topBarStyle == ReaderTopBarStyle.reader) !=
+        (style == ReaderTopBarStyle.reader);
+    final currentProgress = _currentReadingProgress;
+    final currentTextOffset = _currentTextOffset;
+    setState(() {
+      _topBarStyle = style;
+      if (repaginate) {
+        _paginationKey = null;
+        _paginatedPages = const [];
+        _verticalLayouts.clear();
+        _restorePageProgress = currentProgress;
+        _restorePagedPosition = true;
+        _restoreTextOffset = currentTextOffset;
+      }
+    });
+    await ReaderSystemUiController.savePreference(style);
+    await _applyReaderSystemUi();
     if (repaginate) _restoreScrollProgress(currentProgress);
   }
 
@@ -1060,18 +1086,16 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         BookSourcePageMode.pageCurl => context.l10n.readerModePageCurlHint,
       };
 
-  String _pageTurnStyleTitle(ReaderPageTurnStyle style) => switch (style) {
-        ReaderPageTurnStyle.cylinder =>
-          context.l10n.readerPageTurnStyleCylinder,
-        ReaderPageTurnStyle.classicFold =>
-          context.l10n.readerPageTurnStyleClassicFold,
+  String _topBarStyleTitle(ReaderTopBarStyle style) => switch (style) {
+        ReaderTopBarStyle.system => context.l10n.readerTopBarStyleSystem,
+        ReaderTopBarStyle.reader => context.l10n.readerTopBarStyleReader,
+        ReaderTopBarStyle.hidden => context.l10n.readerTopBarStyleHidden,
       };
 
-  String _pageTurnStyleHint(ReaderPageTurnStyle style) => switch (style) {
-        ReaderPageTurnStyle.cylinder =>
-          context.l10n.readerPageTurnStyleCylinderHint,
-        ReaderPageTurnStyle.classicFold =>
-          context.l10n.readerPageTurnStyleClassicFoldHint,
+  String _topBarStyleHint(ReaderTopBarStyle style) => switch (style) {
+        ReaderTopBarStyle.system => context.l10n.readerTopBarStyleSystemHint,
+        ReaderTopBarStyle.reader => context.l10n.readerTopBarStyleReaderHint,
+        ReaderTopBarStyle.hidden => context.l10n.readerTopBarStyleHiddenHint,
       };
 
   Future<void> _showReadingSettings() async {
@@ -1086,8 +1110,8 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         themeDescription: context.l10n.readerThemeDescription,
         pageModeTitle: context.l10n.pageTurningMode,
         pageModeSummary: _pageModeSummary(),
-        pageTurnStyleTitle: context.l10n.readerPageTurnStyleTitle,
-        pageTurnStyleSummary: _pageTurnStyleTitle(_pageTurnStyle),
+        topBarStyleTitle: context.l10n.readerTopBarStyleTitle,
+        topBarStyleSummary: _topBarStyleTitle(_topBarStyle),
         pullBookmarkTitle: context.l10n.readerPullBookmarkTitle,
         pullBookmarkHint: context.l10n.readerPullBookmarkHint,
         tapPageAnimationTitle: context.l10n.readerTapAnimationTitle,
@@ -1115,7 +1139,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         ),
         onCustomThemeTap: _showCustomThemeEditor,
         onPageModeTap: _showPageModeSettings,
-        onPageTurnStyleTap: _showPageTurnStyleSettings,
+        onTopBarStyleTap: _showTopBarStyleSettings,
         onFontSizeChanged: (value) => unawaited(
           _updateReadingSettings(fontSize: value),
         ),
@@ -1159,17 +1183,25 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     Navigator.of(context).pop();
     await WidgetsBinding.instance.endOfFrame;
     if (!mounted) return;
-    final result = await Navigator.of(context).push<ReaderCustomTheme>(
+    final result = await Navigator.of(context).push<ReaderCustomThemesResult>(
       MaterialPageRoute(
-        builder: (_) => ReaderCustomThemePage(
-          initialTheme: ReaderThemes.customTheme ?? ReaderCustomTheme.defaults,
+        builder: (_) => ReaderCustomThemesPage(
+          initialThemes: ReaderThemes.customThemes,
+          initialSelectedThemeId:
+              ReaderCustomTheme.isCustomThemeId(_readerThemeId)
+                  ? _readerThemeId
+                  : null,
         ),
       ),
     );
     if (result == null || !mounted) return;
-    await _customThemeStore.save(result);
-    ReaderThemes.setCustomTheme(result);
-    await _updateReadingSettings(themeId: ReaderCustomTheme.themeId);
+    ReaderThemes.setCustomThemes(result.themes);
+    final nextThemeId = result.selectedThemeId ??
+        (ReaderCustomTheme.isCustomThemeId(_readerThemeId) &&
+                ReaderThemes.customThemeById(_readerThemeId) == null
+            ? ReaderSettings.defaultThemeId
+            : _readerThemeId);
+    await _updateReadingSettings(themeId: nextThemeId);
     await _applyReaderSystemUi();
   }
 
@@ -1207,24 +1239,24 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     Navigator.of(context).pop(selectedMode);
   }
 
-  Future<void> _showPageTurnStyleSettings() async {
-    final selectedStyle = await showModalBottomSheet<ReaderPageTurnStyle>(
+  Future<void> _showTopBarStyleSettings() async {
+    final selectedStyle = await showModalBottomSheet<ReaderTopBarStyle>(
       context: context,
       backgroundColor: _readerTheme.surface,
       showDragHandle: true,
       isScrollControlled: true,
-      builder: (menuContext) => ReaderPageTurnStyleSheet(
+      builder: (menuContext) => ReaderTopBarStyleSheet(
         palette: _readerTheme,
-        title: context.l10n.readerPageTurnStyleTitle,
-        selectedStyle: _pageTurnStyle,
-        titleFor: _pageTurnStyleTitle,
-        hintFor: _pageTurnStyleHint,
+        title: context.l10n.readerTopBarStyleTitle,
+        selectedStyle: _topBarStyle,
+        titleFor: _topBarStyleTitle,
+        hintFor: _topBarStyleHint,
         onSelected: (style) => Navigator.of(menuContext).pop(style),
       ),
     );
     if (selectedStyle == null || !mounted) return;
     Navigator.of(context).pop();
-    await _updateReadingSettings(pageTurnStyle: selectedStyle);
+    await _setTopBarStyle(selectedStyle);
   }
 
   @override
@@ -1242,61 +1274,68 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         child: Theme(
           data: _readerThemeData,
           child: Scaffold(
-            backgroundColor: _readerTheme.background,
-            body: ReaderPullBookmark(
-              enabled: _pullBookmarkEnabled && _chapters.isNotEmpty,
-              bookmarked: _currentPageIsBookmarked,
-              busy: _bookmarkBusy,
+            backgroundColor: Colors.transparent,
+            body: ReaderThemeBackground(
               palette: _readerTheme,
-              addHint: context.l10n.readerPullBookmarkAddHint,
-              removeHint: context.l10n.readerPullBookmarkRemoveHint,
-              releaseHint: context.l10n.readerPullBookmarkReleaseHint,
-              onTriggered: () => unawaited(_toggleCurrentBookmark()),
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: Semantics(
-                      label: widget.book.title,
-                      child: _buildBody(),
+              child: ReaderPullBookmark(
+                enabled: _pullBookmarkEnabled && _chapters.isNotEmpty,
+                bookmarked: _currentPageIsBookmarked,
+                busy: _bookmarkBusy,
+                palette: _readerTheme,
+                addHint: context.l10n.readerPullBookmarkAddHint,
+                removeHint: context.l10n.readerPullBookmarkRemoveHint,
+                releaseHint: context.l10n.readerPullBookmarkReleaseHint,
+                onTriggered: () => unawaited(_toggleCurrentBookmark()),
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: Semantics(
+                        label: widget.book.title,
+                        child: _buildBody(),
+                      ),
                     ),
-                  ),
-                  ReaderChromeOverlay(
-                    palette: _readerTheme,
-                    visible: _controlsVisible,
-                    title: _chapters.isEmpty
-                        ? widget.book.title
-                        : _chapters[
-                                _chapterIndex.clamp(0, _chapters.length - 1)]
-                            .title,
-                    statusBottom: _readerSafeArea.pageNumberBottom,
-                    showViewportStatus:
-                        _pageMode == BookSourcePageMode.verticalScroll,
-                    showViewportTitle:
-                        _pageMode == BookSourcePageMode.verticalScroll,
-                    viewportTitleTop: _verticalChrome.titleTop,
-                    viewportTitleKey:
-                        const ValueKey('book-source-viewport-title'),
-                    statusBuilder: _buildReaderStatusText,
-                    onBack: () => unawaited(_requestExit()),
-                    onBookmark: _chapters.isEmpty
-                        ? null
-                        : () => unawaited(_toggleCurrentBookmark()),
-                    onTableOfContents: _chapters.isEmpty ? null : _showCatalog,
-                    onSettings: _showReadingSettings,
-                    backTooltip:
-                        MaterialLocalizations.of(context).backButtonTooltip,
-                    bookmarkTooltip: _currentPageIsBookmarked
-                        ? context.l10n.bookmarkRemoved
-                        : context.l10n.readerAddBookmark,
-                    tableOfContentsTooltip: context.l10n.readerToolbarTOC,
-                    settingsTooltip: context.l10n.readingSettings,
-                    bookmarked: _currentPageIsBookmarked,
-                    bookmarkBusy: _bookmarkBusy,
-                    topKey: const ValueKey('book-source-top-controls'),
-                    bottomKey: const ValueKey('book-source-bottom-controls'),
-                    statusKey: const ValueKey('book-source-reader-status'),
-                  ),
-                ],
+                    ReaderChromeOverlay(
+                      palette: _readerTheme,
+                      visible: _controlsVisible,
+                      title: _chapters.isEmpty
+                          ? widget.book.title
+                          : _chapters[
+                                  _chapterIndex.clamp(0, _chapters.length - 1)]
+                              .title,
+                      statusBottom: _readerSafeArea.pageNumberBottom,
+                      showViewportStatus:
+                          _pageMode == BookSourcePageMode.verticalScroll,
+                      showViewportTitle:
+                          _topBarStyle == ReaderTopBarStyle.reader,
+                      viewportTitleTop: _readerSafeArea.readerTopBarTop,
+                      viewportTitleKey:
+                          const ValueKey('book-source-viewport-title'),
+                      readerStatus: _leafStatusController.value,
+                      viewportStatusHorizontalPadding:
+                          math.max(14, _horizontalMargin),
+                      statusBuilder: _buildReaderStatusText,
+                      onBack: () => unawaited(_requestExit()),
+                      onBookmark: _chapters.isEmpty
+                          ? null
+                          : () => unawaited(_toggleCurrentBookmark()),
+                      onTableOfContents:
+                          _chapters.isEmpty ? null : _showCatalog,
+                      onSettings: _showReadingSettings,
+                      backTooltip:
+                          MaterialLocalizations.of(context).backButtonTooltip,
+                      bookmarkTooltip: _currentPageIsBookmarked
+                          ? context.l10n.bookmarkRemoved
+                          : context.l10n.readerAddBookmark,
+                      tableOfContentsTooltip: context.l10n.readerToolbarTOC,
+                      settingsTooltip: context.l10n.readingSettings,
+                      bookmarked: _currentPageIsBookmarked,
+                      bookmarkBusy: _bookmarkBusy,
+                      topKey: const ValueKey('book-source-top-controls'),
+                      bottomKey: const ValueKey('book-source-bottom-controls'),
+                      statusKey: const ValueKey('book-source-reader-status'),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -1875,7 +1914,6 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       palette: _readerTheme,
       safeArea: _readerSafeArea,
       metadata: metadata,
-      status: _leafStatusController.value,
       horizontalPadding: math.max(14, _horizontalMargin),
       child: Padding(
         padding: EdgeInsets.fromLTRB(
@@ -1936,7 +1974,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     );
     return ReaderPageSnapshot(
       key: metadata.snapshotKey,
-      contentRevision: _leafStatusController.value.revision,
+      contentRevision: 0,
       child: _buildPageLeaf(
         page,
         pageIndex: pageIndex,
@@ -2042,8 +2080,8 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     );
   }
 
-  Widget _buildBoundaryLeaf({required bool forward}) => ColoredBox(
-        color: _readerTheme.background,
+  Widget _buildBoundaryLeaf({required bool forward}) => ReaderThemeBackground(
+        palette: _readerTheme,
         child: Center(
           child: Icon(
             forward
@@ -2262,7 +2300,6 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
             key: ValueKey('source-curl:${widget.source.id}:${widget.book.id}'),
             controller: _pageCurlController,
             paperColor: _readerTheme.background,
-            turnStyle: _pageTurnStyle,
             currentPage: currentSnapshot,
             forwardPage: forwardSnapshot,
             backwardPage: backwardSnapshot,

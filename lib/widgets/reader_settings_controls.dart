@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import '../core/reader/reader_layout.dart';
 import '../core/reader/reader_margin_settings.dart';
 import '../core/reader/reader_custom_theme.dart';
+import '../core/reader/reader_system_ui.dart';
 import '../utils/reader_themes.dart';
+import 'reader_theme_background.dart';
 
 class ReaderSettingsSheet extends StatefulWidget {
   const ReaderSettingsSheet({
@@ -13,8 +15,8 @@ class ReaderSettingsSheet extends StatefulWidget {
     required this.themeDescription,
     required this.pageModeTitle,
     required this.pageModeSummary,
-    required this.pageTurnStyleTitle,
-    required this.pageTurnStyleSummary,
+    required this.topBarStyleTitle,
+    required this.topBarStyleSummary,
     required this.pullBookmarkTitle,
     required this.pullBookmarkHint,
     required this.tapPageAnimationTitle,
@@ -40,7 +42,7 @@ class ReaderSettingsSheet extends StatefulWidget {
     required this.onThemeChanged,
     required this.onCustomThemeTap,
     required this.onPageModeTap,
-    required this.onPageTurnStyleTap,
+    required this.onTopBarStyleTap,
     required this.onFontSizeChanged,
     required this.onLineHeightChanged,
     required this.onFirstLineIndentChanged,
@@ -57,8 +59,8 @@ class ReaderSettingsSheet extends StatefulWidget {
   final String themeDescription;
   final String pageModeTitle;
   final String pageModeSummary;
-  final String pageTurnStyleTitle;
-  final String pageTurnStyleSummary;
+  final String topBarStyleTitle;
+  final String topBarStyleSummary;
   final String pullBookmarkTitle;
   final String pullBookmarkHint;
   final String tapPageAnimationTitle;
@@ -84,7 +86,7 @@ class ReaderSettingsSheet extends StatefulWidget {
   final ValueChanged<String> onThemeChanged;
   final VoidCallback onCustomThemeTap;
   final VoidCallback onPageModeTap;
-  final VoidCallback onPageTurnStyleTap;
+  final VoidCallback onTopBarStyleTap;
   final ValueChanged<double> onFontSizeChanged;
   final ValueChanged<double> onLineHeightChanged;
   final ValueChanged<int> onFirstLineIndentChanged;
@@ -151,12 +153,13 @@ class _ReaderSettingsSheetState extends State<ReaderSettingsSheet> {
             onTap: widget.onPageModeTap,
           ),
           ListTile(
+            key: const ValueKey('reader-top-bar-style-tile'),
             contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.auto_stories_outlined),
-            title: Text(widget.pageTurnStyleTitle),
-            subtitle: Text(widget.pageTurnStyleSummary),
+            leading: const Icon(Icons.vertical_align_top_rounded),
+            title: Text(widget.topBarStyleTitle),
+            subtitle: Text(widget.topBarStyleSummary),
             trailing: const Icon(Icons.chevron_right),
-            onTap: widget.onPageTurnStyleTap,
+            onTap: widget.onTopBarStyleTap,
           ),
           SwitchListTile(
             key: const ValueKey('reader-pull-bookmark-switch'),
@@ -258,8 +261,8 @@ class _ReaderSettingsSheetState extends State<ReaderSettingsSheet> {
   }
 }
 
-class ReaderPageTurnStyleSheet extends StatelessWidget {
-  const ReaderPageTurnStyleSheet({
+class ReaderTopBarStyleSheet extends StatelessWidget {
+  const ReaderTopBarStyleSheet({
     super.key,
     required this.palette,
     required this.title,
@@ -271,10 +274,10 @@ class ReaderPageTurnStyleSheet extends StatelessWidget {
 
   final ReaderThemePalette palette;
   final String title;
-  final ReaderPageTurnStyle selectedStyle;
-  final String Function(ReaderPageTurnStyle style) titleFor;
-  final String Function(ReaderPageTurnStyle style) hintFor;
-  final ValueChanged<ReaderPageTurnStyle> onSelected;
+  final ReaderTopBarStyle selectedStyle;
+  final String Function(ReaderTopBarStyle style) titleFor;
+  final String Function(ReaderTopBarStyle style) hintFor;
+  final ValueChanged<ReaderTopBarStyle> onSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -290,16 +293,22 @@ class ReaderPageTurnStyleSheet extends StatelessWidget {
             children: [
               Text(title, style: theme.textTheme.titleLarge),
               const SizedBox(height: 8),
-              RadioGroup<ReaderPageTurnStyle>(
+              RadioGroup<ReaderTopBarStyle>(
                 groupValue: selectedStyle,
                 onChanged: (style) {
                   if (style != null) onSelected(style);
                 },
                 child: Column(
                   children: [
-                    for (final style in ReaderPageTurnStyle.values)
-                      RadioListTile<ReaderPageTurnStyle>(
+                    for (final style in ReaderTopBarStyle.values)
+                      RadioListTile<ReaderTopBarStyle>(
+                        key: ValueKey('reader-top-bar-style-${style.name}'),
                         value: style,
+                        contentPadding: EdgeInsets.zero,
+                        secondary: _ReaderTopBarStylePreview(
+                          style: style,
+                          palette: palette,
+                        ),
                         title: Text(titleFor(style)),
                         subtitle: Text(hintFor(style)),
                       ),
@@ -308,6 +317,85 @@ class ReaderPageTurnStyleSheet extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ReaderTopBarStylePreview extends StatelessWidget {
+  const _ReaderTopBarStylePreview({
+    required this.style,
+    required this.palette,
+  });
+
+  final ReaderTopBarStyle style;
+  final ReaderThemePalette palette;
+
+  @override
+  Widget build(BuildContext context) {
+    final muted = palette.secondaryText.withValues(alpha: 0.72);
+    return Semantics(
+      excludeSemantics: true,
+      child: Container(
+        width: 72,
+        height: 44,
+        padding: const EdgeInsets.fromLTRB(6, 5, 6, 4),
+        decoration: BoxDecoration(
+          color: palette.background,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: palette.border.withValues(alpha: 0.7)),
+        ),
+        child: Column(
+          children: [
+            SizedBox(
+              height: 10,
+              child: switch (style) {
+                ReaderTopBarStyle.system => Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('9:41', style: TextStyle(fontSize: 5, color: muted)),
+                      Icon(Icons.signal_cellular_alt_rounded,
+                          size: 7, color: muted),
+                    ],
+                  ),
+                ReaderTopBarStyle.reader => Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('9:41', style: TextStyle(fontSize: 5, color: muted)),
+                      Expanded(
+                        child: Text(
+                          '···',
+                          textAlign: TextAlign.center,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 5, color: muted),
+                        ),
+                      ),
+                      Icon(Icons.battery_full_rounded, size: 7, color: muted),
+                    ],
+                  ),
+                ReaderTopBarStyle.hidden => const SizedBox.shrink(),
+              },
+            ),
+            const SizedBox(height: 4),
+            for (var index = 0; index < 3; index++) ...[
+              Expanded(
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: FractionallySizedBox(
+                    widthFactor: index == 2 ? 0.62 : 1,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: palette.text.withValues(alpha: 0.16),
+                        borderRadius: BorderRadius.circular(99),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              if (index != 2) const SizedBox(height: 2),
+            ],
+          ],
         ),
       ),
     );
@@ -480,25 +568,42 @@ class ReaderThemeStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final customThemes = ReaderThemes.customThemes;
     return SizedBox(
       height: 122,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 1),
         physics: const BouncingScrollPhysics(),
-        itemCount: ReaderThemes.all.length + 1,
+        itemCount: ReaderThemes.all.length + customThemes.length + 1,
         separatorBuilder: (_, __) => const SizedBox(width: 10),
         itemBuilder: (context, index) {
-          if (index == ReaderThemes.all.length) {
-            final custom = ReaderThemes.custom;
-            final selected = selectedThemeId == ReaderCustomTheme.themeId;
+          if (index >= ReaderThemes.all.length &&
+              index < ReaderThemes.all.length + customThemes.length) {
+            final customTheme = customThemes[index - ReaderThemes.all.length];
+            final palette = ReaderThemes.fromCustomTheme(customTheme);
+            final selected = selectedThemeId == customTheme.id;
+            final label = customTheme.name.trim().isEmpty
+                ? labelFor(ReaderCustomTheme.legacyThemeId)
+                : customTheme.name.trim();
+            return _ReaderThemeCard(
+              key: ValueKey('reader-custom-theme-${customTheme.id}'),
+              palette: palette,
+              label: label,
+              selected: selected,
+              icon: customTheme.hasBackgroundImage
+                  ? Icons.image_rounded
+                  : Icons.palette_rounded,
+              onTap: () => onSelected(customTheme.id),
+            );
+          }
+          if (index == ReaderThemes.all.length + customThemes.length) {
             final colors = Theme.of(context).colorScheme;
             return SizedBox(
               width: 108,
               child: Semantics(
                 button: true,
-                selected: selected,
-                label: labelFor(ReaderCustomTheme.themeId),
+                label: labelFor(ReaderCustomTheme.legacyThemeId),
                 child: InkWell(
                   key: const ValueKey('reader-custom-theme-card'),
                   onTap: onCustomThemeTap,
@@ -507,13 +612,11 @@ class ReaderThemeStrip extends StatelessWidget {
                     duration: const Duration(milliseconds: 180),
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: custom?.background ?? colors.surface,
+                      color: colors.surface,
                       borderRadius: BorderRadius.circular(18),
                       border: Border.all(
-                        color: selected
-                            ? (custom?.accent ?? colors.primary)
-                            : colors.outlineVariant,
-                        width: selected ? 2.2 : 1.2,
+                        color: colors.outlineVariant,
+                        width: 1.2,
                       ),
                     ),
                     child: Column(
@@ -525,67 +628,56 @@ class ReaderThemeStrip extends StatelessWidget {
                               width: 30,
                               height: 30,
                               decoration: BoxDecoration(
-                                color: custom?.controlBar ??
-                                    colors.surfaceContainerHighest,
+                                color: colors.surfaceContainerHighest,
                                 shape: BoxShape.circle,
-                                border: Border.all(
-                                  color:
-                                      custom?.border ?? colors.outlineVariant,
-                                ),
+                                border:
+                                    Border.all(color: colors.outlineVariant),
                               ),
                               child: Icon(
                                 Icons.add_rounded,
                                 size: 20,
-                                color: custom?.text ?? colors.onSurface,
+                                color: colors.onSurface,
                               ),
                             ),
                             const Spacer(),
-                            if (selected)
-                              Icon(
-                                Icons.check_circle_rounded,
-                                size: 21,
-                                color: custom?.accent ?? colors.primary,
+                            if (customThemes.isNotEmpty)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 7,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: colors.primaryContainer,
+                                  borderRadius: BorderRadius.circular(99),
+                                ),
+                                child: Text(
+                                  '${customThemes.length}',
+                                  style: TextStyle(
+                                    color: colors.onPrimaryContainer,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
                               ),
                           ],
                         ),
                         const Spacer(),
-                        if (custom != null)
-                          Row(
-                            children: [
-                              for (final color in [
-                                custom.text,
-                                custom.background,
-                                custom.controlBar,
-                              ])
-                                Container(
-                                  width: 15,
-                                  height: 15,
-                                  margin: const EdgeInsets.only(right: 4),
-                                  decoration: BoxDecoration(
-                                    color: color,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(color: custom.border),
-                                  ),
-                                ),
-                            ],
-                          )
-                        else
-                          Text(
-                            'Aa',
-                            style: TextStyle(
-                              color: colors.onSurface,
-                              fontSize: 20,
-                              height: 1,
-                              fontWeight: FontWeight.w700,
-                            ),
+                        Text(
+                          customThemes.isEmpty ? 'Aa +' : 'Aa ···',
+                          style: TextStyle(
+                            color: colors.onSurface,
+                            fontSize: 19,
+                            height: 1,
+                            fontWeight: FontWeight.w700,
                           ),
+                        ),
                         const SizedBox(height: 7),
                         Text(
-                          labelFor(ReaderCustomTheme.themeId),
+                          labelFor(ReaderCustomTheme.legacyThemeId),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            color: custom?.text ?? colors.onSurface,
+                            color: colors.onSurface,
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
                           ),
@@ -600,94 +692,12 @@ class ReaderThemeStrip extends StatelessWidget {
           final palette = ReaderThemes.all[index];
           final selected = palette.id == selectedThemeId;
           final label = labelFor(palette.id);
-          return SizedBox(
-            width: 108,
-            child: Semantics(
-              button: true,
-              selected: selected,
-              label: label,
-              child: InkWell(
-                onTap: () => onSelected(palette.id),
-                borderRadius: BorderRadius.circular(18),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 180),
-                  curve: Curves.easeOutCubic,
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: palette.background,
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(
-                      color: selected ? palette.accent : palette.border,
-                      width: selected ? 2.2 : 1,
-                    ),
-                    boxShadow: selected
-                        ? [
-                            BoxShadow(
-                              color: palette.shadow.withValues(alpha: 0.16),
-                              blurRadius: 12,
-                              offset: const Offset(0, 5),
-                            ),
-                          ]
-                        : null,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            _iconFor(palette.id),
-                            size: 18,
-                            color: palette.secondaryText,
-                          ),
-                          const Spacer(),
-                          AnimatedContainer(
-                            duration: const Duration(milliseconds: 180),
-                            width: 22,
-                            height: 22,
-                            decoration: BoxDecoration(
-                              color: selected
-                                  ? palette.accent
-                                  : palette.controlBar,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: palette.border),
-                            ),
-                            child: selected
-                                ? Icon(
-                                    Icons.check_rounded,
-                                    size: 14,
-                                    color: palette.onAccent,
-                                  )
-                                : null,
-                          ),
-                        ],
-                      ),
-                      const Spacer(),
-                      Text(
-                        'Aa',
-                        style: TextStyle(
-                          color: palette.text,
-                          fontSize: 20,
-                          height: 1,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 7),
-                      Text(
-                        label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: palette.text,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+          return _ReaderThemeCard(
+            palette: palette,
+            label: label,
+            selected: selected,
+            icon: _iconFor(palette.id),
+            onTap: () => onSelected(palette.id),
           );
         },
       ),
@@ -704,6 +714,117 @@ class ReaderThemeStrip extends StatelessWidget {
         'mist' => Icons.cloud_outlined,
         _ => Icons.light_mode_rounded,
       };
+}
+
+class _ReaderThemeCard extends StatelessWidget {
+  const _ReaderThemeCard({
+    super.key,
+    required this.palette,
+    required this.label,
+    required this.selected,
+    required this.icon,
+    required this.onTap,
+  });
+
+  final ReaderThemePalette palette;
+  final String label;
+  final bool selected;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 108,
+      child: Semantics(
+        button: true,
+        selected: selected,
+        label: label,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(18),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOutCubic,
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: selected ? palette.accent : palette.border,
+                width: selected ? 2.2 : 1,
+              ),
+              boxShadow: selected
+                  ? [
+                      BoxShadow(
+                        color: palette.shadow.withValues(alpha: 0.16),
+                        blurRadius: 12,
+                        offset: const Offset(0, 5),
+                      ),
+                    ]
+                  : null,
+            ),
+            child: ReaderThemeBackground(
+              palette: palette,
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(icon, size: 18, color: palette.secondaryText),
+                        const Spacer(),
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
+                          width: 22,
+                          height: 22,
+                          decoration: BoxDecoration(
+                            color: selected
+                                ? palette.accent
+                                : palette.controlBar.withValues(alpha: 0.9),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: palette.border),
+                          ),
+                          child: selected
+                              ? Icon(
+                                  Icons.check_rounded,
+                                  size: 14,
+                                  color: palette.onAccent,
+                                )
+                              : null,
+                        ),
+                      ],
+                    ),
+                    const Spacer(),
+                    Text(
+                      'Aa',
+                      style: TextStyle(
+                        color: palette.text,
+                        fontSize: 20,
+                        height: 1,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 7),
+                    Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: palette.text,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class ReaderSettingSlider extends StatelessWidget {
