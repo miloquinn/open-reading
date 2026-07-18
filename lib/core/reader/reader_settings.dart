@@ -9,6 +9,8 @@ class ReaderSettings {
   static const double defaultFontSize = 19;
   static const double defaultLineHeight = 1.75;
   static const double defaultHorizontalMargin = 18;
+  static const int defaultFirstLineIndent = 2;
+  static const int defaultParagraphSpacing = 0;
   static const String defaultThemeId = 'day';
 
   const ReaderSettings({
@@ -19,6 +21,9 @@ class ReaderSettings {
     required this.bottomMargin,
     required this.themeId,
     required this.pageMode,
+    this.firstLineIndent = defaultFirstLineIndent,
+    this.paragraphSpacing = defaultParagraphSpacing,
+    this.pageTurnStyle = ReaderPageTurnStyle.cylinder,
   });
 
   final double fontSize;
@@ -28,6 +33,9 @@ class ReaderSettings {
   final double bottomMargin;
   final String themeId;
   final ReaderPageMode pageMode;
+  final int firstLineIndent;
+  final int paragraphSpacing;
+  final ReaderPageTurnStyle pageTurnStyle;
 
   ReaderSettings copyWith({
     double? fontSize,
@@ -37,6 +45,9 @@ class ReaderSettings {
     double? bottomMargin,
     String? themeId,
     ReaderPageMode? pageMode,
+    int? firstLineIndent,
+    int? paragraphSpacing,
+    ReaderPageTurnStyle? pageTurnStyle,
   }) {
     return ReaderSettings(
       fontSize: (fontSize ?? this.fontSize).clamp(14, 32),
@@ -51,6 +62,9 @@ class ReaderSettings {
           .clamp(ReaderMarginSettings.min, ReaderMarginSettings.max),
       themeId: themeId ?? this.themeId,
       pageMode: pageMode ?? this.pageMode,
+      firstLineIndent: (firstLineIndent ?? this.firstLineIndent).clamp(0, 4),
+      paragraphSpacing: (paragraphSpacing ?? this.paragraphSpacing).clamp(0, 2),
+      pageTurnStyle: pageTurnStyle ?? this.pageTurnStyle,
     );
   }
 }
@@ -64,6 +78,9 @@ class ReaderSettingsStore {
   static const legacyVerticalMarginKey = 'native_reader_vertical_margin';
   static const themeKey = 'native_reader_theme';
   static const pageModeKey = 'native_reader_page_mode';
+  static const firstLineIndentKey = 'native_reader_first_line_indent';
+  static const paragraphSpacingKey = 'native_reader_paragraph_spacing';
+  static const pageTurnStyleKey = 'native_reader_page_turn_style';
   static const scrollByChapterKey = 'native_reader_scroll_by_chapter';
   static const legacyBookSourceLineHeightKey = 'book_source_reader_line_height';
 
@@ -107,6 +124,15 @@ class ReaderSettingsStore {
         prefs.getString(pageModeKey),
         fallback: fallbackPageMode,
       ),
+      firstLineIndent: (prefs.getInt(firstLineIndentKey) ??
+              ReaderSettings.defaultFirstLineIndent)
+          .clamp(0, 4),
+      paragraphSpacing: (prefs.getInt(paragraphSpacingKey) ??
+              ReaderSettings.defaultParagraphSpacing)
+          .clamp(0, 2),
+      pageTurnStyle: readerPageTurnStyleFromName(
+        prefs.getString(pageTurnStyleKey),
+      ),
     );
   }
 
@@ -120,6 +146,9 @@ class ReaderSettingsStore {
       prefs.setDouble(bottomMarginKey, settings.bottomMargin),
       prefs.setString(themeKey, settings.themeId),
       prefs.setString(pageModeKey, settings.pageMode.name),
+      prefs.setInt(firstLineIndentKey, settings.firstLineIndent),
+      prefs.setInt(paragraphSpacingKey, settings.paragraphSpacing),
+      prefs.setString(pageTurnStyleKey, settings.pageTurnStyle.name),
     ]);
   }
 

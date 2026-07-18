@@ -465,6 +465,10 @@
   "@firstLineIndentLabel": {
     "description": "首行缩进标签"
   },
+  "paragraphSpacingLabel": "段落间距",
+  "@paragraphSpacingLabel": {
+    "description": "阅读正文段落之间的附加间距"
+  },
   "pageMarginLabel": "页边距",
   "@pageMarginLabel": {
     "description": "页边距标签"
@@ -1134,6 +1138,11 @@
   "readerModeHorizontalSlideHint": "页面跟随手指横向移动并吸附翻页",
   "readerModePageCurl": "仿真翻页",
   "readerModePageCurlHint": "左右拖动卷起页面，松手后完成翻页或回弹",
+  "readerPageTurnStyleTitle": "仿真样式",
+  "readerPageTurnStyleCylinder": "圆柱卷页",
+  "readerPageTurnStyleCylinderHint": "连续曲面的柔和卷页效果",
+  "readerPageTurnStyleClassicFold": "经典折页",
+  "readerPageTurnStyleClassicFoldHint": "对角折线、纸背反射与真实弹簧回弹",
   "readerFontSizeValue": "字体大小  {size}",
   "readerHorizontalMarginValue": "左右页边距  {margin}",
   "readerHorizontalMarginLabel": "左右页边距",

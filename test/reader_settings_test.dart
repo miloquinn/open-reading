@@ -33,6 +33,9 @@ void main() {
       bottomMargin: 3,
       themeId: 'mist',
       pageMode: ReaderPageMode.pageCurl,
+      firstLineIndent: 3,
+      paragraphSpacing: 1,
+      pageTurnStyle: ReaderPageTurnStyle.classicFold,
     );
 
     await store.save(settings);
@@ -45,6 +48,9 @@ void main() {
     expect(restored.bottomMargin, 3);
     expect(restored.themeId, 'mist');
     expect(restored.pageMode, ReaderPageMode.pageCurl);
+    expect(restored.firstLineIndent, 3);
+    expect(restored.paragraphSpacing, 1);
+    expect(restored.pageTurnStyle, ReaderPageTurnStyle.classicFold);
   });
 
   test('allows a zero horizontal page margin', () async {
@@ -75,5 +81,22 @@ void main() {
       prefs.getBool(ReaderSettingsStore.scrollByChapterKey),
       isFalse,
     );
+  });
+
+  test('clamps typography settings and defaults to cylinder turns', () async {
+    SharedPreferences.setMockInitialValues({
+      ReaderSettingsStore.firstLineIndentKey: 20,
+      ReaderSettingsStore.paragraphSpacingKey: -3,
+    });
+
+    final restored = await const ReaderSettingsStore().load(
+      fallbackPageMode: ReaderPageMode.verticalScroll,
+    );
+
+    expect(restored.firstLineIndent, 4);
+    expect(restored.paragraphSpacing, 0);
+    expect(restored.pageTurnStyle, ReaderPageTurnStyle.cylinder);
+    expect(restored.copyWith(firstLineIndent: -1).firstLineIndent, 0);
+    expect(restored.copyWith(paragraphSpacing: 9).paragraphSpacing, 2);
   });
 }

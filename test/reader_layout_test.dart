@@ -23,6 +23,36 @@ void main() {
     );
   });
 
+  test('typography controls and direction participate in the fingerprint', () {
+    ReaderLayoutFingerprint fingerprint({
+      int indent = 2,
+      int spacing = 0,
+      TextDirection direction = TextDirection.ltr,
+    }) =>
+        ReaderLayoutFingerprint(
+          contentKey: 'chapter-1',
+          viewport: const Size(360, 720),
+          fontSize: 19,
+          lineHeight: 1.75,
+          horizontalMargin: 18,
+          verticalMargin: 24,
+          textScaler: TextScaler.noScaling,
+          locale: const Locale('zh'),
+          pageMode: ReaderPageMode.pageCurl,
+          firstLineIndent: indent,
+          paragraphSpacing: spacing,
+          textDirection: direction,
+        );
+
+    final base = fingerprint().cacheKey('reader-v4');
+    expect(base, isNot(fingerprint(indent: 0).cacheKey('reader-v4')));
+    expect(base, isNot(fingerprint(spacing: 1).cacheKey('reader-v4')));
+    expect(
+      base,
+      isNot(fingerprint(direction: TextDirection.rtl).cacheKey('reader-v4')),
+    );
+  });
+
   test('local and source readers resolve the same persisted page mode', () {
     expect(
       readerPageModeFromName(

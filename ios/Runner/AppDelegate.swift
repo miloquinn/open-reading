@@ -99,6 +99,29 @@ import UIKit
       }
     }
 
+    let readerStatusChannel = FlutterMethodChannel(
+      name: "com.niki.xxread/reader_status",
+      binaryMessenger: messenger
+    )
+    readerStatusChannel.setMethodCallHandler { (call: FlutterMethodCall, result: @escaping FlutterResult) in
+      switch call.method {
+      case "getBatteryStatus":
+        UIDevice.current.isBatteryMonitoringEnabled = true
+        let level = UIDevice.current.batteryLevel
+        guard level >= 0 else {
+          result(nil)
+          return
+        }
+        let state = UIDevice.current.batteryState
+        result([
+          "level": Int((level * 100).rounded()),
+          "charging": state == .charging || state == .full,
+        ])
+      default:
+        result(FlutterMethodNotImplemented)
+      }
+    }
+
     storageBridge = StorageBridge(messenger: messenger)
 
   }

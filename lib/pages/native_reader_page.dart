@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:archive/archive.dart';
 import 'package:crypto/crypto.dart';
@@ -17,11 +18,13 @@ import 'package:provider/provider.dart';
 
 import 'package:xxread/core/reader/canonical_locator.dart';
 import 'package:xxread/core/reader/native_text_paginator.dart';
+import 'package:xxread/core/reader/reader_leaf_status.dart';
 import 'package:xxread/core/reader/reader_layout.dart';
 import 'package:xxread/core/reader/reader_margin_settings.dart';
 import 'package:xxread/core/reader/reader_safe_area.dart';
 import 'package:xxread/core/reader/reader_settings.dart';
 import 'package:xxread/core/reader/reader_system_ui.dart';
+import 'package:xxread/core/reader/reader_text_layout.dart';
 import 'package:xxread/core/reader/reader_volume_key_controller.dart';
 import 'package:xxread/models/book.dart';
 import 'package:xxread/models/bookmark.dart';
@@ -38,6 +41,7 @@ import '../utils/system_ui_helper.dart';
 import '../widgets/reader_shader_page_curl.dart';
 import '../widgets/reader_control_chrome.dart';
 import '../widgets/reader_navigation_sheet.dart';
+import '../widgets/reader_paper_page_leaf.dart';
 import '../widgets/reader_settings_controls.dart';
 import '../widgets/side_toast.dart';
 
@@ -78,6 +82,8 @@ class _NativeReaderPageState extends State<NativeReaderPage>
   final ReaderPageCurlController _pageCurlController =
       ReaderPageCurlController();
   final ValueNotifier<double> _verticalScrollProgress = ValueNotifier(0);
+  final ReaderLeafStatusController _leafStatusController =
+      ReaderLeafStatusController();
   final Map<int, GlobalKey> _continuousChapterKeys = {};
   late final Map<String, List<_ReaderPageData>> _pageCache;
   bool _readerDependenciesInitialized = false;
@@ -97,11 +103,14 @@ class _NativeReaderPageState extends State<NativeReaderPage>
   bool _continuousVisibilityUpdateScheduled = false;
   double _fontSize = 19;
   double _lineHeight = 1.75;
+  int _firstLineIndent = ReaderSettings.defaultFirstLineIndent;
+  int _paragraphSpacing = ReaderSettings.defaultParagraphSpacing;
   double _horizontalMargin = 18;
   double _topMargin = ReaderMarginSettings.defaultTop;
   double _bottomMargin = ReaderMarginSettings.defaultBottom;
   FontOption _readerFont = FontCatalog.defaultReaderFont;
   String _readerThemeId = ReaderThemes.day.id;
+  ReaderPageTurnStyle _pageTurnStyle = ReaderPageTurnStyle.cylinder;
   Offset? _pointerDownPosition;
   DateTime? _pointerDownTime;
   bool _pointerMoved = false;
@@ -124,6 +133,9 @@ class _NativeReaderPageState extends State<NativeReaderPage>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _leafStatusController
+      ..addListener(_onLeafStatusChanged)
+      ..start();
     _startReadingSession();
     _chapterIndex = widget.book.currentPage;
     _continuousAnchorChapter = _chapterIndex;
@@ -277,6 +289,9 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     _chapterScrollController.dispose();
     _continuousScrollController.dispose();
     _verticalScrollProgress.dispose();
+    _leafStatusController
+      ..removeListener(_onLeafStatusChanged)
+      ..dispose();
     unawaited(ReaderVolumeKeyController.deactivate(this));
     unawaited(ReaderSystemUiController.restore());
     super.dispose();
@@ -285,6 +300,10 @@ class _NativeReaderPageState extends State<NativeReaderPage>
   Future<void> _applyReaderSystemUi() => ReaderSystemUiController.apply(
         showStatusBar: _showSystemStatusBarInReader,
       );
+
+  void _onLeafStatusChanged() {
+    if (mounted) setState(() {});
+  }
 
   Future<void> _loadPageMode() async {
     try {
@@ -304,8 +323,11 @@ class _NativeReaderPageState extends State<NativeReaderPage>
         _horizontalMargin = settings.horizontalMargin;
         _topMargin = settings.topMargin;
         _bottomMargin = settings.bottomMargin;
+        _firstLineIndent = settings.firstLineIndent;
+        _paragraphSpacing = settings.paragraphSpacing;
         _scrollByChapter = scrollByChapter;
         _readerThemeId = ReaderThemes.byId(settings.themeId).id;
+        _pageTurnStyle = settings.pageTurnStyle;
         _readerSettingsLoaded = true;
       });
       unawaited(_syncVolumeKeyPaging());
@@ -362,6 +384,9 @@ class _NativeReaderPageState extends State<NativeReaderPage>
         bottomMargin: _bottomMargin,
         themeId: _readerThemeId,
         pageMode: _pageMode,
+        firstLineIndent: _firstLineIndent,
+        paragraphSpacing: _paragraphSpacing,
+        pageTurnStyle: _pageTurnStyle,
       );
 
   TextStyle get _readerTextStyle => TextStyle(
@@ -414,12 +439,26 @@ class _NativeReaderPageState extends State<NativeReaderPage>
 
   Widget _buildStyledReaderText(
     _NativeChapter chapter,
-    int start,
-    int end,
+    _ReaderPageData page,
   ) {
     final flowStyle = _readerTextFlowStyle();
+    final layout = page.layout;
+    final span = layout == null
+        ? _styledSpanForRange(
+            chapter,
+            page.startOffset,
+            page.endOffset,
+            _readerTextStyle,
+          )
+        : layout.buildSpan(
+            page.displayStart,
+            page.displayEnd,
+            sourceSpanBuilder: (start, end) =>
+                _styledSpanForRange(chapter, start, end, _readerTextStyle),
+            generatedStyle: _readerTextStyle,
+          );
     return RichText(
-      text: _styledSpanForRange(chapter, start, end, _readerTextStyle),
+      text: span,
       textAlign: flowStyle.textAlign,
       textDirection: flowStyle.textDirection,
       textScaler: flowStyle.textScaler,
@@ -459,6 +498,8 @@ class _NativeReaderPageState extends State<NativeReaderPage>
   Future<void> _updateLayout({
     double? fontSize,
     double? lineHeight,
+    int? firstLineIndent,
+    int? paragraphSpacing,
     double? horizontalMargin,
     double? topMargin,
     double? bottomMargin,
@@ -466,6 +507,8 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     setState(() {
       _fontSize = fontSize ?? _fontSize;
       _lineHeight = (lineHeight ?? _lineHeight).clamp(1.4, 2.1);
+      _firstLineIndent = (firstLineIndent ?? _firstLineIndent).clamp(0, 4);
+      _paragraphSpacing = (paragraphSpacing ?? _paragraphSpacing).clamp(0, 2);
       _horizontalMargin = (horizontalMargin ?? _horizontalMargin).clamp(
         ReaderMarginSettings.horizontalMin,
         ReaderMarginSettings.horizontalMax,
@@ -485,7 +528,13 @@ class _NativeReaderPageState extends State<NativeReaderPage>
       '${_horizontalMargin.toStringAsFixed(1)}:'
       '${_topMargin.toStringAsFixed(1)}:'
       '${_bottomMargin.toStringAsFixed(1)}:${_pageMode.name}:'
-      '${_readerFont.id}';
+      '$_firstLineIndent:$_paragraphSpacing:${_readerFont.id}';
+
+  Future<void> _setPageTurnStyle(ReaderPageTurnStyle style) async {
+    if (_pageTurnStyle == style) return;
+    setState(() => _pageTurnStyle = style);
+    await _readerSettingsStore.save(_readerSettings);
+  }
 
   void _saveCanonicalProgress(
     _NativeChapter chapter,
@@ -887,23 +936,34 @@ class _NativeReaderPageState extends State<NativeReaderPage>
         themeDescription: context.l10n.readerThemeDescription,
         pageModeTitle: context.l10n.pageTurningMode,
         pageModeSummary: _pageModeSummary(context),
+        pageTurnStyleTitle: context.l10n.readerPageTurnStyleTitle,
+        pageTurnStyleSummary: _pageTurnStyleTitle(_pageTurnStyle),
         fontSizeLabel: context.l10n.fontSizeLabel,
         lineHeightLabel: context.l10n.lineSpacingLabel,
+        firstLineIndentLabel: context.l10n.firstLineIndentLabel,
+        paragraphSpacingLabel: context.l10n.paragraphSpacingLabel,
         horizontalMarginLabel: context.l10n.readerHorizontalMarginLabel,
         topMarginLabel: context.l10n.readerTopMarginLabel,
         bottomMarginLabel: context.l10n.readerBottomMarginLabel,
         themeId: _readerThemeId,
         fontSize: _fontSize,
         lineHeight: _lineHeight,
+        firstLineIndent: _firstLineIndent,
+        paragraphSpacing: _paragraphSpacing,
         horizontalMargin: _horizontalMargin,
         topMargin: _topMargin,
         bottomMargin: _bottomMargin,
         themeLabelFor: (id) => _readerThemeName(context, id),
         onThemeChanged: (id) => unawaited(_setReaderTheme(id)),
         onPageModeTap: _showPageModeSettings,
+        onPageTurnStyleTap: _showPageTurnStyleSettings,
         onFontSizeChanged: (value) => unawaited(_updateLayout(fontSize: value)),
         onLineHeightChanged: (value) =>
             unawaited(_updateLayout(lineHeight: value)),
+        onFirstLineIndentChanged: (value) =>
+            unawaited(_updateLayout(firstLineIndent: value)),
+        onParagraphSpacingChanged: (value) =>
+            unawaited(_updateLayout(paragraphSpacing: value)),
         onHorizontalMarginChanged: (value) =>
             unawaited(_updateLayout(horizontalMargin: value)),
         onTopMarginChanged: (value) =>
@@ -970,6 +1030,26 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     Navigator.of(context).pop(selectedMode);
   }
 
+  Future<void> _showPageTurnStyleSettings() async {
+    final selectedStyle = await showModalBottomSheet<ReaderPageTurnStyle>(
+      context: context,
+      backgroundColor: _readerTheme.surface,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (menuContext) => ReaderPageTurnStyleSheet(
+        palette: _readerTheme,
+        title: context.l10n.readerPageTurnStyleTitle,
+        selectedStyle: _pageTurnStyle,
+        titleFor: _pageTurnStyleTitle,
+        hintFor: _pageTurnStyleHint,
+        onSelected: (style) => Navigator.of(menuContext).pop(style),
+      ),
+    );
+    if (selectedStyle == null || !mounted) return;
+    Navigator.of(context).pop();
+    await _setPageTurnStyle(selectedStyle);
+  }
+
   String _pageModeTitle(NativePageMode mode) => switch (mode) {
         NativePageMode.verticalScroll => context.l10n.pageTurningScroll,
         NativePageMode.instantPage => context.l10n.readerModeHorizontalPage,
@@ -984,6 +1064,20 @@ class _NativeReaderPageState extends State<NativeReaderPage>
         NativePageMode.horizontalSlide =>
           context.l10n.readerModeHorizontalSlideHint,
         NativePageMode.pageCurl => context.l10n.readerModePageCurlHint,
+      };
+
+  String _pageTurnStyleTitle(ReaderPageTurnStyle style) => switch (style) {
+        ReaderPageTurnStyle.cylinder =>
+          context.l10n.readerPageTurnStyleCylinder,
+        ReaderPageTurnStyle.classicFold =>
+          context.l10n.readerPageTurnStyleClassicFold,
+      };
+
+  String _pageTurnStyleHint(ReaderPageTurnStyle style) => switch (style) {
+        ReaderPageTurnStyle.cylinder =>
+          context.l10n.readerPageTurnStyleCylinderHint,
+        ReaderPageTurnStyle.classicFold =>
+          context.l10n.readerPageTurnStyleClassicFoldHint,
       };
 
   _ReaderPageData _bookmarkPageFor(List<_ReaderPageData> pages) {
@@ -1209,18 +1303,12 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     TextDirection direction,
     TextScaler textScaler,
   ) {
-    final key = ReaderLayoutFingerprint(
-      contentKey: '$chapterIndex',
-      viewport: size,
-      fontSize: _fontSize,
-      lineHeight: _lineHeight,
-      horizontalMargin: _horizontalMargin,
-      verticalMargin: _topMargin + _bottomMargin,
-      textScaler: textScaler,
-      locale: Localizations.maybeLocaleOf(context),
-      pageMode: _pageMode,
-      extra: '${_readerSafeArea.paginationSignature}:${_readerFont.id}',
-    ).cacheKey('native-line-v3');
+    final key = _paginationFingerprintFor(
+      chapterIndex,
+      size,
+      direction,
+      textScaler,
+    );
     if (!_pageCache.containsKey(key) && _pageCache.length >= 96) {
       _pageCache.remove(_pageCache.keys.first);
     }
@@ -1236,18 +1324,41 @@ class _NativeReaderPageState extends State<NativeReaderPage>
             textScaler: textScaler,
           ),
           style: _readerTextStyle,
+          firstLineIndent: _firstLineIndent,
+          paragraphSpacing: _paragraphSpacing,
         );
       },
     );
   }
+
+  String _paginationFingerprintFor(
+    int chapterIndex,
+    Size size,
+    TextDirection direction,
+    TextScaler textScaler,
+  ) =>
+      ReaderLayoutFingerprint(
+        contentKey: '$chapterIndex',
+        viewport: size,
+        fontSize: _fontSize,
+        lineHeight: _lineHeight,
+        horizontalMargin: _horizontalMargin,
+        verticalMargin: _topMargin + _bottomMargin,
+        textScaler: textScaler,
+        locale: Localizations.maybeLocaleOf(context),
+        pageMode: _pageMode,
+        firstLineIndent: _firstLineIndent,
+        paragraphSpacing: _paragraphSpacing,
+        textDirection: direction,
+        extra: '${_readerSafeArea.paginationSignature}:${_readerFont.id}',
+      ).cacheKey('native-line-v4');
 
   Widget _buildPage(_NativeChapter chapter, _ReaderPageData page) {
     final imageIndex = page.imageBlockIndex;
     if (imageIndex == null) {
       return _buildStyledReaderText(
         chapter,
-        page.startOffset,
-        page.endOffset,
+        page,
       );
     }
     final bytes = chapter.blocks[imageIndex].imageBytes;
@@ -1271,8 +1382,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
             flex: _imagePageTextFlex,
             child: _buildStyledReaderText(
               chapter,
-              page.startOffset,
-              page.endOffset,
+              page,
             ),
           ),
       ],
@@ -1300,11 +1410,19 @@ class _NativeReaderPageState extends State<NativeReaderPage>
         direction,
         textScaler,
       );
+      final layoutFingerprint = _paginationFingerprintFor(
+        chapterIndex,
+        size,
+        direction,
+        textScaler,
+      );
       for (var pageIndex = 0; pageIndex < chapterPages.length; pageIndex++) {
         result.add(
           _BookPageRef(
             chapterIndex: chapterIndex,
             pageIndex: pageIndex,
+            pageCount: chapterPages.length,
+            layoutFingerprint: layoutFingerprint,
             content: chapterPages[pageIndex],
           ),
         );
@@ -1388,7 +1506,11 @@ class _NativeReaderPageState extends State<NativeReaderPage>
           padding: const EdgeInsets.only(bottom: 10),
           child: RichText(
             text: TextSpan(
-              text: block.text ?? '',
+              text: ReaderTextLayout.build(
+                block.text ?? '',
+                firstLineIndent: _firstLineIndent,
+                paragraphSpacing: _paragraphSpacing,
+              ).text,
               style: _styleForNativeBlock(block, _readerTextStyle),
             ),
             textAlign: readerBodyTextAlign,
@@ -1556,6 +1678,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     List<_ReaderPageData> pages,
     List<_BookPageRef> bookPages,
     bool usesTwoPageLayout,
+    String layoutFingerprint,
   ) {
     if (_pageMode == NativePageMode.verticalScroll) {
       if (!_scrollByChapter) {
@@ -1591,10 +1714,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
         itemBuilder: (context, index) {
           if (!usesTwoPageLayout) {
             final page = bookPages[index];
-            return _buildPageLeaf(
-              chapters[page.chapterIndex],
-              page.content,
-            );
+            return _buildBookPageLeaf(chapters, page);
           }
           final firstIndex = index * 2;
           return _buildSpread(
@@ -1618,7 +1738,14 @@ class _NativeReaderPageState extends State<NativeReaderPage>
             page.chapterIndex == _chapterIndex && page.pageIndex == _pageIndex,
       );
       if (currentIndex < 0) {
-        return _buildPageLeaf(chapter, pages[_pageIndex]);
+        return _buildPageLeaf(
+          chapter,
+          pages[_pageIndex],
+          chapterIndex: _chapterIndex,
+          pageIndex: _pageIndex,
+          pageCount: pages.length,
+          layoutFingerprint: layoutFingerprint,
+        );
       }
       final current = bookPages[currentIndex];
       final forward = currentIndex + 1 < bookPages.length
@@ -1626,23 +1753,21 @@ class _NativeReaderPageState extends State<NativeReaderPage>
           : null;
       final backward = currentIndex > 0 ? bookPages[currentIndex - 1] : null;
       return ReaderShaderPageCurl(
-        key: ValueKey(
-          'shader-curl:$_readerThemeId:$_layoutSignature:'
-          '${current.chapterIndex}:${current.pageIndex}',
-        ),
+        key: ValueKey('native-curl:${widget.book.id ?? _bookCacheKey}'),
         controller: _pageCurlController,
-        currentPage: _buildBookPageLeaf(
+        turnStyle: _pageTurnStyle,
+        currentPage: _buildBookPageSnapshot(
           chapters,
           current,
         ),
         forwardPage: forward != null
-            ? _buildBookPageLeaf(
+            ? _buildBookPageSnapshot(
                 chapters,
                 forward,
               )
             : null,
         backwardPage: backward != null
-            ? _buildBookPageLeaf(
+            ? _buildBookPageSnapshot(
                 chapters,
                 backward,
               )
@@ -1666,7 +1791,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
           bookPages,
           chapters,
         ),
-        paperColor: _readerTheme.surface,
+        paperColor: _readerTheme.background,
       );
     }
     if (usesTwoPageLayout) {
@@ -1675,28 +1800,30 @@ class _NativeReaderPageState extends State<NativeReaderPage>
         left: _buildPageLeaf(
           chapter,
           pages[spreadStart],
+          chapterIndex: _chapterIndex,
+          pageIndex: spreadStart,
+          pageCount: pages.length,
+          layoutFingerprint: layoutFingerprint,
         ),
         right: spreadStart + 1 < pages.length
             ? _buildPageLeaf(
                 chapter,
                 pages[spreadStart + 1],
+                chapterIndex: _chapterIndex,
+                pageIndex: spreadStart + 1,
+                pageCount: pages.length,
+                layoutFingerprint: layoutFingerprint,
               )
             : null,
       );
     }
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        _horizontalMargin,
-        _effectiveTopMargin,
-        _horizontalMargin,
-        _effectiveBottomMargin,
-      ),
-      child: SizedBox.expand(
-        child: KeyedSubtree(
-          key: ValueKey('$_chapterIndex:$_pageIndex'),
-          child: _buildPage(chapter, pages[_pageIndex]),
-        ),
-      ),
+    return _buildPageLeaf(
+      chapter,
+      pages[_pageIndex],
+      chapterIndex: _chapterIndex,
+      pageIndex: _pageIndex,
+      pageCount: pages.length,
+      layoutFingerprint: layoutFingerprint,
     );
   }
 
@@ -1707,13 +1834,76 @@ class _NativeReaderPageState extends State<NativeReaderPage>
       _buildPageLeaf(
         chapters[page.chapterIndex],
         page.content,
+        chapterIndex: page.chapterIndex,
+        pageIndex: page.pageIndex,
+        pageCount: page.pageCount,
+        layoutFingerprint: page.layoutFingerprint,
       );
+
+  ReaderPageSnapshot _buildBookPageSnapshot(
+    List<_NativeChapter> chapters,
+    _BookPageRef page,
+  ) {
+    final metadata = _nativePageMetadata(
+      chapters[page.chapterIndex],
+      page.content,
+      chapterIndex: page.chapterIndex,
+      pageIndex: page.pageIndex,
+      pageCount: page.pageCount,
+      layoutFingerprint: page.layoutFingerprint,
+    );
+    return ReaderPageSnapshot(
+      key: metadata.snapshotKey,
+      contentRevision: _leafStatusController.value.revision,
+      child: _buildBookPageLeaf(chapters, page),
+    );
+  }
+
+  ReaderPaperPageMetadata _nativePageMetadata(
+    _NativeChapter chapter,
+    _ReaderPageData page, {
+    required int chapterIndex,
+    required int pageIndex,
+    required int pageCount,
+    required String layoutFingerprint,
+  }) {
+    final chapterTitle = chapter.title.isEmpty
+        ? context.l10n.readerChapterFallback(chapterIndex + 1)
+        : chapter.title;
+    return ReaderPaperPageMetadata(
+      pageIdentity: 'native:${widget.book.id ?? _bookCacheKey}:'
+          '${chapter.id}:$pageIndex:${page.startOffset}',
+      layoutFingerprint: layoutFingerprint,
+      themeId: _readerTheme.id,
+      chapterTitle: chapterTitle,
+      pageNumber: pageIndex + 1,
+      pageCount: pageCount,
+    );
+  }
 
   Widget _buildPageLeaf(
     _NativeChapter chapter,
-    _ReaderPageData page,
-  ) =>
-      Padding(
+    _ReaderPageData page, {
+    required int chapterIndex,
+    required int pageIndex,
+    required int pageCount,
+    required String layoutFingerprint,
+  }) {
+    final metadata = _nativePageMetadata(
+      chapter,
+      page,
+      chapterIndex: chapterIndex,
+      pageIndex: pageIndex,
+      pageCount: pageCount,
+      layoutFingerprint: layoutFingerprint,
+    );
+    return ReaderPaperPageLeaf(
+      palette: _readerTheme,
+      safeArea: _readerSafeArea,
+      metadata: metadata,
+      status: _leafStatusController.value,
+      horizontalPadding: math.max(14, _horizontalMargin),
+      child: Padding(
         padding: EdgeInsets.fromLTRB(
           _horizontalMargin,
           _effectiveTopMargin,
@@ -1723,7 +1913,9 @@ class _NativeReaderPageState extends State<NativeReaderPage>
         child: SizedBox.expand(
           child: _buildPage(chapter, page),
         ),
-      );
+      ),
+    );
+  }
 
   Widget _buildSpread({
     required Widget left,
@@ -1977,6 +2169,12 @@ class _NativeReaderPageState extends State<NativeReaderPage>
                                 pages,
                                 bookPages,
                                 usesTwoPageLayout,
+                                _paginationFingerprintFor(
+                                  _chapterIndex,
+                                  paginationSize,
+                                  Directionality.of(context),
+                                  MediaQuery.textScalerOf(context),
+                                ),
                               ),
                             ),
                           ),
@@ -1988,6 +2186,8 @@ class _NativeReaderPageState extends State<NativeReaderPage>
                               ? widget.book.title
                               : chapter.title,
                           statusBottom: _readerSafeArea.pageNumberBottom,
+                          showViewportStatus:
+                              _pageMode == NativePageMode.verticalScroll,
                           statusBuilder: (context, style, key) =>
                               _buildReaderStatusText(
                             pages: pages,
@@ -2036,50 +2236,86 @@ List<_ReaderPageData> _paginateChapter(
   required double maxHeight,
   required NativeTextFlowStyle flowStyle,
   required TextStyle style,
+  required int firstLineIndent,
+  required int paragraphSpacing,
 }) {
   final imageOffsets = <(int, int)>[];
   var searchFrom = 0;
   for (var i = 0; i < chapter.blocks.length; i++) {
     final block = chapter.blocks[i];
     if (block.imageBase64 != null) {
-      imageOffsets.add((searchFrom, i));
+      final offset = block.startOffset >= 0 ? block.startOffset : searchFrom;
+      imageOffsets.add((offset.clamp(searchFrom, chapter.plainText.length), i));
       continue;
     }
     final text = block.text;
     if (text == null || text.isEmpty) continue;
+    if (block.startOffset >= searchFrom &&
+        block.endOffset >= block.startOffset) {
+      searchFrom = block.endOffset.clamp(searchFrom, chapter.plainText.length);
+      continue;
+    }
     final found = chapter.plainText.indexOf(text, searchFrom);
     if (found >= 0) searchFrom = found + text.length;
   }
 
   final pages = <_ReaderPageData>[];
   var cursor = 0;
-  TextSpan buildSpan(int start, int end) =>
-      _styledSpanForRange(chapter, start, end, style);
   List<_ReaderPageData> paginateRange(
     String text, {
     required int sourceOffset,
     required double height,
   }) {
     if (text.isEmpty) return const <_ReaderPageData>[];
+    final layout = ReaderTextLayout.build(
+      text,
+      sourceOffset: sourceOffset,
+      firstLineIndent: firstLineIndent,
+      paragraphSpacing: paragraphSpacing,
+      indentFirstParagraph: sourceOffset == 0 ||
+          chapter.plainText.codeUnitAt(sourceOffset - 1) == 0x0A ||
+          chapter.plainText.codeUnitAt(sourceOffset - 1) == 0x0D,
+    );
+    if (layout.text.isEmpty) {
+      return <_ReaderPageData>[
+        _ReaderPageData(
+          text: '',
+          startOffset: sourceOffset,
+          endOffset: sourceOffset + text.length,
+        ),
+      ];
+    }
+    TextSpan buildSpan(int start, int end) => layout.buildSpan(
+          start,
+          end,
+          sourceSpanBuilder: (sourceStart, sourceEnd) =>
+              _styledSpanForRange(chapter, sourceStart, sourceEnd, style),
+          generatedStyle: style,
+        );
     final ranges = NativeTextPaginator(
       maxWidth: maxWidth,
       maxHeight: height,
       flowStyle: flowStyle,
     ).paginate(
-      text: text,
-      sourceOffset: sourceOffset,
+      text: layout.text,
       spanBuilder: buildSpan,
     );
     return ranges
         .map(
           (range) => _ReaderPageData(
-            text: text.substring(range.start, range.end),
+            text: layout.text.substring(range.start, range.end),
+            layout: layout,
+            displayStart: range.start,
+            displayEnd: range.end,
+            startOffset: layout.sourceOffsetForDisplayOffset(range.start),
+            endOffset: layout.sourceOffsetForDisplayOffset(range.end),
           ),
         )
         .toList(growable: false);
   }
 
-  for (final image in imageOffsets) {
+  for (var imageIndex = 0; imageIndex < imageOffsets.length; imageIndex++) {
+    final image = imageOffsets[imageIndex];
     final offset = image.$1.clamp(cursor, chapter.plainText.length);
     final before = chapter.plainText.substring(cursor, offset);
     pages.addAll(
@@ -2090,10 +2326,9 @@ List<_ReaderPageData> _paginateChapter(
       ),
     );
 
-    final nextImageOffset =
-        imageOffsets.indexOf(image) + 1 < imageOffsets.length
-            ? imageOffsets[imageOffsets.indexOf(image) + 1].$1
-            : chapter.plainText.length;
+    final nextImageOffset = imageIndex + 1 < imageOffsets.length
+        ? imageOffsets[imageIndex + 1].$1
+        : chapter.plainText.length;
     final available = chapter.plainText.substring(offset, nextImageOffset);
     final hasImage = chapter.blocks[image.$2].imageBytes != null;
     final inlineTextHeight = hasImage
@@ -2106,11 +2341,24 @@ List<_ReaderPageData> _paginateChapter(
       sourceOffset: offset,
       height: inlineTextHeight,
     );
-    final inlineText = inlineChunks.isEmpty ? '' : inlineChunks.first.text;
-    pages.add(
-      _ReaderPageData(text: inlineText, imageBlockIndex: image.$2),
+    assert(inlineChunks.isEmpty || inlineChunks.first.startOffset == offset);
+    assert(
+      inlineChunks.isEmpty || inlineChunks.last.endOffset == nextImageOffset,
     );
-    cursor = offset + inlineText.length;
+    final inlinePage = inlineChunks.isEmpty
+        ? _ReaderPageData(
+            text: '',
+            imageBlockIndex: image.$2,
+            startOffset: offset,
+            endOffset: nextImageOffset,
+          )
+        : inlineChunks.first.copyWith(imageBlockIndex: image.$2);
+    pages.add(inlinePage);
+    // Keep every page from this projection. Rebuilding the tail from only its
+    // canonical offset can replay generated indentation or paragraph spacing
+    // when the first page ends inside one of those display-only runs.
+    pages.addAll(inlineChunks.skip(1));
+    cursor = nextImageOffset;
   }
 
   if (cursor < chapter.plainText.length || pages.isEmpty) {
@@ -2122,24 +2370,22 @@ List<_ReaderPageData> _paginateChapter(
       ),
     );
   }
-  assert(pages.map((page) => page.text).join() == chapter.plainText,
-      'Chapter pagination must preserve every character');
-  var offset = 0;
-  final anchoredPages = <_ReaderPageData>[];
-  for (final page in pages) {
-    anchoredPages.add(
+  if (pages.isEmpty) {
+    pages.add(
       _ReaderPageData(
-        text: page.text,
-        imageBlockIndex: page.imageBlockIndex,
-        startOffset: offset,
-        endOffset: offset + page.text.length,
+        text: '',
+        startOffset: 0,
+        endOffset: chapter.plainText.length,
       ),
     );
-    offset += page.text.length;
   }
-  assert(offset == chapter.plainText.length,
-      'Page boundaries must cover the complete chapter');
-  return anchoredPages;
+  assert(pages.isNotEmpty);
+  assert(pages.first.startOffset == 0);
+  assert(pages.last.endOffset == chapter.plainText.length);
+  for (var index = 1; index < pages.length; index++) {
+    assert(pages[index - 1].endOffset == pages[index].startOffset);
+  }
+  return pages;
 }
 
 class _NativeChapter {
@@ -2198,11 +2444,15 @@ class _BookPageRef {
   const _BookPageRef({
     required this.chapterIndex,
     required this.pageIndex,
+    required this.pageCount,
+    required this.layoutFingerprint,
     required this.content,
   });
 
   final int chapterIndex;
   final int pageIndex;
+  final int pageCount;
+  final String layoutFingerprint;
   final _ReaderPageData content;
 }
 
@@ -2212,12 +2462,29 @@ class _ReaderPageData {
     this.imageBlockIndex,
     this.startOffset = 0,
     int? endOffset,
-  }) : endOffset = endOffset ?? startOffset + text.length;
+    this.layout,
+    this.displayStart = 0,
+    int? displayEnd,
+  })  : endOffset = endOffset ?? startOffset + text.length,
+        displayEnd = displayEnd ?? displayStart + text.length;
 
   final String text;
   final int? imageBlockIndex;
   final int startOffset;
   final int endOffset;
+  final ReaderTextLayout? layout;
+  final int displayStart;
+  final int displayEnd;
+
+  _ReaderPageData copyWith({int? imageBlockIndex}) => _ReaderPageData(
+        text: text,
+        imageBlockIndex: imageBlockIndex ?? this.imageBlockIndex,
+        startOffset: startOffset,
+        endOffset: endOffset,
+        layout: layout,
+        displayStart: displayStart,
+        displayEnd: displayEnd,
+      );
 }
 
 class _NativeBlock {
@@ -2354,7 +2621,12 @@ Future<List<Map<String, dynamic>>> _parseEpubChapters(Uint8List bytes) async {
               .toLowerCase();
           final encoded = imagesByName[name];
           if (encoded != null) {
-            blocks.add(<String, String>{'type': 'image', 'content': encoded});
+            blocks.add(<String, String>{
+              'type': 'image',
+              'content': encoded,
+              'startOffset': '${plainText.length}',
+              'endOffset': '${plainText.length}',
+            });
           }
           continue;
         }

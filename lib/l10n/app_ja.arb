@@ -187,6 +187,7 @@
   "lineSpacingLabel": "行間",
   "letterSpacingLabel": "字間",
   "firstLineIndentLabel": "字下げ",
+  "paragraphSpacingLabel": "段落間隔",
   "pageMarginLabel": "ページ余白",
   "resetDefault": "初期値に戻す",
   "ttsPanelTitle": "読み上げ",
@@ -679,6 +680,11 @@
   "readerModeHorizontalSlideHint": "ページが指に追従して横に動き、離すと吸着します",
   "readerModePageCurl": "ページカール",
   "readerModePageCurlHint": "左右にドラッグしてページをめくり、離すと完了または戻ります",
+  "readerPageTurnStyleTitle": "ページめくり表現",
+  "readerPageTurnStyleCylinder": "円筒カール",
+  "readerPageTurnStyleCylinderHint": "連続した曲面で紙を柔らかく巻き上げます",
+  "readerPageTurnStyleClassicFold": "クラシック折り",
+  "readerPageTurnStyleClassicFoldHint": "斜めの折り線、紙裏の反射、実スプリングで動きます",
   "readerFontSizeValue": "文字サイズ  {size}",
   "@readerFontSizeValue": {
     "placeholders": {

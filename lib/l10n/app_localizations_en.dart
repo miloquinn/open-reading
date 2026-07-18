@@ -560,6 +560,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get firstLineIndentLabel => 'First-line Indent';
 
   @override
+  String get paragraphSpacingLabel => 'Paragraph Spacing';
+
+  @override
   String get pageMarginLabel => 'Page Margin';
 
   @override
@@ -1383,6 +1386,23 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get readerModePageCurlHint =>
       'Drag sideways to curl the page, then release to turn or rebound';
+
+  @override
+  String get readerPageTurnStyleTitle => 'Page-turn Animation';
+
+  @override
+  String get readerPageTurnStyleCylinder => 'Cylinder Curl';
+
+  @override
+  String get readerPageTurnStyleCylinderHint =>
+      'A soft rolling sheet with continuous curvature';
+
+  @override
+  String get readerPageTurnStyleClassicFold => 'Classic Fold';
+
+  @override
+  String get readerPageTurnStyleClassicFoldHint =>
+      'A crisp diagonal fold with reflected paper and a real spring';
 
   @override
   String readerFontSizeValue(int size) {

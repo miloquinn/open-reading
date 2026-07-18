@@ -12,10 +12,13 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import android.util.Log
 import android.content.Intent
+import android.content.IntentFilter
+import android.os.BatteryManager
 
 class MainActivity : FlutterActivity() {
     private val CHANNEL = "com.niki.xxread/fullscreen"
     private val READER_KEYS_CHANNEL = "com.niki.xxread/reader_keys"
+    private val READER_STATUS_CHANNEL = "com.niki.xxread/reader_status"
     private var readerKeysChannel: MethodChannel? = null
     private var safDirectoryBridge: SafDirectoryBridge? = null
     @Volatile private var volumePagingEnabled: Boolean = false
@@ -76,6 +79,16 @@ class MainActivity : FlutterActivity() {
                     }
                     else -> result.notImplemented()
                 }
+            }
+        }
+
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            READER_STATUS_CHANNEL,
+        ).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "getBatteryStatus" -> result.success(readBatteryStatus())
+                else -> result.notImplemented()
             }
         }
 
@@ -210,5 +223,20 @@ class MainActivity : FlutterActivity() {
         } catch (e: Exception) {
             Log.w("xxread", "enableHighRefreshRate failed: ${e.message}")
         }
+    }
+
+    private fun readBatteryStatus(): Map<String, Any>? {
+        val status = registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+            ?: return null
+        val level = status.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
+        val scale = status.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
+        if (level < 0 || scale <= 0) return null
+        val batteryStatus = status.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
+        val charging = batteryStatus == BatteryManager.BATTERY_STATUS_CHARGING ||
+            batteryStatus == BatteryManager.BATTERY_STATUS_FULL
+        return mapOf(
+            "level" to ((level * 100f) / scale).toInt().coerceIn(0, 100),
+            "charging" to charging,
+        )
     }
 }

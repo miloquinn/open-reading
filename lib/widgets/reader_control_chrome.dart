@@ -32,6 +32,7 @@ class ReaderChromeOverlay extends StatelessWidget {
     this.topKey,
     this.bottomKey,
     this.statusKey,
+    this.showViewportStatus = true,
   });
 
   final ReaderThemePalette palette;
@@ -52,6 +53,7 @@ class ReaderChromeOverlay extends StatelessWidget {
   final Key? topKey;
   final Key? bottomKey;
   final Key? statusKey;
+  final bool showViewportStatus;
 
   @override
   Widget build(BuildContext context) {
@@ -60,25 +62,40 @@ class ReaderChromeOverlay extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: statusBottom,
-          child: IgnorePointer(
-            child: statusBuilder(
-              context,
-              textTheme.labelSmall?.copyWith(
-                fontSize: 10,
-                height: 1,
-                color: colors.onSurfaceVariant.withValues(
-                  alpha: visible ? 0 : 0.58,
+        if (showViewportStatus)
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: statusBottom,
+            child: IgnorePointer(
+              child: statusBuilder(
+                context,
+                textTheme.labelSmall?.copyWith(
+                  fontSize: 10,
+                  height: 1,
+                  color: colors.onSurfaceVariant.withValues(
+                    alpha: visible ? 0 : 0.58,
+                  ),
+                  fontFeatures: const [FontFeature.tabularFigures()],
                 ),
-                fontFeatures: const [FontFeature.tabularFigures()],
+                statusKey,
               ),
-              statusKey,
             ),
           ),
-        ),
+        if (!showViewportStatus && statusKey != null)
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: statusBottom,
+            child: IgnorePointer(
+              child: ExcludeSemantics(
+                child: Opacity(
+                  opacity: 0,
+                  child: statusBuilder(context, null, statusKey),
+                ),
+              ),
+            ),
+          ),
         AnimatedPositioned(
           key: topKey,
           duration: const Duration(milliseconds: 300),

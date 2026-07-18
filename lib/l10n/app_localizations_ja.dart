@@ -536,6 +536,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get firstLineIndentLabel => '字下げ';
 
   @override
+  String get paragraphSpacingLabel => '段落間隔';
+
+  @override
   String get pageMarginLabel => 'ページ余白';
 
   @override
@@ -1337,6 +1340,21 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get readerModePageCurlHint => '左右にドラッグしてページをめくり、離すと完了または戻ります';
+
+  @override
+  String get readerPageTurnStyleTitle => 'ページめくり表現';
+
+  @override
+  String get readerPageTurnStyleCylinder => '円筒カール';
+
+  @override
+  String get readerPageTurnStyleCylinderHint => '連続した曲面で紙を柔らかく巻き上げます';
+
+  @override
+  String get readerPageTurnStyleClassicFold => 'クラシック折り';
+
+  @override
+  String get readerPageTurnStyleClassicFoldHint => '斜めの折り線、紙裏の反射、実スプリングで動きます';
 
   @override
   String readerFontSizeValue(int size) {

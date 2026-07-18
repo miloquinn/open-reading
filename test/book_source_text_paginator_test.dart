@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:xxread/book_sources/services/book_source_text_paginator.dart';
+import 'package:xxread/core/reader/reader_text_layout.dart';
 
 void main() {
   const style = TextStyle(fontSize: 18, height: 1.7);
@@ -23,7 +24,7 @@ void main() {
 
     expect(pages.length, greaterThan(1));
     expect(pages.every((page) => page.text.isNotEmpty), isTrue);
-    expect(pages.map((page) => page.text).join(), text);
+    expectCanonicalCoverage(pages, text);
     expect(pages.first.showsChapterTitle, isTrue);
     expect(pages.skip(1).every((page) => !page.showsChapterTitle), isTrue);
   });
@@ -125,7 +126,7 @@ void main() {
           locale: const Locale('zh', 'CN'),
         );
 
-        expect(pages.map((page) => page.text).join(), text);
+        expectCanonicalCoverage(pages, text);
         for (final page in pages.skip(1)) {
           final firstCharacter = page.text.trimLeft()[0];
           expect(
@@ -189,6 +190,77 @@ void main() {
     expect(spaciousPages.length, greaterThan(compactPages.length));
     expect(restoredPage.startOffset, lessThanOrEqualTo(anchor));
     expect(restoredPage.endOffset, greaterThan(anchor));
-    expect(spaciousPages.map((page) => page.text).join(), text);
+    expectCanonicalCoverage(spaciousPages, text);
   });
+
+  testWidgets(
+      'keeps canonical offsets contiguous while indent and spacing alter display text',
+      (tester) async {
+    final text = List.generate(
+      36,
+      (index) => index.isEven
+          ? '  第$index段包含原有半角缩进和足够长的分页正文。'
+          : '\t第$index段包含原有制表符缩进和足够长的分页正文。',
+    ).join('\r\n');
+    final pages = paginateBookSourceText(
+      text,
+      width: 190,
+      firstPageHeight: 130,
+      pageHeight: 150,
+      style: style,
+      textDirection: TextDirection.ltr,
+      locale: const Locale('zh', 'CN'),
+      firstLineIndent: 2,
+      paragraphSpacing: 1,
+    );
+    final displayLayout = ReaderTextLayout.build(
+      text,
+      firstLineIndent: 2,
+      paragraphSpacing: 1,
+    );
+
+    expect(pages.length, greaterThan(1));
+    expect(pages.map((page) => page.text).join(), displayLayout.text);
+    expect(pages.map((page) => page.text).join(), isNot(text));
+    expectCanonicalCoverage(pages, text);
+
+    for (final offset in <int>[0, 1, text.length ~/ 2, text.length - 1]) {
+      final page = pages[bookSourcePageIndexForOffset(pages, offset)];
+      expect(page.startOffset, lessThanOrEqualTo(offset));
+      expect(page.endOffset, greaterThan(offset));
+    }
+  });
+
+  testWidgets('keeps an all-indent chapter addressable with zero indentation',
+      (tester) async {
+    const text = ' \t\u3000  ';
+    final pages = paginateBookSourceText(
+      text,
+      width: 180,
+      firstPageHeight: 120,
+      pageHeight: 140,
+      style: style,
+      textDirection: TextDirection.ltr,
+      firstLineIndent: 0,
+      paragraphSpacing: 2,
+    );
+
+    expect(pages, hasLength(1));
+    expect(pages.single.text, isEmpty);
+    expectCanonicalCoverage(pages, text);
+  });
+}
+
+void expectCanonicalCoverage(List<BookSourceTextPage> pages, String source) {
+  expect(pages, isNotEmpty);
+  expect(pages.first.startOffset, 0);
+  expect(pages.last.endOffset, source.length);
+  for (var index = 0; index < pages.length; index++) {
+    final page = pages[index];
+    expect(page.startOffset, inInclusiveRange(0, source.length));
+    expect(page.endOffset, inInclusiveRange(page.startOffset, source.length));
+    if (index > 0) {
+      expect(page.startOffset, pages[index - 1].endOffset);
+    }
+  }
 }

@@ -465,6 +465,10 @@
   "@firstLineIndentLabel": {
     "description": "First line indent label"
   },
+  "paragraphSpacingLabel": "Paragraph Spacing",
+  "@paragraphSpacingLabel": {
+    "description": "Additional spacing between reader paragraphs"
+  },
   "pageMarginLabel": "Page Margin",
   "@pageMarginLabel": {
     "description": "Page margin label"
@@ -1580,6 +1584,11 @@
   "@readerModePageCurlHint": {
     "description": "Subtitle explaining the simulated page curl mode"
   },
+  "readerPageTurnStyleTitle": "Page-turn Animation",
+  "readerPageTurnStyleCylinder": "Cylinder Curl",
+  "readerPageTurnStyleCylinderHint": "A soft rolling sheet with continuous curvature",
+  "readerPageTurnStyleClassicFold": "Classic Fold",
+  "readerPageTurnStyleClassicFoldHint": "A crisp diagonal fold with reflected paper and a real spring",
   "readerFontSizeValue": "Font size  {size}",
   "@readerFontSizeValue": {
     "description": "Slider label showing the current reader font size",

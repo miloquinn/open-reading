@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:xxread/core/reader/native_text_paginator.dart';
+import 'package:xxread/core/reader/reader_text_layout.dart';
 
 class BookSourceTextPage {
   const BookSourceTextPage({
@@ -50,6 +51,8 @@ List<BookSourceTextPage> paginateBookSourceText(
   required TextDirection textDirection,
   TextScaler textScaler = TextScaler.noScaling,
   Locale? locale,
+  int firstLineIndent = 0,
+  int paragraphSpacing = 0,
 }) {
   if (text.isEmpty) {
     return const [
@@ -72,6 +75,21 @@ List<BookSourceTextPage> paginateBookSourceText(
     ];
   }
 
+  final layout = ReaderTextLayout.build(
+    text,
+    firstLineIndent: firstLineIndent,
+    paragraphSpacing: paragraphSpacing,
+  );
+  if (layout.text.isEmpty) {
+    return [
+      BookSourceTextPage(
+        text: '',
+        showsChapterTitle: true,
+        startOffset: 0,
+        endOffset: text.length,
+      ),
+    ];
+  }
   final flowStyle = NativeTextFlowStyle(
     textDirection: textDirection,
     textScaler: textScaler,
@@ -80,7 +98,7 @@ List<BookSourceTextPage> paginateBookSourceText(
     textHeightBehavior: readerTextHeightBehavior,
   );
   TextSpan buildSpan(int start, int end) => TextSpan(
-        text: text.substring(start, end),
+        text: layout.text.substring(start, end),
         style: style,
       );
 
@@ -88,18 +106,18 @@ List<BookSourceTextPage> paginateBookSourceText(
     maxWidth: width,
     maxHeight: firstPageHeight,
     flowStyle: flowStyle,
-  ).paginate(text: text, spanBuilder: buildSpan).first;
+  ).paginate(text: layout.text, spanBuilder: buildSpan).first;
   final pages = <BookSourceTextPage>[
     BookSourceTextPage(
-      text: text.substring(firstRange.start, firstRange.end),
+      text: layout.text.substring(firstRange.start, firstRange.end),
       showsChapterTitle: true,
-      startOffset: firstRange.start,
-      endOffset: firstRange.end,
+      startOffset: layout.sourceOffsetForDisplayOffset(firstRange.start),
+      endOffset: layout.sourceOffsetForDisplayOffset(firstRange.end),
     ),
   ];
-  if (firstRange.end == text.length) return pages;
+  if (firstRange.end == layout.text.length) return pages;
 
-  final remaining = text.substring(firstRange.end);
+  final remaining = layout.text.substring(firstRange.end);
   final remainingRanges = NativeTextPaginator(
     maxWidth: width,
     maxHeight: pageHeight,
@@ -114,12 +132,21 @@ List<BookSourceTextPage> paginateBookSourceText(
       (range) => BookSourceTextPage(
         text: remaining.substring(range.start, range.end),
         showsChapterTitle: false,
-        startOffset: firstRange.end + range.start,
-        endOffset: firstRange.end + range.end,
+        startOffset: layout.sourceOffsetForDisplayOffset(
+          firstRange.end + range.start,
+        ),
+        endOffset: layout.sourceOffsetForDisplayOffset(
+          firstRange.end + range.end,
+        ),
       ),
     ),
   );
-  assert(pages.map((page) => page.text).join() == text);
+  assert(pages.map((page) => page.text).join() == layout.text);
+  assert(pages.first.startOffset == 0);
+  assert(pages.last.endOffset == text.length);
+  for (var index = 1; index < pages.length; index++) {
+    assert(pages[index - 1].endOffset == pages[index].startOffset);
+  }
   return pages;
 }
 

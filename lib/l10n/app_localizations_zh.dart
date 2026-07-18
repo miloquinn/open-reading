@@ -534,6 +534,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get firstLineIndentLabel => '首行缩进';
 
   @override
+  String get paragraphSpacingLabel => '段落间距';
+
+  @override
   String get pageMarginLabel => '页边距';
 
   @override
@@ -1333,6 +1336,21 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get readerModePageCurlHint => '左右拖动卷起页面，松手后完成翻页或回弹';
+
+  @override
+  String get readerPageTurnStyleTitle => '仿真样式';
+
+  @override
+  String get readerPageTurnStyleCylinder => '圆柱卷页';
+
+  @override
+  String get readerPageTurnStyleCylinderHint => '连续曲面的柔和卷页效果';
+
+  @override
+  String get readerPageTurnStyleClassicFold => '经典折页';
+
+  @override
+  String get readerPageTurnStyleClassicFoldHint => '对角折线、纸背反射与真实弹簧回弹';
 
   @override
   String readerFontSizeValue(int size) {
@@ -2832,6 +2850,9 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get firstLineIndentLabel => '首行縮排';
 
   @override
+  String get paragraphSpacingLabel => '段落間距';
+
+  @override
   String get pageMarginLabel => '頁面邊界';
 
   @override
@@ -3631,6 +3652,21 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get readerModePageCurlHint => '左右拖動捲起頁面，放開後完成翻頁或回彈';
+
+  @override
+  String get readerPageTurnStyleTitle => '仿真樣式';
+
+  @override
+  String get readerPageTurnStyleCylinder => '圓柱捲頁';
+
+  @override
+  String get readerPageTurnStyleCylinderHint => '連續曲面的柔和捲頁效果';
+
+  @override
+  String get readerPageTurnStyleClassicFold => '經典摺頁';
+
+  @override
+  String get readerPageTurnStyleClassicFoldHint => '對角摺線、紙背反射與真實彈簧回彈';
 
   @override
   String readerFontSizeValue(int size) {

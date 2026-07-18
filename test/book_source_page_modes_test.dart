@@ -9,6 +9,7 @@ import 'package:xxread/book_sources/models/registered_book_source.dart';
 import 'package:xxread/book_sources/protocol/book_source_protocol.dart';
 import 'package:xxread/book_sources/services/book_source_client.dart';
 import 'package:xxread/book_sources/services/book_source_shelf_service.dart';
+import 'package:xxread/core/reader/reader_layout.dart';
 import 'package:xxread/core/reader/reader_settings.dart';
 import 'package:xxread/l10n/app_localizations.dart';
 import 'package:xxread/models/book.dart';
@@ -182,6 +183,72 @@ void main() {
     expect(
       int.parse(afterPages[1].group(2)!),
       greaterThan(int.parse(beforePages[1].group(2)!)),
+    );
+  });
+
+  testWidgets('source reader persists typography and page turn style settings',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({
+      ReaderSettingsStore.pageModeKey: ReaderPageMode.instantPage.name,
+    });
+    await tester.pumpWidget(_testApp());
+    await _pumpUntilFound(tester, find.textContaining('娴嬭瘯姝ｆ枃'));
+
+    tester
+        .widget<IconButton>(
+          find.ancestor(
+            of: find.byIcon(Icons.tune_rounded),
+            matching: find.byType(IconButton),
+          ),
+        )
+        .onPressed!();
+    await tester.pumpAndSettle();
+
+    final indentFinder = find.descendant(
+      of: find.byKey(const ValueKey('reader-first-line-indent-slider')),
+      matching: find.byType(Slider),
+    );
+    final spacingFinder = find.descendant(
+      of: find.byKey(const ValueKey('reader-paragraph-spacing-slider')),
+      matching: find.byType(Slider),
+    );
+    expect(indentFinder, findsOneWidget);
+    expect(spacingFinder, findsOneWidget);
+
+    tester.widget<Slider>(indentFinder).onChanged!(4);
+    await tester.pump();
+    tester.widget<Slider>(indentFinder).onChangeEnd!(4);
+    tester.widget<Slider>(spacingFinder).onChanged!(2);
+    await tester.pump();
+    tester.widget<Slider>(spacingFinder).onChangeEnd!(2);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.auto_stories_outlined));
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<RadioGroup<ReaderPageTurnStyle>>(
+            find.byType(RadioGroup<ReaderPageTurnStyle>),
+          )
+          .groupValue,
+      ReaderPageTurnStyle.cylinder,
+    );
+
+    final classicFold = find.byWidgetPredicate(
+      (widget) =>
+          widget is RadioListTile<ReaderPageTurnStyle> &&
+          widget.value == ReaderPageTurnStyle.classicFold,
+    );
+    expect(classicFold, findsOneWidget);
+    await tester.tap(classicFold);
+    await tester.pumpAndSettle();
+
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getInt(ReaderSettingsStore.firstLineIndentKey), 4);
+    expect(prefs.getInt(ReaderSettingsStore.paragraphSpacingKey), 2);
+    expect(
+      prefs.getString(ReaderSettingsStore.pageTurnStyleKey),
+      ReaderPageTurnStyle.classicFold.name,
     );
   });
 

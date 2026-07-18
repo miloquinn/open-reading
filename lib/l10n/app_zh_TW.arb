@@ -187,6 +187,7 @@
   "lineSpacingLabel": "行距",
   "letterSpacingLabel": "字距",
   "firstLineIndentLabel": "首行縮排",
+  "paragraphSpacingLabel": "段落間距",
   "pageMarginLabel": "頁面邊界",
   "resetDefault": "恢復預設",
   "ttsPanelTitle": "語音朗讀",
@@ -679,6 +680,11 @@
   "readerModeHorizontalSlideHint": "頁面跟隨手指橫向移動並吸附翻頁",
   "readerModePageCurl": "仿真翻頁",
   "readerModePageCurlHint": "左右拖動捲起頁面，放開後完成翻頁或回彈",
+  "readerPageTurnStyleTitle": "仿真樣式",
+  "readerPageTurnStyleCylinder": "圓柱捲頁",
+  "readerPageTurnStyleCylinderHint": "連續曲面的柔和捲頁效果",
+  "readerPageTurnStyleClassicFold": "經典摺頁",
+  "readerPageTurnStyleClassicFoldHint": "對角摺線、紙背反射與真實彈簧回彈",
   "readerFontSizeValue": "字體大小  {size}",
   "@readerFontSizeValue": {
     "placeholders": {

@@ -1,0 +1,208 @@
+import 'dart:math' as math;
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/painting.dart';
+
+enum ReaderPageTurnDirection { forward, backward }
+
+enum ReaderPageTurnCorner { top, bottom }
+
+/// Clean-room paper-fold geometry in logical pixel space.
+///
+/// Both directions share a canonical right-edge page. Backward turns mirror
+/// input/output across the vertical page axis. The crease is the perpendicular
+/// bisector between the fixed paper corner and the constrained finger point.
+@immutable
+class ReaderPageTurnGeometry {
+  const ReaderPageTurnGeometry._({
+    required this.size,
+    required this.direction,
+    required this.corner,
+    required this.canonicalTouch,
+    required this.canonicalFoldPoint,
+    required this.canonicalFoldNormal,
+    required this.canonicalFoldStart,
+    required this.canonicalFoldEnd,
+    required this.progress,
+  });
+
+  factory ReaderPageTurnGeometry.fromPointer({
+    required Size size,
+    required ReaderPageTurnDirection direction,
+    required Offset pointer,
+    required Offset dragOrigin,
+  }) {
+    final canonicalOrigin = canonicalize(dragOrigin, size, direction);
+    final corner = canonicalOrigin.dy <= size.height / 2
+        ? ReaderPageTurnCorner.top
+        : ReaderPageTurnCorner.bottom;
+    return ReaderPageTurnGeometry.fromCanonicalTouch(
+      size: size,
+      direction: direction,
+      corner: corner,
+      canonicalTouch: canonicalize(pointer, size, direction),
+    );
+  }
+
+  factory ReaderPageTurnGeometry.fromCanonicalTouch({
+    required Size size,
+    required ReaderPageTurnDirection direction,
+    required ReaderPageTurnCorner corner,
+    required Offset canonicalTouch,
+  }) {
+    final width = math.max(size.width, 1.0);
+    final height = math.max(size.height, 1.0);
+    final pageSize = Size(width, height);
+    final anchor = Offset(
+      width,
+      corner == ReaderPageTurnCorner.top ? 0 : height,
+    );
+    var touch = Offset(
+      canonicalTouch.dx.clamp(-width, width),
+      canonicalTouch.dy.clamp(0.0, height),
+    );
+    var delta = anchor - touch;
+    if (delta.distance < 0.5) {
+      touch = Offset(width - 0.5, anchor.dy);
+      delta = anchor - touch;
+    }
+    final normal = delta / delta.distance;
+    final midpoint = Offset(
+      (anchor.dx + touch.dx) / 2,
+      (anchor.dy + touch.dy) / 2,
+    );
+    final tangent = Offset(-normal.dy, normal.dx);
+    final intersections = _lineRectangleIntersections(
+      point: midpoint,
+      direction: tangent,
+      size: pageSize,
+    );
+    final endpoints = _farthestPair(intersections, pageSize);
+    return ReaderPageTurnGeometry._(
+      size: pageSize,
+      direction: direction,
+      corner: corner,
+      canonicalTouch: touch,
+      canonicalFoldPoint: midpoint,
+      canonicalFoldNormal: normal,
+      canonicalFoldStart: endpoints.$1,
+      canonicalFoldEnd: endpoints.$2,
+      progress: ((width - touch.dx) / width).clamp(0.0, 1.0),
+    );
+  }
+
+  final Size size;
+  final ReaderPageTurnDirection direction;
+  final ReaderPageTurnCorner corner;
+  final Offset canonicalTouch;
+  final Offset canonicalFoldPoint;
+  final Offset canonicalFoldNormal;
+  final Offset canonicalFoldStart;
+  final Offset canonicalFoldEnd;
+  final double progress;
+
+  bool get reverse => direction == ReaderPageTurnDirection.backward;
+
+  Offset get foldPoint => screenPoint(canonicalFoldPoint);
+
+  Offset get foldNormal => reverse
+      ? Offset(-canonicalFoldNormal.dx, canonicalFoldNormal.dy)
+      : canonicalFoldNormal;
+
+  /// Renderer-facing turn axis. Its positive half-plane is always the page
+  /// being uncovered, including when a backward turn mirrors the fold line.
+  Offset get turnAxis => reverse ? -foldNormal : foldNormal;
+
+  Offset get foldStart => screenPoint(canonicalFoldStart);
+
+  Offset get foldEnd => screenPoint(canonicalFoldEnd);
+
+  Offset get reflectedCorner {
+    final anchor = Offset(
+      size.width,
+      corner == ReaderPageTurnCorner.top ? 0 : size.height,
+    );
+    final distance = (anchor - canonicalFoldPoint).dx * canonicalFoldNormal.dx +
+        (anchor - canonicalFoldPoint).dy * canonicalFoldNormal.dy;
+    return screenPoint(anchor - canonicalFoldNormal * (2 * distance));
+  }
+
+  Offset screenPoint(Offset canonical) =>
+      reverse ? Offset(size.width - canonical.dx, canonical.dy) : canonical;
+
+  static Offset canonicalize(
+    Offset point,
+    Size size,
+    ReaderPageTurnDirection direction,
+  ) =>
+      direction == ReaderPageTurnDirection.backward
+          ? Offset(size.width - point.dx, point.dy)
+          : point;
+
+  static Offset canonicalVelocity(
+    Offset velocity,
+    ReaderPageTurnDirection direction,
+  ) =>
+      direction == ReaderPageTurnDirection.backward
+          ? Offset(-velocity.dx, velocity.dy)
+          : velocity;
+}
+
+List<Offset> _lineRectangleIntersections({
+  required Offset point,
+  required Offset direction,
+  required Size size,
+}) {
+  const epsilon = 1e-6;
+  final values = <Offset>[];
+
+  void add(Offset candidate) {
+    if (candidate.dx < -epsilon ||
+        candidate.dx > size.width + epsilon ||
+        candidate.dy < -epsilon ||
+        candidate.dy > size.height + epsilon) {
+      return;
+    }
+    final clamped = Offset(
+      candidate.dx.clamp(0.0, size.width),
+      candidate.dy.clamp(0.0, size.height),
+    );
+    if (values.every((value) => (value - clamped).distance > 0.25)) {
+      values.add(clamped);
+    }
+  }
+
+  if (direction.dx.abs() > epsilon) {
+    var t = -point.dx / direction.dx;
+    add(point + direction * t);
+    t = (size.width - point.dx) / direction.dx;
+    add(point + direction * t);
+  }
+  if (direction.dy.abs() > epsilon) {
+    var t = -point.dy / direction.dy;
+    add(point + direction * t);
+    t = (size.height - point.dy) / direction.dy;
+    add(point + direction * t);
+  }
+  return values;
+}
+
+(Offset, Offset) _farthestPair(List<Offset> values, Size size) {
+  if (values.length < 2) {
+    return (Offset(size.width, 0), Offset(size.width, size.height));
+  }
+  var first = values[0];
+  var second = values[1];
+  var greatestDistance = (first - second).distanceSquared;
+  for (var left = 0; left < values.length; left++) {
+    for (var right = left + 1; right < values.length; right++) {
+      final distance = (values[left] - values[right]).distanceSquared;
+      if (distance > greatestDistance) {
+        greatestDistance = distance;
+        first = values[left];
+        second = values[right];
+      }
+    }
+  }
+  return (first, second);
+}

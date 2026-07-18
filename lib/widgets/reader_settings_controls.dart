@@ -12,22 +12,31 @@ class ReaderSettingsSheet extends StatefulWidget {
     required this.themeDescription,
     required this.pageModeTitle,
     required this.pageModeSummary,
+    required this.pageTurnStyleTitle,
+    required this.pageTurnStyleSummary,
     required this.fontSizeLabel,
     required this.lineHeightLabel,
+    required this.firstLineIndentLabel,
+    required this.paragraphSpacingLabel,
     required this.horizontalMarginLabel,
     required this.topMarginLabel,
     required this.bottomMarginLabel,
     required this.themeId,
     required this.fontSize,
     required this.lineHeight,
+    required this.firstLineIndent,
+    required this.paragraphSpacing,
     required this.horizontalMargin,
     required this.topMargin,
     required this.bottomMargin,
     required this.themeLabelFor,
     required this.onThemeChanged,
     required this.onPageModeTap,
+    required this.onPageTurnStyleTap,
     required this.onFontSizeChanged,
     required this.onLineHeightChanged,
+    required this.onFirstLineIndentChanged,
+    required this.onParagraphSpacingChanged,
     required this.onHorizontalMarginChanged,
     required this.onTopMarginChanged,
     required this.onBottomMarginChanged,
@@ -38,22 +47,31 @@ class ReaderSettingsSheet extends StatefulWidget {
   final String themeDescription;
   final String pageModeTitle;
   final String pageModeSummary;
+  final String pageTurnStyleTitle;
+  final String pageTurnStyleSummary;
   final String fontSizeLabel;
   final String lineHeightLabel;
+  final String firstLineIndentLabel;
+  final String paragraphSpacingLabel;
   final String horizontalMarginLabel;
   final String topMarginLabel;
   final String bottomMarginLabel;
   final String themeId;
   final double fontSize;
   final double lineHeight;
+  final int firstLineIndent;
+  final int paragraphSpacing;
   final double horizontalMargin;
   final double topMargin;
   final double bottomMargin;
   final String Function(String themeId) themeLabelFor;
   final ValueChanged<String> onThemeChanged;
   final VoidCallback onPageModeTap;
+  final VoidCallback onPageTurnStyleTap;
   final ValueChanged<double> onFontSizeChanged;
   final ValueChanged<double> onLineHeightChanged;
+  final ValueChanged<int> onFirstLineIndentChanged;
+  final ValueChanged<int> onParagraphSpacingChanged;
   final ValueChanged<double> onHorizontalMarginChanged;
   final ValueChanged<double> onTopMarginChanged;
   final ValueChanged<double> onBottomMarginChanged;
@@ -66,6 +84,8 @@ class _ReaderSettingsSheetState extends State<ReaderSettingsSheet> {
   late String _themeId = widget.themeId;
   late double _fontSize = widget.fontSize;
   late double _lineHeight = widget.lineHeight;
+  late int _firstLineIndent = widget.firstLineIndent;
+  late int _paragraphSpacing = widget.paragraphSpacing;
   late double _horizontalMargin = widget.horizontalMargin;
   late double _topMargin = widget.topMargin;
   late double _bottomMargin = widget.bottomMargin;
@@ -108,6 +128,14 @@ class _ReaderSettingsSheetState extends State<ReaderSettingsSheet> {
             trailing: const Icon(Icons.chevron_right),
             onTap: widget.onPageModeTap,
           ),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.auto_stories_outlined),
+            title: Text(widget.pageTurnStyleTitle),
+            subtitle: Text(widget.pageTurnStyleSummary),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: widget.onPageTurnStyleTap,
+          ),
           const Divider(height: 28),
           ReaderSettingSlider(
             label: widget.fontSizeLabel,
@@ -128,6 +156,34 @@ class _ReaderSettingsSheetState extends State<ReaderSettingsSheet> {
             divisions: 7,
             onChanged: (value) => setState(() => _lineHeight = value),
             onChangeEnd: widget.onLineHeightChanged,
+          ),
+          ReaderSettingSlider(
+            key: const ValueKey('reader-first-line-indent-slider'),
+            label: widget.firstLineIndentLabel,
+            value: _firstLineIndent.toDouble(),
+            valueLabel: _firstLineIndent.toString(),
+            min: 0,
+            max: 4,
+            divisions: 4,
+            onChanged: (value) => setState(
+              () => _firstLineIndent = value.round(),
+            ),
+            onChangeEnd: (value) =>
+                widget.onFirstLineIndentChanged(value.round()),
+          ),
+          ReaderSettingSlider(
+            key: const ValueKey('reader-paragraph-spacing-slider'),
+            label: widget.paragraphSpacingLabel,
+            value: _paragraphSpacing.toDouble(),
+            valueLabel: _paragraphSpacing.toString(),
+            min: 0,
+            max: 2,
+            divisions: 2,
+            onChanged: (value) => setState(
+              () => _paragraphSpacing = value.round(),
+            ),
+            onChangeEnd: (value) =>
+                widget.onParagraphSpacingChanged(value.round()),
           ),
           ReaderSettingSlider(
             key: const ValueKey('reader-horizontal-margin-slider'),
@@ -151,6 +207,62 @@ class _ReaderSettingsSheetState extends State<ReaderSettingsSheet> {
             onBottomChangeEnd: widget.onBottomMarginChanged,
           ),
         ],
+      ),
+    );
+  }
+}
+
+class ReaderPageTurnStyleSheet extends StatelessWidget {
+  const ReaderPageTurnStyleSheet({
+    super.key,
+    required this.palette,
+    required this.title,
+    required this.selectedStyle,
+    required this.titleFor,
+    required this.hintFor,
+    required this.onSelected,
+  });
+
+  final ReaderThemePalette palette;
+  final String title;
+  final ReaderPageTurnStyle selectedStyle;
+  final String Function(ReaderPageTurnStyle style) titleFor;
+  final String Function(ReaderPageTurnStyle style) hintFor;
+  final ValueChanged<ReaderPageTurnStyle> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = palette.toThemeData(typography: Theme.of(context).textTheme);
+    return Theme(
+      data: theme,
+      child: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: theme.textTheme.titleLarge),
+              const SizedBox(height: 8),
+              RadioGroup<ReaderPageTurnStyle>(
+                groupValue: selectedStyle,
+                onChanged: (style) {
+                  if (style != null) onSelected(style);
+                },
+                child: Column(
+                  children: [
+                    for (final style in ReaderPageTurnStyle.values)
+                      RadioListTile<ReaderPageTurnStyle>(
+                        value: style,
+                        title: Text(titleFor(style)),
+                        subtitle: Text(hintFor(style)),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

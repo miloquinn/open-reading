@@ -8,6 +8,11 @@ enum ReaderPageMode {
   pageCurl,
 }
 
+enum ReaderPageTurnStyle {
+  cylinder,
+  classicFold,
+}
+
 ReaderPageMode readerPageModeFromName(
   String? name, {
   required ReaderPageMode fallback,
@@ -15,6 +20,16 @@ ReaderPageMode readerPageModeFromName(
   if (name == 'horizontalPage') return ReaderPageMode.instantPage;
   return ReaderPageMode.values.firstWhere(
     (mode) => mode.name == name,
+    orElse: () => fallback,
+  );
+}
+
+ReaderPageTurnStyle readerPageTurnStyleFromName(
+  String? name, {
+  ReaderPageTurnStyle fallback = ReaderPageTurnStyle.cylinder,
+}) {
+  return ReaderPageTurnStyle.values.firstWhere(
+    (style) => style.name == name,
     orElse: () => fallback,
   );
 }
@@ -31,6 +46,9 @@ class ReaderLayoutFingerprint {
     required this.textScaler,
     required this.locale,
     required this.pageMode,
+    this.firstLineIndent = 0,
+    this.paragraphSpacing = 0,
+    this.textDirection,
     this.extra = '',
   });
 
@@ -43,6 +61,9 @@ class ReaderLayoutFingerprint {
   final TextScaler textScaler;
   final Locale? locale;
   final ReaderPageMode pageMode;
+  final int firstLineIndent;
+  final int paragraphSpacing;
+  final TextDirection? textDirection;
   final String extra;
 
   String cacheKey(String version) {
@@ -54,6 +75,7 @@ class ReaderLayoutFingerprint {
         '${fontSize.toStringAsFixed(2)}:${lineHeight.toStringAsFixed(3)}:'
         '${horizontalMargin.toStringAsFixed(2)}:'
         '${verticalMargin.toStringAsFixed(2)}:$scalerKey:'
-        '${locale?.toLanguageTag()}:${pageMode.name}:$extra';
+        '${locale?.toLanguageTag()}:${textDirection?.name}:${pageMode.name}:'
+        '$firstLineIndent:$paragraphSpacing:$extra';
   }
 }

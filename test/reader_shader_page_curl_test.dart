@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:xxread/widgets/reader_shader_page_curl.dart';
+import 'package:xxread/widgets/reader_paper_page_leaf.dart';
 
 void main() {
   testWidgets('programmatic forward turn reports the reader page change',
@@ -15,8 +16,8 @@ void main() {
           height: 700,
           child: ReaderShaderPageCurl(
             controller: controller,
-            currentPage: const Text('current'),
-            forwardPage: const Text('next'),
+            currentPage: _snapshot('current'),
+            forwardPage: _snapshot('next'),
             onTurnForward: () => forwardTurns++,
             onTurnBackward: () {},
             paperColor: Colors.white,
@@ -40,9 +41,9 @@ void main() {
           width: 400,
           height: 700,
           child: ReaderShaderPageCurl(
-            currentPage: const Text('current'),
-            backwardPage: const Text('previous'),
-            forwardPage: const Text('next'),
+            currentPage: _snapshot('current'),
+            backwardPage: _snapshot('previous'),
+            forwardPage: _snapshot('next'),
             onTurnForward: () {},
             onTurnBackward: () {},
             paperColor: Colors.amber,
@@ -70,8 +71,8 @@ void main() {
           width: 400,
           height: 700,
           child: ReaderShaderPageCurl(
-            currentPage: const Text('current'),
-            forwardPage: const Text('next'),
+            currentPage: _snapshot('current'),
+            forwardPage: _snapshot('next'),
             onTurnForward: () => forwardTurns++,
             onTurnBackward: () {},
             paperColor: Colors.white,
@@ -90,4 +91,47 @@ void main() {
 
     expect(forwardTurns, 1);
   });
+
+  test('snapshot ratio stays inside quality and byte ceilings', () {
+    expect(
+      readerPageSnapshotPixelRatio(
+        logicalSize: const Size(400, 800),
+        devicePixelRatio: 3,
+      ),
+      lessThanOrEqualTo(2.5),
+    );
+    expect(
+      readerPageSnapshotPixelRatio(
+        logicalSize: const Size(1200, 1600),
+        devicePixelRatio: 3,
+      ),
+      lessThan(1.2),
+    );
+    const budget = 8 * 1024 * 1024;
+    const largeViewport = Size(7680, 4320);
+    final downsampledRatio = readerPageSnapshotPixelRatio(
+      logicalSize: largeViewport,
+      devicePixelRatio: 3,
+      perEntryByteBudget: budget,
+    );
+    expect(downsampledRatio, lessThan(1));
+    expect(
+      largeViewport.width *
+          largeViewport.height *
+          downsampledRatio *
+          downsampledRatio *
+          4,
+      lessThanOrEqualTo(budget),
+    );
+  });
 }
+
+ReaderPageSnapshot _snapshot(String id) => ReaderPageSnapshot(
+      key: ReaderPageSnapshotKey(
+        pageIdentity: id,
+        layoutFingerprint: 'layout',
+        themeId: 'day',
+      ),
+      contentRevision: 0,
+      child: Text(id),
+    );

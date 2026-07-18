@@ -1127,6 +1127,12 @@ abstract class AppLocalizations {
   /// **'First-line Indent'**
   String get firstLineIndentLabel;
 
+  /// Additional spacing between reader paragraphs
+  ///
+  /// In en, this message translates to:
+  /// **'Paragraph Spacing'**
+  String get paragraphSpacingLabel;
+
   /// Page margin label
   ///
   /// In en, this message translates to:
@@ -2584,6 +2590,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Drag sideways to curl the page, then release to turn or rebound'**
   String get readerModePageCurlHint;
+
+  /// No description provided for @readerPageTurnStyleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Page-turn Animation'**
+  String get readerPageTurnStyleTitle;
+
+  /// No description provided for @readerPageTurnStyleCylinder.
+  ///
+  /// In en, this message translates to:
+  /// **'Cylinder Curl'**
+  String get readerPageTurnStyleCylinder;
+
+  /// No description provided for @readerPageTurnStyleCylinderHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A soft rolling sheet with continuous curvature'**
+  String get readerPageTurnStyleCylinderHint;
+
+  /// No description provided for @readerPageTurnStyleClassicFold.
+  ///
+  /// In en, this message translates to:
+  /// **'Classic Fold'**
+  String get readerPageTurnStyleClassicFold;
+
+  /// No description provided for @readerPageTurnStyleClassicFoldHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A crisp diagonal fold with reflected paper and a real spring'**
+  String get readerPageTurnStyleClassicFoldHint;
 
   /// Slider label showing the current reader font size
   ///
