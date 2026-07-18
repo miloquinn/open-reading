@@ -125,6 +125,76 @@ void main() {
     expect(forwardTurns, 1);
   });
 
+  testWidgets('edge-only forward turn cannot start from its binding edge',
+      (tester) async {
+    var forwardTurns = 0;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SizedBox(
+          width: 400,
+          height: 700,
+          child: ReaderShaderPageCurl(
+            edgeDragOnly: true,
+            currentPage: _snapshot('current'),
+            forwardPage: _snapshot('next'),
+            onTurnForward: () => forwardTurns++,
+            onTurnBackward: () {},
+            paperColor: Colors.white,
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final rect = tester.getRect(find.byType(ReaderShaderPageCurl));
+    await tester.dragFrom(
+      Offset(rect.left + 2, rect.center.dy),
+      Offset(-rect.width * 0.5, 0),
+    );
+    await tester.pumpAndSettle();
+
+    expect(forwardTurns, 0);
+  });
+
+  testWidgets('edge-only backward turn uses the outer edge, not the spine',
+      (tester) async {
+    var backwardTurns = 0;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SizedBox(
+          width: 400,
+          height: 700,
+          child: ReaderShaderPageCurl(
+            edgeDragOnly: true,
+            currentPage: _snapshot('current'),
+            backwardPage: _snapshot('previous'),
+            onTurnForward: () {},
+            onTurnBackward: () => backwardTurns++,
+            paperColor: Colors.white,
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final rect = tester.getRect(find.byType(ReaderShaderPageCurl));
+    await tester.dragFrom(
+      Offset(rect.right - 2, rect.center.dy),
+      Offset(rect.width * 0.5, 0),
+    );
+    await tester.pumpAndSettle();
+    expect(backwardTurns, 0);
+
+    await tester.dragFrom(
+      Offset(rect.left + 2, rect.center.dy),
+      Offset(rect.width * 0.5, 0),
+    );
+    await tester.pumpAndSettle();
+    expect(backwardTurns, 1);
+  });
+
   test('snapshot ratio stays inside quality and byte ceilings', () {
     expect(
       readerPageSnapshotPixelRatio(

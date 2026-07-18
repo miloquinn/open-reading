@@ -77,9 +77,13 @@ void main() {
 
       expect(
         tester
-            .widget<ReaderShaderPageCurl>(find.byType(ReaderShaderPageCurl))
-            .turnStyle,
-        ReaderPageTurnStyle.classicFold,
+            .widgetList<ReaderShaderPageCurl>(
+              find.byType(ReaderShaderPageCurl),
+            )
+            .every(
+              (curl) => curl.turnStyle == ReaderPageTurnStyle.classicFold,
+            ),
+        isTrue,
       );
 
       tester
@@ -139,13 +143,78 @@ void main() {
       );
       expect(
         tester
-            .widget<ReaderShaderPageCurl>(find.byType(ReaderShaderPageCurl))
-            .turnStyle,
-        ReaderPageTurnStyle.cylinder,
+            .widgetList<ReaderShaderPageCurl>(
+              find.byType(ReaderShaderPageCurl),
+            )
+            .every(
+              (curl) => curl.turnStyle == ReaderPageTurnStyle.cylinder,
+            ),
+        isTrue,
       );
     } finally {
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump();
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+
+  testWidgets('tablet page curl keeps two leaves around a fixed center spine',
+      (tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    await tester.binding.setSurfaceSize(const Size(1200, 800));
+    final tabletBook = File(
+      '${Directory.systemTemp.path}/open-reading-tablet-spread.html',
+    );
+    tabletBook.writeAsStringSync(
+      '<!doctype html><html><body><h1>Tablet spread</h1>'
+      '${List.generate(240, (index) => '<p>Paragraph $index verifies that '
+          'the center binding remains fixed while outer page edges turn.</p>').join()}'
+      '</body></html>',
+    );
+    try {
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: NativeReaderPage(
+            book: Book(
+              title: 'Tablet spread',
+              filePath: tabletBook.path,
+              format: 'html',
+              fileModifiedTime:
+                  tabletBook.lastModifiedSync().millisecondsSinceEpoch,
+            ),
+          ),
+        ),
+      );
+      await tester.runAsync(() async {
+        for (var attempt = 0; attempt < 30; attempt++) {
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+          await tester.pump();
+          if (find.byType(ReaderShaderPageCurl).evaluate().length >= 2) return;
+        }
+      });
+      await _pumpUntilFound(tester, find.byType(ReaderShaderPageCurl));
+
+      final curlFinder = find.byType(ReaderShaderPageCurl);
+      expect(curlFinder, findsNWidgets(2));
+      final curls =
+          tester.widgetList<ReaderShaderPageCurl>(curlFinder).toList();
+      expect(curls.every((curl) => curl.edgeDragOnly), isTrue);
+
+      final rects = curlFinder
+          .evaluate()
+          .map((element) => tester.getRect(find.byWidget(element.widget)))
+          .toList()
+        ..sort((left, right) => left.left.compareTo(right.left));
+      expect(rects[0].right, closeTo(588, 0.1));
+      expect(rects[1].left, closeTo(612, 0.1));
+      expect(rects[1].right, closeTo(1200, 0.1));
+    } finally {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+      await tester.binding.setSurfaceSize(null);
+      if (tabletBook.existsSync()) tabletBook.deleteSync();
       debugDefaultTargetPlatformOverride = null;
     }
   });

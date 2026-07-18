@@ -6,6 +6,8 @@ uniform vec2 uCurlDir;
 uniform float uRadius;
 uniform float uShadowWidth;
 uniform float uBackInkOpacity;
+uniform float uReverse;
+uniform float uBindingGuard;
 uniform vec4 uPaperColor;
 uniform sampler2D uCurrentPage;
 uniform sampler2D uTargetPage;
@@ -25,6 +27,21 @@ vec4 shadeBack(vec4 source, float lighting) {
 
 void main() {
     vec2 uv = FlutterFragCoord().xy / uSize;
+
+    // Forward turns keep the source's left binding seam flat. Reverse turns
+    // keep the target's mirrored right seam flat. The host also clamps the
+    // moving curl line to the leaf bounds, so this is a shader-level hard lock
+    // rather than a decorative spine overlay.
+    float guardUv = uBindingGuard / max(uSize.x, 1.0);
+    if (uReverse < 0.5 && uv.x <= guardUv) {
+        fragColor = texture(uCurrentPage, uv);
+        return;
+    }
+    if (uReverse >= 0.5 && uv.x >= 1.0 - guardUv) {
+        fragColor = texture(uTargetPage, uv);
+        return;
+    }
+
     vec2 dir = normalize(uCurlDir);
     vec2 curlPos = uCurlPos;
 

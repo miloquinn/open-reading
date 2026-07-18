@@ -24,6 +24,8 @@ class ReaderSettings {
     this.firstLineIndent = defaultFirstLineIndent,
     this.paragraphSpacing = defaultParagraphSpacing,
     this.pageTurnStyle = ReaderPageTurnStyle.cylinder,
+    this.pullBookmarkEnabled = false,
+    this.tapPageAnimationEnabled = true,
   });
 
   final double fontSize;
@@ -36,6 +38,8 @@ class ReaderSettings {
   final int firstLineIndent;
   final int paragraphSpacing;
   final ReaderPageTurnStyle pageTurnStyle;
+  final bool pullBookmarkEnabled;
+  final bool tapPageAnimationEnabled;
 
   ReaderSettings copyWith({
     double? fontSize,
@@ -48,6 +52,8 @@ class ReaderSettings {
     int? firstLineIndent,
     int? paragraphSpacing,
     ReaderPageTurnStyle? pageTurnStyle,
+    bool? pullBookmarkEnabled,
+    bool? tapPageAnimationEnabled,
   }) {
     return ReaderSettings(
       fontSize: (fontSize ?? this.fontSize).clamp(14, 32),
@@ -65,6 +71,10 @@ class ReaderSettings {
       firstLineIndent: (firstLineIndent ?? this.firstLineIndent).clamp(0, 4),
       paragraphSpacing: (paragraphSpacing ?? this.paragraphSpacing).clamp(0, 2),
       pageTurnStyle: pageTurnStyle ?? this.pageTurnStyle,
+      pullBookmarkEnabled:
+          pullBookmarkEnabled ?? this.pullBookmarkEnabled,
+      tapPageAnimationEnabled:
+          tapPageAnimationEnabled ?? this.tapPageAnimationEnabled,
     );
   }
 }
@@ -81,6 +91,8 @@ class ReaderSettingsStore {
   static const firstLineIndentKey = 'native_reader_first_line_indent';
   static const paragraphSpacingKey = 'native_reader_paragraph_spacing';
   static const pageTurnStyleKey = 'native_reader_page_turn_style';
+  static const pullBookmarkKey = 'reader_pull_bookmark_enabled';
+  static const tapPageAnimationKey = 'reader_tap_page_animation_enabled';
   static const scrollByChapterKey = 'native_reader_scroll_by_chapter';
   static const legacyBookSourceLineHeightKey = 'book_source_reader_line_height';
 
@@ -133,6 +145,8 @@ class ReaderSettingsStore {
       pageTurnStyle: readerPageTurnStyleFromName(
         prefs.getString(pageTurnStyleKey),
       ),
+      pullBookmarkEnabled: prefs.getBool(pullBookmarkKey) ?? false,
+      tapPageAnimationEnabled: prefs.getBool(tapPageAnimationKey) ?? true,
     );
   }
 
@@ -149,6 +163,11 @@ class ReaderSettingsStore {
       prefs.setInt(firstLineIndentKey, settings.firstLineIndent),
       prefs.setInt(paragraphSpacingKey, settings.paragraphSpacing),
       prefs.setString(pageTurnStyleKey, settings.pageTurnStyle.name),
+      prefs.setBool(pullBookmarkKey, settings.pullBookmarkEnabled),
+      prefs.setBool(
+        tapPageAnimationKey,
+        settings.tapPageAnimationEnabled,
+      ),
     ]);
   }
 

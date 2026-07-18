@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/reader/reader_layout.dart';
 import '../core/reader/reader_margin_settings.dart';
+import '../core/reader/reader_custom_theme.dart';
 import '../utils/reader_themes.dart';
 
 class ReaderSettingsSheet extends StatefulWidget {
@@ -14,6 +15,10 @@ class ReaderSettingsSheet extends StatefulWidget {
     required this.pageModeSummary,
     required this.pageTurnStyleTitle,
     required this.pageTurnStyleSummary,
+    required this.pullBookmarkTitle,
+    required this.pullBookmarkHint,
+    required this.tapPageAnimationTitle,
+    required this.tapPageAnimationHint,
     required this.fontSizeLabel,
     required this.lineHeightLabel,
     required this.firstLineIndentLabel,
@@ -29,8 +34,11 @@ class ReaderSettingsSheet extends StatefulWidget {
     required this.horizontalMargin,
     required this.topMargin,
     required this.bottomMargin,
+    required this.pullBookmarkEnabled,
+    required this.tapPageAnimationEnabled,
     required this.themeLabelFor,
     required this.onThemeChanged,
+    required this.onCustomThemeTap,
     required this.onPageModeTap,
     required this.onPageTurnStyleTap,
     required this.onFontSizeChanged,
@@ -40,6 +48,8 @@ class ReaderSettingsSheet extends StatefulWidget {
     required this.onHorizontalMarginChanged,
     required this.onTopMarginChanged,
     required this.onBottomMarginChanged,
+    required this.onPullBookmarkChanged,
+    required this.onTapPageAnimationChanged,
   });
 
   final String title;
@@ -49,6 +59,10 @@ class ReaderSettingsSheet extends StatefulWidget {
   final String pageModeSummary;
   final String pageTurnStyleTitle;
   final String pageTurnStyleSummary;
+  final String pullBookmarkTitle;
+  final String pullBookmarkHint;
+  final String tapPageAnimationTitle;
+  final String tapPageAnimationHint;
   final String fontSizeLabel;
   final String lineHeightLabel;
   final String firstLineIndentLabel;
@@ -64,8 +78,11 @@ class ReaderSettingsSheet extends StatefulWidget {
   final double horizontalMargin;
   final double topMargin;
   final double bottomMargin;
+  final bool pullBookmarkEnabled;
+  final bool tapPageAnimationEnabled;
   final String Function(String themeId) themeLabelFor;
   final ValueChanged<String> onThemeChanged;
+  final VoidCallback onCustomThemeTap;
   final VoidCallback onPageModeTap;
   final VoidCallback onPageTurnStyleTap;
   final ValueChanged<double> onFontSizeChanged;
@@ -75,6 +92,8 @@ class ReaderSettingsSheet extends StatefulWidget {
   final ValueChanged<double> onHorizontalMarginChanged;
   final ValueChanged<double> onTopMarginChanged;
   final ValueChanged<double> onBottomMarginChanged;
+  final ValueChanged<bool> onPullBookmarkChanged;
+  final ValueChanged<bool> onTapPageAnimationChanged;
 
   @override
   State<ReaderSettingsSheet> createState() => _ReaderSettingsSheetState();
@@ -89,6 +108,8 @@ class _ReaderSettingsSheetState extends State<ReaderSettingsSheet> {
   late double _horizontalMargin = widget.horizontalMargin;
   late double _topMargin = widget.topMargin;
   late double _bottomMargin = widget.bottomMargin;
+  late bool _pullBookmarkEnabled = widget.pullBookmarkEnabled;
+  late bool _tapPageAnimationEnabled = widget.tapPageAnimationEnabled;
 
   @override
   Widget build(BuildContext context) {
@@ -118,6 +139,7 @@ class _ReaderSettingsSheetState extends State<ReaderSettingsSheet> {
               setState(() => _themeId = themeId);
               widget.onThemeChanged(themeId);
             },
+            onCustomThemeTap: widget.onCustomThemeTap,
           ),
           const Divider(height: 28),
           ListTile(
@@ -135,6 +157,30 @@ class _ReaderSettingsSheetState extends State<ReaderSettingsSheet> {
             subtitle: Text(widget.pageTurnStyleSummary),
             trailing: const Icon(Icons.chevron_right),
             onTap: widget.onPageTurnStyleTap,
+          ),
+          SwitchListTile(
+            key: const ValueKey('reader-pull-bookmark-switch'),
+            contentPadding: EdgeInsets.zero,
+            secondary: const Icon(Icons.bookmark_add_outlined),
+            value: _pullBookmarkEnabled,
+            title: Text(widget.pullBookmarkTitle),
+            subtitle: Text(widget.pullBookmarkHint),
+            onChanged: (value) {
+              setState(() => _pullBookmarkEnabled = value);
+              widget.onPullBookmarkChanged(value);
+            },
+          ),
+          SwitchListTile(
+            key: const ValueKey('reader-tap-page-animation-switch'),
+            contentPadding: EdgeInsets.zero,
+            secondary: const Icon(Icons.animation_rounded),
+            value: _tapPageAnimationEnabled,
+            title: Text(widget.tapPageAnimationTitle),
+            subtitle: Text(widget.tapPageAnimationHint),
+            onChanged: (value) {
+              setState(() => _tapPageAnimationEnabled = value);
+              widget.onTapPageAnimationChanged(value);
+            },
           ),
           const Divider(height: 28),
           ReaderSettingSlider(
@@ -424,11 +470,13 @@ class ReaderThemeStrip extends StatelessWidget {
     required this.selectedThemeId,
     required this.labelFor,
     required this.onSelected,
+    required this.onCustomThemeTap,
   });
 
   final String selectedThemeId;
   final String Function(String themeId) labelFor;
   final ValueChanged<String> onSelected;
+  final VoidCallback onCustomThemeTap;
 
   @override
   Widget build(BuildContext context) {
@@ -438,9 +486,116 @@ class ReaderThemeStrip extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 1),
         physics: const BouncingScrollPhysics(),
-        itemCount: ReaderThemes.all.length,
+        itemCount: ReaderThemes.all.length + 1,
         separatorBuilder: (_, __) => const SizedBox(width: 10),
         itemBuilder: (context, index) {
+          if (index == ReaderThemes.all.length) {
+            final custom = ReaderThemes.custom;
+            final selected = selectedThemeId == ReaderCustomTheme.themeId;
+            final colors = Theme.of(context).colorScheme;
+            return SizedBox(
+              width: 108,
+              child: Semantics(
+                button: true,
+                selected: selected,
+                label: labelFor(ReaderCustomTheme.themeId),
+                child: InkWell(
+                  key: const ValueKey('reader-custom-theme-card'),
+                  onTap: onCustomThemeTap,
+                  borderRadius: BorderRadius.circular(18),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: custom?.background ?? colors.surface,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(
+                        color: selected
+                            ? (custom?.accent ?? colors.primary)
+                            : colors.outlineVariant,
+                        width: selected ? 2.2 : 1.2,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: 30,
+                              height: 30,
+                              decoration: BoxDecoration(
+                                color: custom?.controlBar ??
+                                    colors.surfaceContainerHighest,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: custom?.border ?? colors.outlineVariant,
+                                ),
+                              ),
+                              child: Icon(
+                                Icons.add_rounded,
+                                size: 20,
+                                color: custom?.text ?? colors.onSurface,
+                              ),
+                            ),
+                            const Spacer(),
+                            if (selected)
+                              Icon(
+                                Icons.check_circle_rounded,
+                                size: 21,
+                                color: custom?.accent ?? colors.primary,
+                              ),
+                          ],
+                        ),
+                        const Spacer(),
+                        if (custom != null)
+                          Row(
+                            children: [
+                              for (final color in [
+                                custom.text,
+                                custom.background,
+                                custom.controlBar,
+                              ])
+                                Container(
+                                  width: 15,
+                                  height: 15,
+                                  margin: const EdgeInsets.only(right: 4),
+                                  decoration: BoxDecoration(
+                                    color: color,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: custom.border),
+                                  ),
+                                ),
+                            ],
+                          )
+                        else
+                          Text(
+                            'Aa',
+                            style: TextStyle(
+                              color: colors.onSurface,
+                              fontSize: 20,
+                              height: 1,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        const SizedBox(height: 7),
+                        Text(
+                          labelFor(ReaderCustomTheme.themeId),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: custom?.text ?? colors.onSurface,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }
           final palette = ReaderThemes.all[index];
           final selected = palette.id == selectedThemeId;
           final label = labelFor(palette.id);

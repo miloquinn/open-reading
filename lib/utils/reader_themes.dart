@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../core/reader/reader_custom_theme.dart';
+
 /// A reader-only color system. It is intentionally separate from AppThemes so
 /// changing the reading canvas never changes the rest of the application.
 class ReaderThemePalette {
@@ -30,6 +32,11 @@ class ReaderThemePalette {
   final Color onAccent;
   final Color border;
   final Color shadow;
+
+  String get cacheKey => '$id:'
+      '${background.toARGB32()}:'
+      '${text.toARGB32()}:'
+      '${controlBar.toARGB32()}';
 
   ThemeData toThemeData({TextTheme? typography}) {
     final baseScheme = ColorScheme.fromSeed(
@@ -121,6 +128,17 @@ class ReaderThemePalette {
 
 class ReaderThemes {
   ReaderThemes._();
+
+  static ReaderCustomTheme? _customTheme;
+
+  static ReaderCustomTheme? get customTheme => _customTheme;
+
+  static ReaderThemePalette? get custom =>
+      _customTheme == null ? null : _fromCustomTheme(_customTheme!);
+
+  static void setCustomTheme(ReaderCustomTheme? theme) {
+    _customTheme = theme;
+  }
 
   static const day = ReaderThemePalette(
     id: 'day',
@@ -254,9 +272,49 @@ class ReaderThemes {
   ];
 
   static ReaderThemePalette byId(String? id) {
+    if (id == ReaderCustomTheme.themeId && custom != null) return custom!;
     return all.firstWhere(
       (theme) => theme.id == id,
       orElse: () => day,
+    );
+  }
+
+  static ReaderThemePalette _fromCustomTheme(ReaderCustomTheme custom) {
+    final background = custom.background;
+    final text = custom.text;
+    final controlBar = custom.controlBar;
+    final brightness = background.computeLuminance() < 0.34
+        ? Brightness.dark
+        : Brightness.light;
+    final surface = Color.alphaBlend(
+      text.withValues(alpha: brightness == Brightness.dark ? 0.07 : 0.035),
+      background,
+    );
+    final controlFill = Color.alphaBlend(
+      text.withValues(alpha: brightness == Brightness.dark ? 0.18 : 0.11),
+      controlBar,
+    );
+    final secondaryText = Color.alphaBlend(
+      text.withValues(alpha: 0.68),
+      background,
+    );
+    final border = Color.alphaBlend(
+      text.withValues(alpha: brightness == Brightness.dark ? 0.32 : 0.22),
+      background,
+    );
+    return ReaderThemePalette(
+      id: ReaderCustomTheme.themeId,
+      brightness: brightness,
+      background: background,
+      text: text,
+      secondaryText: secondaryText,
+      surface: surface,
+      controlBar: controlBar,
+      controlFill: controlFill,
+      accent: text,
+      onAccent: background,
+      border: border,
+      shadow: const Color(0xFF000000),
     );
   }
 }

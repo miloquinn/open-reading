@@ -91,6 +91,25 @@ void main() {
     expect(geometry.foldNormal.dy, lessThan(geometry.foldNormal.dx));
   });
 
+  test('crease keeps the full binding edge on the unlifted half-plane', () {
+    final geometry = ReaderPageTurnGeometry.fromPointer(
+      size: size,
+      direction: ReaderPageTurnDirection.forward,
+      pointer: const Offset(-200, 100),
+      dragOrigin: const Offset(400, 700),
+      anchorMode: ReaderPageTurnAnchorMode.followEdge,
+    );
+
+    for (final bindingPoint in const [Offset.zero, Offset(0, 800)]) {
+      final delta = bindingPoint - geometry.canonicalFoldPoint;
+      final signedDistance = delta.dx * geometry.canonicalFoldNormal.dx +
+          delta.dy * geometry.canonicalFoldNormal.dy;
+      expect(signedDistance, lessThanOrEqualTo(0.001));
+    }
+    expect(geometry.canonicalFoldStart.dx, greaterThanOrEqualTo(0));
+    expect(geometry.canonicalFoldEnd.dx, greaterThanOrEqualTo(0));
+  });
+
   test('progress increases monotonically as the finger moves across the page',
       () {
     final nearEdge = ReaderPageTurnGeometry.fromPointer(

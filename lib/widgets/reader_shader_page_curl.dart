@@ -63,6 +63,7 @@ class ReaderShaderPageCurl extends StatefulWidget {
     this.controller,
     this.preparePages,
     this.turnStyle = ReaderPageTurnStyle.cylinder,
+    this.edgeDragOnly = false,
   });
 
   final ReaderPageSnapshot currentPage;
@@ -74,6 +75,12 @@ class ReaderShaderPageCurl extends StatefulWidget {
   final ReaderPageCurlController? controller;
   final Future<void> Function()? preparePages;
   final ReaderPageTurnStyle turnStyle;
+
+  /// Restricts interactive turns to the free outer edge.
+  ///
+  /// A two-page spread enables this on each half so the center spine cannot
+  /// start a page turn. Programmatic turns remain available for taps and keys.
+  final bool edgeDragOnly;
 
   @override
   State<ReaderShaderPageCurl> createState() => _ReaderShaderPageCurlState();
@@ -391,8 +398,11 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
         pointer: details.localPosition,
         origin: origin,
       );
-    } else {
+    } else if (!widget.edgeDragOnly) {
       setState(() => _phase = _PageTurnPhase.pointerPending);
+    } else {
+      _pointerDown = null;
+      _dragOrigin = null;
     }
   }
 
@@ -974,8 +984,12 @@ class _ReaderCylinderCurlPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final touch = geometry.screenPoint(geometry.canonicalTouch);
-    final curlPosition = Offset(touch.dx / size.width, touch.dy / size.height);
+    final curlPosition = Offset(
+      (touch.dx / size.width).clamp(0.0, 1.0),
+      (touch.dy / size.height).clamp(0.0, 1.0),
+    );
     final direction = geometry.turnAxis;
+    final bindingGuard = math.min(4.0, math.max(1.5, size.width * 0.006));
     var index = 0;
     shader
       ..setFloat(index++, size.width)
@@ -987,6 +1001,8 @@ class _ReaderCylinderCurlPainter extends CustomPainter {
       ..setFloat(index++, 0.07)
       ..setFloat(index++, 0.065)
       ..setFloat(index++, 0.30)
+      ..setFloat(index++, geometry.reverse ? 1 : 0)
+      ..setFloat(index++, bindingGuard)
       ..setFloat(index++, paperColor.r)
       ..setFloat(index++, paperColor.g)
       ..setFloat(index++, paperColor.b)
@@ -1024,6 +1040,7 @@ class _ReaderClassicFoldPainter extends CustomPainter {
     _drawPageImage(canvas, targetPage, size);
     final foldPoint = geometry.foldPoint;
     final normal = geometry.turnAxis;
+    final bindingGuard = math.min(4.0, math.max(1.5, size.width * 0.006));
     var index = 0;
     shader
       ..setFloat(index++, size.width)
@@ -1034,6 +1051,8 @@ class _ReaderClassicFoldPainter extends CustomPainter {
       ..setFloat(index++, normal.dy)
       ..setFloat(index++, math.min(28, size.shortestSide * 0.045))
       ..setFloat(index++, 0.34)
+      ..setFloat(index++, geometry.reverse ? 1 : 0)
+      ..setFloat(index++, bindingGuard)
       ..setFloat(index++, paperColor.r)
       ..setFloat(index++, paperColor.g)
       ..setFloat(index++, paperColor.b)

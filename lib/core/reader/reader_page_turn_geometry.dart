@@ -83,26 +83,55 @@ class ReaderPageTurnGeometry {
       touch = Offset(width - 0.5, anchor.dy);
       delta = anchor - touch;
     }
-    final normal = delta / delta.distance;
-    final midpoint = Offset(
+    final rawNormal = delta / delta.distance;
+    final rawMidpoint = Offset(
       (anchor.dx + touch.dx) / 2,
       (anchor.dy + touch.dy) / 2,
     );
-    final tangent = Offset(-normal.dy, normal.dx);
-    final intersections = _lineRectangleIntersections(
-      point: midpoint,
+    var foldPoint = rawMidpoint;
+    var foldNormal = rawNormal;
+    var tangent = Offset(-foldNormal.dy, foldNormal.dx);
+    var intersections = _lineRectangleIntersections(
+      point: foldPoint,
       direction: tangent,
       size: pageSize,
     );
-    final endpoints = _farthestPair(intersections, pageSize);
+    var endpoints = _farthestPair(intersections, pageSize);
+
+    // The canonical page is glued to x = 0. A steep diagonal drag can put
+    // the mathematical crease beyond that edge near the top or bottom even
+    // while its midpoint remains on the page. Clamp both infinite-line edge
+    // intersections and rebuild the render line so the full spine remains on
+    // the unlifted half-plane. Backward turns inherit the same rule by mirror.
+    if (rawNormal.dx.abs() > 1e-6) {
+      double creaseXAt(double y) =>
+          rawMidpoint.dx - rawNormal.dy * (y - rawMidpoint.dy) / rawNormal.dx;
+
+      final rawTopX = creaseXAt(0);
+      final rawBottomX = creaseXAt(height);
+      if (rawTopX < 0 || rawBottomX < 0) {
+        final top = Offset(math.max(0, rawTopX), 0);
+        final bottom = Offset(math.max(0, rawBottomX), height);
+        tangent = (bottom - top) / (bottom - top).distance;
+        foldNormal = Offset(tangent.dy, -tangent.dx);
+        if (foldNormal.dx < 0) foldNormal = -foldNormal;
+        foldPoint = top;
+        intersections = _lineRectangleIntersections(
+          point: foldPoint,
+          direction: tangent,
+          size: pageSize,
+        );
+        endpoints = _farthestPair(intersections, pageSize);
+      }
+    }
     return ReaderPageTurnGeometry._(
       size: pageSize,
       direction: direction,
       corner: corner,
       canonicalAnchor: anchor,
       canonicalTouch: touch,
-      canonicalFoldPoint: midpoint,
-      canonicalFoldNormal: normal,
+      canonicalFoldPoint: foldPoint,
+      canonicalFoldNormal: foldNormal,
       canonicalFoldStart: endpoints.$1,
       canonicalFoldEnd: endpoints.$2,
       progress: ((width - touch.dx) / width).clamp(0.0, 1.0),
