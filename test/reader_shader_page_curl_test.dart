@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:xxread/core/reader/reader_layout.dart';
 import 'package:xxread/widgets/reader_shader_page_curl.dart';
 import 'package:xxread/widgets/reader_paper_page_leaf.dart';
 
@@ -86,6 +87,38 @@ void main() {
     await tester.dragFrom(
       Offset(rect.left + rect.width * 0.5, rect.center.dy),
       Offset(-rect.width * 0.4, 0),
+    );
+    await tester.pumpAndSettle();
+
+    expect(forwardTurns, 1);
+  });
+
+  testWidgets('classic fold accepts a horizontal drag below page center',
+      (tester) async {
+    var forwardTurns = 0;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SizedBox(
+          width: 400,
+          height: 700,
+          child: ReaderShaderPageCurl(
+            turnStyle: ReaderPageTurnStyle.classicFold,
+            currentPage: _snapshot('current'),
+            forwardPage: _snapshot('next'),
+            onTurnForward: () => forwardTurns++,
+            onTurnBackward: () {},
+            paperColor: Colors.white,
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final rect = tester.getRect(find.byType(ReaderShaderPageCurl));
+    await tester.dragFrom(
+      Offset(rect.right - 2, rect.top + rect.height * 0.68),
+      Offset(-rect.width * 0.42, 0),
     );
     await tester.pumpAndSettle();
 

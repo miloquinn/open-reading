@@ -426,6 +426,7 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
         direction: _direction!,
         pointer: details.localPosition,
         dragOrigin: _dragOrigin!,
+        anchorMode: _pageTurnAnchorMode,
       );
     });
   }
@@ -452,6 +453,7 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
         direction: direction,
         pointer: pointer,
         dragOrigin: origin,
+        anchorMode: _pageTurnAnchorMode,
       );
       _phase = _PageTurnPhase.dragging;
     });
@@ -544,6 +546,11 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
           ? widget.forwardPage != null
           : widget.backwardPage != null;
 
+  ReaderPageTurnAnchorMode get _pageTurnAnchorMode =>
+      widget.turnStyle == ReaderPageTurnStyle.classicFold
+          ? ReaderPageTurnAnchorMode.followEdge
+          : ReaderPageTurnAnchorMode.nearestCorner;
+
   void _startSpring({
     required bool commit,
     required Offset canonicalVelocity,
@@ -551,10 +558,7 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
     final geometry = _geometry;
     final direction = _direction;
     if (geometry == null || direction == null) return;
-    final anchor = Offset(
-      _viewportSize.width,
-      geometry.corner == ReaderPageTurnCorner.top ? 0 : _viewportSize.height,
-    );
+    final anchor = geometry.canonicalAnchor;
     final target = commit
         ? widget.turnStyle == ReaderPageTurnStyle.classicFold
             ? Offset(-_viewportSize.width, anchor.dy)
@@ -615,6 +619,7 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
           size: _viewportSize,
           direction: direction,
           corner: geometry.corner,
+          canonicalAnchorY: geometry.canonicalAnchor.dy,
           canonicalTouch: touch,
         );
       });

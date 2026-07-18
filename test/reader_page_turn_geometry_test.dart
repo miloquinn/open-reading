@@ -57,6 +57,40 @@ void main() {
     expect(geometry.progress, 1);
   });
 
+  test('classic fold keeps a horizontal drag on the same page-edge height', () {
+    final geometry = ReaderPageTurnGeometry.fromPointer(
+      size: size,
+      direction: ReaderPageTurnDirection.forward,
+      pointer: const Offset(210, 540),
+      dragOrigin: const Offset(398, 540),
+      anchorMode: ReaderPageTurnAnchorMode.followEdge,
+    );
+
+    expect(geometry.anchor, const Offset(400, 540));
+    expect(geometry.reflectedCorner, const Offset(210, 540));
+    expect(geometry.foldNormal.dy, closeTo(0, 0.001));
+    expect(geometry.foldStart.dx, closeTo(geometry.foldEnd.dx, 0.001));
+    expect(geometry.foldStart.dy, closeTo(0, 0.001));
+    expect(geometry.foldEnd.dy, closeTo(size.height, 0.001));
+  });
+
+  test('classic fold follows diagonal finger movement without corner snapping',
+      () {
+    final geometry = ReaderPageTurnGeometry.fromPointer(
+      size: size,
+      direction: ReaderPageTurnDirection.forward,
+      pointer: const Offset(210, 470),
+      dragOrigin: const Offset(398, 540),
+      anchorMode: ReaderPageTurnAnchorMode.followEdge,
+    );
+
+    expect(geometry.anchor.dy, 540);
+    expect(geometry.reflectedCorner.dx, closeTo(210, 0.001));
+    expect(geometry.reflectedCorner.dy, closeTo(470, 0.001));
+    expect(geometry.foldNormal.dy, greaterThan(0));
+    expect(geometry.foldNormal.dy, lessThan(geometry.foldNormal.dx));
+  });
+
   test('progress increases monotonically as the finger moves across the page',
       () {
     final nearEdge = ReaderPageTurnGeometry.fromPointer(

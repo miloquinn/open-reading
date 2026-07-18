@@ -7,6 +7,11 @@ enum ReaderPageTurnDirection { forward, backward }
 
 enum ReaderPageTurnCorner { top, bottom }
 
+enum ReaderPageTurnAnchorMode {
+  nearestCorner,
+  followEdge,
+}
+
 /// Clean-room paper-fold geometry in logical pixel space.
 ///
 /// Both directions share a canonical right-edge page. Backward turns mirror
@@ -18,6 +23,7 @@ class ReaderPageTurnGeometry {
     required this.size,
     required this.direction,
     required this.corner,
+    required this.canonicalAnchor,
     required this.canonicalTouch,
     required this.canonicalFoldPoint,
     required this.canonicalFoldNormal,
@@ -31,15 +37,24 @@ class ReaderPageTurnGeometry {
     required ReaderPageTurnDirection direction,
     required Offset pointer,
     required Offset dragOrigin,
+    ReaderPageTurnAnchorMode anchorMode =
+        ReaderPageTurnAnchorMode.nearestCorner,
   }) {
     final canonicalOrigin = canonicalize(dragOrigin, size, direction);
     final corner = canonicalOrigin.dy <= size.height / 2
         ? ReaderPageTurnCorner.top
         : ReaderPageTurnCorner.bottom;
+    final anchorY = switch (anchorMode) {
+      ReaderPageTurnAnchorMode.nearestCorner =>
+        corner == ReaderPageTurnCorner.top ? 0.0 : size.height,
+      ReaderPageTurnAnchorMode.followEdge =>
+        canonicalOrigin.dy.clamp(0.0, size.height),
+    };
     return ReaderPageTurnGeometry.fromCanonicalTouch(
       size: size,
       direction: direction,
       corner: corner,
+      canonicalAnchorY: anchorY,
       canonicalTouch: canonicalize(pointer, size, direction),
     );
   }
@@ -49,13 +64,15 @@ class ReaderPageTurnGeometry {
     required ReaderPageTurnDirection direction,
     required ReaderPageTurnCorner corner,
     required Offset canonicalTouch,
+    double? canonicalAnchorY,
   }) {
     final width = math.max(size.width, 1.0);
     final height = math.max(size.height, 1.0);
     final pageSize = Size(width, height);
     final anchor = Offset(
       width,
-      corner == ReaderPageTurnCorner.top ? 0 : height,
+      (canonicalAnchorY ?? (corner == ReaderPageTurnCorner.top ? 0.0 : height))
+          .clamp(0.0, height),
     );
     var touch = Offset(
       canonicalTouch.dx.clamp(-width, width),
@@ -82,6 +99,7 @@ class ReaderPageTurnGeometry {
       size: pageSize,
       direction: direction,
       corner: corner,
+      canonicalAnchor: anchor,
       canonicalTouch: touch,
       canonicalFoldPoint: midpoint,
       canonicalFoldNormal: normal,
@@ -94,6 +112,7 @@ class ReaderPageTurnGeometry {
   final Size size;
   final ReaderPageTurnDirection direction;
   final ReaderPageTurnCorner corner;
+  final Offset canonicalAnchor;
   final Offset canonicalTouch;
   final Offset canonicalFoldPoint;
   final Offset canonicalFoldNormal;
@@ -104,6 +123,8 @@ class ReaderPageTurnGeometry {
   bool get reverse => direction == ReaderPageTurnDirection.backward;
 
   Offset get foldPoint => screenPoint(canonicalFoldPoint);
+
+  Offset get anchor => screenPoint(canonicalAnchor);
 
   Offset get foldNormal => reverse
       ? Offset(-canonicalFoldNormal.dx, canonicalFoldNormal.dy)
@@ -118,13 +139,12 @@ class ReaderPageTurnGeometry {
   Offset get foldEnd => screenPoint(canonicalFoldEnd);
 
   Offset get reflectedCorner {
-    final anchor = Offset(
-      size.width,
-      corner == ReaderPageTurnCorner.top ? 0 : size.height,
+    final distance =
+        (canonicalAnchor - canonicalFoldPoint).dx * canonicalFoldNormal.dx +
+            (canonicalAnchor - canonicalFoldPoint).dy * canonicalFoldNormal.dy;
+    return screenPoint(
+      canonicalAnchor - canonicalFoldNormal * (2 * distance),
     );
-    final distance = (anchor - canonicalFoldPoint).dx * canonicalFoldNormal.dx +
-        (anchor - canonicalFoldPoint).dy * canonicalFoldNormal.dy;
-    return screenPoint(anchor - canonicalFoldNormal * (2 * distance));
   }
 
   Offset screenPoint(Offset canonical) =>
