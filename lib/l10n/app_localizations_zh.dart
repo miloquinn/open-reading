@@ -1643,6 +1643,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get changelog121Typography => '修复中文正文左右留白不对称并统一分页绘制';
 
   @override
+  String get changelog122ContinuousTap => '修复在线连续滚动无法中间点击呼出控制栏';
+
+  @override
   String get changelog110CustomFonts => '新增自定义字体';
 
   @override
@@ -3936,6 +3939,9 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get changelog121Typography => '修正中文正文左右留白不對稱並統一分頁繪製';
+
+  @override
+  String get changelog122ContinuousTap => '修正線上連續捲動無法點擊中央叫出控制列';
 
   @override
   String get changelog110CustomFonts => '新增自訂字型';

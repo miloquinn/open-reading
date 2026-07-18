@@ -875,6 +875,7 @@
   "changelog120Licenses": "新增應用內開源授權檢視",
   "changelog121ContinuousScroll": "線上書源補齊按章節捲動與整書連續捲動",
   "changelog121Typography": "修正中文正文左右留白不對稱並統一分頁繪製",
+  "changelog122ContinuousTap": "修正線上連續捲動無法點擊中央叫出控制列",
   "changelog110CustomFonts": "新增自訂字型",
   "changelog110Bookmarks": "新增加入書籤",
   "changelog102Summary": "最佳化發現頁、獨立搜尋和閱讀設定",

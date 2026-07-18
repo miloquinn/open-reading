@@ -83,6 +83,43 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('continuous scrolling center tap shows reader controls',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({
+      'native_reader_page_mode': 'verticalScroll',
+      ReaderSettingsStore.scrollByChapterKey: false,
+    });
+
+    await tester.pumpWidget(_testApp());
+    final surface = find.byKey(
+      const ValueKey('book-source-reader-surface'),
+    );
+    await _pumpUntilFound(tester, surface);
+
+    final hiddenTop = tester.widget<AnimatedPositioned>(
+      find.byKey(const ValueKey('book-source-top-controls')),
+    );
+    expect(hiddenTop.top, -130);
+
+    final drag = await tester.startGesture(tester.getRect(surface).center);
+    await drag.moveBy(const Offset(0, -120));
+    await drag.up();
+    await tester.pump();
+
+    final topAfterDrag = tester.widget<AnimatedPositioned>(
+      find.byKey(const ValueKey('book-source-top-controls')),
+    );
+    expect(topAfterDrag.top, -130);
+
+    await tester.tapAt(tester.getRect(surface).center);
+    await tester.pump();
+
+    final visibleTop = tester.widget<AnimatedPositioned>(
+      find.byKey(const ValueKey('book-source-top-controls')),
+    );
+    expect(visibleTop.top, greaterThan(-130));
+  });
+
   testWidgets('restores normalized progress in a paged mode', (tester) async {
     SharedPreferences.setMockInitialValues({
       'native_reader_page_mode': 'instantPage',

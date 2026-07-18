@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -107,6 +108,9 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   int _continuousAnchorChapter = 0;
   Key _continuousCenterKey = GlobalKey();
   bool _continuousVisibilityUpdateScheduled = false;
+  Offset? _continuousPointerDownPosition;
+  Duration? _continuousPointerDownTime;
+  bool _continuousPointerMoved = false;
   bool _exitPromptVisible = false;
   bool _allowPop = false;
   int? _shelfBookId;
@@ -630,6 +634,47 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   void _toggleControls() {
     _controlsTimer?.cancel();
     setState(() => _controlsVisible = !_controlsVisible);
+  }
+
+  void _handleContinuousPointerDown(PointerDownEvent event) {
+    _continuousPointerDownPosition = event.localPosition;
+    _continuousPointerDownTime = event.timeStamp;
+    _continuousPointerMoved = false;
+  }
+
+  void _handleContinuousPointerMove(PointerMoveEvent event) {
+    final origin = _continuousPointerDownPosition;
+    if (origin != null &&
+        (event.localPosition - origin).distance > kTouchSlop) {
+      _continuousPointerMoved = true;
+    }
+  }
+
+  void _handleContinuousPointerCancel(PointerCancelEvent event) {
+    _clearContinuousPointerTracking();
+  }
+
+  void _handleContinuousPointerUp(PointerUpEvent event) {
+    final origin = _continuousPointerDownPosition;
+    final downTime = _continuousPointerDownTime;
+    final moved = _continuousPointerMoved;
+    _clearContinuousPointerTracking();
+    if (origin == null ||
+        downTime == null ||
+        moved ||
+        event.timeStamp - downTime >= kLongPressTimeout ||
+        (event.localPosition - origin).distance > kTouchSlop) {
+      return;
+    }
+    final width = MediaQuery.sizeOf(context).width;
+    final fraction = event.localPosition.dx / width;
+    if (fraction >= 1 / 3 && fraction <= 2 / 3) _toggleControls();
+  }
+
+  void _clearContinuousPointerTracking() {
+    _continuousPointerDownPosition = null;
+    _continuousPointerDownTime = null;
+    _continuousPointerMoved = false;
   }
 
   Future<void> _requestExit() async {
@@ -1431,10 +1476,13 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
 
   Widget _buildContinuousBook() {
     final anchor = _continuousAnchorChapter.clamp(0, _chapters.length - 1);
-    return GestureDetector(
+    return Listener(
       key: const ValueKey('book-source-reader-surface'),
       behavior: HitTestBehavior.translucent,
-      onTap: _toggleControls,
+      onPointerDown: _handleContinuousPointerDown,
+      onPointerMove: _handleContinuousPointerMove,
+      onPointerUp: _handleContinuousPointerUp,
+      onPointerCancel: _handleContinuousPointerCancel,
       child: SelectionArea(
         child: CustomScrollView(
           controller: _scrollController,

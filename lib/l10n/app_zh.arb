@@ -1227,6 +1227,7 @@
   "changelog120Licenses": "新增应用内开源许可查看",
   "changelog121ContinuousScroll": "在线书源补齐按章节滚动与整书连续滚动",
   "changelog121Typography": "修复中文正文左右留白不对称并统一分页绘制",
+  "changelog122ContinuousTap": "修复在线连续滚动无法中间点击呼出控制栏",
   "changelog110CustomFonts": "新增自定义字体",
   "changelog110Bookmarks": "新增加入书签",
   "changelog102Summary": "优化发现页、独立搜索和阅读设置",

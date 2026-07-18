@@ -3144,6 +3144,12 @@ abstract class AppLocalizations {
   /// **'Fixed asymmetric Chinese text margins and aligned pagination with rendering'**
   String get changelog121Typography;
 
+  /// No description provided for @changelog122ContinuousTap.
+  ///
+  /// In en, this message translates to:
+  /// **'Restored center-tap reader controls during continuous online scrolling'**
+  String get changelog122ContinuousTap;
+
   /// No description provided for @changelog110CustomFonts.
   ///
   /// In en, this message translates to:

@@ -1720,6 +1720,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Fixed asymmetric Chinese text margins and aligned pagination with rendering';
 
   @override
+  String get changelog122ContinuousTap =>
+      'Restored center-tap reader controls during continuous online scrolling';
+
+  @override
   String get changelog110CustomFonts => 'Added custom fonts';
 
   @override

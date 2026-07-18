@@ -875,6 +875,7 @@
   "changelog120Licenses": "アプリ内でオープンソースライセンスを閲覧可能に",
   "changelog121ContinuousScroll": "オンライン書籍に章単位と全巻連続スクロールを追加",
   "changelog121Typography": "中国語本文の左右余白とページ分割・描画の不一致を修正",
+  "changelog122ContinuousTap": "オンライン連続スクロールで中央タップの操作バー表示を復元",
   "changelog110CustomFonts": "カスタムフォントを追加",
   "changelog110Bookmarks": "ブックマーク追加機能を追加",
   "changelog102Summary": "発見ページ、独立検索、読書設定を改善",
