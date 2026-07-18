@@ -129,14 +129,14 @@ lib/
 - `core/reader/reader_layout.dart`：翻页模式、圆柱/经典折页样式和分页缓存指纹；动画样式不参与分页指纹。
 - `core/reader/native_text_paginator.dart`：本地与在线纯文本分页共享实现；正文统一两端对齐，分页测量与最终绘制共用同一文字流；正文行高仅作用于行间，首行上方和末行下方的 leading 统一裁剪，配套 strut 不携带 `height`。
 - `core/reader/reader_text_layout.dart`：把首行缩进和段落间距投影成显示文字，并维护显示 UTF-16 boundary 到原文 boundary 的单调映射，保证书签和阅读进度仍使用 canonical offset。
-- `core/reader/reader_page_turn_geometry.dart`：前后翻页共享的镜像坐标、纸角/触点垂直平分线、折线端点和 renderer turn axis。
+- `core/reader/reader_page_turn_geometry.dart`：前后翻页共享的镜像坐标、纸角/触点垂直平分线、折线端点和 renderer turn axis；规范坐标中的 `x = 0` 是装订边，倾斜折线会按顶/底交点钳制，不能越过书脊。
 - `core/reader/reader_leaf_status.dart`：分钟级时间、电量状态与 revision；Android/iOS 通过 `com.niki.xxread/reader_status` method channel 读取电量，不支持的平台只显示时间。
 - `core/reader/reader_safe_area.dart`：系统安全区、正文边距和页码位置。
 - `core/reader/canonical_locator.dart`：与排版无关的稳定阅读位置。
 - `core/reader/reader_volume_key_controller.dart`：Android 音量键翻页桥接；读取全局开关，只在非滚动分页模式下启用原生按键拦截，并把上一页/下一页事件路由给当前阅读器。
 - `widgets/reader_settings_controls.dart`：完整阅读设置、翻页模式和仿真样式面板。
 - `widgets/reader_paper_page_leaf.dart`：正文、章节名、页码、时间和电量组成的完整纸页；分页模式的抓图与横滑均以它为最小 page leaf。
-- `widgets/reader_shader_page_curl.dart`：圆柱卷页与经典折页共用的手势/真实弹簧状态机，以及按页面身份、排版指纹和主题缓存的字节预算快照 LRU。
+- `widgets/reader_shader_page_curl.dart`：圆柱卷页与经典折页共用的手势/真实弹簧状态机，以及按页面身份、排版指纹和主题缓存的字节预算快照 LRU；shader 保留不参与卷曲采样的装订缝，双页 leaf 可启用仅自由边起手的手势约束。
 - `widgets/reader_control_chrome.dart`：统一顶部、底部控制栏和滚动模式状态层；分页模式的常驻状态改由纸页 leaf 绘制。
 - `widgets/reader_navigation_sheet.dart`：目录、书签和定位面板。
 - `widgets/generated_book_cover.dart`：无真实封面时的统一实时封面组件，与持久化 PNG 共用同一绘制器。
@@ -147,6 +147,8 @@ lib/
 - `instantPage`（无动画）
 - `horizontalSlide`（水平滑动）
 - `pageCurl`（仿真翻页；可选连续曲面的圆柱卷页或对角反射的经典折页）
+
+平板仿真翻页按两张独立 leaf 组成 spread：左页只从屏幕最左自由边向后翻，右页只从屏幕最右自由边向前翻；正中的 `_spreadGutter` 是固定书脊，不进入任何 leaf 的抓图变换或手势命中区。手机单页使用整屏 leaf，其规范装订边位于左缘；反向翻页通过镜像坐标复用同一套约束。
 
 ## 在线书源结构
 
