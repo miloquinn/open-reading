@@ -10,16 +10,14 @@ class ReaderCustomThemePage extends StatefulWidget {
   final ReaderCustomTheme initialTheme;
 
   @override
-  State<ReaderCustomThemePage> createState() =>
-      _ReaderCustomThemePageState();
+  State<ReaderCustomThemePage> createState() => _ReaderCustomThemePageState();
 }
 
 class _ReaderCustomThemePageState extends State<ReaderCustomThemePage> {
   late ReaderCustomTheme _theme = widget.initialTheme;
 
   ReaderThemePalette get _palette {
-    ReaderThemes.setCustomTheme(_theme);
-    return ReaderThemes.custom!;
+    return ReaderThemes.fromCustomTheme(_theme);
   }
 
   Future<void> _pickColor({
@@ -56,7 +54,8 @@ class _ReaderCustomThemePageState extends State<ReaderCustomThemePage> {
           title: Text(context.l10n.readerCustomThemeTitle),
           actions: [
             TextButton(
-              onPressed: () => setState(() => _theme = ReaderCustomTheme.defaults),
+              onPressed: () =>
+                  setState(() => _theme = ReaderCustomTheme.defaults),
               child: Text(context.l10n.readerCustomThemeReset),
             ),
             const SizedBox(width: 6),
@@ -324,7 +323,8 @@ class _ColorSettingTile extends StatelessWidget {
                           ),
                     ),
                     const SizedBox(height: 2),
-                    Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
+                    Text(subtitle,
+                        style: Theme.of(context).textTheme.bodySmall),
                   ],
                 ),
               ),
@@ -371,14 +371,30 @@ class _ReaderColorPickerSheet extends StatefulWidget {
 
 class _ReaderColorPickerSheetState extends State<_ReaderColorPickerSheet> {
   static const _presets = <Color>[
-    Color(0xFFFFFFFF), Color(0xFFF7F1E3), Color(0xFFEAD9B8),
-    Color(0xFFE9F1E5), Color(0xFFDCEBE6), Color(0xFFDDE8F2),
-    Color(0xFFF4E8E7), Color(0xFFE8E0EF), Color(0xFFB9A27A),
-    Color(0xFF8D9B82), Color(0xFF708A96), Color(0xFF8B6F72),
-    Color(0xFF4A4238), Color(0xFF34413A), Color(0xFF293B4A),
-    Color(0xFF3B3344), Color(0xFF202124), Color(0xFF151816),
-    Color(0xFF000000), Color(0xFF5C4033), Color(0xFF70451F),
-    Color(0xFF3F63B8), Color(0xFF527451), Color(0xFF8B5A60),
+    Color(0xFFFFFFFF),
+    Color(0xFFF7F1E3),
+    Color(0xFFEAD9B8),
+    Color(0xFFE9F1E5),
+    Color(0xFFDCEBE6),
+    Color(0xFFDDE8F2),
+    Color(0xFFF4E8E7),
+    Color(0xFFE8E0EF),
+    Color(0xFFB9A27A),
+    Color(0xFF8D9B82),
+    Color(0xFF708A96),
+    Color(0xFF8B6F72),
+    Color(0xFF4A4238),
+    Color(0xFF34413A),
+    Color(0xFF293B4A),
+    Color(0xFF3B3344),
+    Color(0xFF202124),
+    Color(0xFF151816),
+    Color(0xFF000000),
+    Color(0xFF5C4033),
+    Color(0xFF70451F),
+    Color(0xFF3F63B8),
+    Color(0xFF527451),
+    Color(0xFF8B5A60),
   ];
 
   late Color _selected = widget.current;

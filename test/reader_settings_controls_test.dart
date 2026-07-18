@@ -9,6 +9,8 @@ void main() {
       (tester) async {
     int? changedIndent;
     int? changedSpacing;
+    bool? pullBookmark;
+    bool? tapAnimation;
 
     await tester.pumpWidget(
       MaterialApp(
@@ -20,6 +22,10 @@ void main() {
           pageModeSummary: 'Page curl',
           pageTurnStyleTitle: 'Page turn style',
           pageTurnStyleSummary: 'Cylinder',
+          pullBookmarkTitle: 'Pull bookmark',
+          pullBookmarkHint: 'Pull down from the top',
+          tapPageAnimationTitle: 'Tap animation',
+          tapPageAnimationHint: 'Animate side taps',
           fontSizeLabel: 'Font size',
           lineHeightLabel: 'Line height',
           firstLineIndentLabel: 'First-line indent',
@@ -35,8 +41,11 @@ void main() {
           horizontalMargin: 18,
           topMargin: 4,
           bottomMargin: 0,
+          pullBookmarkEnabled: false,
+          tapPageAnimationEnabled: true,
           themeLabelFor: (themeId) => themeId,
           onThemeChanged: (_) {},
+          onCustomThemeTap: () {},
           onPageModeTap: () {},
           onPageTurnStyleTap: () {},
           onFontSizeChanged: (_) {},
@@ -46,6 +55,8 @@ void main() {
           onHorizontalMarginChanged: (_) {},
           onTopMarginChanged: (_) {},
           onBottomMarginChanged: (_) {},
+          onPullBookmarkChanged: (value) => pullBookmark = value,
+          onTapPageAnimationChanged: (value) => tapAnimation = value,
         ),
       ),
     );
@@ -83,6 +94,23 @@ void main() {
 
     expect(changedIndent, 4);
     expect(changedSpacing, 2);
+
+    await tester.drag(
+      find.byType(ReaderThemeStrip),
+      const Offset(-900, 0),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('reader-custom-theme-card')), findsOne);
+    final pullSwitch = tester.widget<SwitchListTile>(
+      find.byKey(const ValueKey('reader-pull-bookmark-switch')),
+    );
+    final animationSwitch = tester.widget<SwitchListTile>(
+      find.byKey(const ValueKey('reader-tap-page-animation-switch')),
+    );
+    pullSwitch.onChanged!(true);
+    animationSwitch.onChanged!(false);
+    expect(pullBookmark, isTrue);
+    expect(tapAnimation, isFalse);
   });
 
   testWidgets('page turn style sheet offers and selects both renderers',

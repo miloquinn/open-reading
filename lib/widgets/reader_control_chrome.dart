@@ -33,6 +33,9 @@ class ReaderChromeOverlay extends StatelessWidget {
     this.bottomKey,
     this.statusKey,
     this.showViewportStatus = true,
+    this.showViewportTitle = false,
+    this.viewportTitleTop = 0,
+    this.viewportTitleKey,
   });
 
   final ReaderThemePalette palette;
@@ -54,6 +57,9 @@ class ReaderChromeOverlay extends StatelessWidget {
   final Key? bottomKey;
   final Key? statusKey;
   final bool showViewportStatus;
+  final bool showViewportTitle;
+  final double viewportTitleTop;
+  final Key? viewportTitleKey;
 
   @override
   Widget build(BuildContext context) {
@@ -62,6 +68,33 @@ class ReaderChromeOverlay extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
+        if (showViewportTitle)
+          Positioned(
+            left: 30,
+            right: 30,
+            top: viewportTitleTop,
+            child: IgnorePointer(
+              child: AnimatedOpacity(
+                key: viewportTitleKey,
+                opacity: visible ? 0 : 1,
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOut,
+                child: Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: textTheme.labelMedium?.copyWith(
+                    height: 1,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.18,
+                    color: colors.onSurfaceVariant.withValues(alpha: 0.62),
+                  ),
+                ),
+              ),
+            ),
+          ),
         if (showViewportStatus)
           Positioned(
             left: 0,

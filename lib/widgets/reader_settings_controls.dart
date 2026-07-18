@@ -529,7 +529,8 @@ class ReaderThemeStrip extends StatelessWidget {
                                     colors.surfaceContainerHighest,
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color: custom?.border ?? colors.outlineVariant,
+                                  color:
+                                      custom?.border ?? colors.outlineVariant,
                                 ),
                               ),
                               child: Icon(

@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:xxread/core/reader/reader_custom_theme.dart';
 import 'package:xxread/utils/reader_themes.dart';
 
 double _relativeLuminance(Color color) {
@@ -47,5 +48,26 @@ void main() {
 
   test('unknown saved theme falls back to day', () {
     expect(ReaderThemes.byId('missing'), ReaderThemes.day);
+  });
+
+  test('custom theme derives the full reader palette and cache identity', () {
+    const custom = ReaderCustomTheme(
+      background: Color(0xFFF4EBD8),
+      text: Color(0xFF30271F),
+      controlBar: Color(0xFFE1D0B4),
+    );
+    ReaderThemes.setCustomTheme(custom);
+
+    final palette = ReaderThemes.byId(ReaderCustomTheme.themeId);
+    expect(palette.background, custom.background);
+    expect(palette.text, custom.text);
+    expect(palette.controlBar, custom.controlBar);
+    expect(palette.cacheKey, contains(custom.background.toARGB32().toString()));
+
+    final changed = ReaderThemes.fromCustomTheme(
+      custom.copyWith(background: const Color(0xFF111111)),
+    );
+    expect(changed.cacheKey, isNot(palette.cacheKey));
+    ReaderThemes.setCustomTheme(null);
   });
 }

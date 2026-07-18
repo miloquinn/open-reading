@@ -4,6 +4,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 import 'package:xxread/book_sources/models/registered_book_source.dart';
 import 'package:xxread/book_sources/protocol/book_source_protocol.dart';
@@ -50,15 +51,18 @@ void main() {
     await tester.tap(find.text('翻页模式'));
     await tester.pumpAndSettle();
 
-    expect(find.text('上下滚动'), findsOneWidget);
+    expect(find.text('上下翻页'), findsOneWidget);
     expect(find.text('无动画'), findsOneWidget);
     expect(find.text('水平滑动'), findsOneWidget);
     expect(find.text('仿真翻页'), findsOneWidget);
     expect(find.text('按章节滚动'), findsOneWidget);
-    expect(find.byType(SwitchListTile), findsOneWidget);
+    final scrollSwitch = find.descendant(
+      of: find.byType(ReaderPageModeSheet),
+      matching: find.byType(SwitchListTile),
+    );
+    expect(scrollSwitch, findsOneWidget);
 
-    final scrollByChapter =
-        tester.widget<SwitchListTile>(find.byType(SwitchListTile));
+    final scrollByChapter = tester.widget<SwitchListTile>(scrollSwitch);
     expect(scrollByChapter.value, isTrue);
     scrollByChapter.onChanged!(false);
     await tester.pumpAndSettle();
@@ -78,9 +82,9 @@ void main() {
     });
 
     await tester.pumpWidget(_testApp());
-    await _pumpUntilFound(tester, find.byType(CustomScrollView));
+    await _pumpUntilFound(tester, find.byType(ScrollablePositionedList));
 
-    expect(find.byType(CustomScrollView), findsOneWidget);
+    expect(find.byType(ScrollablePositionedList), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -119,6 +123,39 @@ void main() {
       find.byKey(const ValueKey('book-source-top-controls')),
     );
     expect(visibleTop.top, greaterThan(-130));
+  });
+
+  testWidgets('whole-book vertical paging keeps catalog and fixed title synced',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({
+      'native_reader_page_mode': 'verticalScroll',
+      ReaderSettingsStore.scrollByChapterKey: false,
+    });
+
+    await tester.pumpWidget(_testApp());
+    final surface = find.byKey(
+      const ValueKey('book-source-reader-surface'),
+    );
+    await _pumpUntilFound(tester, surface);
+    await tester.tapAt(tester.getRect(surface).center);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.format_list_bulleted_rounded));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('第二章').last);
+
+    final fixedSecondChapter = find.descendant(
+      of: find.byKey(const ValueKey('book-source-viewport-title')),
+      matching: find.text('第二章'),
+    );
+    await _pumpUntilFound(tester, fixedSecondChapter);
+
+    expect(fixedSecondChapter, findsOneWidget);
+    final status = tester.widget<Text>(
+      find.byKey(const ValueKey('book-source-reader-status')),
+    );
+    expect(status.data, contains('2/2'));
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
   });
 
   testWidgets('restores normalized progress in a paged mode', (tester) async {
@@ -325,6 +362,45 @@ void main() {
     expect(currentPage(), initialPage);
   });
 
+  testWidgets('tap animation off switches a horizontal page immediately',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({
+      ReaderSettingsStore.pageModeKey: ReaderPageMode.horizontalSlide.name,
+      ReaderSettingsStore.tapPageAnimationKey: false,
+    });
+    await tester.pumpWidget(_testApp());
+    final statusFinder = find.byKey(
+      const ValueKey('book-source-reader-status'),
+    );
+    await _pumpUntilFound(tester, statusFinder);
+    int currentPage() => int.parse(
+          RegExp(r'(\d+)/(\d+)')
+              .allMatches(tester.widget<Text>(statusFinder).data!)
+              .toList()[1]
+              .group(1)!,
+        );
+    final initialPage = currentPage();
+    final pageTapDetector = tester
+        .widgetList<GestureDetector>(
+          find.descendant(
+            of: find.byType(PageView),
+            matching: find.byType(GestureDetector),
+          ),
+        )
+        .firstWhere((detector) => detector.onTapUp != null);
+
+    pageTapDetector.onTapUp!(
+      TapUpDetails(
+        localPosition: const Offset(760, 100),
+        globalPosition: const Offset(760, 100),
+        kind: PointerDeviceKind.touch,
+      ),
+    );
+    await tester.pump();
+
+    expect(currentPage(), initialPage + 1);
+  });
+
   testWidgets('volume keys turn pages in a paged reader mode', (tester) async {
     debugDefaultTargetPlatformOverride = TargetPlatform.android;
     const channel = MethodChannel('com.niki.xxread/reader_keys');
@@ -438,10 +514,18 @@ void main() {
     await tester.pump(const Duration(milliseconds: 200));
 
     expect(find.byType(ReaderControlBar), findsNWidgets(2));
+    final verticalList = tester.widget<ScrollablePositionedList>(
+      find.byType(ScrollablePositionedList),
+    );
+    expect(verticalList.itemCount, greaterThan(1));
     final status = tester.widget<Text>(statusFinder).data!;
     final fractions = RegExp(r'(\d+)/(\d+)').allMatches(status).toList();
     expect(fractions.length, 2);
-    expect(int.parse(fractions[1].group(2)!), greaterThan(1));
+    expect(
+      int.parse(fractions[1].group(2)!),
+      greaterThan(1),
+      reason: status,
+    );
   });
 }
 

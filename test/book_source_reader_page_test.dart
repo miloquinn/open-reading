@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:xxread/book_sources/models/registered_book_source.dart';
@@ -53,7 +54,11 @@ void main() {
     expect(find.text('第一章'), findsWidgets);
     expect(find.textContaining('第一章正文'), findsOneWidget);
 
-    await tester.tap(find.byIcon(Icons.chevron_right_rounded));
+    await tester.fling(
+      find.byKey(const ValueKey('book-source-reader-surface')),
+      const Offset(-500, 0),
+      1000,
+    );
     await _pumpUntilFound(tester, find.textContaining('第二章正文'));
 
     expect(find.text('第二章'), findsWidgets);
@@ -202,6 +207,62 @@ void main() {
       expect(tester.widget<Text>(bodyFinder).textAlign, TextAlign.justify);
     });
   }
+
+  testWidgets('vertical source pages are clipped to one fixed reading window',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(400, 800));
+    SharedPreferences.setMockInitialValues({
+      ReaderSettingsStore.pageModeKey: BookSourcePageMode.verticalScroll.name,
+    });
+    try {
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: BookSourceReaderPage(
+            source: _testSource(),
+            book: const BookSourceBook(
+              id: 'book-1',
+              title: 'Test book',
+              author: 'Author',
+              description: '',
+              categories: [],
+            ),
+            client: _FakeBookSourceClient(),
+          ),
+        ),
+      );
+      final windowFinder = find.byKey(
+        const ValueKey('book-source-vertical-reading-window'),
+      );
+      await _pumpUntilFound(tester, windowFinder);
+
+      final window = tester.widget<Padding>(windowFinder);
+      final windowPadding = window.padding.resolve(TextDirection.ltr);
+      final listRect = tester.getRect(find.byType(ScrollablePositionedList));
+      expect(windowPadding.vertical, greaterThan(0));
+      expect(listRect.top, closeTo(windowPadding.top, 0.1));
+      expect(listRect.bottom, closeTo(800 - windowPadding.bottom, 0.1));
+
+      final pageCells = find.byWidgetPredicate(
+        (widget) =>
+            widget is SizedBox &&
+            widget.key is ValueKey<String> &&
+            (widget.key! as ValueKey<String>)
+                .value
+                .startsWith('book-source-vertical-page:'),
+      );
+      expect(pageCells, findsWidgets);
+      expect(
+        tester.widget<SizedBox>(pageCells.first).height,
+        closeTo(listRect.height, 0.1),
+      );
+    } finally {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+      await tester.binding.setSurfaceSize(null);
+    }
+  });
 
   testWidgets('uses the light reader theme for status bar icon contrast',
       (tester) async {

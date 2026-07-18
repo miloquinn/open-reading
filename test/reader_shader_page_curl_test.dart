@@ -35,6 +35,43 @@ void main() {
     expect(forwardTurns, 1);
   });
 
+  testWidgets('rapid programmatic turns are queued instead of dropped',
+      (tester) async {
+    final controller = ReaderPageCurlController();
+    final pages = List.generate(4, (index) => _snapshot('page-$index'));
+    var pageIndex = 0;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: StatefulBuilder(
+          builder: (context, setHostState) => SizedBox(
+            width: 400,
+            height: 700,
+            child: ReaderShaderPageCurl(
+              controller: controller,
+              currentPage: pages[pageIndex],
+              backwardPage: pageIndex > 0 ? pages[pageIndex - 1] : null,
+              forwardPage:
+                  pageIndex + 1 < pages.length ? pages[pageIndex + 1] : null,
+              onTurnForward: () => setHostState(() => pageIndex++),
+              onTurnBackward: () => setHostState(() => pageIndex--),
+              paperColor: Colors.white,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final first = controller.turnForward();
+    final second = controller.turnForward();
+    await tester.pumpAndSettle();
+    await Future.wait([first, second]);
+
+    expect(pageIndex, 2);
+    expect(find.text('page-2'), findsOneWidget);
+  });
+
   testWidgets('renders opaque current and adjacent pages', (tester) async {
     await tester.pumpWidget(
       MaterialApp(

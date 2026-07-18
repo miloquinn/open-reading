@@ -30,13 +30,13 @@ class ReaderPageSnapshot {
 class ReaderPageCurlController {
   _ReaderShaderPageCurlState? _state;
 
-  Future<void> turnForward() async => _state?._turnProgrammatically(
-        ReaderPageTurnDirection.forward,
-      );
+  Future<void> turnForward() =>
+      _state?._requestProgrammaticTurn(ReaderPageTurnDirection.forward) ??
+      Future<void>.value();
 
-  Future<void> turnBackward() async => _state?._turnProgrammatically(
-        ReaderPageTurnDirection.backward,
-      );
+  Future<void> turnBackward() =>
+      _state?._requestProgrammaticTurn(ReaderPageTurnDirection.backward) ??
+      Future<void>.value();
 
   void _attach(_ReaderShaderPageCurlState state) => _state = state;
 
@@ -99,11 +99,12 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   static const int _snapshotBudgetBytes = 48 * 1024 * 1024;
   static const int _perSnapshotBudgetBytes = 8 * 1024 * 1024;
+  static const int _maxQueuedProgrammaticTurns = 2;
   static const double _edgeStartFraction = 0.30;
-  static const double _intentSlop = 7;
-  static const double _horizontalIntentRatio = 1.24;
-  static const double _predictionHorizonSeconds = 0.12;
-  static const double _commitProjection = 0.32;
+  static const double _intentSlop = 4;
+  static const double _horizontalIntentRatio = 1.12;
+  static const double _predictionHorizonSeconds = 0.14;
+  static const double _commitProjection = 0.28;
 
   final GlobalKey _currentKey = GlobalKey(debugLabel: 'curl-current');
   final GlobalKey _forwardKey = GlobalKey(debugLabel: 'curl-forward');
@@ -113,6 +114,7 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
     maxEntries: 7,
   );
   final Map<_SnapshotRequestKey, Future<ui.Image?>> _inFlightCaptures = {};
+  final Queue<_QueuedProgrammaticTurn> _programmaticTurns = Queue();
 
   late final Ticker _springTicker;
   ui.FragmentShader? _cylinderShader;
@@ -186,6 +188,10 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
     _backwardWarmTimer?.cancel();
     final completer = _turnCompleter;
     if (completer != null && !completer.isCompleted) completer.complete();
+    for (final turn in _programmaticTurns) {
+      if (!turn.completer.isCompleted) turn.completer.complete();
+    }
+    _programmaticTurns.clear();
     _springTicker.dispose();
     _snapshotCache.dispose();
     _cylinderShader?.dispose();
@@ -237,7 +243,6 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
       generation,
     );
     if (!mounted || generation != _captureGeneration) return;
-    await WidgetsBinding.instance.endOfFrame;
     final forward = widget.forwardPage;
     if (forward != null) {
       await _ensureSnapshot(forward, _forwardKey, generation);
@@ -522,12 +527,36 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
     }
   }
 
-  Future<void> _turnProgrammatically(
+  Future<void> _requestProgrammaticTurn(
     ReaderPageTurnDirection direction,
-  ) async {
-    if (_phase != _PageTurnPhase.idle ||
-        _viewportSize.isEmpty ||
-        !_hasPage(direction)) {
+  ) {
+    if (_programmaticTurns.length >= _maxQueuedProgrammaticTurns) {
+      final latest = _programmaticTurns.last;
+      if (latest.direction == direction) return latest.completer.future;
+      final replaced = _programmaticTurns.removeLast();
+      if (!replaced.completer.isCompleted) replaced.completer.complete();
+    }
+    final request = _QueuedProgrammaticTurn(direction);
+    _programmaticTurns.add(request);
+    _drainProgrammaticTurns();
+    return request.completer.future;
+  }
+
+  void _drainProgrammaticTurns() {
+    if (!mounted ||
+        _phase != _PageTurnPhase.idle ||
+        _programmaticTurns.isEmpty) {
+      return;
+    }
+    final request = _programmaticTurns.removeFirst();
+    unawaited(_runProgrammaticTurn(request));
+  }
+
+  Future<void> _runProgrammaticTurn(_QueuedProgrammaticTurn request) async {
+    final direction = request.direction;
+    if (_viewportSize.isEmpty || !_hasPage(direction)) {
+      if (!request.completer.isCompleted) request.completer.complete();
+      _scheduleProgrammaticDrain();
       return;
     }
     final reverse = direction == ReaderPageTurnDirection.backward;
@@ -541,7 +570,11 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
     );
     _beginDrag(direction, pointer: pointer, origin: origin);
     await _ensureActiveSnapshots(direction);
-    if (!mounted || _phase != _PageTurnPhase.dragging) return;
+    if (!mounted || _phase != _PageTurnPhase.dragging) {
+      if (!request.completer.isCompleted) request.completer.complete();
+      _scheduleProgrammaticDrain();
+      return;
+    }
     final completer = Completer<void>();
     _turnCompleter = completer;
     _startSpring(
@@ -549,6 +582,14 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
       canonicalVelocity: Offset(-_viewportSize.width * 3.2, 0),
     );
     await completer.future;
+    if (!request.completer.isCompleted) request.completer.complete();
+  }
+
+  void _scheduleProgrammaticDrain() {
+    if (_programmaticTurns.isEmpty) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _drainProgrammaticTurns();
+    });
   }
 
   bool _hasPage(ReaderPageTurnDirection direction) =>
@@ -581,10 +622,10 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
         : anchor;
     final spring = SpringDescription.withDampingRatio(
       mass: 1,
-      stiffness: commit ? 310 : 360,
-      ratio: commit ? 0.90 : 0.86,
+      stiffness: commit ? 420 : 400,
+      ratio: commit ? 0.96 : 0.90,
     );
-    const tolerance = Tolerance(distance: 0.35, velocity: 5);
+    const tolerance = Tolerance(distance: 0.75, velocity: 9);
     _springX = SpringSimulation(
       spring,
       geometry.canonicalTouch.dx,
@@ -634,7 +675,10 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
         );
       });
     }
-    if (simulationX.isDone(seconds) && simulationY.isDone(seconds)) {
+    final visuallySettled = _springCommits
+        ? simulationX.isDone(seconds)
+        : simulationX.isDone(seconds) && simulationY.isDone(seconds);
+    if (visuallySettled) {
       _springTicker.stop();
       if (_springCommits) {
         setState(() => _phase = _PageTurnPhase.awaitingPageUpdate);
@@ -651,7 +695,6 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
           ? widget.onTurnBackward
           : widget.onTurnForward;
       await Future<void>.sync(callback);
-      if (mounted) await WidgetsBinding.instance.endOfFrame;
     } catch (error, stackTrace) {
       debugPrint('Reader page turn callback failed: $error');
       debugPrintStack(stackTrace: stackTrace);
@@ -669,6 +712,7 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
     }
     _scheduleWarmSnapshots();
     if (completer != null && !completer.isCompleted) completer.complete();
+    _scheduleProgrammaticDrain();
   }
 
   void _resetToIdle() {
@@ -929,6 +973,13 @@ class _ReaderSnapshotEntry {
   final double pixelRatio;
 
   int get byteSize => image.width * image.height * 4;
+}
+
+class _QueuedProgrammaticTurn {
+  _QueuedProgrammaticTurn(this.direction);
+
+  final ReaderPageTurnDirection direction;
+  final Completer<void> completer = Completer<void>();
 }
 
 @immutable

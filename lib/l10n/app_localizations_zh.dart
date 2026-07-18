@@ -605,7 +605,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pageTurningSlide => '水平滑动';
 
   @override
-  String get pageTurningScroll => '上下滚动';
+  String get pageTurningScroll => '上下翻页';
 
   @override
   String get tapZoneSettings => '点击翻页区域';
@@ -1311,19 +1311,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get readerModeHorizontalPage => '无动画';
 
   @override
-  String get readerModeVerticalScrollHint => '上下滚动正文，左右滑动切换章节';
+  String get readerModeVerticalScrollHint => '预分页内容上下连续滑动，左右滑动切换章节';
 
   @override
-  String get readerModeWholeBookScrollHint => '整本书从头到尾连续向下滚动';
+  String get readerModeWholeBookScrollHint => '全书预分页后组成可定位的纵向列表';
 
   @override
   String get readerScrollByChapterTitle => '按章节滚动';
 
   @override
-  String get readerScrollByChapterOnHint => '单章内上下滚动，左右滑动切换章节';
+  String get readerScrollByChapterOnHint => '单章内按页上下滑动，左右滑动切换章节';
 
   @override
-  String get readerScrollByChapterOffHint => '所有章节合并为一条连续的纵向内容流';
+  String get readerScrollByChapterOffHint => '所有章节按页连接为可定位的纵向列表';
 
   @override
   String get readerModeHorizontalPageHint => '点击左侧上一页，点击右侧下一页';
@@ -2216,6 +2216,82 @@ class AppLocalizationsZh extends AppLocalizations {
   String get readerThemeParchment => '牛皮纸';
 
   @override
+  String get readerThemeCustom => '自定义';
+
+  @override
+  String get readerPullBookmarkTitle => '下拉书签';
+
+  @override
+  String get readerPullBookmarkHint => '从屏幕顶部向下拉，松手即可添加或移除当前页书签';
+
+  @override
+  String get readerPullBookmarkAddHint => '继续下拉以添加书签';
+
+  @override
+  String get readerPullBookmarkRemoveHint => '继续下拉以移除书签';
+
+  @override
+  String get readerPullBookmarkReleaseHint => '松开完成';
+
+  @override
+  String get readerTapAnimationTitle => '点击动画';
+
+  @override
+  String get readerTapAnimationHint => '左右点击时使用当前翻页模式的动画；关闭后立即刷新页面';
+
+  @override
+  String get readerCustomThemeTitle => '自定义阅读主题';
+
+  @override
+  String get readerCustomThemeReset => '重置';
+
+  @override
+  String get readerCustomThemeColors => '主题颜色';
+
+  @override
+  String get readerCustomThemeTextColor => '字体颜色';
+
+  @override
+  String get readerCustomThemeTextColorHint => '正文、标题与主要图标';
+
+  @override
+  String get readerCustomThemeBackground => '阅读背景';
+
+  @override
+  String get readerCustomThemeBackgroundHint => '纸张与阅读画布的底色';
+
+  @override
+  String get readerCustomThemeControlBar => '控制栏颜色';
+
+  @override
+  String get readerCustomThemeControlBarHint => '顶部、底部控制栏与设置面板';
+
+  @override
+  String get readerCustomThemeContrastGood => '正文与背景对比清晰，适合长时间阅读';
+
+  @override
+  String get readerCustomThemeContrastLow => '正文与背景对比较低，可能容易疲劳';
+
+  @override
+  String get readerCustomThemeSave => '保存并使用';
+
+  @override
+  String get readerCustomThemePreview => '实时预览';
+
+  @override
+  String get readerCustomThemePreviewChapter => '第一章 · 风从书页间吹过';
+
+  @override
+  String get readerCustomThemePreviewBody =>
+      '这是你的阅读空间。调整字体、纸张和控制栏的颜色，让每一页都更贴近自己的阅读习惯。';
+
+  @override
+  String get readerCustomThemeHexInvalid => '请输入 6 位十六进制颜色，例如 #F6F0E4';
+
+  @override
+  String get readerCustomThemeHexLabel => '十六进制颜色';
+
+  @override
   String get importSourceTitle => '添加书籍';
 
   @override
@@ -2924,7 +3000,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get pageTurningSlide => '水平滑動';
 
   @override
-  String get pageTurningScroll => '上下捲動';
+  String get pageTurningScroll => '上下翻頁';
 
   @override
   String get tapZoneSettings => '點擊翻頁區域';
@@ -3630,19 +3706,19 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get readerModeHorizontalPage => '無動畫';
 
   @override
-  String get readerModeVerticalScrollHint => '上下捲動內文，左右滑動切換章節';
+  String get readerModeVerticalScrollHint => '預先分頁後上下連續滑動，左右滑動切換章節';
 
   @override
-  String get readerModeWholeBookScrollHint => '整本書從頭到尾連續向下捲動';
+  String get readerModeWholeBookScrollHint => '全書預先分頁後組成可定位的縱向列表';
 
   @override
   String get readerScrollByChapterTitle => '按章節捲動';
 
   @override
-  String get readerScrollByChapterOnHint => '單章內上下捲動，左右滑動切換章節';
+  String get readerScrollByChapterOnHint => '單章內按頁上下滑動，左右滑動切換章節';
 
   @override
-  String get readerScrollByChapterOffHint => '所有章節合併為一條連續的縱向內容流';
+  String get readerScrollByChapterOffHint => '所有章節按頁連接為可定位的縱向列表';
 
   @override
   String get readerModeHorizontalPageHint => '點擊左側上一頁，點擊右側下一頁';
@@ -4533,6 +4609,82 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get readerThemeParchment => '牛皮紙';
+
+  @override
+  String get readerThemeCustom => '自訂';
+
+  @override
+  String get readerPullBookmarkTitle => '下拉書籤';
+
+  @override
+  String get readerPullBookmarkHint => '從螢幕頂部向下拉，放開即可加入或移除目前頁書籤';
+
+  @override
+  String get readerPullBookmarkAddHint => '繼續下拉以加入書籤';
+
+  @override
+  String get readerPullBookmarkRemoveHint => '繼續下拉以移除書籤';
+
+  @override
+  String get readerPullBookmarkReleaseHint => '放開完成';
+
+  @override
+  String get readerTapAnimationTitle => '點擊動畫';
+
+  @override
+  String get readerTapAnimationHint => '左右點擊時使用目前翻頁模式的動畫；關閉後立即刷新頁面';
+
+  @override
+  String get readerCustomThemeTitle => '自訂閱讀主題';
+
+  @override
+  String get readerCustomThemeReset => '重設';
+
+  @override
+  String get readerCustomThemeColors => '主題顏色';
+
+  @override
+  String get readerCustomThemeTextColor => '字體顏色';
+
+  @override
+  String get readerCustomThemeTextColorHint => '正文、標題與主要圖示';
+
+  @override
+  String get readerCustomThemeBackground => '閱讀背景';
+
+  @override
+  String get readerCustomThemeBackgroundHint => '紙張與閱讀畫布的底色';
+
+  @override
+  String get readerCustomThemeControlBar => '控制列顏色';
+
+  @override
+  String get readerCustomThemeControlBarHint => '頂部、底部控制列與設定面板';
+
+  @override
+  String get readerCustomThemeContrastGood => '正文與背景對比清晰，適合長時間閱讀';
+
+  @override
+  String get readerCustomThemeContrastLow => '正文與背景對比較低，可能容易疲勞';
+
+  @override
+  String get readerCustomThemeSave => '儲存並使用';
+
+  @override
+  String get readerCustomThemePreview => '即時預覽';
+
+  @override
+  String get readerCustomThemePreviewChapter => '第一章 · 風從書頁間吹過';
+
+  @override
+  String get readerCustomThemePreviewBody =>
+      '這是你的閱讀空間。調整字體、紙張和控制列的顏色，讓每一頁都更貼近自己的閱讀習慣。';
+
+  @override
+  String get readerCustomThemeHexInvalid => '請輸入 6 位十六進位顏色，例如 #F6F0E4';
+
+  @override
+  String get readerCustomThemeHexLabel => '十六進位顏色';
 
   @override
   String get importSourceTitle => '加入書籍';

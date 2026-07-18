@@ -134,7 +134,7 @@ class ReaderThemes {
   static ReaderCustomTheme? get customTheme => _customTheme;
 
   static ReaderThemePalette? get custom =>
-      _customTheme == null ? null : _fromCustomTheme(_customTheme!);
+      _customTheme == null ? null : fromCustomTheme(_customTheme!);
 
   static void setCustomTheme(ReaderCustomTheme? theme) {
     _customTheme = theme;
@@ -279,7 +279,7 @@ class ReaderThemes {
     );
   }
 
-  static ReaderThemePalette _fromCustomTheme(ReaderCustomTheme custom) {
+  static ReaderThemePalette fromCustomTheme(ReaderCustomTheme custom) {
     final background = custom.background;
     final text = custom.text;
     final controlBar = custom.controlBar;

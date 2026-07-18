@@ -560,7 +560,7 @@
   "@pageTurningSlide": {
     "description": "Slide page turning"
   },
-  "pageTurningScroll": "Scroll",
+  "pageTurningScroll": "Vertical paging",
   "@pageTurningScroll": {
     "description": "Scroll page turning"
   },
@@ -1548,11 +1548,11 @@
   "@readerModeHorizontalPage": {
     "description": "Page mode option: content split into pages turned instantly by tapping"
   },
-  "readerModeVerticalScrollHint": "Scroll vertically to read, swipe horizontally to switch chapters",
+  "readerModeVerticalScrollHint": "Slide through pre-paginated pages vertically; swipe sideways to change chapters",
   "@readerModeVerticalScrollHint": {
     "description": "Subtitle explaining the vertical scroll page mode"
   },
-  "readerModeWholeBookScrollHint": "Scroll continuously from the beginning to the end of the book",
+  "readerModeWholeBookScrollHint": "Pre-paginated chapters form one positionable vertical list",
   "@readerModeWholeBookScrollHint": {
     "description": "Subtitle explaining whole-book continuous vertical scrolling"
   },
@@ -1560,11 +1560,11 @@
   "@readerScrollByChapterTitle": {
     "description": "Switch controlling whether vertical scrolling is limited to one chapter"
   },
-  "readerScrollByChapterOnHint": "Scroll within one chapter, then swipe left or right to switch chapters",
+  "readerScrollByChapterOnHint": "Slide through one chapter page by page, then swipe sideways to change chapters",
   "@readerScrollByChapterOnHint": {
     "description": "Subtitle when chapter-scoped vertical scrolling is enabled"
   },
-  "readerScrollByChapterOffHint": "All chapters form one continuous vertical list",
+  "readerScrollByChapterOffHint": "All chapters connect page by page in one positionable vertical list",
   "@readerScrollByChapterOffHint": {
     "description": "Subtitle when whole-book vertical scrolling is enabled"
   },
@@ -2622,6 +2622,31 @@
   "@readerThemeParchment": {
     "description": "Parchment reading theme name"
   },
+  "readerThemeCustom": "Custom",
+  "readerPullBookmarkTitle": "Pull-down bookmark",
+  "readerPullBookmarkHint": "Pull down from the top edge and release to add or remove a bookmark for this page",
+  "readerPullBookmarkAddHint": "Pull farther to add bookmark",
+  "readerPullBookmarkRemoveHint": "Pull farther to remove bookmark",
+  "readerPullBookmarkReleaseHint": "Release to finish",
+  "readerTapAnimationTitle": "Tap animation",
+  "readerTapAnimationHint": "Use the current page-turn animation for side taps; turn off to refresh instantly",
+  "readerCustomThemeTitle": "Custom reading theme",
+  "readerCustomThemeReset": "Reset",
+  "readerCustomThemeColors": "Theme colors",
+  "readerCustomThemeTextColor": "Text color",
+  "readerCustomThemeTextColorHint": "Body text, headings, and primary icons",
+  "readerCustomThemeBackground": "Reading background",
+  "readerCustomThemeBackgroundHint": "The paper and reading canvas color",
+  "readerCustomThemeControlBar": "Control bar color",
+  "readerCustomThemeControlBarHint": "Top and bottom controls and settings surfaces",
+  "readerCustomThemeContrastGood": "Text has clear contrast for comfortable long reading",
+  "readerCustomThemeContrastLow": "Text contrast is low and may cause reading fatigue",
+  "readerCustomThemeSave": "Save and use",
+  "readerCustomThemePreview": "Live preview",
+  "readerCustomThemePreviewChapter": "Chapter One · Wind Between the Pages",
+  "readerCustomThemePreviewBody": "This is your reading space. Tune the text, paper, and control colors until every page feels distinctly yours.",
+  "readerCustomThemeHexInvalid": "Enter a 6-digit hex color, such as #F6F0E4",
+  "readerCustomThemeHexLabel": "Hex color",
   "importSourceTitle": "Add books",
   "importSourceDescription": "Choose several files first. Review the queue before starting the import.",
   "importSelectFiles": "Choose files",

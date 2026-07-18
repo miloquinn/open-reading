@@ -71,8 +71,7 @@ class ReaderSettings {
       firstLineIndent: (firstLineIndent ?? this.firstLineIndent).clamp(0, 4),
       paragraphSpacing: (paragraphSpacing ?? this.paragraphSpacing).clamp(0, 2),
       pageTurnStyle: pageTurnStyle ?? this.pageTurnStyle,
-      pullBookmarkEnabled:
-          pullBookmarkEnabled ?? this.pullBookmarkEnabled,
+      pullBookmarkEnabled: pullBookmarkEnabled ?? this.pullBookmarkEnabled,
       tapPageAnimationEnabled:
           tapPageAnimationEnabled ?? this.tapPageAnimationEnabled,
     );

@@ -36,6 +36,8 @@ void main() {
       firstLineIndent: 3,
       paragraphSpacing: 1,
       pageTurnStyle: ReaderPageTurnStyle.classicFold,
+      pullBookmarkEnabled: true,
+      tapPageAnimationEnabled: false,
     );
 
     await store.save(settings);
@@ -51,6 +53,8 @@ void main() {
     expect(restored.firstLineIndent, 3);
     expect(restored.paragraphSpacing, 1);
     expect(restored.pageTurnStyle, ReaderPageTurnStyle.classicFold);
+    expect(restored.pullBookmarkEnabled, isTrue);
+    expect(restored.tapPageAnimationEnabled, isFalse);
   });
 
   test('allows a zero horizontal page margin', () async {
@@ -96,6 +100,8 @@ void main() {
     expect(restored.firstLineIndent, 4);
     expect(restored.paragraphSpacing, 0);
     expect(restored.pageTurnStyle, ReaderPageTurnStyle.cylinder);
+    expect(restored.pullBookmarkEnabled, isFalse);
+    expect(restored.tapPageAnimationEnabled, isTrue);
     expect(restored.copyWith(firstLineIndent: -1).firstLineIndent, 0);
     expect(restored.copyWith(paragraphSpacing: 9).paragraphSpacing, 2);
   });

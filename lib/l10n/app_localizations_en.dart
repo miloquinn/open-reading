@@ -631,7 +631,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pageTurningSlide => 'Horizontal Slide';
 
   @override
-  String get pageTurningScroll => 'Scroll';
+  String get pageTurningScroll => 'Vertical paging';
 
   @override
   String get tapZoneSettings => 'Tap Zones';
@@ -1355,22 +1355,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get readerModeVerticalScrollHint =>
-      'Scroll vertically to read, swipe horizontally to switch chapters';
+      'Slide through pre-paginated pages vertically; swipe sideways to change chapters';
 
   @override
   String get readerModeWholeBookScrollHint =>
-      'Scroll continuously from the beginning to the end of the book';
+      'Pre-paginated chapters form one positionable vertical list';
 
   @override
   String get readerScrollByChapterTitle => 'Scroll by chapter';
 
   @override
   String get readerScrollByChapterOnHint =>
-      'Scroll within one chapter, then swipe left or right to switch chapters';
+      'Slide through one chapter page by page, then swipe sideways to change chapters';
 
   @override
   String get readerScrollByChapterOffHint =>
-      'All chapters form one continuous vertical list';
+      'All chapters connect page by page in one positionable vertical list';
 
   @override
   String get readerModeHorizontalPageHint =>
@@ -2318,6 +2318,91 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get readerThemeParchment => 'Parchment';
+
+  @override
+  String get readerThemeCustom => 'Custom';
+
+  @override
+  String get readerPullBookmarkTitle => 'Pull-down bookmark';
+
+  @override
+  String get readerPullBookmarkHint =>
+      'Pull down from the top edge and release to add or remove a bookmark for this page';
+
+  @override
+  String get readerPullBookmarkAddHint => 'Pull farther to add bookmark';
+
+  @override
+  String get readerPullBookmarkRemoveHint => 'Pull farther to remove bookmark';
+
+  @override
+  String get readerPullBookmarkReleaseHint => 'Release to finish';
+
+  @override
+  String get readerTapAnimationTitle => 'Tap animation';
+
+  @override
+  String get readerTapAnimationHint =>
+      'Use the current page-turn animation for side taps; turn off to refresh instantly';
+
+  @override
+  String get readerCustomThemeTitle => 'Custom reading theme';
+
+  @override
+  String get readerCustomThemeReset => 'Reset';
+
+  @override
+  String get readerCustomThemeColors => 'Theme colors';
+
+  @override
+  String get readerCustomThemeTextColor => 'Text color';
+
+  @override
+  String get readerCustomThemeTextColorHint =>
+      'Body text, headings, and primary icons';
+
+  @override
+  String get readerCustomThemeBackground => 'Reading background';
+
+  @override
+  String get readerCustomThemeBackgroundHint =>
+      'The paper and reading canvas color';
+
+  @override
+  String get readerCustomThemeControlBar => 'Control bar color';
+
+  @override
+  String get readerCustomThemeControlBarHint =>
+      'Top and bottom controls and settings surfaces';
+
+  @override
+  String get readerCustomThemeContrastGood =>
+      'Text has clear contrast for comfortable long reading';
+
+  @override
+  String get readerCustomThemeContrastLow =>
+      'Text contrast is low and may cause reading fatigue';
+
+  @override
+  String get readerCustomThemeSave => 'Save and use';
+
+  @override
+  String get readerCustomThemePreview => 'Live preview';
+
+  @override
+  String get readerCustomThemePreviewChapter =>
+      'Chapter One · Wind Between the Pages';
+
+  @override
+  String get readerCustomThemePreviewBody =>
+      'This is your reading space. Tune the text, paper, and control colors until every page feels distinctly yours.';
+
+  @override
+  String get readerCustomThemeHexInvalid =>
+      'Enter a 6-digit hex color, such as #F6F0E4';
+
+  @override
+  String get readerCustomThemeHexLabel => 'Hex color';
 
   @override
   String get importSourceTitle => 'Add books';

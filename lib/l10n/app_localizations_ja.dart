@@ -607,7 +607,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get pageTurningSlide => '横スライド';
 
   @override
-  String get pageTurningScroll => '縦スクロール';
+  String get pageTurningScroll => '縦ページ送り';
 
   @override
   String get tapZoneSettings => 'タップ領域';
@@ -1315,19 +1315,19 @@ class AppLocalizationsJa extends AppLocalizations {
   String get readerModeHorizontalPage => 'アニメーションなし';
 
   @override
-  String get readerModeVerticalScrollHint => '本文は縦スクロール、左右スワイプで章を切り替え';
+  String get readerModeVerticalScrollHint => '事前に分割したページを縦に送り、左右スワイプで章を切り替え';
 
   @override
-  String get readerModeWholeBookScrollHint => '本全体を最初から最後まで連続して縦にスクロール';
+  String get readerModeWholeBookScrollHint => '事前に分割した全章を位置指定できる縦リストで表示';
 
   @override
   String get readerScrollByChapterTitle => '章ごとにスクロール';
 
   @override
-  String get readerScrollByChapterOnHint => '章内は縦スクロール、左右スワイプで章を切り替え';
+  String get readerScrollByChapterOnHint => '章内をページ単位で縦に送り、左右スワイプで章を切り替え';
 
   @override
-  String get readerScrollByChapterOffHint => '全章をひとつの連続した縦の流れとして表示';
+  String get readerScrollByChapterOffHint => '全章をページ単位でつないだ位置指定可能な縦リストで表示';
 
   @override
   String get readerModeHorizontalPageHint => '左側タップで前のページ、右側タップで次のページ';
@@ -2226,6 +2226,83 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get readerThemeParchment => '羊皮紙';
+
+  @override
+  String get readerThemeCustom => 'カスタム';
+
+  @override
+  String get readerPullBookmarkTitle => 'プルダウンしおり';
+
+  @override
+  String get readerPullBookmarkHint => '画面上端から下へ引き、離すと現在のページのしおりを追加または削除します';
+
+  @override
+  String get readerPullBookmarkAddHint => 'さらに引いてしおりを追加';
+
+  @override
+  String get readerPullBookmarkRemoveHint => 'さらに引いてしおりを削除';
+
+  @override
+  String get readerPullBookmarkReleaseHint => '離して完了';
+
+  @override
+  String get readerTapAnimationTitle => 'タップアニメーション';
+
+  @override
+  String get readerTapAnimationHint =>
+      '左右のタップで現在のページめくりアニメーションを使用。オフでは即時に切り替えます';
+
+  @override
+  String get readerCustomThemeTitle => 'カスタム読書テーマ';
+
+  @override
+  String get readerCustomThemeReset => 'リセット';
+
+  @override
+  String get readerCustomThemeColors => 'テーマカラー';
+
+  @override
+  String get readerCustomThemeTextColor => '文字色';
+
+  @override
+  String get readerCustomThemeTextColorHint => '本文、見出し、主要アイコン';
+
+  @override
+  String get readerCustomThemeBackground => '読書背景';
+
+  @override
+  String get readerCustomThemeBackgroundHint => '紙面と読書キャンバスの色';
+
+  @override
+  String get readerCustomThemeControlBar => 'コントロールバーの色';
+
+  @override
+  String get readerCustomThemeControlBarHint => '上下の操作バーと設定パネル';
+
+  @override
+  String get readerCustomThemeContrastGood => '本文と背景のコントラストは長時間の読書に適しています';
+
+  @override
+  String get readerCustomThemeContrastLow => '本文のコントラストが低く、目が疲れやすい可能性があります';
+
+  @override
+  String get readerCustomThemeSave => '保存して使用';
+
+  @override
+  String get readerCustomThemePreview => 'ライブプレビュー';
+
+  @override
+  String get readerCustomThemePreviewChapter => '第一章 · ページの間を吹く風';
+
+  @override
+  String get readerCustomThemePreviewBody =>
+      'ここはあなたの読書空間です。文字、紙面、操作バーの色を整え、自分らしい一ページに仕上げましょう。';
+
+  @override
+  String get readerCustomThemeHexInvalid => '#F6F0E4 のような6桁の16進カラーを入力してください';
+
+  @override
+  String get readerCustomThemeHexLabel => '16進カラー';
 
   @override
   String get importSourceTitle => '本を追加';

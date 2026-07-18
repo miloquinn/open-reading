@@ -1268,7 +1268,7 @@ abstract class AppLocalizations {
   /// Scroll page turning
   ///
   /// In en, this message translates to:
-  /// **'Scroll'**
+  /// **'Vertical paging'**
   String get pageTurningScroll;
 
   /// Tap zone settings
@@ -2540,13 +2540,13 @@ abstract class AppLocalizations {
   /// Subtitle explaining the vertical scroll page mode
   ///
   /// In en, this message translates to:
-  /// **'Scroll vertically to read, swipe horizontally to switch chapters'**
+  /// **'Slide through pre-paginated pages vertically; swipe sideways to change chapters'**
   String get readerModeVerticalScrollHint;
 
   /// Subtitle explaining whole-book continuous vertical scrolling
   ///
   /// In en, this message translates to:
-  /// **'Scroll continuously from the beginning to the end of the book'**
+  /// **'Pre-paginated chapters form one positionable vertical list'**
   String get readerModeWholeBookScrollHint;
 
   /// Switch controlling whether vertical scrolling is limited to one chapter
@@ -2558,13 +2558,13 @@ abstract class AppLocalizations {
   /// Subtitle when chapter-scoped vertical scrolling is enabled
   ///
   /// In en, this message translates to:
-  /// **'Scroll within one chapter, then swipe left or right to switch chapters'**
+  /// **'Slide through one chapter page by page, then swipe sideways to change chapters'**
   String get readerScrollByChapterOnHint;
 
   /// Subtitle when whole-book vertical scrolling is enabled
   ///
   /// In en, this message translates to:
-  /// **'All chapters form one continuous vertical list'**
+  /// **'All chapters connect page by page in one positionable vertical list'**
   String get readerScrollByChapterOffHint;
 
   /// Subtitle explaining the horizontal paging mode
@@ -4181,6 +4181,156 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Parchment'**
   String get readerThemeParchment;
+
+  /// No description provided for @readerThemeCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get readerThemeCustom;
+
+  /// No description provided for @readerPullBookmarkTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pull-down bookmark'**
+  String get readerPullBookmarkTitle;
+
+  /// No description provided for @readerPullBookmarkHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pull down from the top edge and release to add or remove a bookmark for this page'**
+  String get readerPullBookmarkHint;
+
+  /// No description provided for @readerPullBookmarkAddHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pull farther to add bookmark'**
+  String get readerPullBookmarkAddHint;
+
+  /// No description provided for @readerPullBookmarkRemoveHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pull farther to remove bookmark'**
+  String get readerPullBookmarkRemoveHint;
+
+  /// No description provided for @readerPullBookmarkReleaseHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Release to finish'**
+  String get readerPullBookmarkReleaseHint;
+
+  /// No description provided for @readerTapAnimationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap animation'**
+  String get readerTapAnimationTitle;
+
+  /// No description provided for @readerTapAnimationHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the current page-turn animation for side taps; turn off to refresh instantly'**
+  String get readerTapAnimationHint;
+
+  /// No description provided for @readerCustomThemeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom reading theme'**
+  String get readerCustomThemeTitle;
+
+  /// No description provided for @readerCustomThemeReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get readerCustomThemeReset;
+
+  /// No description provided for @readerCustomThemeColors.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme colors'**
+  String get readerCustomThemeColors;
+
+  /// No description provided for @readerCustomThemeTextColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Text color'**
+  String get readerCustomThemeTextColor;
+
+  /// No description provided for @readerCustomThemeTextColorHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Body text, headings, and primary icons'**
+  String get readerCustomThemeTextColorHint;
+
+  /// No description provided for @readerCustomThemeBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading background'**
+  String get readerCustomThemeBackground;
+
+  /// No description provided for @readerCustomThemeBackgroundHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The paper and reading canvas color'**
+  String get readerCustomThemeBackgroundHint;
+
+  /// No description provided for @readerCustomThemeControlBar.
+  ///
+  /// In en, this message translates to:
+  /// **'Control bar color'**
+  String get readerCustomThemeControlBar;
+
+  /// No description provided for @readerCustomThemeControlBarHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Top and bottom controls and settings surfaces'**
+  String get readerCustomThemeControlBarHint;
+
+  /// No description provided for @readerCustomThemeContrastGood.
+  ///
+  /// In en, this message translates to:
+  /// **'Text has clear contrast for comfortable long reading'**
+  String get readerCustomThemeContrastGood;
+
+  /// No description provided for @readerCustomThemeContrastLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Text contrast is low and may cause reading fatigue'**
+  String get readerCustomThemeContrastLow;
+
+  /// No description provided for @readerCustomThemeSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save and use'**
+  String get readerCustomThemeSave;
+
+  /// No description provided for @readerCustomThemePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Live preview'**
+  String get readerCustomThemePreview;
+
+  /// No description provided for @readerCustomThemePreviewChapter.
+  ///
+  /// In en, this message translates to:
+  /// **'Chapter One · Wind Between the Pages'**
+  String get readerCustomThemePreviewChapter;
+
+  /// No description provided for @readerCustomThemePreviewBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This is your reading space. Tune the text, paper, and control colors until every page feels distinctly yours.'**
+  String get readerCustomThemePreviewBody;
+
+  /// No description provided for @readerCustomThemeHexInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a 6-digit hex color, such as #F6F0E4'**
+  String get readerCustomThemeHexInvalid;
+
+  /// No description provided for @readerCustomThemeHexLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Hex color'**
+  String get readerCustomThemeHexLabel;
 
   /// No description provided for @importSourceTitle.
   ///

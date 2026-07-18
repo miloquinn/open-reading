@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:xxread/core/reader/reader_layout.dart';
 import 'package:xxread/core/reader/reader_settings.dart';
 import 'package:xxread/l10n/app_localizations.dart';
@@ -154,6 +155,246 @@ void main() {
     } finally {
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump();
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+
+  testWidgets('native vertical paging uses positioned pages and fixed chrome',
+      (tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    await tester.binding.setSurfaceSize(const Size(400, 800));
+    final verticalBook = File(
+      '${Directory.systemTemp.path}/open-reading-vertical-paging.html',
+    );
+    verticalBook.writeAsStringSync(bookFile.readAsStringSync());
+    SharedPreferences.setMockInitialValues({
+      ReaderSettingsStore.pageModeKey: ReaderPageMode.verticalScroll.name,
+      ReaderSettingsStore.scrollByChapterKey: false,
+    });
+    try {
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: NativeReaderPage(
+            book: Book(
+              title: 'Vertical paging test',
+              filePath: verticalBook.path,
+              format: 'html',
+              fileModifiedTime:
+                  verticalBook.lastModifiedSync().millisecondsSinceEpoch,
+            ),
+          ),
+        ),
+      );
+      await tester.runAsync(() async {
+        for (var attempt = 0; attempt < 30; attempt++) {
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+          await tester.pump();
+          if (find.byType(ScrollablePositionedList).evaluate().isNotEmpty) {
+            return;
+          }
+        }
+      });
+      await _pumpUntilFound(tester, find.byType(ScrollablePositionedList));
+
+      expect(
+        find.byKey(const ValueKey('native-reader-viewport-title')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('native-reader-status')),
+        findsOneWidget,
+      );
+      final windowFinder =
+          find.byKey(const ValueKey('native-vertical-reading-window'));
+      final window = tester.widget<Padding>(windowFinder);
+      final windowPadding = window.padding.resolve(TextDirection.ltr);
+      final listRect = tester.getRect(find.byType(ScrollablePositionedList));
+      expect(windowPadding.vertical, greaterThan(0));
+      expect(listRect.top, closeTo(windowPadding.top, 0.1));
+      expect(listRect.bottom, closeTo(800 - windowPadding.bottom, 0.1));
+
+      final pageCells = find.byWidgetPredicate(
+        (widget) =>
+            widget is SizedBox &&
+            widget.key is ValueKey<String> &&
+            (widget.key! as ValueKey<String>)
+                .value
+                .startsWith('native-vertical-page:'),
+      );
+      expect(pageCells, findsWidgets);
+      expect(
+        tester.widget<SizedBox>(pageCells.first).height,
+        closeTo(listRect.height, 0.1),
+      );
+
+      final surface = find.byKey(const ValueKey('native-reader-surface'));
+      final hiddenTop = tester.widget<AnimatedPositioned>(
+        find.byKey(const ValueKey('native-reader-top-controls')),
+      );
+      expect(hiddenTop.top, -130);
+
+      final drag = await tester.startGesture(tester.getRect(surface).center);
+      await drag.moveBy(const Offset(0, -120));
+      await drag.up();
+      await tester.pump();
+      expect(
+        tester
+            .widget<AnimatedPositioned>(
+              find.byKey(const ValueKey('native-reader-top-controls')),
+            )
+            .top,
+        -130,
+      );
+
+      await tester.tapAt(tester.getRect(surface).center);
+      await tester.pump();
+      expect(
+        tester
+            .widget<AnimatedPositioned>(
+              find.byKey(const ValueKey('native-reader-top-controls')),
+            )
+            .top,
+        greaterThan(-130),
+      );
+      expect(tester.takeException(), isNull);
+    } finally {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+      await tester.binding.setSurfaceSize(null);
+      if (verticalBook.existsSync()) verticalBook.deleteSync();
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+
+  testWidgets('native horizontal reader resolves a side tap before animating',
+      (tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    await tester.binding.setSurfaceSize(const Size(480, 800));
+    final horizontalBook = File(
+      '${Directory.systemTemp.path}/open-reading-native-tap-animation.html',
+    );
+    horizontalBook.writeAsStringSync(
+      '<!doctype html><html><body><h1>Tap animation</h1>'
+      '${List.generate(180, (index) => '<p>Paragraph $index gives the native '
+          'reader enough pages to verify animated side-tap navigation.</p>').join()}'
+      '</body></html>',
+    );
+    SharedPreferences.setMockInitialValues({
+      ReaderSettingsStore.pageModeKey: ReaderPageMode.horizontalSlide.name,
+      ReaderSettingsStore.tapPageAnimationKey: true,
+    });
+    try {
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: NativeReaderPage(
+            book: Book(
+              title: 'Native tap animation',
+              filePath: horizontalBook.path,
+              format: 'html',
+              fileModifiedTime:
+                  horizontalBook.lastModifiedSync().millisecondsSinceEpoch,
+            ),
+          ),
+        ),
+      );
+      await tester.runAsync(() async {
+        for (var attempt = 0; attempt < 30; attempt++) {
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+          await tester.pump();
+          if (find.byType(PageView).evaluate().isNotEmpty) return;
+        }
+      });
+      await _pumpUntilFound(tester, find.byType(PageView));
+
+      final statusFinder = find.byKey(const ValueKey('native-reader-status'));
+      int currentPage() => int.parse(
+            RegExp(r'(\d+)/(\d+)')
+                .allMatches(tester.widget<Text>(statusFinder).data!)
+                .toList()[1]
+                .group(1)!,
+          );
+      final initialPage = currentPage();
+
+      await tester.tapAt(const Offset(460, 400));
+      await tester.pumpAndSettle();
+
+      expect(currentPage(), initialPage + 1);
+      expect(tester.takeException(), isNull);
+    } finally {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+      await tester.binding.setSurfaceSize(null);
+      if (horizontalBook.existsSync()) horizontalBook.deleteSync();
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+
+  testWidgets(
+      'native horizontal reader changes immediately when tap animation is off',
+      (tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    await tester.binding.setSurfaceSize(const Size(480, 800));
+    final horizontalBook = File(
+      '${Directory.systemTemp.path}/open-reading-native-tap-instant.html',
+    );
+    horizontalBook.writeAsStringSync(
+      '<!doctype html><html><body><h1>Instant tap</h1>'
+      '${List.generate(180, (index) => '<p>Paragraph $index gives the native '
+          'reader enough pages to verify instant side-tap navigation.</p>').join()}'
+      '</body></html>',
+    );
+    SharedPreferences.setMockInitialValues({
+      ReaderSettingsStore.pageModeKey: ReaderPageMode.horizontalSlide.name,
+      ReaderSettingsStore.tapPageAnimationKey: false,
+    });
+    try {
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: NativeReaderPage(
+            book: Book(
+              title: 'Native instant tap',
+              filePath: horizontalBook.path,
+              format: 'html',
+              fileModifiedTime:
+                  horizontalBook.lastModifiedSync().millisecondsSinceEpoch,
+            ),
+          ),
+        ),
+      );
+      await tester.runAsync(() async {
+        for (var attempt = 0; attempt < 30; attempt++) {
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+          await tester.pump();
+          if (find.byType(PageView).evaluate().isNotEmpty) return;
+        }
+      });
+      await _pumpUntilFound(tester, find.byType(PageView));
+
+      final statusFinder = find.byKey(const ValueKey('native-reader-status'));
+      int currentPage() => int.parse(
+            RegExp(r'(\d+)/(\d+)')
+                .allMatches(tester.widget<Text>(statusFinder).data!)
+                .toList()[1]
+                .group(1)!,
+          );
+      final initialPage = currentPage();
+
+      await tester.tapAt(const Offset(460, 400));
+      await tester.pump();
+
+      expect(currentPage(), initialPage + 1);
+      expect(tester.takeException(), isNull);
+    } finally {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+      await tester.binding.setSurfaceSize(null);
+      if (horizontalBook.existsSync()) horizontalBook.deleteSync();
       debugDefaultTargetPlatformOverride = null;
     }
   });
