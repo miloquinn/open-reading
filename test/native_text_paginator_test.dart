@@ -149,6 +149,58 @@ void main() {
     }
   });
 
+  test('pages pack densely under production height behavior', () {
+    // Mirrors native_reader_page readerTextHeightBehavior + strut without height.
+    const style = TextStyle(fontSize: 19, height: 1.75);
+    final flow = NativeTextFlowStyle(
+      textDirection: TextDirection.ltr,
+      textScaler: TextScaler.noScaling,
+      locale: const Locale('zh', 'CN'),
+      strutStyle: StrutStyle(
+        fontSize: style.fontSize,
+        fontWeight: style.fontWeight,
+      ),
+      textHeightBehavior: const TextHeightBehavior(
+        applyHeightToFirstAscent: false,
+        applyHeightToLastDescent: false,
+        leadingDistribution: TextLeadingDistribution.proportional,
+      ),
+    );
+    final text = List.generate(
+      40,
+      (i) => '实际上尽管解题思路结构化看起来依然是一种初级学习策略，'
+          '但它对于大部分中学生来说作用是巨大的。段落$i。\n\n',
+    ).join();
+    const width = 360.0;
+    const height = 640.0;
+    final pages = NativeTextPaginator(
+      maxWidth: width,
+      maxHeight: height,
+      flowStyle: flow,
+    ).paginate(
+      text: text,
+      spanBuilder: (start, end) => TextSpan(
+        text: text.substring(start, end),
+        style: style,
+      ),
+    );
+
+    expect(pages.length, greaterThan(1));
+    // Non-final pages should use most of the content box (not half-empty).
+    for (var i = 0; i < pages.length - 1; i++) {
+      final pageText = text.substring(pages[i].start, pages[i].end);
+      final painter = flow.createPainter(TextSpan(text: pageText, style: style))
+        ..layout(maxWidth: width);
+      expect(
+        painter.height,
+        greaterThan(height * 0.72),
+        reason: 'page $i height ${painter.height} should pack >=72% of $height',
+      );
+      expect(painter.height, lessThanOrEqualTo(height + 0.5));
+      painter.dispose();
+    }
+  });
+
   testWidgets('measured page and RenderParagraph share identical constraints',
       (tester) async {
     const style = TextStyle(fontSize: 32, height: 1.75, letterSpacing: 0.2);

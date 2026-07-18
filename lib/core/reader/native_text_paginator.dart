@@ -173,16 +173,18 @@ class NativeTextPaginator {
       final candidates = <int>[];
       var observedOverflowLine = false;
 
+      // Collect visual line ends from the probe. Do NOT reject lines using
+      // baseline/ascent/height arithmetic here — with TextStyle.height and
+      // TextHeightBehavior that formula often overestimates the line box and
+      // stops a page early, leaving large empty regions at the bottom (common
+      // on EPUB chapters with mixed heading scales and paragraph gaps).
+      // Hard limit is always TextPainter.height via _selectVerifiedCandidate.
       for (var index = 0; index < metrics.length; index++) {
         final metric = metrics[index];
         final isArtificialProbeTail =
             !reachedTextEnd && index == metrics.length - 1;
         if (isArtificialProbeTail) break;
-        final lineBottom = metric.baseline - metric.ascent + metric.height;
-        if (lineBottom > maxHeight) {
-          observedOverflowLine = true;
-          break;
-        }
+
         final samplePosition = painter.getPositionForOffset(
           Offset(
             metric.left + (metric.width / 2),
@@ -192,8 +194,21 @@ class NativeTextPaginator {
         final boundary = painter.getLineBoundary(samplePosition);
         final end = pageStart + boundary.end;
         if (end > pageStart && (candidates.isEmpty || end > candidates.last)) {
+          // Cheap pre-check: ink bottom (baseline+descent). May be slightly
+          // tighter than full line height with leading; verification still
+          // decides. If already past maxHeight, further lines will not fit.
+          final inkBottom = metric.baseline + metric.descent;
+          if (inkBottom > maxHeight + 0.5) {
+            observedOverflowLine = true;
+            break;
+          }
           candidates.add(end);
         }
+      }
+      // If the probe itself is taller than the page, we have enough lines to
+      // binary-walk; mark overflow so the outer loop can stop growing probe.
+      if (!observedOverflowLine && painter.height > maxHeight + 0.5) {
+        observedOverflowLine = true;
       }
       painter.dispose();
 
