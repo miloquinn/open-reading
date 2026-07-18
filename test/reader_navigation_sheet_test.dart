@@ -65,8 +65,7 @@ void main() {
 
     await tester.tap(find.text('书签'));
     await tester.pumpAndSettle();
-    final emptyBookmarksTitle =
-        tester.widget<Text>(find.text('还没有书签'));
+    final emptyBookmarksTitle = tester.widget<Text>(find.text('还没有书签'));
     expect(emptyBookmarksTitle.style?.color, ReaderThemes.green.text);
   });
 

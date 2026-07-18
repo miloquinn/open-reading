@@ -192,9 +192,8 @@ class _ReaderNavigationSheetState extends State<ReaderNavigationSheet>
     var expandedAncestor = false;
     var ancestorPosition = entries[currentPosition].parentPosition;
     while (ancestorPosition != null) {
-      expandedAncestor =
-          _collapsedChapterPositions.remove(ancestorPosition) ||
-              expandedAncestor;
+      expandedAncestor = _collapsedChapterPositions.remove(ancestorPosition) ||
+          expandedAncestor;
       ancestorPosition = entries[ancestorPosition].parentPosition;
     }
     if (expandedAncestor) {
