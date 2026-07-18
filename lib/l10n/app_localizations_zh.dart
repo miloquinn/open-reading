@@ -1637,6 +1637,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get changelog120Licenses => '新增应用内开源许可查看';
 
   @override
+  String get changelog121ContinuousScroll => '在线书源补齐按章节滚动与整书连续滚动';
+
+  @override
+  String get changelog121Typography => '修复中文正文左右留白不对称并统一分页绘制';
+
+  @override
   String get changelog110CustomFonts => '新增自定义字体';
 
   @override
@@ -3924,6 +3930,12 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get changelog120Licenses => '新增應用內開源授權檢視';
+
+  @override
+  String get changelog121ContinuousScroll => '線上書源補齊按章節捲動與整書連續捲動';
+
+  @override
+  String get changelog121Typography => '修正中文正文左右留白不對稱並統一分頁繪製';
 
   @override
   String get changelog110CustomFonts => '新增自訂字型';

@@ -3132,6 +3132,18 @@ abstract class AppLocalizations {
   /// **'Added offline open-source license viewing'**
   String get changelog120Licenses;
 
+  /// No description provided for @changelog121ContinuousScroll.
+  ///
+  /// In en, this message translates to:
+  /// **'Added shared chapter-by-chapter and continuous whole-book scrolling for online sources'**
+  String get changelog121ContinuousScroll;
+
+  /// No description provided for @changelog121Typography.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed asymmetric Chinese text margins and aligned pagination with rendering'**
+  String get changelog121Typography;
+
   /// No description provided for @changelog110CustomFonts.
   ///
   /// In en, this message translates to:

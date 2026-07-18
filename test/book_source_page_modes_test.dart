@@ -9,6 +9,7 @@ import 'package:xxread/book_sources/models/registered_book_source.dart';
 import 'package:xxread/book_sources/protocol/book_source_protocol.dart';
 import 'package:xxread/book_sources/services/book_source_client.dart';
 import 'package:xxread/book_sources/services/book_source_shelf_service.dart';
+import 'package:xxread/core/reader/reader_settings.dart';
 import 'package:xxread/l10n/app_localizations.dart';
 import 'package:xxread/models/book.dart';
 import 'package:xxread/pages/book_source_reader_page.dart';
@@ -52,6 +53,34 @@ void main() {
     expect(find.text('无动画'), findsOneWidget);
     expect(find.text('水平滑动'), findsOneWidget);
     expect(find.text('仿真翻页'), findsOneWidget);
+    expect(find.text('按章节滚动'), findsOneWidget);
+    expect(find.byType(SwitchListTile), findsOneWidget);
+
+    final scrollByChapter =
+        tester.widget<SwitchListTile>(find.byType(SwitchListTile));
+    expect(scrollByChapter.value, isTrue);
+    scrollByChapter.onChanged!(false);
+    await tester.pumpAndSettle();
+
+    final prefs = await SharedPreferences.getInstance();
+    expect(
+      prefs.getBool(ReaderSettingsStore.scrollByChapterKey),
+      isFalse,
+    );
+  });
+
+  testWidgets('source reader shares continuous whole-book scrolling setting',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({
+      'native_reader_page_mode': 'verticalScroll',
+      ReaderSettingsStore.scrollByChapterKey: false,
+    });
+
+    await tester.pumpWidget(_testApp());
+    await _pumpUntilFound(tester, find.byType(CustomScrollView));
+
+    expect(find.byType(CustomScrollView), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('restores normalized progress in a paged mode', (tester) async {

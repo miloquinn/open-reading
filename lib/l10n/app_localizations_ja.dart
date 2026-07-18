@@ -1647,6 +1647,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get changelog120Licenses => 'アプリ内でオープンソースライセンスを閲覧可能に';
 
   @override
+  String get changelog121ContinuousScroll => 'オンライン書籍に章単位と全巻連続スクロールを追加';
+
+  @override
+  String get changelog121Typography => '中国語本文の左右余白とページ分割・描画の不一致を修正';
+
+  @override
   String get changelog110CustomFonts => 'カスタムフォントを追加';
 
   @override

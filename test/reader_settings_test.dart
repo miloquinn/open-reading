@@ -59,4 +59,21 @@ void main() {
     expect(restored.horizontalMargin, 0);
     expect(restored.copyWith(horizontalMargin: -1).horizontalMargin, 0);
   });
+
+  test('shares the chapter-scoped scrolling preference across readers',
+      () async {
+    SharedPreferences.setMockInitialValues({});
+    const store = ReaderSettingsStore();
+
+    expect(await store.loadScrollByChapter(), isTrue);
+
+    await store.saveScrollByChapter(false);
+
+    expect(await store.loadScrollByChapter(), isFalse);
+    final prefs = await SharedPreferences.getInstance();
+    expect(
+      prefs.getBool(ReaderSettingsStore.scrollByChapterKey),
+      isFalse,
+    );
+  });
 }

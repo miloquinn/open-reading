@@ -14,7 +14,6 @@ import 'package:html/dom.dart' as html_dom;
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:xxread/core/reader/canonical_locator.dart';
 import 'package:xxread/core/reader/native_text_paginator.dart';
@@ -63,7 +62,6 @@ class _NativeReaderPageState extends State<NativeReaderPage>
   static final Map<String, Future<List<_NativeChapter>>> _bookMemoryCache = {};
   static final Map<String, Map<String, List<_ReaderPageData>>>
       _paginationMemoryCache = {};
-  static const _scrollByChapterKey = 'native_reader_scroll_by_chapter';
   static const _tabletShortestSide = 600.0;
   static const _twoPageMinimumWidth = 720.0;
   static const _spreadGutter = 24.0;
@@ -290,10 +288,14 @@ class _NativeReaderPageState extends State<NativeReaderPage>
 
   Future<void> _loadPageMode() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final settings = await _readerSettingsStore.load(
-        fallbackPageMode: NativePageMode.horizontalSlide,
-      );
+      final results = await Future.wait<Object>([
+        _readerSettingsStore.load(
+          fallbackPageMode: NativePageMode.horizontalSlide,
+        ),
+        _readerSettingsStore.loadScrollByChapter(),
+      ]);
+      final settings = results[0] as ReaderSettings;
+      final scrollByChapter = results[1] as bool;
       if (!mounted) return;
       setState(() {
         _pageMode = settings.pageMode;
@@ -302,7 +304,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
         _horizontalMargin = settings.horizontalMargin;
         _topMargin = settings.topMargin;
         _bottomMargin = settings.bottomMargin;
-        _scrollByChapter = prefs.getBool(_scrollByChapterKey) ?? true;
+        _scrollByChapter = scrollByChapter;
         _readerThemeId = ReaderThemes.byId(settings.themeId).id;
         _readerSettingsLoaded = true;
       });
@@ -537,8 +539,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
       _continuousCenterKey = GlobalKey();
       _controlsVisible = false;
     });
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_scrollByChapterKey, value);
+    await _readerSettingsStore.saveScrollByChapter(value);
   }
 
   Future<List<_NativeChapter>> _loadBook() async {

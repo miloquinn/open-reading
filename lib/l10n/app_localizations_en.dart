@@ -1712,6 +1712,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Added offline open-source license viewing';
 
   @override
+  String get changelog121ContinuousScroll =>
+      'Added shared chapter-by-chapter and continuous whole-book scrolling for online sources';
+
+  @override
+  String get changelog121Typography =>
+      'Fixed asymmetric Chinese text margins and aligned pagination with rendering';
+
+  @override
   String get changelog110CustomFonts => 'Added custom fonts';
 
   @override

@@ -64,6 +64,7 @@ class ReaderSettingsStore {
   static const legacyVerticalMarginKey = 'native_reader_vertical_margin';
   static const themeKey = 'native_reader_theme';
   static const pageModeKey = 'native_reader_page_mode';
+  static const scrollByChapterKey = 'native_reader_scroll_by_chapter';
   static const legacyBookSourceLineHeightKey = 'book_source_reader_line_height';
 
   const ReaderSettingsStore();
@@ -120,5 +121,15 @@ class ReaderSettingsStore {
       prefs.setString(themeKey, settings.themeId),
       prefs.setString(pageModeKey, settings.pageMode.name),
     ]);
+  }
+
+  Future<bool> loadScrollByChapter() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(scrollByChapterKey) ?? true;
+  }
+
+  Future<void> saveScrollByChapter(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(scrollByChapterKey, value);
   }
 }

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as html_parser;
@@ -100,6 +101,12 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   List<BookSourceTextPage> _paginatedPages = const [];
   int _chapterLoadSerial = 0;
   final Map<int, BookSourceChapterContent> _prefetchedContent = {};
+  final Map<int, Future<BookSourceChapterContent>> _continuousContentLoads = {};
+  final Map<int, GlobalKey> _continuousChapterKeys = {};
+  bool _scrollByChapter = true;
+  int _continuousAnchorChapter = 0;
+  Key _continuousCenterKey = GlobalKey();
+  bool _continuousVisibilityUpdateScheduled = false;
   bool _exitPromptVisible = false;
   bool _allowPop = false;
   int? _shelfBookId;
@@ -251,11 +258,13 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         _readerSettingsStore.load(
           fallbackPageMode: BookSourcePageMode.verticalScroll,
         ),
+        _readerSettingsStore.loadScrollByChapter(),
       ]);
       final chapters = [...results[0]! as List<BookSourceChapter>]
         ..sort((a, b) => a.order.compareTo(b.order));
       final saved = results[1] as BookSourceReadingProgress?;
       final settings = results[2]! as ReaderSettings;
+      final scrollByChapter = results[3]! as bool;
       var initialIndex = saved?.chapterIndex ?? 0;
       if (saved != null && saved.chapterId.isNotEmpty) {
         final byId = chapters.indexWhere(
@@ -277,6 +286,8 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         _lineHeight = settings.lineHeight;
         _readerThemeId = ReaderThemes.byId(settings.themeId).id;
         _pageMode = settings.pageMode;
+        _scrollByChapter = scrollByChapter;
+        _continuousAnchorChapter = initialIndex;
         _loadingCatalog = false;
       });
       unawaited(_syncVolumeKeyPaging());
@@ -344,6 +355,10 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
 
   void _onScroll() {
     if (!_scrollController.hasClients) return;
+    if (_pageMode == BookSourcePageMode.verticalScroll && !_scrollByChapter) {
+      _scheduleContinuousVisibilityUpdate();
+      return;
+    }
     final max = _scrollController.position.maxScrollExtent;
     final progress =
         max <= 0 ? 0.0 : (_scrollController.offset / max).clamp(0.0, 1.0);
@@ -365,6 +380,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     if (_chapters.isEmpty || _chapterIndex >= _chapters.length) return;
     var progress = _scrollProgress.value;
     if (_pageMode == BookSourcePageMode.verticalScroll &&
+        _scrollByChapter &&
         _scrollController.hasClients) {
       final max = _scrollController.position.maxScrollExtent;
       progress =
@@ -436,6 +452,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       setState(() {
         _chapterIndex = index;
         _content = content;
+        _prefetchedContent[index] = content;
         _loadingContent = false;
         _pageIndex = 0;
         _pageCount = 1;
@@ -444,6 +461,12 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         _restorePageProgress = restoreProgress.clamp(0, 1);
         _restorePagedPosition = true;
         _ignoreSlidePageChanges = true;
+        if (!_scrollByChapter &&
+            _pageMode == BookSourcePageMode.verticalScroll) {
+          _continuousAnchorChapter = index;
+          _continuousCenterKey = GlobalKey();
+          _continuousChapterKeys.clear();
+        }
       });
       _scrollProgress.value = restoreProgress.clamp(0, 1);
       _restoreScrollProgress(restoreProgress);
@@ -487,6 +510,78 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     );
   }
 
+  Future<BookSourceChapterContent> _continuousContentFor(int index) {
+    final cached = _prefetchedContent[index];
+    if (cached != null) return Future.value(cached);
+    final inFlight = _continuousContentLoads[index];
+    if (inFlight != null) return inFlight;
+    final future = _client
+        .getChapterContent(
+      widget.source,
+      bookId: widget.book.id,
+      chapterId: _chapters[index].id,
+    )
+        .then((content) {
+      _prefetchedContent[index] = content;
+      if (mounted && _chapterIndex == index && _content != content) {
+        setState(() => _content = content);
+      }
+      return content;
+    });
+    _continuousContentLoads[index] = future;
+    return future;
+  }
+
+  void _scheduleContinuousVisibilityUpdate() {
+    if (_continuousVisibilityUpdateScheduled) return;
+    _continuousVisibilityUpdateScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _continuousVisibilityUpdateScheduled = false;
+      if (!mounted ||
+          _scrollByChapter ||
+          _pageMode != BookSourcePageMode.verticalScroll) {
+        return;
+      }
+      final targetY = MediaQuery.sizeOf(context).height * 0.28;
+      int? visibleChapter;
+      RenderBox? visibleBox;
+      var nearestDistance = double.infinity;
+      for (final entry in _continuousChapterKeys.entries) {
+        final renderObject = entry.value.currentContext?.findRenderObject();
+        if (renderObject is! RenderBox || !renderObject.attached) continue;
+        final top = renderObject.localToGlobal(Offset.zero).dy;
+        final bottom = top + renderObject.size.height;
+        if (top <= targetY && bottom > targetY) {
+          visibleChapter = entry.key;
+          visibleBox = renderObject;
+          break;
+        }
+        final distance = (top - targetY).abs();
+        if (bottom > 0 &&
+            top < MediaQuery.sizeOf(context).height &&
+            distance < nearestDistance) {
+          nearestDistance = distance;
+          visibleChapter = entry.key;
+          visibleBox = renderObject;
+        }
+      }
+      if (visibleChapter == null || visibleBox == null) return;
+      final top = visibleBox.localToGlobal(Offset.zero).dy;
+      _scrollProgress.value =
+          ((targetY - top) / visibleBox.size.height).clamp(0.0, 1.0);
+      if (visibleChapter != _chapterIndex) {
+        final nextChapter = visibleChapter;
+        setState(() {
+          _chapterIndex = nextChapter;
+          _content = _prefetchedContent[nextChapter] ?? _content;
+          _pageIndex = 0;
+        });
+        unawaited(_preloadAround(nextChapter));
+      }
+      _scheduleProgressSave();
+    });
+  }
+
   void _restoreScrollProgress(double progress) {
     _restorePageProgress = progress.clamp(0, 1);
     _restorePagedPosition = true;
@@ -495,6 +590,25 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_scrollController.hasClients) {
         _restoringScroll = false;
+        return;
+      }
+      if (!_scrollByChapter) {
+        final chapterContext =
+            _continuousChapterKeys[_chapterIndex]?.currentContext;
+        final renderObject = chapterContext?.findRenderObject();
+        if (renderObject is RenderBox && renderObject.attached) {
+          final viewport = RenderAbstractViewport.of(renderObject);
+          final chapterStart =
+              viewport.getOffsetToReveal(renderObject, 0).offset;
+          final target = chapterStart +
+              renderObject.size.height * progress.clamp(0.0, 1.0);
+          _scrollController.jumpTo(
+            target.clamp(0.0, _scrollController.position.maxScrollExtent),
+          );
+          _scrollProgress.value = progress.clamp(0.0, 1.0);
+        }
+        _restoringScroll = false;
+        _scheduleContinuousVisibilityUpdate();
         return;
       }
       final target =
@@ -593,6 +707,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
           ? 0
           : (_pageIndex / (_pageCount - 1)).clamp(0.0, 1.0);
     }
+    if (!_scrollByChapter) return _scrollProgress.value;
     if (_scrollController.hasClients) {
       final max = _scrollController.position.maxScrollExtent;
       return max <= 0 ? 0 : (_scrollController.offset / max).clamp(0.0, 1.0);
@@ -867,6 +982,11 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
           .clamp(ReaderMarginSettings.min, ReaderMarginSettings.max);
       _readerThemeId = ReaderThemes.byId(themeId ?? _readerThemeId).id;
       _pageMode = pageMode ?? _pageMode;
+      if (_pageMode == BookSourcePageMode.verticalScroll && !_scrollByChapter) {
+        _continuousAnchorChapter = _chapterIndex;
+        _continuousCenterKey = GlobalKey();
+        _continuousChapterKeys.clear();
+      }
       _paginationKey = null;
       _paginatedPages = const [];
       _restorePageProgress = currentProgress;
@@ -876,6 +996,28 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     unawaited(_syncVolumeKeyPaging());
     await _readerSettingsStore.save(_readerSettings);
     _restoreScrollProgress(currentProgress);
+  }
+
+  Future<void> _setScrollByChapter(bool value) async {
+    if (_scrollByChapter == value) return;
+    final currentProgress = _currentReadingProgress;
+    setState(() {
+      _scrollByChapter = value;
+      _continuousAnchorChapter = _chapterIndex;
+      _continuousCenterKey = GlobalKey();
+      _continuousChapterKeys.clear();
+    });
+    await _readerSettingsStore.saveScrollByChapter(value);
+    _restoreScrollProgress(currentProgress);
+  }
+
+  String _pageModeSummary() {
+    if (_pageMode == BookSourcePageMode.verticalScroll) {
+      return _scrollByChapter
+          ? context.l10n.readerModeVerticalScrollHint
+          : context.l10n.readerModeWholeBookScrollHint;
+    }
+    return _pageModeHint(_pageMode);
   }
 
   String _pageModeTitle(BookSourcePageMode mode) => switch (mode) {
@@ -906,7 +1048,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         themeTitle: context.l10n.readerThemeTitle,
         themeDescription: context.l10n.readerThemeDescription,
         pageModeTitle: context.l10n.pageTurningMode,
-        pageModeSummary: _pageModeHint(_pageMode),
+        pageModeSummary: _pageModeSummary(),
         fontSizeLabel: context.l10n.fontSizeLabel,
         lineHeightLabel: context.l10n.lineSpacingLabel,
         horizontalMarginLabel: context.l10n.readerHorizontalMarginLabel,
@@ -951,18 +1093,33 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   }
 
   Future<void> _showPageModeSettings() async {
+    var previewScrollByChapter = _scrollByChapter;
     final selectedMode = await showModalBottomSheet<BookSourcePageMode>(
       context: context,
       backgroundColor: _readerTheme.surface,
       showDragHandle: true,
       isScrollControlled: true,
-      builder: (menuContext) => ReaderPageModeSheet(
-        palette: _readerTheme,
-        title: context.l10n.pageTurningMode,
-        selectedMode: _pageMode,
-        titleFor: _pageModeTitle,
-        hintFor: _pageModeHint,
-        onSelected: (mode) => Navigator.of(menuContext).pop(mode),
+      builder: (menuContext) => StatefulBuilder(
+        builder: (context, setMenuState) => ReaderPageModeSheet(
+          palette: _readerTheme,
+          title: context.l10n.pageTurningMode,
+          selectedMode: _pageMode,
+          titleFor: _pageModeTitle,
+          hintFor: (mode) => mode == BookSourcePageMode.verticalScroll
+              ? (previewScrollByChapter
+                  ? context.l10n.readerModeVerticalScrollHint
+                  : context.l10n.readerModeWholeBookScrollHint)
+              : _pageModeHint(mode),
+          onSelected: (mode) => Navigator.of(menuContext).pop(mode),
+          scrollByChapter: previewScrollByChapter,
+          scrollByChapterTitle: context.l10n.readerScrollByChapterTitle,
+          scrollByChapterOnHint: context.l10n.readerScrollByChapterOnHint,
+          scrollByChapterOffHint: context.l10n.readerScrollByChapterOffHint,
+          onScrollByChapterChanged: (value) {
+            setMenuState(() => previewScrollByChapter = value);
+            unawaited(_setScrollByChapter(value));
+          },
+        ),
       ),
     );
     if (selectedMode == null || !mounted) return;
@@ -1077,6 +1234,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         content.title.isEmpty ? _chapters[_chapterIndex].title : content.title;
     final text = _readableChapterText(content);
     if (_pageMode == BookSourcePageMode.verticalScroll) {
+      if (!_scrollByChapter) return _buildContinuousBook();
       return LayoutBuilder(
         builder: (context, constraints) {
           _ensurePagination(
@@ -1180,6 +1338,129 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         title,
         style: _chapterTitleStyle,
       );
+
+  Widget _buildContinuousChapter(int chapterIndex) {
+    final chapterKey = _continuousChapterKeys.putIfAbsent(
+      chapterIndex,
+      GlobalKey.new,
+    );
+    final cached = _prefetchedContent[chapterIndex];
+    return KeyedSubtree(
+      key: chapterKey,
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          _horizontalMargin,
+          chapterIndex == 0 ? _readerSafeArea.contentTop : 28,
+          _horizontalMargin,
+          chapterIndex == _chapters.length - 1
+              ? _readerSafeArea.contentBottom
+              : 28,
+        ),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: _maxReaderContentWidth),
+            child: SizedBox(
+              width: double.infinity,
+              child: cached != null
+                  ? _buildContinuousChapterBody(chapterIndex, cached)
+                  : FutureBuilder<BookSourceChapterContent>(
+                      future: _continuousContentFor(chapterIndex),
+                      builder: (context, snapshot) {
+                        final content = snapshot.data;
+                        if (content != null) {
+                          return _buildContinuousChapterBody(
+                            chapterIndex,
+                            content,
+                          );
+                        }
+                        if (snapshot.hasError) {
+                          return SizedBox(
+                            height: 240,
+                            child: Center(
+                              child: TextButton.icon(
+                                onPressed: () {
+                                  setState(() {
+                                    _continuousContentLoads
+                                        .remove(chapterIndex);
+                                  });
+                                },
+                                icon: const Icon(Icons.refresh_rounded),
+                                label: Text(context.l10n.retry),
+                              ),
+                            ),
+                          );
+                        }
+                        return const SizedBox(
+                          height: 360,
+                          child: Center(child: CircularProgressIndicator()),
+                        );
+                      },
+                    ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContinuousChapterBody(
+    int chapterIndex,
+    BookSourceChapterContent content,
+  ) {
+    final title =
+        content.title.isEmpty ? _chapters[chapterIndex].title : content.title;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildChapterTitle(title),
+        const SizedBox(height: 26),
+        Text(
+          _readableChapterText(content),
+          textAlign: readerBodyTextAlign,
+          style: _bodyTextStyle,
+          strutStyle: readerStrutStyle(_bodyTextStyle),
+          textHeightBehavior: readerTextHeightBehavior,
+        ),
+        if (chapterIndex < _chapters.length - 1) ...[
+          const SizedBox(height: 34),
+          Divider(color: _readerTheme.border.withValues(alpha: 0.48)),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildContinuousBook() {
+    final anchor = _continuousAnchorChapter.clamp(0, _chapters.length - 1);
+    return GestureDetector(
+      key: const ValueKey('book-source-reader-surface'),
+      behavior: HitTestBehavior.translucent,
+      onTap: _toggleControls,
+      child: SelectionArea(
+        child: CustomScrollView(
+          controller: _scrollController,
+          center: _continuousCenterKey,
+          slivers: [
+            if (anchor > 0)
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) => _buildContinuousChapter(index),
+                  childCount: anchor,
+                  addAutomaticKeepAlives: false,
+                ),
+              ),
+            SliverList(
+              key: _continuousCenterKey,
+              delegate: SliverChildBuilderDelegate(
+                (context, index) => _buildContinuousChapter(anchor + index),
+                childCount: _chapters.length - anchor,
+                addAutomaticKeepAlives: false,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   Widget _buildChapterButtons() => Row(
         children: [
@@ -1504,6 +1785,12 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
 
   String _readerStatus() {
     if (_pageMode == BookSourcePageMode.verticalScroll) {
+      if (!_scrollByChapter) {
+        return context.l10n.readerStatusScroll(
+          _chapterIndex + 1,
+          _chapters.length,
+        );
+      }
       return context.l10n.readerStatusPaged(
         _chapterIndex + 1,
         _chapters.length,
