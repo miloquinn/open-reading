@@ -126,7 +126,7 @@ lib/
 
 - `core/reader/reader_settings.dart`：统一字号、行高、主题、翻页模式和独立上下边距。
 - `core/reader/reader_layout.dart`：翻页模式和分页缓存指纹。
-- `core/reader/native_text_paginator.dart`：本地与在线纯文本分页共享实现；正文行高仅作用于行间，首行上方和末行下方的 leading 统一裁剪，配套 strut 不携带 `height`。
+- `core/reader/native_text_paginator.dart`：本地与在线纯文本分页共享实现；正文统一两端对齐，分页测量与最终绘制共用同一文字流；正文行高仅作用于行间，首行上方和末行下方的 leading 统一裁剪，配套 strut 不携带 `height`。
 - `core/reader/reader_safe_area.dart`：系统安全区、正文边距和页码位置。
 - `core/reader/canonical_locator.dart`：与排版无关的稳定阅读位置。
 - `core/reader/reader_volume_key_controller.dart`：Android 音量键翻页桥接；读取全局开关，只在非滚动分页模式下启用原生按键拦截，并把上一页/下一页事件路由给当前阅读器。
@@ -192,7 +192,7 @@ lib/
 
 旧的单一纵向边距仅作为迁移输入，不再作为当前设置模型。
 
-水平页边距由 `ReaderMarginSettings` 统一限定为 `0..48`，设置面板、持久化恢复和两个阅读器入口使用同一范围。在线书源的分页正文在扣除用户页边距后，以最大 760 logical pixels 的内容宽度居中，分页测量宽度与实际渲染宽度保持一致。
+水平页边距由 `ReaderMarginSettings` 统一限定为 `0..48`，设置面板、持久化恢复和两个阅读器入口使用同一范围。本地与在线书源正文统一采用两端对齐，把中文软换行后不足一字宽的余量分散到字间；分页测量与实际渲染使用同一对齐规则。在线书源正文在扣除用户页边距后，仍以最大 760 logical pixels 的内容宽度居中。
 
 ## SQLite 数据结构
 
@@ -226,4 +226,5 @@ lib/
 - `book_source_*_test.dart`：原生书源协议、缓存、搜索、书架和在线阅读。
 - `book_import_*_test.dart`：导入模型、迁移、来源和队列。
 - `*_page_test.dart`：页面组件回归。
-- `test/goldens/`：视觉基准图。
+
+Flutter Golden 失败时生成的 `test/failures/` 属于本地诊断产物，不纳入版本控制。

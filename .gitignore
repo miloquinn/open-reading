@@ -75,6 +75,7 @@ devtools_options.yaml
 
 # Test data (novel TXT files — not part of the project)
 /*.txt
+/test/failures/
 
 # Secrets
 *.env

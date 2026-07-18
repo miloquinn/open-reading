@@ -1390,6 +1390,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
               text: block.text ?? '',
               style: _styleForNativeBlock(block, _readerTextStyle),
             ),
+            textAlign: readerBodyTextAlign,
             textScaler: MediaQuery.textScalerOf(context),
           ),
         );

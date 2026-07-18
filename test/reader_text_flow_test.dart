@@ -1,9 +1,16 @@
 import 'package:flutter/painting.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:xxread/core/reader/native_text_paginator.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUpAll(() async {
+    final loader = FontLoader('SourceHanSerifCN')
+      ..addFont(rootBundle.load('assets/fonts/app/NotoSerifSC-Variable.ttf'));
+    await loader.load();
+  });
 
   const fontSize = 20.0;
   const lineHeight = 1.8;
@@ -114,5 +121,39 @@ void main() {
 
     expect(untrimmed.first.lineCount, 1);
     expect(trimmed.first.lineCount, 2);
+  });
+
+  test('reader flow fills both edges of wrapped Chinese lines', () {
+    const width = 219.0;
+    const bodyStyle = TextStyle(
+      fontFamily: 'SourceHanSerifCN',
+      fontSize: 20,
+      letterSpacing: 0.2,
+    );
+    const flow = NativeTextFlowStyle(
+      textDirection: TextDirection.ltr,
+      textScaler: TextScaler.noScaling,
+      locale: Locale('zh', 'CN'),
+      strutStyle: StrutStyle(
+        fontFamily: 'SourceHanSerifCN',
+        fontSize: 20,
+      ),
+      textHeightBehavior: readerTextHeightBehavior,
+    );
+    final painter = flow.createPainter(
+      TextSpan(
+        text: List.filled(20, '开元阅读正文排版').join(),
+        style: bodyStyle,
+      ),
+    )..layout(maxWidth: width);
+    final lines = painter.computeLineMetrics();
+
+    expect(flow.textAlign, TextAlign.justify);
+    expect(lines.length, greaterThan(1));
+    for (final line in lines.take(lines.length - 1)) {
+      expect(line.left.abs(), lessThanOrEqualTo(0.25));
+      expect(line.width, closeTo(width, 0.25));
+    }
+    painter.dispose();
   });
 }

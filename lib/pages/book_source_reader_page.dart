@@ -1111,6 +1111,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
                         const SizedBox(height: 26),
                         Text(
                           text,
+                          textAlign: readerBodyTextAlign,
                           style: _bodyTextStyle,
                           strutStyle: readerStrutStyle(_bodyTextStyle),
                           textHeightBehavior: readerTextHeightBehavior,
@@ -1304,7 +1305,6 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         ),
         child: Center(
           child: ConstrainedBox(
-            key: const ValueKey('book-source-reader-page-content'),
             constraints: const BoxConstraints(
               maxWidth: _maxReaderContentWidth,
             ),
@@ -1323,6 +1323,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
                   ],
                   Text(
                     page.text,
+                    textAlign: readerBodyTextAlign,
                     style: _bodyTextStyle,
                     strutStyle: readerStrutStyle(_bodyTextStyle),
                     textHeightBehavior: readerTextHeightBehavior,

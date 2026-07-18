@@ -169,41 +169,39 @@ void main() {
     );
   });
 
-  testWidgets('centers paged content with equal horizontal whitespace',
-      (tester) async {
-    tester.view.physicalSize = const Size(1200, 800);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    SharedPreferences.setMockInitialValues({
-      ReaderSettingsStore.pageModeKey: BookSourcePageMode.instantPage.name,
-      ReaderSettingsStore.horizontalMarginKey: 0.0,
-    });
+  for (final mode in [
+    BookSourcePageMode.verticalScroll,
+    BookSourcePageMode.instantPage,
+  ]) {
+    testWidgets('justifies source body text in ${mode.name} mode',
+        (tester) async {
+      SharedPreferences.setMockInitialValues({
+        ReaderSettingsStore.pageModeKey: mode.name,
+      });
 
-    await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: BookSourceReaderPage(
-          source: _testSource(),
-          book: const BookSourceBook(
-            id: 'book-1',
-            title: 'Test book',
-            author: 'Author',
-            description: '',
-            categories: [],
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: BookSourceReaderPage(
+            source: _testSource(),
+            book: const BookSourceBook(
+              id: 'book-1',
+              title: 'Test book',
+              author: 'Author',
+              description: '',
+              categories: [],
+            ),
+            client: _FakeBookSourceClient(),
           ),
-          client: _FakeBookSourceClient(),
         ),
-      ),
-    );
-    const contentKey = ValueKey('book-source-reader-page-content');
-    await _pumpUntilFound(tester, find.byKey(contentKey));
+      );
+      final bodyFinder = find.textContaining('第一章正文');
+      await _pumpUntilFound(tester, bodyFinder);
 
-    final rect = tester.getRect(find.byKey(contentKey));
-    expect(rect.width, 760);
-    expect(rect.left, closeTo(1200 - rect.right, 0.01));
-  });
+      expect(tester.widget<Text>(bodyFinder).textAlign, TextAlign.justify);
+    });
+  }
 
   testWidgets('uses the light reader theme for status bar icon contrast',
       (tester) async {

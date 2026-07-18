@@ -5,6 +5,10 @@ import 'package:flutter/painting.dart';
 
 typedef NativeTextSpanBuilder = TextSpan Function(int start, int end);
 
+/// 正文使用两端对齐，让中文软换行产生的不足一字宽余量分散到字间，
+/// 而不是全部堆在右侧。分页测量和实际绘制必须共用这一规则。
+const TextAlign readerBodyTextAlign = TextAlign.justify;
+
 /// 行高只作用于行与行之间：首行上方、末行下方不再垫行距，
 /// 这样"上/下边距"就是从字形边缘量起，不随行高设置漂移。
 const TextHeightBehavior readerTextHeightBehavior = TextHeightBehavior(
@@ -32,7 +36,7 @@ class NativeTextFlowStyle {
     required this.locale,
     required this.strutStyle,
     required this.textHeightBehavior,
-    this.textAlign = TextAlign.start,
+    this.textAlign = readerBodyTextAlign,
     this.textWidthBasis = TextWidthBasis.parent,
   });
 
