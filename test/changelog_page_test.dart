@@ -17,6 +17,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('版本更新记录'), findsOneWidget);
+    expect(find.text('v1.2.4'), findsOneWidget);
+    expect(find.text('新增纸页化页脚、经典折页动画与阅读排版设置'), findsOneWidget);
     expect(find.text('v1.2.2'), findsOneWidget);
     expect(find.text('当前版本'), findsOneWidget);
     expect(find.text('修复在线连续滚动无法中间点击呼出控制栏'), findsOneWidget);

@@ -1948,6 +1948,7 @@
   "changelog120Licenses": "Added offline open-source license viewing",
   "changelog121ContinuousScroll": "Added shared chapter-by-chapter and continuous whole-book scrolling for online sources",
   "changelog121Typography": "Fixed asymmetric Chinese text margins and aligned pagination with rendering",
+  "changelog124PaperLeaf": "Added paper-bound page chrome, classic fold animation, and reader typography controls",
   "changelog122ContinuousTap": "Restored center-tap reader controls during continuous online scrolling",
   "changelog110CustomFonts": "Added custom fonts",
   "changelog110Bookmarks": "Added bookmark support",

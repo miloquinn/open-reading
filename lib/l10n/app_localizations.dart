@@ -3180,6 +3180,12 @@ abstract class AppLocalizations {
   /// **'Fixed asymmetric Chinese text margins and aligned pagination with rendering'**
   String get changelog121Typography;
 
+  /// No description provided for @changelog124PaperLeaf.
+  ///
+  /// In en, this message translates to:
+  /// **'Added paper-bound page chrome, classic fold animation, and reader typography controls'**
+  String get changelog124PaperLeaf;
+
   /// No description provided for @changelog122ContinuousTap.
   ///
   /// In en, this message translates to:

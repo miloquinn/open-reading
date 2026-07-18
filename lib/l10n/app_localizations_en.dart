@@ -1740,6 +1740,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Fixed asymmetric Chinese text margins and aligned pagination with rendering';
 
   @override
+  String get changelog124PaperLeaf =>
+      'Added paper-bound page chrome, classic fold animation, and reader typography controls';
+
+  @override
   String get changelog122ContinuousTap =>
       'Restored center-tap reader controls during continuous online scrolling';
 

@@ -1671,6 +1671,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get changelog121Typography => '中国語本文の左右余白とページ分割・描画の不一致を修正';
 
   @override
+  String get changelog124PaperLeaf => '紙面に追従するページ情報、クラシック折り、読書組版設定を追加';
+
+  @override
   String get changelog122ContinuousTap => 'オンライン連続スクロールで中央タップの操作バー表示を復元';
 
   @override
