@@ -3042,6 +3042,24 @@ abstract class AppLocalizations {
   /// **'Support development'**
   String get settingsSupportDevelopmentTitle;
 
+  /// Primary action on the first-home developer support introduction
+  ///
+  /// In en, this message translates to:
+  /// **'Support now'**
+  String get firstHomeSupportNow;
+
+  /// Dismiss action on the first-home developer support introduction
+  ///
+  /// In en, this message translates to:
+  /// **'Maybe later'**
+  String get firstHomeSupportLater;
+
+  /// Accessibility label for the paper shown in the first-home support introduction
+  ///
+  /// In en, this message translates to:
+  /// **'A letter from the Open Reading developer asking for voluntary support'**
+  String get firstHomeSupportPaperSemanticLabel;
+
   /// Title of the voluntary developer support card
   ///
   /// In en, this message translates to:
@@ -4439,6 +4457,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Use the current page-turn animation for side taps; turn off to refresh instantly'**
   String get readerTapAnimationHint;
+
+  /// No description provided for @readerTabletTwoPageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tablet two-page layout'**
+  String get readerTabletTwoPageTitle;
+
+  /// No description provided for @readerTabletTwoPageHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Show left and right pages side by side in landscape; turn off to always use a single page'**
+  String get readerTabletTwoPageHint;
 
   /// No description provided for @readerCustomThemeTitle.
   ///

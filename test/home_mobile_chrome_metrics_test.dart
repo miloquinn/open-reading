@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:xxread/pages/home_layout_constants.dart';
+import 'package:xxread/pages/home/home_mobile_chrome.dart';
 
 void main() {
   group('HomeMobileChromeMetrics', () {

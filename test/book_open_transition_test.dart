@@ -52,9 +52,13 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
-    // 飞行中：封面飞行图层与正文同时在树上
+    // 飞行中：只保留轻量纸色占位，避免阅读器同步初始化抢动画帧。
     expect(find.text('flight-cover'), findsOneWidget);
-    expect(find.text('reader'), findsOneWidget);
+    expect(find.text('reader'), findsNothing);
+    expect(
+      find.byKey(const ValueKey('book-open-transition-deferred-page')),
+      findsOneWidget,
+    );
 
     await tester.pumpAndSettle();
     // 落定：飞行图层移除，正文完全可见

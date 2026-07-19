@@ -8,6 +8,18 @@ enum ReaderPageMode {
   pageCurl,
 }
 
+abstract final class ReaderLayoutBreakpoints {
+  static const double tabletShortestSide = 600;
+  static const double twoPageMinimumWidth = 720;
+
+  static bool isTablet(Size size) => size.shortestSide >= tabletShortestSide;
+
+  static bool supportsTwoPageLayout(Size size) =>
+      isTablet(size) &&
+      size.width > size.height &&
+      size.width >= twoPageMinimumWidth;
+}
+
 ReaderPageMode readerPageModeFromName(
   String? name, {
   required ReaderPageMode fallback,

@@ -139,6 +139,7 @@ class ReaderThemes {
   ReaderThemes._();
 
   static List<ReaderCustomTheme> _customThemes = const [];
+  static List<String> _themeOrder = const [];
 
   static List<ReaderCustomTheme> get customThemes =>
       List<ReaderCustomTheme>.unmodifiable(_customThemes);
@@ -152,12 +153,23 @@ class ReaderThemes {
   static List<ReaderThemePalette> get customPalettes =>
       _customThemes.map(fromCustomTheme).toList(growable: false);
 
+  static List<String> get themeOrder =>
+      List<String>.unmodifiable(_resolvedThemeOrder());
+
+  static List<ReaderThemePalette> get orderedPalettes =>
+      themeOrder.map(byId).toList(growable: false);
+
   static void setCustomThemes(List<ReaderCustomTheme> themes) {
     _customThemes = List<ReaderCustomTheme>.unmodifiable(themes);
+    _themeOrder = _resolvedThemeOrder();
   }
 
   static void setCustomTheme(ReaderCustomTheme? theme) {
-    _customThemes = theme == null ? const [] : [theme];
+    setCustomThemes(theme == null ? const [] : [theme]);
+  }
+
+  static void setThemeOrder(List<String> themeIds) {
+    _themeOrder = resolveThemeOrder(themeIds, _customThemes);
   }
 
   static const day = ReaderThemePalette(
@@ -290,6 +302,35 @@ class ReaderThemes {
     night,
     pureBlack,
   ];
+
+  static List<String> resolveThemeOrder(
+    Iterable<String> themeIds,
+    Iterable<ReaderCustomTheme> customThemes,
+  ) {
+    final customThemeIds = customThemes.map((theme) => theme.id).toList();
+    final availableIds = <String>{
+      ...all.map((theme) => theme.id),
+      ...customThemeIds,
+    };
+    final result = <String>[];
+    final seen = <String>{};
+
+    for (final id in themeIds) {
+      if (availableIds.contains(id) && seen.add(id)) {
+        result.add(id);
+      }
+    }
+    for (final theme in all) {
+      if (seen.add(theme.id)) result.add(theme.id);
+    }
+    for (final id in customThemeIds) {
+      if (seen.add(id)) result.add(id);
+    }
+    return result;
+  }
+
+  static List<String> _resolvedThemeOrder() =>
+      resolveThemeOrder(_themeOrder, _customThemes);
 
   static ReaderThemePalette byId(String? id) {
     for (final theme in _customThemes) {

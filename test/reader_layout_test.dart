@@ -69,4 +69,23 @@ void main() {
       ReaderPageMode.pageCurl,
     );
   });
+
+  test('tablet spread breakpoints require a landscape tablet viewport', () {
+    expect(
+      ReaderLayoutBreakpoints.isTablet(const Size(430, 932)),
+      isFalse,
+    );
+    expect(
+      ReaderLayoutBreakpoints.isTablet(const Size(800, 1200)),
+      isTrue,
+    );
+    expect(
+      ReaderLayoutBreakpoints.supportsTwoPageLayout(const Size(800, 1200)),
+      isFalse,
+    );
+    expect(
+      ReaderLayoutBreakpoints.supportsTwoPageLayout(const Size(1200, 800)),
+      isTrue,
+    );
+  });
 }

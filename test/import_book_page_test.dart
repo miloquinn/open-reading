@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:xxread/l10n/app_localizations.dart';
-import 'package:xxread/pages/import_book/import_book_widgets.dart';
-import 'package:xxread/pages/import_book_page.dart';
+import 'package:xxread/pages/library/import_book/import_book_page.dart';
+import 'package:xxread/pages/library/import_book/import_book_widgets.dart';
 import 'package:xxread/services/books/book_import_models.dart';
 
 void main() {

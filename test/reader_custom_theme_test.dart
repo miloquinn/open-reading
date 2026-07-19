@@ -4,8 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:xxread/core/reader/reader_custom_theme.dart';
+import 'package:xxread/core/reader/reader_theme_order.dart';
 import 'package:xxread/l10n/app_localizations.dart';
-import 'package:xxread/pages/reader_custom_theme_page.dart';
+import 'package:xxread/pages/reader/themes/reader_custom_theme_page.dart';
 import 'package:xxread/utils/reader_themes.dart';
 
 void main() {
@@ -85,6 +86,15 @@ void main() {
     expect(restored, hasLength(1));
     expect(restored.single.id, ReaderCustomTheme.legacyThemeId);
     expect(prefs.getString(ReaderCustomThemeStore.storageKey), isNotNull);
+  });
+
+  test('reader theme order store removes blanks and duplicate ids', () async {
+    SharedPreferences.setMockInitialValues({});
+    const store = ReaderThemeOrderStore();
+
+    await store.save(['mist', 'day', 'mist', ' ', 'custom:first']);
+
+    expect(await store.load(), ['mist', 'day', 'custom:first']);
   });
 
   testWidgets('editing a preview does not mutate the active saved palette',

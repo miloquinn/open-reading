@@ -83,10 +83,43 @@ void main() {
       1,
     );
   });
+
+  testWidgets('reader chrome preserves the selected reading theme color',
+      (tester) async {
+    await tester.pumpWidget(
+      _testApp(
+        glassEnabled: true,
+        palette: ReaderThemes.green,
+      ),
+    );
+
+    final greenSurface = _panelGradient(tester).colors.last;
+    final expectedGreen = Color.lerp(
+      ReaderThemes.green.controlBar,
+      Colors.white,
+      0.28,
+    )!;
+    expect(greenSurface.r, closeTo(expectedGreen.r, 0.001));
+    expect(greenSurface.g, closeTo(expectedGreen.g, 0.001));
+    expect(greenSurface.b, closeTo(expectedGreen.b, 0.001));
+
+    await tester.pumpWidget(
+      _testApp(
+        glassEnabled: true,
+        palette: ReaderThemes.rose,
+      ),
+    );
+
+    final roseSurface = _panelGradient(tester).colors.last;
+    expect(roseSurface.r, greaterThan(greenSurface.r));
+    expect(roseSurface.g, lessThan(greenSurface.g));
+  });
 }
 
-Widget _testApp({required bool glassEnabled}) {
-  const palette = ReaderThemes.day;
+Widget _testApp({
+  required bool glassEnabled,
+  ReaderThemePalette palette = ReaderThemes.day,
+}) {
   return MaterialApp(
     theme: palette.toThemeData(),
     home: Scaffold(
@@ -95,7 +128,7 @@ Widget _testApp({required bool glassEnabled}) {
           key: ValueKey(glassEnabled),
           palette: palette,
           isTopBar: true,
-          child: const SizedBox(
+          child: SizedBox(
             width: 240,
             height: 58,
             child: ReaderControlIconButton(

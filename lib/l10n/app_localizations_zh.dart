@@ -1592,6 +1592,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsSupportDevelopmentTitle => '支持开发';
 
   @override
+  String get firstHomeSupportNow => '立即支持';
+
+  @override
+  String get firstHomeSupportLater => '再说吧';
+
+  @override
+  String get firstHomeSupportPaperSemanticLabel => '开元阅读开发者的自愿支持说明';
+
+  @override
   String get settingsSupportDevelopmentCardTitle => '支持持续开发';
 
   @override
@@ -2345,6 +2354,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get readerTapAnimationHint => '左右点击时使用当前翻页模式的动画；关闭后立即刷新页面';
+
+  @override
+  String get readerTabletTwoPageTitle => '平板双页布局';
+
+  @override
+  String get readerTabletTwoPageHint => '横屏时并排显示左右两页；关闭后始终使用单页布局';
 
   @override
   String get readerCustomThemeTitle => '自定义阅读主题';
@@ -4163,6 +4178,15 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get settingsSupportDevelopmentTitle => '支持開發';
 
   @override
+  String get firstHomeSupportNow => '立即支持';
+
+  @override
+  String get firstHomeSupportLater => '再說吧';
+
+  @override
+  String get firstHomeSupportPaperSemanticLabel => '開元閱讀開發者的自願支持說明';
+
+  @override
   String get settingsSupportDevelopmentCardTitle => '支持持續開發';
 
   @override
@@ -4916,6 +4940,12 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get readerTapAnimationHint => '左右點擊時使用目前翻頁模式的動畫；關閉後立即刷新頁面';
+
+  @override
+  String get readerTabletTwoPageTitle => '平板雙頁版面';
+
+  @override
+  String get readerTabletTwoPageHint => '橫向時並排顯示左右兩頁；關閉後一律使用單頁版面';
 
   @override
   String get readerCustomThemeTitle => '自訂閱讀主題';

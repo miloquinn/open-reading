@@ -23,6 +23,11 @@ double _contrast(Color foreground, Color background) {
 }
 
 void main() {
+  tearDown(() {
+    ReaderThemes.setCustomThemes(const []);
+    ReaderThemes.setThemeOrder(const []);
+  });
+
   test('reader themes remain independent and readable', () {
     expect(ReaderThemes.all, hasLength(8));
     expect(
@@ -97,6 +102,29 @@ void main() {
     expect(ReaderThemes.byId(second.id).backgroundImagePath,
         second.backgroundImagePath);
     expect(ReaderThemes.byId(second.id).cacheKey, contains('night.webp'));
-    ReaderThemes.setCustomThemes(const []);
+  });
+
+  test('saved order applies to built-in and custom themes together', () {
+    const custom = ReaderCustomTheme(
+      id: 'custom:first',
+      name: 'First',
+      background: Color(0xFFF4EBD8),
+      text: Color(0xFF30271F),
+      controlBar: Color(0xFFE1D0B4),
+    );
+    ReaderThemes.setCustomThemes(const [custom]);
+
+    ReaderThemes.setThemeOrder(const [
+      'green',
+      'custom:first',
+      'day',
+      'missing',
+    ]);
+
+    expect(
+      ReaderThemes.orderedPalettes.take(3).map((theme) => theme.id),
+      ['green', 'custom:first', 'day'],
+    );
+    expect(ReaderThemes.themeOrder, hasLength(ReaderThemes.all.length + 1));
   });
 }

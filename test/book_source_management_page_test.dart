@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:xxread/book_sources/services/book_source_registry.dart';
 import 'package:xxread/l10n/app_localizations.dart';
-import 'package:xxread/pages/book_source_management_page.dart';
+import 'package:xxread/pages/book_sources/book_source_management_page.dart';
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));

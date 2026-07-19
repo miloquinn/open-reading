@@ -74,24 +74,125 @@ class BookOpenTransition {
     if (animation == null) {
       return CustomPageTransitions.createSmoothReaderPageRoute<T>(page);
     }
+    final entranceCompleted = ValueNotifier<bool>(false);
     return PageRouteBuilder<T>(
-      pageBuilder: (context, _, __) => page,
+      pageBuilder: (context, _, __) => _DeferredBookOpenPage(
+        entranceCompleted: entranceCompleted,
+        child: page,
+      ),
       transitionDuration: const Duration(milliseconds: 460),
       reverseTransitionDuration: const Duration(milliseconds: 360),
       opaque: true,
       barrierColor: Colors.transparent,
-      // 与 createSmoothReaderPageRoute 相同：飞行只动合成器友好的属性，
-      // 让书籍加载的 future 在转场期间保持响应。
+      // The destination reader stays unmounted until the cover flight ends,
+      // keeping parsing, pagination, inset changes, and page snapshots out of
+      // the transition's frame budget.
       allowSnapshotting: false,
       transitionsBuilder: (context, routeAnimation, secondaryAnimation, child) {
-        return _BookOpenFlight(
+        return _BookOpenTransitionCompletionDriver(
           animation: routeAnimation,
-          data: animation,
-          child: child,
+          entranceCompleted: entranceCompleted,
+          child: _BookOpenFlight(
+            animation: routeAnimation,
+            data: animation,
+            child: child,
+          ),
         );
       },
     );
   }
+}
+
+class _DeferredBookOpenPage extends StatelessWidget {
+  const _DeferredBookOpenPage({
+    required this.entranceCompleted,
+    required this.child,
+  });
+
+  final ValueNotifier<bool> entranceCompleted;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: entranceCompleted,
+      builder: (context, revealed, _) {
+        if (revealed) return child;
+        return ColoredBox(
+          key: const ValueKey('book-open-transition-deferred-page'),
+          color: Theme.of(context).colorScheme.surface,
+          child: const SizedBox.expand(),
+        );
+      },
+    );
+  }
+}
+
+class _BookOpenTransitionCompletionDriver extends StatefulWidget {
+  const _BookOpenTransitionCompletionDriver({
+    required this.animation,
+    required this.entranceCompleted,
+    required this.child,
+  });
+
+  final Animation<double> animation;
+  final ValueNotifier<bool> entranceCompleted;
+  final Widget child;
+
+  @override
+  State<_BookOpenTransitionCompletionDriver> createState() =>
+      _BookOpenTransitionCompletionDriverState();
+}
+
+class _BookOpenTransitionCompletionDriverState
+    extends State<_BookOpenTransitionCompletionDriver> {
+  bool _revealScheduled = false;
+  bool _sawEntranceMotion = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.animation.addStatusListener(_onStatusChanged);
+  }
+
+  @override
+  void didUpdateWidget(
+    covariant _BookOpenTransitionCompletionDriver oldWidget,
+  ) {
+    super.didUpdateWidget(oldWidget);
+    if (identical(oldWidget.animation, widget.animation)) return;
+    oldWidget.animation.removeStatusListener(_onStatusChanged);
+    widget.animation.addStatusListener(_onStatusChanged);
+    _sawEntranceMotion = false;
+  }
+
+  void _onStatusChanged(AnimationStatus status) {
+    if (status == AnimationStatus.forward) {
+      _sawEntranceMotion = true;
+      return;
+    }
+    if (status != AnimationStatus.completed ||
+        !_sawEntranceMotion ||
+        widget.entranceCompleted.value ||
+        _revealScheduled) {
+      return;
+    }
+    _revealScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _revealScheduled = false;
+      if (!mounted || widget.entranceCompleted.value) return;
+      widget.entranceCompleted.value = true;
+    });
+  }
+
+  @override
+  void dispose() {
+    widget.animation.removeStatusListener(_onStatusChanged);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 class _BookOpenFlight extends StatelessWidget {

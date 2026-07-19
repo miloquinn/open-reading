@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:xxread/pages/home_widgets/home_bounce_navigation_item.dart';
-import 'package:xxread/pages/home_widgets/home_navigation_item.dart';
+import 'package:xxread/pages/home/widgets/home_bounce_navigation_item.dart';
+import 'package:xxread/pages/home/widgets/home_navigation_item.dart';
 
 void main() {
   const label = 'Library';

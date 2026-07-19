@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -12,9 +14,10 @@ import 'package:xxread/core/reader/reader_page_turn_geometry.dart';
 import 'package:xxread/core/reader/reader_margin_settings.dart';
 import 'package:xxread/core/reader/reader_settings.dart';
 import 'package:xxread/l10n/app_localizations.dart';
-import 'package:xxread/pages/book_source_reader_page.dart';
+import 'package:xxread/pages/reader/book_source_reader_page.dart';
 import 'package:xxread/widgets/reader_paper_page_leaf.dart';
 import 'package:xxread/widgets/reader_shader_page_curl.dart';
+import 'package:xxread/widgets/reader_top_information_bar.dart';
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
@@ -299,11 +302,26 @@ void main() {
 
       final curlFinder = find.byType(ReaderShaderPageCurl);
       expect(curlFinder, findsNWidgets(2));
+      expect(find.byType(ReaderPageCurlSpread), findsOneWidget);
+      final spread = tester.widget<ReaderPageCurlSpread>(
+        find.byType(ReaderPageCurlSpread),
+      );
+      expect(spread.coordinator.gutterWidth, 24);
       final curls =
           tester.widgetList<ReaderShaderPageCurl>(curlFinder).toList();
       expect(curls.every((curl) => curl.edgeDragOnly), isTrue);
       expect(curls[0].bindingEdge, ReaderPageBindingEdge.right);
       expect(curls[1].bindingEdge, ReaderPageBindingEdge.left);
+      expect(
+        (curls[0].currentPage.child as ReaderPaperPageLeaf)
+            .topInformationLayout,
+        ReaderTopInformationLayout.spreadLeft,
+      );
+      expect(
+        (curls[1].currentPage.child as ReaderPaperPageLeaf)
+            .topInformationLayout,
+        ReaderTopInformationLayout.spreadRight,
+      );
 
       final rects = curlFinder
           .evaluate()
@@ -319,12 +337,43 @@ void main() {
       );
       await gesture.moveBy(const Offset(-90, -45));
       await tester.pump();
+      await gesture.moveBy(const Offset(-20, 0));
+      await tester.pump();
       expect(rightController.debugMotion, ReaderPageTurnMotion.outgoing);
       expect(rightController.debugActiveSourceIsCurrent, isTrue);
+      expect(
+        spread.coordinator.activeBindingEdge,
+        ReaderPageBindingEdge.left,
+      );
       await gesture.cancel();
       for (var frame = 0; frame < 24; frame++) {
         await tester.pump(const Duration(milliseconds: 50));
       }
+    } finally {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+      await tester.binding.setSurfaceSize(null);
+    }
+  });
+
+  testWidgets('tablet source reader can disable the two-page layout',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1200, 800));
+    SharedPreferences.setMockInitialValues({
+      ReaderSettingsStore.pageModeKey: BookSourcePageMode.pageCurl.name,
+      ReaderSettingsStore.tabletTwoPageKey: false,
+    });
+    try {
+      await tester.pumpWidget(
+        _buildTabletSourceReader(_LongFakeBookSourceClient()),
+      );
+      for (var attempt = 0; attempt < 40; attempt++) {
+        await tester.pump(const Duration(milliseconds: 100));
+        if (find.byType(ReaderShaderPageCurl).evaluate().isNotEmpty) break;
+      }
+
+      expect(find.byType(ReaderShaderPageCurl), findsOneWidget);
+      expect(find.byType(ReaderPageCurlSpread), findsNothing);
     } finally {
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump();
@@ -395,6 +444,79 @@ void main() {
       expect(restoredIndex, expectedRestoredIndex);
       expect(restoredIndex.isEven, isTrue);
     } finally {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+      await tester.binding.setSurfaceSize(null);
+    }
+  });
+
+  testWidgets(
+      'next chapter preview is ready even while a farther prefetch is pending',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1200, 800));
+    SharedPreferences.setMockInitialValues({
+      ReaderSettingsStore.pageModeKey: BookSourcePageMode.pageCurl.name,
+    });
+    final client = _DelayedThirdChapterClient();
+    try {
+      await tester.pumpWidget(_buildTabletSourceReader(client));
+      final forwardCurl = await _pumpUntilSpreadTarget(
+        tester,
+        bindingEdge: ReaderPageBindingEdge.left,
+        forward: true,
+        pageIdentity: (identity) => identity.contains(':chapter-2:1:'),
+      );
+
+      expect(forwardCurl.forwardPage, isNotNull);
+      expect(client.requestedChapterIds, contains('chapter-3'));
+      expect(client.thirdChapterCompleted, isFalse);
+    } finally {
+      client.completeThirdChapter();
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+      await tester.binding.setSurfaceSize(null);
+    }
+  });
+
+  testWidgets('prefetched chapter turn does not wait for progress persistence',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1200, 800));
+    SharedPreferences.setMockInitialValues({
+      ReaderSettingsStore.pageModeKey: BookSourcePageMode.pageCurl.name,
+    });
+    final store = _BlockingProgressStore();
+    final client = _ConfigurableBookSourceClient({
+      'chapter-1': 'Short first chapter.',
+      'chapter-2': _tabletChapterText(240),
+    });
+    try {
+      await tester.pumpWidget(
+        _buildTabletSourceReader(client, progressStore: store),
+      );
+      final forwardCurl = await _pumpUntilSpreadTarget(
+        tester,
+        bindingEdge: ReaderPageBindingEdge.left,
+        forward: true,
+        pageIdentity: (identity) => identity.contains(':chapter-2:1:'),
+      );
+
+      final turn = Future<void>.sync(forwardCurl.onTurnForward);
+      await tester.pump();
+
+      expect(store.saveStarted, isTrue);
+      expect(store.saveCompleted, isFalse);
+      expect(
+        _spreadCurl(tester, ReaderPageBindingEdge.left)
+            .currentPage
+            .key
+            .pageIdentity,
+        contains(':chapter-2:1:'),
+      );
+
+      store.completeSave();
+      await turn;
+    } finally {
+      store.completeSave();
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump();
       await tester.binding.setSurfaceSize(null);
@@ -755,6 +877,77 @@ class _ConfigurableBookSourceClient extends BookSourceClient {
       content: contents[chapterId]!,
       contentType: 'text/plain',
     );
+  }
+}
+
+class _DelayedThirdChapterClient extends BookSourceClient {
+  final List<String> requestedChapterIds = [];
+  final Completer<BookSourceChapterContent> _thirdChapter = Completer();
+
+  bool get thirdChapterCompleted => _thirdChapter.isCompleted;
+
+  void completeThirdChapter() {
+    if (_thirdChapter.isCompleted) return;
+    _thirdChapter.complete(
+      BookSourceChapterContent(
+        bookId: 'book-1',
+        chapterId: 'chapter-3',
+        title: 'Chapter 3',
+        content: _tabletChapterText(240),
+        contentType: 'text/plain',
+      ),
+    );
+  }
+
+  @override
+  Future<List<BookSourceChapter>> getChapters(
+    RegisteredBookSource source,
+    String bookId,
+  ) async =>
+      const [
+        BookSourceChapter(id: 'chapter-1', title: 'Chapter 1', order: 1),
+        BookSourceChapter(id: 'chapter-2', title: 'Chapter 2', order: 2),
+        BookSourceChapter(id: 'chapter-3', title: 'Chapter 3', order: 3),
+      ];
+
+  @override
+  Future<BookSourceChapterContent> getChapterContent(
+    RegisteredBookSource source, {
+    required String bookId,
+    required String chapterId,
+  }) async {
+    requestedChapterIds.add(chapterId);
+    if (chapterId == 'chapter-3') return _thirdChapter.future;
+    return BookSourceChapterContent(
+      bookId: bookId,
+      chapterId: chapterId,
+      title: chapterId == 'chapter-1' ? 'Chapter 1' : 'Chapter 2',
+      content: chapterId == 'chapter-1'
+          ? 'Short first chapter.'
+          : _tabletChapterText(240),
+      contentType: 'text/plain',
+    );
+  }
+}
+
+class _BlockingProgressStore extends BookSourceReadingProgressStore {
+  final Completer<void> _save = Completer<void>();
+  bool saveStarted = false;
+
+  bool get saveCompleted => _save.isCompleted;
+
+  void completeSave() {
+    if (!_save.isCompleted) _save.complete();
+  }
+
+  @override
+  Future<void> save({
+    required String sourceId,
+    required String bookId,
+    required BookSourceReadingProgress progress,
+  }) {
+    saveStarted = true;
+    return _save.future;
   }
 }
 

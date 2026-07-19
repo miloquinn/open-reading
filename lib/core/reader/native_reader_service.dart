@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import 'package:xxread/models/book.dart';
-import 'package:xxread/pages/native_reader_page.dart';
+import 'package:xxread/pages/reader/native_reader_page.dart';
 import 'package:xxread/services/books/book_storage_repair_service.dart';
 import 'package:xxread/utils/book_open_transition.dart';
 import 'package:xxread/utils/localization_extension.dart';

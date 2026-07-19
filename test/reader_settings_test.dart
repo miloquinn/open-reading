@@ -16,6 +16,7 @@ void main() {
 
     expect(settings.topMargin, 14);
     expect(settings.bottomMargin, 10);
+    expect(settings.tabletTwoPageEnabled, isTrue);
 
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getDouble(ReaderSettingsStore.topMarginKey), 14);
@@ -37,6 +38,7 @@ void main() {
       paragraphSpacing: 1,
       pullBookmarkEnabled: true,
       tapPageAnimationEnabled: false,
+      tabletTwoPageEnabled: false,
     );
 
     await store.save(settings);
@@ -53,6 +55,7 @@ void main() {
     expect(restored.paragraphSpacing, 1);
     expect(restored.pullBookmarkEnabled, isTrue);
     expect(restored.tapPageAnimationEnabled, isFalse);
+    expect(restored.tabletTwoPageEnabled, isFalse);
   });
 
   test('allows a zero horizontal page margin', () async {
@@ -100,6 +103,7 @@ void main() {
     expect(restored.paragraphSpacing, 0);
     expect(restored.pullBookmarkEnabled, isFalse);
     expect(restored.tapPageAnimationEnabled, isTrue);
+    expect(restored.tabletTwoPageEnabled, isTrue);
     expect(restored.copyWith(firstLineIndent: -1).firstLineIndent, 0);
     expect(restored.copyWith(paragraphSpacing: 9).paragraphSpacing, 2);
     final prefs = await SharedPreferences.getInstance();

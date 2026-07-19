@@ -14,7 +14,7 @@ import 'package:xxread/core/reader/reader_layout.dart';
 import 'package:xxread/core/reader/reader_settings.dart';
 import 'package:xxread/l10n/app_localizations.dart';
 import 'package:xxread/models/book.dart';
-import 'package:xxread/pages/book_source_reader_page.dart';
+import 'package:xxread/pages/reader/book_source_reader_page.dart';
 import 'package:xxread/widgets/reader_control_chrome.dart';
 import 'package:xxread/widgets/reader_settings_controls.dart';
 

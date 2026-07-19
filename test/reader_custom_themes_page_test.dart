@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:xxread/core/reader/reader_custom_theme.dart';
+import 'package:xxread/core/reader/reader_theme_order.dart';
 import 'package:xxread/l10n/app_localizations.dart';
-import 'package:xxread/pages/reader_custom_themes_page.dart';
+import 'package:xxread/pages/reader/themes/reader_custom_themes_page.dart';
 
 void main() {
-  testWidgets('custom theme library exposes selection, editing, and reordering',
+  testWidgets('theme library reorders built-in and custom themes together',
       (tester) async {
     SharedPreferences.setMockInitialValues({});
     const themes = [
@@ -32,11 +33,16 @@ void main() {
         supportedLocales: AppLocalizations.supportedLocales,
         home: ReaderCustomThemesPage(
           initialThemes: themes,
-          initialSelectedThemeId: 'custom:first',
+          initialSelectedThemeId: 'day',
         ),
       ),
     );
     await tester.pump();
+
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('theme-order-list-custom:first')),
+      500,
+    );
 
     expect(find.text('Rain'), findsOne);
     expect(find.text('Paper'), findsOne);
@@ -51,6 +57,9 @@ void main() {
     await tester.pump();
 
     final stored = await const ReaderCustomThemeStore().loadAll();
-    expect(stored.map((theme) => theme.id), ['custom:second', 'custom:first']);
+    final storedOrder = await const ReaderThemeOrderStore().load();
+    expect(stored.map((theme) => theme.id), ['custom:first', 'custom:second']);
+    expect(storedOrder.take(2), ['mist', 'day']);
+    expect(storedOrder, containsAll(['custom:first', 'custom:second']));
   });
 }

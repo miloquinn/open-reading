@@ -4,6 +4,7 @@ import 'package:xxread/core/reader/reader_leaf_status.dart';
 import 'package:xxread/core/reader/reader_safe_area.dart';
 import 'package:xxread/utils/reader_themes.dart';
 import 'package:xxread/widgets/reader_paper_page_leaf.dart';
+import 'package:xxread/widgets/reader_top_information_bar.dart';
 
 void main() {
   testWidgets('page leaf paints only the page number in its footer',
@@ -143,6 +144,80 @@ void main() {
       tester.getCenter(pageNumber).dx,
       lessThan(MediaQuery.sizeOf(tester.element(pageNumber)).width / 2),
     );
+  });
+
+  testWidgets('tablet spread splits chapter and device status across leaves',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1200, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final status = ReaderLeafStatusData(
+      time: DateTime(2026, 7, 19, 9, 5),
+      battery: const ReaderBatteryStatus(level: 73, charging: false),
+      revision: 2,
+    );
+
+    ReaderPaperPageLeaf leaf(
+      String id,
+      ReaderTopInformationLayout layout,
+      ReaderPageNumberPlacement pageNumberPlacement,
+    ) =>
+        ReaderPaperPageLeaf(
+          palette: ReaderThemes.day,
+          safeArea: const ReaderSafeAreaMetrics(
+            viewPadding: EdgeInsets.only(top: 24, bottom: 24),
+            topMargin: 4,
+            bottomMargin: 0,
+            topChromeReserve: ReaderSafeAreaMetrics.readerTopBarReserve,
+          ),
+          metadata: ReaderPaperPageMetadata(
+            pageIdentity: id,
+            layoutFingerprint: 'layout-v4',
+            themeId: 'day',
+            chapterTitle: 'Chapter 3',
+            pageNumber: id == 'left' ? 5 : 6,
+            pageCount: 12,
+          ),
+          pageNumberPlacement: pageNumberPlacement,
+          showTopInformation: true,
+          topInformationLayout: layout,
+          status: status,
+          child: const SizedBox.expand(),
+        );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MediaQuery(
+          data: const MediaQueryData(alwaysUse24HourFormat: true),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: leaf(
+                  'left',
+                  ReaderTopInformationLayout.spreadLeft,
+                  ReaderPageNumberPlacement.bottomLeft,
+                ),
+              ),
+              const SizedBox(width: 24),
+              Expanded(
+                child: leaf(
+                  'right',
+                  ReaderTopInformationLayout.spreadRight,
+                  ReaderPageNumberPlacement.bottomRight,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    for (final text in ['Chapter 3', '09:05', '73%']) {
+      expect(find.text(text), findsOneWidget);
+    }
+    expect(tester.getCenter(find.text('Chapter 3')).dx, lessThan(600));
+    expect(tester.getCenter(find.text('09:05')).dx, greaterThan(600));
+    expect(tester.getCenter(find.text('73%')).dx, greaterThan(600));
   });
 
   test('snapshot key separates page, layout and theme', () {

@@ -11,8 +11,10 @@ import 'package:xxread/core/reader/reader_layout.dart';
 import 'package:xxread/core/reader/reader_settings.dart';
 import 'package:xxread/l10n/app_localizations.dart';
 import 'package:xxread/models/book.dart';
-import 'package:xxread/pages/native_reader_page.dart';
+import 'package:xxread/pages/reader/native_reader_page.dart';
+import 'package:xxread/widgets/reader_paper_page_leaf.dart';
 import 'package:xxread/widgets/reader_shader_page_curl.dart';
+import 'package:xxread/widgets/reader_top_information_bar.dart';
 
 void main() {
   late File bookFile;
@@ -369,21 +371,7 @@ void main() {
       '</body></html>',
     );
     try {
-      await tester.pumpWidget(
-        MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: NativeReaderPage(
-            book: Book(
-              title: 'Tablet spread',
-              filePath: tabletBook.path,
-              format: 'html',
-              fileModifiedTime:
-                  tabletBook.lastModifiedSync().millisecondsSinceEpoch,
-            ),
-          ),
-        ),
-      );
+      await tester.pumpWidget(_buildTabletNativeReader(tabletBook));
       await tester.runAsync(() async {
         for (var attempt = 0; attempt < 30; attempt++) {
           await Future<void>.delayed(const Duration(milliseconds: 50));
@@ -395,11 +383,26 @@ void main() {
 
       final curlFinder = find.byType(ReaderShaderPageCurl);
       expect(curlFinder, findsNWidgets(2));
+      expect(find.byType(ReaderPageCurlSpread), findsOneWidget);
+      final spread = tester.widget<ReaderPageCurlSpread>(
+        find.byType(ReaderPageCurlSpread),
+      );
+      expect(spread.coordinator.gutterWidth, 24);
       final curls =
           tester.widgetList<ReaderShaderPageCurl>(curlFinder).toList();
       expect(curls.every((curl) => curl.edgeDragOnly), isTrue);
       expect(curls[0].bindingEdge, ReaderPageBindingEdge.right);
       expect(curls[1].bindingEdge, ReaderPageBindingEdge.left);
+      expect(
+        (curls[0].currentPage.child as ReaderPaperPageLeaf)
+            .topInformationLayout,
+        ReaderTopInformationLayout.spreadLeft,
+      );
+      expect(
+        (curls[1].currentPage.child as ReaderPaperPageLeaf)
+            .topInformationLayout,
+        ReaderTopInformationLayout.spreadRight,
+      );
 
       final rects = curlFinder
           .evaluate()
@@ -424,12 +427,55 @@ void main() {
       );
       await rightGesture.moveBy(const Offset(-90, -45));
       await tester.pump();
+      await rightGesture.moveBy(const Offset(-20, 0));
+      await tester.pump();
       expect(rightController.debugMotion, ReaderPageTurnMotion.outgoing);
       expect(rightController.debugActiveSourceIsCurrent, isTrue);
+      expect(
+        spread.coordinator.activeBindingEdge,
+        ReaderPageBindingEdge.left,
+      );
       await rightGesture.cancel();
       for (var frame = 0; frame < 24; frame++) {
         await tester.pump(const Duration(milliseconds: 50));
       }
+    } finally {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+      await tester.binding.setSurfaceSize(null);
+      if (tabletBook.existsSync()) tabletBook.deleteSync();
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+
+  testWidgets('tablet can disable the two-page reader layout', (tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    await tester.binding.setSurfaceSize(const Size(1200, 800));
+    SharedPreferences.setMockInitialValues({
+      ReaderSettingsStore.pageModeKey: ReaderPageMode.pageCurl.name,
+      ReaderSettingsStore.tabletTwoPageKey: false,
+    });
+    final tabletBook = File(
+      '${Directory.systemTemp.path}/open-reading-tablet-single-page.html',
+    );
+    tabletBook.writeAsStringSync(
+      '<!doctype html><html><body><h1>Tablet single page</h1>'
+      '${List.generate(160, (index) => '<p>Paragraph $index.</p>').join()}'
+      '</body></html>',
+    );
+    try {
+      await tester.pumpWidget(_buildTabletNativeReader(tabletBook));
+      await tester.runAsync(() async {
+        for (var attempt = 0; attempt < 30; attempt++) {
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+          await tester.pump();
+          if (find.byType(ReaderShaderPageCurl).evaluate().isNotEmpty) return;
+        }
+      });
+      await _pumpUntilFound(tester, find.byType(ReaderShaderPageCurl));
+
+      expect(find.byType(ReaderShaderPageCurl), findsOneWidget);
+      expect(find.byType(ReaderPageCurlSpread), findsNothing);
     } finally {
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump();
@@ -498,6 +544,20 @@ void main() {
     }
   });
 }
+
+Widget _buildTabletNativeReader(File tabletBook) => MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: NativeReaderPage(
+        book: Book(
+          title: 'Tablet spread',
+          filePath: tabletBook.path,
+          format: 'html',
+          fileModifiedTime:
+              tabletBook.lastModifiedSync().millisecondsSinceEpoch,
+        ),
+      ),
+    );
 
 Future<void> _pumpUntilFound(WidgetTester tester, Finder finder) async {
   for (var attempt = 0; attempt < 50; attempt++) {

@@ -12,8 +12,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'l10n/app_localizations.dart';
-import 'pages/home_shell_page.dart';
-import 'pages/user_agreement_page.dart';
+import 'pages/home/home_shell_page.dart';
+import 'pages/legal/user_agreement_page.dart';
 import 'services/books/book_services.dart';
 import 'services/core/core_services.dart';
 import 'utils/app_themes.dart';
@@ -384,6 +384,7 @@ class XxReadApp extends StatefulWidget {
 class _XxReadAppState extends State<XxReadApp> {
   bool? _hasAcceptedAgreement;
   bool _isBootstrapped = false;
+  bool _showFirstHomeSupportAfterAgreement = false;
   _BootstrapError? _bootstrapError;
 
   @override
@@ -454,6 +455,7 @@ class _XxReadAppState extends State<XxReadApp> {
   void _onAgreementAccepted() {
     setState(() {
       _hasAcceptedAgreement = true;
+      _showFirstHomeSupportAfterAgreement = true;
     });
     debugPrint('✅ 用户协议已同意，进入主应用');
   }
@@ -536,7 +538,11 @@ class _XxReadAppState extends State<XxReadApp> {
     }
 
     // 已同意协议，显示主页面
-    return const UpdateCheckGate(child: HomeShellPage());
+    return UpdateCheckGate(
+      child: HomeShellPage(
+        showFirstHomeSupport: _showFirstHomeSupportAfterAgreement,
+      ),
+    );
   }
 
   Widget _buildBootstrapErrorPage(BuildContext context) {

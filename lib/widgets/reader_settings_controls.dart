@@ -21,6 +21,9 @@ class ReaderSettingsSheet extends StatefulWidget {
     required this.pullBookmarkHint,
     required this.tapPageAnimationTitle,
     required this.tapPageAnimationHint,
+    required this.showTabletTwoPageToggle,
+    required this.tabletTwoPageTitle,
+    required this.tabletTwoPageHint,
     required this.fontSizeLabel,
     required this.lineHeightLabel,
     required this.firstLineIndentLabel,
@@ -38,6 +41,7 @@ class ReaderSettingsSheet extends StatefulWidget {
     required this.bottomMargin,
     required this.pullBookmarkEnabled,
     required this.tapPageAnimationEnabled,
+    required this.tabletTwoPageEnabled,
     required this.themeLabelFor,
     required this.onThemeChanged,
     required this.onCustomThemeTap,
@@ -52,6 +56,7 @@ class ReaderSettingsSheet extends StatefulWidget {
     required this.onBottomMarginChanged,
     required this.onPullBookmarkChanged,
     required this.onTapPageAnimationChanged,
+    required this.onTabletTwoPageChanged,
   });
 
   final String title;
@@ -65,6 +70,9 @@ class ReaderSettingsSheet extends StatefulWidget {
   final String pullBookmarkHint;
   final String tapPageAnimationTitle;
   final String tapPageAnimationHint;
+  final bool showTabletTwoPageToggle;
+  final String tabletTwoPageTitle;
+  final String tabletTwoPageHint;
   final String fontSizeLabel;
   final String lineHeightLabel;
   final String firstLineIndentLabel;
@@ -82,6 +90,7 @@ class ReaderSettingsSheet extends StatefulWidget {
   final double bottomMargin;
   final bool pullBookmarkEnabled;
   final bool tapPageAnimationEnabled;
+  final bool tabletTwoPageEnabled;
   final String Function(String themeId) themeLabelFor;
   final ValueChanged<String> onThemeChanged;
   final VoidCallback onCustomThemeTap;
@@ -96,6 +105,7 @@ class ReaderSettingsSheet extends StatefulWidget {
   final ValueChanged<double> onBottomMarginChanged;
   final ValueChanged<bool> onPullBookmarkChanged;
   final ValueChanged<bool> onTapPageAnimationChanged;
+  final ValueChanged<bool> onTabletTwoPageChanged;
 
   @override
   State<ReaderSettingsSheet> createState() => _ReaderSettingsSheetState();
@@ -112,6 +122,7 @@ class _ReaderSettingsSheetState extends State<ReaderSettingsSheet> {
   late double _bottomMargin = widget.bottomMargin;
   late bool _pullBookmarkEnabled = widget.pullBookmarkEnabled;
   late bool _tapPageAnimationEnabled = widget.tapPageAnimationEnabled;
+  late bool _tabletTwoPageEnabled = widget.tabletTwoPageEnabled;
 
   @override
   Widget build(BuildContext context) {
@@ -152,6 +163,19 @@ class _ReaderSettingsSheetState extends State<ReaderSettingsSheet> {
             trailing: const Icon(Icons.chevron_right),
             onTap: widget.onPageModeTap,
           ),
+          if (widget.showTabletTwoPageToggle)
+            SwitchListTile(
+              key: const ValueKey('reader-tablet-two-page-switch'),
+              contentPadding: EdgeInsets.zero,
+              secondary: const Icon(Icons.menu_book_rounded),
+              value: _tabletTwoPageEnabled,
+              title: Text(widget.tabletTwoPageTitle),
+              subtitle: Text(widget.tabletTwoPageHint),
+              onChanged: (value) {
+                setState(() => _tabletTwoPageEnabled = value);
+                widget.onTabletTwoPageChanged(value);
+              },
+            ),
           ListTile(
             key: const ValueKey('reader-top-bar-style-tile'),
             contentPadding: EdgeInsets.zero,
@@ -569,35 +593,17 @@ class ReaderThemeStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final customThemes = ReaderThemes.customThemes;
+    final themes = ReaderThemes.orderedPalettes;
     return SizedBox(
       height: 122,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 1),
         physics: const BouncingScrollPhysics(),
-        itemCount: ReaderThemes.all.length + customThemes.length + 1,
+        itemCount: themes.length + 1,
         separatorBuilder: (_, __) => const SizedBox(width: 10),
         itemBuilder: (context, index) {
-          if (index >= ReaderThemes.all.length &&
-              index < ReaderThemes.all.length + customThemes.length) {
-            final customTheme = customThemes[index - ReaderThemes.all.length];
-            final palette = ReaderThemes.fromCustomTheme(customTheme);
-            final selected = selectedThemeId == customTheme.id;
-            final label = customTheme.name.trim().isEmpty
-                ? labelFor(ReaderCustomTheme.legacyThemeId)
-                : customTheme.name.trim();
-            return _ReaderThemeCard(
-              key: ValueKey('reader-custom-theme-${customTheme.id}'),
-              palette: palette,
-              label: label,
-              selected: selected,
-              icon: customTheme.hasBackgroundImage
-                  ? Icons.image_rounded
-                  : Icons.palette_rounded,
-              onTap: () => onSelected(customTheme.id),
-            );
-          }
-          if (index == ReaderThemes.all.length + customThemes.length) {
+          if (index == themes.length) {
             final colors = Theme.of(context).colorScheme;
             return SizedBox(
               width: 108,
@@ -689,14 +695,22 @@ class ReaderThemeStrip extends StatelessWidget {
               ),
             );
           }
-          final palette = ReaderThemes.all[index];
+          final palette = themes[index];
+          final customTheme = ReaderThemes.customThemeById(palette.id);
           final selected = palette.id == selectedThemeId;
-          final label = labelFor(palette.id);
+          final label = customTheme == null || customTheme.name.trim().isEmpty
+              ? labelFor(palette.id)
+              : customTheme.name.trim();
           return _ReaderThemeCard(
+            key: ValueKey('reader-theme-${palette.id}'),
             palette: palette,
             label: label,
             selected: selected,
-            icon: _iconFor(palette.id),
+            icon: customTheme == null
+                ? _iconFor(palette.id)
+                : customTheme.hasBackgroundImage
+                    ? Icons.image_rounded
+                    : Icons.palette_rounded,
             onTap: () => onSelected(palette.id),
           );
         },
@@ -734,6 +748,7 @@ class _ReaderThemeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cardRadius = BorderRadius.circular(18);
     return SizedBox(
       width: 108,
       child: Semantics(
@@ -742,17 +757,13 @@ class _ReaderThemeCard extends StatelessWidget {
         label: label,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: cardRadius,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),
             curve: Curves.easeOutCubic,
             clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: selected ? palette.accent : palette.border,
-                width: selected ? 2.2 : 1,
-              ),
+              borderRadius: cardRadius,
               boxShadow: selected
                   ? [
                       BoxShadow(
@@ -762,6 +773,13 @@ class _ReaderThemeCard extends StatelessWidget {
                       ),
                     ]
                   : null,
+            ),
+            foregroundDecoration: BoxDecoration(
+              borderRadius: cardRadius,
+              border: Border.all(
+                color: selected ? palette.accent : palette.border,
+                width: selected ? 2.2 : 1,
+              ),
             ),
             child: ReaderThemeBackground(
               palette: palette,

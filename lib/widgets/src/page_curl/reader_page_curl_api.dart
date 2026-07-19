@@ -91,22 +91,36 @@ class ReaderPageCurlController {
 /// A released slot becomes available after the next frame so the host has a
 /// chance to rebuild both leaves with the newly committed spread first.
 class ReaderPageCurlCoordinator extends ChangeNotifier {
+  ReaderPageCurlCoordinator({this.gutterWidth = 0})
+      : assert(gutterWidth >= 0 && gutterWidth.isFinite);
+
+  /// The fixed visual gap between the two leaves in a tablet spread.
+  ///
+  /// A coordinated leaf uses this together with its own width when painting
+  /// the folded sheet across the binding and onto the opposite leaf.
+  final double gutterWidth;
+
   Object? _owner;
+  final ValueNotifier<ReaderPageBindingEdge?> _activeBindingEdge =
+      ValueNotifier(null);
   bool _availableAfterFrame = true;
   bool _notificationScheduled = false;
   bool _disposed = false;
 
-  bool _tryAcquire(Object owner) {
+  bool _tryAcquire(Object owner, ReaderPageBindingEdge bindingEdge) {
     if (_disposed) return false;
     if (identical(_owner, owner)) return true;
     if (_owner != null || !_availableAfterFrame) return false;
     _owner = owner;
+    _activeBindingEdge.value = bindingEdge;
     return true;
   }
 
   void _release(Object owner) {
+    if (_disposed) return;
     if (!identical(_owner, owner)) return;
     _owner = null;
+    _activeBindingEdge.value = null;
     _availableAfterFrame = false;
     if (_notificationScheduled) return;
     _notificationScheduled = true;
@@ -118,6 +132,16 @@ class ReaderPageCurlCoordinator extends ChangeNotifier {
     });
   }
 
+  /// Binding edge of the leaf that currently owns the spread turn.
+  ///
+  /// The right-hand leaf is bound on the left; the left-hand leaf is bound on
+  /// the right. Hosts use this to paint the active leaf after its sibling.
+  ReaderPageBindingEdge? get activeBindingEdge => _activeBindingEdge.value;
+
+  /// Emits immediately when the active spread leaf changes.
+  ValueListenable<ReaderPageBindingEdge?> get activeBindingEdgeListenable =>
+      _activeBindingEdge;
+
   @visibleForTesting
   bool get debugIsBusy => _owner != null || !_availableAfterFrame;
 
@@ -125,7 +149,81 @@ class ReaderPageCurlCoordinator extends ChangeNotifier {
   void dispose() {
     _disposed = true;
     _owner = null;
+    _activeBindingEdge.dispose();
     super.dispose();
+  }
+}
+
+/// Paint-order-aware layout for the two independently rendered leaves of a
+/// tablet page-curl spread.
+///
+/// The leaves keep fixed physical positions while the leaf that owns the
+/// shared [coordinator] is moved to the final paint slot. Stable layer keys
+/// preserve each curl state when the order changes mid-gesture.
+class ReaderPageCurlSpread extends StatelessWidget {
+  const ReaderPageCurlSpread({
+    super.key,
+    required this.coordinator,
+    required this.left,
+    required this.gutter,
+    this.right,
+  });
+
+  final ReaderPageCurlCoordinator coordinator;
+  final Widget left;
+  final Widget? right;
+  final Widget gutter;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final leafWidth = math.max(
+          0.0,
+          (constraints.maxWidth - coordinator.gutterWidth) / 2,
+        );
+        return AnimatedBuilder(
+          animation: coordinator.activeBindingEdgeListenable,
+          builder: (context, _) {
+            final leftLayer = Positioned(
+              key: const ValueKey('reader-page-curl-spread-left-layer'),
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: leafWidth,
+              child: left,
+            );
+            final rightLayer = Positioned(
+              key: const ValueKey('reader-page-curl-spread-right-layer'),
+              left: leafWidth + coordinator.gutterWidth,
+              top: 0,
+              bottom: 0,
+              width: leafWidth,
+              child: right ?? const SizedBox.expand(),
+            );
+            final leftIsActive =
+                coordinator.activeBindingEdge == ReaderPageBindingEdge.right;
+            return Stack(
+              key: const ValueKey('reader-page-curl-spread-layer-stack'),
+              fit: StackFit.expand,
+              clipBehavior: Clip.none,
+              children: [
+                Positioned(
+                  key: const ValueKey('reader-page-curl-spread-gutter-layer'),
+                  left: leafWidth,
+                  top: 0,
+                  bottom: 0,
+                  width: coordinator.gutterWidth,
+                  child: IgnorePointer(child: gutter),
+                ),
+                if (leftIsActive) rightLayer else leftLayer,
+                if (leftIsActive) leftLayer else rightLayer,
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 }
 

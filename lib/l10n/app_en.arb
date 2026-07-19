@@ -1925,6 +1925,18 @@
   "@settingsSupportDevelopmentTitle": {
     "description": "Settings section title for voluntary donations"
   },
+  "firstHomeSupportNow": "Support now",
+  "@firstHomeSupportNow": {
+    "description": "Primary action on the first-home developer support introduction"
+  },
+  "firstHomeSupportLater": "Maybe later",
+  "@firstHomeSupportLater": {
+    "description": "Dismiss action on the first-home developer support introduction"
+  },
+  "firstHomeSupportPaperSemanticLabel": "A letter from the Open Reading developer asking for voluntary support",
+  "@firstHomeSupportPaperSemanticLabel": {
+    "description": "Accessibility label for the paper shown in the first-home support introduction"
+  },
   "settingsSupportDevelopmentCardTitle": "Support continued development",
   "@settingsSupportDevelopmentCardTitle": {
     "description": "Title of the voluntary developer support card"
@@ -2728,6 +2740,8 @@
   "readerPullBookmarkReleaseHint": "Release to finish",
   "readerTapAnimationTitle": "Tap animation",
   "readerTapAnimationHint": "Use the current page-turn animation for side taps; turn off to refresh instantly",
+  "readerTabletTwoPageTitle": "Tablet two-page layout",
+  "readerTabletTwoPageHint": "Show left and right pages side by side in landscape; turn off to always use a single page",
   "readerCustomThemeTitle": "Custom reading theme",
   "readerCustomThemeReset": "Reset",
   "readerCustomThemeColors": "Theme colors",

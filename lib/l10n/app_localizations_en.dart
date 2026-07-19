@@ -1659,6 +1659,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsSupportDevelopmentTitle => 'Support development';
 
   @override
+  String get firstHomeSupportNow => 'Support now';
+
+  @override
+  String get firstHomeSupportLater => 'Maybe later';
+
+  @override
+  String get firstHomeSupportPaperSemanticLabel =>
+      'A letter from the Open Reading developer asking for voluntary support';
+
+  @override
   String get settingsSupportDevelopmentCardTitle =>
       'Support continued development';
 
@@ -2472,6 +2482,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get readerTapAnimationHint =>
       'Use the current page-turn animation for side taps; turn off to refresh instantly';
+
+  @override
+  String get readerTabletTwoPageTitle => 'Tablet two-page layout';
+
+  @override
+  String get readerTabletTwoPageHint =>
+      'Show left and right pages side by side in landscape; turn off to always use a single page';
 
   @override
   String get readerCustomThemeTitle => 'Custom reading theme';

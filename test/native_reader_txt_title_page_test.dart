@@ -8,7 +8,8 @@ import 'package:xxread/core/reader/reader_layout.dart';
 import 'package:xxread/core/reader/reader_settings.dart';
 import 'package:xxread/l10n/app_localizations.dart';
 import 'package:xxread/models/book.dart';
-import 'package:xxread/pages/native_reader_page.dart';
+import 'package:xxread/pages/reader/native_reader_page.dart';
+import 'package:xxread/utils/book_open_transition.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -160,6 +161,82 @@ void main() {
     expect(
       find.byKey(const ValueKey('native-vertical-reading-window')),
       findsOneWidget,
+    );
+  });
+
+  testWidgets('TXT initialization waits until the cover route settles',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(400, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final navigatorKey = GlobalKey<NavigatorState>();
+    final coverKey = GlobalKey();
+    await tester.pumpWidget(
+      MaterialApp(
+        navigatorKey: navigatorKey,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: Center(
+            child: SizedBox(
+              key: coverKey,
+              width: 120,
+              height: 180,
+              child: const ColoredBox(color: Colors.brown),
+            ),
+          ),
+        ),
+      ),
+    );
+    final animation = BookOpenAnimation.fromCoverKey(
+      coverKey,
+      radius: BorderRadius.circular(12),
+      coverBuilder: (_) => const ColoredBox(color: Colors.brown),
+    );
+
+    navigatorKey.currentState!.push<void>(
+      BookOpenTransition.createRoute<void>(
+        NativeReaderPage(
+          book: Book(
+            title: 'Transition test',
+            filePath: bookFile.path,
+            format: 'txt',
+            textEncoding: 'utf8',
+            fileModifiedTime:
+                bookFile.lastModifiedSync().millisecondsSinceEpoch,
+          ),
+        ),
+        animation: animation,
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+
+    expect(
+      find.byKey(const ValueKey('book-open-transition-deferred-page')),
+      findsOneWidget,
+    );
+    expect(find.byType(NativeReaderPage), findsNothing);
+    expect(
+      find.byKey(const ValueKey('native-chapter-title-page')),
+      findsNothing,
+    );
+
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.runAsync(() async {
+      for (var attempt = 0; attempt < 30; attempt++) {
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        await tester.pump();
+        if (find
+            .byKey(const ValueKey('native-chapter-title-page'))
+            .evaluate()
+            .isNotEmpty) {
+          return;
+        }
+      }
+    });
+    await _pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('native-chapter-title-page')),
     );
   });
 }

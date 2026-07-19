@@ -452,7 +452,7 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
   bool _acquireTurnSlot() {
     final coordinator = widget.coordinator;
     if (coordinator == null) return true;
-    if (!coordinator._tryAcquire(this)) return false;
+    if (!coordinator._tryAcquire(this, widget.bindingEdge)) return false;
     _ownedCoordinator = coordinator;
     return true;
   }
@@ -1124,6 +1124,8 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
             onPanCancel: _onPanCancel,
             child: Stack(
               fit: StackFit.expand,
+              clipBehavior:
+                  widget.coordinator == null ? Clip.hardEdge : Clip.none,
               children: [
                 for (final entry in boundaryPages.entries)
                   if (!identical(entry.key, visibleKey))
@@ -1135,6 +1137,10 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
                       painter: _pageTurnPainter(
                         geometry: geometry!,
                         sourceImage: sourceImage!,
+                        bindingOverflow: widget.coordinator == null
+                            ? 0
+                            : geometry.size.width +
+                                widget.coordinator!.gutterWidth,
                       ),
                     ),
                   ),
@@ -1149,6 +1155,7 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
   CustomPainter _pageTurnPainter({
     required ReaderPageTurnGeometry geometry,
     required ui.Image sourceImage,
+    required double bindingOverflow,
   }) {
     if (_classicFoldShader != null) {
       return _ReaderClassicFoldPainter(
@@ -1156,11 +1163,13 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
         sourcePage: sourceImage,
         geometry: geometry,
         bindingEdge: widget.bindingEdge,
+        bindingOverflow: bindingOverflow,
       );
     }
     return _ReaderFallbackTurnPainter(
       sourcePage: sourceImage,
       geometry: geometry,
+      bindingOverflow: bindingOverflow,
     );
   }
 }

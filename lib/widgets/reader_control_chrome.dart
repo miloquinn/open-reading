@@ -72,7 +72,6 @@ class ReaderChromeOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final colors = Theme.of(context).colorScheme;
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -112,7 +111,7 @@ class ReaderChromeOverlay extends StatelessWidget {
                     textTheme.labelSmall?.copyWith(
                       fontSize: 10,
                       height: 1,
-                      color: colors.onSurfaceVariant.withValues(
+                      color: palette.secondaryText.withValues(
                         alpha: visible ? 0 : 0.58,
                       ),
                       fontFeatures: const [FontFeature.tabularFigures()],
@@ -172,6 +171,7 @@ class ReaderChromeOverlay extends StatelessWidget {
                           style: textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w600,
                             letterSpacing: 0.1,
+                            color: palette.text,
                           ),
                         ),
                       ),
@@ -221,6 +221,7 @@ class ReaderChromeOverlay extends StatelessWidget {
                           textTheme.labelLarge?.copyWith(
                             fontWeight: FontWeight.w700,
                             letterSpacing: 0.15,
+                            color: palette.secondaryText,
                           ),
                           null,
                         ),
@@ -257,18 +258,25 @@ class ReaderControlBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
     final borderRadius = BorderRadius.circular(999);
     final blurEnabled = !GlassEffectConfig.shouldDisableBlur;
     // 不叠加预设，直接使用与悬浮导航栏/首页顶栏一致的标准玻璃参数
     final config = GlassEffectHelper.getReadingControlConfig(
       isTopBar: isTopBar,
+      brightness: palette.brightness,
     );
     final surfaceOpacity = blurEnabled ? config['opacity']! : 1.0;
+    final cleanSurface = blurEnabled
+        ? GlassEffectConfig.chromeBaseColor(
+            palette.controlBar,
+            palette.brightness,
+            lightBlend: 0.28,
+          )
+        : palette.controlBar;
     final highlight = Color.lerp(
-      palette.controlBar,
+      cleanSurface,
       Colors.white,
-      palette.brightness == Brightness.dark ? 0.06 : 0.18,
+      palette.brightness == Brightness.dark ? 0.06 : (blurEnabled ? 0.1 : 0.18),
     )!;
     final panel = DecoratedBox(
       decoration: BoxDecoration(
@@ -281,7 +289,7 @@ class ReaderControlBar extends StatelessWidget {
               alpha:
                   (surfaceOpacity + (blurEnabled ? 0.08 : 0.0)).clamp(0.0, 1.0),
             ),
-            palette.controlBar.withValues(
+            cleanSurface.withValues(
               alpha:
                   (surfaceOpacity - (blurEnabled ? 0.02 : 0.0)).clamp(0.0, 1.0),
             ),
@@ -289,11 +297,17 @@ class ReaderControlBar extends StatelessWidget {
         ),
         border: Border.all(
           color: Color.lerp(
-            colors.outline,
+            palette.border,
             Colors.white,
-            palette.brightness == Brightness.dark ? 0.16 : 0.38,
+            palette.brightness == Brightness.dark
+                ? 0.16
+                : (blurEnabled ? 0.14 : 0.38),
           )!
-              .withValues(alpha: blurEnabled ? 0.54 : 0.68),
+              .withValues(
+            alpha: blurEnabled
+                ? (palette.brightness == Brightness.light ? 0.28 : 0.54)
+                : 0.68,
+          ),
           width: 1,
         ),
       ),
@@ -305,18 +319,29 @@ class ReaderControlBar extends StatelessWidget {
         borderRadius: borderRadius,
         boxShadow: [
           BoxShadow(
-            color: colors.shadow.withValues(
-              alpha: palette.brightness == Brightness.dark ? 0.46 : 0.22,
-            ),
-            blurRadius: 32,
+            color: blurEnabled
+                ? GlassEffectConfig.chromeShadowColor(
+                    source: palette.shadow,
+                    brightness: palette.brightness,
+                    darkOpacity: 0.46,
+                  )
+                : palette.shadow.withValues(
+                    alpha: palette.brightness == Brightness.dark ? 0.46 : 0.22,
+                  ),
+            blurRadius:
+                blurEnabled && palette.brightness == Brightness.light ? 24 : 32,
             spreadRadius: -5,
-            offset: const Offset(0, 16),
+            offset: Offset(
+              0,
+              blurEnabled && palette.brightness == Brightness.light ? 8 : 16,
+            ),
           ),
-          BoxShadow(
-            color: colors.shadow.withValues(alpha: 0.10),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
+          if (!blurEnabled || palette.brightness == Brightness.dark)
+            BoxShadow(
+              color: palette.shadow.withValues(alpha: 0.10),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
         ],
       ),
       child: ClipRRect(
@@ -352,14 +377,23 @@ class ReaderControlIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final glassEnabled = !GlassEffectConfig.shouldDisableBlur;
+    final cleanControlFill = glassEnabled
+        ? GlassEffectConfig.chromeBaseColor(
+            palette.controlFill,
+            palette.brightness,
+            lightBlend: 0.22,
+          )
+        : palette.controlFill;
     return IconButton.filledTonal(
       onPressed: onPressed,
       tooltip: tooltip,
       icon: Icon(icon, size: 22),
       style: IconButton.styleFrom(
         foregroundColor: palette.text,
-        backgroundColor: palette.controlFill.withValues(
-          alpha: glassEnabled ? 0.58 : 1.0,
+        backgroundColor: cleanControlFill.withValues(
+          alpha: glassEnabled
+              ? (palette.brightness == Brightness.light ? 0.76 : 0.58)
+              : 1.0,
         ),
         minimumSize: const Size.square(44),
         maximumSize: const Size.square(44),
@@ -368,9 +402,15 @@ class ReaderControlIconButton extends StatelessWidget {
           color: Color.lerp(
             palette.border,
             Colors.white,
-            palette.brightness == Brightness.dark ? 0.12 : 0.32,
+            palette.brightness == Brightness.dark
+                ? 0.12
+                : (glassEnabled ? 0.12 : 0.32),
           )!
-              .withValues(alpha: glassEnabled ? 0.48 : 0.42),
+              .withValues(
+            alpha: glassEnabled
+                ? (palette.brightness == Brightness.light ? 0.28 : 0.48)
+                : 0.42,
+          ),
           width: 0.8,
         ),
         shape: const CircleBorder(),

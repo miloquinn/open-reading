@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:xxread/l10n/app_localizations.dart';
-import 'package:xxread/pages/open_source_licenses_page.dart';
+import 'package:xxread/pages/settings/about/open_source_licenses_page.dart';
 
 void main() {
   testWidgets('shows project, font, and dependency license entries',

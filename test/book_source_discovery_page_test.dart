@@ -8,8 +8,8 @@ import 'package:xxread/book_sources/models/registered_book_source.dart';
 import 'package:xxread/book_sources/protocol/book_source_protocol.dart';
 import 'package:xxread/book_sources/services/book_source_client.dart';
 import 'package:xxread/l10n/app_localizations.dart';
-import 'package:xxread/pages/book_source_widgets.dart';
-import 'package:xxread/pages/book_sources_page.dart';
+import 'package:xxread/pages/book_sources/book_sources_page.dart';
+import 'package:xxread/pages/book_sources/widgets/sourced_book_widgets.dart';
 
 void main() {
   setUp(() {

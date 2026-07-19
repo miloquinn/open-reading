@@ -65,7 +65,14 @@ lib/
 ├─ data/migration/          SQLite 前向迁移
 ├─ l10n/                    ARB 与生成的多语言代码
 ├─ models/                  Book、Bookmark、BookNote 等领域模型
-├─ pages/                   页面与页面级控制器
+├─ pages/                   按功能域组织的页面与页面级控制器
+│  ├─ home/                 首页壳层、仪表盘、parts 与 widgets
+│  ├─ library/              书库与 import_book 导入流程
+│  ├─ book_sources/         书源发现、搜索、管理与业务 widgets
+│  ├─ reader/               本地/书源阅读器与 themes
+│  ├─ reading_stats/        阅读统计页与 parts
+│  ├─ settings/             设置、字体、parts 与 about 页面
+│  └─ legal/                协议等法律页面
 ├─ reader_core/             AI 阅读等历史阅读核心能力
 ├─ services/
 │  ├─ ai/                   全局 AI 阅读服务
@@ -78,19 +85,36 @@ lib/
 └─ widgets/                 可复用 UI，包含统一阅读器控制层
 ```
 
+页面目录命名规则：
+
+- 路由页面使用 `<feature>_<purpose>_page.dart`，控制器使用 `*_controller.dart`。
+- 同主题的多组件文件使用 `*_widgets.dart`；单组件文件直接使用组件语义名，不追加多余的 `_widget`。
+- 私有拆分文件统一放在所属功能域的 `parts/`，并以 `*_part.dart` 结尾。
+- 跨功能域引用使用 `package:xxread/pages/...`；同一功能域内部可以使用相对 import。
+- 页面公开类名不随目录整理做无关扩大重命名；后续业务拆分与文件归档分开进行。
+
 ## 主要页面
 
-- `home_shell_page.dart`：应用主壳和导航入口；手机悬浮底栏支持纯图标与“图标＋文字”两种模式，宽度在手机上取 `screenWidth - 20` 并封顶 392，选中底板按真实单项槽宽自适应；宽屏继续使用 `NavigationRail`。
-- `library_page.dart`：本地与在线书架。
-- `import_book_page.dart`：跨平台书籍导入队列；手机确认态采用顶部安全标题栏、独立滚动书目区和页面内底部操作区，并对文件选择器返回的异常窗口 inset 做限幅。
-- `native_reader_page.dart`：本地 TXT、EPUB 等内容适配器。
-- `book_source_reader_page.dart`：在线书源章节内容适配器。
-- `book_source_search_page.dart`：在线书源搜索与发现。
-- `book_source_management_page.dart`：原生协议书源管理。
-- `settings_page.dart`：应用设置、版本与维护入口。
-- `custom_fonts_page.dart`：用户字体库的导入、应用、重命名和删除入口。
-- `changelog_page.dart`：应用内版本历史。
-- `open_source_licenses_page.dart`：应用、历史版本、内置字体及 Flutter/Dart 依赖的许可查看入口。
+- `pages/home/home_shell_page.dart`：应用主壳和导航入口；手机悬浮底栏支持纯图标与“图标＋文字”两种模式，宽度在手机上取 `screenWidth - 20` 并封顶 392，选中底板按真实单项槽宽自适应；宽屏继续使用 `NavigationRail`。新用户完成欢迎协议后，主壳可挂载一次性开发者支持浮层。
+- `pages/reading_stats/detailed_stats_page.dart`：阅读统计详情入口与数据加载；`reading_stats/parts/` 按公共样式、总览、图表、热力图、书籍排行和成就拆分页面模块，避免统计页继续膨胀为巨型文件。
+- `pages/library/library_page.dart`：本地与在线书架。
+- `pages/library/import_book/import_book_page.dart`：跨平台书籍导入队列；手机确认态采用顶部安全标题栏、独立滚动书目区和页面内底部操作区，并对文件选择器返回的异常窗口 inset 做限幅。
+- `pages/reader/native_reader_page.dart`：本地 TXT、EPUB 等内容适配器。
+- `pages/reader/book_source_reader_page.dart`：在线书源章节内容适配器。
+- `pages/book_sources/source_search_page.dart`：在线书源搜索与发现。
+- `pages/book_sources/book_source_management_page.dart`：原生协议书源管理。
+- `pages/settings/settings_page.dart`：应用设置、版本与维护入口；`SettingsPageController` 可从首页导航后定位到“支持开发”区域。
+- `pages/settings/custom_fonts_page.dart`：用户字体库的导入、应用、重命名和删除入口。
+- `pages/settings/about/changelog_page.dart`：应用内版本历史。
+- `pages/settings/about/open_source_licenses_page.dart`：应用、历史版本、内置字体及 Flutter/Dart 依赖的许可查看入口。
+- `pages/legal/user_agreement_page.dart`：首次使用协议、隐私与第三方书源责任确认。
+
+## 首次首页支持引导
+
+- `widgets/first_home_support_overlay.dart`：正视透明纸张的卷轴展开、悬浮、退出动画与两个操作按钮；系统开启减少动态效果时直接展示完成态。
+- `services/core/first_home_support_intro_service.dart`：以 SharedPreferences 键 `first_home_support_intro_seen_v1` 原子领取一次性展示资格。
+- `assets/images/cyber_begging_paper.png`：无背景 RGBA 纸张素材；阴影与悬浮层次由运行时 UI 绘制，不写入图片本身。
+- “立即支持”切换到设置页并滚动到捐赠卡片；“再说吧”关闭浮层。入口只在当前会话刚完成欢迎协议时请求展示，已领取后不重复出现。
 
 ## 字体架构
 
@@ -126,14 +150,17 @@ lib/
                    ReaderChromeOverlay / ReaderSafeAreaMetrics
                    ReaderTopBarStyle / ReaderSystemUiController
                    ReaderKeepScreenOnController → Android window flag
+                   BookOpenTransition → deferred reader mount
                    ReaderPageMode / ReaderLayoutFingerprint
 ```
 
 核心文件：
 
-- `core/reader/reader_settings.dart`：统一字号、行高、主题、翻页模式、首行缩进、段落间距、独立上下边距、“下拉书签”和“点击动画”偏好。
+- `utils/book_open_transition.dart`：书架封面展开/缩回路由；打开阶段只渲染封面与轻量纸色占位，路由动画落定后的下一帧才挂载目标阅读页，使 TXT 解析、同步分页、系统栏切换和 page-curl 快照抓取不进入打开动画帧预算。阅读页一旦挂载便保持到退出结束，反向飞回仍使用实时解析的封面位置。
+- `core/reader/reader_settings.dart`：统一字号、行高、主题、翻页模式、首行缩进、段落间距、独立上下边距、“下拉书签”“点击动画”和平板双页偏好。`tabletTwoPageEnabled` 默认开启，以 `reader_tablet_two_page_enabled` 在两个阅读器之间共享持久化。
 - `core/reader/reader_custom_theme.dart`：有序自定义阅读主题库模型；每个主题拥有稳定 ID、名称、字体色、阅读背景色、控制栏色、可选背景图片路径与显示强度。`ReaderCustomThemeStore` 使用 SharedPreferences JSON 列表持久化，并自动迁移旧的单主题 `reader_custom_theme_v1` 数据。
-- `core/reader/reader_layout.dart`：翻页模式和分页缓存指纹；`pageCurl` 固定使用经典折页，不再维护额外的仿真样式状态。
+- `core/reader/reader_theme_order.dart`：阅读主题全局顺序存储；以稳定主题 ID 列表统一持久化预设与自定义主题的排列，并在读取时去除空值和重复项。
+- `core/reader/reader_layout.dart`：翻页模式、分页缓存指纹与阅读布局断点；最短边至少 600 才视为平板，双页仅在横屏且宽度至少 720 时可用，并继续受用户开关控制。`pageCurl` 固定使用经典折页，不再维护额外的仿真样式状态。
 - `core/reader/native_text_paginator.dart`：本地与在线纯文本分页共享实现；正文统一两端对齐，分页测量与最终绘制共用同一文字流；正文行高仅作用于行间，首行上方和末行下方的 leading 统一裁剪，配套 strut 不携带 `height`。分页可为第一页单独指定 `firstPageHeight`，供 EPUB 图片页缩小首屏文字区而让后续纯文字页恢复全高。
 - `core/reader/txt_chapter_parser.dart`：TXT 章节识别与标题/正文边界的单一实现；识别出的标题独立存储，正文范围跳过标题行和相邻空行，并输出 `isNeedSplitTitle` 供分页模式插入章节标题页。小文件解析缓存和大文件 UTF-8 索引共用该边界结果。
 - `core/reader/reader_text_layout.dart`：把首行缩进和段落间距投影成显示文字，并维护显示 UTF-16 boundary 到原文 boundary 的单调映射，保证书签和阅读进度仍使用 canonical offset；EPUB 解析器生成的连续段落换行只在显示层归一化，不改写规范文本。
@@ -145,17 +172,17 @@ lib/
 - `core/reader/canonical_locator.dart`：与排版无关的稳定阅读位置。
 - `core/reader/reader_volume_key_controller.dart`：Android 音量键翻页桥接；读取全局开关，只在非滚动分页模式下启用原生按键拦截，并把上一页/下一页事件路由给当前阅读器。
 - `core/reader/reader_keep_screen_on.dart`：共享“阅读时保持屏幕常亮”控制；按活动阅读页持有/释放 `keepScreenOn` 偏好，并通过 Android 原生窗口 `FLAG_KEEP_SCREEN_ON` 生效，应用恢复前台时重新应用。
-- `pages/reader_custom_themes_page.dart`：自定义主题库管理页，负责选择当前主题、新增、编辑、删除与拖拽排序；排序顺序直接用于阅读设置横向主题列表。
-- `pages/reader_custom_theme_page.dart`：单个自定义阅读主题编辑页，提供名称、实时纸页预览、预设/十六进制选色、背景图片上传/移除/强度和正文对比度提示。
+- `pages/reader/themes/reader_custom_themes_page.dart`：阅读主题管理页，预设与自定义主题共用一套拖拽顺序；自定义主题额外支持新增、编辑与删除，选择和排序结果直接回传两个阅读器。
+- `pages/reader/themes/reader_custom_theme_page.dart`：单个自定义阅读主题编辑页，提供名称、实时纸页预览、预设/十六进制选色、背景图片上传/移除/强度和正文对比度提示。
 - `services/core/reader_theme_background_service*.dart`：原生平台背景图片导入边界；校验 JPG/PNG/WebP 与 20 MB 上限，把文件复制到应用私有目录，Web 保持安全不支持实现。
 - `widgets/reader_theme_background.dart`：阅读背景合成层，按主题底色铺底并以受控强度叠加用户图片；本地阅读器、在线书源阅读器、纸页快照和主题预览共同使用。
-- `widgets/reader_settings_controls.dart`：完整阅读设置、主题横向卡片、翻页模式、仿真样式、三态顶部信息选择器和阅读交互开关面板；预设主题后按用户排序展示自定义主题，最右侧固定为带主题数量的管理入口。
+- `widgets/reader_settings_controls.dart`：完整阅读设置、主题横向卡片、翻页模式、三态顶部信息选择器和阅读交互开关面板；平板会显示双页布局开关，手机不渲染该选项。预设与自定义主题按统一用户顺序展示，最右侧固定为带自定义主题数量的管理入口。
 - `widgets/reader_pull_bookmark.dart`：只从屏幕顶部区域起手的原始指针下拉手势、阈值反馈和当前页书签页缘标记；数据仍复用既有 `BookmarkDao`。
 - `widgets/reader_vertical_paging_surface.dart`：本地文件与在线书源共用的上下翻页交互宿主；把中间轻点识别放在 `SelectionArea` 内部，统一“轻点呼出控制栏、竖滑只滚正文”的手势优先级。
 - `widgets/reader_chapter_title_page.dart`：章节独占标题页组件；从正文样式继承字体与主色，字号按正文 `1.8×` 并限制在 28–34，标题水平居中且垂直略偏上。
-- `widgets/reader_paper_page_leaf.dart`：正文、可选的页内阅读信息栏与章内页码组成完整纸页；无动画、横滑和仿真翻页均以它为最小 page leaf，因此时间、标题、电量和页码会随纸张运动。手机/单页页码位于右下，平板 spread 的左 leaf 位于左下、右 leaf 位于右下；页码距离外侧屏幕边缘至少 24px，避开圆角遮挡。
-- `widgets/reader_top_information_bar.dart`：时间、章节标题和电量的共享绘制组件；分页模式嵌入纸页 leaf，上下翻页复用于固定视口 chrome。
-- `widgets/reader_shader_page_curl.dart`：经典折页专用的手势、独立 forward/backward 双弹簧通道和字节预算快照 LRU。手机 forward 以 current 为卷动源、next 为实时底页；backward 以 previous 为展开源、current 为实时底页。活动 source 缓存未命中时先用已完成 paint 的 `RepaintBoundary.toImageSync()` 临时纹理保证首帧跟手，图片准备完成后异步重抓并原子替换，旧纹理保留到 painter 退出后再释放。中部 outgoing 起手从自由边精确竖直 pose 立即追手，先只推进 X，再延迟混入 Y；弹簧接近提交端点时提前量化为精确竖直 pose，避免近退化 curl 多画异常薄片。Shader 直接消费 canonical `posA/posB`，按恢复出的 `max(0,x)` 顶/底交点、装订侧整片 identity 采样和只向自由边生成 curl polygon；方向不进入 shader，平板右装订仅做 leaf 坐标与采样 UV 的成对换算。单 leaf 的连续请求走有界 FIFO，平板左右 leaf 再通过共享 coordinator 串行化，禁止相反方向同时 spring/commit。
+- `widgets/reader_paper_page_leaf.dart`：正文、可选的页内阅读信息栏与章内页码组成完整纸页；无动画、横滑和仿真翻页均以它为最小 page leaf，因此时间、标题、电量和页码会随纸张运动。手机/单页页码位于右下，平板 spread 的左 leaf 位于左下、右 leaf 位于右下；空白和补位 leaf 保留对应顶部信息角色，但不显示虚假页码。页码距离外侧屏幕边缘至少 24px，避开圆角遮挡。
+- `widgets/reader_top_information_bar.dart`：时间、章节标题和电量的共享绘制组件；单页使用 `full`，平板 spread 左页使用 `spreadLeft` 仅在左上显示章节标题，右页使用 `spreadRight` 仅在右上显示时间和电量；上下翻页复用于固定视口 chrome。
+- `widgets/reader_shader_page_curl.dart`：经典折页公共 library 入口，外部 API 保持稳定；实现按 API、状态机、快照缓存、绘制、收尾物理和内部类型拆到 `widgets/src/page_curl/`。手机 forward 以 current 为卷动源、next 为实时底页；backward 以 previous 为展开 source、current 为实时 underlay。所有拖动先等待累计位移超过 18px，再把当时手指位置记录为 activation point；backward 激活后每帧直接使用真实 X/Y 位移，不保留水平/对角永久锁，松手只比较最终 X 是否越过 activation X 且不读取 release velocity。120ms 自由边追赶只属于屏幕中部起手的 outgoing，真实边缘起手直接跟手。Incoming 的提交与取消都以 X 为主通道，并在剩余 X 行程前 84% 内平滑拉平 Y，进入终点后保持精确竖直 pose，避免右下甩尾或阴影复现。活动 source 缓存未命中时先用已完成 paint 的 `RepaintBoundary.toImageSync()` 临时纹理保证首帧跟手，随后异步重抓并原子替换；Shader 直接消费 canonical `posA/posB`，保留恢复出的 `max(0,x)` 装订硬边界。单 leaf 连续请求走有界 FIFO；平板左右 leaf 通过共享 coordinator 串行化，并由 `ReaderPageCurlSpread` 按当前活动装订边动态调整绘制层级。
 - `widgets/reader_control_chrome.dart`：统一顶部、底部控制栏，并仅为上下翻页承载固定视口阅读信息栏；信息栏在系统安全区下方显示时间、章节标题和电量，并在控制栏展开时淡出。上下翻页的章内页码固定在右下，其余分页模式的信息栏与页码均由纸页 leaf 绘制。
 - `widgets/reader_navigation_sheet.dart`：目录、书签和定位面板；整个面板使用当前阅读主题配色，目录按 EPUB 等来源提供的 `depth` 还原为可展开/收起的层级树，搜索结果保留祖先路径，“当前”定位会自动展开被折叠的父链。
 - `widgets/generated_book_cover.dart`：无真实封面时的统一实时封面组件，与持久化 PNG 共用同一绘制器。
@@ -167,7 +194,7 @@ lib/
 - `horizontalSlide`（水平滑动）
 - `pageCurl`（仿真翻页；固定使用对角反射与真实弹簧驱动的经典折页）
 
-平板仿真翻页按两张独立 leaf 组成 spread，本地文件与在线书源阅读器共用相同约束：左页从屏幕最左自由边向后翻并使用右装订，右页从屏幕最右自由边向前翻并使用左装订，翻页步长为两页；正中的 24px `_spreadGutter` 是固定书脊，不进入任一 leaf 的抓图变换或手势命中区。native 双页会给奇数页章节补右侧空白 slot，使每章稳定从左页开始，动态扩展章节窗口不会改变既有 spread 奇偶；两个阅读器在视口重排时都按文本 offset 恢复，而在线书源跨章优先使用已预取章节的真实目标 leaf，并按最后可见页保存双页进度。手机单页使用整屏 leaf，前后翻页的物理装订边都位于左缘；backward 是独立 incoming 通道，不再通过方向镜像书脊或整套 forward 几何。当前平板仍是两张裁剪在各自半屏内的 leaf，并非纸张跨中缝覆盖另一半的 full-spread compositor。
+平板仿真翻页按两张独立 leaf 组成 spread，本地文件与在线书源阅读器共用相同约束：只有横屏平板满足断点且 `tabletTwoPageEnabled` 开启时才进入双页，关闭后回退单页；设置变化时本地阅读器按文本锚点恢复，书源阅读器会失效分页缓存并按文本 offset 恢复。左页从屏幕最左自由边向后翻并使用右装订，右页从屏幕最右自由边向前翻并使用左装订，翻页步长为两页；正中的 24px `_spreadGutter` 是固定书脊，不进入任一 leaf 的抓图变换或手势命中区。`ReaderPageCurlSpread` 以固定位置的 `Stack` 保持左右页布局不变，并把 coordinator 当前持有的活动 leaf 放到最后绘制；活动经典折页的 shader 绘制边界会沿装订侧扩展到整张 spread，因此下一页由右页跨书脊覆盖左页，上一页则由左页覆盖右页，静止 leaf 与手势命中区仍限制在各自半屏。native 双页会给奇数页章节补右侧空白 slot，使每章稳定从左页开始，动态扩展章节窗口不会改变既有 spread 奇偶；两个阅读器在视口重排时都按文本 offset 恢复，而在线书源跨章优先使用已预取章节的真实目标 leaf，并按最后可见页保存双页进度。手机单页使用整屏 leaf，前后翻页的物理装订边都位于左缘；backward 是独立 incoming 通道，不再通过方向镜像书脊或整套 forward 几何。
 
 TXT 在识别到“第 X 章 / Chapter X / Part X / 序章”等章节行时，把标题与正文分离。分页模式将 `isNeedSplitTitle` 章节的第 0 页作为特殊标题页：标题使用正文主色、约 `1.8×` 正文字号（限制在 28–34）、水平居中并略偏上；后续页面才进入 `ReaderTextLayout → NativeTextPaginator`。未识别出章节结构的普通 TXT 不把文件名强制转为独占标题页。上下翻页直接竖向排列同一套分页结果，并由固定视口章名跟随当前中心可见页。
 
@@ -192,7 +219,7 @@ EPUB 图片块与其后的正文共用同一个显示投影：携带图片的第
 
 - `BookSourceRegistry`：注册和启用状态。
 - `BookSourceClient`：协议请求。
-- `BookSourceChapterCache`：章节缓存和并发去重。
+- `BookSourceChapterCache`：章节正文的内存/磁盘缓存和并发去重；在线阅读器把相邻章节逐章独立写入会话缓存，分页模式提前生成并复用下一章布局，跨章提交不等待进度持久化完成。
 - `BookSourceShelfService`：在线书籍加入本地书架；书源未提供封面时生成并持久化统一封面。
 - `BookSourceReadingProgressStore`：在线章节阅读进度。
 
@@ -234,6 +261,7 @@ EPUB 图片块与其后的正文共用同一个显示投影：携带图片的第
 - “点击动画”开关；开启时左右点击复用当前翻页模式动画，关闭时点击直接切页，拖动和音量键行为不受影响。
 - 首行缩进（0–4 个全角字宽）和段落间距（0–2 个附加空行）；EPUB 的 `0` 会压缩解析器生成的双换行为单个结构换行，真正不保留空白行，`1/2` 再分别加入一行或两行空白。
 - “按章节滚动”开关；本地文件与在线书源读取同一个持久化键。
+- “平板双页布局”开关；仅平板设置面板显示，默认开启，手机始终使用单页且不显示该开关。
 
 旧的单一纵向边距仅作为迁移输入，不再作为当前设置模型。在线书源关闭“按章节滚动”后使用懒加载的跨章节纵向列表，并按当前可见章节保存章节索引与章内进度。
 
@@ -260,7 +288,7 @@ EPUB 图片块与其后的正文共用同一个显示投影：携带图片的第
 ## 持久化边界
 
 - SQLite：书籍、书签、笔记、阅读会话和核心业务数据。
-- SharedPreferences：阅读 UI 设置、App/阅读字体选择、手机底部导航文字显隐、应用偏好和轻量状态；自定义阅读主题以有序 JSON 列表保存，两个阅读器共享，旧单主题记录首次读取时自动迁移。
+- SharedPreferences：阅读 UI 设置、App/阅读字体选择、手机底部导航文字显隐、应用偏好和轻量状态；自定义阅读主题以 JSON 列表保存，预设与自定义主题的统一顺序以稳定 ID 列表单独保存，两个阅读器共享，旧单主题记录首次读取时自动迁移。
 - 应用私有目录：数据库、缓存、封面、应用管理的书籍文件，`custom_fonts/` 下的用户字体与清单，以及 `reader_theme_backgrounds/` 下由应用托管的阅读主题背景图片。
 - 用户授权目录：通过平台存储桥接原地管理或导入书籍。
 - 网络：仅在用户使用在线书源、封面、AI、同步或更新检查等功能时访问。

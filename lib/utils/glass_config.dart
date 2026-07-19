@@ -129,19 +129,6 @@ class GlassEffectConfig {
     return source.withValues(alpha: darkOpacity);
   }
 
-  // 顶部应用栏透明度
-  static double get appBarOpacity => effectiveOpacity(_chromeOpacityBase);
-
-  // 导航栏透明度
-  static double get navigationBarOpacity =>
-      effectiveOpacity(_chromeOpacityBase);
-
-  // 阅读页面控制栏透明度（与顶栏/导航栏保持一致）
-  static double get readingTopBarOpacity =>
-      effectiveOpacity(_chromeOpacityBase);
-  static double get readingBottomBarOpacity =>
-      effectiveOpacity(_chromeOpacityBase);
-
   // 卡片透明度
   static const double _cardOpacityBase = 0.8;
   static const double _lightCardOpacityBase = 0.15;
@@ -240,23 +227,30 @@ class GlassPreset {
 // 毛玻璃效果辅助工具
 class GlassEffectHelper {
   // 获取应用栏配置
-  static Map<String, double> getAppBarConfig({GlassPreset? preset}) {
+  static Map<String, double> getAppBarConfig({
+    GlassPreset? preset,
+    required Brightness brightness,
+  }) {
     preset ??= GlassEffectConfig.standardMode;
     return {
       'blur': GlassEffectConfig.appBarBlur * preset.blurReduction,
-      'opacity': (GlassEffectConfig.appBarOpacity + preset.opacityIncrease)
+      'opacity': (GlassEffectConfig.chromeOpacityFor(brightness) +
+              preset.opacityIncrease)
           .clamp(0.0, 1.0),
     };
   }
 
   // 获取导航栏配置
-  static Map<String, double> getNavigationConfig({GlassPreset? preset}) {
+  static Map<String, double> getNavigationConfig({
+    GlassPreset? preset,
+    required Brightness brightness,
+  }) {
     preset ??= GlassEffectConfig.standardMode;
     return {
       'blur': GlassEffectConfig.navigationBarBlur * preset.blurReduction,
-      'opacity':
-          (GlassEffectConfig.navigationBarOpacity + preset.opacityIncrease)
-              .clamp(0.0, 1.0),
+      'opacity': (GlassEffectConfig.chromeOpacityFor(brightness) +
+              preset.opacityIncrease)
+          .clamp(0.0, 1.0),
     };
   }
 
@@ -264,18 +258,17 @@ class GlassEffectHelper {
   static Map<String, double> getReadingControlConfig({
     GlassPreset? preset,
     bool isTopBar = true,
+    required Brightness brightness,
   }) {
     preset ??= GlassEffectConfig.standardMode;
     final blur = isTopBar
         ? GlassEffectConfig.readingTopBarBlur
         : GlassEffectConfig.readingBottomBarBlur;
-    final opacity = isTopBar
-        ? GlassEffectConfig.readingTopBarOpacity
-        : GlassEffectConfig.readingBottomBarOpacity;
-
     return {
       'blur': blur * preset.blurReduction,
-      'opacity': (opacity + preset.opacityIncrease).clamp(0.0, 1.0),
+      'opacity': (GlassEffectConfig.chromeOpacityFor(brightness) +
+              preset.opacityIncrease)
+          .clamp(0.0, 1.0),
     };
   }
 
@@ -290,7 +283,10 @@ class GlassEffectHelper {
     double? opacityScale,
   }) {
     preset ??= GlassEffectConfig.standardMode;
-    final config = getAppBarConfig(preset: preset);
+    final config = getAppBarConfig(
+      preset: preset,
+      brightness: Theme.of(context).brightness,
+    );
     final scaledOpacity = (opacityScale != null)
         ? (config['opacity']! * opacityScale).clamp(0.0, 1.0)
         : config['opacity']!;
@@ -298,8 +294,10 @@ class GlassEffectHelper {
     if (!enableBlur) {
       return Container(
         decoration: BoxDecoration(
-          color:
-              GlassEffectConfig.surfaceColor(context, opacity: scaledOpacity),
+          color: GlassEffectConfig.chromeSurfaceColor(
+            context,
+            opacity: scaledOpacity,
+          ),
           border: Border(
             bottom: BorderSide(
               color:
@@ -316,8 +314,10 @@ class GlassEffectHelper {
     return ProgressiveBlurPresets.topToBottomBlur(
       child: Container(
         decoration: BoxDecoration(
-          color:
-              GlassEffectConfig.surfaceColor(context, opacity: scaledOpacity),
+          color: GlassEffectConfig.chromeSurfaceColor(
+            context,
+            opacity: scaledOpacity,
+          ),
         ),
         child: child,
       ),
@@ -406,7 +406,10 @@ class GlassEffectHelper {
     GlassPreset? preset,
   }) {
     preset ??= GlassEffectConfig.standardMode;
-    final config = getNavigationConfig(preset: preset);
+    final config = getNavigationConfig(
+      preset: preset,
+      brightness: Theme.of(context).brightness,
+    );
 
     return ProgressiveBlurPresets.bottomNavigationBlur(
       child: Container(
@@ -415,16 +418,19 @@ class GlassEffectHelper {
             begin: Alignment.bottomCenter,
             end: Alignment.topCenter,
             colors: [
-              GlassEffectConfig.surfaceColor(
+              GlassEffectConfig.chromeSurfaceColor(
                 context,
                 opacity: (config['opacity']! + 0.1).clamp(0.0, 1.0),
               ),
-              GlassEffectConfig.surfaceColor(
+              GlassEffectConfig.chromeSurfaceColor(
                 context,
                 opacity: config['opacity']!,
               ),
               GlassEffectConfig.disableAllGlassEffects
-                  ? GlassEffectConfig.surfaceColor(context, opacity: 1.0)
+                  ? GlassEffectConfig.chromeSurfaceColor(
+                      context,
+                      opacity: 1.0,
+                    )
                   : Colors.transparent,
             ],
             stops: const [0.0, 0.7, 1.0],
@@ -441,36 +447,37 @@ class GlassEffectHelper {
 
 // ============ 使用示例 ============
 /*
-// 1. 直接使用配置值
+// 1. 直接使用统一的 chrome 配置
 BackdropFilter(
   filter: ImageFilter.blur(
     sigmaX: GlassEffectConfig.appBarBlur,
     sigmaY: GlassEffectConfig.appBarBlur,
   ),
   child: Container(
-    color: Theme.of(context).colorScheme.surface.withValues(alpha: 
-      GlassEffectConfig.appBarOpacity
-    ),
+    color: GlassEffectConfig.chromeSurfaceColor(context),
   ),
 )
 
 // 2. 使用预设配置
-final config = GlassEffectHelper.getAppBarConfig(preset: GlassEffectConfig.clearMode);
+final config = GlassEffectHelper.getAppBarConfig(
+  preset: GlassEffectConfig.clearMode,
+  brightness: Theme.of(context).brightness,
+);
 BackdropFilter(
   filter: ImageFilter.blur(
     sigmaX: config['blur']!,
     sigmaY: config['blur']!,
   ),
   child: Container(
-    color: Theme.of(context).colorScheme.surface.withValues(alpha: 
-      config['opacity']!
+    color: GlassEffectConfig.chromeSurfaceColor(
+      context,
+      opacity: config['opacity']!,
     ),
   ),
 )
 
 // 3. 快速调整透明度
-// 要让应用栏更透明: 把 appBarOpacity 从 0.6 改为 0.4
-// 要让应用栏更不透明: 把 appBarOpacity 从 0.6 改为 0.8
+// 分别调整 _lightChromeOpacityBase / _chromeOpacityBase
 // 要让模糊效果更强: 把 appBarBlur 从 20.0 改为 30.0
 // 要让模糊效果更弱: 把 appBarBlur 从 20.0 改为 10.0
 */

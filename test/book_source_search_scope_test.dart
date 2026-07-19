@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:xxread/book_sources/models/registered_book_source.dart';
-import 'package:xxread/pages/book_sources_page.dart';
+import 'package:xxread/pages/book_sources/book_sources_page.dart';
 
 void main() {
   test('all-source scope searches every enabled source', () {

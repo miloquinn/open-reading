@@ -6,12 +6,14 @@ class _ReaderClassicFoldPainter extends CustomPainter {
     required this.sourcePage,
     required this.geometry,
     required this.bindingEdge,
+    required this.bindingOverflow,
   });
 
   final ui.FragmentShader shader;
   final ui.Image sourcePage;
   final ReaderPageTurnGeometry geometry;
   final ReaderPageBindingEdge bindingEdge;
+  final double bindingOverflow;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -28,13 +30,17 @@ class _ReaderClassicFoldPainter extends CustomPainter {
         bindingEdge == ReaderPageBindingEdge.right ? 1 : 0,
       )
       ..setImageSampler(0, sourcePage);
-    canvas.drawRect(Offset.zero & size, Paint()..shader = shader);
+    final paintBounds = bindingEdge == ReaderPageBindingEdge.left
+        ? Rect.fromLTRB(-bindingOverflow, 0, size.width, size.height)
+        : Rect.fromLTRB(0, 0, size.width + bindingOverflow, size.height);
+    canvas.drawRect(paintBounds, Paint()..shader = shader);
   }
 
   @override
   bool shouldRepaint(covariant _ReaderClassicFoldPainter oldDelegate) =>
       oldDelegate.geometry != geometry ||
       oldDelegate.bindingEdge != bindingEdge ||
+      oldDelegate.bindingOverflow != bindingOverflow ||
       !identical(oldDelegate.sourcePage, sourcePage);
 }
 
@@ -42,17 +48,20 @@ class _ReaderFallbackTurnPainter extends CustomPainter {
   const _ReaderFallbackTurnPainter({
     required this.sourcePage,
     required this.geometry,
+    required this.bindingOverflow,
   });
 
   final ui.Image sourcePage;
   final ReaderPageTurnGeometry geometry;
+  final double bindingOverflow;
 
   @override
   void paint(Canvas canvas, Size size) {
     canvas.save();
+    final turnExtent = bindingOverflow > 0 ? bindingOverflow : size.width;
     final canonicalOffset = switch (geometry.motion) {
-      ReaderPageTurnMotion.outgoing => -size.width * geometry.progress,
-      ReaderPageTurnMotion.incoming => -size.width * (1 - geometry.progress),
+      ReaderPageTurnMotion.outgoing => -turnExtent * geometry.progress,
+      ReaderPageTurnMotion.incoming => -turnExtent * (1 - geometry.progress),
     };
     final offset = geometry.bindingOnRight ? -canonicalOffset : canonicalOffset;
     canvas.translate(offset, 0);
@@ -63,6 +72,7 @@ class _ReaderFallbackTurnPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _ReaderFallbackTurnPainter oldDelegate) =>
       oldDelegate.geometry != geometry ||
+      oldDelegate.bindingOverflow != bindingOverflow ||
       !identical(oldDelegate.sourcePage, sourcePage);
 }
 

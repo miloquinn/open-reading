@@ -7,7 +7,7 @@ import 'package:xxread/book_sources/protocol/book_source_protocol.dart';
 import 'package:xxread/book_sources/services/book_source_client.dart';
 import 'package:xxread/core/reader/reader_settings.dart';
 import 'package:xxread/l10n/app_localizations.dart';
-import 'package:xxread/pages/book_source_reader_page.dart';
+import 'package:xxread/pages/reader/book_source_reader_page.dart';
 import 'package:xxread/widgets/reader_paper_page_leaf.dart';
 
 void main() {

@@ -80,6 +80,8 @@ class ReaderPaperPageLeaf extends StatelessWidget {
     this.horizontalPadding = 14,
     this.pageNumberHorizontalPadding = 24,
     this.showTopInformation = false,
+    this.topInformationLayout = ReaderTopInformationLayout.full,
+    this.showPageNumber = true,
     this.status,
   });
 
@@ -91,6 +93,8 @@ class ReaderPaperPageLeaf extends StatelessWidget {
   final double horizontalPadding;
   final double pageNumberHorizontalPadding;
   final bool showTopInformation;
+  final ReaderTopInformationLayout topInformationLayout;
+  final bool showPageNumber;
   final ReaderLeafStatusData? status;
 
   @override
@@ -108,9 +112,11 @@ class ReaderPaperPageLeaf extends StatelessWidget {
           height: 1,
           fontFeatures: const [FontFeature.tabularFigures()],
         );
-    final semanticsLabel = metadata.chapterTitle.isEmpty
-        ? metadata.pageLabel
-        : '${metadata.chapterTitle}, ${metadata.pageLabel}';
+    final semanticsLabel = showPageNumber
+        ? metadata.chapterTitle.isEmpty
+            ? metadata.pageLabel
+            : '${metadata.chapterTitle}, ${metadata.pageLabel}'
+        : metadata.chapterTitle;
 
     return Semantics(
       label: semanticsLabel,
@@ -134,32 +140,34 @@ class ReaderPaperPageLeaf extends StatelessWidget {
                   palette: palette,
                   title: metadata.chapterTitle,
                   status: status,
+                  layout: topInformationLayout,
                 ),
               ),
-            Positioned(
-              left: pageNumberHorizontalPadding,
-              right: pageNumberHorizontalPadding,
-              bottom: safeArea.pageNumberBottom,
-              height: ReaderSafeAreaMetrics.pageNumberReserve,
-              child: Align(
-                key: ValueKey(
-                  'reader-leaf-footer:${metadata.pageIdentity}',
-                ),
-                alignment:
-                    pageNumberPlacement == ReaderPageNumberPlacement.bottomLeft
-                        ? Alignment.centerLeft
-                        : Alignment.centerRight,
-                child: Text(
-                  metadata.pageLabel,
+            if (showPageNumber)
+              Positioned(
+                left: pageNumberHorizontalPadding,
+                right: pageNumberHorizontalPadding,
+                bottom: safeArea.pageNumberBottom,
+                height: ReaderSafeAreaMetrics.pageNumberReserve,
+                child: Align(
                   key: ValueKey(
-                    'reader-leaf-page:${metadata.pageIdentity}',
+                    'reader-leaf-footer:${metadata.pageIdentity}',
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: footerStyle,
+                  alignment: pageNumberPlacement ==
+                          ReaderPageNumberPlacement.bottomLeft
+                      ? Alignment.centerLeft
+                      : Alignment.centerRight,
+                  child: Text(
+                    metadata.pageLabel,
+                    key: ValueKey(
+                      'reader-leaf-page:${metadata.pageIdentity}',
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: footerStyle,
+                  ),
                 ),
               ),
-            ),
           ],
         ),
       ),

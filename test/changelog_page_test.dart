@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:xxread/l10n/app_localizations.dart';
-import 'package:xxread/pages/changelog_page.dart';
+import 'package:xxread/pages/settings/about/changelog_page.dart';
 
 void main() {
   testWidgets('changelog page shows the current and historical releases',

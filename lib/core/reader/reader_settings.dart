@@ -12,6 +12,7 @@ class ReaderSettings {
   static const int defaultFirstLineIndent = 2;
   static const int defaultParagraphSpacing = 0;
   static const String defaultThemeId = 'day';
+  static const bool defaultTabletTwoPageEnabled = true;
 
   const ReaderSettings({
     required this.fontSize,
@@ -25,6 +26,7 @@ class ReaderSettings {
     this.paragraphSpacing = defaultParagraphSpacing,
     this.pullBookmarkEnabled = false,
     this.tapPageAnimationEnabled = true,
+    this.tabletTwoPageEnabled = defaultTabletTwoPageEnabled,
   });
 
   final double fontSize;
@@ -38,6 +40,7 @@ class ReaderSettings {
   final int paragraphSpacing;
   final bool pullBookmarkEnabled;
   final bool tapPageAnimationEnabled;
+  final bool tabletTwoPageEnabled;
 
   ReaderSettings copyWith({
     double? fontSize,
@@ -51,6 +54,7 @@ class ReaderSettings {
     int? paragraphSpacing,
     bool? pullBookmarkEnabled,
     bool? tapPageAnimationEnabled,
+    bool? tabletTwoPageEnabled,
   }) {
     return ReaderSettings(
       fontSize: (fontSize ?? this.fontSize).clamp(14, 32),
@@ -70,6 +74,7 @@ class ReaderSettings {
       pullBookmarkEnabled: pullBookmarkEnabled ?? this.pullBookmarkEnabled,
       tapPageAnimationEnabled:
           tapPageAnimationEnabled ?? this.tapPageAnimationEnabled,
+      tabletTwoPageEnabled: tabletTwoPageEnabled ?? this.tabletTwoPageEnabled,
     );
   }
 }
@@ -88,6 +93,7 @@ class ReaderSettingsStore {
   static const _legacyPageTurnStyleKey = 'native_reader_page_turn_style';
   static const pullBookmarkKey = 'reader_pull_bookmark_enabled';
   static const tapPageAnimationKey = 'reader_tap_page_animation_enabled';
+  static const tabletTwoPageKey = 'reader_tablet_two_page_enabled';
   static const scrollByChapterKey = 'native_reader_scroll_by_chapter';
   static const legacyBookSourceLineHeightKey = 'book_source_reader_line_height';
 
@@ -142,6 +148,8 @@ class ReaderSettingsStore {
           .clamp(0, 2),
       pullBookmarkEnabled: prefs.getBool(pullBookmarkKey) ?? false,
       tapPageAnimationEnabled: prefs.getBool(tapPageAnimationKey) ?? true,
+      tabletTwoPageEnabled: prefs.getBool(tabletTwoPageKey) ??
+          ReaderSettings.defaultTabletTwoPageEnabled,
     );
   }
 
@@ -162,6 +170,7 @@ class ReaderSettingsStore {
         tapPageAnimationKey,
         settings.tapPageAnimationEnabled,
       ),
+      prefs.setBool(tabletTwoPageKey, settings.tabletTwoPageEnabled),
     ]);
   }
 

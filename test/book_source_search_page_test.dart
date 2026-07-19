@@ -9,8 +9,8 @@ import 'package:xxread/book_sources/protocol/book_source_protocol.dart';
 import 'package:xxread/book_sources/services/book_source_client.dart';
 import 'package:xxread/book_sources/services/book_source_shelf_service.dart';
 import 'package:xxread/l10n/app_localizations.dart';
-import 'package:xxread/pages/book_source_search_page.dart';
-import 'package:xxread/pages/book_sources_page.dart';
+import 'package:xxread/pages/book_sources/book_sources_page.dart';
+import 'package:xxread/pages/book_sources/source_search_page.dart';
 
 void main() {
   setUp(() {

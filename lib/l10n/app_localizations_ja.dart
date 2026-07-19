@@ -1602,6 +1602,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsSupportDevelopmentTitle => '開発を支援';
 
   @override
+  String get firstHomeSupportNow => '今すぐ支援';
+
+  @override
+  String get firstHomeSupportLater => 'また今度';
+
+  @override
+  String get firstHomeSupportPaperSemanticLabel => '開元閲読の開発者からの任意支援についての手紙';
+
+  @override
   String get settingsSupportDevelopmentCardTitle => '継続的な開発を支援';
 
   @override
@@ -2369,6 +2378,13 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get readerTapAnimationHint =>
       '左右のタップで現在のページめくりアニメーションを使用。オフでは即時に切り替えます';
+
+  @override
+  String get readerTabletTwoPageTitle => 'タブレットの見開き表示';
+
+  @override
+  String get readerTabletTwoPageHint =>
+      '横向きでは左右2ページを並べて表示します。オフにすると常に1ページ表示になります';
 
   @override
   String get readerCustomThemeTitle => 'カスタム読書テーマ';

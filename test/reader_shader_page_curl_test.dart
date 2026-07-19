@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:xxread/core/reader/reader_page_turn_geometry.dart';
+import 'package:xxread/utils/book_open_transition.dart';
 import 'package:xxread/widgets/reader_shader_page_curl.dart';
 import 'package:xxread/widgets/reader_paper_page_leaf.dart';
 
@@ -132,6 +133,50 @@ void main() {
       ),
       findsNWidgets(3),
     );
+  });
+
+  testWidgets('defers snapshot preparation until the opening route settles',
+      (tester) async {
+    final navigatorKey = GlobalKey<NavigatorState>();
+    var preparationCalls = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        navigatorKey: navigatorKey,
+        home: const Scaffold(body: Text('shelf')),
+      ),
+    );
+
+    navigatorKey.currentState!.push<void>(
+      BookOpenTransition.createRoute<void>(
+        Scaffold(
+          body: ReaderShaderPageCurl(
+            currentPage: _snapshot('current'),
+            forwardPage: _snapshot('next'),
+            backwardPage: _snapshot('previous'),
+            preparePages: () async {
+              preparationCalls++;
+            },
+            onTurnForward: () {},
+            onTurnBackward: () {},
+            paperColor: Colors.white,
+          ),
+        ),
+        animation: BookOpenAnimation(
+          sourceRect: const Rect.fromLTWH(120, 160, 120, 180),
+          sourceRadius: BorderRadius.circular(12),
+          sourceScreenSize: const Size(800, 600),
+          coverBuilder: (_) => const ColoredBox(color: Colors.brown),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+
+    expect(preparationCalls, 0);
+
+    await tester.pumpAndSettle();
+
+    expect(preparationCalls, 1);
   });
 
   testWidgets('phone leaf keeps the physical binding on the left',
@@ -904,6 +949,115 @@ void main() {
     expect(controller.debugShaderLineB, Offset(0, rect.height));
 
     callbackGate.complete();
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('tablet spread paints the active leaf above its sibling',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(900, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final coordinator = ReaderPageCurlCoordinator(gutterWidth: 24);
+    final forwardController = ReaderPageCurlController();
+    final backwardController = ReaderPageCurlController();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Center(
+          child: SizedBox(
+            width: 824,
+            height: 700,
+            child: ReaderPageCurlSpread(
+              coordinator: coordinator,
+              gutter: const ColoredBox(color: Colors.black12),
+              left: ReaderShaderPageCurl(
+                key: const ValueKey('spread-left-curl'),
+                coordinator: coordinator,
+                controller: backwardController,
+                edgeDragOnly: true,
+                bindingEdge: ReaderPageBindingEdge.right,
+                currentPage: _snapshot('left-current'),
+                backwardPage: _snapshot('left-previous'),
+                onTurnForward: () {},
+                onTurnBackward: () {},
+                paperColor: Colors.white,
+              ),
+              right: ReaderShaderPageCurl(
+                key: const ValueKey('spread-right-curl'),
+                coordinator: coordinator,
+                controller: forwardController,
+                edgeDragOnly: true,
+                currentPage: _snapshot('right-current'),
+                forwardPage: _snapshot('right-next'),
+                onTurnForward: () {},
+                onTurnBackward: () {},
+                paperColor: Colors.white,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    Key? topLayerKey() => tester
+        .widget<Stack>(
+          find.byKey(
+            const ValueKey('reader-page-curl-spread-layer-stack'),
+          ),
+        )
+        .children
+        .last
+        .key;
+
+    expect(
+      topLayerKey(),
+      const ValueKey('reader-page-curl-spread-right-layer'),
+    );
+
+    final rightRect = tester.getRect(
+      find.byKey(const ValueKey('spread-right-curl')),
+    );
+    final forwardGesture = await tester.startGesture(
+      Offset(rightRect.right - 2, rightRect.center.dy),
+    );
+    await forwardGesture.moveBy(const Offset(-90, -30));
+    await tester.pump();
+    expect(
+      coordinator.activeBindingEdge,
+      ReaderPageBindingEdge.left,
+    );
+    expect(
+      topLayerKey(),
+      const ValueKey('reader-page-curl-spread-right-layer'),
+    );
+    final firstForwardTouch = forwardController.debugTouchPosition;
+    await forwardGesture.moveBy(const Offset(-40, 20));
+    await tester.pump();
+    expect(forwardController.debugTouchPosition, isNot(firstForwardTouch));
+    await forwardGesture.cancel();
+    await tester.pumpAndSettle();
+
+    final leftRect = tester.getRect(
+      find.byKey(const ValueKey('spread-left-curl')),
+    );
+    final backwardGesture = await tester.startGesture(
+      Offset(leftRect.left + 2, leftRect.center.dy),
+    );
+    await backwardGesture.moveBy(const Offset(90, -30));
+    await tester.pump();
+    expect(
+      coordinator.activeBindingEdge,
+      ReaderPageBindingEdge.right,
+    );
+    expect(
+      topLayerKey(),
+      const ValueKey('reader-page-curl-spread-left-layer'),
+    );
+    final firstBackwardTouch = backwardController.debugTouchPosition;
+    await backwardGesture.moveBy(const Offset(40, 20));
+    await tester.pump();
+    expect(backwardController.debugTouchPosition, isNot(firstBackwardTouch));
+    await backwardGesture.cancel();
     await tester.pumpAndSettle();
   });
 
