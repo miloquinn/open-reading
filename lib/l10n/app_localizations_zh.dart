@@ -1705,6 +1705,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String get changelogCurrentVersion => '当前版本';
 
   @override
+  String get changelog220TabletSpread => '平板新增可关闭的横屏双页布局，左右页顶部信息分工显示';
+
+  @override
+  String get changelog220PageCurl => '重做仿真翻页跟手、跨书脊层级与回弹收尾，修复闪跳、甩尾和遮挡';
+
+  @override
+  String get changelog220ReaderPerformance =>
+      '优化 TXT 打开转场、书源章节预取和分页复用，降低打开与跨章等待';
+
+  @override
+  String get changelog220NavigationThemes => '手机悬浮导航支持图标文字切换，预设与自定义阅读主题可统一排序';
+
+  @override
+  String get changelog220ReadingStats => '阅读统计详情页采用统一书卷风格并重新设计各项统计内容';
+
+  @override
+  String get changelog220SourcePolicy => '明确第三方书源责任边界，并新增开发者产品和自愿支持入口';
+
+  @override
   String get changelog203DeveloperProducts => '设置页新增小元读书和小元读书社区入口';
 
   @override
@@ -4289,6 +4308,25 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get changelogCurrentVersion => '目前版本';
+
+  @override
+  String get changelog220TabletSpread => '平板新增可關閉的橫向雙頁版面，左右頁頂部資訊分工顯示';
+
+  @override
+  String get changelog220PageCurl => '重做擬真翻頁跟手、跨書脊層級與回彈收尾，修正跳動、甩尾和遮擋';
+
+  @override
+  String get changelog220ReaderPerformance =>
+      '最佳化 TXT 開啟轉場、書源章節預取與分頁重用，減少開啟和跨章等待';
+
+  @override
+  String get changelog220NavigationThemes => '手機懸浮導覽支援圖示文字切換，預設與自訂閱讀主題可統一排序';
+
+  @override
+  String get changelog220ReadingStats => '閱讀統計詳情頁採用統一書卷風格並重新設計各項統計內容';
+
+  @override
+  String get changelog220SourcePolicy => '明確第三方書源責任邊界，並新增開發者產品和自願支持入口';
 
   @override
   String get changelog203DeveloperProducts => '設定頁新增小元读书和小元读书社区入口';

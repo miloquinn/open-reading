@@ -3264,6 +3264,42 @@ abstract class AppLocalizations {
   /// **'Current version'**
   String get changelogCurrentVersion;
 
+  /// No description provided for @changelog220TabletSpread.
+  ///
+  /// In en, this message translates to:
+  /// **'Added an optional landscape tablet spread with top information split across the left and right pages'**
+  String get changelog220TabletSpread;
+
+  /// No description provided for @changelog220PageCurl.
+  ///
+  /// In en, this message translates to:
+  /// **'Rebuilt page-curl tracking, cross-spine layering, and settling to fix jumps, tails, and incorrect overlap'**
+  String get changelog220PageCurl;
+
+  /// No description provided for @changelog220ReaderPerformance.
+  ///
+  /// In en, this message translates to:
+  /// **'Improved TXT opening transitions, source chapter prefetching, and pagination reuse to reduce waiting'**
+  String get changelog220ReaderPerformance;
+
+  /// No description provided for @changelog220NavigationThemes.
+  ///
+  /// In en, this message translates to:
+  /// **'Added icon-only or labeled floating navigation and unified sorting for built-in and custom reader themes'**
+  String get changelog220NavigationThemes;
+
+  /// No description provided for @changelog220ReadingStats.
+  ///
+  /// In en, this message translates to:
+  /// **'Redesigned detailed reading statistics with a consistent paper-inspired layout'**
+  String get changelog220ReadingStats;
+
+  /// No description provided for @changelog220SourcePolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Clarified third-party source responsibilities and added developer product and optional support entries'**
+  String get changelog220SourcePolicy;
+
   /// No description provided for @changelog203DeveloperProducts.
   ///
   /// In en, this message translates to:

@@ -17,14 +17,29 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('版本更新记录'), findsOneWidget);
+    expect(find.text('v2.2.0'), findsOneWidget);
+    expect(
+      find.text('平板新增可关闭的横屏双页布局，左右页顶部信息分工显示'),
+      findsOneWidget,
+    );
+    expect(
+      find.text('重做仿真翻页跟手、跨书脊层级与回弹收尾，修复闪跳、甩尾和遮挡'),
+      findsOneWidget,
+    );
+    expect(find.text('当前版本'), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.text('v2.0.3'),
+      200,
+      scrollable: find.byType(Scrollable),
+    );
+
     expect(find.text('v2.0.3'), findsOneWidget);
     expect(find.text('设置页新增小元读书和小元读书社区入口'), findsOneWidget);
     expect(
       find.text('新增自愿微信和支付宝捐赠入口，并明确不影响任何功能'),
       findsOneWidget,
     );
-    expect(find.text('当前版本'), findsOneWidget);
-
     await tester.scrollUntilVisible(
       find.text('v2.0.2'),
       200,

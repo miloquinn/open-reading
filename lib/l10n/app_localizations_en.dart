@@ -1783,6 +1783,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get changelogCurrentVersion => 'Current version';
 
   @override
+  String get changelog220TabletSpread =>
+      'Added an optional landscape tablet spread with top information split across the left and right pages';
+
+  @override
+  String get changelog220PageCurl =>
+      'Rebuilt page-curl tracking, cross-spine layering, and settling to fix jumps, tails, and incorrect overlap';
+
+  @override
+  String get changelog220ReaderPerformance =>
+      'Improved TXT opening transitions, source chapter prefetching, and pagination reuse to reduce waiting';
+
+  @override
+  String get changelog220NavigationThemes =>
+      'Added icon-only or labeled floating navigation and unified sorting for built-in and custom reader themes';
+
+  @override
+  String get changelog220ReadingStats =>
+      'Redesigned detailed reading statistics with a consistent paper-inspired layout';
+
+  @override
+  String get changelog220SourcePolicy =>
+      'Clarified third-party source responsibilities and added developer product and optional support entries';
+
+  @override
   String get changelog203DeveloperProducts =>
       'Added settings links for 小元读书 and 小元读书社区';
 

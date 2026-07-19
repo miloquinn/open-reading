@@ -1720,6 +1720,29 @@ class AppLocalizationsJa extends AppLocalizations {
   String get changelogCurrentVersion => '現在のバージョン';
 
   @override
+  String get changelog220TabletSpread =>
+      'タブレットに無効化可能な横向き見開き表示を追加し、左右ページで上部情報を分担しました';
+
+  @override
+  String get changelog220PageCurl =>
+      'ページめくりの追従、見開き中央の描画順、反発収束を作り直し、跳ね・尾引き・重なりを修正しました';
+
+  @override
+  String get changelog220ReaderPerformance =>
+      'TXT の起動遷移、書籍ソースの章プリフェッチ、ページ分割の再利用を最適化しました';
+
+  @override
+  String get changelog220NavigationThemes =>
+      'モバイルのフローティングナビでアイコンのみ／ラベル付き表示を切り替え、読書テーマを統一順序で並べ替え可能にしました';
+
+  @override
+  String get changelog220ReadingStats => '読書統計の詳細画面を統一された紙面スタイルで再設計しました';
+
+  @override
+  String get changelog220SourcePolicy =>
+      '第三者書籍ソースの責任範囲を明確化し、開発者製品と任意支援への入口を追加しました';
+
+  @override
   String get changelog203DeveloperProducts => '設定画面に小元读书と小元读书社区へのリンクを追加しました';
 
   @override
