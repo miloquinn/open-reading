@@ -2089,6 +2089,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     final currentRight =
         spreadStart + 1 < bookPages.length ? bookPages[spreadStart + 1] : null;
     final previousLeft = hasPreviousSpread ? bookPages[spreadStart - 2] : null;
+    final previousRight = hasPreviousSpread ? bookPages[spreadStart - 1] : null;
     final nextLeft = hasNextSpread ? bookPages[nextSpreadStart] : null;
     final nextRight = nextSpreadStart + 1 < bookPages.length
         ? bookPages[nextSpreadStart + 1]
@@ -2097,6 +2098,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
       currentLeft,
       if (currentRight != null) currentRight,
       if (previousLeft != null) previousLeft,
+      if (previousRight != null) previousRight,
       if (nextLeft != null) nextLeft,
       if (nextRight != null) nextRight,
     ];
@@ -2122,6 +2124,14 @@ class _NativeReaderPageState extends State<NativeReaderPage>
               previousLeft,
               pageNumberPlacement: ReaderPageNumberPlacement.bottomLeft,
               topInformationLayout: ReaderTopInformationLayout.spreadLeft,
+            ),
+      outgoingBackPage: previousRight == null
+          ? null
+          : _buildBookPageSnapshot(
+              chapters,
+              previousRight,
+              pageNumberPlacement: ReaderPageNumberPlacement.bottomRight,
+              topInformationLayout: ReaderTopInformationLayout.spreadRight,
             ),
       preparePages: () => _precacheBookPageImages(
         context,
@@ -2152,6 +2162,14 @@ class _NativeReaderPageState extends State<NativeReaderPage>
               pageNumberPlacement: ReaderPageNumberPlacement.bottomRight,
               topInformationLayout: ReaderTopInformationLayout.spreadRight,
             ),
+            outgoingBackPage: nextLeft == null
+                ? null
+                : _buildBookPageSnapshot(
+                    chapters,
+                    nextLeft,
+                    pageNumberPlacement: ReaderPageNumberPlacement.bottomLeft,
+                    topInformationLayout: ReaderTopInformationLayout.spreadLeft,
+                  ),
             forwardPage: !hasNextSpread
                 ? null
                 : nextRight == null

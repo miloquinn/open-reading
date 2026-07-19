@@ -904,6 +904,7 @@
   "openSourceLicenseLoadFailed": "無法載入授權文字。",
   "changelogPageTitle": "版本更新記錄",
   "changelogCurrentVersion": "目前版本",
+  "changelog221TabletBackPage": "修正平板雙頁擬真翻頁紙背，右頁翻動時會顯示正向的下一張左頁內容",
   "changelog220TabletSpread": "平板新增可關閉的橫向雙頁版面，左右頁頂部資訊分工顯示",
   "changelog220PageCurl": "重做擬真翻頁跟手、跨書脊層級與回彈收尾，修正跳動、甩尾和遮擋",
   "changelog220ReaderPerformance": "最佳化 TXT 開啟轉場、書源章節預取與分頁重用，減少開啟和跨章等待",

@@ -59,6 +59,13 @@ class ReaderPageCurlController {
   }
 
   @visibleForTesting
+  String? get debugActiveBackPageIdentity =>
+      _state?._activeBackPage?.key.pageIdentity;
+
+  @visibleForTesting
+  bool get debugUsesClassicFoldShader => _state?._classicFoldShader != null;
+
+  @visibleForTesting
   bool get debugAnimationReady => _state?._animationReady ?? false;
 
   @visibleForTesting
@@ -242,6 +249,7 @@ class ReaderShaderPageCurl extends StatefulWidget {
     required this.paperColor,
     this.forwardPage,
     this.backwardPage,
+    this.outgoingBackPage,
     this.controller,
     this.preparePages,
     this.coordinator,
@@ -252,6 +260,14 @@ class ReaderShaderPageCurl extends StatefulWidget {
   final ReaderPageSnapshot currentPage;
   final ReaderPageSnapshot? forwardPage;
   final ReaderPageSnapshot? backwardPage;
+
+  /// Optional content printed on the reverse of the current physical sheet.
+  ///
+  /// This is used only while the current page is turning out. A tablet spread
+  /// supplies the page that will land on the opposite side of the spine. When
+  /// omitted, the folded back keeps the legacy mirrored-source appearance used
+  /// by the single-page phone reader.
+  final ReaderPageSnapshot? outgoingBackPage;
   final ReaderPageTurnCallback onTurnForward;
   final ReaderPageTurnCallback onTurnBackward;
   final Color paperColor;

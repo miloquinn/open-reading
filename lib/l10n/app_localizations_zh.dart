@@ -1734,6 +1734,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get changelogCurrentVersion => '当前版本';
 
   @override
+  String get changelog221TabletBackPage => '修复平板双页仿真翻页纸背，右页翻动时会显示正向的下一左页内容';
+
+  @override
   String get changelog220TabletSpread => '平板新增可关闭的横屏双页布局，左右页顶部信息分工显示';
 
   @override
@@ -4409,6 +4412,9 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get changelogCurrentVersion => '目前版本';
+
+  @override
+  String get changelog221TabletBackPage => '修正平板雙頁擬真翻頁紙背，右頁翻動時會顯示正向的下一張左頁內容';
 
   @override
   String get changelog220TabletSpread => '平板新增可關閉的橫向雙頁版面，左右頁頂部資訊分工顯示';

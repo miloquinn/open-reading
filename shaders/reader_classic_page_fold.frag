@@ -4,7 +4,9 @@ uniform vec2 uSize;
 uniform vec2 uPosA;
 uniform vec2 uPosB;
 uniform float uBindingOnRight;
+uniform float uHasBackPage;
 uniform sampler2D uSourcePage;
+uniform sampler2D uBackPage;
 
 out vec4 fragColor;
 
@@ -79,6 +81,18 @@ vec2 physicalPoint(vec2 canonical) {
 
 vec4 sampleSource(vec2 canonical) {
     return texture(uSourcePage, physicalPoint(canonical) / uSize);
+}
+
+vec4 sampleFoldedBack(vec2 canonical) {
+    if (uHasBackPage <= 0.5) {
+        return sampleSource(canonical);
+    }
+    // curlTransform already reflects the visible folded polygon back into the
+    // front texture. A separately authored reverse page needs one more
+    // horizontal reflection so it lies flat in normal reading orientation on
+    // the opposite side of the binding.
+    vec2 backCanonical = vec2(uSize.x - canonical.x, canonical.y);
+    return texture(uBackPage, physicalPoint(backCanonical) / uSize);
 }
 
 bool prepareClippedContent(
@@ -300,7 +314,7 @@ void main() {
             polygon3,
             polygon4
         )) {
-        fragColor = sampleSource(transformedPos);
+        fragColor = sampleFoldedBack(transformedPos);
         fragColor.rgb = mix(fragColor.rgb, vec3(1.0), 0.10);
     }
 }

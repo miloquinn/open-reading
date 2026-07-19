@@ -18,6 +18,8 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
   final GlobalKey _currentKey = GlobalKey(debugLabel: 'curl-current');
   final GlobalKey _forwardKey = GlobalKey(debugLabel: 'curl-forward');
   final GlobalKey _backwardKey = GlobalKey(debugLabel: 'curl-backward');
+  final GlobalKey _outgoingBackKey =
+      GlobalKey(debugLabel: 'curl-outgoing-back');
   final _ReaderSnapshotCache _snapshotCache = _ReaderSnapshotCache(
     maxBytes: _snapshotBudgetBytes,
     maxEntries: 7,
@@ -45,8 +47,10 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
   ReaderPageTurnGeometry? _geometry;
   ReaderPageSnapshot? _activeSourcePage;
   ReaderPageSnapshot? _activeTargetPage;
+  ReaderPageSnapshot? _activeBackPage;
   GlobalKey? _activeSourceKey;
   GlobalKey? _activeTargetKey;
+  GlobalKey? _activeBackKey;
   _PageTurnPhase _phase = _PageTurnPhase.idle;
   bool _warmScheduled = false;
   bool _warmAfterTurn = false;
@@ -93,7 +97,11 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
           widget.currentPage,
         ) ||
         !_sameOptionalSnapshot(oldWidget.forwardPage, widget.forwardPage) ||
-        !_sameOptionalSnapshot(oldWidget.backwardPage, widget.backwardPage);
+        !_sameOptionalSnapshot(oldWidget.backwardPage, widget.backwardPage) ||
+        !_sameOptionalSnapshot(
+          oldWidget.outgoingBackPage,
+          widget.outgoingBackPage,
+        );
     if (pagesChanged) {
       _captureGeneration++;
       _preparedGeneration = -1;
@@ -177,6 +185,12 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
     if (backward != null) {
       adjacentCaptures.add(
         _ensureSnapshot(backward, _backwardKey, generation),
+      );
+    }
+    final outgoingBack = widget.outgoingBackPage;
+    if (outgoingBack != null) {
+      adjacentCaptures.add(
+        _ensureSnapshot(outgoingBack, _outgoingBackKey, generation),
       );
     }
     if (adjacentCaptures.isNotEmpty) {
@@ -317,8 +331,10 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
         widget.currentPage.key,
         if (widget.forwardPage case final page?) page.key,
         if (widget.backwardPage case final page?) page.key,
+        if (widget.outgoingBackPage case final page?) page.key,
         if (_activeSourcePage case final page?) page.key,
         if (_activeTargetPage case final page?) page.key,
+        if (_activeBackPage case final page?) page.key,
       };
 
   void _onPointerDown(PointerDownEvent event) {
@@ -417,13 +433,22 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
     _latestDragPointer = pointer;
     _activeSourcePage = source;
     _activeTargetPage = target;
+    _activeBackPage = layers.back;
     _activeSourceKey = layers.sourceKey;
     _activeTargetKey = layers.targetKey;
-    _captureActiveSourceSync(
+    _activeBackKey = layers.backKey;
+    _captureActiveSnapshotSync(
       source,
       layers.sourceKey,
       refreshAfterPreparation: !_sameSnapshot(source, widget.currentPage),
     );
+    if (layers.back case final back?) {
+      _captureActiveSnapshotSync(
+        back,
+        layers.backKey!,
+        refreshAfterPreparation: !_sameSnapshot(back, widget.currentPage),
+      );
+    }
     final initialPointer = catchUpFromEdge
         ? Offset(
             direction == ReaderPageTurnDirection.forward
@@ -441,7 +466,7 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
       );
       _phase = _PageTurnPhase.dragging;
     });
-    unawaited(_ensureActiveSourceSnapshot(direction));
+    unawaited(_ensureActivePaintSnapshots(direction));
     unawaited(_ensureActiveSnapshots(direction));
     if (catchUpFromEdge) {
       _startCatchUp();
@@ -567,24 +592,44 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
       targetKey,
       generation,
     );
+    if (!mounted || generation != _captureGeneration) return;
+    final back = _direction == direction && _activeBackPage != null
+        ? _activeBackPage
+        : layers.back;
+    final backKey = _direction == direction && _activeBackKey != null
+        ? _activeBackKey
+        : layers.backKey;
+    if (back != null && backKey != null) {
+      await _ensureSnapshot(back, backKey, generation);
+    }
   }
 
-  Future<ui.Image?> _ensureActiveSourceSnapshot(
+  Future<void> _ensureActivePaintSnapshots(
     ReaderPageTurnDirection direction,
-  ) {
+  ) async {
     final layers = _turnLayers(direction);
-    if (layers == null) return Future<ui.Image?>.value();
+    if (layers == null) return;
     final source = _direction == direction && _activeSourcePage != null
         ? _activeSourcePage!
         : layers.source;
     final sourceKey = _direction == direction && _activeSourceKey != null
         ? _activeSourceKey!
         : layers.sourceKey;
-    return _ensureSnapshot(
+    await _ensureSnapshot(
       source,
       sourceKey,
       _captureGeneration,
     );
+    if (!mounted) return;
+    final back = _direction == direction && _activeBackPage != null
+        ? _activeBackPage
+        : layers.back;
+    final backKey = _direction == direction && _activeBackKey != null
+        ? _activeBackKey
+        : layers.backKey;
+    if (back != null && backKey != null) {
+      await _ensureSnapshot(back, backKey, _captureGeneration);
+    }
   }
 
   void _onPanEnd(DragEndDetails details) {
@@ -698,7 +743,7 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
       _programmaticTurns.addFirst(request);
       return;
     }
-    await _ensureActiveSourceSnapshot(direction);
+    await _ensureActivePaintSnapshots(direction);
     if (!mounted || _phase != _PageTurnPhase.dragging) {
       if (!request.completer.isCompleted) request.completer.complete();
       _scheduleProgrammaticDrain();
@@ -745,6 +790,8 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
             sourceKey: _currentKey,
             target: adjacent,
             targetKey: adjacentKey,
+            back: widget.outgoingBackPage,
+            backKey: widget.outgoingBackPage == null ? null : _outgoingBackKey,
           )
         : _ReaderTurnLayers(
             source: adjacent,
@@ -754,7 +801,7 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
           );
   }
 
-  void _captureActiveSourceSync(
+  void _captureActiveSnapshotSync(
     ReaderPageSnapshot page,
     GlobalKey boundaryKey, {
     required bool refreshAfterPreparation,
@@ -1038,8 +1085,10 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
       _geometry = null;
       _activeSourcePage = null;
       _activeTargetPage = null;
+      _activeBackPage = null;
       _activeSourceKey = null;
       _activeTargetKey = null;
+      _activeBackKey = null;
       _dragOrigin = null;
       _pointerDown = null;
       _latestDragPointer = null;
@@ -1067,6 +1116,7 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
   bool get _animationReady =>
       _geometry != null &&
       _cachedImage(_activeSourcePage) != null &&
+      (_activeBackPage == null || _cachedImage(_activeBackPage) != null) &&
       _activeTargetPage != null &&
       _phase != _PageTurnPhase.idle &&
       _phase != _PageTurnPhase.pointerPending;
@@ -1097,17 +1147,22 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
         }
         final geometry = _geometry;
         final sourceImage = _cachedImage(_activeSourcePage);
+        final backImage = _cachedImage(_activeBackPage);
         final animationReady = _animationReady;
         final boundaryPages = <GlobalKey, ReaderPageSnapshot>{
           _currentKey: widget.currentPage,
           if (widget.backwardPage case final page?) _backwardKey: page,
           if (widget.forwardPage case final page?) _forwardKey: page,
+          if (widget.outgoingBackPage case final page?) _outgoingBackKey: page,
         };
         if (_activeSourcePage != null && _activeSourceKey != null) {
           boundaryPages[_activeSourceKey!] = _activeSourcePage!;
         }
         if (_activeTargetPage != null && _activeTargetKey != null) {
           boundaryPages[_activeTargetKey!] = _activeTargetPage!;
+        }
+        if (_activeBackPage != null && _activeBackKey != null) {
+          boundaryPages[_activeBackKey!] = _activeBackPage!;
         }
         final visibleKey = animationReady && _activeTargetKey != null
             ? _activeTargetKey!
@@ -1137,6 +1192,7 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
                       painter: _pageTurnPainter(
                         geometry: geometry!,
                         sourceImage: sourceImage!,
+                        backImage: backImage,
                         bindingOverflow: widget.coordinator == null
                             ? 0
                             : geometry.size.width +
@@ -1155,12 +1211,14 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
   CustomPainter _pageTurnPainter({
     required ReaderPageTurnGeometry geometry,
     required ui.Image sourceImage,
+    required ui.Image? backImage,
     required double bindingOverflow,
   }) {
     if (_classicFoldShader != null) {
       return _ReaderClassicFoldPainter(
         shader: _classicFoldShader!,
         sourcePage: sourceImage,
+        backPage: backImage,
         geometry: geometry,
         bindingEdge: widget.bindingEdge,
         bindingOverflow: bindingOverflow,
@@ -1168,6 +1226,7 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
     }
     return _ReaderFallbackTurnPainter(
       sourcePage: sourceImage,
+      backPage: backImage,
       geometry: geometry,
       bindingOverflow: bindingOverflow,
     );

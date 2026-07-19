@@ -403,6 +403,32 @@ void main() {
             .topInformationLayout,
         ReaderTopInformationLayout.spreadRight,
       );
+      final rightCurl = curls[1];
+      final currentRightLeaf =
+          rightCurl.currentPage.child as ReaderPaperPageLeaf;
+      final nextLeftLeaf =
+          rightCurl.outgoingBackPage!.child as ReaderPaperPageLeaf;
+      final nextRightLeaf = rightCurl.forwardPage!.child as ReaderPaperPageLeaf;
+      expect(
+        nextLeftLeaf.metadata.pageNumber,
+        currentRightLeaf.metadata.pageNumber + 1,
+      );
+      expect(
+        nextRightLeaf.metadata.pageNumber,
+        nextLeftLeaf.metadata.pageNumber + 1,
+      );
+      expect(
+        nextLeftLeaf.pageNumberPlacement,
+        ReaderPageNumberPlacement.bottomLeft,
+      );
+      expect(
+        nextLeftLeaf.topInformationLayout,
+        ReaderTopInformationLayout.spreadLeft,
+      );
+      expect(
+        nextRightLeaf.topInformationLayout,
+        ReaderTopInformationLayout.spreadRight,
+      );
 
       final rects = curlFinder
           .evaluate()
@@ -413,7 +439,7 @@ void main() {
       expect(rects[1].left, closeTo(612, 0.1));
       expect(rects[1].right, closeTo(1200, 0.1));
 
-      final rightController = curls[1].controller!;
+      final rightController = rightCurl.controller!;
       final centerGesture = await tester.startGesture(
         Offset(rects[1].left + 2, rects[1].center.dy),
       );

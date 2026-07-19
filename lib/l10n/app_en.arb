@@ -2037,6 +2037,7 @@
   "openSourceLicenseLoadFailed": "Could not load the license text.",
   "changelogPageTitle": "Release history",
   "changelogCurrentVersion": "Current version",
+  "changelog221TabletBackPage": "Fixed tablet spread page-curl backs so turning the right page shows the next left page in normal reading orientation",
   "changelog220TabletSpread": "Added an optional landscape tablet spread with top information split across the left and right pages",
   "changelog220PageCurl": "Rebuilt page-curl tracking, cross-spine layering, and settling to fix jumps, tails, and incorrect overlap",
   "changelog220ReaderPerformance": "Improved TXT opening transitions, source chapter prefetching, and pagination reuse to reduce waiting",

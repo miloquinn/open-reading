@@ -1,6 +1,9 @@
 import 'dart:async';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:xxread/core/reader/reader_page_turn_geometry.dart';
 import 'package:xxread/utils/book_open_transition.dart';
@@ -255,6 +258,7 @@ void main() {
     await tester.pump();
 
     expect(controller.debugIsCatchingUp, isTrue);
+    expect(controller.debugActiveBackPageIdentity, isNull);
     expect(
       controller.debugTouchPosition!.dx,
       closeTo(rect.width, 0.001),
@@ -977,6 +981,7 @@ void main() {
                 bindingEdge: ReaderPageBindingEdge.right,
                 currentPage: _snapshot('left-current'),
                 backwardPage: _snapshot('left-previous'),
+                outgoingBackPage: _snapshot('left-back'),
                 onTurnForward: () {},
                 onTurnBackward: () {},
                 paperColor: Colors.white,
@@ -988,6 +993,7 @@ void main() {
                 edgeDragOnly: true,
                 currentPage: _snapshot('right-current'),
                 forwardPage: _snapshot('right-next'),
+                outgoingBackPage: _snapshot('right-back'),
                 onTurnForward: () {},
                 onTurnBackward: () {},
                 paperColor: Colors.white,
@@ -1026,6 +1032,7 @@ void main() {
       coordinator.activeBindingEdge,
       ReaderPageBindingEdge.left,
     );
+    expect(forwardController.debugActiveBackPageIdentity, 'right-back');
     expect(
       topLayerKey(),
       const ValueKey('reader-page-curl-spread-right-layer'),
@@ -1049,6 +1056,7 @@ void main() {
       coordinator.activeBindingEdge,
       ReaderPageBindingEdge.right,
     );
+    expect(backwardController.debugActiveBackPageIdentity, 'left-back');
     expect(
       topLayerKey(),
       const ValueKey('reader-page-curl-spread-left-layer'),
@@ -1059,6 +1067,18 @@ void main() {
     expect(backwardController.debugTouchPosition, isNot(firstBackwardTouch));
     await backwardGesture.cancel();
     await tester.pumpAndSettle();
+  });
+
+  testWidgets('tablet folded back texture stays readable on both bindings',
+      (tester) async {
+    await _expectReadableFoldedBack(
+      tester,
+      bindingEdge: ReaderPageBindingEdge.left,
+    );
+    await _expectReadableFoldedBack(
+      tester,
+      bindingEdge: ReaderPageBindingEdge.right,
+    );
   });
 
   testWidgets('tablet spread coordinator serializes opposite leaf turns',
@@ -1185,3 +1205,151 @@ ReaderPageSnapshot _revisionSnapshot(String id, int revision) =>
       contentRevision: revision,
       child: Text('$id-$revision'),
     );
+
+Future<void> _expectReadableFoldedBack(
+  WidgetTester tester, {
+  required ReaderPageBindingEdge bindingEdge,
+}) async {
+  const pageWidth = 400.0;
+  const pageHeight = 400.0;
+  const canvasWidth = 800.0;
+  final rootKey = GlobalKey();
+  final controller = ReaderPageCurlController();
+  final coordinator = ReaderPageCurlCoordinator();
+  final bindingOnLeft = bindingEdge == ReaderPageBindingEdge.left;
+  final current = _visualSnapshot(
+    'visual-current',
+    const ColoredBox(color: Colors.red),
+  );
+  final target = _visualSnapshot(
+    'visual-target',
+    const ColoredBox(color: Colors.blue),
+  );
+  final back = _visualSnapshot(
+    'visual-back',
+    const Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(child: ColoredBox(color: Colors.green)),
+        Expanded(child: ColoredBox(color: Color(0xFFFF00FF))),
+      ],
+    ),
+  );
+
+  await tester.pumpWidget(
+    MaterialApp(
+      home: Center(
+        child: RepaintBoundary(
+          key: rootKey,
+          child: SizedBox(
+            width: canvasWidth,
+            height: pageHeight,
+            child: ColoredBox(
+              color: Colors.black,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Positioned(
+                    left: bindingOnLeft ? pageWidth : 0,
+                    width: pageWidth,
+                    height: pageHeight,
+                    child: ReaderShaderPageCurl(
+                      key: const ValueKey('visual-curl'),
+                      controller: controller,
+                      coordinator: coordinator,
+                      bindingEdge: bindingEdge,
+                      edgeDragOnly: true,
+                      currentPage: current,
+                      forwardPage: bindingOnLeft ? target : null,
+                      backwardPage: bindingOnLeft ? null : target,
+                      outgoingBackPage: back,
+                      onTurnForward: () {},
+                      onTurnBackward: () {},
+                      paperColor: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+  for (var frame = 0;
+      frame < 20 && !controller.debugUsesClassicFoldShader;
+      frame++) {
+    await tester.pump(const Duration(milliseconds: 16));
+  }
+  expect(controller.debugUsesClassicFoldShader, isTrue);
+
+  final curlRect = tester.getRect(find.byKey(const ValueKey('visual-curl')));
+  final gesture = await tester.startGesture(
+    Offset(
+      bindingOnLeft ? curlRect.right - 2 : curlRect.left + 2,
+      curlRect.center.dy,
+    ),
+  );
+  await gesture.moveBy(Offset(bindingOnLeft ? -24 : 24, 0));
+  await tester.pump();
+  await gesture.moveTo(
+    Offset(
+      bindingOnLeft ? curlRect.left - 200 : curlRect.left + 600,
+      curlRect.center.dy,
+    ),
+  );
+  for (var frame = 0; frame < 20 && !controller.debugAnimationReady; frame++) {
+    await tester.pump(const Duration(milliseconds: 16));
+  }
+  expect(controller.debugAnimationReady, isTrue);
+  expect(controller.debugActiveBackPageIdentity, 'visual-back');
+  await tester.pump();
+
+  final boundary =
+      rootKey.currentContext!.findRenderObject()! as RenderRepaintBoundary;
+  late ui.Image image;
+  ByteData? bytes;
+  await tester.runAsync(() async {
+    image = await boundary.toImage(pixelRatio: 1);
+    bytes = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+  });
+  expect(bytes, isNotNull);
+  final rawBytes = bytes!;
+  final y = image.height ~/ 2;
+  final sampleXs = bindingOnLeft ? const [250, 450] : const [350, 550];
+  final first = _pixelColor(rawBytes, image.width, sampleXs[0], y);
+  final second = _pixelColor(rawBytes, image.width, sampleXs[1], y);
+  image.dispose();
+
+  expect(first.g, greaterThan(first.r + 0.18));
+  expect(first.g, greaterThan(first.b + 0.18));
+  expect(second.r, greaterThan(second.g + 0.35));
+  expect(second.b, greaterThan(second.g + 0.35));
+
+  await gesture.cancel();
+  await tester.pumpAndSettle();
+  await tester.pumpWidget(const SizedBox.shrink());
+  await tester.pump();
+  coordinator.dispose();
+}
+
+ReaderPageSnapshot _visualSnapshot(String id, Widget child) =>
+    ReaderPageSnapshot(
+      key: ReaderPageSnapshotKey(
+        pageIdentity: id,
+        layoutFingerprint: 'visual-layout',
+        themeId: 'visual-theme',
+      ),
+      contentRevision: 0,
+      child: child,
+    );
+
+Color _pixelColor(ByteData bytes, int width, int x, int y) {
+  final offset = (y * width + x) * 4;
+  return Color.fromARGB(
+    bytes.getUint8(offset + 3),
+    bytes.getUint8(offset),
+    bytes.getUint8(offset + 1),
+    bytes.getUint8(offset + 2),
+  );
+}

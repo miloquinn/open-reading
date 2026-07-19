@@ -4,6 +4,7 @@ class _ReaderClassicFoldPainter extends CustomPainter {
   const _ReaderClassicFoldPainter({
     required this.shader,
     required this.sourcePage,
+    required this.backPage,
     required this.geometry,
     required this.bindingEdge,
     required this.bindingOverflow,
@@ -11,6 +12,7 @@ class _ReaderClassicFoldPainter extends CustomPainter {
 
   final ui.FragmentShader shader;
   final ui.Image sourcePage;
+  final ui.Image? backPage;
   final ReaderPageTurnGeometry geometry;
   final ReaderPageBindingEdge bindingEdge;
   final double bindingOverflow;
@@ -29,7 +31,9 @@ class _ReaderClassicFoldPainter extends CustomPainter {
         index++,
         bindingEdge == ReaderPageBindingEdge.right ? 1 : 0,
       )
-      ..setImageSampler(0, sourcePage);
+      ..setFloat(index++, backPage == null ? 0 : 1)
+      ..setImageSampler(0, sourcePage)
+      ..setImageSampler(1, backPage ?? sourcePage);
     final paintBounds = bindingEdge == ReaderPageBindingEdge.left
         ? Rect.fromLTRB(-bindingOverflow, 0, size.width, size.height)
         : Rect.fromLTRB(0, 0, size.width + bindingOverflow, size.height);
@@ -41,17 +45,20 @@ class _ReaderClassicFoldPainter extends CustomPainter {
       oldDelegate.geometry != geometry ||
       oldDelegate.bindingEdge != bindingEdge ||
       oldDelegate.bindingOverflow != bindingOverflow ||
-      !identical(oldDelegate.sourcePage, sourcePage);
+      !identical(oldDelegate.sourcePage, sourcePage) ||
+      !identical(oldDelegate.backPage, backPage);
 }
 
 class _ReaderFallbackTurnPainter extends CustomPainter {
   const _ReaderFallbackTurnPainter({
     required this.sourcePage,
+    required this.backPage,
     required this.geometry,
     required this.bindingOverflow,
   });
 
   final ui.Image sourcePage;
+  final ui.Image? backPage;
   final ReaderPageTurnGeometry geometry;
   final double bindingOverflow;
 
@@ -65,7 +72,9 @@ class _ReaderFallbackTurnPainter extends CustomPainter {
     };
     final offset = geometry.bindingOnRight ? -canonicalOffset : canonicalOffset;
     canvas.translate(offset, 0);
-    _drawPageImage(canvas, sourcePage, size);
+    final visiblePage =
+        backPage != null && geometry.progress >= 0.5 ? backPage! : sourcePage;
+    _drawPageImage(canvas, visiblePage, size);
     canvas.restore();
   }
 
@@ -73,7 +82,8 @@ class _ReaderFallbackTurnPainter extends CustomPainter {
   bool shouldRepaint(covariant _ReaderFallbackTurnPainter oldDelegate) =>
       oldDelegate.geometry != geometry ||
       oldDelegate.bindingOverflow != bindingOverflow ||
-      !identical(oldDelegate.sourcePage, sourcePage);
+      !identical(oldDelegate.sourcePage, sourcePage) ||
+      !identical(oldDelegate.backPage, backPage);
 }
 
 void _drawPageImage(Canvas canvas, ui.Image image, Size size) {

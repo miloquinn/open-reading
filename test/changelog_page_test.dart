@@ -17,7 +17,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('版本更新记录'), findsOneWidget);
-    expect(find.text('v2.2.0'), findsOneWidget);
+    expect(find.text('v2.2.1'), findsOneWidget);
+    expect(
+      find.text('修复平板双页仿真翻页纸背，右页翻动时会显示正向的下一左页内容'),
+      findsOneWidget,
+    );
     expect(
       find.text('平板新增可关闭的横屏双页布局，左右页顶部信息分工显示'),
       findsOneWidget,
@@ -28,9 +32,11 @@ void main() {
     );
     expect(find.text('当前版本'), findsOneWidget);
 
+    expect(find.text('v2.2.0'), findsOneWidget);
+
     await tester.scrollUntilVisible(
       find.text('v2.0.3'),
-      200,
+      100,
       scrollable: find.byType(Scrollable),
     );
 
@@ -42,7 +48,7 @@ void main() {
     );
     await tester.scrollUntilVisible(
       find.text('v2.0.2'),
-      200,
+      100,
       scrollable: find.byType(Scrollable),
     );
 
@@ -58,7 +64,7 @@ void main() {
 
     await tester.scrollUntilVisible(
       find.text('v2.0.1'),
-      200,
+      100,
       scrollable: find.byType(Scrollable),
     );
 
@@ -75,7 +81,7 @@ void main() {
 
     await tester.scrollUntilVisible(
       find.text('v2.0.0'),
-      200,
+      100,
       scrollable: find.byType(Scrollable),
     );
 
@@ -87,7 +93,7 @@ void main() {
 
     await tester.scrollUntilVisible(
       find.text('v1.2.4'),
-      200,
+      100,
       scrollable: find.byType(Scrollable),
     );
 
@@ -96,7 +102,7 @@ void main() {
 
     await tester.scrollUntilVisible(
       find.text('v1.2.2'),
-      200,
+      100,
       scrollable: find.byType(Scrollable),
     );
 
@@ -105,7 +111,7 @@ void main() {
 
     await tester.scrollUntilVisible(
       find.text('v1.2.1'),
-      300,
+      100,
       scrollable: find.byType(Scrollable),
     );
 
@@ -115,7 +121,7 @@ void main() {
 
     await tester.scrollUntilVisible(
       find.text('v1.2.0'),
-      300,
+      100,
       scrollable: find.byType(Scrollable),
     );
 
@@ -126,7 +132,7 @@ void main() {
 
     await tester.scrollUntilVisible(
       find.text('v1.1.0'),
-      300,
+      100,
       scrollable: find.byType(Scrollable),
     );
 
@@ -136,7 +142,7 @@ void main() {
 
     await tester.scrollUntilVisible(
       find.text('v0.9.1'),
-      300,
+      100,
       scrollable: find.byType(Scrollable),
     );
 

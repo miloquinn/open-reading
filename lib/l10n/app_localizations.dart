@@ -3318,6 +3318,12 @@ abstract class AppLocalizations {
   /// **'Current version'**
   String get changelogCurrentVersion;
 
+  /// No description provided for @changelog221TabletBackPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed tablet spread page-curl backs so turning the right page shows the next left page in normal reading orientation'**
+  String get changelog221TabletBackPage;
+
   /// No description provided for @changelog220TabletSpread.
   ///
   /// In en, this message translates to:

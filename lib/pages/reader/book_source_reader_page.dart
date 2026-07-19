@@ -2232,6 +2232,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     required bool forward,
     ReaderTopInformationLayout topInformationLayout =
         ReaderTopInformationLayout.full,
+    String slotIdentity = '',
   }) {
     final targetChapterIndex = _chapterIndex + (forward ? 1 : -1);
     final chapterTitle =
@@ -2243,7 +2244,8 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       safeArea: _readerSafeArea,
       metadata: ReaderPaperPageMetadata(
         pageIdentity: 'source:${widget.source.id}:${widget.book.id}:'
-            'boundary:${forward ? 'forward' : 'backward'}',
+            'boundary:${forward ? 'forward' : 'backward'}'
+            '${slotIdentity.isEmpty ? '' : ':$slotIdentity'}',
         layoutFingerprint: _paginationKey ?? 'unpaginated',
         themeId: _readerTheme.cacheKey,
         chapterTitle: chapterTitle,
@@ -2270,11 +2272,13 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     required bool forward,
     ReaderTopInformationLayout topInformationLayout =
         ReaderTopInformationLayout.full,
+    String slotIdentity = '',
   }) =>
       ReaderPageSnapshot(
         key: ReaderPageSnapshotKey(
           pageIdentity: 'source:${widget.source.id}:${widget.book.id}:'
-              'boundary:${forward ? 'forward' : 'backward'}',
+              'boundary:${forward ? 'forward' : 'backward'}'
+              '${slotIdentity.isEmpty ? '' : ':$slotIdentity'}',
           layoutFingerprint: _paginationKey ?? 'unpaginated',
           themeId: _readerTheme.cacheKey,
         ),
@@ -2284,6 +2288,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         child: _buildBoundaryLeaf(
           forward: forward,
           topInformationLayout: topInformationLayout,
+          slotIdentity: slotIdentity,
         ),
       );
 
@@ -2524,7 +2529,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
             _prefetchedContent[previousChapterIndex] != null;
         final nextChapterCached =
             usesNextChapter && _prefetchedContent[nextChapterIndex] != null;
-        final previousChapterData = previousChapterCached
+        final previousChapterLeftData = previousChapterCached
             ? _adjacentPageData(
                 previousChapterIndex,
                 adjacentViewport,
@@ -2532,7 +2537,22 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
                     _spreadStartForPage(pageCount - 1),
               )
             : null;
-        final nextChapterData = nextChapterCached
+        final previousChapterRightData = previousChapterCached
+            ? _adjacentPageData(
+                previousChapterIndex,
+                adjacentViewport,
+                selectPageIndex: (pageCount) =>
+                    _spreadStartForPage(pageCount - 1) + 1,
+              )
+            : null;
+        final nextChapterLeftData = nextChapterCached
+            ? _adjacentPageData(
+                nextChapterIndex,
+                adjacentViewport,
+                selectPageIndex: (_) => 0,
+              )
+            : null;
+        final nextChapterRightData = nextChapterCached
             ? _adjacentPageData(
                 nextChapterIndex,
                 adjacentViewport,
@@ -2577,8 +2597,9 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
                         forward: false,
                         topInformationLayout:
                             ReaderTopInformationLayout.spreadLeft,
+                        slotIdentity: 'spread-left',
                       )
-                    : previousChapterData == null
+                    : previousChapterLeftData == null
                         ? _buildBlankSourceSnapshot(
                             'previous-chapter-$previousChapterIndex-left',
                             topInformationLayout:
@@ -2586,13 +2607,87 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
                             chapterTitle: _chapters[previousChapterIndex].title,
                           )
                         : _buildPageSnapshot(
-                            previousChapterData.page,
-                            pageIndex: previousChapterData.pageIndex,
-                            pageCount: previousChapterData.pageCount,
+                            previousChapterLeftData.page,
+                            pageIndex: previousChapterLeftData.pageIndex,
+                            pageCount: previousChapterLeftData.pageCount,
                             layoutFingerprint:
-                                previousChapterData.layoutFingerprint,
+                                previousChapterLeftData.layoutFingerprint,
                             chapterIndex: previousChapterIndex,
-                            chapterContent: previousChapterData.content,
+                            chapterContent: previousChapterLeftData.content,
+                            pageNumberPlacement:
+                                ReaderPageNumberPlacement.bottomLeft,
+                            topInformationLayout:
+                                ReaderTopInformationLayout.spreadLeft,
+                          );
+        final previousRight = !hasPrevious
+            ? null
+            : spreadStart >= 2
+                ? _buildPageSnapshot(
+                    _paginatedPages[spreadStart - 1],
+                    pageIndex: spreadStart - 1,
+                    pageCount: _pageCount,
+                    layoutFingerprint: _paginationKey!,
+                    topInformationLayout:
+                        ReaderTopInformationLayout.spreadRight,
+                  )
+                : !previousChapterCached
+                    ? _buildBoundarySnapshot(
+                        forward: false,
+                        topInformationLayout:
+                            ReaderTopInformationLayout.spreadRight,
+                        slotIdentity: 'spread-right',
+                      )
+                    : previousChapterRightData == null
+                        ? _buildBlankSourceSnapshot(
+                            'previous-chapter-$previousChapterIndex-right',
+                            topInformationLayout:
+                                ReaderTopInformationLayout.spreadRight,
+                            chapterTitle: _chapters[previousChapterIndex].title,
+                          )
+                        : _buildPageSnapshot(
+                            previousChapterRightData.page,
+                            pageIndex: previousChapterRightData.pageIndex,
+                            pageCount: previousChapterRightData.pageCount,
+                            layoutFingerprint:
+                                previousChapterRightData.layoutFingerprint,
+                            chapterIndex: previousChapterIndex,
+                            chapterContent: previousChapterRightData.content,
+                            topInformationLayout:
+                                ReaderTopInformationLayout.spreadRight,
+                          );
+        final nextLeft = !hasNext
+            ? null
+            : nextSpreadStart < _pageCount
+                ? _buildPageSnapshot(
+                    _paginatedPages[nextSpreadStart],
+                    pageIndex: nextSpreadStart,
+                    pageCount: _pageCount,
+                    layoutFingerprint: _paginationKey!,
+                    pageNumberPlacement: ReaderPageNumberPlacement.bottomLeft,
+                    topInformationLayout: ReaderTopInformationLayout.spreadLeft,
+                  )
+                : !nextChapterCached
+                    ? _buildBoundarySnapshot(
+                        forward: true,
+                        topInformationLayout:
+                            ReaderTopInformationLayout.spreadLeft,
+                        slotIdentity: 'spread-left',
+                      )
+                    : nextChapterLeftData == null
+                        ? _buildBlankSourceSnapshot(
+                            'next-chapter-$nextChapterIndex-left',
+                            topInformationLayout:
+                                ReaderTopInformationLayout.spreadLeft,
+                            chapterTitle: _chapters[nextChapterIndex].title,
+                          )
+                        : _buildPageSnapshot(
+                            nextChapterLeftData.page,
+                            pageIndex: nextChapterLeftData.pageIndex,
+                            pageCount: nextChapterLeftData.pageCount,
+                            layoutFingerprint:
+                                nextChapterLeftData.layoutFingerprint,
+                            chapterIndex: nextChapterIndex,
+                            chapterContent: nextChapterLeftData.content,
                             pageNumberPlacement:
                                 ReaderPageNumberPlacement.bottomLeft,
                             topInformationLayout:
@@ -2620,21 +2715,22 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
                         forward: true,
                         topInformationLayout:
                             ReaderTopInformationLayout.spreadRight,
+                        slotIdentity: 'spread-right',
                       )
-                    : nextChapterData == null
+                    : nextChapterRightData == null
                         ? _buildBlankSourceSnapshot(
                             'next-chapter-$nextChapterIndex-right',
                             topInformationLayout:
                                 ReaderTopInformationLayout.spreadRight,
                           )
                         : _buildPageSnapshot(
-                            nextChapterData.page,
-                            pageIndex: nextChapterData.pageIndex,
-                            pageCount: nextChapterData.pageCount,
+                            nextChapterRightData.page,
+                            pageIndex: nextChapterRightData.pageIndex,
+                            pageCount: nextChapterRightData.pageCount,
                             layoutFingerprint:
-                                nextChapterData.layoutFingerprint,
+                                nextChapterRightData.layoutFingerprint,
                             chapterIndex: nextChapterIndex,
-                            chapterContent: nextChapterData.content,
+                            chapterContent: nextChapterRightData.content,
                             topInformationLayout:
                                 ReaderTopInformationLayout.spreadRight,
                           );
@@ -2650,6 +2746,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
           paperColor: _readerTheme.background,
           currentPage: currentLeft,
           backwardPage: previousLeft,
+          outgoingBackPage: previousRight,
           onTurnForward: () {},
           onTurnBackward: _turnBackward,
         );
@@ -2664,6 +2761,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
           paperColor: _readerTheme.background,
           currentPage: currentRight,
           forwardPage: nextRight,
+          outgoingBackPage: nextLeft,
           onTurnForward: _turnForward,
           onTurnBackward: () {},
         );

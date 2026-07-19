@@ -40,10 +40,14 @@ class _ReaderTurnLayers {
     required this.sourceKey,
     required this.target,
     required this.targetKey,
+    this.back,
+    this.backKey,
   });
 
   final ReaderPageSnapshot source;
   final GlobalKey sourceKey;
   final ReaderPageSnapshot target;
   final GlobalKey targetKey;
+  final ReaderPageSnapshot? back;
+  final GlobalKey? backKey;
 }

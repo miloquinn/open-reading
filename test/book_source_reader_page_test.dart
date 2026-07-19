@@ -322,6 +322,32 @@ void main() {
             .topInformationLayout,
         ReaderTopInformationLayout.spreadRight,
       );
+      final rightCurl = curls[1];
+      final currentRightLeaf =
+          rightCurl.currentPage.child as ReaderPaperPageLeaf;
+      final nextLeftLeaf =
+          rightCurl.outgoingBackPage!.child as ReaderPaperPageLeaf;
+      final nextRightLeaf = rightCurl.forwardPage!.child as ReaderPaperPageLeaf;
+      expect(
+        nextLeftLeaf.metadata.pageNumber,
+        currentRightLeaf.metadata.pageNumber + 1,
+      );
+      expect(
+        nextRightLeaf.metadata.pageNumber,
+        nextLeftLeaf.metadata.pageNumber + 1,
+      );
+      expect(
+        nextLeftLeaf.pageNumberPlacement,
+        ReaderPageNumberPlacement.bottomLeft,
+      );
+      expect(
+        nextLeftLeaf.topInformationLayout,
+        ReaderTopInformationLayout.spreadLeft,
+      );
+      expect(
+        nextRightLeaf.topInformationLayout,
+        ReaderTopInformationLayout.spreadRight,
+      );
 
       final rects = curlFinder
           .evaluate()
@@ -331,7 +357,7 @@ void main() {
       expect(rects[0].right, closeTo(588, 0.1));
       expect(rects[1].left, closeTo(612, 0.1));
 
-      final rightController = curls[1].controller!;
+      final rightController = rightCurl.controller!;
       final gesture = await tester.startGesture(
         Offset(rects[1].right - 2, rects[1].center.dy),
       );
@@ -558,10 +584,17 @@ void main() {
       );
 
       final nextLeaf = forwardCurl.forwardPage!.child as ReaderPaperPageLeaf;
+      final nextBackLeaf =
+          forwardCurl.outgoingBackPage!.child as ReaderPaperPageLeaf;
       final currentLeft = _spreadCurl(
         tester,
         ReaderPageBindingEdge.right,
       ).currentPage.child as ReaderPaperPageLeaf;
+      expect(nextBackLeaf.metadata.pageNumber, 1);
+      expect(
+        nextBackLeaf.topInformationLayout,
+        ReaderTopInformationLayout.spreadLeft,
+      );
       expect(nextLeaf.metadata.pageNumber, 2);
       expect(nextLeaf.metadata.pageCount, currentLeft.metadata.pageCount);
       expect(
@@ -622,6 +655,10 @@ void main() {
         contains('blank:next-chapter-1-right'),
       );
       expect(
+        forwardCurl.outgoingBackPage!.key.pageIdentity,
+        contains(':chapter-2:0:'),
+      );
+      expect(
         forwardCurl.forwardPage!.key.pageIdentity,
         isNot(contains('boundary:forward')),
       );
@@ -671,11 +708,26 @@ void main() {
 
       final previousLeaf =
           backwardCurl.backwardPage!.child as ReaderPaperPageLeaf;
+      final previousBackLeaf =
+          backwardCurl.outgoingBackPage!.child as ReaderPaperPageLeaf;
       final previousIndex = previousLeaf.metadata.pageNumber - 1;
       final expectedIndex = ((previousLeaf.metadata.pageCount - 1) ~/ 2) * 2;
       expect(previousLeaf.metadata.pageCount, greaterThan(2));
       expect(previousIndex, expectedIndex);
       expect(previousIndex.isEven, isTrue);
+      expect(
+        previousBackLeaf.topInformationLayout,
+        ReaderTopInformationLayout.spreadRight,
+      );
+      if (previousIndex + 1 < previousLeaf.metadata.pageCount) {
+        expect(previousBackLeaf.showPageNumber, isTrue);
+        expect(
+          previousBackLeaf.metadata.pageNumber,
+          previousLeaf.metadata.pageNumber + 1,
+        );
+      } else {
+        expect(previousBackLeaf.showPageNumber, isFalse);
+      }
       expect(
         client.requestedChapterIds.where((id) => id == 'chapter-1').length,
         1,

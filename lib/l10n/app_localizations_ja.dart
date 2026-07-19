@@ -1748,6 +1748,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get changelogCurrentVersion => '現在のバージョン';
 
   @override
+  String get changelog221TabletBackPage =>
+      'タブレット見開きの紙面裏側を修正し、右ページをめくると次の左ページが正しい向きで表示されるようにしました';
+
+  @override
   String get changelog220TabletSpread =>
       'タブレットに無効化可能な横向き見開き表示を追加し、左右ページで上部情報を分担しました';
 

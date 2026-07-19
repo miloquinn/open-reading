@@ -1812,6 +1812,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get changelogCurrentVersion => 'Current version';
 
   @override
+  String get changelog221TabletBackPage =>
+      'Fixed tablet spread page-curl backs so turning the right page shows the next left page in normal reading orientation';
+
+  @override
   String get changelog220TabletSpread =>
       'Added an optional landscape tablet spread with top information split across the left and right pages';
 

@@ -904,6 +904,7 @@
   "openSourceLicenseLoadFailed": "ライセンス文を読み込めませんでした。",
   "changelogPageTitle": "バージョン更新履歴",
   "changelogCurrentVersion": "現在のバージョン",
+  "changelog221TabletBackPage": "タブレット見開きの紙面裏側を修正し、右ページをめくると次の左ページが正しい向きで表示されるようにしました",
   "changelog220TabletSpread": "タブレットに無効化可能な横向き見開き表示を追加し、左右ページで上部情報を分担しました",
   "changelog220PageCurl": "ページめくりの追従、見開き中央の描画順、反発収束を作り直し、跳ね・尾引き・重なりを修正しました",
   "changelog220ReaderPerformance": "TXT の起動遷移、書籍ソースの章プリフェッチ、ページ分割の再利用を最適化しました",
