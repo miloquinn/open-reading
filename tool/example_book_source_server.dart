@@ -163,12 +163,18 @@ class ExampleBookSourceServer {
     );
     return {
       'protocol': 'open-reading-source',
-      'protocolVersion': '1.1',
+      'protocolVersion': '1.2',
       'id': sourceId,
       'name': sourceName,
       'description': '仓库内置的本地协议测试书源，仅包含原创示例文本。',
       'apiBaseUrl': publicBaseUri.resolve('api/').toString(),
       'websiteUrl': publicBaseUri.toString(),
+      'operatorName': 'Open Reading Project',
+      'contactUrl':
+          'https://github.com/miloquinn/open-reading/issues/new?template=rights_report.yml',
+      'contentLicense': 'Original example content under the repository license',
+      'rightsStatement':
+          'This reference source contains only original protocol test stories created for Open Reading.',
       'languages': ['zh-CN', 'en'],
       'capabilities': [
         'search',

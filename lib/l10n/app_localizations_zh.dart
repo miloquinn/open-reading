@@ -132,7 +132,8 @@ class AppLocalizationsZh extends AppLocalizations {
       '开元阅读不预装任何书源，也不运营、推荐或背书第三方书源服务。每个书源地址都由你主动添加。';
 
   @override
-  String get bookSourcesResponsibilityAck => '我知悉这是独立第三方服务，并确认自己有权访问和使用其中的内容。';
+  String get bookSourcesResponsibilityAck =>
+      '我确认自己有权访问相关内容，且不会利用书源绕过登录、付费、DRM 或其他访问控制。';
 
   @override
   String get bookSourcesConnect => '连接并校验';
@@ -163,11 +164,39 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bookSourcesProtocolRepositoryOpenFailed => '无法打开书源协议仓库';
 
   @override
-  String get bookSourcesProtocolDialogTitle => '开放书源协议 v1.1';
+  String get bookSourcesProtocolDialogTitle => '开放书源协议 v1.2';
 
   @override
   String get bookSourcesProtocolDialogBody =>
-      '服务在 /.well-known/open-reading-source.json 发布发现文档，并实现搜索、书籍详情、章节目录与章节正文接口。v1.1 可选支持推荐、分类与浏览，仍仅面向公开、无需登录的 HTTP(S) 书源。';
+      '服务在 /.well-known/open-reading-source.json 发布发现文档，并实现搜索、书籍详情、章节目录与章节正文接口。v1.2 为公开、无需登录的 HTTP(S) 书源增加运营者、联系方式、内容许可与权利声明元数据。';
+
+  @override
+  String get bookSourcesRightsDetails => '运营者与权利信息';
+
+  @override
+  String get bookSourcesOperator => '书源运营者';
+
+  @override
+  String get bookSourcesContentLicense => '内容许可';
+
+  @override
+  String get bookSourcesRightsStatement => '权利声明';
+
+  @override
+  String get bookSourcesRightsNotProvided => '该书源未提供';
+
+  @override
+  String get bookSourcesRightsUnverifiedNotice =>
+      '上述信息由独立书源运营者自行声明。开元阅读仅为提高透明度而展示，不负责核验，也不构成推荐或背书。';
+
+  @override
+  String get bookSourcesContactOperator => '联系运营者';
+
+  @override
+  String get bookSourcesRightsReport => '权利投诉';
+
+  @override
+  String get bookSourcesRightsReportOpenFailed => '无法打开权利投诉表单';
 
   @override
   String get bookSourcesClose => '关闭';
@@ -2780,7 +2809,8 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
       '開元閱讀不預載任何書源，也不營運、推薦或背書第三方書源服務。每個書源位址都由你主動新增。';
 
   @override
-  String get bookSourcesResponsibilityAck => '我知悉這是獨立第三方服務，並確認自己有權存取和使用其中的內容。';
+  String get bookSourcesResponsibilityAck =>
+      '我確認自己有權存取相關內容，且不會利用書源繞過登入、付費、DRM 或其他存取控制。';
 
   @override
   String get bookSourcesConnect => '連接並驗證';
@@ -2811,11 +2841,39 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get bookSourcesProtocolRepositoryOpenFailed => '無法開啟書源協定倉庫';
 
   @override
-  String get bookSourcesProtocolDialogTitle => '開放書源協定 v1.1';
+  String get bookSourcesProtocolDialogTitle => '開放書源協定 v1.2';
 
   @override
   String get bookSourcesProtocolDialogBody =>
-      '服務在 /.well-known/open-reading-source.json 發布探索文件，並實作搜尋、書籍詳情、章節目錄與章節內文介面。v1.1 可選支援推薦、分類與瀏覽，仍僅面向公開、無需登入的 HTTP(S) 書源。';
+      '服務在 /.well-known/open-reading-source.json 發布探索文件，並實作搜尋、書籍詳情、章節目錄與章節內文介面。v1.2 為公開、無需登入的 HTTP(S) 書源加入營運者、聯絡方式、內容授權與權利聲明中繼資料。';
+
+  @override
+  String get bookSourcesRightsDetails => '營運者與權利資訊';
+
+  @override
+  String get bookSourcesOperator => '書源營運者';
+
+  @override
+  String get bookSourcesContentLicense => '內容授權';
+
+  @override
+  String get bookSourcesRightsStatement => '權利聲明';
+
+  @override
+  String get bookSourcesRightsNotProvided => '此書源未提供';
+
+  @override
+  String get bookSourcesRightsUnverifiedNotice =>
+      '上述資訊由獨立書源營運者自行聲明。開元閱讀僅為提高透明度而顯示，不負責核驗，也不構成推薦或背書。';
+
+  @override
+  String get bookSourcesContactOperator => '聯絡營運者';
+
+  @override
+  String get bookSourcesRightsReport => '權利申訴';
+
+  @override
+  String get bookSourcesRightsReportOpenFailed => '無法開啟權利申訴表單';
 
   @override
   String get bookSourcesClose => '關閉';

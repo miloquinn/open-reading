@@ -1,12 +1,16 @@
 {
   "protocol": "open-reading-source",
-  "protocolVersion": "1.1",
+  "protocolVersion": "1.2",
   "id": "org.example.public-books",
   "name": "Example Public Books",
   "description": "A minimal Open Reading compatible source",
   "apiBaseUrl": "https://books.example.org/api/",
   "iconUrl": "https://books.example.org/icon.png",
   "websiteUrl": "https://books.example.org/",
+  "operatorName": "Example Public Library",
+  "contactUrl": "https://books.example.org/contact",
+  "contentLicense": "CC BY 4.0",
+  "rightsStatement": "Original and public-domain works distributed with permission.",
   "languages": ["zh-CN", "en"],
   "capabilities": [
     "search",

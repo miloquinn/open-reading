@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
   title: Open Reading Source Protocol
-  version: 1.1.0
-  description: Standard API implemented by an Open Reading compatible book source.
+  version: 1.2.0
+  description: Standard API implemented by an Open Reading compatible public, no-sign-in book source. Implementations must not bypass payment, DRM, authentication, or other access controls.
 servers:
   - url: https://books.example.org/api
 paths:
@@ -131,6 +131,29 @@ components:
         application/json:
           schema: { $ref: '#/components/schemas/ErrorResponse' }
   schemas:
+    SourceManifest:
+      type: object
+      required: [protocol, protocolVersion, id, name, apiBaseUrl, capabilities]
+      properties:
+        protocol: { type: string, const: open-reading-source }
+        protocolVersion: { type: string, pattern: '^1\\.[0-9]+$' }
+        id: { type: string, minLength: 1 }
+        name: { type: string, minLength: 1 }
+        description: { type: string }
+        apiBaseUrl: { type: string, format: uri }
+        iconUrl: { type: string, format: uri }
+        websiteUrl: { type: string, format: uri }
+        operatorName: { type: string, description: Operator responsible for the source service and rights requests. }
+        contactUrl: { type: string, format: uri, description: Public contact or rights-report URL controlled by the operator. }
+        contentLicense: { type: string, description: License name or concise authorization basis for the served content. }
+        rightsStatement: { type: string, description: Concise provenance and rights statement supplied by the operator. }
+        languages:
+          type: array
+          items: { type: string }
+        capabilities:
+          type: array
+          contains: { const: search }
+          items: { type: string }
     Book:
       type: object
       required: [id, title]

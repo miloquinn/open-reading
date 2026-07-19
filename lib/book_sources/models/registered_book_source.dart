@@ -8,6 +8,10 @@ class RegisteredBookSource {
   final Uri apiBaseUrl;
   final Uri? iconUrl;
   final Uri? websiteUrl;
+  final String operatorName;
+  final Uri? contactUrl;
+  final String contentLicense;
+  final String rightsStatement;
   final String protocolVersion;
   final List<String> languages;
   final Set<String> capabilities;
@@ -27,6 +31,10 @@ class RegisteredBookSource {
     required this.addedAt,
     this.iconUrl,
     this.websiteUrl,
+    this.operatorName = '',
+    this.contactUrl,
+    this.contentLicense = '',
+    this.rightsStatement = '',
   });
 
   factory RegisteredBookSource.fromManifest({
@@ -41,6 +49,10 @@ class RegisteredBookSource {
       apiBaseUrl: manifest.apiBaseUrl,
       iconUrl: manifest.iconUrl,
       websiteUrl: manifest.websiteUrl,
+      operatorName: manifest.operatorName,
+      contactUrl: manifest.contactUrl,
+      contentLicense: manifest.contentLicense,
+      rightsStatement: manifest.rightsStatement,
       protocolVersion: manifest.protocolVersion,
       languages: manifest.languages,
       capabilities: manifest.capabilities,
@@ -58,6 +70,10 @@ class RegisteredBookSource {
       apiBaseUrl: Uri.parse(json['apiBaseUrl'] as String),
       iconUrl: _optionalUri(json['iconUrl']),
       websiteUrl: _optionalUri(json['websiteUrl']),
+      operatorName: json['operatorName'] as String? ?? '',
+      contactUrl: _optionalUri(json['contactUrl']),
+      contentLicense: json['contentLicense'] as String? ?? '',
+      rightsStatement: json['rightsStatement'] as String? ?? '',
       protocolVersion: json['protocolVersion'] as String,
       languages: (json['languages'] as List? ?? const [])
           .whereType<String>()
@@ -79,6 +95,10 @@ class RegisteredBookSource {
         'apiBaseUrl': apiBaseUrl.toString(),
         if (iconUrl != null) 'iconUrl': iconUrl.toString(),
         if (websiteUrl != null) 'websiteUrl': websiteUrl.toString(),
+        if (operatorName.isNotEmpty) 'operatorName': operatorName,
+        if (contactUrl != null) 'contactUrl': contactUrl.toString(),
+        if (contentLicense.isNotEmpty) 'contentLicense': contentLicense,
+        if (rightsStatement.isNotEmpty) 'rightsStatement': rightsStatement,
         'protocolVersion': protocolVersion,
         'languages': languages,
         'capabilities': capabilities.toList()..sort(),
@@ -95,6 +115,10 @@ class RegisteredBookSource {
       apiBaseUrl: apiBaseUrl,
       iconUrl: iconUrl,
       websiteUrl: websiteUrl,
+      operatorName: operatorName,
+      contactUrl: contactUrl,
+      contentLicense: contentLicense,
+      rightsStatement: rightsStatement,
       protocolVersion: protocolVersion,
       languages: languages,
       capabilities: capabilities,

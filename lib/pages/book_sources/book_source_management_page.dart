@@ -227,9 +227,14 @@ class _BookSourceManagementPageState extends State<BookSourceManagementPage> {
             PopupMenuButton<String>(
               tooltip: context.l10n.bookSourcesRemove,
               onSelected: (value) {
+                if (value == 'rights') _showSourceRightsDialog(source);
                 if (value == 'remove') _confirmRemoveSource(source);
               },
               itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'rights',
+                  child: Text(context.l10n.bookSourcesRightsDetails),
+                ),
                 PopupMenuItem(
                   value: 'remove',
                   child: Row(
@@ -320,6 +325,11 @@ class _BookSourceManagementPageState extends State<BookSourceManagementPage> {
                       icon: const Icon(Icons.open_in_new_rounded, size: 18),
                       label: Text(context.l10n.bookSourcesProtocolRepository),
                     ),
+                    TextButton.icon(
+                      onPressed: _openRightsReport,
+                      icon: const Icon(Icons.report_outlined, size: 18),
+                      label: Text(context.l10n.bookSourcesRightsReport),
+                    ),
                   ],
                 ),
               ],
@@ -370,6 +380,90 @@ class _BookSourceManagementPageState extends State<BookSourceManagementPage> {
     final sources = await _registry.remove(source.id);
     if (!mounted) return;
     setState(() => _sources = sources);
+  }
+
+  Future<void> _showSourceRightsDialog(RegisteredBookSource source) async {
+    final scheme = Theme.of(context).colorScheme;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(context.l10n.bookSourcesRightsDetails),
+        content: SizedBox(
+          width: 480,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _rightsField(
+                  context.l10n.bookSourcesOperator,
+                  source.operatorName,
+                ),
+                _rightsField(
+                  context.l10n.bookSourcesContentLicense,
+                  source.contentLicense,
+                ),
+                _rightsField(
+                  context.l10n.bookSourcesRightsStatement,
+                  source.rightsStatement,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  context.l10n.bookSourcesRightsUnverifiedNotice,
+                  style: TextStyle(
+                    color: scheme.onSurfaceVariant,
+                    height: 1.45,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: [
+                    if (source.contactUrl != null)
+                      TextButton.icon(
+                        onPressed: () => _openExternalUrl(source.contactUrl!),
+                        icon: const Icon(
+                          Icons.contact_support_outlined,
+                          size: 18,
+                        ),
+                        label: Text(context.l10n.bookSourcesContactOperator),
+                      ),
+                    TextButton.icon(
+                      onPressed: _openRightsReport,
+                      icon: const Icon(Icons.report_outlined, size: 18),
+                      label: Text(context.l10n.bookSourcesRightsReport),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(context.l10n.bookSourcesClose),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _rightsField(String label, String value) {
+    final displayed = value.trim().isEmpty
+        ? context.l10n.bookSourcesRightsNotProvided
+        : value.trim();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: const TextStyle(fontWeight: FontWeight.w700)),
+          const SizedBox(height: 4),
+          SelectableText(displayed, style: const TextStyle(height: 1.4)),
+        ],
+      ),
+    );
   }
 
   Future<void> _showAddSourceDialog() async {
@@ -577,9 +671,8 @@ class _BookSourceManagementPageState extends State<BookSourceManagementPage> {
   }
 
   Future<void> _openProtocolRepository() async {
-    final opened = await launchUrl(
+    final opened = await _openExternalUrl(
       Uri.parse(openReadingSourceProtocolRepositoryUrl),
-      mode: LaunchMode.externalApplication,
     );
     if (!opened && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -588,5 +681,19 @@ class _BookSourceManagementPageState extends State<BookSourceManagementPage> {
         ),
       );
     }
+  }
+
+  Future<void> _openRightsReport() async {
+    final opened =
+        await _openExternalUrl(Uri.parse(openReadingRightsReportUrl));
+    if (!opened && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.bookSourcesRightsReportOpenFailed)),
+      );
+    }
+  }
+
+  Future<bool> _openExternalUrl(Uri url) {
+    return launchUrl(url, mode: LaunchMode.externalApplication);
   }
 }

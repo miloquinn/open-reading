@@ -338,7 +338,7 @@ abstract class AppLocalizations {
   /// No description provided for @bookSourcesResponsibilityAck.
   ///
   /// In en, this message translates to:
-  /// **'I understand this is an independent third-party service and confirm that I am authorized to access and use its content.'**
+  /// **'I confirm that I am authorized to access this content and will not use the source to bypass sign-in, payment, DRM, or other access controls.'**
   String get bookSourcesResponsibilityAck;
 
   /// No description provided for @bookSourcesConnect.
@@ -398,14 +398,68 @@ abstract class AppLocalizations {
   /// No description provided for @bookSourcesProtocolDialogTitle.
   ///
   /// In en, this message translates to:
-  /// **'Open source protocol v1.1'**
+  /// **'Open source protocol v1.2'**
   String get bookSourcesProtocolDialogTitle;
 
   /// No description provided for @bookSourcesProtocolDialogBody.
   ///
   /// In en, this message translates to:
-  /// **'A source publishes /.well-known/open-reading-source.json and implements search, book details, chapter catalogs, and chapter content. Version 1.1 optionally adds discovery, categories, and browsing for public HTTP(S) sources that do not require sign-in.'**
+  /// **'A source publishes /.well-known/open-reading-source.json and implements search, book details, chapter catalogs, and chapter content. Version 1.2 adds operator, contact, license, and rights-statement metadata for public HTTP(S) sources that do not require sign-in.'**
   String get bookSourcesProtocolDialogBody;
+
+  /// No description provided for @bookSourcesRightsDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Operator and rights'**
+  String get bookSourcesRightsDetails;
+
+  /// No description provided for @bookSourcesOperator.
+  ///
+  /// In en, this message translates to:
+  /// **'Source operator'**
+  String get bookSourcesOperator;
+
+  /// No description provided for @bookSourcesContentLicense.
+  ///
+  /// In en, this message translates to:
+  /// **'Content license'**
+  String get bookSourcesContentLicense;
+
+  /// No description provided for @bookSourcesRightsStatement.
+  ///
+  /// In en, this message translates to:
+  /// **'Rights statement'**
+  String get bookSourcesRightsStatement;
+
+  /// No description provided for @bookSourcesRightsNotProvided.
+  ///
+  /// In en, this message translates to:
+  /// **'Not provided by this source'**
+  String get bookSourcesRightsNotProvided;
+
+  /// No description provided for @bookSourcesRightsUnverifiedNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'These statements are supplied by the independent source operator. OpenReading displays them for transparency but does not verify or endorse them.'**
+  String get bookSourcesRightsUnverifiedNotice;
+
+  /// No description provided for @bookSourcesContactOperator.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact operator'**
+  String get bookSourcesContactOperator;
+
+  /// No description provided for @bookSourcesRightsReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Rights report'**
+  String get bookSourcesRightsReport;
+
+  /// No description provided for @bookSourcesRightsReportOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the rights-report form'**
+  String get bookSourcesRightsReportOpenFailed;
 
   /// No description provided for @bookSourcesClose.
   ///

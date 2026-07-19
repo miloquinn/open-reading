@@ -88,13 +88,14 @@ and configured by the user. Cloud sync and WebDAV are not currently built in.
 
 ## Open book sources
 
-ORSP defines standard discovery, search, book-detail, chapter-catalog, and
+ORSP 1.2 defines standard discovery, search, book-detail, chapter-catalog, and
 chapter-content endpoints. Reader apps implement the protocol once; source
 developers may use any server language or framework.
 
 - Repository: [miloquinn/open-reading-source-protocol](https://github.com/miloquinn/open-reading-source-protocol)
-- Version: `1.1` discovery candidate
+- Version: `1.2`
 - Intended content: original, public-domain, or properly licensed works
+- Transparency metadata: operator, contact URL, content license, and rights statement
 
 Run the local example source:
 
