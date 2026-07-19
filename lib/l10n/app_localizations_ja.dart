@@ -1851,6 +1851,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsGlassEffectSubtitle => '半透明・背景ぼかし・浮遊感のあるレイヤー効果を有効にします';
 
   @override
+  String get settingsHideNavigationLabelsTitle => '下部ナビゲーションの文字を隠す';
+
+  @override
+  String get settingsHideNavigationLabelsSubtitle =>
+      'オンにすると、モバイルの下部ナビゲーションはアイコンのみ表示します';
+
+  @override
   String get settingsAccentFollowTheme => 'アクセントカラー：テーマに従う';
 
   @override

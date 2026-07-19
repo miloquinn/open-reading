@@ -943,6 +943,8 @@
   },
   "settingsUiStyleTitle": "玻璃效果",
   "settingsGlassEffectSubtitle": "開啟半透明、背景模糊和懸浮層次效果",
+  "settingsHideNavigationLabelsTitle": "隱藏底部導覽文字",
+  "settingsHideNavigationLabelsSubtitle": "開啟後，手機底部導覽列僅顯示圖示",
   "settingsAccentFollowTheme": "強調色：跟隨主題",
   "settingsAccentValue": "強調色：{name}",
   "@settingsAccentValue": {

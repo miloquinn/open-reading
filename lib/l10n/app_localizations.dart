@@ -3510,6 +3510,18 @@ abstract class AppLocalizations {
   /// **'Use translucent surfaces, background blur, and floating depth'**
   String get settingsGlassEffectSubtitle;
 
+  /// Title of the mobile bottom navigation label visibility toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Hide bottom navigation labels'**
+  String get settingsHideNavigationLabelsTitle;
+
+  /// Description of the mobile bottom navigation label visibility toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Show icons only in the mobile bottom navigation'**
+  String get settingsHideNavigationLabelsSubtitle;
+
   /// Accent summary when following the app theme
   ///
   /// In en, this message translates to:

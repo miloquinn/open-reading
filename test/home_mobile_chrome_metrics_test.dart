@@ -14,12 +14,49 @@ void main() {
 
       expect(metrics.systemTopInset, 59);
       expect(metrics.systemBottomInset, 34);
+      expect(metrics.floatingNavHeight, 64);
       expect(metrics.topBarHeight, 119);
       expect(metrics.pageTopPadding, 127);
       expect(metrics.navBottomInset, 44);
       expect(metrics.navContainerHeight, 108);
       expect(metrics.pageBottomPadding, 118);
       expect(metrics.floatingActionBottomMargin, 123);
+    });
+
+    test('sizes the floating navigation close to the phone screen edges', () {
+      expect(
+        homeMobileFloatingNavWidthFor(screenWidth: 320, itemCount: 4),
+        300,
+      );
+      expect(
+        homeMobileFloatingNavWidthFor(screenWidth: 360, itemCount: 4),
+        340,
+      );
+      expect(
+        homeMobileFloatingNavWidthFor(screenWidth: 393, itemCount: 4),
+        373,
+      );
+      expect(
+        homeMobileFloatingNavWidthFor(screenWidth: 405, itemCount: 4),
+        385,
+      );
+      expect(
+        homeMobileFloatingNavWidthFor(screenWidth: 600, itemCount: 4),
+        392,
+      );
+
+      expect(
+        homeMobileFloatingNavItemWidthFor(screenWidth: 320, itemCount: 4),
+        73,
+      );
+      expect(
+        homeMobileFloatingNavItemWidthFor(screenWidth: 393, itemCount: 4),
+        closeTo(91.25, 0.001),
+      );
+      expect(
+        homeMobileFloatingNavItemWidthFor(screenWidth: 405, itemCount: 4),
+        closeTo(94.25, 0.001),
+      );
     });
 
     test('uses Android system insets without platform-specific branches', () {

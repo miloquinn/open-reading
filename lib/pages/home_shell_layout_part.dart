@@ -216,18 +216,20 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
   /// - PageView 负责横向切页手势。
   /// - 药丸导航负责显式点击切页。
   /// - 两者通过 `_selectedIndex` + `_pageController` 保持同步。
-  Widget _buildBottomNavigation() {
+  Widget _buildBottomNavigation({required bool showNavigationLabels}) {
     final mediaQuery = MediaQuery.of(context);
     final scheme = Theme.of(context).colorScheme;
+    final isLightTheme = scheme.brightness == Brightness.light;
     final metrics = HomeMobileChromeMetrics.fromMediaQuery(mediaQuery);
     final navigationCount = _navigationItems.length;
-    const desiredItemWidth = 72.0;
-    final desiredNavWidth = navigationCount * desiredItemWidth + 28;
-    final maxNavWidth = mediaQuery.size.width - 44;
-    final minNavWidth = navigationCount >= 4 ? 228.0 : 200.0;
-    final navWidth = maxNavWidth <= minNavWidth
-        ? maxNavWidth
-        : desiredNavWidth.clamp(minNavWidth, maxNavWidth).toDouble();
+    final navWidth = homeMobileFloatingNavWidthFor(
+      screenWidth: mediaQuery.size.width,
+      itemCount: navigationCount,
+    );
+    final visualSelectedIndex = _targetTabIndex ?? _selectedIndex;
+    final navBorderRadius = BorderRadius.circular(
+      metrics.floatingNavHeight / 2,
+    );
 
     return Scaffold(
       extendBody: true, // 让body延伸到底部导航栏后面
@@ -261,7 +263,8 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
                   return;
                 }
                 if (targetIndex == index) {
-                  _targetTabIndex = null;
+                  _completeTabTransition(index);
+                  return;
                 }
                 if (mounted && _selectedIndex != index) {
                   _updateSelectedIndex(index);
@@ -289,79 +292,93 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
                   child: Center(
                     child: Padding(
                       padding: EdgeInsets.only(bottom: metrics.navBottomInset),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(60),
-                        child: (() {
-                          final navBar = Container(
-                            width: navWidth,
-                            height: metrics.floatingNavHeight,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: navBorderRadius,
+                          boxShadow: [
+                            BoxShadow(
                               color: _isMaterial3Style
-                                  ? scheme.surfaceContainerHigh
-                                  : GlassEffectConfig.surfaceColor(
-                                      context,
-                                      opacity: GlassEffectConfig
-                                          .navigationBarOpacity,
+                                  ? scheme.shadow.withValues(alpha: 0.1)
+                                  : GlassEffectConfig.chromeShadowColor(
+                                      source: scheme.shadow,
+                                      brightness: scheme.brightness,
+                                      darkOpacity: 0.16,
                                     ),
-                              borderRadius: BorderRadius.circular(60),
-                              border: Border.all(
-                                color: scheme.outline.withValues(
-                                  alpha: _isMaterial3Style ? 0.22 : 0.15,
-                                ),
-                                width: 0.6,
+                              blurRadius: _isMaterial3Style
+                                  ? 18
+                                  : (isLightTheme ? 24 : 32),
+                              offset: const Offset(0, 9),
+                            ),
+                            if (!_isMaterial3Style && !isLightTheme)
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.08),
+                                blurRadius: 48,
+                                offset: const Offset(0, 16),
                               ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: scheme.shadow.withValues(
-                                    alpha: _isMaterial3Style ? 0.07 : 0.12,
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: navBorderRadius,
+                          child: (() {
+                            final navBar = Container(
+                              width: navWidth,
+                              height: metrics.floatingNavHeight,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal:
+                                    kHomeMobileFloatingNavHorizontalPadding,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: _isMaterial3Style
+                                    ? scheme.surfaceContainerHigh
+                                    : GlassEffectConfig.chromeSurfaceColor(
+                                        context),
+                                borderRadius: navBorderRadius,
+                                border: Border.all(
+                                  color: scheme.outline.withValues(
+                                    alpha: _isMaterial3Style
+                                        ? 0.18
+                                        : (isLightTheme ? 0.08 : 0.14),
                                   ),
-                                  blurRadius: _isMaterial3Style ? 12 : 30,
-                                  offset: const Offset(0, 8),
+                                  width: 0.6,
                                 ),
-                                if (!_isMaterial3Style)
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.06),
-                                    blurRadius: 60,
-                                    offset: const Offset(0, 16),
-                                  ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.max,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children:
-                                  _navigationItems.asMap().entries.map((entry) {
-                                final index = entry.key;
-                                final item = entry.value;
-                                final isSelected = _selectedIndex == index;
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.max,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: _navigationItems.asMap().entries.map(
+                                  (entry) {
+                                    final index = entry.key;
+                                    final item = entry.value;
+                                    final isSelected =
+                                        visualSelectedIndex == index;
 
-                                return Expanded(
-                                  child: HomeBounceNavigationItem(
-                                    item: item,
-                                    isSelected: isSelected,
-                                    onTap: () => _switchToTab(index),
-                                  ),
-                                );
-                              }).toList(),
-                            ),
-                          );
+                                    return Expanded(
+                                      child: HomeBounceNavigationItem(
+                                        item: item,
+                                        isSelected: isSelected,
+                                        showLabel: showNavigationLabels,
+                                        onTap: () => _switchToTab(index),
+                                      ),
+                                    );
+                                  },
+                                ).toList(),
+                              ),
+                            );
 
-                          if (_disableShellBlur) {
-                            return navBar;
-                          }
-                          return BackdropFilter(
-                            enabled: !_disableShellBlur,
-                            filter: ImageFilter.blur(
-                              sigmaX: GlassEffectConfig.navigationBarBlur,
-                              sigmaY: GlassEffectConfig.navigationBarBlur,
-                            ),
-                            child: navBar,
-                          );
-                        })(),
+                            if (_disableShellBlur) {
+                              return navBar;
+                            }
+                            return BackdropFilter(
+                              enabled: !_disableShellBlur,
+                              filter: ImageFilter.blur(
+                                sigmaX: GlassEffectConfig.navigationBarBlur,
+                                sigmaY: GlassEffectConfig.navigationBarBlur,
+                              ),
+                              child: navBar,
+                            );
+                          })(),
+                        ),
                       ),
                     ),
                   ),
@@ -534,21 +551,42 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
     return Tooltip(message: tooltip, child: button);
   }
 
-  void _switchToTab(int index) {
+  Future<void> _switchToTab(int index) async {
     if (index < 0 || index >= _navigationItems.length) return;
-    if (_selectedIndex == index || _targetTabIndex == index) return;
+    if (_targetTabIndex == index) return;
+    if (_targetTabIndex == null && _selectedIndex == index) return;
 
-    final currentPage = _pageController.hasClients
-        ? (_pageController.page ?? _selectedIndex.toDouble()).round()
-        : _selectedIndex;
+    if (!_pageController.hasClients) {
+      _updateSelectedIndex(index);
+      return;
+    }
+
+    final currentPage =
+        (_pageController.page ?? _selectedIndex.toDouble()).round();
     final pageDistance = (index - currentPage).abs();
-    _targetTabIndex = index;
-    _pageController.animateToPage(
+    final transitionToken = ++_tabTransitionToken;
+
+    // 底栏用 target 立即启动选中/未选中动画；真正的 selectedIndex 等页面
+    // 到达后再提交，避免顶部标题和操作按钮在旧页面尚可见时提前跳变。
+    _beginTabTransition(index);
+
+    await _pageController.animateToPage(
       index,
-      // 跨两页时给动画更多时间，避免 300ms 内高速掠过书库页造成“卡一下”
-      // 的视觉感受；相邻页则保持轻快响应。
-      duration: Duration(milliseconds: pageDistance > 1 ? 420 : 260),
-      curve: Curves.easeInOutCubicEmphasized,
+      // 距离越远，适度增加时长；正向和反向使用同一条对称曲线，避免
+      // 往返切换时出现一边过快、一边拖沓的体感。
+      duration: Duration(
+        milliseconds: 300 + ((pageDistance - 1).clamp(0, 2) * 60).toInt(),
+      ),
+      curve: Curves.easeInOutCubic,
+    );
+
+    if (!mounted || transitionToken != _tabTransitionToken) return;
+
+    final settledIndex = _pageController.hasClients
+        ? (_pageController.page ?? index.toDouble()).round()
+        : index;
+    _completeTabTransition(
+      settledIndex.clamp(0, _navigationItems.length - 1).toInt(),
     );
   }
 

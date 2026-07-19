@@ -2107,6 +2107,14 @@
   "@settingsGlassEffectSubtitle": {
     "description": "Description of the glass effect toggle"
   },
+  "settingsHideNavigationLabelsTitle": "Hide bottom navigation labels",
+  "@settingsHideNavigationLabelsTitle": {
+    "description": "Title of the mobile bottom navigation label visibility toggle"
+  },
+  "settingsHideNavigationLabelsSubtitle": "Show icons only in the mobile bottom navigation",
+  "@settingsHideNavigationLabelsSubtitle": {
+    "description": "Description of the mobile bottom navigation label visibility toggle"
+  },
   "settingsAccentFollowTheme": "Accent color: follow theme",
   "@settingsAccentFollowTheme": {
     "description": "Accent summary when following the app theme"

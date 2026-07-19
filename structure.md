@@ -1,6 +1,6 @@
 # Open Reading 项目结构
 
-> 最后更新：2026-07-18
+> 最后更新：2026-07-19
 > 当前版本：1.2.4
 > 本文记录稳定的项目结构、模块边界和核心数据结构，不罗列每个实现细节。
 
@@ -80,7 +80,7 @@ lib/
 
 ## 主要页面
 
-- `home_shell_page.dart`：应用主壳和导航入口。
+- `home_shell_page.dart`：应用主壳和导航入口；手机悬浮底栏支持纯图标与“图标＋文字”两种模式，宽度在手机上取 `screenWidth - 20` 并封顶 392，选中底板按真实单项槽宽自适应；宽屏继续使用 `NavigationRail`。
 - `library_page.dart`：本地与在线书架。
 - `import_book_page.dart`：跨平台书籍导入队列；手机确认态采用顶部安全标题栏、独立滚动书目区和页面内底部操作区，并对文件选择器返回的异常窗口 inset 做限幅。
 - `native_reader_page.dart`：本地 TXT、EPUB 等内容适配器。
@@ -96,6 +96,7 @@ lib/
 
 - `FontCatalog` 维护 App 字体与阅读字体两套内置语义目录；用户字体作为共享资产同时合并到两套候选列表。
 - `AppSettingsNotifier` 分别保存 `app_font_id_v2` 与 `reader_font_id_v2`，同一用户字体可独立用于 App、阅读或两者。
+- `AppSettingsNotifier` 同时持久化手机底部导航文字显隐；设置页外观开关更新后，`HomeShellPage` 通过 Provider 立即重建底栏，默认保持纯图标模式。
 - `CustomFontService` 在原生平台负责 TTF/OTF 校验、SHA-256 去重、运行时 `FontLoader` 注册、清单恢复和文件删除；Web 首版不提供持久化字体导入。
 - 用户字体使用 `custom_<hash>` 稳定 ID 和 `OpenReadingCustom_<hash>` 运行时 family，避免同名字体互相覆盖。
 - 删除正在使用的用户字体时，App 字体与阅读字体分别恢复各自默认值；阅读字体 ID 仍参与分页布局签名。
@@ -259,7 +260,7 @@ EPUB 图片块与其后的正文共用同一个显示投影：携带图片的第
 ## 持久化边界
 
 - SQLite：书籍、书签、笔记、阅读会话和核心业务数据。
-- SharedPreferences：阅读 UI 设置、App/阅读字体选择、应用偏好和轻量状态；自定义阅读主题以有序 JSON 列表保存，两个阅读器共享，旧单主题记录首次读取时自动迁移。
+- SharedPreferences：阅读 UI 设置、App/阅读字体选择、手机底部导航文字显隐、应用偏好和轻量状态；自定义阅读主题以有序 JSON 列表保存，两个阅读器共享，旧单主题记录首次读取时自动迁移。
 - 应用私有目录：数据库、缓存、封面、应用管理的书籍文件，`custom_fonts/` 下的用户字体与清单，以及 `reader_theme_backgrounds/` 下由应用托管的阅读主题背景图片。
 - 用户授权目录：通过平台存储桥接原地管理或导入书籍。
 - 网络：仅在用户使用在线书源、封面、AI、同步或更新检查等功能时访问。

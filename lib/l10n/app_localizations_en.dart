@@ -1938,6 +1938,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Use translucent surfaces, background blur, and floating depth';
 
   @override
+  String get settingsHideNavigationLabelsTitle =>
+      'Hide bottom navigation labels';
+
+  @override
+  String get settingsHideNavigationLabelsSubtitle =>
+      'Show icons only in the mobile bottom navigation';
+
+  @override
   String get settingsAccentFollowTheme => 'Accent color: follow theme';
 
   @override

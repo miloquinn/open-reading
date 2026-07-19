@@ -1291,6 +1291,8 @@
   "settingsCurrentValue": "当前：{value}",
   "settingsUiStyleTitle": "玻璃效果",
   "settingsGlassEffectSubtitle": "开启半透明、背景模糊和悬浮层次效果",
+  "settingsHideNavigationLabelsTitle": "隐藏底部导航文字",
+  "settingsHideNavigationLabelsSubtitle": "开启后，手机底部导航栏仅显示图标",
   "settingsAccentFollowTheme": "强调色：跟随主题",
   "settingsAccentValue": "强调色：{name}",
   "settingsAppThemeTitle": "应用主题",

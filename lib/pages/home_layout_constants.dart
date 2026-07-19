@@ -12,9 +12,41 @@ import 'package:flutter/widgets.dart';
 const double kHomeMobileTopBarContentHeight = 60.0;
 const double kHomeMobileFloatingNavHeight = 64.0;
 const double kHomeMobileFloatingNavBottomGap = 10.0;
+const double kHomeMobileFloatingNavScreenGap = 20.0;
+const double kHomeMobileFloatingNavHorizontalPadding = 4.0;
+const double kHomeMobileFloatingNavDesiredItemWidth = 96.0;
+const double kHomeMobileFloatingNavExtraWidth = 8.0;
 const double kHomeMobileContentTopExtra = 8.0;
 const double kHomeMobileContentBottomExtra = 10.0;
 const double kHomeMobileFloatingActionExtra = 15.0;
+
+double homeMobileFloatingNavWidthFor({
+  required double screenWidth,
+  required int itemCount,
+}) {
+  if (screenWidth <= 0 || itemCount <= 0) return 0;
+  final desiredWidth = itemCount * kHomeMobileFloatingNavDesiredItemWidth +
+      kHomeMobileFloatingNavExtraWidth;
+  final maxWidth = (screenWidth - kHomeMobileFloatingNavScreenGap)
+      .clamp(0.0, double.infinity)
+      .toDouble();
+  final minWidth = itemCount >= 4 ? 280.0 : 220.0;
+  if (maxWidth <= minWidth) return maxWidth;
+  return desiredWidth.clamp(minWidth, maxWidth).toDouble();
+}
+
+double homeMobileFloatingNavItemWidthFor({
+  required double screenWidth,
+  required int itemCount,
+}) {
+  if (itemCount <= 0) return 0;
+  final contentWidth = homeMobileFloatingNavWidthFor(
+        screenWidth: screenWidth,
+        itemCount: itemCount,
+      ) -
+      (kHomeMobileFloatingNavHorizontalPadding * 2);
+  return (contentWidth / itemCount).clamp(0.0, double.infinity).toDouble();
+}
 
 /// 手机壳层的统一安全区与浮动控件尺寸。
 ///

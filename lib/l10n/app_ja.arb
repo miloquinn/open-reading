@@ -943,6 +943,8 @@
   },
   "settingsUiStyleTitle": "ガラスエフェクト",
   "settingsGlassEffectSubtitle": "半透明・背景ぼかし・浮遊感のあるレイヤー効果を有効にします",
+  "settingsHideNavigationLabelsTitle": "下部ナビゲーションの文字を隠す",
+  "settingsHideNavigationLabelsSubtitle": "オンにすると、モバイルの下部ナビゲーションはアイコンのみ表示します",
   "settingsAccentFollowTheme": "アクセントカラー：テーマに従う",
   "settingsAccentValue": "アクセントカラー：{name}",
   "@settingsAccentValue": {

@@ -13,11 +13,14 @@ class AppSettingsNotifier extends ChangeNotifier {
   static const String _keyAppFontId = 'app_font_id_v2';
   static const String _keyReaderFontId = 'reader_font_id_v2';
   static const String _keyLegacyAppFontFamily = 'app_font_family';
+  static const String _keyHideNavigationLabels =
+      'hide_home_navigation_labels_v1';
 
   Locale? _locale;
   String _localeCode = 'system';
   String _appFontId = FontCatalog.defaultAppFont.id;
   String _readerFontId = FontCatalog.defaultReaderFont.id;
+  bool _hideNavigationLabels = true;
   bool _isInitialized = false;
   final CustomFontService _customFontService;
 
@@ -30,6 +33,7 @@ class AppSettingsNotifier extends ChangeNotifier {
   String get localeCode => _localeCode;
   String get appFontId => _appFontId;
   String get readerFontId => _readerFontId;
+  bool get hideNavigationLabels => _hideNavigationLabels;
   List<FontOption> get customFonts => _customFontService.fonts
       .map(
         (font) => FontOption(
@@ -90,6 +94,7 @@ class AppSettingsNotifier extends ChangeNotifier {
       prefs.getString(_keyReaderFontId),
       customFonts: availableCustomFonts,
     ).id;
+    _hideNavigationLabels = prefs.getBool(_keyHideNavigationLabels) ?? true;
     await _restoreSelectedCustomFonts(prefs);
     _isInitialized = true;
     notifyListeners();
@@ -165,6 +170,14 @@ class AppSettingsNotifier extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_keyReaderFontId, normalized);
+  }
+
+  Future<void> setHideNavigationLabels(bool value) async {
+    if (_hideNavigationLabels == value) return;
+    _hideNavigationLabels = value;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyHideNavigationLabels, value);
   }
 
   Future<void> prepareCustomFontPreviews() async {

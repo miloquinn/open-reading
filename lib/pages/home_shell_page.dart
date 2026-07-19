@@ -4,6 +4,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'dart:ui';
 
 import 'home_dashboard_page.dart';
@@ -22,6 +23,7 @@ import 'import_book_page.dart';
 import '../book_sources/services/book_source_client.dart';
 import '../book_sources/services/book_source_registry.dart';
 import '../book_sources/services/book_source_shelf_service.dart';
+import '../services/core/app_settings_service.dart';
 import '../utils/layout_helper.dart';
 import '../utils/glass_config.dart';
 import '../utils/page_style_helper.dart';
@@ -86,6 +88,7 @@ class _HomeShellPageState extends State<HomeShellPage> {
   // 所有导航点击、PageView 切换，最终都更新这个值。
   int _selectedIndex = 0;
   int? _targetTabIndex;
+  int _tabTransitionToken = 0;
   late PageController _pageController;
   AppLocalizations? _l10n;
   final LibraryPageController _libraryController = LibraryPageController();
@@ -171,6 +174,19 @@ class _HomeShellPageState extends State<HomeShellPage> {
     setState(() => _selectedIndex = index);
   }
 
+  void _beginTabTransition(int index) {
+    if (!mounted) return;
+    setState(() => _targetTabIndex = index);
+  }
+
+  void _completeTabTransition(int index) {
+    if (!mounted) return;
+    setState(() {
+      _selectedIndex = index;
+      _targetTabIndex = null;
+    });
+  }
+
   @override
   void dispose() {
     _pageController.dispose();
@@ -181,6 +197,9 @@ class _HomeShellPageState extends State<HomeShellPage> {
   @override
   Widget build(BuildContext context) {
     final navigationType = LayoutHelper.getNavigationType(context);
+    final hideNavigationLabels = context.select<AppSettingsNotifier, bool>(
+      (settings) => settings.hideNavigationLabels,
+    );
     final overlayStyle = SystemUiHelper.overlayStyleForBrightness(
       Theme.of(context).brightness,
     );
@@ -197,7 +216,9 @@ class _HomeShellPageState extends State<HomeShellPage> {
         content = _buildNavigationRail();
         break;
       case NavigationType.bottom:
-        content = _buildBottomNavigation();
+        content = _buildBottomNavigation(
+          showNavigationLabels: !hideNavigationLabels,
+        );
         break;
     }
 

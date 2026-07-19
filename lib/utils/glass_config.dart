@@ -65,6 +65,69 @@ class GlassEffectConfig {
 
   // 悬浮 chrome 共用透明度（顶栏、悬浮导航栏、阅读页控制栏）
   static const double _chromeOpacityBase = 0.3;
+  static const double _lightChromeOpacityBase = 0.60;
+
+  /// 根据明暗主题返回统一的悬浮 chrome 透明度。
+  static double chromeOpacityFor(Brightness brightness) {
+    return effectiveOpacity(
+      brightness == Brightness.light
+          ? _lightChromeOpacityBase
+          : _chromeOpacityBase,
+    );
+  }
+
+  /// 返回统一的悬浮 chrome 实色基底，便于渐变组件复用同一套提亮规则。
+  static Color chromeBaseColor(
+    Color source,
+    Brightness brightness, {
+    double lightBlend = 0,
+  }) {
+    if (brightness == Brightness.light) {
+      return Color.lerp(source, Colors.white, lightBlend.clamp(0.0, 1.0))!;
+    }
+    return source;
+  }
+
+  /// 顶栏、浮动底部导航和阅读控制栏共用的玻璃底色。
+  ///
+  /// 默认使用 surface 与 primary 生成轻主题染色，而不是把玻璃写死成白色；
+  /// 因此切换应用主题或自定义强调色时，顶栏和导航栏会同步变化。
+  static Color chromeSurfaceColor(
+    BuildContext context, {
+    Color? source,
+    Brightness? brightness,
+    double? opacity,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    final resolvedBrightness = brightness ?? scheme.brightness;
+    final themedSource = source ??
+        Color.lerp(
+          scheme.surface,
+          scheme.primary,
+          resolvedBrightness == Brightness.light ? 0.08 : 0.06,
+        )!;
+    final base = chromeBaseColor(
+      themedSource,
+      resolvedBrightness,
+    );
+    return base.withValues(
+      alpha: effectiveOpacity(
+        opacity ?? chromeOpacityFor(resolvedBrightness),
+      ),
+    );
+  }
+
+  /// 浅色 chrome 使用调用方提供的主题色轻影，避免黑影污染内部。
+  static Color chromeShadowColor({
+    required Color source,
+    required Brightness brightness,
+    required double darkOpacity,
+  }) {
+    if (brightness == Brightness.light) {
+      return source.withValues(alpha: 0.045);
+    }
+    return source.withValues(alpha: darkOpacity);
+  }
 
   // 顶部应用栏透明度
   static double get appBarOpacity => effectiveOpacity(_chromeOpacityBase);

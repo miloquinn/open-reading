@@ -1830,6 +1830,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsGlassEffectSubtitle => '开启半透明、背景模糊和悬浮层次效果';
 
   @override
+  String get settingsHideNavigationLabelsTitle => '隐藏底部导航文字';
+
+  @override
+  String get settingsHideNavigationLabelsSubtitle => '开启后，手机底部导航栏仅显示图标';
+
+  @override
   String get settingsAccentFollowTheme => '强调色：跟随主题';
 
   @override
@@ -4393,6 +4399,12 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get settingsGlassEffectSubtitle => '開啟半透明、背景模糊和懸浮層次效果';
+
+  @override
+  String get settingsHideNavigationLabelsTitle => '隱藏底部導覽文字';
+
+  @override
+  String get settingsHideNavigationLabelsSubtitle => '開啟後，手機底部導覽列僅顯示圖示';
 
   @override
   String get settingsAccentFollowTheme => '強調色：跟隨主題';

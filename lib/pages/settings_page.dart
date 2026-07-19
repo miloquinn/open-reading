@@ -841,6 +841,16 @@ class _SettingsPageState extends State<SettingsPage> {
               _buildThemeToggle(themeNotifier),
               _buildAppThemeSelector(themeNotifier),
               _buildAccentColorSelector(themeNotifier),
+              _buildSwitchSetting(
+                title: l10n.settingsHideNavigationLabelsTitle,
+                subtitle: l10n.settingsHideNavigationLabelsSubtitle,
+                value: appSettings.hideNavigationLabels,
+                onChanged: (value) => unawaited(
+                  appSettings.setHideNavigationLabels(value),
+                ),
+                icon: Icons.label_off_outlined,
+                persistPageSettings: false,
+              ),
             ],
           ),
           const SizedBox(height: 20),
@@ -3226,6 +3236,7 @@ class _SettingsPageState extends State<SettingsPage> {
     required Function(bool) onChanged,
     required IconData icon,
     bool enabled = true,
+    bool persistPageSettings = true,
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 1),
@@ -3235,7 +3246,9 @@ class _SettingsPageState extends State<SettingsPage> {
           onTap: enabled
               ? () {
                   onChanged(!value);
-                  _saveSettings();
+                  if (persistPageSettings) {
+                    unawaited(_saveSettings());
+                  }
                 }
               : null,
           child: Padding(
@@ -3283,7 +3296,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   onChanged: enabled
                       ? (newValue) {
                           onChanged(newValue);
-                          _saveSettings();
+                          if (persistPageSettings) {
+                            unawaited(_saveSettings());
+                          }
                         }
                       : null,
                   activeTrackColor: Theme.of(context).colorScheme.primary,
