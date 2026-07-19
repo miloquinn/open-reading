@@ -3294,6 +3294,24 @@ abstract class AppLocalizations {
   /// **'Redesigned detailed reading statistics with a consistent paper-inspired layout'**
   String get changelog220ReadingStats;
 
+  /// No description provided for @changelog220PageOrganization.
+  ///
+  /// In en, this message translates to:
+  /// **'Reorganized page source by feature area with consistent naming and module boundaries'**
+  String get changelog220PageOrganization;
+
+  /// No description provided for @changelog220OfficialUpdates.
+  ///
+  /// In en, this message translates to:
+  /// **'Added GitHub and official-site update choices; Android can download, verify, and hand official APKs to the system installer'**
+  String get changelog220OfficialUpdates;
+
+  /// No description provided for @changelog220ReleaseDistribution.
+  ///
+  /// In en, this message translates to:
+  /// **'Added official-site mirrors and download statistics with stricter asset, checksum, APK version, and signing verification'**
+  String get changelog220ReleaseDistribution;
+
   /// No description provided for @changelog220SourcePolicy.
   ///
   /// In en, this message translates to:
@@ -3705,7 +3723,7 @@ abstract class AppLocalizations {
   /// No description provided for @updateCheckNowSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Get the latest version from GitHub Releases'**
+  /// **'Get the latest version from GitHub or the official website'**
   String get updateCheckNowSubtitle;
 
   /// No description provided for @updateAvailableTitle.
@@ -3743,6 +3761,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Go to update'**
   String get updateGoToDownload;
+
+  /// No description provided for @updateFromGithub.
+  ///
+  /// In en, this message translates to:
+  /// **'Update from GitHub'**
+  String get updateFromGithub;
+
+  /// No description provided for @updateFromWebsite.
+  ///
+  /// In en, this message translates to:
+  /// **'Open official website'**
+  String get updateFromWebsite;
+
+  /// No description provided for @updateFromWebsiteInstall.
+  ///
+  /// In en, this message translates to:
+  /// **'Download from website'**
+  String get updateFromWebsiteInstall;
+
+  /// No description provided for @updateWebsiteUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The official website package is not available for this device yet'**
+  String get updateWebsiteUnavailable;
+
+  /// No description provided for @updateDownloadingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading update'**
+  String get updateDownloadingTitle;
+
+  /// No description provided for @updateDownloadProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded {percent}%'**
+  String updateDownloadProgress(int percent);
+
+  /// No description provided for @updatePreparingInstaller.
+  ///
+  /// In en, this message translates to:
+  /// **'Verifying the package and preparing the system installer…'**
+  String get updatePreparingInstaller;
+
+  /// No description provided for @updateDownloadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not download the update from the official website'**
+  String get updateDownloadFailed;
+
+  /// No description provided for @updateIntegrityFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The downloaded update failed its integrity check and was deleted'**
+  String get updateIntegrityFailed;
+
+  /// No description provided for @updateInstallFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The update package could not be installed. Check installation permissions and try again.'**
+  String get updateInstallFailed;
 
   /// No description provided for @updateAlreadyLatest.
   ///

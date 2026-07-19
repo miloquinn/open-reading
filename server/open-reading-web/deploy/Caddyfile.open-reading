@@ -1,0 +1,47 @@
+open.xxread.top {
+	encode zstd gzip
+	request_body {
+		max_size 2GB
+	}
+
+	@blocked path /.env* /data/* /*.db /*.sqlite* /*.tmp
+	respond @blocked 404
+
+	@release_files path /files/*
+	handle @release_files {
+		uri strip_prefix /files
+		root * /srv/open-reading/releases
+		header {
+			Cache-Control "public, max-age=31536000, immutable"
+			X-Content-Type-Options "nosniff"
+			Content-Disposition "attachment"
+		}
+		file_server
+	}
+
+	handle {
+		reverse_proxy 127.0.0.1:3002 {
+			transport http {
+				read_timeout 30m
+				write_timeout 30m
+			}
+		}
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		Content-Security-Policy "default-src 'self'; img-src 'self' data: https://avatars.githubusercontent.com; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://github.com"
+		-Server
+	}
+
+	log {
+		output file /var/log/caddy/open-reading-access.log {
+			roll_size 20MiB
+			roll_keep 5
+			roll_keep_for 720h
+		}
+	}
+}

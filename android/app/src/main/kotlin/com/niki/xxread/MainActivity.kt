@@ -22,6 +22,7 @@ class MainActivity : FlutterActivity() {
     private val READER_STATUS_CHANNEL = "com.niki.xxread/reader_status"
     private var readerKeysChannel: MethodChannel? = null
     private var safDirectoryBridge: SafDirectoryBridge? = null
+    private var appUpdateBridge: AppUpdateBridge? = null
     @Volatile private var volumePagingEnabled: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -102,7 +103,16 @@ class MainActivity : FlutterActivity() {
             this,
             flutterEngine.dartExecutor.binaryMessenger,
         )
+        appUpdateBridge = AppUpdateBridge(
+            this,
+            flutterEngine.dartExecutor.binaryMessenger,
+        )
 
+    }
+
+    override fun onResume() {
+        super.onResume()
+        appUpdateBridge?.onResume()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

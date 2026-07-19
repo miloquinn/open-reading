@@ -8,6 +8,7 @@ import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:flutter/services.dart';
 import 'package:xxread/book_sources/services/book_source_shelf_service.dart';
 import 'package:xxread/core/reader/native_reader_service.dart';
@@ -784,7 +785,7 @@ class _LibraryPageState extends State<LibraryPage> {
             ),
           ),
           child: GridView.builder(
-            cacheExtent: 720,
+            scrollCacheExtent: const ScrollCacheExtent.pixels(720),
             physics: const AlwaysScrollableScrollPhysics(
               parent: BouncingScrollPhysics(),
             ),
@@ -831,7 +832,7 @@ class _LibraryPageState extends State<LibraryPage> {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     return ListView.builder(
-      cacheExtent: 720,
+      scrollCacheExtent: const ScrollCacheExtent.pixels(720),
       physics: const AlwaysScrollableScrollPhysics(
         parent: BouncingScrollPhysics(),
       ),

@@ -12,21 +12,23 @@ on:
         type: string
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: release-${{ inputs.tag || github.ref_name }}
+  group: cross-platform-release
   cancel-in-progress: false
 
 env:
   FLUTTER_VERSION: "3.44.4"
   RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+  UV_VERSION: "0.11.8"
+  UV_PYTHON_DOWNLOADS: "never"
 
 jobs:
   verify-release:
     name: Verify release source
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
     steps:
       - name: Check out release source
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -48,6 +50,29 @@ jobs:
             echo "::error::Tag ${RELEASE_TAG} does not match pubspec version ${pubspec_version}."
             exit 1
           fi
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            server/open-reading-web/pyproject.toml
+            server/open-reading-web/uv.lock
+
+      - name: Install locked website development dependencies
+        working-directory: server/open-reading-web
+        run: |
+          python -m pip install --disable-pip-version-check "uv==${UV_VERSION}"
+          uv sync --locked --extra dev --python 3.12
+
+      - name: Lint website source
+        working-directory: server/open-reading-web
+        run: uv run --locked --extra dev ruff check app tests scripts
+
+      - name: Test website
+        working-directory: server/open-reading-web
+        run: uv run --locked --extra dev pytest
 
       - name: Set up Flutter
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
@@ -78,6 +103,7 @@ jobs:
     name: Android APKs
     needs: verify-release
     runs-on: ubuntu-latest
+    environment: release
     timeout-minutes: 45
     steps:
       - name: Check out release source
@@ -310,6 +336,8 @@ jobs:
     needs: [android, windows, linux]
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: write
     steps:
       - name: Check out release metadata
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -328,12 +356,241 @@ jobs:
           cd release-assets
           sha256sum ./* > SHA256SUMS.txt
 
+      - name: Verify release asset immutability
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${RELEASE_TAG#v}"
+          expected_files=(
+            "OpenReading-Android-arm64-v8a-${version}.apk"
+            "OpenReading-Android-armeabi-v7a-${version}.apk"
+            "OpenReading-Android-x86_64-${version}.apk"
+            "OpenReading-Windows-x64-${version}.zip"
+            "OpenReading-Linux-x64-${version}.tar.gz"
+            "SHA256SUMS.txt"
+          )
+          expected_list="${RUNNER_TEMP}/expected-release-assets.txt"
+          current_list="${RUNNER_TEMP}/current-release-assets.txt"
+          printf '%s\n' "${expected_files[@]}" | LC_ALL=C sort > "$expected_list"
+          find release-assets -maxdepth 1 -type f -printf '%f\n' \
+            | LC_ALL=C sort > "$current_list"
+          if ! cmp --silent "$expected_list" "$current_list"; then
+            echo "::error::The current build produced an unexpected release asset set."
+            diff --unified "$expected_list" "$current_list" || true
+            exit 1
+          fi
+
+          release_metadata_path="${RUNNER_TEMP}/existing-release.json"
+          encoded_tag="$(
+            python3 -c \
+              'import os, urllib.parse; print(urllib.parse.quote(os.environ["RELEASE_TAG"], safe=""))'
+          )"
+          http_code="$(
+            curl --silent --show-error \
+              --output "$release_metadata_path" \
+              --write-out '%{http_code}' \
+              --connect-timeout 10 \
+              --max-time 30 \
+              --header 'Accept: application/vnd.github+json' \
+              --header "Authorization: Bearer ${GH_TOKEN}" \
+              --header 'X-GitHub-Api-Version: 2022-11-28' \
+              "${GITHUB_API_URL}/repos/${GH_REPO}/releases/tags/${encoded_tag}"
+          )"
+
+          case "$http_code" in
+            200)
+              ;;
+            404)
+              echo "RELEASE_ALREADY_EXISTS=false" >> "$GITHUB_ENV"
+              echo "No existing release uses ${RELEASE_TAG}; a new immutable asset set will be published."
+              exit 0
+              ;;
+            *)
+              echo "::error::Could not query release ${RELEASE_TAG} (HTTP ${http_code})."
+              exit 1
+              ;;
+          esac
+
+          RELEASE_METADATA_PATH="$release_metadata_path" \
+          EXPECTED_ASSET_LIST="$expected_list" \
+          python3 <<'PY'
+          from __future__ import annotations
+
+          import json
+          import os
+          from pathlib import Path
+
+          metadata = json.loads(
+              Path(os.environ["RELEASE_METADATA_PATH"]).read_text(encoding="utf-8")
+          )
+          assets = metadata.get("assets")
+          if not isinstance(assets, list):
+              raise SystemExit("existing GitHub Release response has no asset list")
+
+          names = []
+          for asset in assets:
+              if not isinstance(asset, dict) or not isinstance(asset.get("name"), str):
+                  raise SystemExit("existing GitHub Release contains invalid asset metadata")
+              names.append(asset["name"])
+
+          expected = Path(os.environ["EXPECTED_ASSET_LIST"]).read_text(
+              encoding="utf-8"
+          ).splitlines()
+          if sorted(names) != expected:
+              raise SystemExit(
+                  "existing GitHub Release asset names differ from the required immutable set"
+              )
+          PY
+
+          existing_assets_dir="$(
+            mktemp -d "${RUNNER_TEMP}/existing-release-assets.XXXXXX"
+          )"
+          gh release download "$RELEASE_TAG" --dir "$existing_assets_dir"
+
+          existing_list="${RUNNER_TEMP}/existing-release-assets.txt"
+          find "$existing_assets_dir" -maxdepth 1 -type f -printf '%f\n' \
+            | LC_ALL=C sort > "$existing_list"
+          if ! cmp --silent "$expected_list" "$existing_list"; then
+            echo "::error::Downloaded GitHub Release assets differ from the required immutable set."
+            diff --unified "$expected_list" "$existing_list" || true
+            exit 1
+          fi
+
+          for filename in "${expected_files[@]}"; do
+            current_sha256="$(sha256sum "release-assets/${filename}" | cut -d ' ' -f 1)"
+            existing_sha256="$(sha256sum "${existing_assets_dir}/${filename}" | cut -d ' ' -f 1)"
+            if [[ "$current_sha256" != "$existing_sha256" ]]; then
+              echo "::error::Release ${RELEASE_TAG} already contains a different ${filename}; refusing to replace immutable assets."
+              exit 1
+            fi
+          done
+
+          echo "RELEASE_ALREADY_EXISTS=true" >> "$GITHUB_ENV"
+          echo "Release ${RELEASE_TAG} already contains the exact current build; only its notes may be updated."
+
+      - name: Prevent GitHub Latest rollback
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          latest_release_path="${RUNNER_TEMP}/github-latest-release.json"
+          http_code="$(
+            curl --silent --show-error \
+              --output "$latest_release_path" \
+              --write-out '%{http_code}' \
+              --header 'Accept: application/vnd.github+json' \
+              --header "Authorization: Bearer ${GH_TOKEN}" \
+              --header 'X-GitHub-Api-Version: 2022-11-28' \
+              "${GITHUB_API_URL}/repos/${GH_REPO}/releases/latest"
+          )"
+
+          case "$http_code" in
+            200)
+              ;;
+            404)
+              echo "No existing GitHub Latest release; ${RELEASE_TAG} may become Latest."
+              exit 0
+              ;;
+            *)
+              echo "::error::Could not query the current GitHub Latest release (HTTP ${http_code})."
+              exit 1
+              ;;
+          esac
+
+          LATEST_RELEASE_PATH="$latest_release_path" python3 <<'PY'
+          from __future__ import annotations
+
+          import json
+          import os
+          import re
+          from pathlib import Path
+
+          SEMVER = re.compile(
+              r"^v?(0|[1-9][0-9]*)\."
+              r"(0|[1-9][0-9]*)\."
+              r"(0|[1-9][0-9]*)"
+              r"(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?"
+              r"(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$"
+          )
+
+
+          def parse_semver(tag: str) -> tuple[tuple[int, int, int], tuple[str, ...] | None]:
+              match = SEMVER.fullmatch(tag)
+              if match is None:
+                  raise SystemExit(f"release tag is not valid SemVer: {tag!r}")
+              major, minor, patch, prerelease = match.groups()
+              identifiers = tuple(prerelease.split(".")) if prerelease else None
+              if identifiers is not None:
+                  for identifier in identifiers:
+                      if identifier.isdigit() and len(identifier) > 1 and identifier[0] == "0":
+                          raise SystemExit(
+                              f"release tag has a numeric prerelease identifier with a leading zero: {tag!r}"
+                          )
+              return (int(major), int(minor), int(patch)), identifiers
+
+
+          def compare_prerelease(
+              left: tuple[str, ...] | None,
+              right: tuple[str, ...] | None,
+          ) -> int:
+              if left is None:
+                  return 0 if right is None else 1
+              if right is None:
+                  return -1
+              for left_item, right_item in zip(left, right):
+                  if left_item == right_item:
+                      continue
+                  left_numeric = left_item.isdigit()
+                  right_numeric = right_item.isdigit()
+                  if left_numeric and right_numeric:
+                      return -1 if int(left_item) < int(right_item) else 1
+                  if left_numeric != right_numeric:
+                      return -1 if left_numeric else 1
+                  return -1 if left_item < right_item else 1
+              if len(left) == len(right):
+                  return 0
+              return -1 if len(left) < len(right) else 1
+
+
+          def compare_semver(left_tag: str, right_tag: str) -> int:
+              left_core, left_prerelease = parse_semver(left_tag)
+              right_core, right_prerelease = parse_semver(right_tag)
+              if left_core != right_core:
+                  return -1 if left_core < right_core else 1
+              return compare_prerelease(left_prerelease, right_prerelease)
+
+
+          metadata = json.loads(
+              Path(os.environ["LATEST_RELEASE_PATH"]).read_text(encoding="utf-8")
+          )
+          current_tag = metadata.get("tag_name")
+          target_tag = os.environ["RELEASE_TAG"]
+          if not isinstance(current_tag, str) or not current_tag:
+              raise SystemExit("GitHub Latest response has no tag_name")
+          if target_tag == current_tag:
+              print(f"GitHub Latest already uses {target_tag}; idempotent rerun is allowed.")
+              raise SystemExit(0)
+
+          comparison = compare_semver(target_tag, current_tag)
+          if comparison <= 0:
+              raise SystemExit(
+                  f"refusing to replace GitHub Latest {current_tag!r} with non-newer tag {target_tag!r}"
+              )
+          print(f"GitHub Latest may advance from {current_tag} to {target_tag}.")
+          PY
+
       - name: Create or update release
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         shell: bash
         run: |
+          set -euo pipefail
           version="${RELEASE_TAG#v}"
           notes_file="${RUNNER_TEMP}/release-notes.md"
           generated_notes_file="${RUNNER_TEMP}/generated-notes.md"
@@ -361,8 +618,7 @@ jobs:
           此 Release 由 GitHub Actions 从 Tag \`${RELEASE_TAG}\` 自动构建。
           EOF
 
-          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            gh release upload "$RELEASE_TAG" release-assets/* --clobber
+          if [[ "${RELEASE_ALREADY_EXISTS:-false}" == "true" ]]; then
             gh release edit "$RELEASE_TAG" \
               --title "开元阅读 ${RELEASE_TAG}" \
               --notes-file "$notes_file" \
@@ -380,3 +636,367 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: gh release view "$RELEASE_TAG"
+
+  mirror-official-site:
+    name: Mirror release to official site
+    needs: publish
+    runs-on: ubuntu-latest
+    environment: release
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Check out release metadata
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.12"
+
+      - name: Download and verify published release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${RELEASE_TAG#v}"
+          bundle_dir="${GITHUB_WORKSPACE}/official-site-bundle"
+          mkdir -p "$bundle_dir"
+
+          gh release download "$RELEASE_TAG" --dir "$bundle_dir"
+
+          expected_files=(
+            "OpenReading-Android-arm64-v8a-${version}.apk"
+            "OpenReading-Android-armeabi-v7a-${version}.apk"
+            "OpenReading-Android-x86_64-${version}.apk"
+            "OpenReading-Linux-x64-${version}.tar.gz"
+            "OpenReading-Windows-x64-${version}.zip"
+            "SHA256SUMS.txt"
+          )
+          for filename in "${expected_files[@]}"; do
+            if [[ ! -f "${bundle_dir}/${filename}" ]]; then
+              echo "::error::Published release is missing ${filename}."
+              exit 1
+            fi
+          done
+
+          mapfile -t actual_files < <(
+            find "$bundle_dir" -maxdepth 1 -type f -printf '%f\n' | LC_ALL=C sort
+          )
+          if [[ "${#actual_files[@]}" -ne "${#expected_files[@]}" ]]; then
+            echo "::error::Published release contains an unexpected asset set."
+            printf 'asset=%s\n' "${actual_files[@]}"
+            exit 1
+          fi
+
+          (
+            cd "$bundle_dir"
+            sha256sum --check --strict SHA256SUMS.txt
+          )
+
+          gh release view "$RELEASE_TAG" \
+            --json body,publishedAt,url > "${RUNNER_TEMP}/github-release.json"
+
+      - name: Generate official-site import manifest
+        shell: bash
+        env:
+          RELEASE_METADATA_PATH: ${{ runner.temp }}/github-release.json
+        run: |
+          set -euo pipefail
+          android_sdk_root="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}"
+          if [[ -z "$android_sdk_root" || ! -d "${android_sdk_root}/build-tools" ]]; then
+            echo "::error::Android SDK build-tools are unavailable on the release runner."
+            exit 1
+          fi
+          aapt_path="$(
+            find "${android_sdk_root}/build-tools" -type f -name aapt \
+              | sort -V \
+              | tail -n 1
+          )"
+          if [[ -z "$aapt_path" ]]; then
+            echo "::error::aapt was not found in the Android SDK."
+            exit 1
+          fi
+          export AAPT_PATH="$aapt_path"
+
+          python3 <<'PY'
+          from __future__ import annotations
+
+          import hashlib
+          import json
+          import os
+          import re
+          import subprocess
+          from pathlib import Path
+
+          repository = os.environ["GITHUB_REPOSITORY"]
+          tag = os.environ["RELEASE_TAG"]
+          if not re.fullmatch(r"v[0-9A-Za-z][0-9A-Za-z._-]{0,63}", tag):
+              raise SystemExit(f"invalid release tag: {tag!r}")
+          if not re.fullmatch(r"[0-9A-Za-z_.-]+/[0-9A-Za-z_.-]+", repository):
+              raise SystemExit(f"invalid repository name: {repository!r}")
+
+          pubspec = Path("pubspec.yaml").read_text(encoding="utf-8")
+          match = re.search(
+              r"^version:\s*([^+\s]+)\+([0-9]+)\s*$",
+              pubspec,
+              flags=re.MULTILINE,
+          )
+          if match is None:
+              raise SystemExit("pubspec.yaml must declare version <name>+<build>")
+          version, build_number = match.groups()
+          if tag != f"v{version}":
+              raise SystemExit(f"tag {tag!r} does not match pubspec version {version!r}")
+
+          bundle_dir = Path("official-site-bundle")
+          asset_specs = (
+              (
+                  f"OpenReading-Android-arm64-v8a-{version}.apk",
+                  "android",
+                  "apk",
+                  "arm64-v8a",
+              ),
+              (
+                  f"OpenReading-Android-armeabi-v7a-{version}.apk",
+                  "android",
+                  "apk",
+                  "armeabi-v7a",
+              ),
+              (
+                  f"OpenReading-Android-x86_64-{version}.apk",
+                  "android",
+                  "apk",
+                  "x86_64",
+              ),
+              (f"OpenReading-Windows-x64-{version}.zip", "windows", "zip", "x64"),
+              (f"OpenReading-Linux-x64-{version}.tar.gz", "linux", "tar.gz", "x64"),
+          )
+
+          checksums: dict[str, str] = {}
+          for line in (bundle_dir / "SHA256SUMS.txt").read_text(
+              encoding="utf-8"
+          ).splitlines():
+              checksum_match = re.fullmatch(r"([0-9a-fA-F]{64})\s+[ *](.+)", line)
+              if checksum_match is None:
+                  raise SystemExit(f"invalid SHA256SUMS.txt line: {line!r}")
+              digest, filename = checksum_match.groups()
+              filename = filename.removeprefix("./")
+              if filename in checksums:
+                  raise SystemExit(f"duplicate checksum entry: {filename}")
+              checksums[filename] = digest.lower()
+
+          assets = []
+          for filename, platform, package_type, architecture in asset_specs:
+              path = bundle_dir / filename
+              digest = hashlib.sha256(path.read_bytes()).hexdigest()
+              if checksums.get(filename) != digest:
+                  raise SystemExit(f"checksum mismatch for {filename}")
+              asset_build_number = build_number
+              if package_type == "apk":
+                  completed = subprocess.run(
+                      [os.environ["AAPT_PATH"], "dump", "badging", str(path)],
+                      check=True,
+                      capture_output=True,
+                      text=True,
+                  )
+                  package_line = next(
+                      (
+                          line
+                          for line in completed.stdout.splitlines()
+                          if line.startswith("package: ")
+                      ),
+                      "",
+                  )
+                  package_match = re.match(
+                      r"^package: name='([^']+)' versionCode='([0-9]+)' "
+                      r"versionName='([^']+)'",
+                      package_line,
+                  )
+                  if package_match is None:
+                      raise SystemExit(f"could not read APK metadata from {filename}")
+                  package_name, asset_build_number, apk_version = package_match.groups()
+                  if package_name != "com.niki.xxread":
+                      raise SystemExit(f"unexpected Android package name in {filename}")
+                  if apk_version != version:
+                      raise SystemExit(f"unexpected Android version name in {filename}")
+              assets.append(
+                  {
+                      "filename": filename,
+                      "platform": platform,
+                      "package_type": package_type,
+                      "architecture": architecture,
+                      "build_number": asset_build_number,
+                      "size": path.stat().st_size,
+                      "sha256": digest,
+                  }
+              )
+          if set(checksums) != {item[0] for item in asset_specs}:
+              raise SystemExit("SHA256SUMS.txt contains an unexpected asset set")
+
+          metadata = json.loads(
+              Path(os.environ["RELEASE_METADATA_PATH"]).read_text(encoding="utf-8")
+          )
+          expected_url = f"https://github.com/{repository}/releases/tag/{tag}"
+          if metadata.get("url") != expected_url:
+              raise SystemExit("GitHub release URL does not match the release source")
+          published_at = metadata.get("publishedAt")
+          if not isinstance(published_at, str) or not published_at:
+              raise SystemExit("GitHub release has no publication timestamp")
+
+          manifest = {
+              "schema_version": 1,
+              "tag": tag,
+              "version": version,
+              "build_number": build_number,
+              "channel": "stable",
+              "published_at": published_at,
+              "release_notes": metadata.get("body") or "",
+              "github_release_url": expected_url,
+              "assets": assets,
+          }
+          manifest_path = bundle_dir / "release-manifest.json"
+          manifest_path.write_text(
+              json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
+              encoding="utf-8",
+          )
+          PY
+
+      - name: Upload and import official-site mirror
+        shell: bash
+        env:
+          SSH_HOST: ${{ secrets.OFFICIAL_SITE_SSH_HOST }}
+          SSH_PORT: ${{ secrets.OFFICIAL_SITE_SSH_PORT }}
+          SSH_USER: ${{ secrets.OFFICIAL_SITE_SSH_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.OFFICIAL_SITE_SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.OFFICIAL_SITE_SSH_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          for variable in \
+            SSH_HOST \
+            SSH_PORT \
+            SSH_USER \
+            SSH_PRIVATE_KEY \
+            SSH_KNOWN_HOSTS; do
+            if [[ -z "${!variable}" ]]; then
+              echo "::error::Required official-site mirror secret is missing: ${variable}"
+              exit 1
+            fi
+          done
+
+          if [[ ! "$SSH_HOST" =~ ^[0-9A-Za-z][0-9A-Za-z.-]{0,252}$ ]]; then
+            echo "::error::Official-site SSH host has an invalid format."
+            exit 1
+          fi
+          if [[ ! "$SSH_PORT" =~ ^[0-9]{1,5}$ ]] \
+            || ((10#$SSH_PORT < 1 || 10#$SSH_PORT > 65535)); then
+            echo "::error::Official-site SSH port has an invalid format."
+            exit 1
+          fi
+          if [[ ! "$SSH_USER" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]]; then
+            echo "::error::Official-site SSH user has an invalid format."
+            exit 1
+          fi
+          if [[ ! "$RELEASE_TAG" =~ ^v[0-9A-Za-z][0-9A-Za-z._-]{0,63}$ ]] \
+            || [[ ! "$GITHUB_REPOSITORY" =~ ^[0-9A-Za-z_.-]+/[0-9A-Za-z_.-]+$ ]]; then
+            echo "::error::Release identifiers have an invalid format."
+            exit 1
+          fi
+          if [[ ! "$GITHUB_RUN_ID" =~ ^[0-9]+$ ]] \
+            || [[ ! "$GITHUB_RUN_ATTEMPT" =~ ^[0-9]+$ ]]; then
+            echo "::error::GitHub run identifiers have an invalid format."
+            exit 1
+          fi
+
+          umask 077
+          ssh_dir="${RUNNER_TEMP}/official-site-ssh"
+          identity_file="${ssh_dir}/identity"
+          known_hosts_file="${ssh_dir}/known_hosts"
+          remote_dir="/tmp/open-reading-release-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          bundle_dir="${GITHUB_WORKSPACE}/official-site-bundle"
+          target="${SSH_USER}@${SSH_HOST}"
+          mkdir -p "$ssh_dir"
+          printf '%s\n' "$SSH_PRIVATE_KEY" | sed 's/\r$//' > "$identity_file"
+          printf '%s\n' "$SSH_KNOWN_HOSTS" | sed 's/\r$//' > "$known_hosts_file"
+          chmod 600 "$identity_file" "$known_hosts_file"
+
+          host_lookup="$SSH_HOST"
+          if [[ "$SSH_PORT" != "22" ]]; then
+            host_lookup="[${SSH_HOST}]:${SSH_PORT}"
+          fi
+          if ! ssh-keygen -F "$host_lookup" -f "$known_hosts_file" >/dev/null; then
+            echo "::error::Pinned known_hosts does not contain the configured SSH host and port."
+            exit 1
+          fi
+
+          ssh_options=(
+            -i "$identity_file"
+            -p "$SSH_PORT"
+            -o BatchMode=yes
+            -o IdentitiesOnly=yes
+            -o StrictHostKeyChecking=yes
+            -o "UserKnownHostsFile=${known_hosts_file}"
+            -o GlobalKnownHostsFile=/dev/null
+            -o LogLevel=ERROR
+            -o ConnectTimeout=15
+            -o ConnectionAttempts=3
+          )
+          scp_options=(
+            -i "$identity_file"
+            -P "$SSH_PORT"
+            -o BatchMode=yes
+            -o IdentitiesOnly=yes
+            -o StrictHostKeyChecking=yes
+            -o "UserKnownHostsFile=${known_hosts_file}"
+            -o GlobalKnownHostsFile=/dev/null
+            -o LogLevel=ERROR
+            -o ConnectTimeout=15
+            -o ConnectionAttempts=3
+          )
+
+          remote_created=false
+          cleanup() {
+            if [[ "$remote_created" == true ]]; then
+              ssh "${ssh_options[@]}" "$target" \
+                "rm -rf -- '${remote_dir}'" >/dev/null 2>&1 || true
+            fi
+            rm -rf -- "$ssh_dir"
+          }
+          trap cleanup EXIT
+
+          ssh "${ssh_options[@]}" "$target" \
+            "mkdir -m 0700 -- '${remote_dir}'"
+          remote_created=true
+          scp "${scp_options[@]}" "${bundle_dir}/"* "${target}:${remote_dir}/"
+
+          ssh "${ssh_options[@]}" "$target" \
+            "sudo -n -- /usr/local/sbin/open-reading-import-release \
+              --source '${remote_dir}' \
+              --tag '${RELEASE_TAG}' \
+              --repository '${GITHUB_REPOSITORY}' \
+              --manifest release-manifest.json"
+
+      - name: Verify official-site latest release
+        shell: bash
+        run: |
+          set -euo pipefail
+          response_path="${RUNNER_TEMP}/official-site-latest.json"
+          verified_apk_path="${RUNNER_TEMP}/official-site-arm64-v8a.apk"
+          curl --fail --silent --show-error \
+            --retry 5 \
+            --retry-all-errors \
+            --retry-delay 2 \
+            --connect-timeout 10 \
+            --max-time 30 \
+            'https://open.xxread.top/api/v1/releases/latest?platform=android&architecture=arm64-v8a&channel=stable' \
+            > "$response_path"
+
+          python3 server/open-reading-web/scripts/verify_official_download.py \
+            --manifest official-site-bundle/release-manifest.json \
+            --response "$response_path" \
+            --output "$verified_apk_path" \
+            --idle-timeout 30 \
+            --total-timeout 900

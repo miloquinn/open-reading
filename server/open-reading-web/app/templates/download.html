@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}下载｜开元阅读{% endblock %}
+{% block content %}
+<header class="page-head shell"><p class="eyebrow"><span></span> DOWNLOAD</p><h1>选择你的<br><em>阅读设备。</em></h1><p>官网直链适合直接安装；GitHub Releases 提供公开镜像与历史文件。</p></header>
+<section class="shell download-layout">
+  <nav class="platform-tabs" aria-label="平台快速导航">
+    {% for p in platforms %}<a href="#{{ p.key | default(p.slug) }}" {% if recommended_platform == (p.key | default(p.slug)) %}class="recommended"{% endif %}>{{ p.name }}{% if recommended_platform == (p.key | default(p.slug)) %}<small>推荐</small>{% endif %}</a>{% endfor %}
+  </nav>
+  <div class="download-cards">
+  {% for p in platforms %}
+    {% set release = p.latest | default(None) %}
+    <article class="download-card" id="{{ p.key | default(p.slug) }}">
+      <div class="platform-number">{{ '%02d' % loop.index }}</div>
+      <div class="download-main"><div class="download-title"><h2>{{ p.name }}</h2><span>{{ p.package_types_display | default('') }}</span></div>
+      {% if release %}<div class="release-meta"><b>v{{ release.version }}</b><span>{{ release.architecture }}</span><span>{{ release.file_size_display | default(release.file_size) }}</span><span>{{ release.published_at_display | default(release.published_at) }}</span></div><p class="notes-excerpt">{{ release.release_notes_excerpt | default(release.release_notes) }}</p>
+      <div class="download-actions"><a class="button button-primary" href="/download/{{ p.key | default(p.slug) }}">官网下载 <span>↓</span></a><a class="button button-outline" href="{{ release.github_release_url or github_releases_url | default('https://github.com/miloquinn/open-reading/releases') }}">GitHub 镜像 ↗</a></div>
+      <details class="checksum"><summary>查看 SHA-256 校验值</summary><code>{{ release.sha256 }}</code></details>
+      {% else %}<div class="empty-release"><strong>等待首个安装包</strong><p>该平台的下载槽位已经准备好。正式安装包发布后会自动显示在这里。</p><a href="https://github.com/miloquinn/open-reading">先在 GitHub 关注进展 ↗</a></div>{% endif %}
+      </div>
+    </article>
+  {% else %}<p class="empty-state">平台信息正在准备中。</p>{% endfor %}
+  </div>
+</section>
+<aside class="shell ios-note"><strong>关于 iOS 安装</strong><p>IPA 是否能直接安装取决于签名与分发方式。请以当前版本详情中的安装说明为准。</p></aside>
+{% endblock %}

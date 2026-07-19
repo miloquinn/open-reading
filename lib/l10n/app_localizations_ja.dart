@@ -1739,6 +1739,18 @@ class AppLocalizationsJa extends AppLocalizations {
   String get changelog220ReadingStats => '読書統計の詳細画面を統一された紙面スタイルで再設計しました';
 
   @override
+  String get changelog220PageOrganization =>
+      '画面ソースを機能領域ごとに再編し、ファイル命名、モジュール境界、領域間参照を統一しました';
+
+  @override
+  String get changelog220OfficialUpdates =>
+      'GitHub と公式サイトの更新元を選べるようにし、Android では公式 APK をアプリ内でダウンロード・検証してシステムインストーラーへ渡せるようにしました';
+
+  @override
+  String get changelog220ReleaseDistribution =>
+      '公式サイトへの配布ミラーとダウンロード統計を追加し、資産、チェックサム、APK バージョン、署名の検証を強化しました';
+
+  @override
   String get changelog220SourcePolicy =>
       '第三者書籍ソースの責任範囲を明確化し、開発者製品と任意支援への入口を追加しました';
 
@@ -1958,7 +1970,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get updateCheckNow => 'アップデートを確認';
 
   @override
-  String get updateCheckNowSubtitle => 'GitHub Releases から最新バージョンを確認します';
+  String get updateCheckNowSubtitle => 'GitHub または公式サイトから最新バージョンを確認します';
 
   @override
   String get updateAvailableTitle => '新しいバージョンがあります';
@@ -1979,6 +1991,39 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get updateGoToDownload => 'ダウンロードへ';
+
+  @override
+  String get updateFromGithub => 'GitHub から更新';
+
+  @override
+  String get updateFromWebsite => '公式サイトを開く';
+
+  @override
+  String get updateFromWebsiteInstall => '公式サイトからダウンロード';
+
+  @override
+  String get updateWebsiteUnavailable => 'この端末向けの公式サイト版パッケージはまだありません';
+
+  @override
+  String get updateDownloadingTitle => 'アップデートをダウンロード中';
+
+  @override
+  String updateDownloadProgress(int percent) {
+    return '$percent% ダウンロード済み';
+  }
+
+  @override
+  String get updatePreparingInstaller => 'パッケージを検証し、システムインストーラーを準備しています…';
+
+  @override
+  String get updateDownloadFailed => '公式サイトからアップデートをダウンロードできませんでした';
+
+  @override
+  String get updateIntegrityFailed => 'アップデートの整合性確認に失敗したため、ダウンロードを削除しました';
+
+  @override
+  String get updateInstallFailed =>
+      'アップデートをインストールできません。インストール権限を確認して再試行してください。';
 
   @override
   String get updateAlreadyLatest => '現在のバージョンが最新です';

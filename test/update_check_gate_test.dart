@@ -57,7 +57,60 @@ void main() {
     expect(find.text('A new version is available'), findsOneWidget);
     expect(find.text('Added automatic update checks.'), findsOneWidget);
     expect(find.textContaining('Current version: 0.9.1'), findsOneWidget);
-    expect(find.text('Go to update'), findsOneWidget);
+    expect(find.text('Update from GitHub'), findsOneWidget);
+    expect(find.text('Download from website'), findsOneWidget);
+  });
+
+  testWidgets('automatic prompt is remembered only after user chooses later',
+      (tester) async {
+    final service = _FakeUpdateCheckService(
+      UpdateCheckResult(
+        currentVersion: '1.0.0',
+        latestRelease: AppRelease(
+          version: '2.0.0',
+          name: 'Open Reading v2.0.0',
+          notes: 'A safer updater.',
+          releaseUrl: Uri.parse(
+            'https://github.com/miloquinn/open-reading/releases/tag/v2.0.0',
+          ),
+          publishedAt: DateTime.utc(2026, 7, 19),
+        ),
+      ),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: FilledButton(
+              onPressed: () => UpdatePromptController.check(
+                context,
+                service: service,
+              ),
+              child: const Text('Check automatically'),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Check automatically'));
+    await tester.pumpAndSettle();
+    var prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString('last_prompted_update_version'), isNull);
+
+    await tester.tap(find.text('Later'));
+    await tester.pumpAndSettle();
+    prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString('last_prompted_update_version'), '2.0.0');
   });
 }
 

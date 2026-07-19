@@ -1,0 +1,11 @@
+{% extends "admin/base.html" %}
+{% set admin_section = 'releases' %}
+{% block title %}管理 v{{ release.version }}｜开元阅读{% endblock %}
+{% block admin_content %}
+<a class="back-link" href="/admin">← 返回发行总览</a>
+<header class="admin-head release-admin-head"><div><p class="eyebrow">{{ release.platform }} / {{ release.channel }}</p><h1>v{{ release.version }}</h1><p>{{ release.original_filename }}</p></div>{% if release.is_latest %}<span class="big-status">当前最新版</span>{% endif %}</header>
+<div class="admin-detail-grid">
+  <section class="form-section"><div class="form-section-title"><span>01</span><div><h2>发行信息</h2><p>公开页面展示的版本元数据。</p></div></div><dl class="admin-detail-list"><div><dt>平台 / 架构</dt><dd>{{ release.platform }} / {{ release.architecture }}</dd></div><div><dt>安装包格式</dt><dd>{{ release.package_type }}</dd></div><div><dt>构建号</dt><dd>{{ release.build_number or '—' }}</dd></div><div><dt>文件大小</dt><dd>{{ release.file_size_display | default(release.file_size) }}</dd></div><div><dt>SHA-256</dt><dd><code>{{ release.sha256 }}</code></dd></div><div><dt>累计下载</dt><dd>{{ release.download_count }}</dd></div><div><dt>发布时间</dt><dd>{{ release.published_at_display | default(release.published_at) }}</dd></div></dl><h3 class="notes-heading">更新日志</h3><div class="admin-notes">{{ release.release_notes }}</div></section>
+  <aside class="admin-actions"><h2>版本操作</h2>{% if not release.is_latest %}<form method="post" action="/admin/releases/{{ release.id }}/latest"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><p>将稳定下载短链切换到这个版本。</p><button class="button button-primary full" type="submit">设为最新版</button></form>{% endif %}{% if release.is_published %}<form method="post" action="/admin/releases/{{ release.id }}/unpublish" onsubmit="return confirm('确认下架这个版本？安装文件将不再公开下载。')"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><p>下架会保留文件和审计记录，但停止公开分发。</p><button class="button button-danger full" type="submit">下架此版本</button></form>{% else %}<div class="auth-disabled"><strong>此版本已下架</strong><p>审计记录和安装文件仍被保留。</p></div>{% endif %}<a class="button button-outline full" href="/releases/{{ release.id }}" target="_blank">查看公开详情 ↗</a></aside>
+</div>
+{% endblock %}

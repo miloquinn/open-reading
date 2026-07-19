@@ -50,6 +50,7 @@ android/local.properties
 # Internal dev docs & logs
 Log.md
 knowledge_base/
+/knowledge/
 *.pen
 
 # Screenshots / dev captures
@@ -79,8 +80,80 @@ devtools_options.yaml
 
 # Secrets
 *.env
+**/.env
+**/.env.*
+!**/.env.example
 *.pem
 *.key
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.ppk
+*.kdbx
+**/id_rsa
+**/id_rsa_*
+**/id_ed25519
+**/id_ed25519_*
+**/id_dsa
+**/id_dsa_*
+**/id_ecdsa
+**/id_ecdsa_*
+**/id_xmss
+**/id_xmss_*
+**/known_hosts
+**/key.properties
+**/keystore.properties
+**/.netrc
+**/.pypirc
+**/.ssh/
+**/.secrets/
+**/secrets/
+**/credentials*.json
+**/client_secret*.json
+**/service-account*.json
+**/application_default_credentials.json
+**/firebase-adminsdk-*.json
+!**/credentials.example.json
+!**/client_secret.example.json
+!**/service-account.example.json
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+
+# Private backend runtime data and release payloads
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+*.bak
+*.backup
+*.dump
+*.sql.gz
+*.apk
+*.aab
+*.ipa
+*.dmg
+*.pkg
+*.exe
+*.msi
+*.msix
+*.appimage
+*.deb
+*.rpm
+/server/open-reading-web/data/
+/server/open-reading-web/releases/
+/server/open-reading-web/storage/
+/server/open-reading-web/backups/
+/server/open-reading-web/logs/
+/server/open-reading-web/.incoming/
+/official-site-bundle/
+
+# Agent-generated assets are never part of application releases
+/output/
 
 # l10n tooling artifacts
 l10n_untranslated.json

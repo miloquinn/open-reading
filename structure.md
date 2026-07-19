@@ -1,7 +1,7 @@
 # Open Reading 项目结构
 
 > 最后更新：2026-07-19
-> 当前版本：1.2.4
+> 当前版本：2.2.0
 > 本文记录稳定的项目结构、模块边界和核心数据结构，不罗列每个实现细节。
 
 ## 维护规则
@@ -22,12 +22,13 @@
 - 本地结构化数据使用 SQLite，移动端通过 `sqflite`，桌面端通过 `sqflite_common_ffi`。
 - 轻量设置使用 `SharedPreferences`。
 - 在线书源使用 Open Reading Source Protocol，不包含 Legado 兼容层。
+- `server/open-reading-web/` 使用 FastAPI、SQLite、Uvicorn 与 Caddy，负责官网、发行元数据、安装包镜像和下载统计；它与 Flutter 客户端本地数据库相互独立。
 
 ## 顶层目录
 
 ```text
 open-reading/
-├─ android/                 Android 原生工程和存储桥接
+├─ android/                 Android 原生工程、存储与更新安装桥接
 ├─ ios/                     iOS 原生工程和文档存储桥接
 ├─ linux/ macos/ windows/   桌面平台工程
 ├─ web/                     Web 平台工程
@@ -36,6 +37,7 @@ open-reading/
 ├─ docs/                    设计、规范、计划和示例文档
 ├─ .github/workflows/       日常验证、跨平台构建和发布自动化
 ├─ lib/                     Flutter 主源码
+├─ server/open-reading-web/ 官网、发行 API、镜像导入和下载统计
 ├─ test/                    单元、组件、回归和 Golden 测试
 ├─ tool/                    项目辅助脚本
 ├─ shaders/                 阅读翻页等着色器资源
@@ -48,9 +50,10 @@ open-reading/
 
 ## 持续集成与发布
 
-- `.github/workflows/pr-checks.yml`：对 Pull Request、`main` 推送和手动运行执行锁定依赖解析、国际化生成一致性、格式检查、静态分析、带覆盖率测试，以及 Android debug 和 Web release 冒烟构建；Pull Request 额外执行依赖安全审查。Web 构建当前为提示性检查，不阻塞合并。
+- `.github/workflows/pr-checks.yml`：对 Pull Request、`main` 推送和手动运行执行锁定依赖解析、国际化生成一致性、格式检查、静态分析、带覆盖率测试，以及 Android debug 和 Web release 冒烟构建；官网服务使用独立 Python 3.12 job 执行 Ruff 和 Pytest；Pull Request 额外执行依赖安全审查。Web 构建当前为提示性检查，不阻塞合并。
 - `.github/workflows/platform-smoke.yml`：在相关源码或平台工程变更、每周计划任务和手动运行时，构建 Linux、Windows、macOS release 以及不签名的 iOS release，用于尽早发现平台工程漂移。OpenHarmony 仍依赖专用 SDK，不在 GitHub 托管运行器中构建。
-- `.github/workflows/release.yml`：版本 Tag 发布前验证 `pubspec.yaml` 版本、生成文件、格式、分析和测试；随后构建 Android、Windows、Linux 发布包，校验 Android APK 使用配置的签名身份，并生成 `SHA256SUMS.txt` 后发布 GitHub Release。
+- `.github/workflows/release.yml`：所有版本 Tag 共用同一发布并发锁；Tag 发布前验证客户端与官网服务，并在写入 GitHub Latest 前拒绝低于或等于当前 Latest 的其他 Tag，同 Tag 重跑保持幂等。随后构建 Android、Windows、Linux 发布包、校验 Android 签名、生成校验和并发布 GitHub Release；发布成功后重新校验全部资产、读取 split APK 实际版本码，再通过固定 `known_hosts` 和受控导入 wrapper 原子镜像到官网。
+- GitHub `release` Environment 同时保护 Android 签名 job 和官网镜像 job，并应配置 required reviewers。Android 签名 Secrets 与 `OFFICIAL_SITE_SSH_HOST`、`OFFICIAL_SITE_SSH_PORT`、`OFFICIAL_SITE_SSH_USER`、`OFFICIAL_SITE_SSH_PRIVATE_KEY`、`OFFICIAL_SITE_SSH_KNOWN_HOSTS` 均只保存在该 Environment，不保留仓库级副本。
 - `pubspec.lock` 纳入版本控制，CI 和发布流程均使用 `--enforce-lockfile` 保证依赖解析可复现。
 
 ## lib 目录
@@ -77,7 +80,7 @@ lib/
 ├─ services/
 │  ├─ ai/                   全局 AI 阅读服务
 │  ├─ books/                导入、格式注册表、DAO、封面、图片、修复和文本预处理
-│  ├─ core/                 数据库、设置、应用状态、缓存、更新检查与自定义字体存储
+│  ├─ core/                 数据库、设置、应用状态、缓存、双源更新检查、Android 更新下载与自定义字体存储
 │  ├─ library/              书库事件和聚合服务
 │  ├─ reading/              阅读统计与阅读计划
 │  └─ storage/              平台存储桥接与 Android 文件夹授权
@@ -107,7 +110,21 @@ lib/
 - `pages/settings/custom_fonts_page.dart`：用户字体库的导入、应用、重命名和删除入口。
 - `pages/settings/about/changelog_page.dart`：应用内版本历史。
 - `pages/settings/about/open_source_licenses_page.dart`：应用、历史版本、内置字体及 Flutter/Dart 依赖的许可查看入口。
-- `pages/legal/user_agreement_page.dart`：首次使用协议、隐私与第三方书源责任确认。
+- `pages/legal/user_agreement_page.dart`：首次使用协议、隐私与第三方书源责任确认；条款披露 GitHub/官网更新检查和官网下载统计，含原始 IP 的下载明细最多保留 30 天。
+
+## 官网更新与发布服务
+
+- `services/core/update_check_service.dart`：并行查询 GitHub Releases 与 `open.xxread.top` 的版本化 latest API，按语义版本选择最新结果；官网异常、无匹配 ABI 或元数据无效时保留 GitHub 兜底。
+- `services/core/app_update_download_service*.dart`：Android 将官网 APK 下载到私有缓存的 `.part` 文件，只允许 `open.xxread.top` HTTPS 同域跳转，并以 512 MiB 为硬上限；下载进度或响应长度超过元数据声明时立即取消，完成后校验大小与 SHA-256 再原子改名。每次新下载先清理旧 `.part`/`.apk`，异常统一清理临时文件；Web/非 IO 平台使用安全桩实现。
+- `widgets/update_check_gate.dart`：更新提示提供“稍后 / GitHub / 官网”三个选择。Android 官网路径在应用内下载后交给系统安装器；iOS 当前打开官网下载页，后续上架后再切换 App Store。
+- `android/app/src/main/kotlin/com/niki/xxread/AppUpdateBridge.kt`：提供 ABI 查询、未知来源安装授权和 FileProvider 安装桥；打开安装器前复核 APK 包名、实际 versionCode 和当前已安装应用的签名身份，普通应用不能静默安装。
+- `server/open-reading-web/app/routes/api.py`：保留既有兼容接口，并提供 `GET /api/v1/releases/latest?platform=...&architecture=...&channel=stable` 的直接对象响应。
+- `server/open-reading-web/app/services/release_files.py` 与导入脚本：管理上传、SHA-256、原子文件落盘、同平台/架构/channel 的 latest 切换，以及 GitHub Actions 镜像清单的幂等导入；同版本同哈希可重试，不同哈希拒绝覆盖。正式导入必须联网核对固定 GitHub 仓库/tag 的 5 个安装包加 `SHA256SUMS.txt`，并把镜像 job 发布后生成的本地 manifest 与 GitHub API 的 URL、发布时间、更新日志和资产映射交叉校验；APK 还必须通过 `aapt` 包信息和 `apksigner` 正式证书校验。
+- stable latest 以平台与架构为槽位保持单调：记录过高版本后不能重新激活低版本，即使高版本已下架；beta/nightly 仍可人工回退。脱敏备份删除下载明细、OAuth state 和后台会话，并清空审计 IP/User-Agent，只保留发行累计下载数等聚合数据。
+- 官网 SQLite `releases` 表保存平台、架构、版本、实际构建号、文件大小、SHA-256、下载次数和 GitHub 地址；`download_events` 表保存下载版本、架构、来源、IP、User-Agent 与时间。原始 IP 明细和 Caddy 访问日志最多保留 30 天，长期只保留不含原始 IP 的聚合统计；IP 明细只在认证后台可见。
+- Caddy 继续直接发送 `/files/*` 并支持 Range；FastAPI 只处理元数据和下载短链，因此一次下载先在服务端记账，再重定向到不可变文件地址。
+- FastAPI 进程内滑动窗口限流器以锁保证检查/记账原子性，周期删除过期 IP 桶，并将活跃 key 上限固定为 8192、按最久未使用淘汰，防止高基数 IPv6 请求突破 systemd `MemoryMax=256M`。
+- 生产 `.env`、SQLite、安装包、备份、日志、私钥、known_hosts 和签名材料均位于 Git 忽略范围或仓库外；仓库只保留无凭据的配置模板和部署脚本。
 
 ## 首次首页支持引导
 

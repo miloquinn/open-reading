@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}开元阅读｜自由、开放的跨平台阅读器{% endblock %}
+{% block body_class %}home-blue{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/home-blue.css">{% endblock %}
+{% block content %}
+<section class="blue-hero">
+  <div class="shell blue-hero-grid">
+    <div class="blue-hero-copy reveal">
+      <div class="blue-kicker">Open source · Cross platform</div>
+      <h1>把自己的书，<br>放回自己的设备。</h1>
+      <p>开元阅读是一款覆盖 Android、iOS、macOS、Windows 和 Linux 的开源阅读器。下载安装到设备，导入自己的书，然后安静地读下去。</p>
+      <div class="blue-actions">
+        <a class="blue-button blue-button-primary" href="/download">下载开元阅读 <span>↓</span></a>
+        <a class="blue-button blue-button-secondary" href="https://github.com/miloquinn/open-reading">查看 GitHub <span>↗</span></a>
+      </div>
+      <div class="blue-proof"><span>MIT 开源</span><span>五个平台</span><span>本地优先</span></div>
+    </div>
+    <div class="product-hero reveal delay-1">
+      <div class="product-glow" aria-hidden="true"></div>
+      <figure class="real-shot real-shot-primary">
+        <img src="/static/product/reader-mobile.png" alt="开元阅读在 Android 手机上的真实正文阅读界面">
+      </figure>
+      <figure class="real-shot real-shot-secondary">
+        <img src="/static/product/home-stats-mobile.png" alt="开元阅读真实首页和阅读统计界面">
+      </figure>
+      <div class="real-label"><strong>真实界面</strong><span>Android · Flutter</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="platform-strip" aria-label="支持平台">
+  <div class="shell platform-strip-inner">
+    {% for item in [('Android','APK / AAB'),('iOS','IPA'),('macOS','DMG / PKG'),('Windows','EXE / MSI'),('Linux','AppImage / DEB')] %}
+    <a href="/download#{{ item[0] | lower }}"><strong>{{ item[0] }}</strong><span>{{ item[1] }}</span></a>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="blue-section shell product-intro">
+  <div class="section-heading">
+    <span>真实产品，而不是概念图</span>
+    <h2>阅读、书库和统计，<br>都来自正在运行的应用。</h2>
+    <p>这一版官网先展示现有的真实界面。后续产品更新时，官网素材也跟着真实版本更新，不再使用虚构 UI。</p>
+  </div>
+  <div class="product-story product-story-reader">
+    <div class="product-story-copy">
+      <span class="story-index">01 / 阅读</span>
+      <h3>打开书以后，正文是唯一的主角。</h3>
+      <p>支持 TXT、EPUB、PDF 等常见格式。翻页、进度和排版设置围绕实际阅读发生，不需要先理解一套复杂工具。</p>
+      <a href="https://github.com/miloquinn/open-reading">查看阅读器实现 <span>↗</span></a>
+    </div>
+    <figure class="product-stage product-stage-phone">
+      <img src="/static/product/reader-mobile.png" alt="开元阅读正文页面真实截图">
+    </figure>
+  </div>
+
+  <div class="product-story product-story-library">
+    <figure class="product-stage product-stage-library">
+      <img src="/static/product/library-mobile.png" alt="开元阅读书库页面真实截图">
+    </figure>
+    <div class="product-story-copy">
+      <span class="story-index">02 / 书库</span>
+      <h3>自己的文件，留在自己的书架里。</h3>
+      <p>导入、整理和继续阅读都在应用内完成。书库不是内容商城，也不会要求你先把私人文件上传到某个账号。</p>
+      <a href="/download">选择你的平台 <span>→</span></a>
+    </div>
+  </div>
+
+  <div class="product-story product-story-stats">
+    <div class="product-story-copy">
+      <span class="story-index">03 / 统计</span>
+      <h3>统计是阅读留下的记录，不是催促。</h3>
+      <p>阅读时长、趋势与书架数据来自实际使用。数据保留在你的设备与自己选择的同步方式中。</p>
+    </div>
+    <figure class="product-stage product-stage-stats">
+      <img src="/static/product/home-stats-mobile.png" alt="开元阅读首页阅读统计真实截图">
+    </figure>
+  </div>
+</section>
+
+<section class="open-source-blue">
+  <div class="shell open-source-grid">
+    <div>
+      <span class="blue-kicker">Built in public</span>
+      <h2>代码、问题和版本，<br>都可以公开查看。</h2>
+    </div>
+    <div class="open-source-links">
+      <a href="https://github.com/miloquinn/open-reading"><span>源代码</span><strong>浏览仓库与实现</strong><i>↗</i></a>
+      <a href="https://github.com/miloquinn/open-reading/issues"><span>Issues</span><strong>报告问题和提出建议</strong><i>↗</i></a>
+      <a href="https://github.com/miloquinn/open-reading/releases"><span>Releases</span><strong>查看 GitHub 发布记录</strong><i>↗</i></a>
+    </div>
+  </div>
+</section>
+
+<section class="blue-sister shell">
+  <img src="/static/branding/open-reading-icon-192.png" alt="开元阅读图标">
+  <div>
+    <span>同一创作者的姊妹项目</span>
+    <h2>想要更深入的 Apple 原生体验？</h2>
+    <p>小元读书面向另一条独立路线，专注 iPhone 与 iPad 上更精致、稳定的商业阅读体验。</p>
+  </div>
+  <a href="https://xxread.top">了解小元读书 <span>↗</span></a>
+</section>
+{% endblock %}

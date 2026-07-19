@@ -1721,6 +1721,17 @@ class AppLocalizationsZh extends AppLocalizations {
   String get changelog220ReadingStats => '阅读统计详情页采用统一书卷风格并重新设计各项统计内容';
 
   @override
+  String get changelog220PageOrganization => '页面源码按功能域重新整理，统一文件命名、模块边界和跨域引用';
+
+  @override
+  String get changelog220OfficialUpdates =>
+      '更新检查新增 GitHub 与官网双来源；Android 可在应用内下载、校验并请求系统安装官网 APK';
+
+  @override
+  String get changelog220ReleaseDistribution =>
+      '官网新增安装包镜像与下载统计，发布流程强化资产、校验和、APK 版本与签名核验';
+
+  @override
   String get changelog220SourcePolicy => '明确第三方书源责任边界，并新增开发者产品和自愿支持入口';
 
   @override
@@ -1931,7 +1942,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get updateCheckNow => '检查更新';
 
   @override
-  String get updateCheckNowSubtitle => '从 GitHub Releases 获取最新版本';
+  String get updateCheckNowSubtitle => '从 GitHub 或官网获取最新版本';
 
   @override
   String get updateAvailableTitle => '发现新版本';
@@ -1952,6 +1963,38 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get updateGoToDownload => '前往更新';
+
+  @override
+  String get updateFromGithub => '从 GitHub 更新';
+
+  @override
+  String get updateFromWebsite => '前往官网更新';
+
+  @override
+  String get updateFromWebsiteInstall => '从官网下载并安装';
+
+  @override
+  String get updateWebsiteUnavailable => '官网暂未提供适用于此设备的安装包';
+
+  @override
+  String get updateDownloadingTitle => '正在下载更新';
+
+  @override
+  String updateDownloadProgress(int percent) {
+    return '已下载 $percent%';
+  }
+
+  @override
+  String get updatePreparingInstaller => '正在校验安装包并准备系统安装程序…';
+
+  @override
+  String get updateDownloadFailed => '无法从官网下载更新，请稍后重试';
+
+  @override
+  String get updateIntegrityFailed => '安装包完整性校验失败，已删除此次下载';
+
+  @override
+  String get updateInstallFailed => '无法安装更新，请检查安装未知应用权限后重试';
 
   @override
   String get updateAlreadyLatest => '当前已是最新版本';
@@ -4326,6 +4369,17 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get changelog220ReadingStats => '閱讀統計詳情頁採用統一書卷風格並重新設計各項統計內容';
 
   @override
+  String get changelog220PageOrganization => '頁面原始碼依功能領域重新整理，統一檔案命名、模組邊界與跨領域引用';
+
+  @override
+  String get changelog220OfficialUpdates =>
+      '更新檢查新增 GitHub 與官網雙來源；Android 可在應用程式內下載、校驗並請求系統安裝官網 APK';
+
+  @override
+  String get changelog220ReleaseDistribution =>
+      '官網新增安裝檔鏡像與下載統計，發布流程加強資產、校驗和、APK 版本與簽章驗證';
+
+  @override
   String get changelog220SourcePolicy => '明確第三方書源責任邊界，並新增開發者產品和自願支持入口';
 
   @override
@@ -4536,7 +4590,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get updateCheckNow => '檢查更新';
 
   @override
-  String get updateCheckNowSubtitle => '從 GitHub Releases 取得最新版本';
+  String get updateCheckNowSubtitle => '從 GitHub 或官網取得最新版本';
 
   @override
   String get updateAvailableTitle => '發現新版本';
@@ -4557,6 +4611,38 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get updateGoToDownload => '前往更新';
+
+  @override
+  String get updateFromGithub => '從 GitHub 更新';
+
+  @override
+  String get updateFromWebsite => '前往官網更新';
+
+  @override
+  String get updateFromWebsiteInstall => '從官網下載並安裝';
+
+  @override
+  String get updateWebsiteUnavailable => '官網暫未提供適用於此裝置的安裝檔';
+
+  @override
+  String get updateDownloadingTitle => '正在下載更新';
+
+  @override
+  String updateDownloadProgress(int percent) {
+    return '已下載 $percent%';
+  }
+
+  @override
+  String get updatePreparingInstaller => '正在驗證安裝檔並準備系統安裝程式…';
+
+  @override
+  String get updateDownloadFailed => '無法從官網下載更新，請稍後再試';
+
+  @override
+  String get updateIntegrityFailed => '安裝檔完整性驗證失敗，已刪除此下載';
+
+  @override
+  String get updateInstallFailed => '無法安裝更新，請檢查安裝未知應用程式權限後再試';
 
   @override
   String get updateAlreadyLatest => '目前已是最新版本';

@@ -12,6 +12,8 @@ void main() {
 
   test('updated terms require the current version and source acknowledgment',
       () async {
+    expect(UserAgreementService.currentAgreementVersion, '2026-07-19.2');
+
     SharedPreferences.setMockInitialValues({
       'userAgreementAccepted': true,
       'agreementAcceptedVersion': '2026-07-13.1',
@@ -46,6 +48,10 @@ void main() {
         find.byKey(const Key('agreementSourceBoundaryCard')), findsOneWidget);
     expect(
       find.textContaining('provides no source addresses'),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('retained for no more than 30 days'),
       findsOneWidget,
     );
 

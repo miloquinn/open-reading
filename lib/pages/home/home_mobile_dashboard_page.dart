@@ -5,6 +5,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:xxread/core/reader/native_reader_service.dart';
 import 'package:xxread/models/book.dart';
 import 'package:xxread/pages/reading_stats/detailed_stats_page.dart';
@@ -535,7 +536,7 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
               backgroundColor: palette.refreshBackgroundColor,
               edgeOffset: metrics.refreshEdgeOffset,
               child: ListView(
-                cacheExtent: 900,
+                scrollCacheExtent: const ScrollCacheExtent.pixels(900),
                 physics: const AlwaysScrollableScrollPhysics(
                   parent: BouncingScrollPhysics(),
                 ),

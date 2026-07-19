@@ -116,6 +116,7 @@ Open Reading Source Protocol（ORSP）连接用户自行选择的公开内容服
 - 书籍、进度、书签、统计、字体和阅读主题主要保存在当前设备；
 - 项目当前不内置云同步或 WebDAV，卸载、清理数据或设备故障前请自行备份；
 - 只有在用户主动使用书源、封面检索、AI、更新检查等功能时才会访问网络；
+- 更新检查会同时查询 GitHub Releases 与官方站点；从官方站点下载安装包时，服务端会为下载统计、安全防护和故障排查记录版本、架构、时间、IP 与 User-Agent，含原始 IP 的明细最多保留 30 天；
 - 自定义字体、背景图片、书籍文件和第三方内容的使用与分发授权由用户自行确认。
 
 ## Open Reading Source Protocol
@@ -168,9 +169,10 @@ flutter build windows
 flutter build web
 ```
 
-仓库包含 Android、iOS、Windows、macOS、Linux、Web 和 OpenHarmony 工程。GitHub Release
-目前主要生成 Android、Windows 和 Linux 产物；其他平台的可用性、签名和分发方式以对应
-版本说明与 CI 状态为准。
+仓库包含 Android、iOS、Windows、macOS、Linux、Web 和 OpenHarmony 工程。版本 Tag 会通过
+GitHub Actions 生成 Android、Windows 和 Linux 产物，发布到 GitHub Releases，并在校验后同步
+到 [官方站点](https://open.xxread.top/download)。Android 可在更新提示中选择 GitHub 或官网，
+官网下载会在应用内完成校验并交给系统安装器；iOS 当前打开网页，后续上架后再切换 App Store。
 
 ## 项目结构
 
@@ -186,6 +188,9 @@ lib/
 ├── services/      # 导入、存储、统计、字体、主题、AI 与 TTS 服务
 ├── utils/         # 主题、布局、编码等工具
 └── widgets/       # 通用组件和共享阅读器界面
+
+server/
+└── open-reading-web/ # 官方站点、发行 API、安装包镜像与下载统计服务
 
 docs/              # 协议、格式支持、设计和开发文档
 shaders/           # 仿真翻页着色器

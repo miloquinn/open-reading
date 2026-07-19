@@ -1803,6 +1803,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Redesigned detailed reading statistics with a consistent paper-inspired layout';
 
   @override
+  String get changelog220PageOrganization =>
+      'Reorganized page source by feature area with consistent naming and module boundaries';
+
+  @override
+  String get changelog220OfficialUpdates =>
+      'Added GitHub and official-site update choices; Android can download, verify, and hand official APKs to the system installer';
+
+  @override
+  String get changelog220ReleaseDistribution =>
+      'Added official-site mirrors and download statistics with stricter asset, checksum, APK version, and signing verification';
+
+  @override
   String get changelog220SourcePolicy =>
       'Clarified third-party source responsibilities and added developer product and optional support entries';
 
@@ -2052,7 +2064,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get updateCheckNowSubtitle =>
-      'Get the latest version from GitHub Releases';
+      'Get the latest version from GitHub or the official website';
 
   @override
   String get updateAvailableTitle => 'A new version is available';
@@ -2074,6 +2086,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get updateGoToDownload => 'Go to update';
+
+  @override
+  String get updateFromGithub => 'Update from GitHub';
+
+  @override
+  String get updateFromWebsite => 'Open official website';
+
+  @override
+  String get updateFromWebsiteInstall => 'Download from website';
+
+  @override
+  String get updateWebsiteUnavailable =>
+      'The official website package is not available for this device yet';
+
+  @override
+  String get updateDownloadingTitle => 'Downloading update';
+
+  @override
+  String updateDownloadProgress(int percent) {
+    return 'Downloaded $percent%';
+  }
+
+  @override
+  String get updatePreparingInstaller =>
+      'Verifying the package and preparing the system installer…';
+
+  @override
+  String get updateDownloadFailed =>
+      'Could not download the update from the official website';
+
+  @override
+  String get updateIntegrityFailed =>
+      'The downloaded update failed its integrity check and was deleted';
+
+  @override
+  String get updateInstallFailed =>
+      'The update package could not be installed. Check installation permissions and try again.';
 
   @override
   String get updateAlreadyLatest => 'You\'re already using the latest version';

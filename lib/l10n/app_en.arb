@@ -2033,6 +2033,9 @@
   "changelog220ReaderPerformance": "Improved TXT opening transitions, source chapter prefetching, and pagination reuse to reduce waiting",
   "changelog220NavigationThemes": "Added icon-only or labeled floating navigation and unified sorting for built-in and custom reader themes",
   "changelog220ReadingStats": "Redesigned detailed reading statistics with a consistent paper-inspired layout",
+  "changelog220PageOrganization": "Reorganized page source by feature area with consistent naming and module boundaries",
+  "changelog220OfficialUpdates": "Added GitHub and official-site update choices; Android can download, verify, and hand official APKs to the system installer",
+  "changelog220ReleaseDistribution": "Added official-site mirrors and download statistics with stricter asset, checksum, APK version, and signing verification",
   "changelog220SourcePolicy": "Clarified third-party source responsibilities and added developer product and optional support entries",
   "changelog203DeveloperProducts": "Added settings links for 小元读书 and 小元读书社区",
   "changelog203Donation": "Added optional WeChat and Alipay donation entries with no effect on app features",
@@ -2227,7 +2230,7 @@
     "description": "Toast when the GitHub link fails to open"
   },
   "updateCheckNow": "Check for updates",
-  "updateCheckNowSubtitle": "Get the latest version from GitHub Releases",
+  "updateCheckNowSubtitle": "Get the latest version from GitHub or the official website",
   "updateAvailableTitle": "A new version is available",
   "updateVersionSummary": "Current version: {currentVersion}\nLatest version: {latestVersion}",
   "@updateVersionSummary": {
@@ -2244,6 +2247,21 @@
   "updateNotesEmpty": "No release notes were provided for this version.",
   "updateLater": "Later",
   "updateGoToDownload": "Go to update",
+  "updateFromGithub": "Update from GitHub",
+  "updateFromWebsite": "Open official website",
+  "updateFromWebsiteInstall": "Download from website",
+  "updateWebsiteUnavailable": "The official website package is not available for this device yet",
+  "updateDownloadingTitle": "Downloading update",
+  "updateDownloadProgress": "Downloaded {percent}%",
+  "@updateDownloadProgress": {
+    "placeholders": {
+      "percent": {"type": "int"}
+    }
+  },
+  "updatePreparingInstaller": "Verifying the package and preparing the system installer…",
+  "updateDownloadFailed": "Could not download the update from the official website",
+  "updateIntegrityFailed": "The downloaded update failed its integrity check and was deleted",
+  "updateInstallFailed": "The update package could not be installed. Check installation permissions and try again.",
   "updateAlreadyLatest": "You're already using the latest version",
   "updateCheckFailed": "Could not check for updates. Please try again later.",
   "updateOpenFailed": "Could not open the GitHub Release download page",
