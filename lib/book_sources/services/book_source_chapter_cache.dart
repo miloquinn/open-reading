@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:crypto/crypto.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 
@@ -111,12 +112,5 @@ class BookSourceChapterCache {
   String _key(String sourceId, String bookId, String chapterId) =>
       '$sourceId\u0000$bookId\u0000$chapterId';
 
-  String _hash(String value) {
-    var hash = 0xcbf29ce484222325;
-    for (final unit in utf8.encode(value)) {
-      hash ^= unit;
-      hash = (hash * 0x100000001b3) & 0x7fffffffffffffff;
-    }
-    return hash.toRadixString(16).padLeft(16, '0');
-  }
+  String _hash(String value) => sha256.convert(utf8.encode(value)).toString();
 }

@@ -73,8 +73,10 @@ def test_android_verifier_checks_package_version_and_certificate(
     ],
 )
 def test_android_verifier_rejects_missing_identity_or_tools(
-    tmp_path: Path, certificate: str, which, message: str
+    tmp_path: Path, certificate: str, which, message: str, monkeypatch
 ) -> None:
+    monkeypatch.delenv("ANDROID_HOME", raising=False)
+    monkeypatch.delenv("ANDROID_SDK_ROOT", raising=False)
     verifier = AndroidPackageVerifier(_settings(tmp_path, certificate), which=which)
 
     with pytest.raises(ValueError, match=message):
