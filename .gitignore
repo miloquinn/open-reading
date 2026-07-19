@@ -57,6 +57,8 @@ knowledge_base/
 screenshots/
 shot/
 diagrams/
+!marketing/app-store/screenshots/
+!marketing/app-store/screenshots/**
 
 # Misc utility scripts & internal docs
 extract_svg.py

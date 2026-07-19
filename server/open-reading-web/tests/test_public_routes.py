@@ -45,6 +45,22 @@ def test_browser_chrome_uses_the_blue_theme(client: TestClient) -> None:
     assert '/static/css/github-nav.css' not in response.text
 
 
+def test_home_versions_layout_css_with_latest_screenshots(client: TestClient) -> None:
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert '/static/css/home-blue.css?v=20260720-1' in response.text
+    for filename in (
+        "home-latest.webp",
+        "library-latest.webp",
+        "reader-latest.webp",
+        "page-turn-latest.webp",
+        "personalization-latest.webp",
+        "stats-latest.webp",
+    ):
+        assert f"/static/product/{filename}" in response.text
+
+
 def test_all_five_platforms_exist_before_first_upload(client: TestClient) -> None:
     response = client.get("/download")
 

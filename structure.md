@@ -34,6 +34,7 @@ open-reading/
 ├─ web/                     Web 平台工程
 ├─ ohos/                    OpenHarmony 平台工程
 ├─ assets/                  字体、图标、图片等资源
+├─ marketing/app-store/     原始商店截图、1242×2688 宣传图与素材说明
 ├─ docs/                    设计、规范、计划和示例文档
 ├─ .github/workflows/       日常验证、跨平台构建和发布自动化
 ├─ lib/                     Flutter 主源码
