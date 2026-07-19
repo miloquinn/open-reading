@@ -75,8 +75,9 @@ if [[ "$uv_name" != "uv" || "$installed_uv_version" != "$required_uv_version" ]]
 fi
 
 cd "$remote_release"
-"$uv_bin" lock --check
-UV_PROJECT_ENVIRONMENT="$remote_release/.venv" \
+UV_CACHE_DIR="$remote_release/.uv-cache" "$uv_bin" lock --check
+UV_CACHE_DIR="$remote_release/.uv-cache" \
+  UV_PROJECT_ENVIRONMENT="$remote_release/.venv" \
   "$uv_bin" sync --frozen --no-dev --python python3.12
 ln -sfn "$remote_release" "$deploy_root/current"
 
