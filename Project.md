@@ -8,13 +8,13 @@
 ## 关键目录
 
 - `lib/main.dart`：应用启动、全局初始化与依赖装配。
-- `lib/pages/native_reader_page.dart`：原生阅读页面、分页和阅读交互。
+- `lib/pages/reader/native_reader_page.dart`：原生阅读页面、分页和阅读交互。
 - `lib/core/reader/native_reader_service.dart`：统一打开本地书籍的阅读入口。
 - `lib/core/reader/canonical_locator.dart`：跨排版阅读位置模型。
 - `lib/reader_core/`：文档解析、统一文档模型与分页支撑。
 - `lib/services/books/`：书籍导入、存储、图片、笔记与进度服务。
 - `lib/book_sources/`：开放书源协议模型、客户端与本地注册表。
-- `lib/pages/`：首页、书库、书源、设置及其他应用页面。
+- `lib/pages/`：按 home、library、book_sources、reader、reading_stats、settings、legal 功能域组织的应用页面。
 - `test/`：单元测试和端到端测试。
 
 ## 主要工作流

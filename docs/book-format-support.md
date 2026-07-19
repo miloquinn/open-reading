@@ -130,8 +130,8 @@ zip/rar → 解压到临时/托管目录
 | TXT 增强导入 | `enhanced_txt_import_service.dart` |
 | EPUB | `book_import_service` + `epubx` + `epub_image_extractor_service` |
 | 统一分页 | `core/reader/native_text_paginator.dart` |
-| 本地阅读入口 | `pages/native_reader_page.dart` |
-| 导入队列 | `book_import_*` + `import_book_page` |
+| 本地阅读入口 | `pages/reader/native_reader_page.dart` |
+| 导入队列 | `book_import_*` + `pages/library/import_book/import_book_page.dart` |
 
 **规则：** 新增/调整格式时：
 

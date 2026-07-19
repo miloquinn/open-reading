@@ -25,14 +25,14 @@ NativeReaderPage
 ## 建议阅读顺序
 
 1. `lib/main.dart`：应用启动与全局服务初始化。
-2. `lib/pages/home_shell_page.dart`：主导航和页面装配。
-3. `lib/pages/library_page.dart`：本地书库与打开书籍入口。
+2. `lib/pages/home/home_shell_page.dart`：主导航和页面装配。
+3. `lib/pages/library/library_page.dart`：本地书库与打开书籍入口。
 4. `lib/core/reader/native_reader_service.dart`：阅读路由边界。
-5. `lib/pages/native_reader_page.dart`：原生阅读、分页和交互实现。
+5. `lib/pages/reader/native_reader_page.dart`：原生阅读、分页和交互实现。
 6. `lib/core/reader/canonical_locator.dart`：稳定阅读定位模型。
 7. `lib/services/books/`：导入、数据库、图片、笔记与进度。
 8. `lib/reader_core/`：格式解析和统一文档支撑。
-9. `lib/book_sources/` 与 `lib/pages/book_sources_page.dart`：开放书源能力。
+9. `lib/book_sources/` 与 `lib/pages/book_sources/book_sources_page.dart`：开放书源能力。
 10. `test/`：通过测试理解模块预期行为。
 
 ## 目录职责
@@ -44,8 +44,8 @@ NativeReaderPage
 
 ### `lib/pages/`
 
-应用页面层，包括首页、书库、原生阅读器、开放书源、统计、设置和用户协议。复杂页面
-可通过同目录 `part` 文件拆分，但状态所有权仍保留在主页面。
+应用页面层，按 `home`、`library`、`book_sources`、`reader`、`reading_stats`、`settings`
+和 `legal` 功能域组织。复杂页面的私有拆分统一放在所属域的 `parts/`，状态所有权仍保留在主页面。
 
 ### `lib/reader_core/`
 
