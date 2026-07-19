@@ -226,3 +226,5 @@ tool/              # 本地开发与示例服务工具
 [GNU AGPL-3.0](LICENSE) © [miloquinn](https://github.com/miloquinn)。修改版在分发或通过网络
 提供服务时，须按 AGPL-3.0 提供对应源代码。`v1.0.0` 及更早发布版本仍适用其原有
 [MIT 授权](LICENSE-MIT-LEGACY)，详见[授权边界说明](LICENSING.md)。
+
+<!-- Minimal documentation-only change for pull request verification. -->
