@@ -5,179 +5,210 @@ import 'package:xxread/core/reader/reader_page_turn_geometry.dart';
 void main() {
   const size = Size(400, 800);
 
-  test('crease reflects the selected paper corner onto the finger', () {
+  test('outgoing crease reflects the free paper corner onto the finger', () {
     final geometry = ReaderPageTurnGeometry.fromPointer(
       size: size,
       direction: ReaderPageTurnDirection.forward,
+      motion: ReaderPageTurnMotion.outgoing,
       pointer: const Offset(190, 610),
       dragOrigin: const Offset(398, 760),
     );
 
     expect(geometry.reflectedCorner.dx, closeTo(190, 0.001));
     expect(geometry.reflectedCorner.dy, closeTo(610, 0.001));
-    expect(_isOnBoundary(geometry.foldStart, size), isTrue);
-    expect(_isOnBoundary(geometry.foldEnd, size), isTrue);
+    expect(geometry.bindingOnRight, isFalse);
+    expect(geometry.foldStart.dx, greaterThanOrEqualTo(0));
+    expect(geometry.foldEnd.dx, greaterThanOrEqualTo(0));
   });
 
-  test('backward geometry is the horizontal mirror of forward geometry', () {
-    final forward = ReaderPageTurnGeometry.fromPointer(
-      size: size,
-      direction: ReaderPageTurnDirection.forward,
-      pointer: const Offset(220, 260),
-      dragOrigin: const Offset(398, 40),
-    );
-    final backward = ReaderPageTurnGeometry.fromPointer(
-      size: size,
-      direction: ReaderPageTurnDirection.backward,
-      pointer: const Offset(180, 260),
-      dragOrigin: const Offset(2, 40),
-    );
-
-    expect(backward.foldPoint.dx,
-        closeTo(size.width - forward.foldPoint.dx, 0.001));
-    expect(backward.foldPoint.dy, closeTo(forward.foldPoint.dy, 0.001));
-    expect(backward.foldNormal.dx, closeTo(-forward.foldNormal.dx, 0.001));
-    expect(backward.foldNormal.dy, closeTo(forward.foldNormal.dy, 0.001));
-    expect(backward.reflectedCorner.dx, closeTo(180, 0.001));
-    expect(backward.reflectedCorner.dy, closeTo(260, 0.001));
-    expect(forward.turnAxis.dx, greaterThan(0));
-    expect(backward.turnAxis.dx, greaterThan(0));
-  });
-
-  test('classic fold can settle with its crease on the opposite spine', () {
-    final geometry = ReaderPageTurnGeometry.fromCanonicalTouch(
-      size: size,
-      direction: ReaderPageTurnDirection.forward,
-      corner: ReaderPageTurnCorner.bottom,
-      canonicalTouch: const Offset(-400, 800),
-    );
-
-    expect(geometry.canonicalTouch, const Offset(-400, 800));
-    expect(geometry.foldPoint.dx, closeTo(0, 0.001));
-    expect(geometry.progress, 1);
-  });
-
-  test('classic fold keeps a horizontal drag on the same page-edge height', () {
+  test('phone backward is an incoming pose with the same left binding', () {
     final geometry = ReaderPageTurnGeometry.fromPointer(
       size: size,
-      direction: ReaderPageTurnDirection.forward,
-      pointer: const Offset(210, 540),
-      dragOrigin: const Offset(398, 540),
-      anchorMode: ReaderPageTurnAnchorMode.followEdge,
+      direction: ReaderPageTurnDirection.backward,
+      motion: ReaderPageTurnMotion.incoming,
+      pointer: const Offset(160, 360),
+      dragOrigin: const Offset(0, 520),
     );
 
-    expect(geometry.anchor, const Offset(400, 540));
-    expect(geometry.reflectedCorner, const Offset(210, 540));
-    expect(geometry.foldNormal.dy, closeTo(0, 0.001));
-    expect(geometry.foldStart.dx, closeTo(geometry.foldEnd.dx, 0.001));
-    expect(geometry.foldStart.dy, closeTo(0, 0.001));
-    expect(geometry.foldEnd.dy, closeTo(size.height, 0.001));
+    expect(geometry.bindingOnRight, isFalse);
+    expect(geometry.foldPoint.dx, closeTo(160, 0.001));
+    expect(geometry.foldPoint.dy, closeTo(360, 0.001));
+    expect(geometry.progress, closeTo(0.4, 0.001));
+    expect(geometry.foldStart.dx, greaterThanOrEqualTo(0));
+    expect(geometry.foldEnd.dx, greaterThanOrEqualTo(0));
   });
 
-  test('classic fold follows diagonal finger movement without corner snapping',
+  test('incoming middle gesture starts from displacement instead of half page',
       () {
     final geometry = ReaderPageTurnGeometry.fromPointer(
       size: size,
-      direction: ReaderPageTurnDirection.forward,
-      pointer: const Offset(210, 470),
-      dragOrigin: const Offset(398, 540),
-      anchorMode: ReaderPageTurnAnchorMode.followEdge,
+      direction: ReaderPageTurnDirection.backward,
+      motion: ReaderPageTurnMotion.incoming,
+      pointer: const Offset(232, 420),
+      dragOrigin: const Offset(200, 400),
     );
 
-    expect(geometry.anchor.dy, 540);
-    expect(geometry.reflectedCorner.dx, closeTo(210, 0.001));
-    expect(geometry.reflectedCorner.dy, closeTo(470, 0.001));
-    expect(geometry.foldNormal.dy, greaterThan(0));
-    expect(geometry.foldNormal.dy, lessThan(geometry.foldNormal.dx));
+    expect(geometry.foldPoint.dx, closeTo(32, 0.001));
+    expect(geometry.foldPoint.dy, closeTo(420, 0.001));
+    expect(geometry.progress, closeTo(0.08, 0.001));
   });
 
-  test('crease keeps the full binding edge on the unlifted half-plane', () {
-    final geometry = ReaderPageTurnGeometry.fromPointer(
+  test('backward diagonal hand movement changes crease slope', () {
+    final upper = ReaderPageTurnGeometry.fromPointer(
       size: size,
-      direction: ReaderPageTurnDirection.forward,
-      pointer: const Offset(-200, 100),
-      dragOrigin: const Offset(400, 700),
-      anchorMode: ReaderPageTurnAnchorMode.followEdge,
+      direction: ReaderPageTurnDirection.backward,
+      motion: ReaderPageTurnMotion.incoming,
+      pointer: const Offset(160, 200),
+      dragOrigin: const Offset(0, 400),
+    );
+    final lower = ReaderPageTurnGeometry.fromPointer(
+      size: size,
+      direction: ReaderPageTurnDirection.backward,
+      motion: ReaderPageTurnMotion.incoming,
+      pointer: const Offset(160, 600),
+      dragOrigin: const Offset(0, 400),
     );
 
-    for (final bindingPoint in const [Offset.zero, Offset(0, 800)]) {
-      final delta = bindingPoint - geometry.canonicalFoldPoint;
-      final signedDistance = delta.dx * geometry.canonicalFoldNormal.dx +
-          delta.dy * geometry.canonicalFoldNormal.dy;
-      expect(signedDistance, lessThanOrEqualTo(0.001));
-    }
+    expect(upper.canonicalFoldNormal.dy, greaterThan(0));
+    expect(lower.canonicalFoldNormal.dy, lessThan(0));
+    expect(upper.foldStart.dx, isNot(closeTo(upper.foldEnd.dx, 0.001)));
+    expect(lower.foldStart.dx, isNot(closeTo(lower.foldEnd.dx, 0.001)));
+  });
+
+  test('horizontal incoming drag keeps a vertical crease at the driver', () {
+    final geometry = ReaderPageTurnGeometry.fromPointer(
+      size: size,
+      direction: ReaderPageTurnDirection.backward,
+      motion: ReaderPageTurnMotion.incoming,
+      pointer: const Offset(210, 540),
+      dragOrigin: const Offset(0, 540),
+    );
+
+    expect(geometry.foldPoint, const Offset(210, 540));
+    expect(geometry.foldNormal.dy, closeTo(0, 0.001));
+    expect(geometry.foldStart.dx, closeTo(210, 0.001));
+    expect(geometry.foldEnd.dx, closeTo(210, 0.001));
+  });
+
+  test('right-bound tablet leaf mirrors leaf coordinates, not navigation', () {
+    final leftLeafBackward = ReaderPageTurnGeometry.fromPointer(
+      size: size,
+      direction: ReaderPageTurnDirection.backward,
+      motion: ReaderPageTurnMotion.outgoing,
+      pointer: const Offset(180, 260),
+      dragOrigin: const Offset(2, 40),
+      bindingOnRight: true,
+    );
+    final canonicalOutgoing = ReaderPageTurnGeometry.fromPointer(
+      size: size,
+      direction: ReaderPageTurnDirection.forward,
+      motion: ReaderPageTurnMotion.outgoing,
+      pointer: const Offset(220, 260),
+      dragOrigin: const Offset(398, 40),
+    );
+
+    expect(leftLeafBackward.bindingOnRight, isTrue);
+    expect(
+      leftLeafBackward.foldPoint.dx,
+      closeTo(size.width - canonicalOutgoing.foldPoint.dx, 0.001),
+    );
+    expect(
+      leftLeafBackward.foldNormal.dx,
+      closeTo(-canonicalOutgoing.foldNormal.dx, 0.001),
+    );
+  });
+
+  test('binding clamp keeps both crease intersections off the glued side', () {
+    final geometry = ReaderPageTurnGeometry.fromPointer(
+      size: size,
+      direction: ReaderPageTurnDirection.backward,
+      motion: ReaderPageTurnMotion.incoming,
+      pointer: const Offset(40, 40),
+      dragOrigin: const Offset(0, 760),
+    );
+
     expect(geometry.canonicalFoldStart.dx, greaterThanOrEqualTo(0));
     expect(geometry.canonicalFoldEnd.dx, greaterThanOrEqualTo(0));
   });
 
-  test('backward follow-pointer geometry ignores vertical hand jitter', () {
-    const origin = Offset(2, 400);
-    for (final pointer in const [
-      Offset(80, 120),
-      Offset(160, 680),
-      Offset(240, 260),
-      Offset(320, 540),
-    ]) {
-      final geometry = ReaderPageTurnGeometry.fromPointer(
-        size: size,
-        direction: ReaderPageTurnDirection.backward,
-        pointer: pointer,
-        dragOrigin: origin,
-        anchorMode: ReaderPageTurnAnchorMode.followPointerEdge,
-        canonicalBindingOnRight: true,
-      );
-
-      expect(geometry.reflectedCorner.dx, closeTo(pointer.dx, 0.001));
-      expect(geometry.reflectedCorner.dy, closeTo(pointer.dy, 0.001));
-      expect(geometry.foldStart.dx, closeTo(geometry.foldEnd.dx, 0.001));
-      expect(geometry.progress, closeTo(pointer.dx / size.width, 0.001));
-    }
-  });
-
-  test('canonical right binding clamps backward completion geometry', () {
-    final geometry = ReaderPageTurnGeometry.fromCanonicalTouch(
+  test('outgoing and incoming completion progress are independent', () {
+    final outgoingComplete = ReaderPageTurnGeometry.fromCanonicalTouch(
+      size: size,
+      direction: ReaderPageTurnDirection.forward,
+      motion: ReaderPageTurnMotion.outgoing,
+      corner: ReaderPageTurnCorner.bottom,
+      canonicalTouch: const Offset(-400, 800),
+    );
+    final incomingComplete = ReaderPageTurnGeometry.fromCanonicalTouch(
       size: size,
       direction: ReaderPageTurnDirection.backward,
-      corner: ReaderPageTurnCorner.top,
-      canonicalAnchorY: 0,
-      canonicalTouch: const Offset(-200, 400),
-      canonicalBindingOnRight: true,
+      motion: ReaderPageTurnMotion.incoming,
+      corner: ReaderPageTurnCorner.bottom,
+      canonicalTouch: const Offset(400, 800),
     );
 
-    expect(geometry.canonicalFoldStart.dx, lessThanOrEqualTo(size.width));
-    expect(geometry.canonicalFoldEnd.dx, lessThanOrEqualTo(size.width));
+    expect(outgoingComplete.progress, 1);
+    expect(incomingComplete.progress, 1);
+    expect(outgoingComplete.canonicalFoldPoint.dx, closeTo(0, 0.001));
+    expect(incomingComplete.canonicalFoldPoint.dx, closeTo(400, 0.001));
   });
 
-  test('progress increases monotonically as the finger moves across the page',
-      () {
-    final nearEdge = ReaderPageTurnGeometry.fromPointer(
+  test('terminal poses use the shader exact vertical endpoints', () {
+    final turnedOut = ReaderPageTurnGeometry.fromCanonicalTouch(
       size: size,
       direction: ReaderPageTurnDirection.forward,
-      pointer: const Offset(360, 700),
-      dragOrigin: const Offset(398, 760),
+      motion: ReaderPageTurnMotion.outgoing,
+      corner: ReaderPageTurnCorner.bottom,
+      canonicalAnchorY: 620,
+      canonicalTouch: const Offset(-400, 620),
     );
-    final middle = ReaderPageTurnGeometry.fromPointer(
+    final flatIncoming = ReaderPageTurnGeometry.fromCanonicalTouch(
       size: size,
-      direction: ReaderPageTurnDirection.forward,
-      pointer: const Offset(220, 650),
-      dragOrigin: const Offset(398, 760),
+      direction: ReaderPageTurnDirection.backward,
+      motion: ReaderPageTurnMotion.incoming,
+      corner: ReaderPageTurnCorner.bottom,
+      canonicalAnchorY: 620,
+      canonicalTouch: const Offset(400, 620),
     );
-    final pastSpine = ReaderPageTurnGeometry.fromPointer(
+    final rightBoundTurnedOut = ReaderPageTurnGeometry.fromCanonicalTouch(
       size: size,
-      direction: ReaderPageTurnDirection.forward,
-      pointer: const Offset(-40, 600),
-      dragOrigin: const Offset(398, 760),
+      direction: ReaderPageTurnDirection.backward,
+      motion: ReaderPageTurnMotion.outgoing,
+      corner: ReaderPageTurnCorner.bottom,
+      canonicalAnchorY: 620,
+      canonicalTouch: const Offset(-400, 620),
+      bindingOnRight: true,
     );
 
-    expect(nearEdge.progress, lessThan(middle.progress));
-    expect(middle.progress, lessThan(pastSpine.progress));
+    expect(turnedOut.canonicalLineA, Offset.zero);
+    expect(turnedOut.canonicalLineB, const Offset(0, 800));
+    expect(flatIncoming.canonicalLineA, const Offset(400, 0));
+    expect(flatIncoming.canonicalLineB, const Offset(400, 800));
+    expect(rightBoundTurnedOut.lineA, const Offset(400, 0));
+    expect(rightBoundTurnedOut.lineB, const Offset(400, 800));
   });
-}
 
-bool _isOnBoundary(Offset point, Size size) {
-  const epsilon = 0.01;
-  return point.dx.abs() < epsilon ||
-      (point.dx - size.width).abs() < epsilon ||
-      point.dy.abs() < epsilon ||
-      (point.dy - size.height).abs() < epsilon;
+  test('progress increases monotonically in both animation channels', () {
+    ReaderPageTurnGeometry outgoing(double x) =>
+        ReaderPageTurnGeometry.fromPointer(
+          size: size,
+          direction: ReaderPageTurnDirection.forward,
+          motion: ReaderPageTurnMotion.outgoing,
+          pointer: Offset(x, 700),
+          dragOrigin: const Offset(400, 700),
+        );
+    ReaderPageTurnGeometry incoming(double x) =>
+        ReaderPageTurnGeometry.fromPointer(
+          size: size,
+          direction: ReaderPageTurnDirection.backward,
+          motion: ReaderPageTurnMotion.incoming,
+          pointer: Offset(x, 700),
+          dragOrigin: const Offset(0, 700),
+        );
+
+    expect(outgoing(360).progress, lessThan(outgoing(220).progress));
+    expect(outgoing(220).progress, lessThan(outgoing(-40).progress));
+    expect(incoming(40).progress, lessThan(incoming(220).progress));
+    expect(incoming(220).progress, lessThan(incoming(380).progress));
+  });
 }

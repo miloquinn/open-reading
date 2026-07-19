@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
+import 'package:xxread/core/reader/reader_page_turn_geometry.dart';
 import 'package:xxread/core/reader/reader_layout.dart';
 import 'package:xxread/core/reader/reader_settings.dart';
 import 'package:xxread/l10n/app_localizations.dart';
@@ -408,11 +409,91 @@ void main() {
       expect(rects[0].right, closeTo(588, 0.1));
       expect(rects[1].left, closeTo(612, 0.1));
       expect(rects[1].right, closeTo(1200, 0.1));
+
+      final rightController = curls[1].controller!;
+      final centerGesture = await tester.startGesture(
+        Offset(rects[1].left + 2, rects[1].center.dy),
+      );
+      await centerGesture.moveBy(const Offset(-90, 0));
+      await tester.pump();
+      expect(rightController.debugMotion, isNull);
+      await centerGesture.cancel();
+
+      final rightGesture = await tester.startGesture(
+        Offset(rects[1].right - 2, rects[1].center.dy),
+      );
+      await rightGesture.moveBy(const Offset(-90, -45));
+      await tester.pump();
+      expect(rightController.debugMotion, ReaderPageTurnMotion.outgoing);
+      expect(rightController.debugActiveSourceIsCurrent, isTrue);
+      await rightGesture.cancel();
+      for (var frame = 0; frame < 24; frame++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
     } finally {
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump();
       await tester.binding.setSurfaceSize(null);
       if (tabletBook.existsSync()) tabletBook.deleteSync();
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+
+  testWidgets('tablet spreads keep every chapter on a stable left-page parity',
+      (tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    await tester.binding.setSurfaceSize(const Size(1200, 800));
+    final parityBook = File(
+      '${Directory.systemTemp.path}/open-reading-tablet-parity.html',
+    );
+    parityBook.writeAsStringSync(
+      '<!doctype html><html><body>'
+      '<h1>Short first chapter</h1><p>One short page.</p>'
+      '<h1>Long second chapter</h1>'
+      '${List.generate(220, (index) => '<p>Second chapter paragraph $index '
+          'keeps its first page on the left after an odd previous chapter.'
+          '</p>').join()}'
+      '</body></html>',
+    );
+    try {
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: NativeReaderPage(
+            book: Book(
+              title: 'Tablet parity',
+              filePath: parityBook.path,
+              format: 'html',
+              currentPage: 1,
+              fileModifiedTime:
+                  parityBook.lastModifiedSync().millisecondsSinceEpoch,
+            ),
+          ),
+        ),
+      );
+      await tester.runAsync(() async {
+        for (var attempt = 0; attempt < 30; attempt++) {
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+          await tester.pump();
+          if (find.byType(ReaderShaderPageCurl).evaluate().length >= 2) return;
+        }
+      });
+      await _pumpUntilFound(tester, find.byType(ReaderShaderPageCurl));
+
+      final curls = tester
+          .widgetList<ReaderShaderPageCurl>(find.byType(ReaderShaderPageCurl))
+          .toList();
+      expect(curls, hasLength(2));
+      expect(
+        curls.map((curl) => curl.currentPage.key.pageIdentity),
+        everyElement(contains(':html-1:')),
+      );
+    } finally {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+      await tester.binding.setSurfaceSize(null);
+      if (parityBook.existsSync()) parityBook.deleteSync();
       debugDefaultTargetPlatformOverride = null;
     }
   });

@@ -10,19 +10,29 @@ enum ReaderPageTurnCorner { top, bottom }
 enum ReaderPageTurnAnchorMode {
   nearestCorner,
   followEdge,
-  followPointerEdge,
 }
 
-/// Clean-room paper-fold geometry in logical pixel space.
+/// Whether the visible leaf is being peeled away or unfolded into view.
 ///
-/// Both directions share a canonical right-edge page. Backward turns mirror
-/// input/output across the vertical page axis. The crease is the perpendicular
-/// bisector between the fixed paper corner and the constrained finger point.
+/// This is deliberately independent from [ReaderPageTurnDirection]. A phone
+/// forward turn peels the current leaf away, while a phone backward turn
+/// unfolds the previous leaf into view. On the left side of a tablet spread,
+/// a backward turn peels the current leaf toward the center binding.
+enum ReaderPageTurnMotion { outgoing, incoming }
+
+/// Clean-room paper-fold geometry in binding-local logical pixel space.
+///
+/// The canonical leaf is always bound on x=0 and has its free edge at x=width.
+/// A physical right binding mirrors only the leaf coordinate system; navigation
+/// direction never moves the spine. The crease is the perpendicular bisector
+/// between the free edge rest point and a virtual paper corner.
 @immutable
 class ReaderPageTurnGeometry {
   const ReaderPageTurnGeometry._({
     required this.size,
     required this.direction,
+    required this.motion,
+    required this.bindingOnRight,
     required this.corner,
     required this.canonicalAnchor,
     required this.canonicalTouch,
@@ -30,20 +40,30 @@ class ReaderPageTurnGeometry {
     required this.canonicalFoldNormal,
     required this.canonicalFoldStart,
     required this.canonicalFoldEnd,
+    required this.canonicalLineA,
+    required this.canonicalLineB,
     required this.progress,
   });
 
   factory ReaderPageTurnGeometry.fromPointer({
     required Size size,
     required ReaderPageTurnDirection direction,
+    required ReaderPageTurnMotion motion,
     required Offset pointer,
     required Offset dragOrigin,
-    ReaderPageTurnAnchorMode anchorMode =
-        ReaderPageTurnAnchorMode.nearestCorner,
-    bool canonicalBindingOnRight = false,
+    ReaderPageTurnAnchorMode anchorMode = ReaderPageTurnAnchorMode.followEdge,
+    bool bindingOnRight = false,
   }) {
-    final canonicalOrigin = canonicalize(dragOrigin, size, direction);
-    final canonicalPointer = canonicalize(pointer, size, direction);
+    final canonicalOrigin = toBindingSpace(
+      dragOrigin,
+      size,
+      bindingOnRight: bindingOnRight,
+    );
+    final canonicalPointer = toBindingSpace(
+      pointer,
+      size,
+      bindingOnRight: bindingOnRight,
+    );
     final corner = canonicalOrigin.dy <= size.height / 2
         ? ReaderPageTurnCorner.top
         : ReaderPageTurnCorner.bottom;
@@ -52,26 +72,42 @@ class ReaderPageTurnGeometry {
         corner == ReaderPageTurnCorner.top ? 0.0 : size.height,
       ReaderPageTurnAnchorMode.followEdge =>
         canonicalOrigin.dy.clamp(0.0, size.height),
-      ReaderPageTurnAnchorMode.followPointerEdge =>
-        canonicalPointer.dy.clamp(0.0, size.height),
     };
+    final width = math.max(size.width, 1.0);
+    final anchor = Offset(width, anchorY);
+
+    // An outgoing turn makes the free paper corner follow the finger. An
+    // incoming turn is a separate pose: the crease itself follows the finger,
+    // so the virtual corner is reflected through the pointer around free-rest.
+    // At the binding this yields touch=-width (fully turned out); at the free
+    // edge it yields touch=width (the previous page is flat).
+    final incomingCreaseDriver = Offset(
+      (canonicalPointer.dx - canonicalOrigin.dx).clamp(0.0, width),
+      anchorY + canonicalPointer.dy - canonicalOrigin.dy,
+    );
+    final canonicalTouch = motion == ReaderPageTurnMotion.outgoing
+        ? canonicalPointer
+        : incomingCreaseDriver * 2 - anchor;
+
     return ReaderPageTurnGeometry.fromCanonicalTouch(
       size: size,
       direction: direction,
+      motion: motion,
       corner: corner,
       canonicalAnchorY: anchorY,
-      canonicalTouch: canonicalPointer,
-      canonicalBindingOnRight: canonicalBindingOnRight,
+      canonicalTouch: canonicalTouch,
+      bindingOnRight: bindingOnRight,
     );
   }
 
   factory ReaderPageTurnGeometry.fromCanonicalTouch({
     required Size size,
     required ReaderPageTurnDirection direction,
+    required ReaderPageTurnMotion motion,
     required ReaderPageTurnCorner corner,
     required Offset canonicalTouch,
     double? canonicalAnchorY,
-    bool canonicalBindingOnRight = false,
+    bool bindingOnRight = false,
   }) {
     final width = math.max(size.width, 1.0);
     final height = math.max(size.height, 1.0);
@@ -83,81 +119,86 @@ class ReaderPageTurnGeometry {
     );
     var touch = Offset(
       canonicalTouch.dx.clamp(-width, width),
-      canonicalTouch.dy.clamp(0.0, height),
+      canonicalTouch.dy.clamp(-height, height * 2),
     );
+    final atBindingEndpoint = touch.dx == -width && touch.dy == anchor.dy;
+    final atFreeEndpoint = touch.dx == width && touch.dy == anchor.dy;
+    if (atBindingEndpoint || atFreeEndpoint) {
+      final x = atBindingEndpoint ? 0.0 : width;
+      final lineA = Offset(x, 0);
+      final lineB = Offset(x, height);
+      return ReaderPageTurnGeometry._(
+        size: pageSize,
+        direction: direction,
+        motion: motion,
+        bindingOnRight: bindingOnRight,
+        corner: corner,
+        canonicalAnchor: anchor,
+        canonicalTouch: touch,
+        canonicalFoldPoint: Offset(x, anchor.dy),
+        canonicalFoldNormal: const Offset(1, 0),
+        canonicalFoldStart: lineA,
+        canonicalFoldEnd: lineB,
+        canonicalLineA: lineA,
+        canonicalLineB: lineB,
+        progress: switch (motion) {
+          ReaderPageTurnMotion.outgoing => atBindingEndpoint ? 1.0 : 0.0,
+          ReaderPageTurnMotion.incoming => atFreeEndpoint ? 1.0 : 0.0,
+        },
+      );
+    }
     var delta = anchor - touch;
     if (delta.distance < 0.5) {
-      touch = Offset(width - 0.5, anchor.dy);
-      delta = anchor - touch;
+      delta = const Offset(0.5, 0);
     }
+
     final rawNormal = delta / delta.distance;
     final rawMidpoint = Offset(
       (anchor.dx + touch.dx) / 2,
       (anchor.dy + touch.dy) / 2,
     );
-    var foldPoint = rawMidpoint;
-    var foldNormal = rawNormal;
-    var tangent = Offset(-foldNormal.dy, foldNormal.dx);
-    var intersections = _lineRectangleIntersections(
-      point: foldPoint,
-      direction: tangent,
+    final rawTangent = Offset(-rawNormal.dy, rawNormal.dx);
+    final lineExtent = width + height;
+    final lineA = rawMidpoint + rawTangent * lineExtent;
+    final lineB = rawMidpoint - rawTangent * lineExtent;
+
+    // Mirrors the recovered shader's hard binding rule: intersect the crease
+    // with the top/bottom edges and clamp both x coordinates with max(0, x).
+    // The raw line is still retained for the shader, which performs the same
+    // operation per pixel.
+    final (top, bottom) = _bindingClampedTopBottom(
+      point: rawMidpoint,
+      normal: rawNormal,
       size: pageSize,
     );
-    var endpoints = _farthestPair(intersections, pageSize);
 
-    // Clamp the infinite crease against the physical binding edge expressed
-    // in canonical coordinates. Phone backward turns mirror motion but keep
-    // a screen-left spine, so their canonical binding is on the right.
-    if (rawNormal.dx.abs() > 1e-6) {
-      double creaseXAt(double y) =>
-          rawMidpoint.dx - rawNormal.dy * (y - rawMidpoint.dy) / rawNormal.dx;
-
-      final rawTopX = creaseXAt(0);
-      final rawBottomX = creaseXAt(height);
-      final crossesBinding = canonicalBindingOnRight
-          ? rawTopX > width || rawBottomX > width
-          : rawTopX < 0 || rawBottomX < 0;
-      if (crossesBinding) {
-        final top = Offset(
-          canonicalBindingOnRight
-              ? math.min(width, rawTopX)
-              : math.max(0, rawTopX),
-          0,
-        );
-        final bottom = Offset(
-          canonicalBindingOnRight
-              ? math.min(width, rawBottomX)
-              : math.max(0, rawBottomX),
-          height,
-        );
-        tangent = (bottom - top) / (bottom - top).distance;
-        foldNormal = Offset(tangent.dy, -tangent.dx);
-        if (foldNormal.dx < 0) foldNormal = -foldNormal;
-        foldPoint = top;
-        intersections = _lineRectangleIntersections(
-          point: foldPoint,
-          direction: tangent,
-          size: pageSize,
-        );
-        endpoints = _farthestPair(intersections, pageSize);
-      }
-    }
     return ReaderPageTurnGeometry._(
       size: pageSize,
       direction: direction,
+      motion: motion,
+      bindingOnRight: bindingOnRight,
       corner: corner,
       canonicalAnchor: anchor,
       canonicalTouch: touch,
-      canonicalFoldPoint: foldPoint,
-      canonicalFoldNormal: foldNormal,
-      canonicalFoldStart: endpoints.$1,
-      canonicalFoldEnd: endpoints.$2,
-      progress: ((width - touch.dx) / width).clamp(0.0, 1.0),
+      canonicalFoldPoint: rawMidpoint,
+      canonicalFoldNormal: rawNormal,
+      canonicalFoldStart: top,
+      canonicalFoldEnd: bottom,
+      canonicalLineA: lineA,
+      canonicalLineB: lineB,
+      progress: switch (motion) {
+        ReaderPageTurnMotion.outgoing =>
+          ((width - touch.dx) / width).clamp(0.0, 1.0),
+        ReaderPageTurnMotion.incoming =>
+          ((touch.dx + width) / (width * 2)).clamp(0.0, 1.0),
+      },
     );
   }
 
   final Size size;
   final ReaderPageTurnDirection direction;
+  final ReaderPageTurnMotion motion;
+  final bool bindingOnRight;
   final ReaderPageTurnCorner corner;
   final Offset canonicalAnchor;
   final Offset canonicalTouch;
@@ -165,25 +206,31 @@ class ReaderPageTurnGeometry {
   final Offset canonicalFoldNormal;
   final Offset canonicalFoldStart;
   final Offset canonicalFoldEnd;
-  final double progress;
 
-  bool get reverse => direction == ReaderPageTurnDirection.backward;
+  /// Two far-apart points on the unclamped crease passed to the fragment
+  /// shader as posA/posB.
+  final Offset canonicalLineA;
+  final Offset canonicalLineB;
+
+  final double progress;
 
   Offset get foldPoint => screenPoint(canonicalFoldPoint);
 
   Offset get anchor => screenPoint(canonicalAnchor);
 
-  Offset get foldNormal => reverse
+  Offset get foldNormal => bindingOnRight
       ? Offset(-canonicalFoldNormal.dx, canonicalFoldNormal.dy)
       : canonicalFoldNormal;
 
-  /// Renderer-facing turn axis. Its positive half-plane is always the page
-  /// being uncovered, including when a backward turn mirrors the fold line.
-  Offset get turnAxis => reverse ? -foldNormal : foldNormal;
+  Offset get turnAxis => foldNormal;
 
   Offset get foldStart => screenPoint(canonicalFoldStart);
 
   Offset get foldEnd => screenPoint(canonicalFoldEnd);
+
+  Offset get lineA => screenPoint(canonicalLineA);
+
+  Offset get lineB => screenPoint(canonicalLineB);
 
   Offset get reflectedCorner {
     final distance =
@@ -194,82 +241,40 @@ class ReaderPageTurnGeometry {
     );
   }
 
-  Offset screenPoint(Offset canonical) =>
-      reverse ? Offset(size.width - canonical.dx, canonical.dy) : canonical;
+  Offset screenPoint(Offset canonical) => bindingOnRight
+      ? Offset(size.width - canonical.dx, canonical.dy)
+      : canonical;
 
-  static Offset canonicalize(
+  static Offset toBindingSpace(
     Offset point,
-    Size size,
-    ReaderPageTurnDirection direction,
-  ) =>
-      direction == ReaderPageTurnDirection.backward
-          ? Offset(size.width - point.dx, point.dy)
-          : point;
+    Size size, {
+    required bool bindingOnRight,
+  }) =>
+      bindingOnRight ? Offset(size.width - point.dx, point.dy) : point;
 
-  static Offset canonicalVelocity(
-    Offset velocity,
-    ReaderPageTurnDirection direction,
-  ) =>
-      direction == ReaderPageTurnDirection.backward
-          ? Offset(-velocity.dx, velocity.dy)
-          : velocity;
+  static Offset velocityToBindingSpace(
+    Offset velocity, {
+    required bool bindingOnRight,
+  }) =>
+      bindingOnRight ? Offset(-velocity.dx, velocity.dy) : velocity;
 }
 
-List<Offset> _lineRectangleIntersections({
+(Offset, Offset) _bindingClampedTopBottom({
   required Offset point,
-  required Offset direction,
+  required Offset normal,
   required Size size,
 }) {
   const epsilon = 1e-6;
-  final values = <Offset>[];
-
-  void add(Offset candidate) {
-    if (candidate.dx < -epsilon ||
-        candidate.dx > size.width + epsilon ||
-        candidate.dy < -epsilon ||
-        candidate.dy > size.height + epsilon) {
-      return;
-    }
-    final clamped = Offset(
-      candidate.dx.clamp(0.0, size.width),
-      candidate.dy.clamp(0.0, size.height),
-    );
-    if (values.every((value) => (value - clamped).distance > 0.25)) {
-      values.add(clamped);
-    }
+  if (normal.dx.abs() <= epsilon) {
+    final x = math.max(0.0, point.dx);
+    return (Offset(x, 0), Offset(x, size.height));
   }
 
-  if (direction.dx.abs() > epsilon) {
-    var t = -point.dx / direction.dx;
-    add(point + direction * t);
-    t = (size.width - point.dx) / direction.dx;
-    add(point + direction * t);
-  }
-  if (direction.dy.abs() > epsilon) {
-    var t = -point.dy / direction.dy;
-    add(point + direction * t);
-    t = (size.height - point.dy) / direction.dy;
-    add(point + direction * t);
-  }
-  return values;
-}
+  double creaseXAt(double y) =>
+      point.dx - normal.dy * (y - point.dy) / normal.dx;
 
-(Offset, Offset) _farthestPair(List<Offset> values, Size size) {
-  if (values.length < 2) {
-    return (Offset(size.width, 0), Offset(size.width, size.height));
-  }
-  var first = values[0];
-  var second = values[1];
-  var greatestDistance = (first - second).distanceSquared;
-  for (var left = 0; left < values.length; left++) {
-    for (var right = left + 1; right < values.length; right++) {
-      final distance = (values[left] - values[right]).distanceSquared;
-      if (distance > greatestDistance) {
-        greatestDistance = distance;
-        first = values[left];
-        second = values[right];
-      }
-    }
-  }
-  return (first, second);
+  return (
+    Offset(math.max(0.0, creaseXAt(0)), 0),
+    Offset(math.max(0.0, creaseXAt(size.height)), size.height),
+  );
 }

@@ -42,16 +42,101 @@ class ReaderPageCurlController {
   @visibleForTesting
   Offset? get debugTouchPosition {
     final geometry = _state?._geometry;
-    return geometry?.screenPoint(geometry.canonicalTouch);
+    if (geometry == null) return null;
+    return geometry.motion == ReaderPageTurnMotion.incoming
+        ? geometry.foldPoint
+        : geometry.reflectedCorner;
   }
 
   @visibleForTesting
   bool get debugIsCatchingUp => _state?._catchUpStartPointer != null;
 
+  @visibleForTesting
+  Offset? get debugFoldStart => _state?._geometry?.foldStart;
+
+  @visibleForTesting
+  Offset? get debugFoldEnd => _state?._geometry?.foldEnd;
+
+  @visibleForTesting
+  ReaderPageTurnMotion? get debugMotion => _state?._geometry?.motion;
+
+  @visibleForTesting
+  bool get debugActiveSourceIsCurrent {
+    final state = _state;
+    final source = state?._activeSourcePage;
+    return state != null &&
+        source != null &&
+        _sameSnapshot(source, state.widget.currentPage);
+  }
+
+  @visibleForTesting
+  bool get debugAnimationReady => _state?._animationReady ?? false;
+
+  @visibleForTesting
+  Offset? get debugShaderLineA => _state?._geometry?.lineA;
+
+  @visibleForTesting
+  Offset? get debugShaderLineB => _state?._geometry?.lineB;
+
+  @visibleForTesting
+  bool get debugUsesProvisionalSnapshot {
+    final state = _state;
+    final source = state?._activeSourcePage;
+    return state != null &&
+        source != null &&
+        state._syncSnapshotKeys.contains(source.key);
+  }
+
   void _attach(_ReaderShaderPageCurlState state) => _state = state;
 
   void _detach(_ReaderShaderPageCurlState state) {
     if (identical(_state, state)) _state = null;
+  }
+}
+
+/// Serializes page turns across the two independently rendered leaves of a
+/// tablet spread.
+///
+/// Each leaf keeps its own directional spring and queue, while this shared
+/// coordinator guarantees that only one leaf can animate or commit at a time.
+/// A released slot becomes available after the next frame so the host has a
+/// chance to rebuild both leaves with the newly committed spread first.
+class ReaderPageCurlCoordinator extends ChangeNotifier {
+  Object? _owner;
+  bool _availableAfterFrame = true;
+  bool _notificationScheduled = false;
+  bool _disposed = false;
+
+  bool _tryAcquire(Object owner) {
+    if (_disposed) return false;
+    if (identical(_owner, owner)) return true;
+    if (_owner != null || !_availableAfterFrame) return false;
+    _owner = owner;
+    return true;
+  }
+
+  void _release(Object owner) {
+    if (!identical(_owner, owner)) return;
+    _owner = null;
+    _availableAfterFrame = false;
+    if (_notificationScheduled) return;
+    _notificationScheduled = true;
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      _notificationScheduled = false;
+      if (_disposed) return;
+      _availableAfterFrame = true;
+      notifyListeners();
+    });
+  }
+
+  @visibleForTesting
+  bool get debugIsBusy => _owner != null || !_availableAfterFrame;
+
+  @override
+  void dispose() {
+    _disposed = true;
+    _owner = null;
+    super.dispose();
   }
 }
 
@@ -72,6 +157,7 @@ class ReaderShaderPageCurl extends StatefulWidget {
     this.backwardPage,
     this.controller,
     this.preparePages,
+    this.coordinator,
     this.edgeDragOnly = false,
     this.bindingEdge = ReaderPageBindingEdge.left,
   });
@@ -83,6 +169,7 @@ class ReaderShaderPageCurl extends StatefulWidget {
   final ReaderPageTurnCallback onTurnBackward;
   final Color paperColor;
   final ReaderPageCurlController? controller;
+  final ReaderPageCurlCoordinator? coordinator;
   final Future<void> Function()? preparePages;
 
   /// The physical spine edge of this leaf in screen coordinates.
@@ -121,7 +208,9 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
   static const double _horizontalIntentRatio = 1.12;
   static const double _predictionHorizonSeconds = 0.14;
   static const double _commitProjection = 0.28;
-  static const Duration _middleDragCatchUpDuration = Duration(milliseconds: 85);
+  static const Duration _middleDragCatchUpDuration =
+      Duration(milliseconds: 120);
+  static const double _middleDragTiltStart = 0.55;
 
   final GlobalKey _currentKey = GlobalKey(debugLabel: 'curl-current');
   final GlobalKey _forwardKey = GlobalKey(debugLabel: 'curl-forward');
@@ -132,13 +221,15 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
   );
   final Map<_SnapshotRequestKey, Future<ui.Image?>> _inFlightCaptures = {};
   final Queue<_QueuedProgrammaticTurn> _programmaticTurns = Queue();
+  final Set<ReaderPageSnapshotKey> _syncSnapshotKeys = {};
+  final List<ui.Image> _retiredSnapshotImages = [];
 
-  late final Ticker _springTicker;
+  late final Ticker _forwardSpringTicker;
+  late final Ticker _backwardSpringTicker;
   late final Ticker _catchUpTicker;
   ui.FragmentShader? _classicFoldShader;
-  SpringSimulation? _springX;
-  SpringSimulation? _springY;
-  Duration _springStartedAt = Duration.zero;
+  final _forwardSpring = _ReaderSpringChannel();
+  final _backwardSpring = _ReaderSpringChannel();
   Completer<void>? _turnCompleter;
 
   Size _viewportSize = Size.zero;
@@ -150,22 +241,30 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
   ReaderPageTurnGeometry? _geometry;
   ReaderPageSnapshot? _activeSourcePage;
   ReaderPageSnapshot? _activeTargetPage;
+  GlobalKey? _activeSourceKey;
+  GlobalKey? _activeTargetKey;
   _PageTurnPhase _phase = _PageTurnPhase.idle;
-  bool _springCommits = false;
   bool _warmScheduled = false;
   bool _warmAfterTurn = false;
   int _captureGeneration = 0;
   int _preparedGeneration = -1;
   int _preparingGeneration = -1;
   Future<void>? _preparingPages;
+  ReaderPageCurlCoordinator? _ownedCoordinator;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _springTicker = createTicker(_onSpringTick);
+    _forwardSpringTicker = createTicker(
+      (elapsed) => _onSpringTick(ReaderPageTurnDirection.forward, elapsed),
+    );
+    _backwardSpringTicker = createTicker(
+      (elapsed) => _onSpringTick(ReaderPageTurnDirection.backward, elapsed),
+    );
     _catchUpTicker = createTicker(_onCatchUpTick);
     widget.controller?._attach(this);
+    widget.coordinator?.addListener(_onCoordinatorAvailable);
     unawaited(_loadClassicFoldShader());
     _scheduleWarmSnapshots();
   }
@@ -176,6 +275,14 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
     if (!identical(oldWidget.controller, widget.controller)) {
       oldWidget.controller?._detach(this);
       widget.controller?._attach(this);
+    }
+    if (!identical(oldWidget.coordinator, widget.coordinator)) {
+      oldWidget.coordinator?.removeListener(_onCoordinatorAvailable);
+      if (identical(_ownedCoordinator, oldWidget.coordinator)) {
+        oldWidget.coordinator?._release(this);
+        _ownedCoordinator = null;
+      }
+      widget.coordinator?.addListener(_onCoordinatorAvailable);
     }
     final pagesChanged = !_sameSnapshot(
           oldWidget.currentPage,
@@ -203,6 +310,9 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     widget.controller?._detach(this);
+    widget.coordinator?.removeListener(_onCoordinatorAvailable);
+    _ownedCoordinator?._release(this);
+    _ownedCoordinator = null;
     final completer = _turnCompleter;
     if (completer != null && !completer.isCompleted) completer.complete();
     for (final turn in _programmaticTurns) {
@@ -210,8 +320,13 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
     }
     _programmaticTurns.clear();
     _catchUpTicker.dispose();
-    _springTicker.dispose();
+    _forwardSpringTicker.dispose();
+    _backwardSpringTicker.dispose();
     _snapshotCache.dispose();
+    for (final image in _retiredSnapshotImages) {
+      image.dispose();
+    }
+    _retiredSnapshotImages.clear();
     _classicFoldShader?.dispose();
     super.dispose();
   }
@@ -320,7 +435,7 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
       logicalSize: _viewportSize,
       pixelRatio: ratio,
     );
-    if (cached != null) return cached;
+    if (cached != null && !_syncSnapshotKeys.contains(page.key)) return cached;
 
     final requestKey = _SnapshotRequestKey(
       pageKey: page.key,
@@ -368,14 +483,28 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
       image.dispose();
       return null;
     }
-    _snapshotCache.store(
+    final existing = _snapshotCache.lookup(
+      page.key,
+      contentRevision: page.contentRevision,
+      logicalSize: _viewportSize,
+      pixelRatio: pixelRatio,
+    );
+    final replacesProvisional = _syncSnapshotKeys.contains(page.key);
+    if (existing != null && !replacesProvisional) {
+      image.dispose();
+      return existing;
+    }
+    final retired = _snapshotCache.store(
       page.key,
       image: image,
       contentRevision: page.contentRevision,
       logicalSize: _viewportSize,
       pixelRatio: pixelRatio,
       protectedKeys: _protectedSnapshotKeys,
+      retainPrevious: replacesProvisional,
     );
+    if (retired != null) _retiredSnapshotImages.add(retired);
+    if (replacesProvisional) _syncSnapshotKeys.remove(page.key);
     if (mounted) setState(() {});
     return image;
   }
@@ -399,17 +528,25 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
     _dragOrigin = origin;
     final fraction = origin.dx / _viewportSize.width;
     if (fraction >= 1 - _edgeStartFraction && widget.forwardPage != null) {
-      _beginDrag(
+      final started = _beginDrag(
         ReaderPageTurnDirection.forward,
         pointer: details.localPosition,
         origin: origin,
       );
+      if (!started) {
+        _pointerDown = null;
+        _dragOrigin = null;
+      }
     } else if (fraction <= _edgeStartFraction && widget.backwardPage != null) {
-      _beginDrag(
+      final started = _beginDrag(
         ReaderPageTurnDirection.backward,
         pointer: details.localPosition,
         origin: origin,
       );
+      if (!started) {
+        _pointerDown = null;
+        _dragOrigin = null;
+      }
     } else if (!widget.edgeDragOnly) {
       setState(() => _phase = _PageTurnPhase.pointerPending);
     } else {
@@ -434,12 +571,13 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
         _resetToIdle();
         return;
       }
-      _beginDrag(
+      final started = _beginDrag(
         direction,
         pointer: details.localPosition,
         origin: origin,
-        catchUpFromEdge: direction == ReaderPageTurnDirection.forward,
+        catchUpFromEdge: _motionFor(direction) == ReaderPageTurnMotion.outgoing,
       );
+      if (!started) _resetToIdle();
       return;
     }
     if (_phase != _PageTurnPhase.dragging || _direction == null) return;
@@ -456,30 +594,34 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
     });
   }
 
-  void _beginDrag(
+  bool _beginDrag(
     ReaderPageTurnDirection direction, {
     required Offset pointer,
     required Offset origin,
     bool catchUpFromEdge = false,
   }) {
-    final source = direction == ReaderPageTurnDirection.forward
-        ? widget.currentPage
-        : widget.backwardPage;
-    final target = direction == ReaderPageTurnDirection.forward
-        ? widget.forwardPage
-        : widget.currentPage;
-    if (source == null || target == null) return;
+    final layers = _turnLayers(direction);
+    if (layers == null || !_acquireTurnSlot()) return false;
+    final source = layers.source;
+    final target = layers.target;
     _direction = direction;
     _dragOrigin = origin;
     _latestDragPointer = pointer;
     _activeSourcePage = source;
     _activeTargetPage = target;
+    _activeSourceKey = layers.sourceKey;
+    _activeTargetKey = layers.targetKey;
+    _captureActiveSourceSync(
+      source,
+      layers.sourceKey,
+      refreshAfterPreparation: !_sameSnapshot(source, widget.currentPage),
+    );
     final initialPointer = catchUpFromEdge
         ? Offset(
             direction == ReaderPageTurnDirection.forward
-                ? _viewportSize.width - 0.5
-                : 0.5,
-            pointer.dy,
+                ? _viewportSize.width
+                : 0,
+            origin.dy,
           )
         : pointer;
     _catchUpStartPointer = catchUpFromEdge ? initialPointer : null;
@@ -491,16 +633,29 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
       );
       _phase = _PageTurnPhase.dragging;
     });
-    final snapshotsReady = _ensureActiveSnapshots(direction);
+    unawaited(_ensureActiveSourceSnapshot(direction));
+    unawaited(_ensureActiveSnapshots(direction));
     if (catchUpFromEdge) {
-      unawaited(_startCatchUpAfterSnapshots(snapshotsReady));
-    } else {
-      unawaited(snapshotsReady);
+      _startCatchUp();
+    }
+    return true;
+  }
+
+  bool _acquireTurnSlot() {
+    final coordinator = widget.coordinator;
+    if (coordinator == null) return true;
+    if (!coordinator._tryAcquire(this)) return false;
+    _ownedCoordinator = coordinator;
+    return true;
+  }
+
+  void _onCoordinatorAvailable() {
+    if (mounted && _phase == _PageTurnPhase.idle) {
+      _drainProgrammaticTurns();
     }
   }
 
-  Future<void> _startCatchUpAfterSnapshots(Future<void> snapshotsReady) async {
-    await snapshotsReady;
+  void _startCatchUp() {
     if (!mounted ||
         _phase != _PageTurnPhase.dragging ||
         _catchUpStartPointer == null) {
@@ -526,8 +681,24 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
     final linearProgress =
         (elapsed.inMicroseconds / _middleDragCatchUpDuration.inMicroseconds)
             .clamp(0.0, 1.0);
-    final progress = Curves.easeOutCubic.transform(linearProgress);
-    final pointer = Offset.lerp(start, target, progress)!;
+    // A front-loaded ease-out made the first painted fold jump most of the
+    // distance in one or two frames. Ease-in-out keeps the edge origin visible
+    // before accelerating into the live pointer, while remaining short enough
+    // to feel like catch-up rather than a separate animation.
+    final horizontalProgress = Curves.easeInOutCubic.transform(linearProgress);
+    // Keep the first part of a middle-origin catch-up as a flat vertical roll.
+    // Feeding small pointer-Y jitter into the almost-collapsed right-edge curl
+    // rotates a very thin polygon and can produce one or two malformed frames.
+    // Once the fold is well clear of the edge, blend the live Y back in so the
+    // page finishes the catch-up at the actual finger position.
+    final tiltLinearProgress =
+        ((linearProgress - _middleDragTiltStart) / (1 - _middleDragTiltStart))
+            .clamp(0.0, 1.0);
+    final tiltProgress = Curves.easeInOutCubic.transform(tiltLinearProgress);
+    final pointer = Offset(
+      start.dx + (target.dx - start.dx) * horizontalProgress,
+      origin.dy + (target.dy - origin.dy) * tiltProgress,
+    );
     if (mounted) {
       setState(() {
         _geometry = _geometryFromPointer(
@@ -563,19 +734,49 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
     ReaderPageTurnDirection direction,
   ) async {
     final generation = _captureGeneration;
-    if (direction == ReaderPageTurnDirection.forward) {
-      await _ensureSnapshot(widget.currentPage, _currentKey, generation);
-      final target = widget.forwardPage;
-      if (target != null) {
-        await _ensureSnapshot(target, _forwardKey, generation);
-      }
-    } else {
-      final source = widget.backwardPage;
-      if (source != null) {
-        await _ensureSnapshot(source, _backwardKey, generation);
-      }
-      await _ensureSnapshot(widget.currentPage, _currentKey, generation);
-    }
+    final layers = _turnLayers(direction);
+    if (layers == null) return;
+    final source = _direction == direction && _activeSourcePage != null
+        ? _activeSourcePage!
+        : layers.source;
+    final sourceKey = _direction == direction && _activeSourceKey != null
+        ? _activeSourceKey!
+        : layers.sourceKey;
+    final target = _direction == direction && _activeTargetPage != null
+        ? _activeTargetPage!
+        : layers.target;
+    final targetKey = _direction == direction && _activeTargetKey != null
+        ? _activeTargetKey!
+        : layers.targetKey;
+    await _ensureSnapshot(
+      source,
+      sourceKey,
+      generation,
+    );
+    if (!mounted || generation != _captureGeneration) return;
+    await _ensureSnapshot(
+      target,
+      targetKey,
+      generation,
+    );
+  }
+
+  Future<ui.Image?> _ensureActiveSourceSnapshot(
+    ReaderPageTurnDirection direction,
+  ) {
+    final layers = _turnLayers(direction);
+    if (layers == null) return Future<ui.Image?>.value();
+    final source = _direction == direction && _activeSourcePage != null
+        ? _activeSourcePage!
+        : layers.source;
+    final sourceKey = _direction == direction && _activeSourceKey != null
+        ? _activeSourceKey!
+        : layers.sourceKey;
+    return _ensureSnapshot(
+      source,
+      sourceKey,
+      _captureGeneration,
+    );
   }
 
   void _onPanEnd(DragEndDetails details) {
@@ -590,16 +791,23 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
       return;
     }
     _finishCatchUpAtLatestPointer();
-    final canonicalVelocity = ReaderPageTurnGeometry.canonicalVelocity(
+    final canonicalVelocity = ReaderPageTurnGeometry.velocityToBindingSpace(
       details.velocity.pixelsPerSecond,
-      _direction!,
+      bindingOnRight: _bindingOnRight,
     );
+    final motion = _geometry!.motion;
+    final velocityTowardCommit = motion == ReaderPageTurnMotion.outgoing
+        ? -canonicalVelocity.dx
+        : canonicalVelocity.dx;
     final projected = _geometry!.progress +
-        (-canonicalVelocity.dx / math.max(_viewportSize.width, 1)) *
+        (velocityTowardCommit / math.max(_viewportSize.width, 1)) *
             _predictionHorizonSeconds;
+    final springVelocity = motion == ReaderPageTurnMotion.incoming
+        ? canonicalVelocity * 2
+        : canonicalVelocity;
     _startSpring(
       commit: projected >= _commitProjection,
-      canonicalVelocity: canonicalVelocity,
+      canonicalVelocity: springVelocity,
     );
   }
 
@@ -635,27 +843,48 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
       return;
     }
     final request = _programmaticTurns.removeFirst();
-    unawaited(_runProgrammaticTurn(request));
+    unawaited(
+      request.direction == ReaderPageTurnDirection.forward
+          ? _runForwardAnimation(request)
+          : _runBackwardAnimation(request),
+    );
   }
 
-  Future<void> _runProgrammaticTurn(_QueuedProgrammaticTurn request) async {
-    final direction = request.direction;
+  Future<void> _runForwardAnimation(_QueuedProgrammaticTurn request) =>
+      _runDirectionalProgrammaticTurn(
+        request,
+        ReaderPageTurnDirection.forward,
+      );
+
+  Future<void> _runBackwardAnimation(_QueuedProgrammaticTurn request) =>
+      _runDirectionalProgrammaticTurn(
+        request,
+        ReaderPageTurnDirection.backward,
+      );
+
+  Future<void> _runDirectionalProgrammaticTurn(
+    _QueuedProgrammaticTurn request,
+    ReaderPageTurnDirection direction,
+  ) async {
     if (_viewportSize.isEmpty || !_hasPage(direction)) {
       if (!request.completer.isCompleted) request.completer.complete();
       _scheduleProgrammaticDrain();
       return;
     }
-    final reverse = direction == ReaderPageTurnDirection.backward;
+    final startsOnLeft = direction == ReaderPageTurnDirection.backward;
     final origin = Offset(
-      reverse ? 0 : _viewportSize.width,
+      startsOnLeft ? 0 : _viewportSize.width,
       _viewportSize.height * 0.72,
     );
     final pointer = Offset(
-      reverse ? 1 : _viewportSize.width - 1,
+      startsOnLeft ? 1 : _viewportSize.width - 1,
       origin.dy,
     );
-    _beginDrag(direction, pointer: pointer, origin: origin);
-    await _ensureActiveSnapshots(direction);
+    if (!_beginDrag(direction, pointer: pointer, origin: origin)) {
+      _programmaticTurns.addFirst(request);
+      return;
+    }
+    await _ensureActiveSourceSnapshot(direction);
     if (!mounted || _phase != _PageTurnPhase.dragging) {
       if (!request.completer.isCompleted) request.completer.complete();
       _scheduleProgrammaticDrain();
@@ -665,7 +894,12 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
     _turnCompleter = completer;
     _startSpring(
       commit: true,
-      canonicalVelocity: Offset(-_viewportSize.width * 3.2, 0),
+      canonicalVelocity: Offset(
+        _motionFor(direction) == ReaderPageTurnMotion.outgoing
+            ? -_viewportSize.width * 3.2
+            : _viewportSize.width * 3.2,
+        0,
+      ),
     );
     await completer.future;
     if (!request.completer.isCompleted) request.completer.complete();
@@ -683,19 +917,82 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
           ? widget.forwardPage != null
           : widget.backwardPage != null;
 
-  ReaderPageTurnAnchorMode _anchorModeFor(
-    ReaderPageTurnDirection direction,
-  ) =>
-      direction == ReaderPageTurnDirection.backward
-          ? ReaderPageTurnAnchorMode.followPointerEdge
-          : ReaderPageTurnAnchorMode.followEdge;
+  _ReaderTurnLayers? _turnLayers(ReaderPageTurnDirection direction) {
+    final adjacent = direction == ReaderPageTurnDirection.forward
+        ? widget.forwardPage
+        : widget.backwardPage;
+    if (adjacent == null) return null;
+    final adjacentKey = direction == ReaderPageTurnDirection.forward
+        ? _forwardKey
+        : _backwardKey;
+    return _motionFor(direction) == ReaderPageTurnMotion.outgoing
+        ? _ReaderTurnLayers(
+            source: widget.currentPage,
+            sourceKey: _currentKey,
+            target: adjacent,
+            targetKey: adjacentKey,
+          )
+        : _ReaderTurnLayers(
+            source: adjacent,
+            sourceKey: adjacentKey,
+            target: widget.currentPage,
+            targetKey: _currentKey,
+          );
+  }
 
-  bool _canonicalBindingOnRight(ReaderPageTurnDirection direction) {
-    final physicalBindingOnRight =
-        widget.bindingEdge == ReaderPageBindingEdge.right;
-    return direction == ReaderPageTurnDirection.backward
-        ? !physicalBindingOnRight
-        : physicalBindingOnRight;
+  void _captureActiveSourceSync(
+    ReaderPageSnapshot page,
+    GlobalKey boundaryKey, {
+    required bool refreshAfterPreparation,
+  }) {
+    if (!mounted || _viewportSize.isEmpty) return;
+    final ratio = readerPageSnapshotPixelRatio(
+      logicalSize: _viewportSize,
+      devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
+      perEntryByteBudget: _perSnapshotBudgetBytes,
+    );
+    final cached = _snapshotCache.lookup(
+      page.key,
+      contentRevision: page.contentRevision,
+      logicalSize: _viewportSize,
+      pixelRatio: ratio,
+    );
+    if (cached != null) return;
+    final boundary = boundaryKey.currentContext?.findRenderObject()
+        as RenderRepaintBoundary?;
+    if (boundary == null || !boundary.hasSize) return;
+    var needsPaint = false;
+    assert(() {
+      needsPaint = boundary.debugNeedsPaint;
+      return true;
+    }());
+    if (needsPaint) return;
+    try {
+      final image = boundary.toImageSync(pixelRatio: ratio);
+      _snapshotCache.store(
+        page.key,
+        image: image,
+        contentRevision: page.contentRevision,
+        logicalSize: _viewportSize,
+        pixelRatio: ratio,
+        protectedKeys: _protectedSnapshotKeys,
+      );
+      if (refreshAfterPreparation) _syncSnapshotKeys.add(page.key);
+    } catch (error, stackTrace) {
+      debugPrint('Reader page turn sync capture failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
+  }
+
+  bool get _bindingOnRight => widget.bindingEdge == ReaderPageBindingEdge.right;
+
+  ReaderPageTurnMotion _motionFor(ReaderPageTurnDirection direction) {
+    final turnsCurrentPageOut = direction == ReaderPageTurnDirection.forward
+        ? !_bindingOnRight
+        : _bindingOnRight;
+    return turnsCurrentPageOut
+        ? ReaderPageTurnMotion.outgoing
+        : ReaderPageTurnMotion.incoming;
   }
 
   ReaderPageTurnGeometry _geometryFromPointer({
@@ -706,11 +1003,32 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
       ReaderPageTurnGeometry.fromPointer(
         size: _viewportSize,
         direction: direction,
+        motion: _motionFor(direction),
         pointer: pointer,
         dragOrigin: origin,
-        anchorMode: _anchorModeFor(direction),
-        canonicalBindingOnRight: _canonicalBindingOnRight(direction),
+        anchorMode: ReaderPageTurnAnchorMode.followEdge,
+        bindingOnRight: _bindingOnRight,
       );
+
+  _ReaderSpringChannel _springFor(ReaderPageTurnDirection direction) =>
+      direction == ReaderPageTurnDirection.forward
+          ? _forwardSpring
+          : _backwardSpring;
+
+  Ticker _springTickerFor(ReaderPageTurnDirection direction) =>
+      direction == ReaderPageTurnDirection.forward
+          ? _forwardSpringTicker
+          : _backwardSpringTicker;
+
+  ReaderPageTurnDirection _opposite(ReaderPageTurnDirection direction) =>
+      direction == ReaderPageTurnDirection.forward
+          ? ReaderPageTurnDirection.backward
+          : ReaderPageTurnDirection.forward;
+
+  void _stopSpringTicker(ReaderPageTurnDirection direction) {
+    final ticker = _springTickerFor(direction);
+    if (ticker.isActive) ticker.stop();
+  }
 
   void _startSpring({
     required bool commit,
@@ -721,69 +1039,108 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
     if (geometry == null || direction == null) return;
     _stopCatchUp();
     final anchor = geometry.canonicalAnchor;
-    final target = commit ? Offset(-_viewportSize.width, anchor.dy) : anchor;
+    final target = switch ((geometry.motion, commit)) {
+      (ReaderPageTurnMotion.outgoing, true) =>
+        Offset(-_viewportSize.width, anchor.dy),
+      (ReaderPageTurnMotion.outgoing, false) => anchor,
+      (ReaderPageTurnMotion.incoming, true) => anchor,
+      (ReaderPageTurnMotion.incoming, false) =>
+        Offset(-_viewportSize.width, anchor.dy),
+    };
     final spring = SpringDescription.withDampingRatio(
       mass: 1,
       stiffness: commit ? 420 : 400,
       ratio: commit ? 0.96 : 0.90,
     );
     const tolerance = Tolerance(distance: 0.75, velocity: 9);
-    _springX = SpringSimulation(
+    final channel = _springFor(direction);
+    channel.simulationX = SpringSimulation(
       spring,
       geometry.canonicalTouch.dx,
       target.dx,
       canonicalVelocity.dx,
       tolerance: tolerance,
     );
-    _springY = SpringSimulation(
+    channel.simulationY = SpringSimulation(
       spring,
       geometry.canonicalTouch.dy,
       target.dy,
       canonicalVelocity.dy,
       tolerance: tolerance,
     );
-    _springCommits = commit;
-    _springStartedAt = Duration.zero;
+    channel
+      ..commits = commit
+      ..target = target
+      ..startedAt = Duration.zero;
     setState(() {
       _phase =
           commit ? _PageTurnPhase.settlingCommit : _PageTurnPhase.settlingBack;
     });
-    _springTicker.start();
+    _stopSpringTicker(_opposite(direction));
+    final ticker = _springTickerFor(direction);
+    if (ticker.isActive) ticker.stop();
+    ticker.start();
   }
 
-  void _onSpringTick(Duration elapsed) {
-    final simulationX = _springX;
-    final simulationY = _springY;
+  void _onSpringTick(
+    ReaderPageTurnDirection channelDirection,
+    Duration elapsed,
+  ) {
+    final channel = _springFor(channelDirection);
+    final simulationX = channel.simulationX;
+    final simulationY = channel.simulationY;
     final direction = _direction;
     final geometry = _geometry;
     if (simulationX == null ||
         simulationY == null ||
-        direction == null ||
+        direction != channelDirection ||
         geometry == null) {
-      _springTicker.stop();
+      _stopSpringTicker(channelDirection);
       return;
     }
-    if (_springStartedAt == Duration.zero) _springStartedAt = elapsed;
-    final seconds = (elapsed - _springStartedAt).inMicroseconds / 1000000;
+    if (channel.startedAt == Duration.zero) channel.startedAt = elapsed;
+    final seconds = (elapsed - channel.startedAt).inMicroseconds / 1000000;
     final touch = Offset(simulationX.x(seconds), simulationY.x(seconds));
+    final target = channel.target;
+    final terminalSnapDistance = math.max(
+      2.0,
+      math.min(8.0, _viewportSize.width * 0.012),
+    );
+    final snapsToExactTerminal = channel.commits &&
+        target != null &&
+        (touch - target).distance <= terminalSnapDistance;
+    final renderedTouch = snapsToExactTerminal ? target : touch;
     if (mounted) {
       setState(() {
         _geometry = ReaderPageTurnGeometry.fromCanonicalTouch(
           size: _viewportSize,
-          direction: direction,
+          direction: channelDirection,
+          motion: geometry.motion,
           corner: geometry.corner,
           canonicalAnchorY: geometry.canonicalAnchor.dy,
-          canonicalTouch: touch,
-          canonicalBindingOnRight: _canonicalBindingOnRight(direction),
+          canonicalTouch: renderedTouch,
+          bindingOnRight: _bindingOnRight,
         );
       });
     }
-    final visuallySettled = _springCommits
-        ? simulationX.isDone(seconds)
-        : simulationX.isDone(seconds) && simulationY.isDone(seconds);
+    final visuallySettled = snapsToExactTerminal ||
+        (simulationX.isDone(seconds) && simulationY.isDone(seconds));
     if (visuallySettled) {
-      _springTicker.stop();
-      if (_springCommits) {
+      _stopSpringTicker(channelDirection);
+      if (target != null && mounted) {
+        setState(() {
+          _geometry = ReaderPageTurnGeometry.fromCanonicalTouch(
+            size: _viewportSize,
+            direction: channelDirection,
+            motion: geometry.motion,
+            corner: geometry.corner,
+            canonicalAnchorY: geometry.canonicalAnchor.dy,
+            canonicalTouch: target,
+            bindingOnRight: _bindingOnRight,
+          );
+        });
+      }
+      if (channel.commits) {
         setState(() => _phase = _PageTurnPhase.awaitingPageUpdate);
         unawaited(_commitTurn());
       } else {
@@ -809,31 +1166,54 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
   void _completeTurn() {
     final completer = _turnCompleter;
     _turnCompleter = null;
+    final syncSnapshotKeys = _syncSnapshotKeys.toSet();
+    _syncSnapshotKeys.clear();
+    final retiredSnapshotImages = _retiredSnapshotImages.toList();
+    _retiredSnapshotImages.clear();
     _resetToIdle();
     if (_warmAfterTurn) {
       _warmAfterTurn = false;
     }
-    _scheduleWarmSnapshots();
+    if (syncSnapshotKeys.isEmpty && retiredSnapshotImages.isEmpty) {
+      _scheduleWarmSnapshots();
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        for (final image in retiredSnapshotImages) {
+          image.dispose();
+        }
+        if (!mounted) return;
+        for (final key in syncSnapshotKeys) {
+          _snapshotCache.remove(key);
+        }
+        _scheduleWarmSnapshots();
+      });
+    }
     if (completer != null && !completer.isCompleted) completer.complete();
     _scheduleProgrammaticDrain();
   }
 
   void _resetToIdle() {
     _stopCatchUp();
-    if (_springTicker.isActive) _springTicker.stop();
+    _stopSpringTicker(ReaderPageTurnDirection.forward);
+    _stopSpringTicker(ReaderPageTurnDirection.backward);
     if (!mounted) return;
+    final coordinator = _ownedCoordinator;
+    _ownedCoordinator = null;
     setState(() {
       _phase = _PageTurnPhase.idle;
       _direction = null;
       _geometry = null;
       _activeSourcePage = null;
       _activeTargetPage = null;
+      _activeSourceKey = null;
+      _activeTargetKey = null;
       _dragOrigin = null;
       _pointerDown = null;
       _latestDragPointer = null;
-      _springX = null;
-      _springY = null;
+      _forwardSpring.clear();
+      _backwardSpring.clear();
     });
+    coordinator?._release(this);
   }
 
   ui.Image? _cachedImage(ReaderPageSnapshot? page) {
@@ -850,6 +1230,13 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
       pixelRatio: ratio,
     );
   }
+
+  bool get _animationReady =>
+      _geometry != null &&
+      _cachedImage(_activeSourcePage) != null &&
+      _activeTargetPage != null &&
+      _phase != _PageTurnPhase.idle &&
+      _phase != _PageTurnPhase.pointerPending;
 
   Widget _paper(
     GlobalKey key,
@@ -877,12 +1264,22 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
         }
         final geometry = _geometry;
         final sourceImage = _cachedImage(_activeSourcePage);
-        final targetImage = _cachedImage(_activeTargetPage);
-        final animationReady = geometry != null &&
-            sourceImage != null &&
-            targetImage != null &&
-            _phase != _PageTurnPhase.idle &&
-            _phase != _PageTurnPhase.pointerPending;
+        final animationReady = _animationReady;
+        final boundaryPages = <GlobalKey, ReaderPageSnapshot>{
+          _currentKey: widget.currentPage,
+          if (widget.backwardPage case final page?) _backwardKey: page,
+          if (widget.forwardPage case final page?) _forwardKey: page,
+        };
+        if (_activeSourcePage != null && _activeSourceKey != null) {
+          boundaryPages[_activeSourceKey!] = _activeSourcePage!;
+        }
+        if (_activeTargetPage != null && _activeTargetKey != null) {
+          boundaryPages[_activeTargetKey!] = _activeTargetPage!;
+        }
+        final visibleKey = animationReady && _activeTargetKey != null
+            ? _activeTargetKey!
+            : _currentKey;
+        final visiblePage = boundaryPages[visibleKey]!;
         return Listener(
           behavior: HitTestBehavior.opaque,
           onPointerDown: _onPointerDown,
@@ -895,18 +1292,16 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
             child: Stack(
               fit: StackFit.expand,
               children: [
-                if (widget.backwardPage case final page?)
-                  _paper(_backwardKey, page, hidden: true),
-                if (widget.forwardPage case final page?)
-                  _paper(_forwardKey, page, hidden: true),
-                _paper(_currentKey, widget.currentPage, hidden: false),
+                for (final entry in boundaryPages.entries)
+                  if (!identical(entry.key, visibleKey))
+                    _paper(entry.key, entry.value, hidden: true),
+                _paper(visibleKey, visiblePage, hidden: false),
                 if (animationReady)
                   Positioned.fill(
                     child: CustomPaint(
                       painter: _pageTurnPainter(
-                        geometry: geometry,
-                        sourceImage: sourceImage,
-                        targetImage: targetImage,
+                        geometry: geometry!,
+                        sourceImage: sourceImage!,
                       ),
                     ),
                   ),
@@ -921,21 +1316,17 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
   CustomPainter _pageTurnPainter({
     required ReaderPageTurnGeometry geometry,
     required ui.Image sourceImage,
-    required ui.Image targetImage,
   }) {
     if (_classicFoldShader != null) {
       return _ReaderClassicFoldPainter(
         shader: _classicFoldShader!,
-        currentPage: sourceImage,
-        targetPage: targetImage,
+        sourcePage: sourceImage,
         geometry: geometry,
-        paperColor: widget.paperColor,
         bindingEdge: widget.bindingEdge,
       );
     }
     return _ReaderFallbackTurnPainter(
-      currentPage: sourceImage,
-      targetPage: targetImage,
+      sourcePage: sourceImage,
       geometry: geometry,
     );
   }
@@ -994,18 +1385,24 @@ class _ReaderSnapshotCache {
     return entry.image;
   }
 
-  void store(
+  ui.Image? store(
     ReaderPageSnapshotKey key, {
     required ui.Image image,
     required int contentRevision,
     required Size logicalSize,
     required double pixelRatio,
     required Set<ReaderPageSnapshotKey> protectedKeys,
+    bool retainPrevious = false,
   }) {
     final previous = _entries.remove(key);
+    ui.Image? retainedImage;
     if (previous != null) {
       _bytes -= previous.byteSize;
-      previous.image.dispose();
+      if (retainPrevious) {
+        retainedImage = previous.image;
+      } else {
+        previous.image.dispose();
+      }
     }
     final entry = _ReaderSnapshotEntry(
       image: image,
@@ -1016,6 +1413,7 @@ class _ReaderSnapshotCache {
     _entries[key] = entry;
     _bytes += entry.byteSize;
     _trim(protectedKeys);
+    return retainedImage;
   }
 
   void _trim(Set<ReaderPageSnapshotKey> protectedKeys) {
@@ -1045,6 +1443,13 @@ class _ReaderSnapshotCache {
     }
   }
 
+  void remove(ReaderPageSnapshotKey key) {
+    final entry = _entries.remove(key);
+    if (entry == null) return;
+    _bytes -= entry.byteSize;
+    entry.image.dispose();
+  }
+
   void dispose() {
     for (final entry in _entries.values) {
       entry.image.dispose();
@@ -1068,6 +1473,22 @@ class _ReaderSnapshotEntry {
   final double pixelRatio;
 
   int get byteSize => image.width * image.height * 4;
+}
+
+class _ReaderSpringChannel {
+  SpringSimulation? simulationX;
+  SpringSimulation? simulationY;
+  Duration startedAt = Duration.zero;
+  bool commits = false;
+  Offset? target;
+
+  void clear() {
+    simulationX = null;
+    simulationY = null;
+    startedAt = Duration.zero;
+    commits = false;
+    target = null;
+  }
 }
 
 class _QueuedProgrammaticTurn {
@@ -1112,90 +1533,84 @@ class _SnapshotRequestKey {
       );
 }
 
+class _ReaderTurnLayers {
+  const _ReaderTurnLayers({
+    required this.source,
+    required this.sourceKey,
+    required this.target,
+    required this.targetKey,
+  });
+
+  final ReaderPageSnapshot source;
+  final GlobalKey sourceKey;
+  final ReaderPageSnapshot target;
+  final GlobalKey targetKey;
+}
+
 class _ReaderClassicFoldPainter extends CustomPainter {
   const _ReaderClassicFoldPainter({
     required this.shader,
-    required this.currentPage,
-    required this.targetPage,
+    required this.sourcePage,
     required this.geometry,
-    required this.paperColor,
     required this.bindingEdge,
   });
 
   final ui.FragmentShader shader;
-  final ui.Image currentPage;
-  final ui.Image targetPage;
+  final ui.Image sourcePage;
   final ReaderPageTurnGeometry geometry;
-  final Color paperColor;
   final ReaderPageBindingEdge bindingEdge;
 
   @override
   void paint(Canvas canvas, Size size) {
-    _drawPageImage(canvas, targetPage, size);
-    final foldPoint = geometry.foldPoint;
-    final normal = geometry.turnAxis;
-    final bindingGuard = math.min(4.0, math.max(1.5, size.width * 0.006));
     var index = 0;
     shader
       ..setFloat(index++, size.width)
       ..setFloat(index++, size.height)
-      ..setFloat(index++, foldPoint.dx)
-      ..setFloat(index++, foldPoint.dy)
-      ..setFloat(index++, normal.dx)
-      ..setFloat(index++, normal.dy)
-      ..setFloat(index++, math.min(28, size.shortestSide * 0.045))
-      ..setFloat(index++, 0.34)
-      ..setFloat(index++, geometry.reverse ? 1 : 0)
+      ..setFloat(index++, geometry.canonicalLineA.dx)
+      ..setFloat(index++, geometry.canonicalLineA.dy)
+      ..setFloat(index++, geometry.canonicalLineB.dx)
+      ..setFloat(index++, geometry.canonicalLineB.dy)
       ..setFloat(
         index++,
         bindingEdge == ReaderPageBindingEdge.right ? 1 : 0,
       )
-      ..setFloat(index++, bindingGuard)
-      ..setFloat(index++, paperColor.r)
-      ..setFloat(index++, paperColor.g)
-      ..setFloat(index++, paperColor.b)
-      ..setFloat(index++, paperColor.a)
-      ..setImageSampler(0, currentPage);
+      ..setImageSampler(0, sourcePage);
     canvas.drawRect(Offset.zero & size, Paint()..shader = shader);
   }
 
   @override
   bool shouldRepaint(covariant _ReaderClassicFoldPainter oldDelegate) =>
       oldDelegate.geometry != geometry ||
-      oldDelegate.paperColor != paperColor ||
       oldDelegate.bindingEdge != bindingEdge ||
-      !identical(oldDelegate.currentPage, currentPage) ||
-      !identical(oldDelegate.targetPage, targetPage);
+      !identical(oldDelegate.sourcePage, sourcePage);
 }
 
 class _ReaderFallbackTurnPainter extends CustomPainter {
   const _ReaderFallbackTurnPainter({
-    required this.currentPage,
-    required this.targetPage,
+    required this.sourcePage,
     required this.geometry,
   });
 
-  final ui.Image currentPage;
-  final ui.Image targetPage;
+  final ui.Image sourcePage;
   final ReaderPageTurnGeometry geometry;
 
   @override
   void paint(Canvas canvas, Size size) {
-    _drawPageImage(canvas, targetPage, size);
     canvas.save();
-    final offset = geometry.reverse
-        ? -size.width * (1 - geometry.progress)
-        : -size.width * geometry.progress;
+    final canonicalOffset = switch (geometry.motion) {
+      ReaderPageTurnMotion.outgoing => -size.width * geometry.progress,
+      ReaderPageTurnMotion.incoming => -size.width * (1 - geometry.progress),
+    };
+    final offset = geometry.bindingOnRight ? -canonicalOffset : canonicalOffset;
     canvas.translate(offset, 0);
-    _drawPageImage(canvas, currentPage, size);
+    _drawPageImage(canvas, sourcePage, size);
     canvas.restore();
   }
 
   @override
   bool shouldRepaint(covariant _ReaderFallbackTurnPainter oldDelegate) =>
       oldDelegate.geometry != geometry ||
-      !identical(oldDelegate.currentPage, currentPage) ||
-      !identical(oldDelegate.targetPage, targetPage);
+      !identical(oldDelegate.sourcePage, sourcePage);
 }
 
 void _drawPageImage(Canvas canvas, ui.Image image, Size size) {

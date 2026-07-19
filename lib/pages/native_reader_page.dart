@@ -103,6 +103,8 @@ class _NativeReaderPageState extends State<NativeReaderPage>
       ReaderPageCurlController();
   final ReaderPageCurlController _spreadBackwardPageCurlController =
       ReaderPageCurlController();
+  final ReaderPageCurlCoordinator _spreadPageCurlCoordinator =
+      ReaderPageCurlCoordinator();
   final ValueNotifier<double> _verticalScrollProgress = ValueNotifier(0);
   final ReaderLeafStatusController _leafStatusController =
       ReaderLeafStatusController();
@@ -150,6 +152,8 @@ class _NativeReaderPageState extends State<NativeReaderPage>
   Size _verticalViewportSize = Size.zero;
   TextDirection _verticalTextDirection = TextDirection.ltr;
   TextScaler _verticalTextScaler = TextScaler.noScaling;
+  Size _lastPaginationSize = Size.zero;
+  bool? _lastUsesTwoPageLayout;
 
   @override
   void initState() {
@@ -317,6 +321,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     _verticalChapterPositionsListener.itemPositions
         .removeListener(_onVerticalChapterPositionsChanged);
     _verticalScrollProgress.dispose();
+    _spreadPageCurlCoordinator.dispose();
     _leafStatusController
       ..removeListener(_onLeafStatusChanged)
       ..dispose();
@@ -1487,8 +1492,9 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     int lastChapter,
     Size size,
     TextDirection direction,
-    TextScaler textScaler,
-  ) {
+    TextScaler textScaler, {
+    required bool padOddChapters,
+  }) {
     final result = <_BookPageRef>[];
     final safeFirst = firstChapter.clamp(0, chapters.length - 1);
     final safeLast = lastChapter.clamp(safeFirst, chapters.length - 1);
@@ -1519,6 +1525,18 @@ class _NativeReaderPageState extends State<NativeReaderPage>
           ),
         );
       }
+      if (padOddChapters && chapterPages.length.isOdd) {
+        result.add(
+          _BookPageRef(
+            chapterIndex: chapterIndex,
+            pageIndex: chapterPages.length,
+            pageCount: chapterPages.length,
+            layoutFingerprint: layoutFingerprint,
+            content: chapterPages.last,
+            isBlank: true,
+          ),
+        );
+      }
     }
     return result;
   }
@@ -1529,6 +1547,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     List<_NativeChapter> chapters,
   ) {
     final page = bookPages[index];
+    if (page.isBlank) return;
     final movedForward = page.chapterIndex > _chapterIndex ||
         (page.chapterIndex == _chapterIndex && page.pageIndex > _pageIndex);
     final chapterChanged = page.chapterIndex != _chapterIndex;
@@ -1562,6 +1581,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
   ) async {
     final images = <Uint8List>{};
     for (final page in pages) {
+      if (page.isBlank) continue;
       final imageIndex = page.content.imageBlockIndex;
       if (imageIndex == null) continue;
       final bytes = chapters[page.chapterIndex].blocks[imageIndex].imageBytes;
@@ -1924,16 +1944,23 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     _BookPageRef page, {
     ReaderPageNumberPlacement pageNumberPlacement =
         ReaderPageNumberPlacement.bottomRight,
-  }) =>
-      _buildPageLeaf(
-        chapters[page.chapterIndex],
-        page.content,
-        chapterIndex: page.chapterIndex,
-        pageIndex: page.pageIndex,
-        pageCount: page.pageCount,
-        layoutFingerprint: page.layoutFingerprint,
-        pageNumberPlacement: pageNumberPlacement,
+  }) {
+    if (page.isBlank) {
+      return ReaderThemeBackground(
+        palette: _readerTheme,
+        child: const SizedBox.expand(),
       );
+    }
+    return _buildPageLeaf(
+      chapters[page.chapterIndex],
+      page.content,
+      chapterIndex: page.chapterIndex,
+      pageIndex: page.pageIndex,
+      pageCount: page.pageCount,
+      layoutFingerprint: page.layoutFingerprint,
+      pageNumberPlacement: pageNumberPlacement,
+    );
+  }
 
   ReaderPageSnapshot _buildBookPageSnapshot(
     List<_NativeChapter> chapters,
@@ -1941,6 +1968,12 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     ReaderPageNumberPlacement pageNumberPlacement =
         ReaderPageNumberPlacement.bottomRight,
   }) {
+    if (page.isBlank) {
+      return _buildBlankPageSnapshot(
+        pageIdentity: 'chapter-${page.chapterIndex}-padding',
+        layoutFingerprint: page.layoutFingerprint,
+      );
+    }
     final metadata = _nativePageMetadata(
       chapters[page.chapterIndex],
       page.content,
@@ -1993,6 +2026,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
         'native-spread-curl-left:${widget.book.id ?? _bookCacheKey}',
       ),
       controller: _spreadBackwardPageCurlController,
+      coordinator: _spreadPageCurlCoordinator,
       edgeDragOnly: true,
       bindingEdge: ReaderPageBindingEdge.right,
       currentPage: _buildBookPageSnapshot(
@@ -2028,6 +2062,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
               'native-spread-curl-right:${widget.book.id ?? _bookCacheKey}',
             ),
             controller: _spreadForwardPageCurlController,
+            coordinator: _spreadPageCurlCoordinator,
             edgeDragOnly: true,
             currentPage: _buildBookPageSnapshot(
               chapters,
@@ -2271,6 +2306,16 @@ class _NativeReaderPageState extends State<NativeReaderPage>
                         size,
                         usesTwoPageLayout,
                       );
+                      final paginationGeometryChanged =
+                          !_lastPaginationSize.isEmpty &&
+                              (_lastPaginationSize != paginationSize ||
+                                  _lastUsesTwoPageLayout != usesTwoPageLayout);
+                      if (paginationGeometryChanged) {
+                        _restoreAnchorAfterLayout = true;
+                        _lastSavedLocation = null;
+                      }
+                      _lastPaginationSize = paginationSize;
+                      _lastUsesTwoPageLayout = usesTwoPageLayout;
                       final pages = _pagesFor(
                         chapter,
                         _chapterIndex,
@@ -2291,18 +2336,17 @@ class _NativeReaderPageState extends State<NativeReaderPage>
                                   paginationSize,
                                   Directionality.of(context),
                                   MediaQuery.textScalerOf(context),
+                                  padOddChapters: usesTwoPageLayout,
                                 )
                               : const <_BookPageRef>[];
                       if (_openPreviousChapterAtLastPage) {
-                        _pageIndex = usesTwoPageLayout &&
-                                _pageMode == NativePageMode.instantPage
+                        _pageIndex = usesTwoPageLayout
                             ? _spreadStartForPage(pages.length - 1)
                             : pages.length - 1;
                         _openPreviousChapterAtLastPage = false;
                       }
                       _pageIndex = _pageIndex.clamp(0, pages.length - 1);
-                      if (usesTwoPageLayout &&
-                          _pageMode == NativePageMode.instantPage) {
+                      if (usesTwoPageLayout) {
                         _pageIndex = _spreadStartForPage(_pageIndex);
                       }
                       if (_restoreAnchorAfterLayout && _anchorOffset != null) {
@@ -2316,8 +2360,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
                                         anchor < page.endOffset,
                                   );
                         if (restoredIndex >= 0) _pageIndex = restoredIndex;
-                        if (usesTwoPageLayout &&
-                            _pageMode == NativePageMode.instantPage) {
+                        if (usesTwoPageLayout) {
                           _pageIndex = _spreadStartForPage(_pageIndex);
                         }
                         _restoreAnchorAfterLayout = false;
@@ -2728,6 +2771,7 @@ class _BookPageRef {
     required this.pageCount,
     required this.layoutFingerprint,
     required this.content,
+    this.isBlank = false,
   });
 
   final int chapterIndex;
@@ -2735,6 +2779,7 @@ class _BookPageRef {
   final int pageCount;
   final String layoutFingerprint;
   final _ReaderPageData content;
+  final bool isBlank;
 }
 
 class _ReaderPageData {
