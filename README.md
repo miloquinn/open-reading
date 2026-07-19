@@ -158,6 +158,19 @@ test/              # 单元测试及书源端到端测试
 tool/              # 本地开发与示例服务工具
 ```
 
+## 支持开发
+
+开元阅读的设计、开发、测试和持续维护投入了大量时间与精力。如果这个项目对你有帮助，
+欢迎通过微信或支付宝自愿捐赠，支持项目继续迭代。
+
+<div align="center">
+  <img src="assets/images/wechat_donation_qr.png" width="340" alt="微信捐赠二维码">
+  <img src="assets/images/alipay_donation_qr.jpg" width="340" alt="支付宝捐赠二维码">
+  <p>使用微信或支付宝扫码支持持续开发</p>
+</div>
+
+> 捐赠完全自愿，不影响任何功能，也不构成购买或服务承诺。
+
 ## 🤝 参与贡献
 
 欢迎提交 Issue 和 Pull Request，包括阅读体验改进、格式兼容、平台适配、无障碍优化、

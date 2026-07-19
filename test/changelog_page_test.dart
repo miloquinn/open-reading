@@ -17,6 +17,20 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('版本更新记录'), findsOneWidget);
+    expect(find.text('v2.0.3'), findsOneWidget);
+    expect(find.text('设置页新增小元读书和小元读书社区入口'), findsOneWidget);
+    expect(
+      find.text('新增自愿微信和支付宝捐赠入口，并明确不影响任何功能'),
+      findsOneWidget,
+    );
+    expect(find.text('当前版本'), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.text('v2.0.2'),
+      200,
+      scrollable: find.byType(Scrollable),
+    );
+
     expect(find.text('v2.0.2'), findsOneWidget);
     expect(
       find.text('阅读信息栏嵌入每张纸页，横滑和仿真翻页时随页面一起移动'),
@@ -26,6 +40,13 @@ void main() {
       find.text('页码向屏幕内侧留出安全距离，避免被圆角遮挡'),
       findsOneWidget,
     );
+
+    await tester.scrollUntilVisible(
+      find.text('v2.0.1'),
+      200,
+      scrollable: find.byType(Scrollable),
+    );
+
     expect(find.text('v2.0.1'), findsOneWidget);
     expect(
       find.text('优化上一页仿真翻页，中间起手立即跟手，纵向晃动不再带偏装订边'),
@@ -36,14 +57,27 @@ void main() {
       find.text('发现页支持全部或单一书源筛选，最新书籍在多个书源间均衡穿插'),
       findsOneWidget,
     );
+
+    await tester.scrollUntilVisible(
+      find.text('v2.0.0'),
+      200,
+      scrollable: find.byType(Scrollable),
+    );
+
     expect(find.text('v2.0.0'), findsOneWidget);
     expect(find.text('升级顶部信息、纸页页码与仿真翻页体验'), findsOneWidget);
     expect(find.text('支持多套自定义阅读主题、图片背景与拖拽排序'), findsOneWidget);
     expect(find.text('优化 EPUB 分页与可折叠多级目录'), findsOneWidget);
     expect(find.text('Android 阅读时保持屏幕常亮正式生效'), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.text('v1.2.4'),
+      200,
+      scrollable: find.byType(Scrollable),
+    );
+
     expect(find.text('v1.2.4'), findsOneWidget);
     expect(find.text('新增纸页化页脚、经典折页动画与阅读排版设置'), findsOneWidget);
-    expect(find.text('当前版本'), findsOneWidget);
 
     await tester.scrollUntilVisible(
       find.text('v1.2.2'),

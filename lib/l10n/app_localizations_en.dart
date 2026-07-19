@@ -1627,6 +1627,68 @@ class AppLocalizationsEn extends AppLocalizations {
       'Only the options that shape your reading experience.';
 
   @override
+  String get settingsDeveloperProductsTitle => 'More from the developer';
+
+  @override
+  String get settingsXiaoyuanReadingTitle => '小元读书';
+
+  @override
+  String get settingsXiaoyuanReadingSubtitle =>
+      'A reader-focused product for end users, currently available on iOS only';
+
+  @override
+  String get settingsXiaoyuanCommunityTitle => '小元读书社区';
+
+  @override
+  String get settingsXiaoyuanCommunitySubtitle =>
+      'A community for reading, writing, and conversation';
+
+  @override
+  String get settingsDeveloperProductOpenFailed =>
+      'Could not open the product website';
+
+  @override
+  String get settingsSupportDevelopmentTitle => 'Support development';
+
+  @override
+  String get settingsSupportDevelopmentCardTitle =>
+      'Support continued development';
+
+  @override
+  String get settingsSupportDevelopmentCardSubtitle =>
+      'Building and maintaining Open Reading takes substantial time and effort. If it helps you, voluntary donations are welcome.';
+
+  @override
+  String get settingsDonationAction => 'Donate with WeChat';
+
+  @override
+  String get settingsAlipayDonationAction => 'Donate with Alipay';
+
+  @override
+  String get settingsDonationDialogTitle => 'WeChat donation';
+
+  @override
+  String get settingsDonationDialogHint =>
+      'Scan the QR code with WeChat to support continued development. Thank you.';
+
+  @override
+  String get settingsAlipayDonationDialogTitle => 'Alipay donation';
+
+  @override
+  String get settingsAlipayDonationDialogHint =>
+      'Scan the QR code with Alipay to support continued development. Thank you.';
+
+  @override
+  String get settingsDonationVoluntaryNotice =>
+      'Donations are entirely optional. They do not unlock features or constitute a purchase or service agreement.';
+
+  @override
+  String get settingsDonationQrCodeLabel => 'WeChat donation QR code';
+
+  @override
+  String get settingsAlipayDonationQrCodeLabel => 'Alipay donation QR code';
+
+  @override
   String get settingsAiSwipeHint =>
       'Swipe through models and tap a card to switch.';
 
@@ -1701,6 +1763,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get changelogCurrentVersion => 'Current version';
+
+  @override
+  String get changelog203DeveloperProducts =>
+      'Added settings links for 小元读书 and 小元读书社区';
+
+  @override
+  String get changelog203Donation =>
+      'Added optional WeChat and Alipay donation entries with no effect on app features';
 
   @override
   String get changelog202PaperInformation =>

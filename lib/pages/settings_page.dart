@@ -20,6 +20,8 @@ import '../services/core/core_services.dart';
 import '../widgets/side_toast.dart';
 import '../widgets/app_brand_icon.dart';
 import '../widgets/contributors_view.dart';
+import '../widgets/developer_products_promotion.dart';
+import '../widgets/developer_support_card.dart';
 import '../widgets/update_check_gate.dart';
 import '../widgets/reader_settings_controls.dart';
 import 'home_shell_page.dart';
@@ -919,6 +921,36 @@ class _SettingsPageState extends State<SettingsPage> {
                 value: _enableAutoSave,
                 onChanged: (value) => setState(() => _enableAutoSave = value),
                 icon: Icons.save_outlined,
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          _buildSectionCard(
+            title: l10n.settingsDeveloperProductsTitle,
+            icon: Icons.apps_rounded,
+            children: [
+              DeveloperProductsPromotion(
+                onOpenXiaoyuanReading: () => unawaited(
+                  _openDeveloperProduct('https://xxread.top/'),
+                ),
+                onOpenXiaoyuanCommunity: () => unawaited(
+                  _openDeveloperProduct('https://community.xxread.top/'),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          _buildSectionCard(
+            title: l10n.settingsSupportDevelopmentTitle,
+            icon: Icons.volunteer_activism_outlined,
+            children: [
+              DeveloperSupportCard(
+                onWechatTap: () => _showDonationDialog(
+                  DeveloperDonationMethod.wechat,
+                ),
+                onAlipayTap: () => _showDonationDialog(
+                  DeveloperDonationMethod.alipay,
+                ),
               ),
             ],
           ),
@@ -3593,6 +3625,27 @@ class _SettingsPageState extends State<SettingsPage> {
       showSideToast(context, context.l10n.settingsGithubOpenFailed,
           icon: Icons.error_outline);
     }
+  }
+
+  Future<void> _openDeveloperProduct(String url) async {
+    final opened = await launchUrl(
+      Uri.parse(url),
+      mode: LaunchMode.externalApplication,
+    );
+    if (!opened && mounted) {
+      showSideToast(
+        context,
+        context.l10n.settingsDeveloperProductOpenFailed,
+        icon: Icons.error_outline,
+      );
+    }
+  }
+
+  void _showDonationDialog(DeveloperDonationMethod method) {
+    showDialog<void>(
+      context: context,
+      builder: (_) => DeveloperDonationDialog(method: method),
+    );
   }
 
   Future<void> _openTelegramChannel() async {

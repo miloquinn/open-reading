@@ -2988,6 +2988,114 @@ abstract class AppLocalizations {
   /// **'Only the options that shape your reading experience.'**
   String get settingsPageIntro;
 
+  /// Section title for the developer's other products
+  ///
+  /// In en, this message translates to:
+  /// **'More from the developer'**
+  String get settingsDeveloperProductsTitle;
+
+  /// Brand name of the developer's iOS reading product
+  ///
+  /// In en, this message translates to:
+  /// **'小元读书'**
+  String get settingsXiaoyuanReadingTitle;
+
+  /// Description of the developer's iOS reading product
+  ///
+  /// In en, this message translates to:
+  /// **'A reader-focused product for end users, currently available on iOS only'**
+  String get settingsXiaoyuanReadingSubtitle;
+
+  /// Brand name of the developer's reading community
+  ///
+  /// In en, this message translates to:
+  /// **'小元读书社区'**
+  String get settingsXiaoyuanCommunityTitle;
+
+  /// Description of the developer's reading community
+  ///
+  /// In en, this message translates to:
+  /// **'A community for reading, writing, and conversation'**
+  String get settingsXiaoyuanCommunitySubtitle;
+
+  /// Toast shown when a promoted product website cannot be opened
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the product website'**
+  String get settingsDeveloperProductOpenFailed;
+
+  /// Settings section title for voluntary donations
+  ///
+  /// In en, this message translates to:
+  /// **'Support development'**
+  String get settingsSupportDevelopmentTitle;
+
+  /// Title of the voluntary developer support card
+  ///
+  /// In en, this message translates to:
+  /// **'Support continued development'**
+  String get settingsSupportDevelopmentCardTitle;
+
+  /// Explanation shown on the voluntary developer support card
+  ///
+  /// In en, this message translates to:
+  /// **'Building and maintaining Open Reading takes substantial time and effort. If it helps you, voluntary donations are welcome.'**
+  String get settingsSupportDevelopmentCardSubtitle;
+
+  /// Action label that opens the WeChat donation QR code
+  ///
+  /// In en, this message translates to:
+  /// **'Donate with WeChat'**
+  String get settingsDonationAction;
+
+  /// Action label that opens the Alipay donation QR code
+  ///
+  /// In en, this message translates to:
+  /// **'Donate with Alipay'**
+  String get settingsAlipayDonationAction;
+
+  /// Title of the WeChat donation QR code dialog
+  ///
+  /// In en, this message translates to:
+  /// **'WeChat donation'**
+  String get settingsDonationDialogTitle;
+
+  /// Instructions shown above the WeChat donation QR code
+  ///
+  /// In en, this message translates to:
+  /// **'Scan the QR code with WeChat to support continued development. Thank you.'**
+  String get settingsDonationDialogHint;
+
+  /// Title of the Alipay donation QR code dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Alipay donation'**
+  String get settingsAlipayDonationDialogTitle;
+
+  /// Instructions shown above the Alipay donation QR code
+  ///
+  /// In en, this message translates to:
+  /// **'Scan the QR code with Alipay to support continued development. Thank you.'**
+  String get settingsAlipayDonationDialogHint;
+
+  /// Notice clarifying that donations are voluntary and do not unlock features
+  ///
+  /// In en, this message translates to:
+  /// **'Donations are entirely optional. They do not unlock features or constitute a purchase or service agreement.'**
+  String get settingsDonationVoluntaryNotice;
+
+  /// Accessibility label for the WeChat donation QR code image
+  ///
+  /// In en, this message translates to:
+  /// **'WeChat donation QR code'**
+  String get settingsDonationQrCodeLabel;
+
+  /// Accessibility label for the Alipay donation QR code image
+  ///
+  /// In en, this message translates to:
+  /// **'Alipay donation QR code'**
+  String get settingsAlipayDonationQrCodeLabel;
+
   /// Hint above the horizontal AI model card list
   ///
   /// In en, this message translates to:
@@ -3125,6 +3233,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Current version'**
   String get changelogCurrentVersion;
+
+  /// No description provided for @changelog203DeveloperProducts.
+  ///
+  /// In en, this message translates to:
+  /// **'Added settings links for 小元读书 and 小元读书社区'**
+  String get changelog203DeveloperProducts;
+
+  /// No description provided for @changelog203Donation.
+  ///
+  /// In en, this message translates to:
+  /// **'Added optional WeChat and Alipay donation entries with no effect on app features'**
+  String get changelog203Donation;
 
   /// No description provided for @changelog202PaperInformation.
   ///

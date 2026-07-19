@@ -1572,6 +1572,65 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsPageIntro => '読書体験に本当に影響する項目だけを残しています。';
 
   @override
+  String get settingsDeveloperProductsTitle => '開発者のその他のプロダクト';
+
+  @override
+  String get settingsXiaoyuanReadingTitle => '小元读书';
+
+  @override
+  String get settingsXiaoyuanReadingSubtitle =>
+      '読者向けの読書アプリです。現在は iOS 版のみ提供しています';
+
+  @override
+  String get settingsXiaoyuanCommunityTitle => '小元读书社区';
+
+  @override
+  String get settingsXiaoyuanCommunitySubtitle => '読書・創作・交流のためのコミュニティ';
+
+  @override
+  String get settingsDeveloperProductOpenFailed => '製品サイトを開けませんでした';
+
+  @override
+  String get settingsSupportDevelopmentTitle => '開発を支援';
+
+  @override
+  String get settingsSupportDevelopmentCardTitle => '継続的な開発を支援';
+
+  @override
+  String get settingsSupportDevelopmentCardSubtitle =>
+      '開発と保守には多くの時間と労力がかかっています。開元閲読が役に立った場合は、任意の寄付で支援いただけます。';
+
+  @override
+  String get settingsDonationAction => 'WeChat で寄付';
+
+  @override
+  String get settingsAlipayDonationAction => 'Alipay で寄付';
+
+  @override
+  String get settingsDonationDialogTitle => 'WeChat で寄付';
+
+  @override
+  String get settingsDonationDialogHint =>
+      'WeChat で QR コードを読み取ってください。継続的な開発へのご支援に感謝します。';
+
+  @override
+  String get settingsAlipayDonationDialogTitle => 'Alipay で寄付';
+
+  @override
+  String get settingsAlipayDonationDialogHint =>
+      'Alipay で QR コードを読み取ってください。継続的な開発へのご支援に感謝します。';
+
+  @override
+  String get settingsDonationVoluntaryNotice =>
+      '寄付は完全に任意です。機能の利用条件ではなく、購入またはサービス契約にも該当しません。';
+
+  @override
+  String get settingsDonationQrCodeLabel => 'WeChat 寄付用 QR コード';
+
+  @override
+  String get settingsAlipayDonationQrCodeLabel => 'Alipay 寄付用 QR コード';
+
+  @override
   String get settingsAiSwipeHint => '左右にスワイプしてモデルを選び、カードをタップで切り替え。';
 
   @override
@@ -1642,6 +1701,13 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get changelogCurrentVersion => '現在のバージョン';
+
+  @override
+  String get changelog203DeveloperProducts => '設定画面に小元读书と小元读书社区へのリンクを追加しました';
+
+  @override
+  String get changelog203Donation =>
+      '任意の WeChat・Alipay 寄付入口を追加し、機能には影響しないことを明記しました';
 
   @override
   String get changelog202PaperInformation =>

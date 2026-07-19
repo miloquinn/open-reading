@@ -1895,6 +1895,78 @@
   "@settingsPageIntro": {
     "description": "Subtitle under the settings page title"
   },
+  "settingsDeveloperProductsTitle": "More from the developer",
+  "@settingsDeveloperProductsTitle": {
+    "description": "Section title for the developer's other products"
+  },
+  "settingsXiaoyuanReadingTitle": "小元读书",
+  "@settingsXiaoyuanReadingTitle": {
+    "description": "Brand name of the developer's iOS reading product"
+  },
+  "settingsXiaoyuanReadingSubtitle": "A reader-focused product for end users, currently available on iOS only",
+  "@settingsXiaoyuanReadingSubtitle": {
+    "description": "Description of the developer's iOS reading product"
+  },
+  "settingsXiaoyuanCommunityTitle": "小元读书社区",
+  "@settingsXiaoyuanCommunityTitle": {
+    "description": "Brand name of the developer's reading community"
+  },
+  "settingsXiaoyuanCommunitySubtitle": "A community for reading, writing, and conversation",
+  "@settingsXiaoyuanCommunitySubtitle": {
+    "description": "Description of the developer's reading community"
+  },
+  "settingsDeveloperProductOpenFailed": "Could not open the product website",
+  "@settingsDeveloperProductOpenFailed": {
+    "description": "Toast shown when a promoted product website cannot be opened"
+  },
+  "settingsSupportDevelopmentTitle": "Support development",
+  "@settingsSupportDevelopmentTitle": {
+    "description": "Settings section title for voluntary donations"
+  },
+  "settingsSupportDevelopmentCardTitle": "Support continued development",
+  "@settingsSupportDevelopmentCardTitle": {
+    "description": "Title of the voluntary developer support card"
+  },
+  "settingsSupportDevelopmentCardSubtitle": "Building and maintaining Open Reading takes substantial time and effort. If it helps you, voluntary donations are welcome.",
+  "@settingsSupportDevelopmentCardSubtitle": {
+    "description": "Explanation shown on the voluntary developer support card"
+  },
+  "settingsDonationAction": "Donate with WeChat",
+  "@settingsDonationAction": {
+    "description": "Action label that opens the WeChat donation QR code"
+  },
+  "settingsAlipayDonationAction": "Donate with Alipay",
+  "@settingsAlipayDonationAction": {
+    "description": "Action label that opens the Alipay donation QR code"
+  },
+  "settingsDonationDialogTitle": "WeChat donation",
+  "@settingsDonationDialogTitle": {
+    "description": "Title of the WeChat donation QR code dialog"
+  },
+  "settingsDonationDialogHint": "Scan the QR code with WeChat to support continued development. Thank you.",
+  "@settingsDonationDialogHint": {
+    "description": "Instructions shown above the WeChat donation QR code"
+  },
+  "settingsAlipayDonationDialogTitle": "Alipay donation",
+  "@settingsAlipayDonationDialogTitle": {
+    "description": "Title of the Alipay donation QR code dialog"
+  },
+  "settingsAlipayDonationDialogHint": "Scan the QR code with Alipay to support continued development. Thank you.",
+  "@settingsAlipayDonationDialogHint": {
+    "description": "Instructions shown above the Alipay donation QR code"
+  },
+  "settingsDonationVoluntaryNotice": "Donations are entirely optional. They do not unlock features or constitute a purchase or service agreement.",
+  "@settingsDonationVoluntaryNotice": {
+    "description": "Notice clarifying that donations are voluntary and do not unlock features"
+  },
+  "settingsDonationQrCodeLabel": "WeChat donation QR code",
+  "@settingsDonationQrCodeLabel": {
+    "description": "Accessibility label for the WeChat donation QR code image"
+  },
+  "settingsAlipayDonationQrCodeLabel": "Alipay donation QR code",
+  "@settingsAlipayDonationQrCodeLabel": {
+    "description": "Accessibility label for the Alipay donation QR code image"
+  },
   "settingsAiSwipeHint": "Swipe through models and tap a card to switch.",
   "@settingsAiSwipeHint": {
     "description": "Hint above the horizontal AI model card list"
@@ -1942,6 +2014,8 @@
   "openSourceLicenseLoadFailed": "Could not load the license text.",
   "changelogPageTitle": "Release history",
   "changelogCurrentVersion": "Current version",
+  "changelog203DeveloperProducts": "Added settings links for 小元读书 and 小元读书社区",
+  "changelog203Donation": "Added optional WeChat and Alipay donation entries with no effect on app features",
   "changelog202PaperInformation": "Embedded reader information in each paper page so it moves with slide and page-curl turns",
   "changelog202PageNumberInset": "Inset page numbers from screen edges to avoid rounded-corner clipping",
   "changelog201BackwardPageTurn": "Improved backward simulated turns with immediate mid-screen tracking and a stable binding edge during vertical hand movement",

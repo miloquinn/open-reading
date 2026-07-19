@@ -1564,6 +1564,61 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsPageIntro => '只保留真正影响阅读体验的选项。';
 
   @override
+  String get settingsDeveloperProductsTitle => '开发者的其他产品';
+
+  @override
+  String get settingsXiaoyuanReadingTitle => '小元读书';
+
+  @override
+  String get settingsXiaoyuanReadingSubtitle => '面向用户的阅读产品，目前仅提供 iOS 版本';
+
+  @override
+  String get settingsXiaoyuanCommunityTitle => '小元读书社区';
+
+  @override
+  String get settingsXiaoyuanCommunitySubtitle => '阅读、创作与交流社区';
+
+  @override
+  String get settingsDeveloperProductOpenFailed => '无法打开产品网站';
+
+  @override
+  String get settingsSupportDevelopmentTitle => '支持开发';
+
+  @override
+  String get settingsSupportDevelopmentCardTitle => '支持持续开发';
+
+  @override
+  String get settingsSupportDevelopmentCardSubtitle =>
+      '开发和维护投入了大量时间与精力。如果开元阅读对你有帮助，欢迎自愿捐赠支持。';
+
+  @override
+  String get settingsDonationAction => '微信捐赠';
+
+  @override
+  String get settingsAlipayDonationAction => '支付宝捐赠';
+
+  @override
+  String get settingsDonationDialogTitle => '微信捐赠';
+
+  @override
+  String get settingsDonationDialogHint => '请使用微信扫描二维码。感谢你对持续开发的支持。';
+
+  @override
+  String get settingsAlipayDonationDialogTitle => '支付宝捐赠';
+
+  @override
+  String get settingsAlipayDonationDialogHint => '请使用支付宝扫描二维码。感谢你对持续开发的支持。';
+
+  @override
+  String get settingsDonationVoluntaryNotice => '捐赠完全自愿，不影响任何功能，也不构成购买或服务承诺。';
+
+  @override
+  String get settingsDonationQrCodeLabel => '微信捐赠二维码';
+
+  @override
+  String get settingsAlipayDonationQrCodeLabel => '支付宝捐赠二维码';
+
+  @override
   String get settingsAiSwipeHint => '左右滑动选择模型，点击卡片即可切换。';
 
   @override
@@ -1632,6 +1687,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get changelogCurrentVersion => '当前版本';
+
+  @override
+  String get changelog203DeveloperProducts => '设置页新增小元读书和小元读书社区入口';
+
+  @override
+  String get changelog203Donation => '新增自愿微信和支付宝捐赠入口，并明确不影响任何功能';
 
   @override
   String get changelog202PaperInformation => '阅读信息栏嵌入每张纸页，横滑和仿真翻页时随页面一起移动';
@@ -4061,6 +4122,61 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get settingsPageIntro => '只保留真正影響閱讀體驗的選項。';
 
   @override
+  String get settingsDeveloperProductsTitle => '開發者的其他產品';
+
+  @override
+  String get settingsXiaoyuanReadingTitle => '小元读书';
+
+  @override
+  String get settingsXiaoyuanReadingSubtitle => '面向使用者的閱讀產品，目前僅提供 iOS 版本';
+
+  @override
+  String get settingsXiaoyuanCommunityTitle => '小元读书社区';
+
+  @override
+  String get settingsXiaoyuanCommunitySubtitle => '閱讀、創作與交流社群';
+
+  @override
+  String get settingsDeveloperProductOpenFailed => '無法開啟產品網站';
+
+  @override
+  String get settingsSupportDevelopmentTitle => '支持開發';
+
+  @override
+  String get settingsSupportDevelopmentCardTitle => '支持持續開發';
+
+  @override
+  String get settingsSupportDevelopmentCardSubtitle =>
+      '開發與維護投入了大量時間和心力。如果開元閱讀對你有幫助，歡迎自願捐贈支持。';
+
+  @override
+  String get settingsDonationAction => '微信捐贈';
+
+  @override
+  String get settingsAlipayDonationAction => '支付寶捐贈';
+
+  @override
+  String get settingsDonationDialogTitle => '微信捐贈';
+
+  @override
+  String get settingsDonationDialogHint => '請使用微信掃描二維碼。感謝你對持續開發的支持。';
+
+  @override
+  String get settingsAlipayDonationDialogTitle => '支付寶捐贈';
+
+  @override
+  String get settingsAlipayDonationDialogHint => '請使用支付寶掃描二維碼。感謝你對持續開發的支持。';
+
+  @override
+  String get settingsDonationVoluntaryNotice => '捐贈完全自願，不影響任何功能，也不構成購買或服務承諾。';
+
+  @override
+  String get settingsDonationQrCodeLabel => '微信捐贈二維碼';
+
+  @override
+  String get settingsAlipayDonationQrCodeLabel => '支付寶捐贈二維碼';
+
+  @override
   String get settingsAiSwipeHint => '左右滑動選擇模型，點擊卡片即可切換。';
 
   @override
@@ -4129,6 +4245,12 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get changelogCurrentVersion => '目前版本';
+
+  @override
+  String get changelog203DeveloperProducts => '設定頁新增小元读书和小元读书社区入口';
+
+  @override
+  String get changelog203Donation => '新增自願微信和支付寶捐贈入口，並明確不影響任何功能';
 
   @override
   String get changelog202PaperInformation => '閱讀資訊列嵌入每張紙頁，橫向滑動與擬真翻頁時會隨頁面一起移動';
