@@ -24,6 +24,8 @@ import 'home_shell_page.dart';
 class BookSourcesPage extends StatefulWidget {
   final BookSourceClient? client;
 
+  static const int maxLatestItemsPerSource = 12;
+
   const BookSourcesPage({super.key, this.client});
 
   @visibleForTesting
@@ -32,6 +34,49 @@ class BookSourcesPage extends StatefulWidget {
     String? selectedSourceId,
   ) =>
       SourceSearchPage.searchTargets(sources, selectedSourceId);
+
+  /// 保留每个书源自己的 latest 顺序，再按来源轮流穿插。
+  ///
+  /// 首轮优先展示头部更新时间较新的书源；随后每轮每源最多贡献一本，
+  /// 避免单一书源依靠时间戳或返回数量占满聚合列表。
+  @visibleForTesting
+  static List<SourcedBook> interleaveLatestBatches(
+    Iterable<List<SourcedBook>> batches, {
+    int maxItemsPerSource = maxLatestItemsPerSource,
+  }) {
+    if (maxItemsPerSource <= 0) return const [];
+    final queues = batches
+        .where((batch) => batch.isNotEmpty)
+        .map(
+          (batch) => batch.take(maxItemsPerSource).toList(growable: false),
+        )
+        .toList();
+    queues.sort((left, right) {
+      final leftTime = left.first.book.updatedAt;
+      final rightTime = right.first.book.updatedAt;
+      if (leftTime != null && rightTime != null) {
+        final byTime = rightTime.compareTo(leftTime);
+        if (byTime != 0) return byTime;
+      } else if (leftTime != null) {
+        return -1;
+      } else if (rightTime != null) {
+        return 1;
+      }
+      return left.first.source.name.compareTo(right.first.source.name);
+    });
+
+    final results = <SourcedBook>[];
+    for (var index = 0; index < maxItemsPerSource; index++) {
+      var added = false;
+      for (final queue in queues) {
+        if (index >= queue.length) continue;
+        results.add(queue[index]);
+        added = true;
+      }
+      if (!added) break;
+    }
+    return results;
+  }
 
   @override
   State<BookSourcesPage> createState() => _BookSourcesPageState();
@@ -52,6 +97,7 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
   List<RegisteredBookSource> _sources = const [];
   bool _loadingSources = true;
   _DiscoverSection _section = _DiscoverSection.recommended;
+  String? _selectedSourceId;
 
   // 每个 Tab 的内容独立缓存，切换回来不再重新请求。
   final Map<_DiscoverSection, _SectionCache> _cache = {};
@@ -85,8 +131,10 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
 
   Future<void> _reloadAll() async {
     _cache.clear();
+    _selectedSourceId = null;
     _selectedCategory = null;
     _categoryBooks = const [];
+    _loadingCategoryBooks = false;
     await _loadSources();
   }
 
@@ -94,6 +142,18 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
       .where((source) => source.enabled)
       .where((source) => source.capabilities.contains(capability))
       .toList(growable: false);
+
+  String _capabilityFor(_DiscoverSection section) => switch (section) {
+        _DiscoverSection.recommended => 'discover',
+        _DiscoverSection.categories => 'categories',
+        _DiscoverSection.latest => 'browse',
+      };
+
+  List<RegisteredBookSource> _sourcesFor(_DiscoverSection section) =>
+      _targets(_capabilityFor(section));
+
+  bool _matchesSelectedSource(RegisteredBookSource source) =>
+      _selectedSourceId == null || source.id == _selectedSourceId;
 
   Future<void> _loadSection(
     _DiscoverSection section, {
@@ -178,20 +238,47 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
         }
       }),
     );
-    final results = batches.expand((items) => items).toList();
-    results.sort((a, b) {
-      final left = a.book.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-      final right = b.book.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-      return right.compareTo(left);
-    });
-    return results;
+    return BookSourcesPage.interleaveLatestBatches(batches);
   }
 
   void _autoSelectFirstCategory() {
     final cache = _cache[_DiscoverSection.categories];
-    final categories = cache?.categories ?? const <_SourcedCategory>[];
+    final categories = (cache?.categories ?? const <_SourcedCategory>[])
+        .where((category) => _matchesSelectedSource(category.source))
+        .toList(growable: false);
     if (_selectedCategory != null || categories.isEmpty) return;
     unawaited(_selectCategory(categories.first));
+  }
+
+  void _changeSourceScope(String? sourceId) {
+    if (_selectedSourceId == sourceId) return;
+    setState(() {
+      _selectedSourceId = sourceId;
+      _selectedCategory = null;
+      _categoryBooks = const [];
+      _loadingCategoryBooks = false;
+    });
+    if (_section == _DiscoverSection.categories) {
+      _autoSelectFirstCategory();
+    }
+  }
+
+  Future<void> _changeSection(_DiscoverSection section) async {
+    final selectedSourceStillAvailable = _selectedSourceId == null ||
+        _sourcesFor(section).any((source) => source.id == _selectedSourceId);
+    setState(() {
+      _section = section;
+      if (!selectedSourceStillAvailable) {
+        _selectedSourceId = null;
+        _selectedCategory = null;
+        _categoryBooks = const [];
+        _loadingCategoryBooks = false;
+      }
+    });
+    await _loadSection(section);
+    if (mounted && section == _DiscoverSection.categories) {
+      _autoSelectFirstCategory();
+    }
   }
 
   Future<void> _selectCategory(_SourcedCategory category) async {
@@ -278,6 +365,10 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
                         children: [
                           if (useRailNavigation) _buildRailHeader(),
                           _buildSectionTabs(),
+                          if (_sourcesFor(_section).length > 1) ...[
+                            const SizedBox(height: 8),
+                            _buildSourceScope(_sourcesFor(_section)),
+                          ],
                           const SizedBox(height: 4),
                         ],
                       ),
@@ -360,14 +451,41 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
       selected: {_section},
       onSelectionChanged: (selection) {
         if (selection.isEmpty) return;
-        setState(() => _section = selection.first);
-        unawaited(_loadSection(selection.first));
+        unawaited(_changeSection(selection.first));
       },
       style: ButtonStyle(
         minimumSize: const WidgetStatePropertyAll(Size(44, 48)),
         side: WidgetStatePropertyAll(
           BorderSide(color: scheme.outlineVariant),
         ),
+      ),
+    );
+  }
+
+  Widget _buildSourceScope(List<RegisteredBookSource> sources) {
+    return SizedBox(
+      key: const Key('bookSourceDiscoverScopeControl'),
+      height: 42,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: [
+          ChoiceChip(
+            key: const Key('bookSourceDiscoverScopeAll'),
+            selected: _selectedSourceId == null,
+            label: Text(context.l10n.statsRangeAll),
+            onSelected: (_) => _changeSourceScope(null),
+          ),
+          const SizedBox(width: 8),
+          for (final source in sources) ...[
+            ChoiceChip(
+              key: Key('bookSourceDiscoverScope-${source.id}'),
+              selected: _selectedSourceId == source.id,
+              label: Text(source.name),
+              onSelected: (_) => _changeSourceScope(source.id),
+            ),
+            const SizedBox(width: 8),
+          ],
+        ],
       ),
     );
   }
@@ -403,7 +521,9 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
   }
 
   Widget _buildShelvesBody(_SectionCache cache) {
-    final shelves = cache.shelves ?? const <_DiscoveryShelf>[];
+    final shelves = (cache.shelves ?? const <_DiscoveryShelf>[])
+        .where((shelf) => _matchesSelectedSource(shelf.source))
+        .toList(growable: false);
     if (shelves.isEmpty) {
       return _buildUnsupportedMessage('discover');
     }
@@ -434,7 +554,7 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
           ),
           const SizedBox(height: 12),
           SizedBox(
-            height: 238,
+            height: 242,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: shelf.items.length,
@@ -457,7 +577,9 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
   }
 
   Widget _buildCategoriesBody(_SectionCache cache) {
-    final categories = cache.categories ?? const <_SourcedCategory>[];
+    final categories = (cache.categories ?? const <_SourcedCategory>[])
+        .where((category) => _matchesSelectedSource(category.source))
+        .toList(growable: false);
     if (categories.isEmpty) {
       return _buildUnsupportedMessage('categories');
     }
@@ -511,7 +633,9 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
   }
 
   Widget _buildLatestBody(_SectionCache cache) {
-    final books = cache.books ?? const <SourcedBook>[];
+    final books = (cache.books ?? const <SourcedBook>[])
+        .where((result) => _matchesSelectedSource(result.source))
+        .toList(growable: false);
     if (books.isEmpty) {
       return _buildUnsupportedMessage('browse');
     }
