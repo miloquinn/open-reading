@@ -17,6 +17,16 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('版本更新记录'), findsOneWidget);
+    expect(find.text('v2.0.1'), findsOneWidget);
+    expect(
+      find.text('优化上一页仿真翻页，中间起手立即跟手，纵向晃动不再带偏装订边'),
+      findsOneWidget,
+    );
+    expect(find.text('前后相邻页同步预热，减少首次反向翻页卡顿'), findsOneWidget);
+    expect(
+      find.text('发现页支持全部或单一书源筛选，最新书籍在多个书源间均衡穿插'),
+      findsOneWidget,
+    );
     expect(find.text('v2.0.0'), findsOneWidget);
     expect(find.text('升级顶部信息、纸页页码与仿真翻页体验'), findsOneWidget);
     expect(find.text('支持多套自定义阅读主题、图片背景与拖拽排序'), findsOneWidget);
@@ -27,6 +37,13 @@ void main() {
     expect(find.text('v1.2.2'), findsOneWidget);
     expect(find.text('当前版本'), findsOneWidget);
     expect(find.text('修复在线连续滚动无法中间点击呼出控制栏'), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.text('v1.2.1'),
+      300,
+      scrollable: find.byType(Scrollable),
+    );
+
     expect(find.text('v1.2.1'), findsOneWidget);
     expect(find.text('在线书源补齐按章节滚动与整书连续滚动'), findsOneWidget);
     expect(find.text('修复中文正文左右留白不对称并统一分页绘制'), findsOneWidget);

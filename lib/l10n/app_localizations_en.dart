@@ -1703,6 +1703,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get changelogCurrentVersion => 'Current version';
 
   @override
+  String get changelog201BackwardPageTurn =>
+      'Improved backward simulated turns with immediate mid-screen tracking and a stable binding edge during vertical hand movement';
+
+  @override
+  String get changelog201SnapshotPreheat =>
+      'Preheated both adjacent pages together to reduce first backward-turn latency';
+
+  @override
+  String get changelog201SourceFilters =>
+      'Added all-source and per-source discovery filters with balanced latest-book interleaving';
+
+  @override
   String get changelog120CustomFonts =>
       'Improved custom fonts with import and management';
 

@@ -10,6 +10,7 @@ enum ReaderPageTurnCorner { top, bottom }
 enum ReaderPageTurnAnchorMode {
   nearestCorner,
   followEdge,
+  followPointerEdge,
 }
 
 /// Clean-room paper-fold geometry in logical pixel space.
@@ -39,8 +40,10 @@ class ReaderPageTurnGeometry {
     required Offset dragOrigin,
     ReaderPageTurnAnchorMode anchorMode =
         ReaderPageTurnAnchorMode.nearestCorner,
+    bool canonicalBindingOnRight = false,
   }) {
     final canonicalOrigin = canonicalize(dragOrigin, size, direction);
+    final canonicalPointer = canonicalize(pointer, size, direction);
     final corner = canonicalOrigin.dy <= size.height / 2
         ? ReaderPageTurnCorner.top
         : ReaderPageTurnCorner.bottom;
@@ -49,13 +52,16 @@ class ReaderPageTurnGeometry {
         corner == ReaderPageTurnCorner.top ? 0.0 : size.height,
       ReaderPageTurnAnchorMode.followEdge =>
         canonicalOrigin.dy.clamp(0.0, size.height),
+      ReaderPageTurnAnchorMode.followPointerEdge =>
+        canonicalPointer.dy.clamp(0.0, size.height),
     };
     return ReaderPageTurnGeometry.fromCanonicalTouch(
       size: size,
       direction: direction,
       corner: corner,
       canonicalAnchorY: anchorY,
-      canonicalTouch: canonicalize(pointer, size, direction),
+      canonicalTouch: canonicalPointer,
+      canonicalBindingOnRight: canonicalBindingOnRight,
     );
   }
 
@@ -65,6 +71,7 @@ class ReaderPageTurnGeometry {
     required ReaderPageTurnCorner corner,
     required Offset canonicalTouch,
     double? canonicalAnchorY,
+    bool canonicalBindingOnRight = false,
   }) {
     final width = math.max(size.width, 1.0);
     final height = math.max(size.height, 1.0);
@@ -98,20 +105,31 @@ class ReaderPageTurnGeometry {
     );
     var endpoints = _farthestPair(intersections, pageSize);
 
-    // The canonical page is glued to x = 0. A steep diagonal drag can put
-    // the mathematical crease beyond that edge near the top or bottom even
-    // while its midpoint remains on the page. Clamp both infinite-line edge
-    // intersections and rebuild the render line so the full spine remains on
-    // the unlifted half-plane. Backward turns inherit the same rule by mirror.
+    // Clamp the infinite crease against the physical binding edge expressed
+    // in canonical coordinates. Phone backward turns mirror motion but keep
+    // a screen-left spine, so their canonical binding is on the right.
     if (rawNormal.dx.abs() > 1e-6) {
       double creaseXAt(double y) =>
           rawMidpoint.dx - rawNormal.dy * (y - rawMidpoint.dy) / rawNormal.dx;
 
       final rawTopX = creaseXAt(0);
       final rawBottomX = creaseXAt(height);
-      if (rawTopX < 0 || rawBottomX < 0) {
-        final top = Offset(math.max(0, rawTopX), 0);
-        final bottom = Offset(math.max(0, rawBottomX), height);
+      final crossesBinding = canonicalBindingOnRight
+          ? rawTopX > width || rawBottomX > width
+          : rawTopX < 0 || rawBottomX < 0;
+      if (crossesBinding) {
+        final top = Offset(
+          canonicalBindingOnRight
+              ? math.min(width, rawTopX)
+              : math.max(0, rawTopX),
+          0,
+        );
+        final bottom = Offset(
+          canonicalBindingOnRight
+              ? math.min(width, rawBottomX)
+              : math.max(0, rawBottomX),
+          height,
+        );
         tangent = (bottom - top) / (bottom - top).distance;
         foldNormal = Offset(tangent.dy, -tangent.dx);
         if (foldNormal.dx < 0) foldNormal = -foldNormal;

@@ -1644,6 +1644,18 @@ class AppLocalizationsJa extends AppLocalizations {
   String get changelogCurrentVersion => '現在のバージョン';
 
   @override
+  String get changelog201BackwardPageTurn =>
+      '前のページへの紙面めくりを改善し、画面中央からでも即座に追従して上下の手ぶれで綴じ目がずれないようにしました';
+
+  @override
+  String get changelog201SnapshotPreheat =>
+      '前後の隣接ページを同時にプリヒートし、最初の逆方向ページめくりの遅延を軽減しました';
+
+  @override
+  String get changelog201SourceFilters =>
+      'すべて／個別の書籍ソース絞り込みと最新書籍の均等な交互表示に対応しました';
+
+  @override
   String get changelog120CustomFonts => 'カスタムフォントの取り込みと管理を強化';
 
   @override

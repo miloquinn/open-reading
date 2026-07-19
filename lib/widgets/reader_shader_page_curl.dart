@@ -154,7 +154,6 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
   bool _springCommits = false;
   bool _warmScheduled = false;
   bool _warmAfterTurn = false;
-  Timer? _backwardWarmTimer;
   int _captureGeneration = 0;
   int _preparedGeneration = -1;
   int _preparingGeneration = -1;
@@ -204,7 +203,6 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     widget.controller?._detach(this);
-    _backwardWarmTimer?.cancel();
     final completer = _turnCompleter;
     if (completer != null && !completer.isCompleted) completer.complete();
     for (final turn in _programmaticTurns) {
@@ -249,18 +247,21 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
       generation,
     );
     if (!mounted || generation != _captureGeneration) return;
+    final adjacentCaptures = <Future<ui.Image?>>[];
     final forward = widget.forwardPage;
     if (forward != null) {
-      await _ensureSnapshot(forward, _forwardKey, generation);
+      adjacentCaptures.add(
+        _ensureSnapshot(forward, _forwardKey, generation),
+      );
     }
-    if (!mounted || generation != _captureGeneration) return;
-    _backwardWarmTimer?.cancel();
     final backward = widget.backwardPage;
     if (backward != null) {
-      _backwardWarmTimer = Timer(const Duration(milliseconds: 140), () {
-        if (!mounted || generation != _captureGeneration) return;
-        unawaited(_ensureSnapshot(backward, _backwardKey, generation));
-      });
+      adjacentCaptures.add(
+        _ensureSnapshot(backward, _backwardKey, generation),
+      );
+    }
+    if (adjacentCaptures.isNotEmpty) {
+      await Future.wait(adjacentCaptures);
     }
   }
 
@@ -437,7 +438,7 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
         direction,
         pointer: details.localPosition,
         origin: origin,
-        catchUpFromEdge: true,
+        catchUpFromEdge: direction == ReaderPageTurnDirection.forward,
       );
       return;
     }
@@ -447,12 +448,10 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
       return;
     }
     setState(() {
-      _geometry = ReaderPageTurnGeometry.fromPointer(
-        size: _viewportSize,
+      _geometry = _geometryFromPointer(
         direction: _direction!,
         pointer: details.localPosition,
-        dragOrigin: _dragOrigin!,
-        anchorMode: _pageTurnAnchorMode,
+        origin: _dragOrigin!,
       );
     });
   }
@@ -485,12 +484,10 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
         : pointer;
     _catchUpStartPointer = catchUpFromEdge ? initialPointer : null;
     setState(() {
-      _geometry = ReaderPageTurnGeometry.fromPointer(
-        size: _viewportSize,
+      _geometry = _geometryFromPointer(
         direction: direction,
         pointer: initialPointer,
-        dragOrigin: origin,
-        anchorMode: _pageTurnAnchorMode,
+        origin: origin,
       );
       _phase = _PageTurnPhase.dragging;
     });
@@ -533,12 +530,10 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
     final pointer = Offset.lerp(start, target, progress)!;
     if (mounted) {
       setState(() {
-        _geometry = ReaderPageTurnGeometry.fromPointer(
-          size: _viewportSize,
+        _geometry = _geometryFromPointer(
           direction: direction,
           pointer: pointer,
-          dragOrigin: origin,
-          anchorMode: _pageTurnAnchorMode,
+          origin: origin,
         );
       });
     }
@@ -557,12 +552,10 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
     final origin = _dragOrigin;
     _stopCatchUp();
     if (pointer == null || direction == null || origin == null) return;
-    _geometry = ReaderPageTurnGeometry.fromPointer(
-      size: _viewportSize,
+    _geometry = _geometryFromPointer(
       direction: direction,
       pointer: pointer,
-      dragOrigin: origin,
-      anchorMode: _pageTurnAnchorMode,
+      origin: origin,
     );
   }
 
@@ -690,8 +683,34 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
           ? widget.forwardPage != null
           : widget.backwardPage != null;
 
-  ReaderPageTurnAnchorMode get _pageTurnAnchorMode =>
-      ReaderPageTurnAnchorMode.followEdge;
+  ReaderPageTurnAnchorMode _anchorModeFor(
+    ReaderPageTurnDirection direction,
+  ) =>
+      direction == ReaderPageTurnDirection.backward
+          ? ReaderPageTurnAnchorMode.followPointerEdge
+          : ReaderPageTurnAnchorMode.followEdge;
+
+  bool _canonicalBindingOnRight(ReaderPageTurnDirection direction) {
+    final physicalBindingOnRight =
+        widget.bindingEdge == ReaderPageBindingEdge.right;
+    return direction == ReaderPageTurnDirection.backward
+        ? !physicalBindingOnRight
+        : physicalBindingOnRight;
+  }
+
+  ReaderPageTurnGeometry _geometryFromPointer({
+    required ReaderPageTurnDirection direction,
+    required Offset pointer,
+    required Offset origin,
+  }) =>
+      ReaderPageTurnGeometry.fromPointer(
+        size: _viewportSize,
+        direction: direction,
+        pointer: pointer,
+        dragOrigin: origin,
+        anchorMode: _anchorModeFor(direction),
+        canonicalBindingOnRight: _canonicalBindingOnRight(direction),
+      );
 
   void _startSpring({
     required bool commit,
@@ -755,6 +774,7 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
           corner: geometry.corner,
           canonicalAnchorY: geometry.canonicalAnchor.dy,
           canonicalTouch: touch,
+          canonicalBindingOnRight: _canonicalBindingOnRight(direction),
         );
       });
     }

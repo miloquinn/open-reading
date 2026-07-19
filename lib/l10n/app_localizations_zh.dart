@@ -1634,6 +1634,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get changelogCurrentVersion => '当前版本';
 
   @override
+  String get changelog201BackwardPageTurn => '优化上一页仿真翻页，中间起手立即跟手，纵向晃动不再带偏装订边';
+
+  @override
+  String get changelog201SnapshotPreheat => '前后相邻页同步预热，减少首次反向翻页卡顿';
+
+  @override
+  String get changelog201SourceFilters => '发现页支持全部或单一书源筛选，最新书籍在多个书源间均衡穿插';
+
+  @override
   String get changelog120CustomFonts => '完善自定义字体，支持导入与管理';
 
   @override
@@ -4114,6 +4123,15 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get changelogCurrentVersion => '目前版本';
+
+  @override
+  String get changelog201BackwardPageTurn => '最佳化上一頁擬真翻頁，從中央起手立即跟手，垂直晃動不再帶偏裝訂邊';
+
+  @override
+  String get changelog201SnapshotPreheat => '前後相鄰頁同步預熱，減少首次反向翻頁卡頓';
+
+  @override
+  String get changelog201SourceFilters => '發現頁支援全部或單一書源篩選，最新書籍在多個書源間均衡穿插';
 
   @override
   String get changelog120CustomFonts => '完善自訂字型，支援匯入與管理';

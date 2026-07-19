@@ -110,6 +110,44 @@ void main() {
     expect(geometry.canonicalFoldEnd.dx, greaterThanOrEqualTo(0));
   });
 
+  test('backward follow-pointer geometry ignores vertical hand jitter', () {
+    const origin = Offset(2, 400);
+    for (final pointer in const [
+      Offset(80, 120),
+      Offset(160, 680),
+      Offset(240, 260),
+      Offset(320, 540),
+    ]) {
+      final geometry = ReaderPageTurnGeometry.fromPointer(
+        size: size,
+        direction: ReaderPageTurnDirection.backward,
+        pointer: pointer,
+        dragOrigin: origin,
+        anchorMode: ReaderPageTurnAnchorMode.followPointerEdge,
+        canonicalBindingOnRight: true,
+      );
+
+      expect(geometry.reflectedCorner.dx, closeTo(pointer.dx, 0.001));
+      expect(geometry.reflectedCorner.dy, closeTo(pointer.dy, 0.001));
+      expect(geometry.foldStart.dx, closeTo(geometry.foldEnd.dx, 0.001));
+      expect(geometry.progress, closeTo(pointer.dx / size.width, 0.001));
+    }
+  });
+
+  test('canonical right binding clamps backward completion geometry', () {
+    final geometry = ReaderPageTurnGeometry.fromCanonicalTouch(
+      size: size,
+      direction: ReaderPageTurnDirection.backward,
+      corner: ReaderPageTurnCorner.top,
+      canonicalAnchorY: 0,
+      canonicalTouch: const Offset(-200, 400),
+      canonicalBindingOnRight: true,
+    );
+
+    expect(geometry.canonicalFoldStart.dx, lessThanOrEqualTo(size.width));
+    expect(geometry.canonicalFoldEnd.dx, lessThanOrEqualTo(size.width));
+  });
+
   test('progress increases monotonically as the finger moves across the page',
       () {
     final nearEdge = ReaderPageTurnGeometry.fromPointer(

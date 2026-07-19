@@ -3126,6 +3126,24 @@ abstract class AppLocalizations {
   /// **'Current version'**
   String get changelogCurrentVersion;
 
+  /// No description provided for @changelog201BackwardPageTurn.
+  ///
+  /// In en, this message translates to:
+  /// **'Improved backward simulated turns with immediate mid-screen tracking and a stable binding edge during vertical hand movement'**
+  String get changelog201BackwardPageTurn;
+
+  /// No description provided for @changelog201SnapshotPreheat.
+  ///
+  /// In en, this message translates to:
+  /// **'Preheated both adjacent pages together to reduce first backward-turn latency'**
+  String get changelog201SnapshotPreheat;
+
+  /// No description provided for @changelog201SourceFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Added all-source and per-source discovery filters with balanced latest-book interleaving'**
+  String get changelog201SourceFilters;
+
   /// No description provided for @changelog120CustomFonts.
   ///
   /// In en, this message translates to:

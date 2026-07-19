@@ -196,7 +196,7 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets('middle backward drag catches up from the left edge',
+  testWidgets('middle backward drag follows pointer immediately through jitter',
       (tester) async {
     final controller = ReaderPageCurlController();
     await tester.pumpWidget(
@@ -222,20 +222,37 @@ void main() {
     await gesture.moveBy(const Offset(30, 0));
     await tester.pump();
 
-    expect(controller.debugIsCatchingUp, isTrue);
-    expect(controller.debugTouchPosition!.dx, lessThan(5));
-
-    await tester.pump(const Duration(milliseconds: 40));
-    final middle = controller.debugTouchPosition!.dx;
-    expect(middle, greaterThan(0.5));
-    expect(middle, lessThan(rect.width / 2 + 30));
-
-    await gesture.moveBy(const Offset(35, 0));
-    await tester.pump(const Duration(milliseconds: 50));
     expect(controller.debugIsCatchingUp, isFalse);
     expect(
       controller.debugTouchPosition!.dx,
-      closeTo(rect.width / 2 + 65, 1),
+      closeTo(rect.width / 2 + 30, 1),
+    );
+
+    await gesture.moveBy(const Offset(-18, 45));
+    await tester.pump();
+    expect(
+      (controller.debugTouchPosition! -
+              Offset(rect.width / 2 + 12, rect.height / 2 + 45))
+          .distance,
+      lessThan(1),
+    );
+
+    await gesture.moveBy(const Offset(55, -90));
+    await tester.pump();
+    expect(
+      (controller.debugTouchPosition! -
+              Offset(rect.width / 2 + 67, rect.height / 2 - 45))
+          .distance,
+      lessThan(1),
+    );
+
+    await gesture.moveBy(const Offset(-22, 60));
+    await tester.pump();
+    expect(
+      (controller.debugTouchPosition! -
+              Offset(rect.width / 2 + 45, rect.height / 2 + 15))
+          .distance,
+      lessThan(1),
     );
 
     await gesture.cancel();
