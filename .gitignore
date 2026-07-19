@@ -146,12 +146,6 @@ devtools_options.yaml
 *.appimage
 *.deb
 *.rpm
-/server/open-reading-web/data/
-/server/open-reading-web/releases/
-/server/open-reading-web/storage/
-/server/open-reading-web/backups/
-/server/open-reading-web/logs/
-/server/open-reading-web/.incoming/
 /official-site-bundle/
 
 # Agent-generated assets are never part of application releases

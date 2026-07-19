@@ -1,2 +1,0 @@
-"""HTTP route modules."""
-

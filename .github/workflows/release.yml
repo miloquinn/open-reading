@@ -21,8 +21,6 @@ concurrency:
 env:
   FLUTTER_VERSION: "3.44.4"
   RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
-  UV_VERSION: "0.11.8"
-  UV_PYTHON_DOWNLOADS: "never"
 
 jobs:
   verify-release:
@@ -50,29 +48,6 @@ jobs:
             echo "::error::Tag ${RELEASE_TAG} does not match pubspec version ${pubspec_version}."
             exit 1
           fi
-
-      - name: Set up Python
-        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
-        with:
-          python-version: "3.12"
-          cache: pip
-          cache-dependency-path: |
-            server/open-reading-web/pyproject.toml
-            server/open-reading-web/uv.lock
-
-      - name: Install locked website development dependencies
-        working-directory: server/open-reading-web
-        run: |
-          python -m pip install --disable-pip-version-check "uv==${UV_VERSION}"
-          uv sync --locked --extra dev --python 3.12
-
-      - name: Lint website source
-        working-directory: server/open-reading-web
-        run: uv run --locked --extra dev ruff check app tests scripts
-
-      - name: Test website
-        working-directory: server/open-reading-web
-        run: uv run --locked --extra dev pytest
 
       - name: Set up Flutter
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
@@ -994,7 +969,7 @@ jobs:
             'https://open.xxread.top/api/v1/releases/latest?platform=android&architecture=arm64-v8a&channel=stable' \
             > "$response_path"
 
-          python3 server/open-reading-web/scripts/verify_official_download.py \
+          python3 tool/official_site/verify_official_download.py \
             --manifest official-site-bundle/release-manifest.json \
             --response "$response_path" \
             --output "$verified_apk_path" \

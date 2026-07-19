@@ -7,7 +7,7 @@
 - `screenshots/`：六张精选原始应用截图，统一为 1216×2640，保留真实状态栏和应用界面。
 - `promotional/iphone-6.5/`：六张 1242×2688 的 App Store 宣传图及整套预览，符合 iPhone 6.5 英寸截图槽位要求。
 - 正式应用图标继续使用 [`assets/images/app_icon.png`](../../assets/images/app_icon.png)，不在本目录重复保存。
-- 官网加载的压缩 WebP 位于 `server/open-reading-web/app/static/product/`，由本目录的精选截图派生。
+- 官网加载的压缩 WebP 位于独立仓库 `miloquinn/open-reading-web` 的 `app/static/product/`，由本目录的精选截图派生。
 
 ## 素材对应关系
 

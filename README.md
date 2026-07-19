@@ -192,14 +192,14 @@ lib/
 ├── utils/         # 主题、布局、编码等工具
 └── widgets/       # 通用组件和共享阅读器界面
 
-server/
-└── open-reading-web/ # 官方站点、发行 API、安装包镜像与下载统计服务
-
 docs/              # 协议、格式支持、设计和开发文档
 shaders/           # 仿真翻页着色器
 test/              # 单元、组件、回归和端到端测试
-tool/              # 本地开发与示例服务工具
+tool/              # 本地开发、官网发布校验与示例服务工具
 ```
+
+官网、发行 API、安装包镜像与下载统计服务位于独立仓库
+[`miloquinn/open-reading-web`](https://github.com/miloquinn/open-reading-web)。
 
 更完整的架构说明见 [`structure.md`](structure.md) 和
 [`CODEBASE_DOCUMENTATION.md`](CODEBASE_DOCUMENTATION.md)，版本变化见
