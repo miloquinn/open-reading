@@ -137,6 +137,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'https://example.com or a discovery document URL';
 
   @override
+  String get bookSourcesNoOfficialSourcesNotice =>
+      'OpenReading includes no sources and does not operate, recommend, or endorse third-party source services. Every source address is added by you.';
+
+  @override
+  String get bookSourcesResponsibilityAck =>
+      'I understand this is an independent third-party service and confirm that I am authorized to access and use its content.';
+
+  @override
   String get bookSourcesConnect => 'Connect and validate';
 
   @override

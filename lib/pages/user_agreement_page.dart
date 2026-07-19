@@ -24,7 +24,8 @@ class _UserAgreementPageState extends State<UserAgreementPage>
   late final AnimationController _controller;
   late final Animation<double> _fade;
   late final Animation<Offset> _slide;
-  bool _confirmed = false;
+  bool _termsConfirmed = false;
+  bool _sourceBoundaryConfirmed = false;
   bool _saving = false;
 
   _AgreementCopy get _copy {
@@ -182,24 +183,9 @@ class _UserAgreementPageState extends State<UserAgreementPage>
   }
 
   Widget _buildCompactHeader(ColorScheme scheme) {
-    return Row(
-      children: [
-        Expanded(child: _buildBrand(scheme, compact: true)),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          decoration: BoxDecoration(
-            border: Border.all(color: scheme.outline.withValues(alpha: 0.22)),
-            borderRadius: BorderRadius.circular(99),
-          ),
-          child: Text(
-            'AGPL-3.0 · LOCAL FIRST',
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.8,
-                ),
-          ),
-        ),
-      ],
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: _buildBrand(scheme, compact: true),
     );
   }
 
@@ -339,6 +325,8 @@ class _UserAgreementPageState extends State<UserAgreementPage>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildImportantNotice(scheme, copy),
+                    const SizedBox(height: 16),
+                    _buildSourceBoundary(scheme, copy),
                     const SizedBox(height: 26),
                     for (var i = 0; i < copy.sections.length; i++) ...[
                       _buildLegalSection(scheme, i + 1, copy.sections[i]),
@@ -381,6 +369,74 @@ class _UserAgreementPageState extends State<UserAgreementPage>
                   ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSourceBoundary(ColorScheme scheme, _AgreementCopy copy) {
+    return Container(
+      key: const Key('agreementSourceBoundaryCard'),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: scheme.primaryContainer.withValues(alpha: 0.46),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: scheme.primary.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.shield_outlined,
+                size: 20,
+                color: scheme.primary,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  copy.sourceBoundaryTitle,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: scheme.onPrimaryContainer,
+                      ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          for (final point in copy.sourceBoundaryPoints) ...[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Container(
+                    width: 5,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: scheme.primary,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    point,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          height: 1.55,
+                          color:
+                              scheme.onPrimaryContainer.withValues(alpha: 0.84),
+                        ),
+                  ),
+                ),
+              ],
+            ),
+            if (point != copy.sourceBoundaryPoints.last)
+              const SizedBox(height: 8),
+          ],
         ],
       ),
     );
@@ -434,38 +490,27 @@ class _UserAgreementPageState extends State<UserAgreementPage>
   }
 
   Widget _buildConsentArea(ColorScheme scheme, _AgreementCopy copy) {
+    final canContinue = _termsConfirmed && _sourceBoundaryConfirmed && !_saving;
     return Padding(
       padding: const EdgeInsets.fromLTRB(18, 12, 18, 16),
       child: Column(
         children: [
-          InkWell(
-            onTap:
-                _saving ? null : () => setState(() => _confirmed = !_confirmed),
-            borderRadius: BorderRadius.circular(10),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Row(
-                children: [
-                  Checkbox(
-                    value: _confirmed,
-                    onChanged: _saving
-                        ? null
-                        : (value) =>
-                            setState(() => _confirmed = value ?? false),
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(
-                      copy.confirmLabel,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            height: 1.45,
-                            color: scheme.onSurface.withValues(alpha: 0.72),
-                          ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          _buildConsentCheckbox(
+            key: const Key('agreementTermsConsent'),
+            scheme: scheme,
+            value: _termsConfirmed,
+            label: copy.confirmLabel,
+            onChanged: (value) => setState(() => _termsConfirmed = value),
+          ),
+          const SizedBox(height: 6),
+          _buildConsentCheckbox(
+            key: const Key('agreementSourceConsent'),
+            scheme: scheme,
+            value: _sourceBoundaryConfirmed,
+            label: copy.sourceConfirmLabel,
+            emphasized: true,
+            onChanged: (value) =>
+                setState(() => _sourceBoundaryConfirmed = value),
           ),
           const SizedBox(height: 10),
           Row(
@@ -477,7 +522,8 @@ class _UserAgreementPageState extends State<UserAgreementPage>
               const SizedBox(width: 12),
               Expanded(
                 child: FilledButton(
-                  onPressed: _confirmed && !_saving ? _onAgreePressed : null,
+                  key: const Key('agreementContinueButton'),
+                  onPressed: canContinue ? _onAgreePressed : null,
                   style: FilledButton.styleFrom(
                     minimumSize: const Size.fromHeight(52),
                     shape: RoundedRectangleBorder(
@@ -500,8 +546,54 @@ class _UserAgreementPageState extends State<UserAgreementPage>
     );
   }
 
+  Widget _buildConsentCheckbox({
+    required Key key,
+    required ColorScheme scheme,
+    required bool value,
+    required String label,
+    required ValueChanged<bool> onChanged,
+    bool emphasized = false,
+  }) {
+    return Material(
+      color: emphasized
+          ? scheme.primaryContainer.withValues(alpha: 0.24)
+          : Colors.transparent,
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        key: key,
+        onTap: _saving ? null : () => onChanged(!value),
+        borderRadius: BorderRadius.circular(10),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            children: [
+              Checkbox(
+                value: value,
+                onChanged: _saving
+                    ? null
+                    : (nextValue) => onChanged(nextValue ?? false),
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  label,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        height: 1.45,
+                        fontWeight:
+                            emphasized ? FontWeight.w600 : FontWeight.normal,
+                        color: scheme.onSurface.withValues(alpha: 0.76),
+                      ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _onAgreePressed() async {
-    if (!_confirmed || _saving) return;
+    if (!_termsConfirmed || !_sourceBoundaryConfirmed || _saving) return;
     setState(() => _saving = true);
     try {
       await UserAgreementService.acceptAgreement(
@@ -572,17 +664,20 @@ class _PaperGrainPainter extends CustomPainter {
 }
 
 class UserAgreementService {
-  static const String currentAgreementVersion = '2026-07-13.1';
+  static const String currentAgreementVersion = '2026-07-19.1';
   static const String _keyAgreementAccepted = 'userAgreementAccepted';
   static const String _keyAcceptedDate = 'agreementAcceptedDate';
   static const String _keyAcceptedVersion = 'agreementAcceptedVersion';
   static const String _keyAcceptedLocale = 'agreementAcceptedLocale';
+  static const String _keySourceBoundaryAccepted =
+      'thirdPartySourceBoundaryAccepted';
 
   static Future<bool> hasUserAcceptedAgreement() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       return (prefs.getBool(_keyAgreementAccepted) ?? false) &&
-          prefs.getString(_keyAcceptedVersion) == currentAgreementVersion;
+          prefs.getString(_keyAcceptedVersion) == currentAgreementVersion &&
+          (prefs.getBool(_keySourceBoundaryAccepted) ?? false);
     } catch (error) {
       debugPrint('检查用户协议状态失败: $error');
       return false;
@@ -596,6 +691,7 @@ class UserAgreementService {
         _keyAcceptedDate, DateTime.now().toUtc().toIso8601String());
     await prefs.setString(_keyAcceptedVersion, currentAgreementVersion);
     await prefs.setString(_keyAcceptedLocale, locale);
+    await prefs.setBool(_keySourceBoundaryAccepted, true);
   }
 
   static Future<DateTime?> getAgreementAcceptedDate() async {
@@ -615,6 +711,7 @@ class UserAgreementService {
     await prefs.remove(_keyAcceptedDate);
     await prefs.remove(_keyAcceptedVersion);
     await prefs.remove(_keyAcceptedLocale);
+    await prefs.remove(_keySourceBoundaryAccepted);
   }
 }
 
@@ -635,8 +732,11 @@ class _AgreementCopy {
   final String agreementTitle;
   final String agreementSubtitle;
   final String importantNotice;
+  final String sourceBoundaryTitle;
+  final List<String> sourceBoundaryPoints;
   final List<_AgreementSection> sections;
   final String confirmLabel;
+  final String sourceConfirmLabel;
   final String exitLabel;
   final String continueLabel;
   final String exitDialogTitle;
@@ -656,8 +756,11 @@ class _AgreementCopy {
     required this.agreementTitle,
     required this.agreementSubtitle,
     required this.importantNotice,
+    required this.sourceBoundaryTitle,
+    required this.sourceBoundaryPoints,
     required this.sections,
     required this.confirmLabel,
+    required this.sourceConfirmLabel,
     required this.exitLabel,
     required this.continueLabel,
     required this.exitDialogTitle,
@@ -674,11 +777,17 @@ class _AgreementCopy {
     localBody: '书籍、进度与笔记原则上保存在你的设备中，由你自行管理与备份。',
     openSourceTitle: 'AGPL-3.0 开源',
     openSourceBody: '源代码按 GNU AGPL v3.0 提供；软件按“原样”交付，不附带任何明示或默示担保。',
-    versionLabel: '条款版本 2026-07-13.1',
+    versionLabel: '条款版本 2026-07-19.1',
     agreementTitle: '使用条款与隐私说明',
     agreementSubtitle: '使用前请完整阅读，重点条款已直接说明',
     importantNotice:
-        '特别提示：你导入、打开、转换、朗读或通过第三方书源获取的任何文件和内容，均由你自行选择并承担责任。开元阅读及其开发者不提供盗版内容，不对用户内容的来源、合法性、安全性或准确性负责。',
+        '特别提示：开元阅读官方版本不预装、不内置、不推荐任何第三方书源，也不运营、代理或托管书源内容。你导入的文件和主动添加的书源均由你自行选择；请仅访问和使用你有权使用的内容。',
+    sourceBoundaryTitle: '第三方书源责任边界',
+    sourceBoundaryPoints: [
+      '官方只提供开源阅读软件和 Open Reading Source Protocol，不提供书源地址或官方书源目录。',
+      '每个书源地址都必须由你主动输入添加；App 直接连接该独立第三方服务，不经过开发者内容服务器。',
+      '协议兼容只代表接口可连接，不代表内容合法或获得授权。书源运营者负责其内容，你负责添加前审查并合法使用。',
+    ],
     sections: [
       _AgreementSection('协议范围与接受',
           '本协议适用于你对开元阅读软件及其附带功能的下载、安装和使用。点击“同意并继续”即表示你已阅读、理解并同意本协议；如你不同意，请停止使用并退出应用。若你未达到所在地法律规定的独立同意年龄，应由监护人阅读并同意。'),
@@ -689,7 +798,7 @@ class _AgreementCopy {
       _AgreementSection('禁止使用',
           '你不得利用本软件侵犯知识产权或其他合法权益，不得传播违法、有害或恶意内容，不得绕过数字版权保护、访问控制或付费限制，不得攻击、干扰第三方系统，亦不得将本软件用于任何违反适用法律的活动。因你的使用行为导致的投诉、索赔、处罚或损失由你自行承担。'),
       _AgreementSection('书源、链接与第三方服务',
-          '自定义书源、网络接口、外部链接、封面检索、在线内容、系统 TTS、AI 服务及其他第三方能力由相应第三方提供和控制。开发者不保证其持续可用、合法合规、安全、准确或不侵权，也不对第三方的收费、内容变更、数据处理或服务中断负责。启用前请自行审查来源、接口协议、隐私政策和使用条款；因第三方服务产生的责任由你与相应第三方处理。'),
+          '官方版本不预装、不分发、不推荐书源，也不运营官方书源目录。你添加的书源、网络接口、外部链接、在线内容、系统 TTS、AI 服务及其他第三方能力均由独立第三方提供和控制，与开发者不存在运营、代理、授权、背书或内容审核关系。书源运营者依法负责其提供的内容；你须在添加前审查来源、内容授权、隐私政策和使用条款，并对自己的访问、下载、缓存、传播及其他使用行为负责。在适用法律允许的最大范围内，开发者不对第三方内容、收费、数据处理、服务中断或侵权争议承担责任。'),
       _AgreementSection('数据与隐私',
           '本软件采用本地优先设计，书籍、阅读进度、笔记和设置通常保存在你的设备。除非你主动启用联网书源、封面搜索、AI、同步或其他联网功能，本软件不会为了提供本地阅读而主动将书籍正文发送给开发者。启用联网功能时，相关查询、文本片段、设备网络信息或必要参数可能发送给你选择的第三方服务，具体以该服务规则为准。你应自行保护设备、访问密钥和备份；卸载、清理数据、设备故障或误操作可能导致数据永久丢失。'),
       _AgreementSection('AI 与自动化输出',
@@ -703,7 +812,8 @@ class _AgreementCopy {
       _AgreementSection('变更、停止与适用规则',
           '软件功能、项目维护状态和本协议可能因开源项目发展、法律变化或风险控制需要而调整。重大条款更新时，应用可要求你重新确认；不同意新条款的，你应停止使用。你可随时卸载软件。争议优先友好协商；在不影响你依法享有的强制性消费者权益前提下，适用开发者所在地法律并由有管辖权的法院处理。若部分条款无效，其余条款仍然有效。'),
     ],
-    confirmLabel: '我已完整阅读并同意以上条款，知悉用户导入内容、第三方书源及联网服务的风险由我自行承担。',
+    confirmLabel: '我已完整阅读并同意以上使用条款与隐私说明。',
+    sourceConfirmLabel: '我已知悉官方不提供任何书源；我添加的书源及其内容由独立第三方提供，我会自行确认授权并对自己的使用行为负责。',
     exitLabel: '不同意',
     continueLabel: '同意并继续',
     exitDialogTitle: '不同意条款？',
@@ -720,11 +830,17 @@ class _AgreementCopy {
     localBody: '書籍、進度與筆記原則上儲存在你的裝置中，由你自行管理與備份。',
     openSourceTitle: 'AGPL-3.0 開源',
     openSourceBody: '原始碼依 GNU AGPL v3.0 提供；軟體按「原樣」交付，不附帶任何明示或默示擔保。',
-    versionLabel: '條款版本 2026-07-13.1',
+    versionLabel: '條款版本 2026-07-19.1',
     agreementTitle: '使用條款與隱私說明',
     agreementSubtitle: '使用前請完整閱讀，重點條款已直接說明',
     importantNotice:
-        '特別提示：你匯入、開啟、轉換、朗讀或透過第三方書源取得的任何檔案和內容，均由你自行選擇並承擔責任。開元閱讀及其開發者不提供盜版內容，不對使用者內容的來源、合法性、安全性或準確性負責。',
+        '特別提示：開元閱讀官方版本不預載、不內建、不推薦任何第三方書源，也不營運、代理或代管書源內容。你匯入的檔案和主動新增的書源均由你自行選擇；請僅存取和使用你有權使用的內容。',
+    sourceBoundaryTitle: '第三方書源責任邊界',
+    sourceBoundaryPoints: [
+      '官方只提供開源閱讀軟體和 Open Reading Source Protocol，不提供書源位址或官方書源目錄。',
+      '每個書源位址都必須由你主動輸入新增；App 直接連接該獨立第三方服務，不經過開發者內容伺服器。',
+      '協定相容只代表介面可以連接，不代表內容合法或已獲授權。書源營運者負責其內容，你負責新增前審查並合法使用。',
+    ],
     sections: [
       _AgreementSection('協議範圍與接受',
           '本協議適用於你對開元閱讀軟體及其附帶功能的下載、安裝和使用。點擊「同意並繼續」即表示你已閱讀、理解並同意本協議；如你不同意，請停止使用並離開應用程式。若你未達到所在地法律規定的獨立同意年齡，應由監護人閱讀並同意。'),
@@ -735,7 +851,7 @@ class _AgreementCopy {
       _AgreementSection('禁止使用',
           '你不得利用本軟體侵犯智慧財產權或其他合法權益，不得散布違法、有害或惡意內容，不得繞過數位版權保護、存取控制或付費限制，不得攻擊、干擾第三方系統，亦不得將本軟體用於任何違反適用法律的活動。因你的使用行為導致的申訴、求償、處罰或損失由你自行承擔。'),
       _AgreementSection('書源、連結與第三方服務',
-          '自訂書源、網路介面、外部連結、封面檢索、線上內容、系統 TTS、AI 服務及其他第三方能力由相應第三方提供和控制。開發者不保證其持續可用、合法合規、安全、準確或不侵權，也不對第三方的收費、內容變更、資料處理或服務中斷負責。啟用前請自行審查來源、介面協定、隱私政策和使用條款；因第三方服務產生的責任由你與相應第三方處理。'),
+          '官方版本不預載、不散布、不推薦書源，也不營運官方書源目錄。你新增的書源、網路介面、外部連結、線上內容、系統 TTS、AI 服務及其他第三方能力均由獨立第三方提供和控制，與開發者不存在營運、代理、授權、背書或內容審核關係。書源營運者依法負責其提供的內容；你須在新增前審查來源、內容授權、隱私政策和使用條款，並對自己的存取、下載、快取、散布及其他使用行為負責。在適用法律允許的最大範圍內，開發者不對第三方內容、收費、資料處理、服務中斷或侵權爭議承擔責任。'),
       _AgreementSection('資料與隱私',
           '本軟體採用本機優先設計，書籍、閱讀進度、筆記和設定通常儲存在你的裝置。除非你主動啟用連網書源、封面搜尋、AI、同步或其他連網功能，本軟體不會為了提供本機閱讀而主動將書籍內文傳送給開發者。啟用連網功能時，相關查詢、文字片段、裝置網路資訊或必要參數可能傳送給你選擇的第三方服務，具體以該服務規則為準。你應自行保護裝置、存取金鑰和備份；解除安裝、清除資料、裝置故障或誤操作可能導致資料永久遺失。'),
       _AgreementSection('AI 與自動化輸出',
@@ -749,7 +865,8 @@ class _AgreementCopy {
       _AgreementSection('變更、終止與適用規則',
           '軟體功能、專案維護狀態和本協議可能因開源專案發展、法律變化或風險控制需要而調整。重大條款更新時，應用程式可要求你重新確認；不同意新條款的，你應停止使用。你可隨時解除安裝軟體。爭議優先友好協商；在不影響你依法享有的強制性消費者權益前提下，適用開發者所在地法律並由有管轄權的法院處理。若部分條款無效，其餘條款仍然有效。'),
     ],
-    confirmLabel: '我已完整閱讀並同意以上條款，知悉使用者匯入內容、第三方書源及連網服務的風險由我自行承擔。',
+    confirmLabel: '我已完整閱讀並同意以上使用條款與隱私說明。',
+    sourceConfirmLabel: '我已知悉官方不提供任何書源；我新增的書源及其內容由獨立第三方提供，我會自行確認授權並對自己的使用行為負責。',
     exitLabel: '不同意',
     continueLabel: '同意並繼續',
     exitDialogTitle: '不同意條款？',
@@ -768,11 +885,17 @@ class _AgreementCopy {
     openSourceTitle: 'AGPL-3.0 ライセンス',
     openSourceBody:
         'ソースコードは GNU AGPL v3.0 の下で提供され、ソフトウェアは「現状のまま」で提供されます。明示・黙示を問わずいかなる保証も付帯しません。',
-    versionLabel: '規約バージョン 2026-07-13.1',
+    versionLabel: '規約バージョン 2026-07-19.1',
     agreementTitle: '利用規約とプライバシーについて',
     agreementSubtitle: 'ご利用前に全文をお読みください。重要な条項は直接記載しています',
     importantNotice:
-        '重要：あなたが取り込み、開き、変換し、読み上げ、またはサードパーティのソース経由で取得したあらゆるファイルとコンテンツは、あなた自身の選択によるものであり、その責任はあなたが負います。OpenReading とその開発者は海賊版コンテンツを提供せず、ユーザーコンテンツの出所・合法性・安全性・正確性について責任を負いません。',
+        '重要：OpenReading の公式版にはサードパーティの書籍ソースはプリインストール、内蔵、推奨されておらず、開発者がそのコンテンツを運営、代理、ホスティングすることもありません。取り込むファイルと追加するソースはご自身で選択し、権利のあるコンテンツだけを利用してください。',
+    sourceBoundaryTitle: 'サードパーティソースの責任範囲',
+    sourceBoundaryPoints: [
+      '公式プロジェクトが提供するのはオープンソースの閲覧ソフトウェアと Open Reading Source Protocol だけであり、ソースのアドレスや公式一覧は提供しません。',
+      '各ソースのアドレスはあなたが自分で入力して追加します。アプリは開発者のコンテンツサーバーを経由せず、その独立したサービスへ直接接続します。',
+      'プロトコル互換性は接続可能であることだけを示し、コンテンツの適法性や許諾を証明しません。運営者が提供内容に責任を負い、あなたは追加前に確認して適法に利用します。',
+    ],
     sections: [
       _AgreementSection('適用範囲と同意',
           '本規約は、OpenReading ソフトウェアおよび付属機能のダウンロード・インストール・使用に適用されます。「同意して続ける」をタップすることで、本規約を読み、理解し、同意したものとみなされます。同意しない場合は、使用を中止しアプリを終了してください。お住まいの地域の法律が定める同意年齢に達していない場合は、保護者が内容を読み同意する必要があります。'),
@@ -783,7 +906,7 @@ class _AgreementCopy {
       _AgreementSection('禁止事項',
           '本ソフトウェアを利用して知的財産権その他の正当な権利を侵害すること、違法・有害・悪意あるコンテンツを頒布すること、DRM・アクセス制御・課金制限を回避すること、第三者のシステムを攻撃・妨害すること、その他適用法に違反する活動を行うことはできません。あなたの利用行為に起因する苦情・請求・処罰・損失はあなたが負担します。'),
       _AgreementSection('ソース・リンク・サードパーティサービス',
-          'カスタムソース、ネットワーク API、外部リンク、カバー検索、オンラインコンテンツ、システム TTS、AI サービスその他のサードパーティ機能は、各サードパーティが提供・管理します。開発者はその継続的可用性・適法性・安全性・正確性・非侵害を保証せず、サードパーティの課金・内容変更・データ処理・サービス中断についても責任を負いません。有効化する前に、提供元・API 規約・プライバシーポリシー・利用規約をご自身で確認してください。'),
+          '公式版は書籍ソースをプリインストール、配布、推奨せず、公式ソース一覧も運営しません。あなたが追加するソース、ネットワーク API、外部リンク、オンラインコンテンツ、システム TTS、AI サービスその他の機能は、独立した第三者が提供・管理し、開発者との間に運営、代理、許諾、推奨、内容審査の関係はありません。ソース運営者は提供内容について法的責任を負います。あなたは追加前に提供元、コンテンツの権利、プライバシーポリシー、利用規約を確認し、自身のアクセス、ダウンロード、キャッシュ、頒布その他の利用行為に責任を負います。適用法が認める最大限の範囲で、開発者は第三者のコンテンツ、課金、データ処理、停止、権利侵害紛争について責任を負いません。'),
       _AgreementSection('データとプライバシー',
           '本ソフトウェアはローカルファースト設計であり、書籍・読書進捗・メモ・設定は通常あなたの端末に保存されます。ネットワークソース、カバー検索、AI、同期などのオンライン機能を有効にしない限り、ローカル読書のために書籍本文が開発者へ送信されることはありません。オンライン機能を有効にすると、関連するクエリ・テキスト断片・端末のネットワーク情報・必要なパラメーターが、あなたが選択したサードパーティサービスに送信される場合があり、詳細は当該サービスの規約に従います。端末・アクセスキー・バックアップはご自身で保護してください。アンインストール・データ消去・端末故障・誤操作によりデータが完全に失われる可能性があります。'),
       _AgreementSection('AI と自動生成出力',
@@ -797,8 +920,9 @@ class _AgreementCopy {
       _AgreementSection('変更・終了・準拠法',
           'ソフトウェアの機能、プロジェクトの保守状況、本規約は、オープンソースプロジェクトの発展、法律の変化、リスク管理の必要に応じて変更されることがあります。重要な変更の際、アプリは再同意を求めることがあります。新しい規約に同意しない場合は使用を中止してください。ソフトウェアはいつでもアンインストールできます。紛争はまず友好的な協議により解決を図ります。法律上の強行的な消費者保護を妨げない範囲で、開発者所在地の法律が適用され、管轄権を有する裁判所が扱います。一部の条項が無効となっても、その他の条項は引き続き有効です。'),
     ],
-    confirmLabel:
-        '上記の規約を全文読み、同意します。取り込んだコンテンツ、サードパーティのソース、オンラインサービスのリスクは自分が負うことを理解しています。',
+    confirmLabel: '上記の利用規約とプライバシー通知をすべて読み、同意します。',
+    sourceConfirmLabel:
+        '公式プロジェクトが書籍ソースを提供しないこと、追加したソースとコンテンツは独立した第三者が提供することを理解し、許諾を自分で確認して自身の利用行為に責任を負います。',
     exitLabel: '同意しない',
     continueLabel: '同意して続ける',
     exitDialogTitle: '規約に同意しませんか？',
@@ -818,11 +942,17 @@ class _AgreementCopy {
     openSourceTitle: 'AGPL-3.0 licensed',
     openSourceBody:
         'Source code is provided under GNU AGPL v3.0 and the software is supplied “as is,” without warranties.',
-    versionLabel: 'Terms version 2026-07-13.1',
+    versionLabel: 'Terms version 2026-07-19.1',
     agreementTitle: 'Terms of Use & Privacy Notice',
     agreementSubtitle: 'Please read before using OpenReading',
     importantNotice:
-        'Important: You are solely responsible for every file or item you import, open, convert, read aloud, or obtain through a third-party source. OpenReading and its developers do not provide pirated material and do not verify the origin, legality, safety, or accuracy of user content.',
+        'Important: The official OpenReading app does not preinstall, bundle, or recommend any third-party book source, and its developers do not operate, represent, or host source content. You choose every imported file and source you add; use only content you are authorized to access.',
+    sourceBoundaryTitle: 'Third-party source boundary',
+    sourceBoundaryPoints: [
+      'The official project provides open-source reader software and the Open Reading Source Protocol only. It provides no source addresses or official source directory.',
+      'Every source address must be entered and added by you. The app connects directly to that independent service without routing content through a developer-operated server.',
+      'Protocol compatibility means only that an interface can connect; it does not prove legality or licensing. Source operators are responsible for their content, and you must review and use it lawfully.',
+    ],
     sections: [
       _AgreementSection('Scope and acceptance',
           'These terms apply to your download, installation, and use of OpenReading and its included features. By selecting “Agree and continue,” you confirm that you have read, understood, and accepted them. If you do not agree, stop using and exit the app. A guardian must consent where required by local law.'),
@@ -833,7 +963,7 @@ class _AgreementCopy {
       _AgreementSection('Prohibited use',
           'You may not use the software to infringe intellectual property or other rights; distribute unlawful, harmful, or malicious content; bypass digital rights management, access controls, or paywalls; attack or disrupt third-party systems; or engage in activity prohibited by applicable law. You are responsible for complaints, claims, penalties, and losses resulting from your conduct.'),
       _AgreementSection('Book sources and third parties',
-          'Custom book sources, network APIs, external links, cover search, online content, system text-to-speech, AI services, and other integrations are provided and controlled by third parties. The developers do not warrant their availability, legality, safety, accuracy, or non-infringement and are not responsible for third-party charges, content changes, data practices, or outages. Review each provider and its terms before enabling it.'),
+          'The official app does not preinstall, distribute, or recommend book sources and does not operate an official source directory. Sources, network APIs, external links, online content, system text-to-speech, AI services, and other integrations you add are independently provided and controlled by third parties. They are not operated, represented, licensed, endorsed, or reviewed by the developers. Source operators are legally responsible for the content they provide. Before adding one, you must review its origin, content rights, privacy policy, and terms, and you are responsible for your own access, downloads, caching, distribution, and other use. To the fullest extent permitted by applicable law, the developers are not liable for third-party content, charges, data practices, outages, or infringement disputes.'),
       _AgreementSection('Data and privacy',
           'OpenReading is local-first. Books, reading progress, notes, and settings are normally stored on your device. Unless you enable a network book source, cover search, AI, sync, or another online feature, the app does not need to send book text to the developers to provide local reading. When an online feature is used, queries, selected text, network information, or necessary parameters may be sent to the provider you selected under that provider’s policies. Protect your device, API keys, and backups; uninstalling, clearing data, device failure, or user error may permanently erase data.'),
       _AgreementSection('AI and automated output',
@@ -848,7 +978,9 @@ class _AgreementCopy {
           'Features, maintenance status, and these terms may change as the open-source project, law, or risk controls evolve. Material updates may require renewed consent; if you disagree, stop using the app. You may uninstall at any time. Disputes should first be resolved informally. Subject to mandatory consumer protections, the law of the developer’s location and courts with lawful jurisdiction apply. If one provision is unenforceable, the rest remain effective.'),
     ],
     confirmLabel:
-        'I have read and agree to these terms and understand that I am responsible for user-imported content, third-party book sources, and online services.',
+        'I have read and agree to the Terms of Use and Privacy Notice.',
+    sourceConfirmLabel:
+        'I understand that the official project provides no book sources; sources and content I add come from independent third parties, and I will verify authorization and remain responsible for my own use.',
     exitLabel: 'Decline',
     continueLabel: 'Agree and continue',
     exitDialogTitle: 'Decline the terms?',

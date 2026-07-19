@@ -129,6 +129,14 @@ class AppLocalizationsJa extends AppLocalizations {
   String get bookSourcesUrlHint => 'https://example.com またはディスカバリードキュメントの URL';
 
   @override
+  String get bookSourcesNoOfficialSourcesNotice =>
+      'OpenReading は書籍ソースをプリインストールせず、サードパーティサービスを運営、推奨、保証しません。すべてのアドレスはあなたが追加します。';
+
+  @override
+  String get bookSourcesResponsibilityAck =>
+      'これは独立したサードパーティサービスであり、そのコンテンツへアクセスして利用する権限があることを確認します。';
+
+  @override
   String get bookSourcesConnect => '接続して検証';
 
   @override

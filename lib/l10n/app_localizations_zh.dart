@@ -128,6 +128,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bookSourcesUrlHint => 'https://example.com 或发现文档 URL';
 
   @override
+  String get bookSourcesNoOfficialSourcesNotice =>
+      '开元阅读不预装任何书源，也不运营、推荐或背书第三方书源服务。每个书源地址都由你主动添加。';
+
+  @override
+  String get bookSourcesResponsibilityAck => '我知悉这是独立第三方服务，并确认自己有权访问和使用其中的内容。';
+
+  @override
   String get bookSourcesConnect => '连接并校验';
 
   @override
@@ -2684,6 +2691,13 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get bookSourcesUrlHint => 'https://example.com 或探索文件 URL';
+
+  @override
+  String get bookSourcesNoOfficialSourcesNotice =>
+      '開元閱讀不預載任何書源，也不營運、推薦或背書第三方書源服務。每個書源位址都由你主動新增。';
+
+  @override
+  String get bookSourcesResponsibilityAck => '我知悉這是獨立第三方服務，並確認自己有權存取和使用其中的內容。';
 
   @override
   String get bookSourcesConnect => '連接並驗證';

@@ -64,6 +64,8 @@
   "bookSourcesAddTitle": "Add open source",
   "bookSourcesUrlLabel": "Source address",
   "bookSourcesUrlHint": "https://example.com or a discovery document URL",
+  "bookSourcesNoOfficialSourcesNotice": "OpenReading includes no sources and does not operate, recommend, or endorse third-party source services. Every source address is added by you.",
+  "bookSourcesResponsibilityAck": "I understand this is an independent third-party service and confirm that I am authorized to access and use its content.",
   "bookSourcesConnect": "Connect and validate",
   "bookSourcesConnecting": "Validating protocol…",
   "bookSourcesAdded": "Source added",

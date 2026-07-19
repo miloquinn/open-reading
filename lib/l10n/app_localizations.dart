@@ -329,6 +329,18 @@ abstract class AppLocalizations {
   /// **'https://example.com or a discovery document URL'**
   String get bookSourcesUrlHint;
 
+  /// No description provided for @bookSourcesNoOfficialSourcesNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'OpenReading includes no sources and does not operate, recommend, or endorse third-party source services. Every source address is added by you.'**
+  String get bookSourcesNoOfficialSourcesNotice;
+
+  /// No description provided for @bookSourcesResponsibilityAck.
+  ///
+  /// In en, this message translates to:
+  /// **'I understand this is an independent third-party service and confirm that I am authorized to access and use its content.'**
+  String get bookSourcesResponsibilityAck;
+
   /// No description provided for @bookSourcesConnect.
   ///
   /// In en, this message translates to:

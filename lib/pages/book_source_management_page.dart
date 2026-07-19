@@ -376,6 +376,7 @@ class _BookSourceManagementPageState extends State<BookSourceManagementPage> {
   Future<void> _showAddSourceDialog() async {
     final controller = TextEditingController();
     var connecting = false;
+    var responsibilityAccepted = false;
     String? errorText;
     await showDialog<void>(
       context: context,
@@ -402,6 +403,72 @@ class _BookSourceManagementPageState extends State<BookSourceManagementPage> {
                     prefixIcon: const Icon(Icons.link_rounded),
                   ),
                 ),
+                const SizedBox(height: 14),
+                Container(
+                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .primaryContainer
+                        .withValues(alpha: 0.36),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withValues(alpha: 0.18),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.shield_outlined,
+                            size: 19,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          const SizedBox(width: 9),
+                          Expanded(
+                            child: Text(
+                              context.l10n.bookSourcesNoOfficialSourcesNotice,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(height: 1.45),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Material(
+                        type: MaterialType.transparency,
+                        child: CheckboxListTile(
+                          key: const Key('bookSourceResponsibilityCheckbox'),
+                          value: responsibilityAccepted,
+                          enabled: !connecting,
+                          contentPadding: EdgeInsets.zero,
+                          controlAffinity: ListTileControlAffinity.leading,
+                          dense: true,
+                          title: Text(
+                            context.l10n.bookSourcesResponsibilityAck,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall
+                                ?.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                          onChanged: connecting
+                              ? null
+                              : (value) => setDialogState(
+                                    () =>
+                                        responsibilityAccepted = value ?? false,
+                                  ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 if (connecting) ...[
                   const SizedBox(height: 16),
                   Row(
@@ -425,7 +492,8 @@ class _BookSourceManagementPageState extends State<BookSourceManagementPage> {
               child: Text(context.l10n.bookSourcesCancel),
             ),
             FilledButton(
-              onPressed: connecting
+              key: const Key('bookSourceConnectButton'),
+              onPressed: connecting || !responsibilityAccepted
                   ? null
                   : () async {
                       setDialogState(() {

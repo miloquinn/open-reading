@@ -64,6 +64,8 @@
   "bookSourcesAddTitle": "添加开放书源",
   "bookSourcesUrlLabel": "书源地址",
   "bookSourcesUrlHint": "https://example.com 或发现文档 URL",
+  "bookSourcesNoOfficialSourcesNotice": "开元阅读不预装任何书源，也不运营、推荐或背书第三方书源服务。每个书源地址都由你主动添加。",
+  "bookSourcesResponsibilityAck": "我知悉这是独立第三方服务，并确认自己有权访问和使用其中的内容。",
   "bookSourcesConnect": "连接并校验",
   "bookSourcesConnecting": "正在校验协议…",
   "bookSourcesAdded": "书源已添加",

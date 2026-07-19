@@ -52,6 +52,8 @@
   "bookSourcesAddTitle": "オープンソースを追加",
   "bookSourcesUrlLabel": "ソースのアドレス",
   "bookSourcesUrlHint": "https://example.com またはディスカバリードキュメントの URL",
+  "bookSourcesNoOfficialSourcesNotice": "OpenReading は書籍ソースをプリインストールせず、サードパーティサービスを運営、推奨、保証しません。すべてのアドレスはあなたが追加します。",
+  "bookSourcesResponsibilityAck": "これは独立したサードパーティサービスであり、そのコンテンツへアクセスして利用する権限があることを確認します。",
   "bookSourcesConnect": "接続して検証",
   "bookSourcesConnecting": "プロトコルを検証中…",
   "bookSourcesAdded": "ソースを追加しました",

@@ -52,6 +52,8 @@
   "bookSourcesAddTitle": "新增開放書源",
   "bookSourcesUrlLabel": "書源位址",
   "bookSourcesUrlHint": "https://example.com 或探索文件 URL",
+  "bookSourcesNoOfficialSourcesNotice": "開元閱讀不預載任何書源，也不營運、推薦或背書第三方書源服務。每個書源位址都由你主動新增。",
+  "bookSourcesResponsibilityAck": "我知悉這是獨立第三方服務，並確認自己有權存取和使用其中的內容。",
   "bookSourcesConnect": "連接並驗證",
   "bookSourcesConnecting": "正在驗證協定…",
   "bookSourcesAdded": "書源已新增",
