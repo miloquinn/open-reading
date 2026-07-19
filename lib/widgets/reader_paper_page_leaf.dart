@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../core/reader/reader_leaf_status.dart';
 import '../core/reader/reader_safe_area.dart';
 import '../utils/reader_themes.dart';
 import 'reader_theme_background.dart';
+import 'reader_top_information_bar.dart';
 
 enum ReaderPageNumberPlacement {
   bottomLeft,
@@ -76,6 +78,9 @@ class ReaderPaperPageLeaf extends StatelessWidget {
     required this.child,
     this.pageNumberPlacement = ReaderPageNumberPlacement.bottomRight,
     this.horizontalPadding = 14,
+    this.pageNumberHorizontalPadding = 24,
+    this.showTopInformation = false,
+    this.status,
   });
 
   final ReaderThemePalette palette;
@@ -84,6 +89,9 @@ class ReaderPaperPageLeaf extends StatelessWidget {
   final Widget child;
   final ReaderPageNumberPlacement pageNumberPlacement;
   final double horizontalPadding;
+  final double pageNumberHorizontalPadding;
+  final bool showTopInformation;
+  final ReaderLeafStatusData? status;
 
   @override
   Widget build(BuildContext context) {
@@ -113,9 +121,24 @@ class ReaderPaperPageLeaf extends StatelessWidget {
           fit: StackFit.expand,
           children: [
             child,
+            if (showTopInformation)
+              Positioned(
+                left: horizontalPadding,
+                right: horizontalPadding,
+                top: safeArea.readerTopBarTop,
+                height: ReaderSafeAreaMetrics.readerTopBarHeight,
+                child: ReaderTopInformationBar(
+                  key: ValueKey(
+                    'reader-leaf-top-information:${metadata.pageIdentity}',
+                  ),
+                  palette: palette,
+                  title: metadata.chapterTitle,
+                  status: status,
+                ),
+              ),
             Positioned(
-              left: horizontalPadding,
-              right: horizontalPadding,
+              left: pageNumberHorizontalPadding,
+              right: pageNumberHorizontalPadding,
               bottom: safeArea.pageNumberBottom,
               height: ReaderSafeAreaMetrics.pageNumberReserve,
               child: Align(

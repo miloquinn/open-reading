@@ -872,6 +872,8 @@
   "openSourceLicenseLoadFailed": "無法載入授權文字。",
   "changelogPageTitle": "版本更新記錄",
   "changelogCurrentVersion": "目前版本",
+  "changelog202PaperInformation": "閱讀資訊列嵌入每張紙頁，橫向滑動與擬真翻頁時會隨頁面一起移動",
+  "changelog202PageNumberInset": "頁碼向螢幕內側保留安全距離，避免被圓角遮擋",
   "changelog201BackwardPageTurn": "最佳化上一頁擬真翻頁，從中央起手立即跟手，垂直晃動不再帶偏裝訂邊",
   "changelog201SnapshotPreheat": "前後相鄰頁同步預熱，減少首次反向翻頁卡頓",
   "changelog201SourceFilters": "發現頁支援全部或單一書源篩選，最新書籍在多個書源間均衡穿插",

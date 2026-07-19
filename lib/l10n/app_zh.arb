@@ -1227,6 +1227,8 @@
   "openSourceLicenseLoadFailed": "无法加载许可文本。",
   "changelogPageTitle": "版本更新记录",
   "changelogCurrentVersion": "当前版本",
+  "changelog202PaperInformation": "阅读信息栏嵌入每张纸页，横滑和仿真翻页时随页面一起移动",
+  "changelog202PageNumberInset": "页码向屏幕内侧留出安全距离，避免被圆角遮挡",
   "changelog201BackwardPageTurn": "优化上一页仿真翻页，中间起手立即跟手，纵向晃动不再带偏装订边",
   "changelog201SnapshotPreheat": "前后相邻页同步预热，减少首次反向翻页卡顿",
   "changelog201SourceFilters": "发现页支持全部或单一书源筛选，最新书籍在多个书源间均衡穿插",

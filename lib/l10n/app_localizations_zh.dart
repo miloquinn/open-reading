@@ -1634,6 +1634,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get changelogCurrentVersion => '当前版本';
 
   @override
+  String get changelog202PaperInformation => '阅读信息栏嵌入每张纸页，横滑和仿真翻页时随页面一起移动';
+
+  @override
+  String get changelog202PageNumberInset => '页码向屏幕内侧留出安全距离，避免被圆角遮挡';
+
+  @override
   String get changelog201BackwardPageTurn => '优化上一页仿真翻页，中间起手立即跟手，纵向晃动不再带偏装订边';
 
   @override
@@ -4123,6 +4129,12 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get changelogCurrentVersion => '目前版本';
+
+  @override
+  String get changelog202PaperInformation => '閱讀資訊列嵌入每張紙頁，橫向滑動與擬真翻頁時會隨頁面一起移動';
+
+  @override
+  String get changelog202PageNumberInset => '頁碼向螢幕內側保留安全距離，避免被圓角遮擋';
 
   @override
   String get changelog201BackwardPageTurn => '最佳化上一頁擬真翻頁，從中央起手立即跟手，垂直晃動不再帶偏裝訂邊';

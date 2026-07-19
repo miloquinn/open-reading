@@ -872,6 +872,8 @@
   "openSourceLicenseLoadFailed": "ライセンス文を読み込めませんでした。",
   "changelogPageTitle": "バージョン更新履歴",
   "changelogCurrentVersion": "現在のバージョン",
+  "changelog202PaperInformation": "読書情報バーを各ページ内に配置し、横スライドやページめくりと一緒に動くよう修正しました",
+  "changelog202PageNumberInset": "画面の角丸で隠れないよう、ページ番号を画面端から内側へ調整しました",
   "changelog201BackwardPageTurn": "前のページへの紙面めくりを改善し、画面中央からでも即座に追従して上下の手ぶれで綴じ目がずれないようにしました",
   "changelog201SnapshotPreheat": "前後の隣接ページを同時にプリヒートし、最初の逆方向ページめくりの遅延を軽減しました",
   "changelog201SourceFilters": "すべて／個別の書籍ソース絞り込みと最新書籍の均等な交互表示に対応しました",

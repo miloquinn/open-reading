@@ -1644,6 +1644,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get changelogCurrentVersion => '現在のバージョン';
 
   @override
+  String get changelog202PaperInformation =>
+      '読書情報バーを各ページ内に配置し、横スライドやページめくりと一緒に動くよう修正しました';
+
+  @override
+  String get changelog202PageNumberInset => '画面の角丸で隠れないよう、ページ番号を画面端から内側へ調整しました';
+
+  @override
   String get changelog201BackwardPageTurn =>
       '前のページへの紙面めくりを改善し、画面中央からでも即座に追従して上下の手ぶれで綴じ目がずれないようにしました';
 

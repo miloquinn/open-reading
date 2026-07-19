@@ -137,7 +137,7 @@ lib/
 - `core/reader/txt_chapter_parser.dart`：TXT 章节识别与标题/正文边界的单一实现；识别出的标题独立存储，正文范围跳过标题行和相邻空行，并输出 `isNeedSplitTitle` 供分页模式插入章节标题页。小文件解析缓存和大文件 UTF-8 索引共用该边界结果。
 - `core/reader/reader_text_layout.dart`：把首行缩进和段落间距投影成显示文字，并维护显示 UTF-16 boundary 到原文 boundary 的单调映射，保证书签和阅读进度仍使用 canonical offset；EPUB 解析器生成的连续段落换行只在显示层归一化，不改写规范文本。
 - `core/reader/reader_page_turn_geometry.dart`：前后翻页共享的镜像坐标、纸角/触点垂直平分线、折线端点和 renderer turn axis；物理装订边会换算到 canonical 左/右侧后钳制。backward 支持 `followPointerEdge`，让 anchor Y 跟随 pointer Y，折线保持竖直，纵向手抖不改变横向揭页进度。
-- `core/reader/reader_leaf_status.dart`：分钟级时间、电量状态；Android/iOS 通过 `com.niki.xxread/reader_status` method channel 读取电量，供共享阅读信息栏消费，不再参与纸页快照 revision。
+- `core/reader/reader_leaf_status.dart`：分钟级时间、电量状态；Android/iOS 通过 `com.niki.xxread/reader_status` method channel 读取电量。分页模式选用阅读信息栏时，状态 revision 会参与纸页快照更新；上下翻页则由固定视口信息栏直接消费。
 - `core/reader/reader_safe_area.dart`：系统安全区、阅读信息栏预留、正文边距和页码位置。
 - `core/reader/reader_system_ui.dart`：统一三态顶部样式（系统状态栏、阅读信息栏、完全沉浸）、旧布尔偏好迁移和 Android/iOS 系统栏切换；退出阅读页时恢复应用级 edge-to-edge。
 - `core/reader/reader_vertical_paging.dart`：上下翻页的固定视口留白、正文窗口高度、中心可见项选择和章内页索引换算；不依赖具体列表包，供本地与书源阅读器共享。
@@ -152,9 +152,10 @@ lib/
 - `widgets/reader_pull_bookmark.dart`：只从屏幕顶部区域起手的原始指针下拉手势、阈值反馈和当前页书签页缘标记；数据仍复用既有 `BookmarkDao`。
 - `widgets/reader_vertical_paging_surface.dart`：本地文件与在线书源共用的上下翻页交互宿主；把中间轻点识别放在 `SelectionArea` 内部，统一“轻点呼出控制栏、竖滑只滚正文”的手势优先级。
 - `widgets/reader_chapter_title_page.dart`：章节独占标题页组件；从正文样式继承字体与主色，字号按正文 `1.8×` 并限制在 28–34，标题水平居中且垂直略偏上。
-- `widgets/reader_paper_page_leaf.dart`：正文与章内页码组成的完整纸页；分页模式的抓图与横滑均以它为最小 page leaf。手机/单页页码位于右下，平板 spread 的左 leaf 位于左下、右 leaf 位于右下。
+- `widgets/reader_paper_page_leaf.dart`：正文、可选的页内阅读信息栏与章内页码组成完整纸页；无动画、横滑和仿真翻页均以它为最小 page leaf，因此时间、标题、电量和页码会随纸张运动。手机/单页页码位于右下，平板 spread 的左 leaf 位于左下、右 leaf 位于右下；页码距离外侧屏幕边缘至少 24px，避开圆角遮挡。
+- `widgets/reader_top_information_bar.dart`：时间、章节标题和电量的共享绘制组件；分页模式嵌入纸页 leaf，上下翻页复用于固定视口 chrome。
 - `widgets/reader_shader_page_curl.dart`：经典折页专用的手势/真实弹簧状态机，以及按页面身份、排版指纹和主题缓存的字节预算快照 LRU；翻页方向与物理 `bindingEdge` 独立，手机前后翻都保持左装订，平板左 leaf 才使用右装订。边缘起手直接跟手；中部 forward 在活动快照就绪后从右自由边用 85ms ease-out 追手，backward 则直接跟 pointer。current 抓图后 forward/backward 同优先级预热，不再延迟上一页 140ms。经典折页 shader 保留只在活动翻页层中存在、不参与纸面采样的装订缝，双页 leaf 可启用仅自由边起手的手势约束。连续点击/音量键请求进入有界 FIFO，不会在上一张纸收尾时丢失，也不会因按键连发形成无限积压；提交动画以横向纸页离场为视觉终点，不等待不可见的纵向弹簧，也不在页面状态更新后额外保留旧页阴影层。
-- `widgets/reader_control_chrome.dart`：统一顶部、底部控制栏与屏幕级阅读信息栏；阅读信息栏在系统安全区下方显示时间、章节标题和电量并在控制栏展开时淡出。上下翻页的章内页码固定在右下，其余分页模式由纸页 leaf 绘制页码。
+- `widgets/reader_control_chrome.dart`：统一顶部、底部控制栏，并仅为上下翻页承载固定视口阅读信息栏；信息栏在系统安全区下方显示时间、章节标题和电量，并在控制栏展开时淡出。上下翻页的章内页码固定在右下，其余分页模式的信息栏与页码均由纸页 leaf 绘制。
 - `widgets/reader_navigation_sheet.dart`：目录、书签和定位面板；整个面板使用当前阅读主题配色，目录按 EPUB 等来源提供的 `depth` 还原为可展开/收起的层级树，搜索结果保留祖先路径，“当前”定位会自动展开被折叠的父链。
 - `widgets/generated_book_cover.dart`：无真实封面时的统一实时封面组件，与持久化 PNG 共用同一绘制器。
 

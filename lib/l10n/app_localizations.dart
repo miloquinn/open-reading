@@ -3126,6 +3126,18 @@ abstract class AppLocalizations {
   /// **'Current version'**
   String get changelogCurrentVersion;
 
+  /// No description provided for @changelog202PaperInformation.
+  ///
+  /// In en, this message translates to:
+  /// **'Embedded reader information in each paper page so it moves with slide and page-curl turns'**
+  String get changelog202PaperInformation;
+
+  /// No description provided for @changelog202PageNumberInset.
+  ///
+  /// In en, this message translates to:
+  /// **'Inset page numbers from screen edges to avoid rounded-corner clipping'**
+  String get changelog202PageNumberInset;
+
   /// No description provided for @changelog201BackwardPageTurn.
   ///
   /// In en, this message translates to:

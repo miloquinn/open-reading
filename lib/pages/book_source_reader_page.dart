@@ -1306,13 +1306,14 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
                       showViewportStatus:
                           _pageMode == BookSourcePageMode.verticalScroll,
                       showViewportTitle:
-                          _topBarStyle == ReaderTopBarStyle.reader,
+                          _pageMode == BookSourcePageMode.verticalScroll &&
+                              _topBarStyle == ReaderTopBarStyle.reader,
                       viewportTitleTop: _readerSafeArea.readerTopBarTop,
                       viewportTitleKey:
                           const ValueKey('book-source-viewport-title'),
                       readerStatus: _leafStatusController.value,
                       viewportStatusHorizontalPadding:
-                          math.max(14, _horizontalMargin),
+                          math.max(24, _horizontalMargin),
                       statusBuilder: _buildReaderStatusText,
                       onBack: () => unawaited(_requestExit()),
                       onBookmark: _chapters.isEmpty
@@ -1915,6 +1916,9 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       safeArea: _readerSafeArea,
       metadata: metadata,
       horizontalPadding: math.max(14, _horizontalMargin),
+      pageNumberHorizontalPadding: math.max(24, _horizontalMargin),
+      showTopInformation: _topBarStyle == ReaderTopBarStyle.reader,
+      status: _leafStatusController.value,
       child: Padding(
         padding: EdgeInsets.fromLTRB(
           _horizontalMargin,
@@ -1974,7 +1978,9 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     );
     return ReaderPageSnapshot(
       key: metadata.snapshotKey,
-      contentRevision: 0,
+      contentRevision: _topBarStyle == ReaderTopBarStyle.reader
+          ? _leafStatusController.value.revision
+          : 0,
       child: _buildPageLeaf(
         page,
         pageIndex: pageIndex,

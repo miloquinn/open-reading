@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:xxread/core/reader/reader_leaf_status.dart';
 import 'package:xxread/core/reader/reader_safe_area.dart';
 import 'package:xxread/utils/reader_themes.dart';
 import 'package:xxread/widgets/reader_paper_page_leaf.dart';
@@ -51,6 +52,62 @@ void main() {
       tester.getCenter(find.text('4 / 12')).dx,
       greaterThan(tester.getSize(find.byKey(captureKey)).width / 2),
     );
+    final leafRect = tester.getRect(find.byKey(captureKey));
+    final pageNumberRect = tester.getRect(find.text('4 / 12'));
+    expect(leafRect.right - pageNumberRect.right, greaterThanOrEqualTo(23));
+  });
+
+  testWidgets('reader information is painted inside the paper leaf',
+      (tester) async {
+    final captureKey = GlobalKey();
+    const metadata = ReaderPaperPageMetadata(
+      pageIdentity: 'chapter-1:5',
+      layoutFingerprint: 'layout-v4',
+      themeId: 'day',
+      chapterTitle: 'Chapter 3',
+      pageNumber: 6,
+      pageCount: 12,
+    );
+    final status = ReaderLeafStatusData(
+      time: DateTime(2026, 7, 19, 9, 5),
+      battery: const ReaderBatteryStatus(level: 73, charging: false),
+      revision: 2,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MediaQuery(
+          data: const MediaQueryData(alwaysUse24HourFormat: true),
+          child: RepaintBoundary(
+            key: captureKey,
+            child: ReaderPaperPageLeaf(
+              palette: ReaderThemes.day,
+              safeArea: const ReaderSafeAreaMetrics(
+                viewPadding: EdgeInsets.only(top: 24, bottom: 24),
+                topMargin: 4,
+                bottomMargin: 0,
+                topChromeReserve: ReaderSafeAreaMetrics.readerTopBarReserve,
+              ),
+              metadata: metadata,
+              showTopInformation: true,
+              status: status,
+              child: const SizedBox.expand(),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    for (final text in ['09:05', 'Chapter 3', '73%']) {
+      expect(find.text(text), findsOneWidget);
+      expect(
+        find.ancestor(
+          of: find.text(text),
+          matching: find.byKey(captureKey),
+        ),
+        findsOneWidget,
+      );
+    }
   });
 
   testWidgets('left page places its page number in the outer bottom corner',

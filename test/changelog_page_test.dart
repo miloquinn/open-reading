@@ -17,6 +17,15 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('版本更新记录'), findsOneWidget);
+    expect(find.text('v2.0.2'), findsOneWidget);
+    expect(
+      find.text('阅读信息栏嵌入每张纸页，横滑和仿真翻页时随页面一起移动'),
+      findsOneWidget,
+    );
+    expect(
+      find.text('页码向屏幕内侧留出安全距离，避免被圆角遮挡'),
+      findsOneWidget,
+    );
     expect(find.text('v2.0.1'), findsOneWidget);
     expect(
       find.text('优化上一页仿真翻页，中间起手立即跟手，纵向晃动不再带偏装订边'),
@@ -34,8 +43,15 @@ void main() {
     expect(find.text('Android 阅读时保持屏幕常亮正式生效'), findsOneWidget);
     expect(find.text('v1.2.4'), findsOneWidget);
     expect(find.text('新增纸页化页脚、经典折页动画与阅读排版设置'), findsOneWidget);
-    expect(find.text('v1.2.2'), findsOneWidget);
     expect(find.text('当前版本'), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.text('v1.2.2'),
+      200,
+      scrollable: find.byType(Scrollable),
+    );
+
+    expect(find.text('v1.2.2'), findsOneWidget);
     expect(find.text('修复在线连续滚动无法中间点击呼出控制栏'), findsOneWidget);
 
     await tester.scrollUntilVisible(

@@ -1942,6 +1942,8 @@
   "openSourceLicenseLoadFailed": "Could not load the license text.",
   "changelogPageTitle": "Release history",
   "changelogCurrentVersion": "Current version",
+  "changelog202PaperInformation": "Embedded reader information in each paper page so it moves with slide and page-curl turns",
+  "changelog202PageNumberInset": "Inset page numbers from screen edges to avoid rounded-corner clipping",
   "changelog201BackwardPageTurn": "Improved backward simulated turns with immediate mid-screen tracking and a stable binding edge during vertical hand movement",
   "changelog201SnapshotPreheat": "Preheated both adjacent pages together to reduce first backward-turn latency",
   "changelog201SourceFilters": "Added all-source and per-source discovery filters with balanced latest-book interleaving",

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../core/reader/reader_leaf_status.dart';
 import '../utils/glass_config.dart';
 import '../utils/reader_themes.dart';
+import 'reader_top_information_bar.dart';
 
 typedef ReaderStatusBuilder = Widget Function(
   BuildContext context,
@@ -86,7 +87,8 @@ class ReaderChromeOverlay extends StatelessWidget {
                 opacity: visible ? 0 : 1,
                 duration: const Duration(milliseconds: 180),
                 curve: Curves.easeOut,
-                child: _ReaderTopInformationBar(
+                child: ReaderTopInformationBar(
+                  palette: palette,
                   title: title,
                   status: readerStatus,
                 ),
@@ -239,106 +241,6 @@ class ReaderChromeOverlay extends StatelessWidget {
       ],
     );
   }
-}
-
-class _ReaderTopInformationBar extends StatelessWidget {
-  const _ReaderTopInformationBar({
-    required this.title,
-    required this.status,
-  });
-
-  final String title;
-  final ReaderLeafStatusData? status;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    final style = Theme.of(context).textTheme.labelSmall?.copyWith(
-          height: 1,
-          fontSize: 10,
-          fontWeight: FontWeight.w500,
-          letterSpacing: 0.08,
-          color: colors.onSurfaceVariant.withValues(alpha: 0.64),
-          fontFeatures: const [FontFeature.tabularFigures()],
-        ) ??
-        TextStyle(
-          height: 1,
-          fontSize: 10,
-          fontWeight: FontWeight.w500,
-          color: colors.onSurfaceVariant.withValues(alpha: 0.64),
-          fontFeatures: const [FontFeature.tabularFigures()],
-        );
-    final time = status == null
-        ? ''
-        : MaterialLocalizations.of(context).formatTimeOfDay(
-            TimeOfDay.fromDateTime(status!.time),
-            alwaysUse24HourFormat: MediaQuery.alwaysUse24HourFormatOf(context),
-          );
-    final battery = status?.battery;
-
-    return Semantics(
-      container: true,
-      label: [
-        if (time.isNotEmpty) time,
-        title,
-        if (battery != null) '${battery.level}%',
-      ].join(', '),
-      child: SizedBox(
-        height: 16,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(time, style: style),
-            ),
-            Center(
-              child: FractionallySizedBox(
-                widthFactor: 0.54,
-                child: Text(
-                  title,
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: style.copyWith(
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.14,
-                  ),
-                ),
-              ),
-            ),
-            if (battery != null)
-              Align(
-                alignment: Alignment.centerRight,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      battery.charging
-                          ? Icons.battery_charging_full_rounded
-                          : _readerBatteryIcon(battery.level),
-                      size: 11,
-                      color: style.color,
-                    ),
-                    const SizedBox(width: 1),
-                    Text('${battery.level}%', style: style),
-                  ],
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-IconData _readerBatteryIcon(int level) {
-  if (level <= 15) return Icons.battery_1_bar_rounded;
-  if (level <= 35) return Icons.battery_2_bar_rounded;
-  if (level <= 55) return Icons.battery_3_bar_rounded;
-  if (level <= 75) return Icons.battery_5_bar_rounded;
-  if (level <= 90) return Icons.battery_6_bar_rounded;
-  return Icons.battery_full_rounded;
 }
 
 class ReaderControlBar extends StatelessWidget {

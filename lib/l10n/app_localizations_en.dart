@@ -1703,6 +1703,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get changelogCurrentVersion => 'Current version';
 
   @override
+  String get changelog202PaperInformation =>
+      'Embedded reader information in each paper page so it moves with slide and page-curl turns';
+
+  @override
+  String get changelog202PageNumberInset =>
+      'Inset page numbers from screen edges to avoid rounded-corner clipping';
+
+  @override
   String get changelog201BackwardPageTurn =>
       'Improved backward simulated turns with immediate mid-screen tracking and a stable binding edge during vertical hand movement';
 

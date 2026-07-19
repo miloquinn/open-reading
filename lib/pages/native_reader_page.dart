@@ -1951,7 +1951,9 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     );
     return ReaderPageSnapshot(
       key: metadata.snapshotKey,
-      contentRevision: 0,
+      contentRevision: _topBarStyle == ReaderTopBarStyle.reader
+          ? _leafStatusController.value.revision
+          : 0,
       child: _buildBookPageLeaf(
         chapters,
         page,
@@ -2096,7 +2098,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
           '${chapter.id}:$pageIndex:${page.startOffset}',
       layoutFingerprint: layoutFingerprint,
       themeId: _readerTheme.cacheKey,
-      chapterTitle: page.isChapterTitle ? '' : resolvedChapterTitle,
+      chapterTitle: resolvedChapterTitle,
       pageNumber: pageIndex + 1,
       pageCount: pageCount,
     );
@@ -2126,6 +2128,9 @@ class _NativeReaderPageState extends State<NativeReaderPage>
       metadata: metadata,
       pageNumberPlacement: pageNumberPlacement,
       horizontalPadding: math.max(14, _horizontalMargin),
+      pageNumberHorizontalPadding: math.max(24, _horizontalMargin),
+      showTopInformation: _topBarStyle == ReaderTopBarStyle.reader,
+      status: _leafStatusController.value,
       child: Padding(
         padding: EdgeInsets.fromLTRB(
           _horizontalMargin,
@@ -2437,13 +2442,14 @@ class _NativeReaderPageState extends State<NativeReaderPage>
                               showViewportStatus:
                                   _pageMode == NativePageMode.verticalScroll,
                               showViewportTitle:
-                                  _topBarStyle == ReaderTopBarStyle.reader,
+                                  _pageMode == NativePageMode.verticalScroll &&
+                                      _topBarStyle == ReaderTopBarStyle.reader,
                               viewportTitleTop: _readerSafeArea.readerTopBarTop,
                               viewportTitleKey: const ValueKey(
                                   'native-reader-viewport-title'),
                               readerStatus: _leafStatusController.value,
                               viewportStatusHorizontalPadding:
-                                  math.max(14, _horizontalMargin),
+                                  math.max(24, _horizontalMargin),
                               statusBuilder: (context, style, key) =>
                                   _buildReaderStatusText(
                                 pages: pages,
