@@ -15,6 +15,10 @@ void main() {
         'id': 'org.example.books',
         'name': 'Example Books',
         'apiBaseUrl': 'https://example.org/api/',
+        'operatorName': 'Example Library',
+        'contactUrl': 'https://example.org/contact',
+        'contentLicense': 'CC BY 4.0',
+        'rightsStatement': 'Licensed public catalog.',
         'languages': ['zh-CN'],
         'capabilities': ['search', 'detail', 'catalog', 'content'],
       });
@@ -22,6 +26,10 @@ void main() {
       expect(manifest.id, 'org.example.books');
       expect(manifest.apiBaseUrl.toString(), 'https://example.org/api/');
       expect(manifest.supports('content'), isTrue);
+      expect(manifest.operatorName, 'Example Library');
+      expect(manifest.contactUrl?.toString(), 'https://example.org/contact');
+      expect(manifest.contentLicense, 'CC BY 4.0');
+      expect(manifest.rightsStatement, 'Licensed public catalog.');
     });
 
     test('rejects an incompatible major version', () {
@@ -130,6 +138,10 @@ void main() {
         protocolVersion: '1.0',
         languages: const ['en'],
         capabilities: const {'search'},
+        operatorName: 'Example Library',
+        contactUrl: Uri.parse('https://example.org/contact'),
+        contentLicense: 'Public Domain',
+        rightsStatement: 'Public-domain works.',
         enabled: true,
         addedAt: DateTime.utc(2026, 7, 11),
       );
@@ -140,6 +152,11 @@ void main() {
       expect(disabled.single.id, source.id);
       expect(disabled.single.enabled, isFalse);
       expect((await registry.load()).single.enabled, isFalse);
+      final restored = (await registry.load()).single;
+      expect(restored.operatorName, 'Example Library');
+      expect(restored.contactUrl?.toString(), 'https://example.org/contact');
+      expect(restored.contentLicense, 'Public Domain');
+      expect(restored.rightsStatement, 'Public-domain works.');
     });
   });
 }

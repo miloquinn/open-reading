@@ -142,7 +142,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bookSourcesResponsibilityAck =>
-      'I understand this is an independent third-party service and confirm that I am authorized to access and use its content.';
+      'I confirm that I am authorized to access this content and will not use the source to bypass sign-in, payment, DRM, or other access controls.';
 
   @override
   String get bookSourcesConnect => 'Connect and validate';
@@ -174,11 +174,40 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not open the protocol repository';
 
   @override
-  String get bookSourcesProtocolDialogTitle => 'Open source protocol v1.1';
+  String get bookSourcesProtocolDialogTitle => 'Open source protocol v1.2';
 
   @override
   String get bookSourcesProtocolDialogBody =>
-      'A source publishes /.well-known/open-reading-source.json and implements search, book details, chapter catalogs, and chapter content. Version 1.1 optionally adds discovery, categories, and browsing for public HTTP(S) sources that do not require sign-in.';
+      'A source publishes /.well-known/open-reading-source.json and implements search, book details, chapter catalogs, and chapter content. Version 1.2 adds operator, contact, license, and rights-statement metadata for public HTTP(S) sources that do not require sign-in.';
+
+  @override
+  String get bookSourcesRightsDetails => 'Operator and rights';
+
+  @override
+  String get bookSourcesOperator => 'Source operator';
+
+  @override
+  String get bookSourcesContentLicense => 'Content license';
+
+  @override
+  String get bookSourcesRightsStatement => 'Rights statement';
+
+  @override
+  String get bookSourcesRightsNotProvided => 'Not provided by this source';
+
+  @override
+  String get bookSourcesRightsUnverifiedNotice =>
+      'These statements are supplied by the independent source operator. OpenReading displays them for transparency but does not verify or endorse them.';
+
+  @override
+  String get bookSourcesContactOperator => 'Contact operator';
+
+  @override
+  String get bookSourcesRightsReport => 'Rights report';
+
+  @override
+  String get bookSourcesRightsReportOpenFailed =>
+      'Could not open the rights-report form';
 
   @override
   String get bookSourcesClose => 'Close';

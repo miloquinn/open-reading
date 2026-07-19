@@ -134,7 +134,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get bookSourcesResponsibilityAck =>
-      'これは独立したサードパーティサービスであり、そのコンテンツへアクセスして利用する権限があることを確認します。';
+      '関連コンテンツへのアクセス権限があり、ログイン、支払い、DRM、その他のアクセス制御を回避するためにソースを使用しないことを確認します。';
 
   @override
   String get bookSourcesConnect => '接続して検証';
@@ -165,11 +165,39 @@ class AppLocalizationsJa extends AppLocalizations {
   String get bookSourcesProtocolRepositoryOpenFailed => 'プロトコルのリポジトリを開けませんでした';
 
   @override
-  String get bookSourcesProtocolDialogTitle => 'オープンソースプロトコル v1.1';
+  String get bookSourcesProtocolDialogTitle => 'オープンソースプロトコル v1.2';
 
   @override
   String get bookSourcesProtocolDialogBody =>
-      'サービスは /.well-known/open-reading-source.json でディスカバリードキュメントを公開し、検索、書籍詳細、章一覧、本文取得を実装します。v1.1 では公開 HTTP(S) ソース向けにディスカバリー、カテゴリ、ブラウズを任意で追加できます。';
+      'サービスは /.well-known/open-reading-source.json でディスカバリードキュメントを公開し、検索、書籍詳細、章一覧、本文取得を実装します。v1.2 は、ログイン不要の公開 HTTP(S) ソース向けに運営者、連絡先、コンテンツライセンス、権利声明のメタデータを追加します。';
+
+  @override
+  String get bookSourcesRightsDetails => '運営者と権利情報';
+
+  @override
+  String get bookSourcesOperator => 'ソース運営者';
+
+  @override
+  String get bookSourcesContentLicense => 'コンテンツライセンス';
+
+  @override
+  String get bookSourcesRightsStatement => '権利声明';
+
+  @override
+  String get bookSourcesRightsNotProvided => 'このソースから提供されていません';
+
+  @override
+  String get bookSourcesRightsUnverifiedNotice =>
+      'これらの情報は独立したソース運営者による自己申告です。OpenReading は透明性のために表示しますが、検証、推奨、保証は行いません。';
+
+  @override
+  String get bookSourcesContactOperator => '運営者に連絡';
+
+  @override
+  String get bookSourcesRightsReport => '権利侵害を報告';
+
+  @override
+  String get bookSourcesRightsReportOpenFailed => '権利報告フォームを開けませんでした';
 
   @override
   String get bookSourcesClose => '閉じる';

@@ -1,4 +1,4 @@
-# Open Reading Source Protocol v1.1
+# Open Reading Source Protocol v1.2
 
 Open Reading Source Protocol（ORSP）是一套面向电子书与连载文本的开放 HTTP
 协议。它把阅读器与具体内容站点解耦：阅读器只实现一次协议客户端，内容提供方或适配器
@@ -28,13 +28,17 @@ GET /.well-known/open-reading-source.json
 ```json
 {
   "protocol": "open-reading-source",
-  "protocolVersion": "1.1",
+  "protocolVersion": "1.2",
   "id": "org.example.public-books",
   "name": "Example Public Books",
   "description": "Public-domain books maintained by Example.org",
   "apiBaseUrl": "https://books.example.org/api/",
   "iconUrl": "https://books.example.org/icon.png",
   "websiteUrl": "https://books.example.org/",
+  "operatorName": "Example Public Library",
+  "contactUrl": "https://books.example.org/contact",
+  "contentLicense": "CC BY 4.0",
+  "rightsStatement": "Original and public-domain works distributed with permission.",
   "languages": ["zh-CN", "en"],
   "capabilities": ["search", "discover", "categories", "browse", "detail", "catalog", "content"]
 }
@@ -51,6 +55,16 @@ GET /.well-known/open-reading-source.json
 | `apiBaseUrl` | API 根地址，必须是绝对 HTTP(S) URL |
 | `capabilities` | 能力列表；v1 必须包含 `search` |
 
+建议书源同时提供以下权利透明度字段。旧版 `1.x` 书源可以省略，但客户端应明确显示“未提供”，
+不得把缺少字段或运营者的自我声明理解为项目方对内容合法性的认证：
+
+| 字段 | 说明 |
+| --- | --- |
+| `operatorName` | 实际运营书源服务、能够处理权利请求的主体名称 |
+| `contactUrl` | 运营者公开的联系或权利投诉页面，只允许绝对 HTTP(S) URL |
+| `contentLicense` | 内容适用的许可名称或简短授权依据，例如 `CC BY 4.0`、`Public Domain` |
+| `rightsStatement` | 内容来源、授权范围或公共领域依据的简要说明 |
+
 发现相关能力均为可选能力：`discover` 提供分区推荐，`categories` 提供分类定义，
 `browse` 提供分类或排序浏览。未声明这些能力的旧书源仍可正常参与搜索。
 
@@ -58,7 +72,7 @@ GET /.well-known/open-reading-source.json
 
 - 请求与响应编码为 UTF-8。
 - JSON 响应使用 `application/json`。
-- 客户端发送 `X-Open-Reading-Protocol: 1.1`。
+- 客户端发送 `X-Open-Reading-Protocol: 1.2`。
 - ID 是书源内部稳定、不透明的字符串。客户端不得推断 ID 格式。
 - 时间使用 ISO 8601，例如 `2026-07-11T10:00:00Z`。
 - 章节正文 `contentType` 仅允许 `text/plain`、`text/markdown`、`text/html`。
@@ -208,6 +222,8 @@ GET /v1/books/{bookId}/chapters/{chapterId}
 - 生产环境应使用 HTTPS。
 - 对搜索参数、书籍 ID 和章节 ID 做长度限制与输入校验。
 - 不要在发现文档或正文中返回密钥、Cookie、内部地址或可执行脚本。
+- 不得使用协议绕过登录、付费、DRM 或其他访问控制；v1 仍只面向公开、无需登录的内容服务。
+- 运营者应提供可用的联系入口、内容许可和权利声明，并及时处理具体权利通知。
 - 面向 Web 客户端时，由书源自行配置合适的 CORS 策略。
 - 建议设置速率限制、缓存头和最大正文尺寸。
 
@@ -243,4 +259,4 @@ dart run tool/example_book_source_server.dart --host 0.0.0.0 --port 8788 \
 ```
 
 协议文本与参考实现随 Open Reading 项目按仓库许可证开放。建议第三方实现明确标注支持的
-协议版本，例如 `Open Reading Source Protocol 1.1 compatible`。
+协议版本，例如 `Open Reading Source Protocol 1.2 compatible`。

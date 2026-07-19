@@ -1,0 +1,59 @@
+name: Rights or copyright report
+description: Report material controlled by the Open Reading project that may infringe copyright or other rights
+title: "[Rights report] "
+labels:
+  - rights-report
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form only for files, links, bundled defaults, documentation, releases, or other material controlled by the Open Reading project.
+
+        Open Reading does not operate independently added third-party sources. Reports about a third-party source's content should normally be sent to that source operator or hosting provider first. Do not post private personal information, credentials, or confidential evidence in a public issue.
+  - type: dropdown
+    id: controlled_material
+    attributes:
+      label: Material controlled by this project
+      description: Where does the reported material appear?
+      options:
+        - Repository file or documentation
+        - Official release or installer
+        - Official website or download service
+        - Default source address or project-maintained link
+        - Other project-controlled material
+    validations:
+      required: true
+  - type: input
+    id: location
+    attributes:
+      label: Exact URL or file path
+      description: Provide the narrowest location that identifies the material.
+      placeholder: https://github.com/miloquinn/open-reading/...
+    validations:
+      required: true
+  - type: textarea
+    id: rights
+    attributes:
+      label: Rights and authorization basis
+      description: Identify the work or right, the rights holder, and why you are authorized to report it.
+    validations:
+      required: true
+  - type: textarea
+    id: requested_action
+    attributes:
+      label: Requested action
+      description: Explain what should be removed, disabled, corrected, or reviewed.
+    validations:
+      required: true
+  - type: input
+    id: contact
+    attributes:
+      label: Public contact or reference
+      description: Optional public contact page or case reference. Use a private Security Advisory if sensitive details are required.
+  - type: checkboxes
+    id: accuracy
+    attributes:
+      label: Confirmation
+      options:
+        - label: I believe the information in this report is accurate and submitted in good faith.
+          required: true

@@ -68,7 +68,7 @@ Open Reading Source Protocol（ORSP）连接用户自行选择的公开内容服
 
 ### 开放书源
 
-- 添加、启用、停用或移除符合 ORSP 1.1 的 HTTP(S) 书源；
+- 添加、启用、停用或移除符合 ORSP 1.2 的 HTTP(S) 书源；
 - 聚合多个已启用书源的推荐、分类、最新内容和搜索结果，并可筛选全部或单一书源；
 - 支持在线查看书籍详情、目录和章节正文，也可加入本地书架；
 - 在线阅读与本地阅读共用主题、排版、翻页模式、书签入口和阅读设置；
@@ -121,9 +121,9 @@ Open Reading Source Protocol（ORSP）连接用户自行选择的公开内容服
 
 ## Open Reading Source Protocol
 
-ORSP 让阅读器通过统一 HTTP 协议连接公开、无需登录的内容服务，而不是在客户端保存站点
+ORSP 1.2 让阅读器通过统一 HTTP 协议连接公开、无需登录的内容服务，而不是在客户端保存站点
 抓取规则、Cookie 或可执行脚本。协议定义发现文档、搜索、书籍详情、章节目录与章节正文，
-1.1 还可选提供推荐、分类和浏览能力。
+1.2 还可选提供推荐、分类和浏览能力，并增加运营者、联系入口、内容许可与权利声明元数据。
 
 - 协议仓库：[miloquinn/open-reading-source-protocol](https://github.com/miloquinn/open-reading-source-protocol)
 - 仓库内规范副本：[`docs/book-source-protocol-v1.md`](docs/book-source-protocol-v1.md)
@@ -141,6 +141,9 @@ dart run tool/example_book_source_server.dart
 
 请只接入原创、公共领域或已获得合法授权的内容，不要使用书源能力绕过访问控制、付费机制
 或第三方服务条款。
+客户端会展示书源运营者自行提供的权利信息，但不会把这些声明视为 Open Reading 的认证或
+背书。项目控制范围内材料的权利投诉可通过
+[GitHub 权利报告表单](https://github.com/miloquinn/open-reading/issues/new?template=rights_report.yml)提交。
 
 ## 开始开发
 

@@ -1,9 +1,11 @@
 import 'dart:convert';
 
 const String openReadingSourceProtocol = 'open-reading-source';
-const String openReadingSourceProtocolVersion = '1.1';
+const String openReadingSourceProtocolVersion = '1.2';
 const String openReadingSourceProtocolRepositoryUrl =
     'https://github.com/miloquinn/open-reading-source-protocol';
+const String openReadingRightsReportUrl =
+    'https://github.com/miloquinn/open-reading/issues/new?template=rights_report.yml';
 const String openReadingSourceDiscoveryPath =
     '.well-known/open-reading-source.json';
 
@@ -25,6 +27,10 @@ class BookSourceManifest {
   final Uri apiBaseUrl;
   final Uri? iconUrl;
   final Uri? websiteUrl;
+  final String operatorName;
+  final Uri? contactUrl;
+  final String contentLicense;
+  final String rightsStatement;
   final List<String> languages;
   final Set<String> capabilities;
 
@@ -39,6 +45,10 @@ class BookSourceManifest {
     required this.capabilities,
     this.iconUrl,
     this.websiteUrl,
+    this.operatorName = '',
+    this.contactUrl,
+    this.contentLicense = '',
+    this.rightsStatement = '',
   });
 
   bool supports(String capability) => capabilities.contains(capability);
@@ -73,6 +83,10 @@ class BookSourceManifest {
       apiBaseUrl: apiBaseUrl,
       iconUrl: _optionalHttpUri(json['iconUrl']),
       websiteUrl: _optionalHttpUri(json['websiteUrl']),
+      operatorName: (json['operatorName'] as String?)?.trim() ?? '',
+      contactUrl: _optionalHttpUri(json['contactUrl']),
+      contentLicense: (json['contentLicense'] as String?)?.trim() ?? '',
+      rightsStatement: (json['rightsStatement'] as String?)?.trim() ?? '',
       languages: _stringList(json['languages']),
       capabilities: capabilities,
     );
@@ -87,6 +101,10 @@ class BookSourceManifest {
         'apiBaseUrl': apiBaseUrl.toString(),
         if (iconUrl != null) 'iconUrl': iconUrl.toString(),
         if (websiteUrl != null) 'websiteUrl': websiteUrl.toString(),
+        if (operatorName.isNotEmpty) 'operatorName': operatorName,
+        if (contactUrl != null) 'contactUrl': contactUrl.toString(),
+        if (contentLicense.isNotEmpty) 'contentLicense': contentLicense,
+        if (rightsStatement.isNotEmpty) 'rightsStatement': rightsStatement,
         'languages': languages,
         'capabilities': capabilities.toList()..sort(),
       };
