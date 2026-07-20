@@ -3318,6 +3318,24 @@ abstract class AppLocalizations {
   /// **'Current version'**
   String get changelogCurrentVersion;
 
+  /// No description provided for @changelog225UnifiedTextReader.
+  ///
+  /// In en, this message translates to:
+  /// **'Unified local files and online sources on the same text pagination and rendering engine'**
+  String get changelog225UnifiedTextReader;
+
+  /// No description provided for @changelog225SourceChapterTurn.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed horizontal cross-chapter turns rebuilding the page before the animation finished'**
+  String get changelog225SourceChapterTurn;
+
+  /// No description provided for @changelog225AppIcons.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated app icons consistently across mobile, desktop, web, and OpenHarmony'**
+  String get changelog225AppIcons;
+
   /// No description provided for @changelog224SourceCatalogPaging.
   ///
   /// In en, this message translates to:

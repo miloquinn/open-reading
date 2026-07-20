@@ -1734,6 +1734,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get changelogCurrentVersion => '当前版本';
 
   @override
+  String get changelog225UnifiedTextReader => '本地文件与在线书源统一使用同一套文字分页和渲染内核';
+
+  @override
+  String get changelog225SourceChapterTurn => '修复水平滑动跨章时动画未结束就重建页面导致的顿挫';
+
+  @override
+  String get changelog225AppIcons => '统一更新移动端、桌面端、Web 与鸿蒙应用图标';
+
+  @override
   String get changelog224SourceCatalogPaging =>
       '书源支持升级到 ORSP 1.3，并按各书源声明的单页上限完整获取章节目录';
 
@@ -4423,6 +4432,15 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get changelogCurrentVersion => '目前版本';
+
+  @override
+  String get changelog225UnifiedTextReader => '本機檔案與線上書源統一使用同一套文字分頁與繪製核心';
+
+  @override
+  String get changelog225SourceChapterTurn => '修正水平滑動跨章時動畫尚未結束就重建頁面造成的頓挫';
+
+  @override
+  String get changelog225AppIcons => '統一更新行動端、桌面端、Web 與鴻蒙應用程式圖示';
 
   @override
   String get changelog224SourceCatalogPaging =>

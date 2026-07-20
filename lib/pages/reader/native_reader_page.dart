@@ -26,7 +26,7 @@ import 'package:xxread/core/reader/reader_margin_settings.dart';
 import 'package:xxread/core/reader/reader_safe_area.dart';
 import 'package:xxread/core/reader/reader_settings.dart';
 import 'package:xxread/core/reader/reader_system_ui.dart';
-import 'package:xxread/core/reader/reader_text_layout.dart';
+import 'package:xxread/core/reader/reader_text_pagination.dart';
 import 'package:xxread/core/reader/reader_theme_order.dart';
 import 'package:xxread/core/reader/reader_vertical_paging.dart';
 import 'package:xxread/core/reader/reader_volume_key_controller.dart';
@@ -42,7 +42,6 @@ import 'package:xxread/utils/font_catalog_helper.dart';
 import 'package:xxread/utils/localization_extension.dart';
 import 'package:xxread/utils/reader_themes.dart';
 import 'package:xxread/utils/system_ui_helper.dart';
-import 'package:xxread/widgets/reader_chapter_title_page.dart';
 import 'package:xxread/widgets/reader_control_chrome.dart';
 import 'package:xxread/widgets/reader_navigation_sheet.dart';
 import 'package:xxread/widgets/reader_paper_page_leaf.dart';
@@ -50,6 +49,7 @@ import 'package:xxread/widgets/reader_pull_bookmark.dart';
 import 'package:xxread/widgets/reader_settings_controls.dart';
 import 'package:xxread/widgets/reader_shader_page_curl.dart';
 import 'package:xxread/widgets/reader_theme_background.dart';
+import 'package:xxread/widgets/reader_text_page_content.dart';
 import 'package:xxread/widgets/reader_top_information_bar.dart';
 import 'package:xxread/widgets/reader_vertical_paging_surface.dart';
 import 'package:xxread/widgets/side_toast.dart';
@@ -516,30 +516,13 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     _ReaderPageData page,
   ) {
     final flowStyle = _readerTextFlowStyle();
-    final layout = page.layout;
-    final span = layout == null
-        ? _styledSpanForRange(
-            chapter,
-            page.startOffset,
-            page.endOffset,
-            _readerTextStyle,
-          )
-        : layout.buildSpan(
-            page.displayStart,
-            page.displayEnd,
-            sourceSpanBuilder: (start, end) =>
-                _styledSpanForRange(chapter, start, end, _readerTextStyle),
-            generatedStyle: _readerTextStyle,
-          );
-    return RichText(
-      text: span,
-      textAlign: flowStyle.textAlign,
-      textDirection: flowStyle.textDirection,
-      textScaler: flowStyle.textScaler,
-      locale: flowStyle.locale,
-      strutStyle: flowStyle.strutStyle,
-      textWidthBasis: flowStyle.textWidthBasis,
-      textHeightBehavior: flowStyle.textHeightBehavior,
+    return ReaderTextPageContent(
+      page: page,
+      chapterTitle: chapter.title,
+      bodyStyle: _readerTextStyle,
+      flowStyle: flowStyle,
+      sourceSpanBuilder: (start, end) =>
+          _styledSpanForRange(chapter, start, end, _readerTextStyle),
     );
   }
 
@@ -1476,9 +1459,13 @@ class _NativeReaderPageState extends State<NativeReaderPage>
             _pageMode == NativePageMode.verticalScroll ? _verticalChrome : null;
         return _paginateChapter(
           chapter,
-          maxWidth: size.width - (_horizontalMargin * 2),
+          maxWidth: readerTextContentWidth(size.width, _horizontalMargin),
           maxHeight: verticalChrome?.contentHeight(size.height) ??
-              size.height - _effectiveTopMargin - _effectiveBottomMargin,
+              readerTextContentHeight(
+                size.height,
+                _effectiveTopMargin,
+                _effectiveBottomMargin,
+              ),
           flowStyle: _readerTextFlowStyle(
             direction: direction,
             textScaler: textScaler,
@@ -1517,12 +1504,6 @@ class _NativeReaderPageState extends State<NativeReaderPage>
       ).cacheKey('native-line-v7');
 
   Widget _buildPage(_NativeChapter chapter, _ReaderPageData page) {
-    if (page.isChapterTitle) {
-      return ReaderChapterTitlePage(
-        title: chapter.title,
-        bodyStyle: _readerTextStyle,
-      );
-    }
     final imageIndex = page.imageBlockIndex;
     if (imageIndex == null) {
       return _buildStyledReaderText(
@@ -1777,7 +1758,16 @@ class _NativeReaderPageState extends State<NativeReaderPage>
         padding: EdgeInsets.symmetric(
           horizontal: _horizontalMargin,
         ),
-        child: _buildPage(chapter, page),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxWidth: readerMaxTextContentWidth,
+            ),
+            child: SizedBox.expand(
+              child: _buildPage(chapter, page),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -2321,8 +2311,15 @@ class _NativeReaderPageState extends State<NativeReaderPage>
           _horizontalMargin,
           _effectiveBottomMargin,
         ),
-        child: SizedBox.expand(
-          child: _buildPage(chapter, page),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxWidth: readerMaxTextContentWidth,
+            ),
+            child: SizedBox.expand(
+              child: _buildPage(chapter, page),
+            ),
+          ),
         ),
       ),
     );
@@ -2748,8 +2745,13 @@ List<_ReaderPageData> _paginateChapter(
     double? firstPageHeight,
   }) {
     if (text.isEmpty) return const <_ReaderPageData>[];
-    final layout = ReaderTextLayout.build(
-      text,
+    final textPages = paginateReaderText(
+      text: text,
+      maxWidth: maxWidth,
+      maxHeight: pageHeight,
+      firstPageHeight: firstPageHeight,
+      flowStyle: flowStyle,
+      style: style,
       sourceOffset: sourceOffset,
       firstLineIndent: firstLineIndent,
       paragraphSpacing: paragraphSpacing,
@@ -2757,44 +2759,10 @@ List<_ReaderPageData> _paginateChapter(
       indentFirstParagraph: sourceOffset == 0 ||
           chapter.plainText.codeUnitAt(sourceOffset - 1) == 0x0A ||
           chapter.plainText.codeUnitAt(sourceOffset - 1) == 0x0D,
+      sourceSpanBuilder: (sourceStart, sourceEnd) =>
+          _styledSpanForRange(chapter, sourceStart, sourceEnd, style),
     );
-    if (layout.text.isEmpty) {
-      return <_ReaderPageData>[
-        _ReaderPageData(
-          text: '',
-          startOffset: sourceOffset,
-          endOffset: sourceOffset + text.length,
-        ),
-      ];
-    }
-    TextSpan buildSpan(int start, int end) => layout.buildSpan(
-          start,
-          end,
-          sourceSpanBuilder: (sourceStart, sourceEnd) =>
-              _styledSpanForRange(chapter, sourceStart, sourceEnd, style),
-          generatedStyle: style,
-        );
-    final ranges = NativeTextPaginator(
-      maxWidth: maxWidth,
-      maxHeight: pageHeight,
-      flowStyle: flowStyle,
-    ).paginate(
-      text: layout.text,
-      spanBuilder: buildSpan,
-      firstPageHeight: firstPageHeight,
-    );
-    return ranges
-        .map(
-          (range) => _ReaderPageData(
-            text: layout.text.substring(range.start, range.end),
-            layout: layout,
-            displayStart: range.start,
-            displayEnd: range.end,
-            startOffset: layout.sourceOffsetForDisplayOffset(range.start),
-            endOffset: layout.sourceOffsetForDisplayOffset(range.end),
-          ),
-        )
-        .toList(growable: false);
+    return textPages.map(_ReaderPageData.fromTextPage).toList(growable: false);
   }
 
   for (var imageIndex = 0; imageIndex < imageOffsets.length; imageIndex++) {
@@ -2945,37 +2913,33 @@ class _BookPageRef {
   final bool isBlank;
 }
 
-class _ReaderPageData {
+class _ReaderPageData extends ReaderTextPage {
   const _ReaderPageData({
-    required this.text,
+    required super.text,
     this.imageBlockIndex,
-    this.startOffset = 0,
-    int? endOffset,
-    this.layout,
-    this.displayStart = 0,
-    int? displayEnd,
-    this.isChapterTitle = false,
-  })  : endOffset = endOffset ?? startOffset + text.length,
-        displayEnd = displayEnd ?? displayStart + text.length;
+    super.startOffset = 0,
+    super.endOffset,
+    super.layout,
+    super.displayStart = 0,
+    super.displayEnd,
+    super.isChapterTitle = false,
+  });
 
   const _ReaderPageData.chapterTitle()
-      : text = '',
-        imageBlockIndex = null,
-        startOffset = 0,
-        endOffset = 0,
-        layout = null,
-        displayStart = 0,
-        displayEnd = 0,
-        isChapterTitle = true;
+      : imageBlockIndex = null,
+        super.chapterTitle();
 
-  final String text;
+  factory _ReaderPageData.fromTextPage(ReaderTextPage page) => _ReaderPageData(
+        text: page.text,
+        startOffset: page.startOffset,
+        endOffset: page.endOffset,
+        layout: page.layout,
+        displayStart: page.displayStart,
+        displayEnd: page.displayEnd,
+        isChapterTitle: page.isChapterTitle,
+      );
+
   final int? imageBlockIndex;
-  final int startOffset;
-  final int endOffset;
-  final ReaderTextLayout? layout;
-  final int displayStart;
-  final int displayEnd;
-  final bool isChapterTitle;
 
   _ReaderPageData copyWith({int? imageBlockIndex}) => _ReaderPageData(
         text: text,

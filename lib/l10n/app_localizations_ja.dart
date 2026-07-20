@@ -1748,6 +1748,18 @@ class AppLocalizationsJa extends AppLocalizations {
   String get changelogCurrentVersion => '現在のバージョン';
 
   @override
+  String get changelog225UnifiedTextReader =>
+      'ローカルファイルとオンラインソースで同じテキストページ分割・描画エンジンを使用するようにしました';
+
+  @override
+  String get changelog225SourceChapterTurn =>
+      '横スライドで章をまたぐ際にアニメーション完了前にページが再構築される引っかかりを修正しました';
+
+  @override
+  String get changelog225AppIcons =>
+      'モバイル、デスクトップ、Web、OpenHarmony のアプリアイコンを統一して更新しました';
+
+  @override
   String get changelog224SourceCatalogPaging =>
       'ソース対応を ORSP 1.3 に更新し、各ソースが宣言したページ上限に従って章一覧全体を取得するようにしました';
 

@@ -1812,6 +1812,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get changelogCurrentVersion => 'Current version';
 
   @override
+  String get changelog225UnifiedTextReader =>
+      'Unified local files and online sources on the same text pagination and rendering engine';
+
+  @override
+  String get changelog225SourceChapterTurn =>
+      'Fixed horizontal cross-chapter turns rebuilding the page before the animation finished';
+
+  @override
+  String get changelog225AppIcons =>
+      'Updated app icons consistently across mobile, desktop, web, and OpenHarmony';
+
+  @override
   String get changelog224SourceCatalogPaging =>
       'Updated source support to ORSP 1.3 and fetch complete chapter catalogs using each source\'s declared page-size limit';
 

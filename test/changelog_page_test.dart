@@ -17,6 +17,16 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('版本更新记录'), findsOneWidget);
+    expect(find.text('v2.2.5'), findsOneWidget);
+    expect(
+      find.text('本地文件与在线书源统一使用同一套文字分页和渲染内核'),
+      findsOneWidget,
+    );
+    expect(
+      find.text('修复水平滑动跨章时动画未结束就重建页面导致的顿挫'),
+      findsOneWidget,
+    );
+    expect(find.text('统一更新移动端、桌面端、Web 与鸿蒙应用图标'), findsOneWidget);
     expect(find.text('v2.2.4'), findsOneWidget);
     expect(
       find.text('书源支持升级到 ORSP 1.3，并按各书源声明的单页上限完整获取章节目录'),

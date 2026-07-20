@@ -15,6 +15,7 @@ import 'package:xxread/core/reader/reader_margin_settings.dart';
 import 'package:xxread/core/reader/reader_settings.dart';
 import 'package:xxread/l10n/app_localizations.dart';
 import 'package:xxread/pages/reader/book_source_reader_page.dart';
+import 'package:xxread/widgets/reader_chapter_title_page.dart';
 import 'package:xxread/widgets/reader_paper_page_leaf.dart';
 import 'package:xxread/widgets/reader_shader_page_curl.dart';
 import 'package:xxread/widgets/reader_top_information_bar.dart';
@@ -43,6 +44,7 @@ void main() {
       description: '',
       categories: [],
     );
+    final client = _FakeBookSourceClient();
 
     await tester.pumpWidget(
       MaterialApp(
@@ -51,24 +53,37 @@ void main() {
         home: BookSourceReaderPage(
           source: source,
           book: book,
-          client: _FakeBookSourceClient(),
+          client: client,
         ),
       ),
     );
-    await _pumpUntilFound(tester, find.textContaining('第一章正文'));
-
+    await _pumpUntilFound(tester, find.text('第一章'));
     expect(find.text('第一章'), findsWidgets);
-    expect(find.textContaining('第一章正文'), findsOneWidget);
-
+    expect(find.byType(ReaderChapterTitlePage), findsOneWidget);
     await tester.fling(
       find.byKey(const ValueKey('book-source-reader-surface')),
-      const Offset(-500, 0),
+      const Offset(0, -500),
       1000,
     );
-    await _pumpUntilFound(tester, find.textContaining('第二章正文'));
+    await tester.pumpAndSettle();
+    final firstBody = find.textContaining(
+      '第一章正文',
+      findRichText: true,
+    );
+    await _pumpUntilFound(tester, firstBody);
+    expect(firstBody, findsOneWidget);
 
-    expect(find.text('第二章'), findsWidgets);
-    expect(find.textContaining('第二章正文'), findsOneWidget);
+    for (var attempt = 0;
+        attempt < 4 && !client.requestedChapterIds.contains('chapter-2');
+        attempt++) {
+      await tester.fling(
+        find.byKey(const ValueKey('book-source-reader-surface')),
+        const Offset(0, -500),
+        1000,
+      );
+      await tester.pumpAndSettle();
+    }
+    expect(client.requestedChapterIds, contains('chapter-2'));
   });
 
   testWidgets('restores the last source chapter on reopen', (tester) async {
@@ -207,10 +222,27 @@ void main() {
           ),
         ),
       );
-      final bodyFinder = find.textContaining('第一章正文');
+      final bodyFinder = find.textContaining(
+        '第一章正文',
+        findRichText: true,
+      );
+      await _pumpUntilFound(
+        tester,
+        find.byKey(const ValueKey('book-source-reader-surface')),
+      );
+      if (mode == BookSourcePageMode.verticalScroll) {
+        await tester.fling(
+          find.byKey(const ValueKey('book-source-reader-surface')),
+          const Offset(0, -500),
+          1000,
+        );
+      } else {
+        await tester.tapAt(const Offset(760, 300));
+      }
+      await tester.pumpAndSettle();
       await _pumpUntilFound(tester, bodyFinder);
 
-      expect(tester.widget<Text>(bodyFinder).textAlign, TextAlign.justify);
+      expect(tester.widget<RichText>(bodyFinder).textAlign, TextAlign.justify);
     });
   }
 
@@ -550,6 +582,87 @@ void main() {
   });
 
   testWidgets(
+      'horizontal slide commits a prefetched chapter only after the animation settles',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(800, 700));
+    SharedPreferences.setMockInitialValues({
+      ReaderSettingsStore.pageModeKey: BookSourcePageMode.horizontalSlide.name,
+    });
+    final store = _BlockingProgressStore();
+    final client = _ConfigurableBookSourceClient(const {
+      'chapter-1': 'Short first chapter.',
+      'chapter-2': 'Short second chapter.',
+    });
+    try {
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: BookSourceReaderPage(
+            source: _testSource(),
+            book: const BookSourceBook(
+              id: 'book-1',
+              title: 'Horizontal source book',
+              author: 'Author',
+              description: '',
+              categories: [],
+            ),
+            client: client,
+            progressStore: store,
+          ),
+        ),
+      );
+      await _pumpUntilFound(
+        tester,
+        find.byKey(const ValueKey('source-slide:chapter-1')),
+      );
+      for (var attempt = 0;
+          attempt < 30 && !client.requestedChapterIds.contains('chapter-2');
+          attempt++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+
+      var pageView = tester.widget<PageView>(find.byType(PageView));
+      final controller = pageView.controller!;
+      controller.jumpToPage(1);
+      await tester.pump();
+
+      unawaited(
+        controller.nextPage(
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeOutCubic,
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 180));
+
+      expect(
+        find.byKey(const ValueKey('source-slide:chapter-1')),
+        findsOneWidget,
+      );
+
+      await tester.pump(const Duration(milliseconds: 160));
+      await _pumpUntilFound(
+        tester,
+        find.byKey(const ValueKey('source-slide:chapter-2')),
+      );
+
+      expect(store.saveStarted, isTrue);
+      expect(store.saveCompleted, isFalse);
+      expect(
+        client.requestedChapterIds.where((id) => id == 'chapter-2').length,
+        1,
+      );
+      pageView = tester.widget<PageView>(find.byType(PageView));
+      expect(pageView.key, const ValueKey('source-slide:chapter-2'));
+    } finally {
+      store.completeSave();
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+      await tester.binding.setSurfaceSize(null);
+    }
+  });
+
+  testWidgets(
       'tablet forward chapter curl uses prefetched page one at half-page width without refetching',
       (tester) async {
     await tester.binding.setSurfaceSize(const Size(1200, 800));
@@ -630,7 +743,7 @@ void main() {
   });
 
   testWidgets(
-      'tablet forward chapter curl uses a blank right leaf for a one-page prefetched chapter',
+      'tablet forward chapter curl previews title and body leaves for a short chapter',
       (tester) async {
     await tester.binding.setSurfaceSize(const Size(1200, 800));
     SharedPreferences.setMockInitialValues({
@@ -646,13 +759,12 @@ void main() {
         tester,
         bindingEdge: ReaderPageBindingEdge.left,
         forward: true,
-        pageIdentity: (identity) =>
-            identity.contains('blank:next-chapter-1-right'),
+        pageIdentity: (identity) => identity.contains(':chapter-2:1:'),
       );
 
       expect(
         forwardCurl.forwardPage!.key.pageIdentity,
-        contains('blank:next-chapter-1-right'),
+        contains(':chapter-2:1:'),
       );
       expect(
         forwardCurl.outgoingBackPage!.key.pageIdentity,
@@ -660,7 +772,7 @@ void main() {
       );
       expect(
         forwardCurl.forwardPage!.key.pageIdentity,
-        isNot(contains('boundary:forward')),
+        isNot(contains('blank:')),
       );
       expect(
         client.requestedChapterIds.where((id) => id == 'chapter-2').length,

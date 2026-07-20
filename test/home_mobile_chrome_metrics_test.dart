@@ -23,39 +23,40 @@ void main() {
       expect(metrics.floatingActionBottomMargin, 115);
     });
 
-    test('sizes the floating navigation close to the phone screen edges', () {
+    test('keeps the floating navigation compact with deliberate side margins',
+        () {
       expect(
         homeMobileFloatingNavWidthFor(screenWidth: 320, itemCount: 4),
-        300,
+        284,
       );
       expect(
         homeMobileFloatingNavWidthFor(screenWidth: 360, itemCount: 4),
-        340,
+        324,
       );
       expect(
         homeMobileFloatingNavWidthFor(screenWidth: 393, itemCount: 4),
-        373,
+        357,
       );
       expect(
         homeMobileFloatingNavWidthFor(screenWidth: 405, itemCount: 4),
-        385,
+        368,
       );
       expect(
         homeMobileFloatingNavWidthFor(screenWidth: 600, itemCount: 4),
-        392,
+        368,
       );
 
       expect(
         homeMobileFloatingNavItemWidthFor(screenWidth: 320, itemCount: 4),
-        73,
+        69,
       );
       expect(
         homeMobileFloatingNavItemWidthFor(screenWidth: 393, itemCount: 4),
-        closeTo(91.25, 0.001),
+        closeTo(87.25, 0.001),
       );
       expect(
         homeMobileFloatingNavItemWidthFor(screenWidth: 405, itemCount: 4),
-        closeTo(94.25, 0.001),
+        90,
       );
     });
 

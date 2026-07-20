@@ -51,7 +51,11 @@ void main() {
       ),
     );
 
-    await _pumpUntilText(tester, '当前章节正文');
+    await _pumpUntil(
+      tester,
+      () => client.requestedChapterIds.contains('chapter-2'),
+      'current chapter load',
+    );
     await _pumpUntil(
       tester,
       () => client.requestedChapterIds.contains('chapter-1'),
@@ -78,18 +82,14 @@ void main() {
   });
 }
 
-String _allText(WidgetTester tester) => tester
-    .widgetList<Text>(find.byType(Text, skipOffstage: false))
-    .map((widget) => widget.data ?? widget.textSpan?.toPlainText() ?? '')
-    .join('\n');
-
-Future<void> _pumpUntilText(WidgetTester tester, String text) async {
-  await _pumpUntil(
-    tester,
-    () => _allText(tester).contains(text),
-    'text "$text"',
-  );
-}
+String _allText(WidgetTester tester) => <String>[
+      ...tester
+          .widgetList<Text>(find.byType(Text, skipOffstage: false))
+          .map((widget) => widget.data ?? widget.textSpan?.toPlainText() ?? ''),
+      ...tester
+          .widgetList<RichText>(find.byType(RichText, skipOffstage: false))
+          .map((widget) => widget.text.toPlainText()),
+    ].join('\n');
 
 Future<void> _pumpUntil(
   WidgetTester tester,
