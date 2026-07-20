@@ -12,6 +12,7 @@
   "contentLicense": "CC BY 4.0",
   "rightsStatement": "Original and public-domain works distributed with permission.",
   "languages": ["zh-CN", "en"],
+  "maxCatalogPageSize": 200,
   "capabilities": [
     "search",
     "discover",

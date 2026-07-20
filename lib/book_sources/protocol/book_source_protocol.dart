@@ -37,6 +37,10 @@ class BookSourceManifest {
   final List<String> languages;
   final Set<String> capabilities;
 
+  /// Largest `pageSize` this source accepts on the chapter-catalog endpoint.
+  /// Absent means the protocol default of 100 applies.
+  final int? maxCatalogPageSize;
+
   const BookSourceManifest({
     required this.protocol,
     required this.protocolVersion,
@@ -52,6 +56,7 @@ class BookSourceManifest {
     this.contactUrl,
     this.contentLicense = '',
     this.rightsStatement = '',
+    this.maxCatalogPageSize,
   });
 
   bool supports(String capability) => capabilities.contains(capability);
@@ -92,6 +97,7 @@ class BookSourceManifest {
       rightsStatement: (json['rightsStatement'] as String?)?.trim() ?? '',
       languages: _stringList(json['languages']),
       capabilities: capabilities,
+      maxCatalogPageSize: _catalogPageSizeFromJson(json['maxCatalogPageSize']),
     );
   }
 
@@ -110,6 +116,8 @@ class BookSourceManifest {
         if (rightsStatement.isNotEmpty) 'rightsStatement': rightsStatement,
         'languages': languages,
         'capabilities': capabilities.toList()..sort(),
+        if (maxCatalogPageSize != null)
+          'maxCatalogPageSize': maxCatalogPageSize,
       };
 }
 
@@ -406,6 +414,18 @@ Uri _httpUri(String value) {
     throw BookSourceProtocolException('Invalid HTTP URL: $value');
   }
   return uri;
+}
+
+/// Parses the discovery document's `maxCatalogPageSize`. The spec's 100-1000
+/// range is a requirement on what a *source* may declare, not something the
+/// client should force a value into: a source declaring an out-of-range
+/// number is still telling the client the largest page it will accept, and
+/// requesting more than that gets rejected regardless of what the spec says
+/// sources are supposed to declare. Only reject non-positive/malformed input.
+int? _catalogPageSizeFromJson(Object? value) {
+  if (value is! num) return null;
+  final parsed = value.toInt();
+  return parsed > 0 ? parsed : null;
 }
 
 Uri? _optionalHttpUri(Object? value) {

@@ -26,14 +26,13 @@ class BookSourceClient {
   static const int maxDownloadResponseBytes = 24 * 1024 * 1024;
   static const Duration downloadReceiveTimeout = Duration(seconds: 90);
 
-  /// 每页请求的章节数，以及允许翻的最大页数。上限约 3 万章，
-  /// 远超真实连载小说的记录，防止异常书源无限声明 hasMore 造成死循环。
-  static const int _chapterPageSize = 500;
-  static const int _maxChapterPages = 60;
+  /// ORSP §11 章节目录默认页大小；书源未声明 maxCatalogPageSize 时使用。
+  static const int _defaultChapterPageSize = 100;
 
-  /// 章节总数的硬上限，独立于页数限制强制执行——避免恶意书源在单页
-  /// items 里塞入远超 _chapterPageSize 的条目、绕开翻页次数上限。
-  static const int _maxChapters = _chapterPageSize * _maxChapterPages;
+  /// 章节总数的硬上限（约 3 万章，远超真实连载小说的记录）。翻页次数上限
+  /// 由它除以实际页大小动态推出，与页大小无关地防止死循环或内存膨胀——
+  /// 哪怕某一页返回的条目数远超请求的 pageSize，这里也会强制截断。
+  static const int _maxChapters = 30000;
 
   static const int _maxRetryAttempts = 3;
   static const Duration _maxRetryAfter = Duration(seconds: 60);
@@ -270,6 +269,7 @@ class BookSourceClient {
         source.apiBaseUrl,
         'v1/books/${Uri.encodeComponent(bookId)}/chapters',
       ),
+      pageSize: _chapterPageSizeFor(source),
       maxBytes: maxResponseBytes,
       receiveTimeout: null,
     );
@@ -284,28 +284,47 @@ class BookSourceClient {
         source.apiBaseUrl,
         'v1/books/${Uri.encodeComponent(bookId)}/chapters',
       ),
+      pageSize: _chapterPageSizeFor(source),
       maxBytes: maxDownloadResponseBytes,
       receiveTimeout: downloadReceiveTimeout,
     );
   }
 
+  /// The page size to request for `source`'s chapter catalog: its own
+  /// declared `maxCatalogPageSize` when present (ORSP §3), otherwise the
+  /// protocol default of 100. Clamped to the spec's own 1000 ceiling purely
+  /// to stop a source from talking the client into absurdly large single
+  /// requests — a source is free to declare a smaller bound than 100 and
+  /// have it honored exactly, since the 100-1000 range is a requirement on
+  /// what sources are supposed to declare, not on what the client must send.
+  int _chapterPageSizeFor(RegisteredBookSource source) {
+    return (source.maxCatalogPageSize ?? _defaultChapterPageSize)
+        .clamp(1, 1000);
+  }
+
   /// Fetches the full chapter catalog, following pagination when the source
-  /// implements it (protocol 1.3). Sources that still return every chapter in
-  /// a single `{items}` response (protocol 1.2 behavior) parse as one
+  /// implements it (protocol 1.3). `pageSize` is capped to the source's own
+  /// declared `maxCatalogPageSize` (ORSP §3) — sending a larger value than a
+  /// source advertises is a protocol violation the source may legitimately
+  /// reject with 400, so it must never be hardcoded higher than what the
+  /// source actually said it accepts. Sources that still return every chapter
+  /// in a single `{items}` response (protocol 1.2 behavior) parse as one
   /// complete page, so the loop exits after the first request with identical
   /// results to before pagination existed.
   Future<List<BookSourceChapter>> _fetchAllChapters(
     Uri uri, {
+    required int pageSize,
     required int maxBytes,
     required Duration? receiveTimeout,
   }) async {
+    final maxPages = (_maxChapters / pageSize).ceil();
     final chapters = <BookSourceChapter>[];
-    for (var page = 1; page <= _maxChapterPages; page++) {
+    for (var page = 1; page <= maxPages; page++) {
       final pageUri = uri.replace(
         queryParameters: {
           ...uri.queryParameters,
           'page': '$page',
-          'pageSize': '$_chapterPageSize',
+          'pageSize': '$pageSize',
         },
       );
       final result = await _withRetries(() async {

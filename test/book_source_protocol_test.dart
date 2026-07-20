@@ -30,6 +30,25 @@ void main() {
       expect(manifest.contactUrl?.toString(), 'https://example.org/contact');
       expect(manifest.contentLicense, 'CC BY 4.0');
       expect(manifest.rightsStatement, 'Licensed public catalog.');
+      expect(manifest.maxCatalogPageSize, isNull);
+    });
+
+    test('honors a declared maxCatalogPageSize exactly, even below 100', () {
+      // The 100-1000 range in ORSP §3 is a requirement on what a source is
+      // supposed to declare, not something the client should force a
+      // smaller value up to — a source that declares less still means it,
+      // and requesting more than it declared gets rejected.
+      final manifest = BookSourceManifest.fromJson({
+        'protocol': 'open-reading-source',
+        'protocolVersion': '1.1',
+        'id': 'org.example.books',
+        'name': 'Example Books',
+        'apiBaseUrl': 'https://example.org/api/',
+        'capabilities': ['search'],
+        'maxCatalogPageSize': 40,
+      });
+
+      expect(manifest.maxCatalogPageSize, 40);
     });
 
     test('rejects an incompatible major version', () {

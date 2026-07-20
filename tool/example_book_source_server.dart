@@ -155,6 +155,12 @@ class ExampleBookSourceServer {
     );
   }
 
+  /// Deliberately small so tests exercise real multi-page fetches without a
+  /// huge fixture. A real source targeting ORSP §3 would declare something
+  /// in the spec's 100-1000 range; this reference source only serves the
+  /// repository's own test suite, not real readers, so it is exempt.
+  static const int _catalogMaxPageSize = 2;
+
   Map<String, Object> _manifest(HttpRequest request) {
     final publicBaseUri = request.requestedUri.replace(
       path: '/',
@@ -176,6 +182,7 @@ class ExampleBookSourceServer {
       'rightsStatement':
           'This reference source contains only original protocol test stories created for Open Reading.',
       'languages': ['zh-CN', 'en'],
+      'maxCatalogPageSize': _catalogMaxPageSize,
       'capabilities': [
         'search',
         'discover',
@@ -293,9 +300,11 @@ class ExampleBookSourceServer {
     _json(response, HttpStatus.ok, entry.book);
   }
 
-  /// Demonstrates protocol 1.3 chapter pagination: `maxPageSize` lets a book
-  /// force multiple pages even for a short catalog, mirroring how a real
-  /// source may cap page size below whatever the client requests.
+  /// Demonstrates ORSP §11 chapter pagination. `_catalogMaxPageSize` is the
+  /// same bound advertised in the discovery document; a compliant client
+  /// never asks for more than that, but this still enforces it server-side
+  /// with a real 400 rather than silently clamping, matching "a source MUST
+  /// return 400 for a pageSize above its declared bound".
   void _chapters(HttpRequest request, String bookId) {
     final entry = _books[bookId];
     if (entry == null) {
@@ -307,15 +316,28 @@ class ExampleBookSourceServer {
       return;
     }
     final page = _positiveInt(request.uri.queryParameters['page'], fallback: 1);
-    final requestedPageSize = _positiveInt(
+    final pageSize = _positiveInt(
       request.uri.queryParameters['pageSize'],
-      fallback: entry.chapters.length,
+      fallback: _catalogMaxPageSize,
     );
-    final pageSize = requestedPageSize.clamp(1, entry.maxPageSize);
+    if (pageSize > _catalogMaxPageSize) {
+      _error(
+        request.response,
+        HttpStatus.badRequest,
+        'PAGE_SIZE_TOO_LARGE',
+        'pageSize exceeds this source\'s declared maxCatalogPageSize '
+            '($_catalogMaxPageSize).',
+      );
+      return;
+    }
+    final sortedChapters = [...entry.chapters]..sort((a, b) {
+        final byOrder = a.order.compareTo(b.order);
+        return byOrder != 0 ? byOrder : a.id.compareTo(b.id);
+      });
     final start = (page - 1) * pageSize;
-    final items = start >= entry.chapters.length
+    final items = start >= sortedChapters.length
         ? const <Map<String, Object>>[]
-        : entry.chapters
+        : sortedChapters
             .skip(start)
             .take(pageSize)
             .map((chapter) => chapter.metadata)
@@ -324,8 +346,8 @@ class ExampleBookSourceServer {
       'items': items,
       'page': page,
       'pageSize': pageSize,
-      'total': entry.chapters.length,
-      'hasMore': start + items.length < entry.chapters.length,
+      'total': sortedChapters.length,
+      'hasMore': start + items.length < sortedChapters.length,
     });
   }
 
@@ -402,16 +424,7 @@ class _ExampleBook {
   final Map<String, Object> book;
   final List<_ExampleChapter> chapters;
 
-  /// Largest chapter page this book will ever return, even if a client asks
-  /// for more. Defaults high enough that short example books always answer
-  /// in a single page.
-  final int maxPageSize;
-
-  const _ExampleBook({
-    required this.book,
-    required this.chapters,
-    this.maxPageSize = 500,
-  });
+  const _ExampleBook({required this.book, required this.chapters});
 }
 
 class _ExampleChapter {
@@ -490,16 +503,13 @@ const Map<String, _ExampleBook> _books = {
       'id': 'paginated-serial',
       'title': '分页连载',
       'author': 'Open Reading',
-      'description': '用于验证章节目录分页的原创示例：本书把每页章节数限制为 2，'
-          '客户端必须跟随 hasMore 翻页才能取全。',
+      'description': '用于验证章节目录分页的原创示例：本源在发现文档里把'
+          'maxCatalogPageSize 声明为 2，客户端必须跟随 hasMore 翻页才能取全。',
       'categories': ['原创', '测试'],
       'status': 'ongoing',
       'latestChapter': '第五章 终章',
       'updatedAt': '2026-07-11T00:00:00Z',
     },
-    // 服务端把单页强制限制在 2 章，即使客户端请求更大的 pageSize，
-    // 用来验证客户端会跟着 hasMore 继续翻页，而不是只取第一页就停下。
-    maxPageSize: 2,
     chapters: [
       _ExampleChapter(
         id: 'serial-1',
