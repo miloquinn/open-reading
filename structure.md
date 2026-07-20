@@ -19,6 +19,7 @@
 
 - Flutter / Dart 多平台应用。
 - 支持 Android、iOS、Windows、macOS、Linux、Web 和 OpenHarmony 工程。
+- 应用图标以 `ios/Runner/AppIcon.icon` 的 Icon Composer 分层工程为 iOS 原生源；`assets/images/app_icon*.png` 提供 Flutter、Android 与桌面回退，Windows runner 使用多尺寸 ICO，Linux runner 从打包后的 Flutter assets 加载窗口图标。
 - 本地结构化数据使用 SQLite，移动端通过 `sqflite`，桌面端通过 `sqflite_common_ffi`。
 - 轻量设置使用 `SharedPreferences`。
 - 在线书源使用 Open Reading Source Protocol，不包含 Legado 兼容层。
