@@ -2925,31 +2925,46 @@ class _BookSourceVerticalLayout {
   final List<BookSourceTextPage> pages;
 }
 
+const _bookSourceBlockTags = {'p', 'div', 'li', 'blockquote'};
+
 String _readableChapterText(BookSourceChapterContent content) {
   final paragraphs = <String>[];
   if (content.contentType == 'text/html') {
     final fragment = html_parser.parseFragment(content.content);
+    final segment = StringBuffer();
 
-    void visit(dom.Node node) {
-      if (node is dom.Element &&
-          const {
-            'p',
-            'div',
-            'li',
-            'blockquote',
-          }.contains(node.localName)) {
-        final text = node.text.replaceAll(RegExp(r'\s+'), ' ').trim();
-        if (text.isNotEmpty) paragraphs.add(text);
-        return;
-      }
-      for (final child in node.nodes) {
-        visit(child);
+    void flush() {
+      final text = segment.toString().replaceAll(RegExp(r'\s+'), ' ').trim();
+      if (text.isNotEmpty) paragraphs.add(text);
+      segment.clear();
+    }
+
+    // Many scraped chapters wrap every paragraph in one container element
+    // and separate them with <br> instead of <p>/<div> siblings. Treat both
+    // a block-tag boundary and a <br> as a paragraph break so those
+    // paragraphs don't collapse into a single run with no indent.
+    void walk(Iterable<dom.Node> nodes) {
+      for (final child in nodes) {
+        if (child is dom.Element) {
+          if (_bookSourceBlockTags.contains(child.localName)) {
+            flush();
+            walk(child.nodes);
+            flush();
+            continue;
+          }
+          if (child.localName == 'br') {
+            flush();
+            continue;
+          }
+          walk(child.nodes);
+        } else if (child is dom.Text) {
+          segment.write(child.data);
+        }
       }
     }
 
-    for (final node in fragment.nodes) {
-      visit(node);
-    }
+    walk(fragment.nodes);
+    flush();
   } else {
     paragraphs.addAll(
       content.content
