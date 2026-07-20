@@ -54,7 +54,7 @@ dependencies:
   html: ^0.15.6
 
   # UI
-  fl_chart: ^0.68.0
+  fl_chart: ^1.2.0
   provider: ^6.1.5
   scrollable_positioned_list: ^0.3.8
   sqflite_common_ffi: ^2.4.2
