@@ -492,7 +492,7 @@ class BookImportService implements BookFileImporter {
       progressCallback?.call(0.0, '选择文件中...');
 
       // 使用路径模式而非数据模式，避免大文件加载到内存
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
+      FilePickerResult? result = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions:
             BookFormatRegistry.pickerExtensions.toList(growable: false),

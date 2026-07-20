@@ -38,7 +38,7 @@ class BookImportSourceService implements BookImportSourcePreparer {
   final Future<Directory> Function() _temporaryDirectory;
 
   static Future<FilePickerResult?> _pickSupportedFiles() {
-    return FilePicker.platform.pickFiles(
+    return FilePicker.pickFiles(
       type: FileType.custom,
       allowedExtensions:
           BookFormatRegistry.pickerExtensions.toList(growable: false),
