@@ -45,7 +45,7 @@ class CustomFontService {
   List<CustomFontRecord> get fonts => List.unmodifiable(_fonts);
 
   static Future<FilePickerResult?> _pickFontFile() {
-    return FilePicker.platform.pickFiles(
+    return FilePicker.pickFiles(
       type: FileType.custom,
       allowedExtensions: const <String>['ttf', 'otf'],
       allowMultiple: false,
