@@ -85,7 +85,7 @@
 	<key>UIStatusBarStyle</key>
 	<string>UIStatusBarStyleDarkContent</string>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
-	<false/>
+	<true/>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>用于语音朗读与语音交互功能（如语音输入/控制阅读）。仅在你主动使用相关功能时请求麦克风权限。</string>
 	<key>NSPhotoLibraryUsageDescription</key>

@@ -14,6 +14,14 @@ import UIKit
     readerImmersiveEnabled
   }
 
+  override var prefersStatusBarHidden: Bool {
+    readerImmersiveEnabled
+  }
+
+  override var preferredStatusBarUpdateAnimation: UIStatusBarAnimation {
+    .fade
+  }
+
   override var preferredScreenEdgesDeferringSystemGestures: UIRectEdge {
     readerImmersiveEnabled ? .all : []
   }
@@ -40,6 +48,7 @@ import UIKit
   }
 
   private func refreshImmersiveUI() {
+    setNeedsStatusBarAppearanceUpdate()
     setNeedsUpdateOfHomeIndicatorAutoHidden()
     setNeedsUpdateOfScreenEdgesDeferringSystemGestures()
   }
@@ -54,13 +63,6 @@ import UIKit
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    // 设置状态栏样式为深色内容（适合浅色背景）
-    if #available(iOS 13.0, *) {
-      UIApplication.shared.statusBarStyle = .darkContent
-    } else {
-      UIApplication.shared.statusBarStyle = .default
-    }
-
     pluginRegistrant = self
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
