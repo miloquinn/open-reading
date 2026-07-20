@@ -37,7 +37,7 @@ dependencies:
   # 文件处理和存储
   file_picker: ^8.3.7
   shared_preferences: ^2.5.3
-  package_info_plus: ^9.0.0
+  package_info_plus: ^9.0.1
   sqflite: ^2.4.2 # 移动平台数据库
   path: ^1.9.1 # 数据库路径处理
   crypto: ^3.0.6 # 加密和哈希计算
