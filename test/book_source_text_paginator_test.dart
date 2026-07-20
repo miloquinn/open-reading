@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:xxread/book_sources/services/book_source_text_paginator.dart';
+import 'package:xxread/core/reader/native_text_paginator.dart';
 import 'package:xxread/core/reader/reader_text_layout.dart';
+import 'package:xxread/core/reader/reader_text_pagination.dart';
 
 void main() {
   const style = TextStyle(fontSize: 18, height: 1.7);
@@ -23,10 +25,70 @@ void main() {
     );
 
     expect(pages.length, greaterThan(1));
-    expect(pages.every((page) => page.text.isNotEmpty), isTrue);
+    expect(pages.first.text, isEmpty);
+    expect(pages.skip(1).every((page) => page.text.isNotEmpty), isTrue);
     expectCanonicalCoverage(pages, text);
     expect(pages.first.showsChapterTitle, isTrue);
     expect(pages.skip(1).every((page) => !page.showsChapterTitle), isTrue);
+  });
+
+  testWidgets('book-source pagination is exactly the shared reader pipeline',
+      (tester) async {
+    final text = List.generate(
+      42,
+      (index) => '第$index段用于验证在线与本地文字阅读不会再走两套分页算法。',
+    ).join('\n');
+    const width = 286.0;
+    const height = 420.0;
+    const flowStyle = NativeTextFlowStyle(
+      textDirection: TextDirection.ltr,
+      textScaler: TextScaler.noScaling,
+      locale: Locale('zh', 'CN'),
+      strutStyle: StrutStyle(fontSize: 18),
+      textHeightBehavior: readerTextHeightBehavior,
+    );
+    final sourcePages = paginateBookSourceText(
+      text,
+      width: width,
+      firstPageHeight: height,
+      pageHeight: height,
+      style: style,
+      textDirection: TextDirection.ltr,
+      locale: const Locale('zh', 'CN'),
+      firstLineIndent: 2,
+      paragraphSpacing: 1,
+    );
+    final sharedPages = paginateReaderText(
+      text: text,
+      maxWidth: width,
+      maxHeight: height,
+      firstPageHeight: height,
+      flowStyle: flowStyle,
+      style: style,
+      firstLineIndent: 2,
+      paragraphSpacing: 1,
+      includeChapterTitlePage: true,
+    );
+
+    expect(
+      sourcePages
+          .map((page) => (
+                page.text,
+                page.startOffset,
+                page.endOffset,
+                page.isChapterTitle,
+              ))
+          .toList(),
+      sharedPages
+          .map((page) => (
+                page.text,
+                page.startOffset,
+                page.endOffset,
+                page.isChapterTitle,
+              ))
+          .toList(),
+    );
+    expect(readerTextContentWidth(1200, 18), readerMaxTextContentWidth);
   });
 
   testWidgets('does not split an emoji surrogate pair', (tester) async {
@@ -41,7 +103,7 @@ void main() {
     );
 
     expect(pages.map((page) => page.text).join(), text);
-    for (final page in pages) {
+    for (final page in pages.where((page) => !page.isChapterTitle)) {
       expect(page.text.codeUnits.last, isNot(inInclusiveRange(0xD800, 0xDBFF)));
       expect(
           page.text.codeUnits.first, isNot(inInclusiveRange(0xDC00, 0xDFFF)));
@@ -79,11 +141,12 @@ void main() {
       textDirection: TextDirection.ltr,
     );
 
-    expect(pages, hasLength(1));
-    expect(pages.single.text, text);
-    expect(pages.single.showsChapterTitle, isTrue);
-    expect(pages.single.startOffset, 0);
-    expect(pages.single.endOffset, text.length);
+    expect(pages, hasLength(2));
+    expect(pages.first.showsChapterTitle, isTrue);
+    expect(pages.last.text, text);
+    expect(pages.last.showsChapterTitle, isFalse);
+    expect(pages.last.startOffset, 0);
+    expect(pages.last.endOffset, text.length);
   });
 
   testWidgets('preserves long content when continuing page height is invalid',
@@ -99,10 +162,11 @@ void main() {
       textDirection: TextDirection.ltr,
     );
 
-    expect(pages, hasLength(1));
-    expect(pages.single.text, text);
-    expect(pages.single.startOffset, 0);
-    expect(pages.single.endOffset, text.length);
+    expect(pages, hasLength(2));
+    expect(pages.first.isChapterTitle, isTrue);
+    expect(pages.last.text, text);
+    expect(pages.last.startOffset, 0);
+    expect(pages.last.endOffset, text.length);
   });
 
   testWidgets('does not strand Chinese closing punctuation at a page start',
@@ -245,8 +309,9 @@ void main() {
       paragraphSpacing: 2,
     );
 
-    expect(pages, hasLength(1));
-    expect(pages.single.text, isEmpty);
+    expect(pages, hasLength(2));
+    expect(pages.first.isChapterTitle, isTrue);
+    expect(pages.last.text, isEmpty);
     expectCanonicalCoverage(pages, text);
   });
 }

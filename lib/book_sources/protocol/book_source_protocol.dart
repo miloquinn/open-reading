@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 const String openReadingSourceProtocol = 'open-reading-source';
-const String openReadingSourceProtocolVersion = '1.2';
+const String openReadingSourceProtocolVersion = '1.3';
 const String openReadingSourceProtocolRepositoryUrl =
     'https://github.com/miloquinn/open-reading-source-protocol';
 const String openReadingRightsReportUrl =
@@ -12,7 +12,10 @@ const String openReadingSourceDiscoveryPath =
 class BookSourceProtocolException implements Exception {
   final String message;
 
-  const BookSourceProtocolException(this.message);
+  /// The source-supplied `error.code`, when the failure carried one.
+  final String? code;
+
+  const BookSourceProtocolException(this.message, {this.code});
 
   @override
   String toString() => message;
@@ -34,6 +37,10 @@ class BookSourceManifest {
   final List<String> languages;
   final Set<String> capabilities;
 
+  /// Largest `pageSize` this source accepts on the chapter-catalog endpoint.
+  /// Absent means the protocol default of 100 applies.
+  final int? maxCatalogPageSize;
+
   const BookSourceManifest({
     required this.protocol,
     required this.protocolVersion,
@@ -49,6 +56,7 @@ class BookSourceManifest {
     this.contactUrl,
     this.contentLicense = '',
     this.rightsStatement = '',
+    this.maxCatalogPageSize,
   });
 
   bool supports(String capability) => capabilities.contains(capability);
@@ -89,6 +97,7 @@ class BookSourceManifest {
       rightsStatement: (json['rightsStatement'] as String?)?.trim() ?? '',
       languages: _stringList(json['languages']),
       capabilities: capabilities,
+      maxCatalogPageSize: _catalogPageSizeFromJson(json['maxCatalogPageSize']),
     );
   }
 
@@ -107,6 +116,8 @@ class BookSourceManifest {
         if (rightsStatement.isNotEmpty) 'rightsStatement': rightsStatement,
         'languages': languages,
         'capabilities': capabilities.toList()..sort(),
+        if (maxCatalogPageSize != null)
+          'maxCatalogPageSize': maxCatalogPageSize,
       };
 }
 
@@ -285,6 +296,45 @@ class BookSourceChapter {
   }
 }
 
+/// One page of a book's chapter catalog.
+///
+/// Sources that do not implement pagination may omit `page`/`pageSize`/
+/// `hasMore` and return every chapter in `items`; that response parses as a
+/// single, complete page (`hasMore: false`), matching legacy unpaged behavior.
+class BookSourceChapterPage {
+  final List<BookSourceChapter> items;
+  final int page;
+  final int pageSize;
+  final int? total;
+  final bool hasMore;
+
+  const BookSourceChapterPage({
+    required this.items,
+    required this.page,
+    required this.pageSize,
+    required this.hasMore,
+    this.total,
+  });
+
+  factory BookSourceChapterPage.fromJson(Map<String, dynamic> json) {
+    final rawItems = json['items'];
+    if (rawItems is! List) {
+      throw const BookSourceProtocolException(
+        'Chapter response must contain an items array.',
+      );
+    }
+    return BookSourceChapterPage(
+      items: rawItems
+          .map((item) => BookSourceChapter.fromJson(_jsonMap(item)))
+          .toList(growable: false),
+      page: (json['page'] as num?)?.toInt() ?? 1,
+      pageSize: (json['pageSize'] as num?)?.toInt() ?? rawItems.length,
+      total: (json['total'] as num?)?.toInt(),
+      hasMore: json['hasMore'] == true,
+    );
+  }
+}
+
 class BookSourceChapterContent {
   final String bookId;
   final String chapterId;
@@ -364,6 +414,18 @@ Uri _httpUri(String value) {
     throw BookSourceProtocolException('Invalid HTTP URL: $value');
   }
   return uri;
+}
+
+/// Parses the discovery document's `maxCatalogPageSize`. The spec's 100-1000
+/// range is a requirement on what a *source* may declare, not something the
+/// client should force a value into: a source declaring an out-of-range
+/// number is still telling the client the largest page it will accept, and
+/// requesting more than that gets rejected regardless of what the spec says
+/// sources are supposed to declare. Only reject non-positive/malformed input.
+int? _catalogPageSizeFromJson(Object? value) {
+  if (value is! num) return null;
+  final parsed = value.toInt();
+  return parsed > 0 ? parsed : null;
 }
 
 Uri? _optionalHttpUri(Object? value) {

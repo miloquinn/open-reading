@@ -1,67 +1,93 @@
 {
+  "features" : [
+    "refractivity"
+  ],
   "fill" : {
-    "linear-gradient" : [
-      "display-p3:0.99608,0.99216,0.97647,1.00000",
-      "display-p3:0.96863,0.95686,0.99608,1.00000"
-    ],
-    "orientation" : {
-      "start" : {
-        "x" : 0.16,
-        "y" : 0.08
-      },
-      "stop" : {
-        "x" : 0.84,
-        "y" : 0.92
-      }
-    }
+    "solid" : "display-p3:1.00000,1.00000,1.00000,1.00000"
   },
   "groups" : [
     {
       "layers" : [
         {
-          "image-name" : "origo-star.png",
-          "name" : "Reading Spark",
+          "image-name" : "gpt2-right-page.png",
+          "name" : "gpt2-right-page",
+          "opacity" : 0.94,
           "position" : {
-            "scale" : 1,
+            "scale" : 1.13,
             "translation-in-points" : [
-              -24.1875,
-              9.8359375
+              0,
+              0
             ]
           }
         }
       ],
-      "name" : "Reading Spark",
+      "name" : "Right Page",
+      "refractivity" : {
+        "depth" : 0,
+        "enabled" : true,
+        "strength" : 0
+      },
       "shadow" : {
         "kind" : "neutral",
-        "opacity" : 0.12
+        "opacity" : 0.6
       },
       "translucency" : {
         "enabled" : true,
-        "value" : 0.12
+        "value" : 0.2
       }
     },
     {
       "layers" : [
         {
-          "image-name" : "origo-book.png",
-          "name" : "Book Artwork",
+          "blend-mode" : "lighten",
+          "fill" : {
+            "solid" : "display-p3:0.61121,0.83160,0.90417,1.00000"
+          },
+          "image-name" : "gpt2-left-page.png",
+          "name" : "gpt2-left-page",
+          "opacity" : 1,
           "position" : {
-            "scale" : 1,
+            "scale" : 1.13,
             "translation-in-points" : [
-              -26,
-              18.4921875
+              0,
+              0
             ]
           }
         }
       ],
-      "name" : "Book Artwork",
+      "name" : "Left Page",
       "shadow" : {
         "kind" : "neutral",
-        "opacity" : 0.12
+        "opacity" : 0.6
       },
       "translucency" : {
         "enabled" : true,
-        "value" : 0.12
+        "value" : 0.2
+      }
+    },
+    {
+      "layers" : [
+        {
+          "image-name" : "gpt2-book-cover.png",
+          "name" : "gpt2-book-cover",
+          "opacity" : 0.94,
+          "position" : {
+            "scale" : 1.13,
+            "translation-in-points" : [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "name" : "Book Cover",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.6
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.2
       }
     }
   ],

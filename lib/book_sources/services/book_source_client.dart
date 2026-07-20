@@ -25,7 +25,17 @@ class BookSourceClient {
   static const int maxResponseBytes = 8 * 1024 * 1024;
   static const int maxDownloadResponseBytes = 24 * 1024 * 1024;
   static const Duration downloadReceiveTimeout = Duration(seconds: 90);
-  static const int downloadMaxAttempts = 3;
+
+  /// ORSP §11 章节目录默认页大小；书源未声明 maxCatalogPageSize 时使用。
+  static const int _defaultChapterPageSize = 100;
+
+  /// 章节总数的硬上限（约 3 万章，远超真实连载小说的记录）。翻页次数上限
+  /// 由它除以实际页大小动态推出，与页大小无关地防止死循环或内存膨胀——
+  /// 哪怕某一页返回的条目数远超请求的 pageSize，这里也会强制截断。
+  static const int _maxChapters = 30000;
+
+  static const int _maxRetryAttempts = 3;
+  static const Duration _maxRetryAfter = Duration(seconds: 60);
 
   BookSourceClient({Dio? dio, BookSourceChapterCache? chapterCache})
       : _chapterCache = chapterCache ?? const BookSourceChapterCache(),
@@ -109,7 +119,10 @@ class BookSourceClient {
         manifest: manifest,
       );
     } on DioException catch (error) {
-      throw BookSourceProtocolException(_dioErrorMessage(error));
+      throw BookSourceProtocolException(
+        _dioErrorMessage(error),
+        code: _sourceErrorCode(error),
+      );
     }
   }
 
@@ -136,7 +149,10 @@ class BookSourceClient {
         decodeBookSourceJson(await _getBounded(uri)),
       );
     } on DioException catch (error) {
-      throw BookSourceProtocolException(_dioErrorMessage(error));
+      throw BookSourceProtocolException(
+        _dioErrorMessage(error),
+        code: _sourceErrorCode(error),
+      );
     }
   }
 
@@ -154,7 +170,10 @@ class BookSourceClient {
         decodeBookSourceJson(await _getBounded(uri)),
       );
     } on DioException catch (error) {
-      throw BookSourceProtocolException(_dioErrorMessage(error));
+      throw BookSourceProtocolException(
+        _dioErrorMessage(error),
+        code: _sourceErrorCode(error),
+      );
     }
   }
 
@@ -181,7 +200,10 @@ class BookSourceClient {
               ))
           .toList(growable: false);
     } on DioException catch (error) {
-      throw BookSourceProtocolException(_dioErrorMessage(error));
+      throw BookSourceProtocolException(
+        _dioErrorMessage(error),
+        code: _sourceErrorCode(error),
+      );
     }
   }
 
@@ -211,7 +233,10 @@ class BookSourceClient {
         decodeBookSourceJson(await _getBounded(uri)),
       );
     } on DioException catch (error) {
-      throw BookSourceProtocolException(_dioErrorMessage(error));
+      throw BookSourceProtocolException(
+        _dioErrorMessage(error),
+        code: _sourceErrorCode(error),
+      );
     }
   }
 
@@ -228,64 +253,95 @@ class BookSourceClient {
         decodeBookSourceJson(await _getBounded(uri)),
       );
     } on DioException catch (error) {
-      throw BookSourceProtocolException(_dioErrorMessage(error));
+      throw BookSourceProtocolException(
+        _dioErrorMessage(error),
+        code: _sourceErrorCode(error),
+      );
     }
   }
 
   Future<List<BookSourceChapter>> getChapters(
     RegisteredBookSource source,
     String bookId,
-  ) async {
-    final uri = _apiUri(
-      source.apiBaseUrl,
-      'v1/books/${Uri.encodeComponent(bookId)}/chapters',
+  ) {
+    return _fetchAllChapters(
+      _apiUri(
+        source.apiBaseUrl,
+        'v1/books/${Uri.encodeComponent(bookId)}/chapters',
+      ),
+      pageSize: _chapterPageSizeFor(source),
+      maxBytes: maxResponseBytes,
+      receiveTimeout: null,
     );
-    try {
-      final json = decodeBookSourceJson(await _getBounded(uri));
-      final items = json['items'];
-      if (items is! List) {
-        throw const BookSourceProtocolException(
-          'Chapter response must contain an items array.',
-        );
-      }
-      return items
-          .map((item) => BookSourceChapter.fromJson(
-                decodeBookSourceJson(item),
-              ))
-          .toList(growable: false);
-    } on DioException catch (error) {
-      throw BookSourceProtocolException(_dioErrorMessage(error));
-    }
   }
 
   Future<List<BookSourceChapter>> getChaptersForDownload(
     RegisteredBookSource source,
     String bookId,
-  ) async {
-    final uri = _apiUri(
-      source.apiBaseUrl,
-      'v1/books/${Uri.encodeComponent(bookId)}/chapters',
+  ) {
+    return _fetchAllChapters(
+      _apiUri(
+        source.apiBaseUrl,
+        'v1/books/${Uri.encodeComponent(bookId)}/chapters',
+      ),
+      pageSize: _chapterPageSizeFor(source),
+      maxBytes: maxDownloadResponseBytes,
+      receiveTimeout: downloadReceiveTimeout,
     );
-    return _withDownloadRetries(() async {
-      final json = decodeBookSourceJson(
-        await _getBounded(
-          uri,
-          maxBytes: maxDownloadResponseBytes,
-          receiveTimeout: downloadReceiveTimeout,
-        ),
+  }
+
+  /// The page size to request for `source`'s chapter catalog: its own
+  /// declared `maxCatalogPageSize` when present (ORSP §3), otherwise the
+  /// protocol default of 100. Clamped to the spec's own 1000 ceiling purely
+  /// to stop a source from talking the client into absurdly large single
+  /// requests — a source is free to declare a smaller bound than 100 and
+  /// have it honored exactly, since the 100-1000 range is a requirement on
+  /// what sources are supposed to declare, not on what the client must send.
+  int _chapterPageSizeFor(RegisteredBookSource source) {
+    return (source.maxCatalogPageSize ?? _defaultChapterPageSize)
+        .clamp(1, 1000);
+  }
+
+  /// Fetches the full chapter catalog, following pagination when the source
+  /// implements it (protocol 1.3). `pageSize` is capped to the source's own
+  /// declared `maxCatalogPageSize` (ORSP §3) — sending a larger value than a
+  /// source advertises is a protocol violation the source may legitimately
+  /// reject with 400, so it must never be hardcoded higher than what the
+  /// source actually said it accepts. Sources that still return every chapter
+  /// in a single `{items}` response (legacy unpaged behavior) parse as one
+  /// complete page, so the loop exits after the first request with identical
+  /// results to before pagination existed.
+  Future<List<BookSourceChapter>> _fetchAllChapters(
+    Uri uri, {
+    required int pageSize,
+    required int maxBytes,
+    required Duration? receiveTimeout,
+  }) async {
+    final maxPages = (_maxChapters / pageSize).ceil();
+    final chapters = <BookSourceChapter>[];
+    for (var page = 1; page <= maxPages; page++) {
+      final pageUri = uri.replace(
+        queryParameters: {
+          ...uri.queryParameters,
+          'page': '$page',
+          'pageSize': '$pageSize',
+        },
       );
-      final items = json['items'];
-      if (items is! List) {
-        throw const BookSourceProtocolException(
-          'Chapter response must contain an items array.',
+      final result = await _withRetries(() async {
+        final json = decodeBookSourceJson(
+          await _getBounded(
+            pageUri,
+            maxBytes: maxBytes,
+            receiveTimeout: receiveTimeout,
+          ),
         );
-      }
-      return items
-          .map(
-            (item) => BookSourceChapter.fromJson(decodeBookSourceJson(item)),
-          )
-          .toList(growable: false);
-    });
+        return BookSourceChapterPage.fromJson(json);
+      });
+      chapters.addAll(result.items);
+      if (chapters.length >= _maxChapters) break;
+      if (!result.hasMore || result.items.isEmpty) break;
+    }
+    return chapters;
   }
 
   Future<BookSourceChapterContent> getChapterContent(
@@ -308,7 +364,10 @@ class BookSourceClient {
             decodeBookSourceJson(await _getBounded(uri)),
           );
         } on DioException catch (error) {
-          throw BookSourceProtocolException(_dioErrorMessage(error));
+          throw BookSourceProtocolException(
+            _dioErrorMessage(error),
+            code: _sourceErrorCode(error),
+          );
         }
       },
     );
@@ -329,7 +388,7 @@ class BookSourceClient {
           'v1/books/${Uri.encodeComponent(bookId)}/chapters/'
           '${Uri.encodeComponent(chapterId)}',
         );
-        return _withDownloadRetries(
+        return _withRetries(
           () async => BookSourceChapterContent.fromJson(
             decodeBookSourceJson(
               await _getBounded(
@@ -360,22 +419,62 @@ class BookSourceClient {
     }
   }
 
-  Future<T> _withDownloadRetries<T>(Future<T> Function() request) async {
-    DioException? lastError;
-    for (var attempt = 1; attempt <= downloadMaxAttempts; attempt++) {
+  /// Retries only on failures that a second attempt could plausibly fix:
+  /// network/timeout errors, 429 and 5xx. A 404 or 400 will never succeed on
+  /// retry, so those fail immediately instead of wasting three attempts.
+  /// A 429 with a `Retry-After` header is honored; otherwise attempts back
+  /// off with increasing delay.
+  Future<T> _withRetries<T>(Future<T> Function() request) async {
+    for (var attempt = 1; attempt <= _maxRetryAttempts; attempt++) {
       try {
         return await request();
       } on DioException catch (error) {
-        lastError = error;
-        if (attempt == downloadMaxAttempts) break;
-        await Future<void>.delayed(
-          Duration(milliseconds: 500 * attempt * attempt),
-        );
+        if (attempt == _maxRetryAttempts || !_isRetryable(error)) {
+          throw BookSourceProtocolException(
+            _dioErrorMessage(error),
+            code: _sourceErrorCode(error),
+          );
+        }
+        await Future<void>.delayed(_retryDelay(error, attempt));
       }
     }
-    throw BookSourceProtocolException(
-      _dioErrorMessage(lastError!),
-    );
+    throw const BookSourceProtocolException('Source request failed.');
+  }
+
+  bool _isRetryable(DioException error) {
+    final status = error.response?.statusCode;
+    if (status == null) {
+      return switch (error.type) {
+        DioExceptionType.connectionTimeout ||
+        DioExceptionType.sendTimeout ||
+        DioExceptionType.receiveTimeout ||
+        DioExceptionType.connectionError =>
+          true,
+        _ => false,
+      };
+    }
+    return status == HttpStatus.tooManyRequests || status >= 500;
+  }
+
+  Duration _retryDelay(DioException error, int attempt) {
+    return _retryAfterHeader(error) ??
+        Duration(milliseconds: 500 * attempt * attempt);
+  }
+
+  Duration? _retryAfterHeader(DioException error) {
+    final value = error.response?.headers.value(HttpHeaders.retryAfterHeader);
+    if (value == null) return null;
+    final seconds = int.tryParse(value.trim());
+    if (seconds != null) {
+      return Duration(seconds: seconds.clamp(0, _maxRetryAfter.inSeconds));
+    }
+    try {
+      final delta = HttpDate.parse(value.trim()).difference(DateTime.now());
+      if (delta.isNegative) return Duration.zero;
+      return delta > _maxRetryAfter ? _maxRetryAfter : delta;
+    } on FormatException {
+      return null;
+    }
   }
 
   static Uri _apiUri(Uri baseUrl, String relativePath) {
@@ -384,8 +483,17 @@ class BookSourceClient {
     return baseUrl.replace(path: normalizedPath).resolve(relativePath);
   }
 
+  /// Protocol §5 asks sources to return `{"error":{"code","message"}}`.
+  /// Surface that message when present instead of discarding it in favor of
+  /// a generic "HTTP $status" string.
   String _dioErrorMessage(DioException error) {
     final status = error.response?.statusCode;
+    final serverMessage = _errorBody(error)?['message'];
+    if (serverMessage is String && serverMessage.trim().isNotEmpty) {
+      return status == null
+          ? serverMessage.trim()
+          : '${serverMessage.trim()} (HTTP $status)';
+    }
     if (status != null) return 'Source request failed with HTTP $status.';
     return switch (error.type) {
       DioExceptionType.connectionTimeout ||
@@ -395,5 +503,23 @@ class BookSourceClient {
       DioExceptionType.connectionError => 'Could not connect to the source.',
       _ => error.message ?? 'Source request failed.',
     };
+  }
+
+  String? _sourceErrorCode(DioException error) {
+    final code = _errorBody(error)?['code'];
+    return code is String && code.trim().isNotEmpty ? code.trim() : null;
+  }
+
+  /// Parses the `error` object out of a failed response body. Malformed or
+  /// absent bodies must fall back silently rather than raise a new error.
+  Map<String, dynamic>? _errorBody(DioException error) {
+    try {
+      final data = error.response?.data;
+      if (data == null) return null;
+      final body = decodeBookSourceJson(data)['error'];
+      return body is Map ? decodeBookSourceJson(body) : null;
+    } catch (_) {
+      return null;
+    }
   }
 }

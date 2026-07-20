@@ -134,7 +134,7 @@ class ExampleBookSourceServer {
         return;
       }
       if (segments.length == 5 && segments[4] == 'chapters') {
-        _chapters(request.response, bookId);
+        _chapters(request, bookId);
         return;
       }
       if (segments.length == 6 && segments[4] == 'chapters') {
@@ -155,6 +155,12 @@ class ExampleBookSourceServer {
     );
   }
 
+  /// Deliberately small so tests exercise real multi-page fetches without a
+  /// huge fixture. A real source targeting ORSP §3 would declare something
+  /// in the spec's 100-1000 range; this reference source only serves the
+  /// repository's own test suite, not real readers, so it is exempt.
+  static const int _catalogMaxPageSize = 2;
+
   Map<String, Object> _manifest(HttpRequest request) {
     final publicBaseUri = request.requestedUri.replace(
       path: '/',
@@ -163,7 +169,7 @@ class ExampleBookSourceServer {
     );
     return {
       'protocol': 'open-reading-source',
-      'protocolVersion': '1.2',
+      'protocolVersion': '1.3',
       'id': sourceId,
       'name': sourceName,
       'description': '仓库内置的本地协议测试书源，仅包含原创示例文本。',
@@ -176,6 +182,7 @@ class ExampleBookSourceServer {
       'rightsStatement':
           'This reference source contains only original protocol test stories created for Open Reading.',
       'languages': ['zh-CN', 'en'],
+      'maxCatalogPageSize': _catalogMaxPageSize,
       'capabilities': [
         'search',
         'discover',
@@ -293,17 +300,54 @@ class ExampleBookSourceServer {
     _json(response, HttpStatus.ok, entry.book);
   }
 
-  void _chapters(HttpResponse response, String bookId) {
+  /// Demonstrates ORSP §11 chapter pagination. `_catalogMaxPageSize` is the
+  /// same bound advertised in the discovery document; a compliant client
+  /// never asks for more than that, but this still enforces it server-side
+  /// with a real 400 rather than silently clamping, matching "a source MUST
+  /// return 400 for a pageSize above its declared bound".
+  void _chapters(HttpRequest request, String bookId) {
     final entry = _books[bookId];
     if (entry == null) {
       _notFound(
-          response, 'BOOK_NOT_FOUND', 'The requested book was not found.');
+        request.response,
+        'BOOK_NOT_FOUND',
+        'The requested book was not found.',
+      );
       return;
     }
-    _json(response, HttpStatus.ok, {
-      'items': entry.chapters
-          .map((chapter) => chapter.metadata)
-          .toList(growable: false),
+    final page = _positiveInt(request.uri.queryParameters['page'], fallback: 1);
+    final pageSize = _positiveInt(
+      request.uri.queryParameters['pageSize'],
+      fallback: _catalogMaxPageSize,
+    );
+    if (pageSize > _catalogMaxPageSize) {
+      _error(
+        request.response,
+        HttpStatus.badRequest,
+        'PAGE_SIZE_TOO_LARGE',
+        'pageSize exceeds this source\'s declared maxCatalogPageSize '
+            '($_catalogMaxPageSize).',
+      );
+      return;
+    }
+    final sortedChapters = [...entry.chapters]..sort((a, b) {
+        final byOrder = a.order.compareTo(b.order);
+        return byOrder != 0 ? byOrder : a.id.compareTo(b.id);
+      });
+    final start = (page - 1) * pageSize;
+    final items = start >= sortedChapters.length
+        ? const <Map<String, Object>>[]
+        : sortedChapters
+            .skip(start)
+            .take(pageSize)
+            .map((chapter) => chapter.metadata)
+            .toList(growable: false);
+    _json(request.response, HttpStatus.ok, {
+      'items': items,
+      'page': page,
+      'pageSize': pageSize,
+      'total': sortedChapters.length,
+      'hasMore': start + items.length < sortedChapters.length,
     });
   }
 
@@ -451,6 +495,51 @@ const Map<String, _ExampleBook> _books = {
         order: 1,
         content: '夜色落下时，书架没有发出声音。'
             '只有被翻开的那一页，替远方的作者继续说话。',
+      ),
+    ],
+  ),
+  'paginated-serial': _ExampleBook(
+    book: {
+      'id': 'paginated-serial',
+      'title': '分页连载',
+      'author': 'Open Reading',
+      'description': '用于验证章节目录分页的原创示例：本源在发现文档里把'
+          'maxCatalogPageSize 声明为 2，客户端必须跟随 hasMore 翻页才能取全。',
+      'categories': ['原创', '测试'],
+      'status': 'ongoing',
+      'latestChapter': '第五章 终章',
+      'updatedAt': '2026-07-11T00:00:00Z',
+    },
+    chapters: [
+      _ExampleChapter(
+        id: 'serial-1',
+        title: '第一章 开篇',
+        order: 1,
+        content: '故事从第一页开始，但远不是全部。',
+      ),
+      _ExampleChapter(
+        id: 'serial-2',
+        title: '第二章 转折',
+        order: 2,
+        content: '翻到第二页时，情节才刚刚展开。',
+      ),
+      _ExampleChapter(
+        id: 'serial-3',
+        title: '第三章 深入',
+        order: 3,
+        content: '第三页揭开了更多线索。',
+      ),
+      _ExampleChapter(
+        id: 'serial-4',
+        title: '第四章 高潮',
+        order: 4,
+        content: '第四页把故事推向高潮。',
+      ),
+      _ExampleChapter(
+        id: 'serial-5',
+        title: '第五章 终章',
+        order: 5,
+        content: '第五页收尾，整本书至此才算读完。',
       ),
     ],
   ),

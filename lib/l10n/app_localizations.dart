@@ -398,13 +398,13 @@ abstract class AppLocalizations {
   /// No description provided for @bookSourcesProtocolDialogTitle.
   ///
   /// In en, this message translates to:
-  /// **'Open source protocol v1.2'**
+  /// **'Open source protocol v1.3'**
   String get bookSourcesProtocolDialogTitle;
 
   /// No description provided for @bookSourcesProtocolDialogBody.
   ///
   /// In en, this message translates to:
-  /// **'A source publishes /.well-known/open-reading-source.json and implements search, book details, chapter catalogs, and chapter content. Version 1.2 adds operator, contact, license, and rights-statement metadata for public HTTP(S) sources that do not require sign-in.'**
+  /// **'A source publishes /.well-known/open-reading-source.json and implements search, book details, paginated chapter catalogs, and chapter content. Version 1.3 adds complete catalog pagination while retaining operator, contact, license, and rights-statement metadata for public HTTP(S) sources that do not require sign-in.'**
   String get bookSourcesProtocolDialogBody;
 
   /// No description provided for @bookSourcesRightsDetails.
@@ -3317,6 +3317,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Current version'**
   String get changelogCurrentVersion;
+
+  /// No description provided for @changelog225UnifiedTextReader.
+  ///
+  /// In en, this message translates to:
+  /// **'Unified local files and online sources on the same text pagination and rendering engine'**
+  String get changelog225UnifiedTextReader;
+
+  /// No description provided for @changelog225SourceChapterTurn.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed horizontal cross-chapter turns rebuilding the page before the animation finished'**
+  String get changelog225SourceChapterTurn;
+
+  /// No description provided for @changelog225AppIcons.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated app icons consistently across mobile, desktop, web, and OpenHarmony'**
+  String get changelog225AppIcons;
+
+  /// No description provided for @changelog224SourceCatalogPaging.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated source support to ORSP 1.3 and fetch complete chapter catalogs using each source\'s declared page-size limit'**
+  String get changelog224SourceCatalogPaging;
+
+  /// No description provided for @changelog224SourceHtmlParagraphs.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed paragraph boundaries being lost when source HTML separates paragraphs with <br> elements'**
+  String get changelog224SourceHtmlParagraphs;
+
+  /// No description provided for @changelog224MobileNavigation.
+  ///
+  /// In en, this message translates to:
+  /// **'Reduced the mobile home floating navigation height to leave more room for content'**
+  String get changelog224MobileNavigation;
 
   /// No description provided for @changelog221TabletBackPage.
   ///

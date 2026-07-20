@@ -14,48 +14,49 @@ void main() {
 
       expect(metrics.systemTopInset, 59);
       expect(metrics.systemBottomInset, 34);
-      expect(metrics.floatingNavHeight, 64);
+      expect(metrics.floatingNavHeight, 56);
       expect(metrics.topBarHeight, 119);
       expect(metrics.pageTopPadding, 127);
       expect(metrics.navBottomInset, 44);
-      expect(metrics.navContainerHeight, 108);
-      expect(metrics.pageBottomPadding, 118);
-      expect(metrics.floatingActionBottomMargin, 123);
+      expect(metrics.navContainerHeight, 100);
+      expect(metrics.pageBottomPadding, 110);
+      expect(metrics.floatingActionBottomMargin, 115);
     });
 
-    test('sizes the floating navigation close to the phone screen edges', () {
+    test('keeps the floating navigation compact with deliberate side margins',
+        () {
       expect(
         homeMobileFloatingNavWidthFor(screenWidth: 320, itemCount: 4),
-        300,
+        284,
       );
       expect(
         homeMobileFloatingNavWidthFor(screenWidth: 360, itemCount: 4),
-        340,
+        324,
       );
       expect(
         homeMobileFloatingNavWidthFor(screenWidth: 393, itemCount: 4),
-        373,
+        357,
       );
       expect(
         homeMobileFloatingNavWidthFor(screenWidth: 405, itemCount: 4),
-        385,
+        368,
       );
       expect(
         homeMobileFloatingNavWidthFor(screenWidth: 600, itemCount: 4),
-        392,
+        368,
       );
 
       expect(
         homeMobileFloatingNavItemWidthFor(screenWidth: 320, itemCount: 4),
-        73,
+        69,
       );
       expect(
         homeMobileFloatingNavItemWidthFor(screenWidth: 393, itemCount: 4),
-        closeTo(91.25, 0.001),
+        closeTo(87.25, 0.001),
       );
       expect(
         homeMobileFloatingNavItemWidthFor(screenWidth: 405, itemCount: 4),
-        closeTo(94.25, 0.001),
+        90,
       );
     });
 
@@ -70,9 +71,9 @@ void main() {
       expect(metrics.topBarHeight, 84);
       expect(metrics.pageTopPadding, 92);
       expect(metrics.navBottomInset, 34);
-      expect(metrics.navContainerHeight, 98);
-      expect(metrics.pageBottomPadding, 108);
-      expect(metrics.floatingActionBottomMargin, 113);
+      expect(metrics.navContainerHeight, 90);
+      expect(metrics.pageBottomPadding, 100);
+      expect(metrics.floatingActionBottomMargin, 105);
     });
 
     test('preserves large system insets instead of clamping them', () {
@@ -85,7 +86,7 @@ void main() {
 
       expect(metrics.systemBottomInset, 60);
       expect(metrics.navBottomInset, 70);
-      expect(metrics.pageBottomPadding, 144);
+      expect(metrics.pageBottomPadding, 136);
     });
   });
 }

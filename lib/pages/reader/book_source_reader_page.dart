@@ -3,13 +3,12 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:html/dom.dart' as dom;
-import 'package:html/parser.dart' as html_parser;
 import 'package:provider/provider.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:xxread/book_sources/models/registered_book_source.dart';
 import 'package:xxread/book_sources/protocol/book_source_protocol.dart';
 import 'package:xxread/book_sources/services/book_source_client.dart';
+import 'package:xxread/book_sources/services/book_source_chapter_text.dart';
 import 'package:xxread/book_sources/services/book_source_reading_progress.dart';
 import 'package:xxread/book_sources/services/book_source_shelf_service.dart';
 import 'package:xxread/book_sources/services/book_source_text_paginator.dart';
@@ -23,6 +22,7 @@ import 'package:xxread/core/reader/reader_margin_settings.dart';
 import 'package:xxread/core/reader/reader_safe_area.dart';
 import 'package:xxread/core/reader/reader_settings.dart';
 import 'package:xxread/core/reader/reader_system_ui.dart';
+import 'package:xxread/core/reader/reader_text_pagination.dart';
 import 'package:xxread/core/reader/reader_theme_order.dart';
 import 'package:xxread/core/reader/reader_vertical_paging.dart';
 import 'package:xxread/core/reader/reader_volume_key_controller.dart';
@@ -41,6 +41,7 @@ import 'package:xxread/widgets/reader_pull_bookmark.dart';
 import 'package:xxread/widgets/reader_settings_controls.dart';
 import 'package:xxread/widgets/reader_shader_page_curl.dart';
 import 'package:xxread/widgets/reader_theme_background.dart';
+import 'package:xxread/widgets/reader_text_page_content.dart';
 import 'package:xxread/widgets/reader_top_information_bar.dart';
 import 'package:xxread/widgets/reader_vertical_paging_surface.dart';
 import 'package:xxread/widgets/side_toast.dart';
@@ -72,7 +73,6 @@ class BookSourceReaderPage extends StatefulWidget {
 
 class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     with WidgetsBindingObserver {
-  static const double _maxReaderContentWidth = 760;
   static const double _spreadGutter = 24;
 
   late final BookSourceClient _client = widget.client ?? BookSourceClient();
@@ -128,6 +128,9 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   int _verticalPageCount = 1;
   int _pageViewLeading = 0;
   bool _ignoreSlidePageChanges = true;
+  int? _pendingSlideChapterIndex;
+  int? _pendingSlideBoundaryViewIndex;
+  double _pendingSlideRestoreProgress = 0;
   double _restorePageProgress = 0;
   bool _restorePagedPosition = false;
   int? _restoreTextOffset;
@@ -587,6 +590,8 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       _restorePageProgress = normalizedProgress;
       _restorePagedPosition = true;
       _ignoreSlidePageChanges = true;
+      _pendingSlideChapterIndex = null;
+      _pendingSlideBoundaryViewIndex = null;
     });
     _scrollProgress.value = normalizedProgress;
     _restoreScrollProgress(normalizedProgress);
@@ -855,6 +860,39 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     );
   }
 
+  void _queueSlideChapterCommit({
+    required int chapterIndex,
+    required int boundaryViewIndex,
+    required double restoreProgress,
+  }) {
+    _pendingSlideChapterIndex = chapterIndex;
+    _pendingSlideBoundaryViewIndex = boundaryViewIndex;
+    _pendingSlideRestoreProgress = restoreProgress;
+  }
+
+  void _commitPendingSlideChapter() {
+    final chapterIndex = _pendingSlideChapterIndex;
+    final boundaryViewIndex = _pendingSlideBoundaryViewIndex;
+    if (chapterIndex == null || boundaryViewIndex == null) return;
+    final settledViewIndex =
+        _pageController.hasClients ? _pageController.page?.round() : null;
+    _pendingSlideChapterIndex = null;
+    _pendingSlideBoundaryViewIndex = null;
+    if (settledViewIndex != boundaryViewIndex) return;
+    final restoreProgress = _pendingSlideRestoreProgress;
+    // Let PageController.nextPage/previousPage finish their own ScrollEnd
+    // future before replacing the PageView with the target chapter.
+    Timer.run(() {
+      if (!mounted) return;
+      unawaited(
+        _loadChapter(
+          chapterIndex,
+          restoreProgress: restoreProgress,
+        ),
+      );
+    });
+  }
+
   Future<void> _turnForward() async {
     final pageStep = _usesTwoPageLayout ? 2 : 1;
     if (_pageIndex + pageStep < _pageCount) {
@@ -893,7 +931,10 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   String? get _currentBookmarkAnchorKey {
     final content = _content;
     if (content == null || _chapters.isEmpty) return null;
-    final text = _readableChapterText(content);
+    final text = readableBookSourceChapterText(
+      content,
+      fallbackTitle: _chapters[_chapterIndex].title,
+    );
     final offset = _currentBookmarkOffset(text);
     return '${_chapters[_chapterIndex].id}:$offset';
   }
@@ -911,7 +952,10 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       );
       return;
     }
-    final text = _readableChapterText(content);
+    final text = readableBookSourceChapterText(
+      content,
+      fallbackTitle: _chapters[_chapterIndex].title,
+    );
     final offset = _currentBookmarkOffset(text);
     final anchorKey = '${_chapters[_chapterIndex].id}:$offset';
     Bookmark? existing;
@@ -1031,6 +1075,17 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   Future<void> _showCatalog() async {
     if (_chapters.isEmpty) return;
     _controlsTimer?.cancel();
+    // Built once outside the StatefulBuilder below: that builder re-runs on
+    // every keyboard show/hide animation frame, and reallocating a
+    // ReaderNavigationChapter per chapter on every frame is severe jank for
+    // books with thousands of chapters.
+    final navigationChapters = [
+      for (var index = 0; index < _chapters.length; index++)
+        ReaderNavigationChapter(
+          title: _chapters[index].title,
+          index: index,
+        ),
+    ];
     await showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
@@ -1045,13 +1100,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
           height: MediaQuery.sizeOf(context).height * 0.86,
           child: ReaderNavigationSheet(
             palette: _readerTheme,
-            chapters: [
-              for (var index = 0; index < _chapters.length; index++)
-                ReaderNavigationChapter(
-                  title: _chapters[index].title,
-                  index: index,
-                ),
-            ],
+            chapters: navigationChapters,
             currentChapterIndex: _chapterIndex,
             bookmarks: _bookmarks,
             currentAnchorKey: _currentBookmarkAnchorKey,
@@ -1414,6 +1463,13 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
           data: _readerThemeData,
           child: Scaffold(
             backgroundColor: Colors.transparent,
+            // The reader page has no text field of its own, but Scaffold
+            // shrinks `body` for ANY keyboard inset by default, including
+            // one raised by a TextField inside a modal sheet stacked on top
+            // (e.g. the TOC search box). That resize changes the layout
+            // constraints the pagination below reacts to on every animation
+            // frame, forcing a full chapter re-pagination each frame.
+            resizeToAvoidBottomInset: false,
             body: ReaderThemeBackground(
               palette: _readerTheme,
               child: ReaderPullBookmark(
@@ -1588,24 +1644,17 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         letterSpacing: 0.2,
       );
 
-  TextStyle get _chapterTitleStyle {
-    final base = _readerThemeData.textTheme.headlineSmall;
-    return TextStyle(
-      inherit: false,
-      fontFamily: _readerFont.family,
-      fontFamilyFallback: _readerFont.fallbackFamilies.isEmpty
-          ? null
-          : _readerFont.fallbackFamilies,
-      color: _readerTheme.text,
-      fontSize: base?.fontSize,
-      fontWeight: FontWeight.w700,
-      height: 1.35,
-    );
-  }
-
-  Widget _buildChapterTitle(String title) => Text(
-        title,
-        style: _chapterTitleStyle,
+  NativeTextFlowStyle _bodyTextFlowStyle({
+    TextDirection? direction,
+    TextScaler? textScaler,
+    Locale? locale,
+  }) =>
+      NativeTextFlowStyle(
+        textDirection: direction ?? Directionality.of(context),
+        textScaler: textScaler ?? MediaQuery.textScalerOf(context),
+        locale: locale ?? Localizations.maybeLocaleOf(context),
+        strutStyle: readerStrutStyle(_bodyTextStyle),
+        textHeightBehavior: readerTextHeightBehavior,
       );
 
   ReaderViewportChromeMetrics get _verticalChrome =>
@@ -1639,8 +1688,10 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     Size viewport,
   ) {
     final chrome = _verticalChrome;
-    final width = (viewport.width - _horizontalMargin * 2)
-        .clamp(80.0, _maxReaderContentWidth);
+    final width = readerTextContentWidth(
+      viewport.width,
+      _horizontalMargin,
+    );
     final height = _verticalPageExtentFor(viewport);
     final textScaler = MediaQuery.textScalerOf(context);
     final locale = Localizations.maybeLocaleOf(context);
@@ -1659,11 +1710,14 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       paragraphSpacing: _paragraphSpacing,
       textDirection: direction,
       extra: '${chrome.paginationSignature}:${_readerFont.id}',
-    ).cacheKey('book-source-vertical-v1');
+    ).cacheKey('book-source-vertical-v2');
     final cached = _verticalLayouts[chapterIndex];
     if (cached?.fingerprint == fingerprint) return cached!;
     final pages = paginateBookSourceText(
-      _readableChapterText(content),
+      readableBookSourceChapterText(
+        content,
+        fallbackTitle: _chapters[chapterIndex].title,
+      ),
       width: width,
       firstPageHeight: height,
       pageHeight: height,
@@ -1673,6 +1727,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       locale: locale,
       firstLineIndent: _firstLineIndent,
       paragraphSpacing: _paragraphSpacing,
+      includeChapterTitlePage: true,
     );
     final layout = _BookSourceVerticalLayout(
       fingerprint: fingerprint,
@@ -1695,11 +1750,12 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     _pageIndex = _verticalPageIndex;
     _restorePagedPosition = false;
     _restoreTextOffset = null;
-    _scrollProgress.value = _verticalPageCount <= 1
-        ? 0
+    final restoredProgress = _verticalPageCount <= 1
+        ? 0.0
         : _verticalPageIndex / (_verticalPageCount - 1);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      _scrollProgress.value = restoredProgress;
       if (!wholeBook && _verticalPageScrollController.isAttached) {
         _verticalPageScrollController.jumpTo(index: _verticalPageIndex);
         return;
@@ -1791,10 +1847,12 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   Widget _buildVerticalPageCell(
     BookSourceTextPage page,
     Size viewport,
+    String chapterTitle,
   ) {
     return SizedBox(
       key: ValueKey(
-        'book-source-vertical-page:${page.startOffset}:${page.endOffset}',
+        'book-source-vertical-page:${page.startOffset}:${page.endOffset}:'
+        '${page.isChapterTitle}',
       ),
       height: _verticalPageExtentFor(viewport),
       child: Padding(
@@ -1803,15 +1861,15 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         ),
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: _maxReaderContentWidth),
-            child: SizedBox(
-              width: double.infinity,
-              child: Text(
-                page.text,
-                textAlign: readerBodyTextAlign,
-                style: _bodyTextStyle,
-                strutStyle: readerStrutStyle(_bodyTextStyle),
-                textHeightBehavior: readerTextHeightBehavior,
+            constraints: const BoxConstraints(
+              maxWidth: readerMaxTextContentWidth,
+            ),
+            child: SizedBox.expand(
+              child: ReaderTextPageContent(
+                page: page,
+                chapterTitle: chapterTitle,
+                bodyStyle: _bodyTextStyle,
+                flowStyle: _bodyTextFlowStyle(),
               ),
             ),
           ),
@@ -1827,10 +1885,12 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     final cached = _prefetchedContent[chapterIndex];
     Widget buildContent(BookSourceChapterContent content) {
       final layout = _verticalLayoutFor(chapterIndex, content, viewport);
+      final chapterTitle =
+          content.title.isEmpty ? _chapters[chapterIndex].title : content.title;
       return Column(
         children: [
           for (final page in layout.pages)
-            _buildVerticalPageCell(page, viewport),
+            _buildVerticalPageCell(page, viewport, chapterTitle),
         ],
       );
     }
@@ -1897,8 +1957,13 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
           parent: AlwaysScrollableScrollPhysics(),
         ),
         itemCount: layout.pages.length,
-        itemBuilder: (context, index) =>
-            _buildVerticalPageCell(layout.pages[index], viewport),
+        itemBuilder: (context, index) => _buildVerticalPageCell(
+          layout.pages[index],
+          viewport,
+          _content!.title.isEmpty
+              ? _chapters[_chapterIndex].title
+              : _content!.title,
+        ),
       ),
     );
   }
@@ -1953,25 +2018,15 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     BookSourceChapterContent content,
     Size viewport,
   ) {
-    final chapterTitle =
-        content.title.isEmpty ? _chapters[chapterIndex].title : content.title;
     final top = _readerSafeArea.contentTop;
     final bottom = _readerSafeArea.contentBottom;
-    final width = (viewport.width - _horizontalMargin * 2)
-        .clamp(80.0, _maxReaderContentWidth);
-    final height = (viewport.height - top - bottom).clamp(120.0, 1600.0);
+    final width = readerTextContentWidth(
+      viewport.width,
+      _horizontalMargin,
+    );
+    final height = readerTextContentHeight(viewport.height, top, bottom);
     final textScaler = MediaQuery.textScalerOf(context);
     final locale = Localizations.maybeLocaleOf(context);
-    final titlePainter = TextPainter(
-      text: TextSpan(
-        text: chapterTitle,
-        style: _chapterTitleStyle,
-      ),
-      textDirection: Directionality.of(context),
-      textScaler: textScaler,
-      locale: locale,
-    )..layout(maxWidth: width);
-    final firstHeight = (height - titlePainter.height - 26).clamp(44.0, height);
     final key = ReaderLayoutFingerprint(
       contentKey: _chapters[chapterIndex].id,
       viewport: Size(width, height),
@@ -1985,15 +2040,17 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       firstLineIndent: _firstLineIndent,
       paragraphSpacing: _paragraphSpacing,
       textDirection: Directionality.of(context),
-      extra: '${firstHeight.toStringAsFixed(2)}:'
-          '${_readerSafeArea.paginationSignature}:${_readerFont.id}',
-    ).cacheKey('book-source-line-v4');
+      extra: '${_readerSafeArea.paginationSignature}:${_readerFont.id}',
+    ).cacheKey('book-source-line-v5');
     final cached = _pagedLayouts[chapterIndex];
     if (cached?.fingerprint == key) return cached!;
     final pages = paginateBookSourceText(
-      _readableChapterText(content),
+      readableBookSourceChapterText(
+        content,
+        fallbackTitle: _chapters[chapterIndex].title,
+      ),
       width: width,
-      firstPageHeight: firstHeight,
+      firstPageHeight: height,
       pageHeight: height,
       style: _bodyTextStyle,
       textDirection: Directionality.of(context),
@@ -2001,6 +2058,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       locale: locale,
       firstLineIndent: _firstLineIndent,
       paragraphSpacing: _paragraphSpacing,
+      includeChapterTitlePage: true,
     );
     final layout = _BookSourcePagedLayout(
       fingerprint: key,
@@ -2108,25 +2166,14 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(
-              maxWidth: _maxReaderContentWidth,
+              maxWidth: readerMaxTextContentWidth,
             ),
-            child: SizedBox(
-              width: double.infinity,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (page.showsChapterTitle) ...[
-                    _buildChapterTitle(chapterTitle),
-                    const SizedBox(height: 26),
-                  ],
-                  Text(
-                    page.text,
-                    textAlign: readerBodyTextAlign,
-                    style: _bodyTextStyle,
-                    strutStyle: readerStrutStyle(_bodyTextStyle),
-                    textHeightBehavior: readerTextHeightBehavior,
-                  ),
-                ],
+            child: SizedBox.expand(
+              child: ReaderTextPageContent(
+                page: page,
+                chapterTitle: chapterTitle,
+                bodyStyle: _bodyTextStyle,
+                flowStyle: _bodyTextFlowStyle(),
               ),
             ),
           ),
@@ -2368,53 +2415,69 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   Widget _buildSlideReader() {
     _pageViewLeading = _chapterIndex > 0 ? 1 : 0;
     final trailing = _chapterIndex + 1 < _chapters.length ? 1 : 0;
-    return PageView.builder(
-      key: ValueKey('source-slide:${_chapters[_chapterIndex].id}'),
-      controller: _pageController,
-      itemCount: _pageViewLeading + _pageCount + trailing,
-      onPageChanged: (viewIndex) {
-        if (_ignoreSlidePageChanges) return;
-        if (_pageViewLeading == 1 && viewIndex == 0) {
-          unawaited(_loadChapter(_chapterIndex - 1, restoreProgress: 1));
-          return;
-        }
-        final page = viewIndex - _pageViewLeading;
-        if (page >= _pageCount) {
-          unawaited(_loadChapter(_chapterIndex + 1));
-          return;
-        }
-        _setPagedIndex(page);
+    return NotificationListener<ScrollEndNotification>(
+      onNotification: (notification) {
+        _commitPendingSlideChapter();
+        return false;
       },
-      itemBuilder: (context, viewIndex) {
-        final page = viewIndex - _pageViewLeading;
-        if (page < 0) {
-          return _buildAdjacentPreview(
-                _chapterIndex - 1,
-                lastPage: true,
-              ) ??
-              _buildBoundaryLeaf(forward: false);
-        }
-        if (page >= _pageCount) {
-          return _buildAdjacentPreview(
-                _chapterIndex + 1,
-                lastPage: false,
-              ) ??
-              _buildBoundaryLeaf(forward: true);
-        }
-        return GestureDetector(
-          behavior: HitTestBehavior.translucent,
-          onTapUp: (details) => _handlePageTap(
-            details,
-            MediaQuery.sizeOf(context).width,
-          ),
-          child: _buildPageLeaf(
-            _paginatedPages[page],
-            pageIndex: page,
-            pageCount: _pageCount,
-            layoutFingerprint: _paginationKey!,
-          ),
-        );
-      },
+      child: PageView.builder(
+        key: ValueKey('source-slide:${_chapters[_chapterIndex].id}'),
+        controller: _pageController,
+        itemCount: _pageViewLeading + _pageCount + trailing,
+        onPageChanged: (viewIndex) {
+          if (_ignoreSlidePageChanges) return;
+          if (_pageViewLeading == 1 && viewIndex == 0) {
+            _queueSlideChapterCommit(
+              chapterIndex: _chapterIndex - 1,
+              boundaryViewIndex: viewIndex,
+              restoreProgress: 1,
+            );
+            return;
+          }
+          final page = viewIndex - _pageViewLeading;
+          if (page >= _pageCount) {
+            _queueSlideChapterCommit(
+              chapterIndex: _chapterIndex + 1,
+              boundaryViewIndex: viewIndex,
+              restoreProgress: 0,
+            );
+            return;
+          }
+          _pendingSlideChapterIndex = null;
+          _pendingSlideBoundaryViewIndex = null;
+          _setPagedIndex(page);
+        },
+        itemBuilder: (context, viewIndex) {
+          final page = viewIndex - _pageViewLeading;
+          if (page < 0) {
+            return _buildAdjacentPreview(
+                  _chapterIndex - 1,
+                  lastPage: true,
+                ) ??
+                _buildBoundaryLeaf(forward: false);
+          }
+          if (page >= _pageCount) {
+            return _buildAdjacentPreview(
+                  _chapterIndex + 1,
+                  lastPage: false,
+                ) ??
+                _buildBoundaryLeaf(forward: true);
+          }
+          return GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onTapUp: (details) => _handlePageTap(
+              details,
+              MediaQuery.sizeOf(context).width,
+            ),
+            child: _buildPageLeaf(
+              _paginatedPages[page],
+              pageIndex: page,
+              pageCount: _pageCount,
+              layoutFingerprint: _paginationKey!,
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -2911,44 +2974,4 @@ class _BookSourceVerticalLayout {
 
   final String fingerprint;
   final List<BookSourceTextPage> pages;
-}
-
-String _readableChapterText(BookSourceChapterContent content) {
-  final paragraphs = <String>[];
-  if (content.contentType == 'text/html') {
-    final fragment = html_parser.parseFragment(content.content);
-
-    void visit(dom.Node node) {
-      if (node is dom.Element &&
-          const {
-            'p',
-            'div',
-            'li',
-            'blockquote',
-          }.contains(node.localName)) {
-        final text = node.text.replaceAll(RegExp(r'\s+'), ' ').trim();
-        if (text.isNotEmpty) paragraphs.add(text);
-        return;
-      }
-      for (final child in node.nodes) {
-        visit(child);
-      }
-    }
-
-    for (final node in fragment.nodes) {
-      visit(node);
-    }
-  } else {
-    paragraphs.addAll(
-      content.content
-          .split(RegExp(r'\n+'))
-          .map((line) => line.trim())
-          .where((line) => line.isNotEmpty),
-    );
-  }
-  if (paragraphs.isEmpty) return content.content.trim();
-  final cleanedParagraphs = removeRepeatedSourcePageMarkers(paragraphs);
-  return cleanedParagraphs
-      .map((paragraph) => '\u3000\u3000$paragraph')
-      .join('\n');
 }

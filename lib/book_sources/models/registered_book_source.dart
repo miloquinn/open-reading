@@ -18,6 +18,10 @@ class RegisteredBookSource {
   final bool enabled;
   final DateTime addedAt;
 
+  /// Largest `pageSize` this source accepts on the chapter-catalog endpoint.
+  /// Absent means the protocol default of 100 applies.
+  final int? maxCatalogPageSize;
+
   const RegisteredBookSource({
     required this.id,
     required this.name,
@@ -35,6 +39,7 @@ class RegisteredBookSource {
     this.contactUrl,
     this.contentLicense = '',
     this.rightsStatement = '',
+    this.maxCatalogPageSize,
   });
 
   factory RegisteredBookSource.fromManifest({
@@ -56,6 +61,7 @@ class RegisteredBookSource {
       protocolVersion: manifest.protocolVersion,
       languages: manifest.languages,
       capabilities: manifest.capabilities,
+      maxCatalogPageSize: manifest.maxCatalogPageSize,
       enabled: true,
       addedAt: DateTime.now(),
     );
@@ -81,6 +87,7 @@ class RegisteredBookSource {
       capabilities: (json['capabilities'] as List? ?? const [])
           .whereType<String>()
           .toSet(),
+      maxCatalogPageSize: (json['maxCatalogPageSize'] as num?)?.toInt(),
       enabled: json['enabled'] as bool? ?? true,
       addedAt:
           DateTime.tryParse(json['addedAt'] as String? ?? '') ?? DateTime.now(),
@@ -102,6 +109,8 @@ class RegisteredBookSource {
         'protocolVersion': protocolVersion,
         'languages': languages,
         'capabilities': capabilities.toList()..sort(),
+        if (maxCatalogPageSize != null)
+          'maxCatalogPageSize': maxCatalogPageSize,
         'enabled': enabled,
         'addedAt': addedAt.toIso8601String(),
       };
@@ -122,6 +131,7 @@ class RegisteredBookSource {
       protocolVersion: protocolVersion,
       languages: languages,
       capabilities: capabilities,
+      maxCatalogPageSize: maxCatalogPageSize,
       enabled: enabled ?? this.enabled,
       addedAt: addedAt,
     );

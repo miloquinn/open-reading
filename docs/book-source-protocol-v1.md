@@ -1,4 +1,4 @@
-# Open Reading Source Protocol v1.2
+# Open Reading Source Protocol v1.3
 
 Open Reading Source Protocol（ORSP）是一套面向电子书与连载文本的开放 HTTP
 协议。它把阅读器与具体内容站点解耦：阅读器只实现一次协议客户端，内容提供方或适配器
@@ -28,7 +28,7 @@ GET /.well-known/open-reading-source.json
 ```json
 {
   "protocol": "open-reading-source",
-  "protocolVersion": "1.2",
+  "protocolVersion": "1.3",
   "id": "org.example.public-books",
   "name": "Example Public Books",
   "description": "Public-domain books maintained by Example.org",
@@ -40,6 +40,7 @@ GET /.well-known/open-reading-source.json
   "contentLicense": "CC BY 4.0",
   "rightsStatement": "Original and public-domain works distributed with permission.",
   "languages": ["zh-CN", "en"],
+  "maxCatalogPageSize": 200,
   "capabilities": ["search", "discover", "categories", "browse", "detail", "catalog", "content"]
 }
 ```
@@ -65,6 +66,12 @@ GET /.well-known/open-reading-source.json
 | `contentLicense` | 内容适用的许可名称或简短授权依据，例如 `CC BY 4.0`、`Public Domain` |
 | `rightsStatement` | 内容来源、授权范围或公共领域依据的简要说明 |
 
+书源还可以声明：
+
+| 字段 | 说明 |
+| --- | --- |
+| `maxCatalogPageSize` | 章节目录接口（4.6 节）单页能接受的最大 `pageSize`；缺省时按 100 处理。客户端请求的 `pageSize` 不得超过这个值，超过时书源应返回 `400` |
+
 发现相关能力均为可选能力：`discover` 提供分区推荐，`categories` 提供分类定义，
 `browse` 提供分类或排序浏览。未声明这些能力的旧书源仍可正常参与搜索。
 
@@ -72,7 +79,7 @@ GET /.well-known/open-reading-source.json
 
 - 请求与响应编码为 UTF-8。
 - JSON 响应使用 `application/json`。
-- 客户端发送 `X-Open-Reading-Protocol: 1.2`。
+- 客户端发送 `X-Open-Reading-Protocol: 1.3`。
 - ID 是书源内部稳定、不透明的字符串。客户端不得推断 ID 格式。
 - 时间使用 ISO 8601，例如 `2026-07-11T10:00:00Z`。
 - 章节正文 `contentType` 仅允许 `text/plain`、`text/markdown`、`text/html`。
@@ -163,8 +170,19 @@ GET /v1/books/{bookId}
 ### 4.6 章节目录
 
 ```text
-GET /v1/books/{bookId}/chapters
+GET /v1/books/{bookId}/chapters?page=1&pageSize=100
 ```
+
+`page`、`pageSize` 均为可选。`page` 缺省为 1，`pageSize` 缺省为 **100**，上限是书源在发现
+文档里声明的 `maxCatalogPageSize`（未声明则上限也是 100）。**客户端不得发送超过该上限的
+`pageSize`；书源收到超限请求应返回 `400`。** 长篇连载常有数千章，能承受更大单页的书源
+建议把 `maxCatalogPageSize` 声明得更高一些，减少客户端需要的请求次数。
+
+不支持分页的书源可以忽略这两个参数，直接返回全部章节的 `{"items": [...]}`（省略
+`page`/`pageSize`/`hasMore`）；客户端会把这种响应当作唯一一页、没有更多数据处理，与旧版
+未分页行为完全一致。
+
+支持分页的书源应返回与搜索/浏览一致的信封，并在还有下一页时设置 `hasMore: true`：
 
 ```json
 {
@@ -175,9 +193,18 @@ GET /v1/books/{bookId}/chapters
       "order": 1,
       "updatedAt": "2026-07-11T10:00:00Z"
     }
-  ]
+  ],
+  "page": 1,
+  "pageSize": 100,
+  "total": 1200,
+  "hasMore": true
 }
 ```
+
+客户端应按 `page` 递增请求直至 `hasMore` 为 `false`，并按 `order` 聚合出完整目录；`order`
+相同时以章节 `id` 作为次要排序键，保证顺序确定。为避免异常书源无限声明 `hasMore: true`，
+客户端应设置合理的分页次数上限。`total` 为可选字段，仅供展示预估总章节数，不作为分页
+终止条件。
 
 ### 4.7 章节正文
 
@@ -259,4 +286,4 @@ dart run tool/example_book_source_server.dart --host 0.0.0.0 --port 8788 \
 ```
 
 协议文本与参考实现随 Open Reading 项目按仓库许可证开放。建议第三方实现明确标注支持的
-协议版本，例如 `Open Reading Source Protocol 1.2 compatible`。
+协议版本，例如 `Open Reading Source Protocol 1.3 compatible`。
