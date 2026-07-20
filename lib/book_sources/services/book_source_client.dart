@@ -308,7 +308,7 @@ class BookSourceClient {
   /// source advertises is a protocol violation the source may legitimately
   /// reject with 400, so it must never be hardcoded higher than what the
   /// source actually said it accepts. Sources that still return every chapter
-  /// in a single `{items}` response (protocol 1.2 behavior) parse as one
+  /// in a single `{items}` response (legacy unpaged behavior) parse as one
   /// complete page, so the loop exits after the first request with identical
   /// results to before pagination existed.
   Future<List<BookSourceChapter>> _fetchAllChapters(

@@ -217,13 +217,13 @@ EPUB 图片块与其后的正文共用同一个显示投影：携带图片的第
 
 ## 在线书源结构
 
-协议标识为 `open-reading-source`，当前版本为 `1.2`；v1 客户端继续接受所有 `1.x` 发现文档。
+协议标识为 `open-reading-source`，当前版本为 `1.3`；v1 客户端继续接受所有 `1.x` 发现文档。
 
 主要数据对象：
 
-- `BookSourceManifest`：书源身份、API 地址、语言和能力声明，以及可选的运营者、联系入口、内容许可与权利声明。
+- `BookSourceManifest`：书源身份、API 地址、语言和能力声明，以及可选的运营者、联系入口、内容许可、权利声明和章节目录单页上限。
 - `BookSourceBook`：在线书籍元数据。
-- `BookSourceChapter`：章节目录项。
+- `BookSourceChapter`：章节目录项；客户端按 ORSP 1.3 分页信封持续拉取，直至 `hasMore` 为 `false`。
 - `BookSourceChapterContent`：章节正文，支持纯文本、Markdown 和 HTML。
 - `BookSourceSearchPage`：分页搜索结果。
 - `BookSourceDiscoveryPage`：可选的发现页分区。

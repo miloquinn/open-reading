@@ -300,7 +300,7 @@ class BookSourceChapter {
 ///
 /// Sources that do not implement pagination may omit `page`/`pageSize`/
 /// `hasMore` and return every chapter in `items`; that response parses as a
-/// single, complete page (`hasMore: false`), matching protocol 1.2 behavior.
+/// single, complete page (`hasMore: false`), matching legacy unpaged behavior.
 class BookSourceChapterPage {
   final List<BookSourceChapter> items;
   final int page;

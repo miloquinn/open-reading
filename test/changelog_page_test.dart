@@ -17,6 +17,13 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('版本更新记录'), findsOneWidget);
+    expect(find.text('v2.2.4'), findsOneWidget);
+    expect(
+      find.text('书源支持升级到 ORSP 1.3，并按各书源声明的单页上限完整获取章节目录'),
+      findsOneWidget,
+    );
+    expect(find.text('修复书源 HTML 使用 <br> 分隔段落时丢失段落边界的问题'), findsOneWidget);
+    expect(find.text('缩小手机首页悬浮导航高度，为内容留出更多空间'), findsOneWidget);
     expect(find.text('v2.2.1'), findsOneWidget);
     expect(
       find.text('修复平板双页仿真翻页纸背，右页翻动时会显示正向的下一左页内容'),

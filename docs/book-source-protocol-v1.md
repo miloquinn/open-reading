@@ -179,8 +179,8 @@ GET /v1/books/{bookId}/chapters?page=1&pageSize=100
 建议把 `maxCatalogPageSize` 声明得更高一些，减少客户端需要的请求次数。
 
 不支持分页的书源可以忽略这两个参数，直接返回全部章节的 `{"items": [...]}`（省略
-`page`/`pageSize`/`hasMore`）；客户端会把这种响应当作唯一一页、没有更多数据处理，与协议
-1.2 行为完全一致。
+`page`/`pageSize`/`hasMore`）；客户端会把这种响应当作唯一一页、没有更多数据处理，与旧版
+未分页行为完全一致。
 
 支持分页的书源应返回与搜索/浏览一致的信封，并在还有下一页时设置 `hasMore: true`：
 

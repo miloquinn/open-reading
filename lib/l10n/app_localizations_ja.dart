@@ -165,11 +165,11 @@ class AppLocalizationsJa extends AppLocalizations {
   String get bookSourcesProtocolRepositoryOpenFailed => 'プロトコルのリポジトリを開けませんでした';
 
   @override
-  String get bookSourcesProtocolDialogTitle => 'オープンソースプロトコル v1.2';
+  String get bookSourcesProtocolDialogTitle => 'オープンソースプロトコル v1.3';
 
   @override
   String get bookSourcesProtocolDialogBody =>
-      'サービスは /.well-known/open-reading-source.json でディスカバリードキュメントを公開し、検索、書籍詳細、章一覧、本文取得を実装します。v1.2 は、ログイン不要の公開 HTTP(S) ソース向けに運営者、連絡先、コンテンツライセンス、権利声明のメタデータを追加します。';
+      'サービスは /.well-known/open-reading-source.json でディスカバリードキュメントを公開し、検索、書籍詳細、ページ分割された章一覧、本文取得を実装します。v1.3 は完全な章一覧のページングに対応し、ログイン不要の公開 HTTP(S) ソース向け運営者、連絡先、コンテンツライセンス、権利声明メタデータを引き続き利用できます。';
 
   @override
   String get bookSourcesRightsDetails => '運営者と権利情報';
@@ -1746,6 +1746,18 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get changelogCurrentVersion => '現在のバージョン';
+
+  @override
+  String get changelog224SourceCatalogPaging =>
+      'ソース対応を ORSP 1.3 に更新し、各ソースが宣言したページ上限に従って章一覧全体を取得するようにしました';
+
+  @override
+  String get changelog224SourceHtmlParagraphs =>
+      'ソース HTML が <br> で段落を区切る場合に段落境界が失われる問題を修正しました';
+
+  @override
+  String get changelog224MobileNavigation =>
+      'モバイルホームのフローティングナビゲーションを低くし、コンテンツ領域を広げました';
 
   @override
   String get changelog221TabletBackPage =>

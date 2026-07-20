@@ -174,11 +174,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not open the protocol repository';
 
   @override
-  String get bookSourcesProtocolDialogTitle => 'Open source protocol v1.2';
+  String get bookSourcesProtocolDialogTitle => 'Open source protocol v1.3';
 
   @override
   String get bookSourcesProtocolDialogBody =>
-      'A source publishes /.well-known/open-reading-source.json and implements search, book details, chapter catalogs, and chapter content. Version 1.2 adds operator, contact, license, and rights-statement metadata for public HTTP(S) sources that do not require sign-in.';
+      'A source publishes /.well-known/open-reading-source.json and implements search, book details, paginated chapter catalogs, and chapter content. Version 1.3 adds complete catalog pagination while retaining operator, contact, license, and rights-statement metadata for public HTTP(S) sources that do not require sign-in.';
 
   @override
   String get bookSourcesRightsDetails => 'Operator and rights';
@@ -1810,6 +1810,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get changelogCurrentVersion => 'Current version';
+
+  @override
+  String get changelog224SourceCatalogPaging =>
+      'Updated source support to ORSP 1.3 and fetch complete chapter catalogs using each source\'s declared page-size limit';
+
+  @override
+  String get changelog224SourceHtmlParagraphs =>
+      'Fixed paragraph boundaries being lost when source HTML separates paragraphs with <br> elements';
+
+  @override
+  String get changelog224MobileNavigation =>
+      'Reduced the mobile home floating navigation height to leave more room for content';
 
   @override
   String get changelog221TabletBackPage =>

@@ -164,11 +164,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bookSourcesProtocolRepositoryOpenFailed => '无法打开书源协议仓库';
 
   @override
-  String get bookSourcesProtocolDialogTitle => '开放书源协议 v1.2';
+  String get bookSourcesProtocolDialogTitle => '开放书源协议 v1.3';
 
   @override
   String get bookSourcesProtocolDialogBody =>
-      '服务在 /.well-known/open-reading-source.json 发布发现文档，并实现搜索、书籍详情、章节目录与章节正文接口。v1.2 为公开、无需登录的 HTTP(S) 书源增加运营者、联系方式、内容许可与权利声明元数据。';
+      '服务在 /.well-known/open-reading-source.json 发布发现文档，并实现搜索、书籍详情、分页章节目录与章节正文接口。v1.3 支持完整目录分页，并保留公开、无需登录的 HTTP(S) 书源运营者、联系方式、内容许可与权利声明元数据。';
 
   @override
   String get bookSourcesRightsDetails => '运营者与权利信息';
@@ -1734,6 +1734,17 @@ class AppLocalizationsZh extends AppLocalizations {
   String get changelogCurrentVersion => '当前版本';
 
   @override
+  String get changelog224SourceCatalogPaging =>
+      '书源支持升级到 ORSP 1.3，并按各书源声明的单页上限完整获取章节目录';
+
+  @override
+  String get changelog224SourceHtmlParagraphs =>
+      '修复书源 HTML 使用 <br> 分隔段落时丢失段落边界的问题';
+
+  @override
+  String get changelog224MobileNavigation => '缩小手机首页悬浮导航高度，为内容留出更多空间';
+
+  @override
   String get changelog221TabletBackPage => '修复平板双页仿真翻页纸背，右页翻动时会显示正向的下一左页内容';
 
   @override
@@ -2844,11 +2855,11 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get bookSourcesProtocolRepositoryOpenFailed => '無法開啟書源協定倉庫';
 
   @override
-  String get bookSourcesProtocolDialogTitle => '開放書源協定 v1.2';
+  String get bookSourcesProtocolDialogTitle => '開放書源協定 v1.3';
 
   @override
   String get bookSourcesProtocolDialogBody =>
-      '服務在 /.well-known/open-reading-source.json 發布探索文件，並實作搜尋、書籍詳情、章節目錄與章節內文介面。v1.2 為公開、無需登入的 HTTP(S) 書源加入營運者、聯絡方式、內容授權與權利聲明中繼資料。';
+      '服務在 /.well-known/open-reading-source.json 發布探索文件，並實作搜尋、書籍詳情、分頁章節目錄與章節內文介面。v1.3 支援完整目錄分頁，並保留公開、無需登入的 HTTP(S) 書源營運者、聯絡方式、內容授權與權利聲明中繼資料。';
 
   @override
   String get bookSourcesRightsDetails => '營運者與權利資訊';
@@ -4412,6 +4423,17 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get changelogCurrentVersion => '目前版本';
+
+  @override
+  String get changelog224SourceCatalogPaging =>
+      '書源支援升級至 ORSP 1.3，並依各書源宣告的單頁上限完整取得章節目錄';
+
+  @override
+  String get changelog224SourceHtmlParagraphs =>
+      '修正書源 HTML 使用 <br> 分隔段落時遺失段落邊界的問題';
+
+  @override
+  String get changelog224MobileNavigation => '縮小手機首頁懸浮導覽高度，為內容保留更多空間';
 
   @override
   String get changelog221TabletBackPage => '修正平板雙頁擬真翻頁紙背，右頁翻動時會顯示正向的下一張左頁內容';
