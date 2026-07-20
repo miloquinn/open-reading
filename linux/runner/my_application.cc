@@ -25,6 +25,26 @@ static const char* get_localized_app_name() {
   return "OpenReading";
 }
 
+static void set_window_icon(GtkWindow* window) {
+  g_autoptr(GError) error = nullptr;
+  g_autofree gchar* executable_path =
+      g_file_read_link("/proc/self/exe", &error);
+  if (executable_path == nullptr) {
+    g_warning("Failed to locate executable for window icon: %s",
+              error->message);
+    return;
+  }
+
+  g_autofree gchar* executable_dir = g_path_get_dirname(executable_path);
+  g_autofree gchar* icon_path =
+      g_build_filename(executable_dir, "data", "flutter_assets", "assets",
+                       "images", "app_icon_desktop.png", nullptr);
+  if (!gtk_window_set_icon_from_file(window, icon_path, &error)) {
+    g_warning("Failed to load window icon from %s: %s", icon_path,
+              error->message);
+  }
+}
+
 struct _MyApplication {
   GtkApplication parent_instance;
   char** dart_entrypoint_arguments;
@@ -68,6 +88,7 @@ static void my_application_activate(GApplication* application) {
     gtk_window_set_title(window, app_name);
   }
 
+  set_window_icon(window);
   gtk_window_set_default_size(window, 1280, 720);
   gtk_widget_show(GTK_WIDGET(window));
 

@@ -3,10 +3,7 @@
     "refractivity"
   ],
   "fill" : {
-    "linear-gradient" : [
-      "display-p3:0.46135,0.80866,0.89940,1.00000",
-      "display-p3:1.00000,1.00000,1.00000,1.00000"
-    ]
+    "solid" : "display-p3:1.00000,1.00000,1.00000,1.00000"
   },
   "groups" : [
     {
@@ -42,9 +39,26 @@
     {
       "layers" : [
         {
+          "blend-mode" : "normal",
+          "fill" : {
+            "linear-gradient" : [
+              "display-p3:0.54297,0.45312,0.96191,0.19000",
+              "display-p3:0.24203,0.54530,0.95747,0.20000"
+            ],
+            "orientation" : {
+              "start" : {
+                "x" : 0.5,
+                "y" : 1
+              },
+              "stop" : {
+                "x" : 0.5,
+                "y" : 0
+              }
+            }
+          },
           "image-name" : "gpt2-left-page.png",
           "name" : "gpt2-left-page",
-          "opacity" : 0.94,
+          "opacity" : 0.81,
           "position" : {
             "scale" : 1.13,
             "translation-in-points" : [
