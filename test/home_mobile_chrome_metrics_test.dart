@@ -14,13 +14,13 @@ void main() {
 
       expect(metrics.systemTopInset, 59);
       expect(metrics.systemBottomInset, 34);
-      expect(metrics.floatingNavHeight, 64);
+      expect(metrics.floatingNavHeight, 56);
       expect(metrics.topBarHeight, 119);
       expect(metrics.pageTopPadding, 127);
       expect(metrics.navBottomInset, 44);
-      expect(metrics.navContainerHeight, 108);
-      expect(metrics.pageBottomPadding, 118);
-      expect(metrics.floatingActionBottomMargin, 123);
+      expect(metrics.navContainerHeight, 100);
+      expect(metrics.pageBottomPadding, 110);
+      expect(metrics.floatingActionBottomMargin, 115);
     });
 
     test('sizes the floating navigation close to the phone screen edges', () {
@@ -70,9 +70,9 @@ void main() {
       expect(metrics.topBarHeight, 84);
       expect(metrics.pageTopPadding, 92);
       expect(metrics.navBottomInset, 34);
-      expect(metrics.navContainerHeight, 98);
-      expect(metrics.pageBottomPadding, 108);
-      expect(metrics.floatingActionBottomMargin, 113);
+      expect(metrics.navContainerHeight, 90);
+      expect(metrics.pageBottomPadding, 100);
+      expect(metrics.floatingActionBottomMargin, 105);
     });
 
     test('preserves large system insets instead of clamping them', () {
@@ -85,7 +85,7 @@ void main() {
 
       expect(metrics.systemBottomInset, 60);
       expect(metrics.navBottomInset, 70);
-      expect(metrics.pageBottomPadding, 144);
+      expect(metrics.pageBottomPadding, 136);
     });
   });
 }

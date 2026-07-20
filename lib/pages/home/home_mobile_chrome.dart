@@ -10,7 +10,7 @@ import 'package:flutter/widgets.dart';
 /// 2) 让 HomeShell 与移动端首页内容页共享同一套尺寸基准
 /// 3) 后续改动时只改这一处
 const double kHomeMobileTopBarContentHeight = 60.0;
-const double kHomeMobileFloatingNavHeight = 64.0;
+const double kHomeMobileFloatingNavHeight = 56.0;
 const double kHomeMobileFloatingNavBottomGap = 10.0;
 const double kHomeMobileFloatingNavScreenGap = 20.0;
 const double kHomeMobileFloatingNavHorizontalPadding = 4.0;
