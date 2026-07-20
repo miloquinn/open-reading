@@ -32,15 +32,15 @@ dependencies:
   flutter_localizations:
     sdk: flutter
 
-  cupertino_icons: ^1.0.2
+  cupertino_icons: ^1.0.9
 
   # 文件处理和存储
   file_picker: ^8.3.7
-  shared_preferences: ^2.5.3
+  shared_preferences: ^2.5.5
   package_info_plus: ^9.0.1
-  sqflite: ^2.4.2 # 移动平台数据库
+  sqflite: ^2.4.3 # 移动平台数据库
   path: ^1.9.1 # 数据库路径处理
-  crypto: ^3.0.6 # 加密和哈希计算
+  crypto: ^3.0.7 # 加密和哈希计算
 
   # 电子书格式支持
   epubx: ^4.0.0
@@ -57,18 +57,18 @@ dependencies:
   fl_chart: ^0.68.0
   provider: ^6.1.5
   scrollable_positioned_list: ^0.3.8
-  sqflite_common_ffi: ^2.3.6
-  path_provider: ^2.1.5
+  sqflite_common_ffi: ^2.4.2
+  path_provider: ^2.1.6
   intl: ^0.20.2
 
   # TTS 朗读
   flutter_tts: ^4.2.5
 
   # 网络请求（AI 与封面检索）
-  dio: ^5.9.0
+  dio: ^5.10.0
 
   # 高亮笔记
-  uuid: ^4.5.1
+  uuid: ^4.6.0
 
   # 字符编码支持（GB2312/GBK）
   gbk_codec: ^0.4.0
