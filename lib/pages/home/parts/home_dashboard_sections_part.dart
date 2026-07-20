@@ -1267,7 +1267,7 @@ extension _HomeDashboardSections on _HomeDashboardPageState {
         text = '';
     }
     return SideTitleWidget(
-      axisSide: AxisSide.bottom,
+      meta: meta,
       space: 4.0,
       child: Text(text, style: style),
     );
