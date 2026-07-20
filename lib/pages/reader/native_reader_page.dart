@@ -1399,6 +1399,18 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     List<_NativeChapter> chapters, {
     String? currentAnchorKey,
   }) async {
+    // Built once outside the StatefulBuilder below: that builder re-runs on
+    // every keyboard show/hide animation frame, and reallocating a
+    // ReaderNavigationChapter per chapter on every frame is severe jank for
+    // books with thousands of chapters.
+    final navigationChapters = [
+      for (var index = 0; index < chapters.length; index++)
+        ReaderNavigationChapter(
+          title: chapters[index].title,
+          index: index,
+          depth: chapters[index].depth,
+        ),
+    ];
     await showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
@@ -1413,14 +1425,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
           height: MediaQuery.sizeOf(context).height * 0.86,
           child: ReaderNavigationSheet(
             palette: _readerTheme,
-            chapters: [
-              for (var index = 0; index < chapters.length; index++)
-                ReaderNavigationChapter(
-                  title: chapters[index].title,
-                  index: index,
-                  depth: chapters[index].depth,
-                ),
-            ],
+            chapters: navigationChapters,
             currentChapterIndex: _chapterIndex,
             bookmarks: _bookmarks,
             currentAnchorKey: currentAnchorKey,
@@ -2447,6 +2452,13 @@ class _NativeReaderPageState extends State<NativeReaderPage>
               final chapter = chapters[_chapterIndex];
               return Scaffold(
                 backgroundColor: Colors.transparent,
+                // The reader page has no text field of its own, but Scaffold
+                // shrinks `body` for ANY keyboard inset by default, including
+                // one raised by a TextField inside a modal sheet stacked on
+                // top (e.g. the TOC search box). That resize changes the
+                // LayoutBuilder constraints below every animation frame,
+                // forcing a full chapter re-pagination each frame.
+                resizeToAvoidBottomInset: false,
                 body: ReaderThemeBackground(
                   palette: _readerTheme,
                   child: LayoutBuilder(
@@ -3059,6 +3071,21 @@ TextSpan _styledSpanForRange(
   return TextSpan(style: base, children: children);
 }
 
+/// 获取 <img>/<svg><image> 元素的图片地址。
+///
+/// package:html 对带命名空间前缀的属性（如 xlink:href）使用 [html_dom.AttributeName]
+/// 作为 attributes map 的 key 而非普通字符串，直接用字符串字面量查找会失配，
+/// 因此这里按 toString() 结果比对。
+String? _epubImageSrc(html_dom.Element element) {
+  for (final entry in element.attributes.entries) {
+    final key = entry.key.toString();
+    if (key == 'src' || key == 'href' || key == 'xlink:href') {
+      return entry.value;
+    }
+  }
+  return null;
+}
+
 Future<List<Map<String, dynamic>>> _parseEpubChapters(Uint8List bytes) async {
   final epub = await EpubReader.readBook(bytes);
   final result = <Map<String, dynamic>>[];
@@ -3102,9 +3129,7 @@ Future<List<Map<String, dynamic>>> _parseEpubChapters(Uint8List bytes) async {
         final isImage = element.localName == 'img' ||
             (element.localName == 'image' && element.namespaceUri != null);
         if (isImage) {
-          final src = element.attributes['src'] ??
-              element.attributes['href'] ??
-              element.attributes['xlink:href'];
+          final src = _epubImageSrc(element);
           if (src == null || src.startsWith('data:')) continue;
           final name = path
               .basename(Uri.decodeFull(src.split('?').first.split('#').first))
@@ -3125,9 +3150,19 @@ Future<List<Map<String, dynamic>>> _parseEpubChapters(Uint8List bytes) async {
         }
         // 只取块的"自有文本"（排除嵌套块子树）：querySelectorAll 会同时
         // 命中 blockquote 与其内部的 p，用整棵子树的 text 会导致正文重复。
-        final text = _epubElementOwnText(element)
-            .replaceAll(RegExp(r'[ \t]+'), ' ')
-            .replaceAll(RegExp(r'\n\s*\n+'), '\n\n')
+        //
+        // 源 XHTML 常把一个段落的文本折行排版，文本节点里会带着裸换行；
+        // 这些换行只是排版折行，不是真正的段落分隔（段落间已由下方的
+        // `\n\n` 显式分隔）。除 <pre> 外一律把内部空白（含换行）折叠成
+        // 空格，否则会被 normalizeParagraphBreaks 误判成新段落，导致
+        // 首行缩进出现在折行处而非每段真正的开头。
+        final isPreformatted = element.localName == 'pre';
+        final rawText = _epubElementOwnText(element);
+        final text = (isPreformatted
+                ? rawText
+                    .replaceAll(RegExp(r'[ \t]+'), ' ')
+                    .replaceAll(RegExp(r'\n\s*\n+'), '\n\n')
+                : rawText.replaceAll(RegExp(r'\s+'), ' '))
             .trim();
         if (text.isNotEmpty) {
           if (plainText.isNotEmpty) plainText.write('\n\n');

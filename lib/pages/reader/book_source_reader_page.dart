@@ -1031,6 +1031,17 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   Future<void> _showCatalog() async {
     if (_chapters.isEmpty) return;
     _controlsTimer?.cancel();
+    // Built once outside the StatefulBuilder below: that builder re-runs on
+    // every keyboard show/hide animation frame, and reallocating a
+    // ReaderNavigationChapter per chapter on every frame is severe jank for
+    // books with thousands of chapters.
+    final navigationChapters = [
+      for (var index = 0; index < _chapters.length; index++)
+        ReaderNavigationChapter(
+          title: _chapters[index].title,
+          index: index,
+        ),
+    ];
     await showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
@@ -1045,13 +1056,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
           height: MediaQuery.sizeOf(context).height * 0.86,
           child: ReaderNavigationSheet(
             palette: _readerTheme,
-            chapters: [
-              for (var index = 0; index < _chapters.length; index++)
-                ReaderNavigationChapter(
-                  title: _chapters[index].title,
-                  index: index,
-                ),
-            ],
+            chapters: navigationChapters,
             currentChapterIndex: _chapterIndex,
             bookmarks: _bookmarks,
             currentAnchorKey: _currentBookmarkAnchorKey,
@@ -1414,6 +1419,13 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
           data: _readerThemeData,
           child: Scaffold(
             backgroundColor: Colors.transparent,
+            // The reader page has no text field of its own, but Scaffold
+            // shrinks `body` for ANY keyboard inset by default, including
+            // one raised by a TextField inside a modal sheet stacked on top
+            // (e.g. the TOC search box). That resize changes the layout
+            // constraints the pagination below reacts to on every animation
+            // frame, forcing a full chapter re-pagination each frame.
+            resizeToAvoidBottomInset: false,
             body: ReaderThemeBackground(
               palette: _readerTheme,
               child: ReaderPullBookmark(

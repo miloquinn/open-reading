@@ -54,11 +54,15 @@ class _ReaderNavigationSheetState extends State<ReaderNavigationSheet>
   final Set<int> _collapsedChapterPositions = <int>{};
   String _query = '';
 
+  List<_ReaderNavigationTreeEntry> _treeEntries = const [];
+  List<_ReaderNavigationTreeEntry>? _visibleCache;
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this)
       ..addListener(_handleTabChanged);
+    _treeEntries = _computeTreeEntries();
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToCurrent());
   }
 
@@ -81,6 +85,8 @@ class _ReaderNavigationSheetState extends State<ReaderNavigationSheet>
     super.didUpdateWidget(oldWidget);
     if (!_sameChapterTree(oldWidget.chapters, widget.chapters)) {
       _collapsedChapterPositions.clear();
+      _treeEntries = _computeTreeEntries();
+      _visibleCache = null;
     }
     if (oldWidget.currentChapterIndex != widget.currentChapterIndex) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToCurrent());
@@ -105,7 +111,7 @@ class _ReaderNavigationSheetState extends State<ReaderNavigationSheet>
     return true;
   }
 
-  List<_ReaderNavigationTreeEntry> _buildTreeEntries() {
+  List<_ReaderNavigationTreeEntry> _computeTreeEntries() {
     final entries = <_ReaderNavigationTreeEntry>[];
     final ancestorPositions = <int>[];
     for (var position = 0; position < widget.chapters.length; position++) {
@@ -134,7 +140,11 @@ class _ReaderNavigationSheetState extends State<ReaderNavigationSheet>
   }
 
   List<_ReaderNavigationTreeEntry> get _visibleChapters {
-    final entries = _buildTreeEntries();
+    return _visibleCache ??= _computeVisibleChapters();
+  }
+
+  List<_ReaderNavigationTreeEntry> _computeVisibleChapters() {
+    final entries = _treeEntries;
     final normalized = _query.trim().toLowerCase();
     if (normalized.isNotEmpty) {
       final includedPositions = <int>{};
@@ -171,6 +181,7 @@ class _ReaderNavigationSheetState extends State<ReaderNavigationSheet>
       if (!_collapsedChapterPositions.remove(entry.position)) {
         _collapsedChapterPositions.add(entry.position);
       }
+      _visibleCache = null;
     });
   }
 
@@ -180,11 +191,14 @@ class _ReaderNavigationSheetState extends State<ReaderNavigationSheet>
     }
     if (_query.isNotEmpty) {
       _searchController.clear();
-      setState(() => _query = '');
+      setState(() {
+        _query = '';
+        _visibleCache = null;
+      });
       WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToCurrent());
       return;
     }
-    final entries = _buildTreeEntries();
+    final entries = _treeEntries;
     final currentPosition = entries.indexWhere(
       (entry) => entry.chapter.index == widget.currentChapterIndex,
     );
@@ -197,7 +211,7 @@ class _ReaderNavigationSheetState extends State<ReaderNavigationSheet>
       ancestorPosition = entries[ancestorPosition].parentPosition;
     }
     if (expandedAncestor) {
-      setState(() {});
+      setState(() => _visibleCache = null);
       WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToCurrent());
       return;
     }
@@ -379,7 +393,10 @@ class _ReaderNavigationSheetState extends State<ReaderNavigationSheet>
               Expanded(
                 child: TextField(
                   controller: _searchController,
-                  onChanged: (value) => setState(() => _query = value),
+                  onChanged: (value) => setState(() {
+                    _query = value;
+                    _visibleCache = null;
+                  }),
                   textInputAction: TextInputAction.search,
                   decoration: InputDecoration(
                     hintText: context.l10n.readerSearchChapters,
