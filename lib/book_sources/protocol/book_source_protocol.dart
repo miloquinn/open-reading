@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 const String openReadingSourceProtocol = 'open-reading-source';
-const String openReadingSourceProtocolVersion = '1.2';
+const String openReadingSourceProtocolVersion = '1.3';
 const String openReadingSourceProtocolRepositoryUrl =
     'https://github.com/miloquinn/open-reading-source-protocol';
 const String openReadingRightsReportUrl =
@@ -12,7 +12,10 @@ const String openReadingSourceDiscoveryPath =
 class BookSourceProtocolException implements Exception {
   final String message;
 
-  const BookSourceProtocolException(this.message);
+  /// The source-supplied `error.code`, when the failure carried one.
+  final String? code;
+
+  const BookSourceProtocolException(this.message, {this.code});
 
   @override
   String toString() => message;
@@ -281,6 +284,45 @@ class BookSourceChapter {
       order: (json['order'] as num?)?.toInt() ?? 0,
       updatedAt:
           updatedAtValue == null ? null : DateTime.tryParse(updatedAtValue),
+    );
+  }
+}
+
+/// One page of a book's chapter catalog.
+///
+/// Sources that do not implement pagination may omit `page`/`pageSize`/
+/// `hasMore` and return every chapter in `items`; that response parses as a
+/// single, complete page (`hasMore: false`), matching protocol 1.2 behavior.
+class BookSourceChapterPage {
+  final List<BookSourceChapter> items;
+  final int page;
+  final int pageSize;
+  final int? total;
+  final bool hasMore;
+
+  const BookSourceChapterPage({
+    required this.items,
+    required this.page,
+    required this.pageSize,
+    required this.hasMore,
+    this.total,
+  });
+
+  factory BookSourceChapterPage.fromJson(Map<String, dynamic> json) {
+    final rawItems = json['items'];
+    if (rawItems is! List) {
+      throw const BookSourceProtocolException(
+        'Chapter response must contain an items array.',
+      );
+    }
+    return BookSourceChapterPage(
+      items: rawItems
+          .map((item) => BookSourceChapter.fromJson(_jsonMap(item)))
+          .toList(growable: false),
+      page: (json['page'] as num?)?.toInt() ?? 1,
+      pageSize: (json['pageSize'] as num?)?.toInt() ?? rawItems.length,
+      total: (json['total'] as num?)?.toInt(),
+      hasMore: json['hasMore'] == true,
     );
   }
 }

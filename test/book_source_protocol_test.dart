@@ -101,6 +101,38 @@ void main() {
       expect(content.content, '<p>Chapter body</p>');
     });
 
+    test('parses a legacy single-page chapter response', () {
+      final page = BookSourceChapterPage.fromJson({
+        'items': [
+          {'id': 'chapter-1', 'title': 'Chapter One', 'order': 1},
+          {'id': 'chapter-2', 'title': 'Chapter Two', 'order': 2},
+        ],
+      });
+
+      expect(page.items, hasLength(2));
+      expect(page.page, 1);
+      expect(page.pageSize, 2);
+      expect(page.hasMore, isFalse);
+      expect(page.total, isNull);
+    });
+
+    test('parses a paginated chapter response', () {
+      final page = BookSourceChapterPage.fromJson({
+        'items': [
+          {'id': 'chapter-1', 'title': 'Chapter One', 'order': 1},
+        ],
+        'page': 1,
+        'pageSize': 1,
+        'total': 3,
+        'hasMore': true,
+      });
+
+      expect(page.items.single.id, 'chapter-1');
+      expect(page.pageSize, 1);
+      expect(page.total, 3);
+      expect(page.hasMore, isTrue);
+    });
+
     test('normalizes service and discovery URLs', () {
       expect(
         BookSourceClient.normalizeManifestUri('https://example.org').toString(),

@@ -134,7 +134,7 @@ class ExampleBookSourceServer {
         return;
       }
       if (segments.length == 5 && segments[4] == 'chapters') {
-        _chapters(request.response, bookId);
+        _chapters(request, bookId);
         return;
       }
       if (segments.length == 6 && segments[4] == 'chapters') {
@@ -163,7 +163,7 @@ class ExampleBookSourceServer {
     );
     return {
       'protocol': 'open-reading-source',
-      'protocolVersion': '1.2',
+      'protocolVersion': '1.3',
       'id': sourceId,
       'name': sourceName,
       'description': '仓库内置的本地协议测试书源，仅包含原创示例文本。',
@@ -293,17 +293,39 @@ class ExampleBookSourceServer {
     _json(response, HttpStatus.ok, entry.book);
   }
 
-  void _chapters(HttpResponse response, String bookId) {
+  /// Demonstrates protocol 1.3 chapter pagination: `maxPageSize` lets a book
+  /// force multiple pages even for a short catalog, mirroring how a real
+  /// source may cap page size below whatever the client requests.
+  void _chapters(HttpRequest request, String bookId) {
     final entry = _books[bookId];
     if (entry == null) {
       _notFound(
-          response, 'BOOK_NOT_FOUND', 'The requested book was not found.');
+        request.response,
+        'BOOK_NOT_FOUND',
+        'The requested book was not found.',
+      );
       return;
     }
-    _json(response, HttpStatus.ok, {
-      'items': entry.chapters
-          .map((chapter) => chapter.metadata)
-          .toList(growable: false),
+    final page = _positiveInt(request.uri.queryParameters['page'], fallback: 1);
+    final requestedPageSize = _positiveInt(
+      request.uri.queryParameters['pageSize'],
+      fallback: entry.chapters.length,
+    );
+    final pageSize = requestedPageSize.clamp(1, entry.maxPageSize);
+    final start = (page - 1) * pageSize;
+    final items = start >= entry.chapters.length
+        ? const <Map<String, Object>>[]
+        : entry.chapters
+            .skip(start)
+            .take(pageSize)
+            .map((chapter) => chapter.metadata)
+            .toList(growable: false);
+    _json(request.response, HttpStatus.ok, {
+      'items': items,
+      'page': page,
+      'pageSize': pageSize,
+      'total': entry.chapters.length,
+      'hasMore': start + items.length < entry.chapters.length,
     });
   }
 
@@ -380,7 +402,16 @@ class _ExampleBook {
   final Map<String, Object> book;
   final List<_ExampleChapter> chapters;
 
-  const _ExampleBook({required this.book, required this.chapters});
+  /// Largest chapter page this book will ever return, even if a client asks
+  /// for more. Defaults high enough that short example books always answer
+  /// in a single page.
+  final int maxPageSize;
+
+  const _ExampleBook({
+    required this.book,
+    required this.chapters,
+    this.maxPageSize = 500,
+  });
 }
 
 class _ExampleChapter {
@@ -451,6 +482,54 @@ const Map<String, _ExampleBook> _books = {
         order: 1,
         content: '夜色落下时，书架没有发出声音。'
             '只有被翻开的那一页，替远方的作者继续说话。',
+      ),
+    ],
+  ),
+  'paginated-serial': _ExampleBook(
+    book: {
+      'id': 'paginated-serial',
+      'title': '分页连载',
+      'author': 'Open Reading',
+      'description': '用于验证章节目录分页的原创示例：本书把每页章节数限制为 2，'
+          '客户端必须跟随 hasMore 翻页才能取全。',
+      'categories': ['原创', '测试'],
+      'status': 'ongoing',
+      'latestChapter': '第五章 终章',
+      'updatedAt': '2026-07-11T00:00:00Z',
+    },
+    // 服务端把单页强制限制在 2 章，即使客户端请求更大的 pageSize，
+    // 用来验证客户端会跟着 hasMore 继续翻页，而不是只取第一页就停下。
+    maxPageSize: 2,
+    chapters: [
+      _ExampleChapter(
+        id: 'serial-1',
+        title: '第一章 开篇',
+        order: 1,
+        content: '故事从第一页开始，但远不是全部。',
+      ),
+      _ExampleChapter(
+        id: 'serial-2',
+        title: '第二章 转折',
+        order: 2,
+        content: '翻到第二页时，情节才刚刚展开。',
+      ),
+      _ExampleChapter(
+        id: 'serial-3',
+        title: '第三章 深入',
+        order: 3,
+        content: '第三页揭开了更多线索。',
+      ),
+      _ExampleChapter(
+        id: 'serial-4',
+        title: '第四章 高潮',
+        order: 4,
+        content: '第四页把故事推向高潮。',
+      ),
+      _ExampleChapter(
+        id: 'serial-5',
+        title: '第五章 终章',
+        order: 5,
+        content: '第五页收尾，整本书至此才算读完。',
       ),
     ],
   ),

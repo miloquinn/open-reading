@@ -1,6 +1,6 @@
 {
   "protocol": "open-reading-source",
-  "protocolVersion": "1.2",
+  "protocolVersion": "1.3",
   "id": "org.example.public-books",
   "name": "Example Public Books",
   "description": "A minimal Open Reading compatible source",
