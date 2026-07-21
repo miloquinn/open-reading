@@ -2474,6 +2474,30 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get downloadTasksTitle => 'ダウンロード';
+
+  @override
+  String get downloadTasksEmpty => 'ダウンロード中の項目はありません';
+
+  @override
+  String get downloadTaskQueued => 'ダウンロード待ち';
+
+  @override
+  String get downloadTaskDownloading => 'バックグラウンドでダウンロード中';
+
+  @override
+  String get downloadTaskCompleted => 'ダウンロード完了';
+
+  @override
+  String get downloadTaskFailed => 'ダウンロード失敗';
+
+  @override
+  String get downloadContinueInBackground => 'バックグラウンドで続ける';
+
+  @override
+  String get downloadRunningInBackground => 'ダウンロードをバックグラウンドで続行します';
+
+  @override
   String get bookSourceExitAddTitle => '本棚に追加しますか？';
 
   @override

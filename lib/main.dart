@@ -1,6 +1,7 @@
 // 文件说明：应用启动入口，负责初始化数据库、依赖注入、主题、国际化与全局服务。
 // 技术要点：Flutter Localizations、Provider、SharedPreferences、SQLite FFI、Path Provider。
 
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -12,10 +13,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'l10n/app_localizations.dart';
+import 'core/reader/native_reader_service.dart';
 import 'pages/home/home_shell_page.dart';
 import 'pages/legal/user_agreement_page.dart';
 import 'services/books/book_services.dart';
+import 'services/core/app_update_download_service.dart';
+import 'services/core/background_download_notifier.dart';
 import 'services/core/core_services.dart';
+import 'services/library/download_task_controller.dart';
 import 'utils/app_themes.dart';
 import 'services/tts_service.dart';
 import 'package:path_provider/path_provider.dart';
@@ -78,6 +83,9 @@ void main() async {
             create: (_) => AppSettingsNotifier(),
           ),
           provider.ChangeNotifierProvider(create: (_) => TtsService()),
+          provider.ChangeNotifierProvider(
+            create: (_) => DownloadTaskController(),
+          ),
         ],
         child: const XxReadApp(),
       ),
@@ -382,16 +390,28 @@ class XxReadApp extends StatefulWidget {
 }
 
 class _XxReadAppState extends State<XxReadApp> {
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
   bool? _hasAcceptedAgreement;
   bool _isBootstrapped = false;
   bool _showFirstHomeSupportAfterAgreement = false;
   _BootstrapError? _bootstrapError;
+  StreamSubscription<BackgroundDownloadTap>? _notificationTapSubscription;
+  BackgroundDownloadTap? _pendingNotificationTap;
 
   @override
   void initState() {
     super.initState();
+    _notificationTapSubscription =
+        BackgroundDownloadNotifier.taps.listen(_handleNotificationTap);
+    unawaited(BackgroundDownloadNotifier.initialize());
     _bootstrapServices();
     _checkAgreementStatus();
+  }
+
+  @override
+  void dispose() {
+    _notificationTapSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _bootstrapServices() async {
@@ -439,6 +459,7 @@ class _XxReadAppState extends State<XxReadApp> {
       _isBootstrapped = true;
       _bootstrapError = null;
     });
+    unawaited(_openPendingNotificationTap());
   }
 
   /// 检查用户是否已同意协议
@@ -448,6 +469,7 @@ class _XxReadAppState extends State<XxReadApp> {
     setState(() {
       _hasAcceptedAgreement = hasAccepted;
     });
+    unawaited(_openPendingNotificationTap());
     debugPrint('📋 协议状态检查: ${hasAccepted ? "已同意" : "未同意"}');
   }
 
@@ -457,7 +479,43 @@ class _XxReadAppState extends State<XxReadApp> {
       _hasAcceptedAgreement = true;
       _showFirstHomeSupportAfterAgreement = true;
     });
+    unawaited(_openPendingNotificationTap());
     debugPrint('✅ 用户协议已同意，进入主应用');
+  }
+
+  void _handleNotificationTap(BackgroundDownloadTap tap) {
+    _pendingNotificationTap = tap;
+    unawaited(_openPendingNotificationTap());
+  }
+
+  Future<void> _openPendingNotificationTap() async {
+    if (!_isBootstrapped || _hasAcceptedAgreement != true) return;
+    final tap = _pendingNotificationTap;
+    if (tap == null) return;
+    _pendingNotificationTap = null;
+    if (tap.kind == BackgroundDownloadKind.update) {
+      final apkPath = tap.apkPath;
+      final buildNumber = tap.expectedBuildNumber;
+      if (apkPath != null && buildNumber != null) {
+        try {
+          await AppUpdateDownloadService.installDownloadedApk(
+            apkPath,
+            expectedBuildNumber: buildNumber,
+          );
+        } catch (error) {
+          debugPrint('open downloaded update failed: $error');
+        }
+      }
+      return;
+    }
+    final bookId = tap.bookId;
+    final context = _navigatorKey.currentContext;
+    if (bookId == null || context == null) return;
+    final book = await BookDao().getBookById(bookId);
+    if (book == null || !mounted || _navigatorKey.currentContext == null) {
+      return;
+    }
+    await NativeReaderService.openBook(_navigatorKey.currentContext!, book);
   }
 
   /// 处理用户拒绝协议
@@ -476,6 +534,7 @@ class _XxReadAppState extends State<XxReadApp> {
         // 避免与阅读页面的全屏模式冲突
 
         return MaterialApp(
+          navigatorKey: _navigatorKey,
           onGenerateTitle: (context) => context.l10n.appTitle,
           debugShowCheckedModeBanner: false,
           // 🚀 启用高性能渲染，支持120Hz高刷新率

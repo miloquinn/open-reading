@@ -4608,6 +4608,54 @@ abstract class AppLocalizations {
   /// **'Download failed: {error}'**
   String bookSourceDownloadFailed(String error);
 
+  /// No description provided for @downloadTasksTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloads'**
+  String get downloadTasksTitle;
+
+  /// No description provided for @downloadTasksEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No download tasks'**
+  String get downloadTasksEmpty;
+
+  /// No description provided for @downloadTaskQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting to download'**
+  String get downloadTaskQueued;
+
+  /// No description provided for @downloadTaskDownloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading in background'**
+  String get downloadTaskDownloading;
+
+  /// No description provided for @downloadTaskCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Download complete'**
+  String get downloadTaskCompleted;
+
+  /// No description provided for @downloadTaskFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Download failed'**
+  String get downloadTaskFailed;
+
+  /// No description provided for @downloadContinueInBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue in background'**
+  String get downloadContinueInBackground;
+
+  /// No description provided for @downloadRunningInBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Download continues in the background'**
+  String get downloadRunningInBackground;
+
   /// No description provided for @bookSourceExitAddTitle.
   ///
   /// In en, this message translates to:

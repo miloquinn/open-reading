@@ -1,6 +1,6 @@
 # Open Reading 项目结构
 
-> 最后更新：2026-07-19
+> 最后更新：2026-07-21
 > 当前版本：2.2.0
 > 本文记录稳定的项目结构、模块边界和核心数据结构，不罗列每个实现细节。
 
@@ -71,7 +71,7 @@ lib/
 ├─ models/                  Book、Bookmark、BookNote 等领域模型
 ├─ pages/                   按功能域组织的页面与页面级控制器
 │  ├─ home/                 首页壳层、仪表盘、parts 与 widgets
-│  ├─ library/              书库与 import_book 导入流程
+│  ├─ library/              书库、下载任务与 import_book 导入流程
 │  ├─ book_sources/         书源发现、搜索、管理与业务 widgets
 │  ├─ reader/               本地/书源阅读器与 themes
 │  ├─ reading_stats/        阅读统计页与 parts
@@ -81,8 +81,8 @@ lib/
 ├─ services/
 │  ├─ ai/                   全局 AI 阅读服务
 │  ├─ books/                导入、格式注册表、DAO、封面、图片、修复和文本预处理
-│  ├─ core/                 数据库、设置、应用状态、缓存、双源更新检查、Android 更新下载与自定义字体存储
-│  ├─ library/              书库事件和聚合服务
+│  ├─ core/                 数据库、设置、应用状态、缓存、更新、后台下载通知与自定义字体存储
+│  ├─ library/              书库事件、聚合服务和下载任务队列
 │  ├─ reading/              阅读统计与阅读计划
 │  └─ storage/              平台存储桥接与 Android 文件夹授权
 ├─ utils/                   主题、字体、玻璃效果、本地化扩展等工具
@@ -101,7 +101,8 @@ lib/
 
 - `pages/home/home_shell_page.dart`：应用主壳和导航入口；手机悬浮底栏支持纯图标与“图标＋文字”两种模式，宽度在手机上取 `screenWidth - 36` 并以四项约 368px 为理想上限，选中底板按真实单项槽宽自适应；宽屏继续使用 `NavigationRail`。新用户完成欢迎协议后，主壳可挂载一次性开发者支持浮层。
 - `pages/reading_stats/detailed_stats_page.dart`：阅读统计详情入口与数据加载；`reading_stats/parts/` 按公共样式、总览、图表、热力图、书籍排行和成就拆分页面模块，避免统计页继续膨胀为巨型文件。
-- `pages/library/library_page.dart`：本地与在线书架。
+- `pages/library/library_page.dart`：本地与在线书架；书库顶部提供下载任务入口。
+- `pages/library/download_tasks_page.dart`：跨平台书籍下载队列的状态查看页。
 - `pages/library/import_book/import_book_page.dart`：跨平台书籍导入队列；手机确认态采用顶部安全标题栏、独立滚动书目区和页面内底部操作区，并对文件选择器返回的异常窗口 inset 做限幅。
 - `pages/reader/native_reader_page.dart`：本地 TXT、EPUB 等内容适配器。
 - `pages/reader/book_source_reader_page.dart`：在线书源章节内容适配器。
@@ -116,9 +117,11 @@ lib/
 ## 官网更新集成
 
 - `services/core/update_check_service.dart`：并行查询 GitHub Releases 与 `open.xxread.top` 的版本化 latest API，按语义版本选择最新结果；官网异常、无匹配 ABI 或元数据无效时保留 GitHub 兜底。
-- `services/core/app_update_download_service*.dart`：Android 将官网 APK 下载到私有缓存的 `.part` 文件，只允许 `open.xxread.top` HTTPS 同域跳转，并以 512 MiB 为硬上限；下载进度或响应长度超过元数据声明时立即取消，完成后校验大小与 SHA-256 再原子改名。每次新下载先清理旧 `.part`/`.apk`，异常统一清理临时文件；Web/非 IO 平台使用安全桩实现。
-- `widgets/update_check_gate.dart`：更新提示提供“稍后 / GitHub / 官网”三个选择。Android 官网路径在应用内下载后交给系统安装器；iOS 当前打开官网下载页，后续上架后再切换 App Store。
+- `services/core/app_update_download_service*.dart`：Android 将官网 APK 下载到私有缓存的 `.part` 文件，只允许 `open.xxread.top` HTTPS 同域跳转，并以 512 MiB 为硬上限；下载进度或响应长度超过元数据声明时立即取消，完成后校验大小与 SHA-256 再原子改名。下载完成后保留经校验的 APK，并由通知点击触发系统安装器；Web/非 IO 平台使用安全桩实现。
+- `services/core/background_download_notifier*.dart` 与 `services/library/download_task_controller.dart`：应用内书籍下载采用单任务队列，保留章节级三并发；Android 将活跃任务同步到前台数据同步服务和系统通知，通知权限失败不影响下载。iOS 继续只展示应用内任务状态，更新跳转官网或 GitHub。
+- `widgets/update_check_gate.dart`：更新提示提供“稍后 / GitHub / 官网”三个选择。Android 官网路径在应用内后台下载、校验后由完成通知进入安装；iOS 当前打开官网下载页，后续上架后再切换 App Store。
 - `android/app/src/main/kotlin/com/niki/xxread/AppUpdateBridge.kt`：提供 ABI 查询、未知来源安装授权和 FileProvider 安装桥；打开安装器前复核 APK 包名、实际 versionCode 和当前已安装应用的签名身份，普通应用不能静默安装。
+- `android/app/src/main/kotlin/com/niki/xxread/DownloadForegroundService.kt` 与 `BackgroundDownloadBridge.kt`：Android 13+ 请求通知权限，使用前台 `dataSync` 服务更新书籍/APK 进度通知；完成通知把书籍 ID 或已验证 APK 路径送回 Flutter，由应用打开阅读器或系统安装器。
 - 独立仓库 `miloquinn/open-reading-web` 负责 `open.xxread.top` 的页面、版本化 latest API、镜像导入、下载统计、后台、生产部署与运行数据安全；其发布和数据结构文档不再由客户端仓库重复维护。
 - `.github/workflows/release.yml` 在 GitHub Release 完成后仍通过受控 SSH 导入官网镜像，并使用 `tool/official_site/verify_official_download.py` 下载、核对官网 arm64 APK 的元数据、大小和 SHA-256。
 - `marketing/app-store/` 保存官网 WebP 的原始截图来源；界面更新时需要同步向独立官网仓库提交新的 `app/static/product/*-latest.webp`。

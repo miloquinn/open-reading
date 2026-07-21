@@ -2748,6 +2748,14 @@
       }
     }
   },
+  "downloadTasksTitle": "Downloads",
+  "downloadTasksEmpty": "No download tasks",
+  "downloadTaskQueued": "Waiting to download",
+  "downloadTaskDownloading": "Downloading in background",
+  "downloadTaskCompleted": "Download complete",
+  "downloadTaskFailed": "Download failed",
+  "downloadContinueInBackground": "Continue in background",
+  "downloadRunningInBackground": "Download continues in the background",
   "bookSourceExitAddTitle": "Add to shelf?",
   "bookSourceExitAddMessage": "Add “{title}” to your shelf as an online book? Your reading progress will be kept.",
   "@bookSourceExitAddMessage": {

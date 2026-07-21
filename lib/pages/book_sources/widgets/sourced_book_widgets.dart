@@ -4,11 +4,14 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:xxread/book_sources/models/registered_book_source.dart';
 import 'package:xxread/book_sources/protocol/book_source_protocol.dart';
 import 'package:xxread/book_sources/services/book_source_client.dart';
 import 'package:xxread/book_sources/services/book_source_shelf_service.dart';
 import 'package:xxread/pages/reader/book_source_reader_page.dart';
+import 'package:xxread/pages/library/download_tasks_page.dart';
+import 'package:xxread/services/library/download_task_controller.dart';
 import 'package:xxread/utils/book_open_transition.dart';
 import 'package:xxread/utils/localization_extension.dart';
 import 'package:xxread/utils/page_style_helper.dart';
@@ -394,63 +397,20 @@ class SourcedBookActions {
   }
 
   Future<void> _downloadSourceBook(SourcedBook result) async {
-    final progress = ValueNotifier<(int, int)>((0, 0));
-    showDialog<void>(
+    final tasks = context.read<DownloadTaskController>();
+    final taskId = tasks.enqueueBookDownload(
+      source: result.source,
+      book: result.book,
+      shelfService: shelfService,
+    );
+    await showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (dialogContext) => PopScope(
-        canPop: false,
-        child: AlertDialog(
-          title: Text(dialogContext.l10n.bookSourceDownloading),
-          content: ValueListenableBuilder<(int, int)>(
-            valueListenable: progress,
-            builder: (context, value, _) {
-              final total = value.$2;
-              final ratio = total <= 0 ? null : value.$1 / total;
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  LinearProgressIndicator(value: ratio),
-                  const SizedBox(height: 12),
-                  Text(
-                    total <= 0
-                        ? context.l10n.bookSourceFetchingCatalog
-                        : context.l10n.bookSourceDownloadProgress(
-                            value.$1,
-                            total,
-                          ),
-                  ),
-                ],
-              );
-            },
-          ),
-        ),
-      ),
+      builder: (_) => BookDownloadTaskDialog(taskId: taskId),
     );
-    try {
-      await shelfService.downloadToLocal(
-        source: result.source,
-        book: result.book,
-        onProgress: (completed, total) {
-          progress.value = (completed, total);
-        },
-      );
-      if (!context.mounted) return;
-      Navigator.of(context, rootNavigator: true).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.bookSourceDownloadComplete)),
-      );
-    } catch (error) {
-      if (!context.mounted) return;
-      Navigator.of(context, rootNavigator: true).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.l10n.bookSourceDownloadFailed('$error')),
-        ),
-      );
-    } finally {
-      progress.dispose();
-    }
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(context.l10n.downloadRunningInBackground)),
+    );
   }
 }

@@ -10,6 +10,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'package:xxread/book_sources/services/book_source_shelf_service.dart';
 import 'package:xxread/core/reader/native_reader_service.dart';
 import 'package:xxread/models/book.dart';
@@ -18,6 +19,7 @@ import 'package:xxread/pages/home/home_shell_page.dart';
 import 'package:xxread/pages/reader/book_source_reader_page.dart';
 import 'package:xxread/services/books/book_services.dart';
 import 'package:xxread/services/library/library_services.dart';
+import 'package:xxread/services/library/download_task_controller.dart';
 import 'package:xxread/utils/book_open_transition.dart';
 import 'package:xxread/utils/glass_config.dart';
 import 'package:xxread/utils/layout_helper.dart';
@@ -31,6 +33,7 @@ import 'package:xxread/widgets/scrolling_text.dart';
 import 'package:xxread/widgets/side_toast.dart';
 
 import 'import_book/import_book_page.dart';
+import 'download_tasks_page.dart';
 
 enum _LibraryFilter {
   all,
@@ -449,6 +452,18 @@ class _LibraryPageState extends State<LibraryPage> {
             ),
           ),
           const Spacer(),
+          _buildTopBarIcon(
+            icon: Icons.downloading_rounded,
+            active: context.watch<DownloadTaskController?>()?.hasActiveTasks ??
+                false,
+            tooltip: context.l10n.downloadTasksTitle,
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const DownloadTasksPage(),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
           _buildTopBarIcon(
             icon: Icons.search_rounded,
             active: _searchBarVisible,
@@ -1014,60 +1029,20 @@ class _LibraryPageState extends State<LibraryPage> {
       );
 
   Future<void> _downloadOnlineBook(Book book) async {
-    final progress = ValueNotifier<(int, int)>((0, 0));
-    showDialog<void>(
+    final source = _sourceShelfService.sourceFrom(book);
+    final sourceBook = _sourceShelfService.sourceBookFrom(book);
+    final taskId = context.read<DownloadTaskController>().enqueueBookDownload(
+          source: source,
+          book: sourceBook,
+          shelfService: _sourceShelfService,
+        );
+    await showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (context) => PopScope(
-        canPop: false,
-        child: AlertDialog(
-          title: Text(context.l10n.bookSourceDownloading),
-          content: ValueListenableBuilder<(int, int)>(
-            valueListenable: progress,
-            builder: (context, value, _) => Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                LinearProgressIndicator(
-                  value: value.$2 <= 0 ? null : value.$1 / value.$2,
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  value.$2 <= 0
-                      ? context.l10n.bookSourceFetchingCatalog
-                      : context.l10n.bookSourceDownloadProgress(
-                          value.$1,
-                          value.$2,
-                        ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+      builder: (_) => BookDownloadTaskDialog(taskId: taskId),
     );
-    try {
-      final source = _sourceShelfService.sourceFrom(book);
-      final sourceBook = _sourceShelfService.sourceBookFrom(book);
-      await _sourceShelfService.downloadToLocal(
-        source: source,
-        book: sourceBook,
-        onProgress: (completed, total) => progress.value = (completed, total),
-      );
-      if (!mounted) return;
-      Navigator.of(context, rootNavigator: true).pop();
-      showSideToast(context, context.l10n.bookSourceDownloadConverted);
-      await _loadBooks();
-    } catch (error) {
-      if (!mounted) return;
-      Navigator.of(context, rootNavigator: true).pop();
-      showSideToast(
-        context,
-        context.l10n.bookSourceDownloadFailed('$error'),
-      );
-    } finally {
-      progress.dispose();
-    }
+    if (!mounted) return;
+    showSideToast(context, context.l10n.downloadRunningInBackground);
   }
 
   void _showBookOptions(Book book) {

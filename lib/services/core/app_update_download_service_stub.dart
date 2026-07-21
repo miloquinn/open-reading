@@ -26,6 +26,12 @@ typedef UpdateDownloadProgress = void Function(int received, int total);
 class AppUpdateDownloadService {
   AppUpdateDownloadService({Dio? dio});
 
+  static Future<String> installDownloadedApk(
+    String path, {
+    required String expectedBuildNumber,
+  }) =>
+      throw const AppUpdateException(AppUpdateFailure.unsupported);
+
   Future<String> downloadAndInstall(
     WebsiteReleaseAsset asset, {
     UpdateDownloadProgress? onProgress,

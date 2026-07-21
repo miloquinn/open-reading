@@ -2440,6 +2440,30 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get downloadTasksTitle => '下载任务';
+
+  @override
+  String get downloadTasksEmpty => '没有下载任务';
+
+  @override
+  String get downloadTaskQueued => '等待下载';
+
+  @override
+  String get downloadTaskDownloading => '正在后台下载';
+
+  @override
+  String get downloadTaskCompleted => '下载完成';
+
+  @override
+  String get downloadTaskFailed => '下载失败';
+
+  @override
+  String get downloadContinueInBackground => '后台继续下载';
+
+  @override
+  String get downloadRunningInBackground => '下载任务已在后台继续';
+
+  @override
   String get bookSourceExitAddTitle => '加入书架？';
 
   @override
@@ -5657,6 +5681,30 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String bookSourceDownloadFailed(String error) {
     return '下載失敗：$error';
   }
+
+  @override
+  String get downloadTasksTitle => '下載任務';
+
+  @override
+  String get downloadTasksEmpty => '沒有下載任務';
+
+  @override
+  String get downloadTaskQueued => '等待下載';
+
+  @override
+  String get downloadTaskDownloading => '正在背景下載';
+
+  @override
+  String get downloadTaskCompleted => '下載完成';
+
+  @override
+  String get downloadTaskFailed => '下載失敗';
+
+  @override
+  String get downloadContinueInBackground => '背景繼續下載';
+
+  @override
+  String get downloadRunningInBackground => '下載任務已在背景繼續';
 
   @override
   String get bookSourceExitAddTitle => '加入書架？';

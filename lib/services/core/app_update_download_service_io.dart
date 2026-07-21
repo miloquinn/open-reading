@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'app_update_download_policy.dart';
+import 'background_download_notifier.dart';
 import 'update_check_service.dart';
 
 enum AppUpdateFailure {
@@ -64,6 +65,13 @@ class AppUpdateDownloadService {
       throw const AppUpdateException(AppUpdateFailure.cancelled);
     }
 
+    final notificationTask = BackgroundDownloadTask(
+      id: 'app-update:${asset.buildNumber}',
+      kind: BackgroundDownloadKind.update,
+      title: 'Open Reading ${asset.buildNumber}',
+    );
+    await _notify(() => BackgroundDownloadNotifier.begin(notificationTask));
+
     final cacheDirectory = await getTemporaryDirectory();
     final updatesDirectory = Directory('${cacheDirectory.path}/updates');
     await updatesDirectory.create(recursive: true);
@@ -116,6 +124,15 @@ class AppUpdateDownloadService {
                 return;
               }
               onProgress?.call(received, total);
+              unawaited(
+                _notify(
+                  () => BackgroundDownloadNotifier.progress(
+                    notificationTask,
+                    completed: received,
+                    total: total,
+                  ),
+                ),
+              );
             },
             options: Options(
               followRedirects: false,
@@ -173,25 +190,51 @@ class AppUpdateDownloadService {
       }
 
       final completedFile = await partialFile.rename(apkFile.path);
-      try {
-        return await _channel.invokeMethod<String>(
-              'installApk',
-              {
-                'path': completedFile.path,
-                'expectedBuildNumber': asset.buildNumber,
-              },
-            ) ??
-            'installer_opened';
-      } on PlatformException catch (error) {
-        await completedFile.deleteIfExists();
-        throw AppUpdateException(AppUpdateFailure.install, error);
-      } catch (error) {
-        await completedFile.deleteIfExists();
-        throw AppUpdateException(AppUpdateFailure.install, error);
-      }
+      await _notify(
+        () => BackgroundDownloadNotifier.completeUpdate(
+          notificationTask,
+          apkPath: completedFile.path,
+          expectedBuildNumber: asset.buildNumber,
+        ),
+      );
+      return 'downloaded';
+    } on AppUpdateException {
+      await _notify(() => BackgroundDownloadNotifier.fail(notificationTask));
+      rethrow;
+    } catch (_) {
+      await _notify(() => BackgroundDownloadNotifier.fail(notificationTask));
+      rethrow;
     } finally {
       active = false;
       await partialFile.deleteIfExists();
+    }
+  }
+
+  static Future<String> installDownloadedApk(
+    String path, {
+    required String expectedBuildNumber,
+  }) async {
+    try {
+      return await _channel.invokeMethod<String>(
+            'installApk',
+            {
+              'path': path,
+              'expectedBuildNumber': expectedBuildNumber,
+            },
+          ) ??
+          'installer_opened';
+    } on PlatformException catch (error) {
+      throw AppUpdateException(AppUpdateFailure.install, error);
+    } catch (error) {
+      throw AppUpdateException(AppUpdateFailure.install, error);
+    }
+  }
+
+  Future<void> _notify(Future<void> Function() action) async {
+    try {
+      await action();
+    } catch (_) {
+      // Notification failures must not interrupt a verified update download.
     }
   }
 }

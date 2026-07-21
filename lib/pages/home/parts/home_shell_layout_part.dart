@@ -421,6 +421,19 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
             onTap: _libraryController.toggleSearch,
           ),
           const SizedBox(width: 8),
+          _buildTopBarActionButton(
+            icon: Icons.downloading_rounded,
+            tooltip: context.l10n.downloadTasksTitle,
+            highlighted:
+                context.watch<DownloadTaskController?>()?.hasActiveTasks ??
+                    false,
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const DownloadTasksPage(),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
           ValueListenableBuilder<bool>(
             valueListenable: _libraryController.filterActive,
             builder: (context, active, _) => _LibraryTopBarFilterButton(

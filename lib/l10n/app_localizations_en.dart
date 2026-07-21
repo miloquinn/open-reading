@@ -2582,6 +2582,31 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get downloadTasksTitle => 'Downloads';
+
+  @override
+  String get downloadTasksEmpty => 'No download tasks';
+
+  @override
+  String get downloadTaskQueued => 'Waiting to download';
+
+  @override
+  String get downloadTaskDownloading => 'Downloading in background';
+
+  @override
+  String get downloadTaskCompleted => 'Download complete';
+
+  @override
+  String get downloadTaskFailed => 'Download failed';
+
+  @override
+  String get downloadContinueInBackground => 'Continue in background';
+
+  @override
+  String get downloadRunningInBackground =>
+      'Download continues in the background';
+
+  @override
   String get bookSourceExitAddTitle => 'Add to shelf?';
 
   @override

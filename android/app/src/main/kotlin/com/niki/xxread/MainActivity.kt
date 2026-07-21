@@ -23,6 +23,7 @@ class MainActivity : FlutterActivity() {
     private var readerKeysChannel: MethodChannel? = null
     private var safDirectoryBridge: SafDirectoryBridge? = null
     private var appUpdateBridge: AppUpdateBridge? = null
+    private var backgroundDownloadBridge: BackgroundDownloadBridge? = null
     @Volatile private var volumePagingEnabled: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -107,6 +108,10 @@ class MainActivity : FlutterActivity() {
             this,
             flutterEngine.dartExecutor.binaryMessenger,
         )
+        backgroundDownloadBridge = BackgroundDownloadBridge(
+            this,
+            flutterEngine.dartExecutor.binaryMessenger,
+        )
 
     }
 
@@ -120,6 +125,23 @@ class MainActivity : FlutterActivity() {
             return
         }
         super.onActivityResult(requestCode, resultCode, data)
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray,
+    ) {
+        if (backgroundDownloadBridge?.onRequestPermissionsResult(requestCode, grantResults) == true) {
+            return
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        backgroundDownloadBridge?.onNewIntent(intent)
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
