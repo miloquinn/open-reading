@@ -1,16 +1,44 @@
 import 'package:flutter/material.dart';
 
-import 'package:xxread/l10n/app_localizations.dart';
+import 'package:xxread/services/core/changelog_service.dart';
 import 'package:xxread/utils/localization_extension.dart';
 import 'package:xxread/utils/page_style_helper.dart';
 
-class ChangelogPage extends StatelessWidget {
-  const ChangelogPage({super.key});
+class ChangelogPage extends StatefulWidget {
+  const ChangelogPage({
+    super.key,
+    this.service,
+  });
+
+  final ChangelogService? service;
+
+  @override
+  State<ChangelogPage> createState() => _ChangelogPageState();
+}
+
+class _ChangelogPageState extends State<ChangelogPage> {
+  late final ChangelogService _service = widget.service ?? ChangelogService();
+  Locale? _locale;
+  Future<List<ChangelogEntry>>? _entries;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final locale = Localizations.localeOf(context);
+    if (_locale == locale) return;
+    _locale = locale;
+    _entries = _service.load(locale);
+  }
+
+  void _retry() {
+    final locale = _locale;
+    if (locale == null) return;
+    setState(() => _entries = _service.load(locale));
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final entries = _entries(l10n);
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.changelogPageTitle),
@@ -22,162 +50,64 @@ class ChangelogPage extends StatelessWidget {
         ),
         child: SafeArea(
           top: false,
-          child: ListView.separated(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-            itemCount: entries.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (context, index) => _VersionCard(
-              entry: entries[index],
-              currentLabel: l10n.changelogCurrentVersion,
-            ),
+          child: FutureBuilder<List<ChangelogEntry>>(
+            future: _entries,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState != ConnectionState.done) {
+                return Center(
+                  child: CircularProgressIndicator(
+                    semanticsLabel: l10n.loading,
+                  ),
+                );
+              }
+              final entries = snapshot.data;
+              if (snapshot.hasError || entries == null || entries.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.error_outline_rounded, size: 32),
+                      const SizedBox(height: 12),
+                      Text(l10n.changelogLoadFailed),
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: _retry,
+                        icon: const Icon(Icons.refresh_rounded),
+                        label: Text(l10n.retry),
+                      ),
+                    ],
+                  ),
+                );
+              }
+              return ListView.separated(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+                itemCount: entries.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                itemBuilder: (context, index) => _VersionCard(
+                  key: ValueKey('changelog-entry-${entries[index].version}'),
+                  entry: entries[index],
+                  current: index == 0,
+                  currentLabel: l10n.changelogCurrentVersion,
+                ),
+              );
+            },
           ),
         ),
       ),
     );
   }
-
-  List<_ChangelogEntry> _entries(AppLocalizations l10n) {
-    return [
-      _ChangelogEntry(
-        version: 'v2.2.6',
-        current: true,
-        items: [
-          l10n.changelog226SourceParagraphs,
-          l10n.changelog226OnlineFonts,
-          l10n.changelog226AiSettings,
-          l10n.changelog226SmoothChapterTurns,
-          l10n.changelog226BackgroundDownloads,
-          l10n.changelog226AndroidIcon,
-        ],
-      ),
-      _ChangelogEntry(
-        version: 'v2.2.5',
-        items: [
-          l10n.changelog225UnifiedTextReader,
-          l10n.changelog225SourceChapterTurn,
-          l10n.changelog225AppIcons,
-        ],
-      ),
-      _ChangelogEntry(
-        version: 'v2.2.4',
-        items: [
-          l10n.changelog224SourceCatalogPaging,
-          l10n.changelog224SourceHtmlParagraphs,
-          l10n.changelog224MobileNavigation,
-        ],
-      ),
-      _ChangelogEntry(
-        version: 'v2.2.1',
-        items: [l10n.changelog221TabletBackPage],
-      ),
-      _ChangelogEntry(
-        version: 'v2.2.0',
-        items: [
-          l10n.changelog220TabletSpread,
-          l10n.changelog220PageCurl,
-          l10n.changelog220ReaderPerformance,
-          l10n.changelog220NavigationThemes,
-          l10n.changelog220ReadingStats,
-          l10n.changelog220PageOrganization,
-          l10n.changelog220OfficialUpdates,
-          l10n.changelog220ReleaseDistribution,
-          l10n.changelog220SourcePolicy,
-        ],
-      ),
-      _ChangelogEntry(
-        version: 'v2.0.3',
-        items: [
-          l10n.changelog203DeveloperProducts,
-          l10n.changelog203Donation,
-        ],
-      ),
-      _ChangelogEntry(
-        version: 'v2.0.2',
-        items: [
-          l10n.changelog202PaperInformation,
-          l10n.changelog202PageNumberInset,
-        ],
-      ),
-      _ChangelogEntry(
-        version: 'v2.0.1',
-        items: [
-          l10n.changelog201BackwardPageTurn,
-          l10n.changelog201SnapshotPreheat,
-          l10n.changelog201SourceFilters,
-        ],
-      ),
-      _ChangelogEntry(
-        version: 'v2.0.0',
-        items: [
-          l10n.changelog200ReaderExperience,
-          l10n.changelog200CustomThemes,
-          l10n.changelog200Navigation,
-          l10n.changelog200KeepScreenOn,
-        ],
-      ),
-      _ChangelogEntry(
-        version: 'v1.2.4',
-        items: [l10n.changelog124PaperLeaf],
-      ),
-      _ChangelogEntry(
-        version: 'v1.2.2',
-        items: [l10n.changelog122ContinuousTap],
-      ),
-      _ChangelogEntry(
-        version: 'v1.2.1',
-        items: [
-          l10n.changelog121ContinuousScroll,
-          l10n.changelog121Typography,
-        ],
-      ),
-      _ChangelogEntry(
-        version: 'v1.2.0',
-        items: [
-          l10n.changelog120Typography,
-          l10n.changelog120VolumeKeys,
-          l10n.changelog120CustomFonts,
-          l10n.changelog120SystemBars,
-          l10n.changelog120BookAnimations,
-          l10n.changelog120TabletLibrary,
-          l10n.changelog120Import,
-          l10n.changelog120Covers,
-          l10n.changelog120Licenses,
-        ],
-      ),
-      _ChangelogEntry(
-        version: 'v1.1.0',
-        items: [
-          l10n.changelog110CustomFonts,
-          l10n.changelog110Bookmarks,
-        ],
-      ),
-      _ChangelogEntry(
-        version: 'v1.0.2',
-        items: [l10n.changelog102Summary],
-      ),
-      _ChangelogEntry(
-        version: 'v1.0.1',
-        items: [l10n.changelog101Summary],
-      ),
-      _ChangelogEntry(
-        version: 'v1.0.0',
-        items: [l10n.changelog100Summary],
-      ),
-      _ChangelogEntry(
-        version: 'v0.9.1',
-        items: [l10n.changelog091Summary],
-      ),
-    ];
-  }
 }
 
 class _VersionCard extends StatelessWidget {
   const _VersionCard({
+    super.key,
     required this.entry,
+    required this.current,
     required this.currentLabel,
   });
 
-  final _ChangelogEntry entry;
+  final ChangelogEntry entry;
+  final bool current;
   final String currentLabel;
 
   @override
@@ -197,12 +127,12 @@ class _VersionCard extends StatelessWidget {
           Row(
             children: [
               Text(
-                entry.version,
+                'v${entry.version}',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w800,
                     ),
               ),
-              if (entry.current) ...[
+              if (current) ...[
                 const SizedBox(width: 9),
                 Container(
                   padding: const EdgeInsets.symmetric(
@@ -257,16 +187,4 @@ class _VersionCard extends StatelessWidget {
       ),
     );
   }
-}
-
-class _ChangelogEntry {
-  const _ChangelogEntry({
-    required this.version,
-    required this.items,
-    this.current = false,
-  });
-
-  final String version;
-  final List<String> items;
-  final bool current;
 }

@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/registered_book_source.dart';
 import '../protocol/book_source_protocol.dart';
+import 'book_source_client.dart';
 
 class BookSourceRegistry {
   static const String _storageKey = 'open_reading_book_sources_v1';
@@ -93,6 +94,25 @@ class BookSourceRegistry {
     await _save(sources);
     _changesController.add(null);
     return load();
+  }
+
+  /// Re-fetches a saved source's manifest while retaining local user choices.
+  /// A manifest is not allowed to change the registered source identity.
+  Future<List<RegisteredBookSource>> refresh(
+    RegisteredBookSource source,
+    BookSourceClient client,
+  ) async {
+    final discovered = await client.discover(source.manifestUrl.toString());
+    final refreshed = RegisteredBookSource.fromManifest(
+      manifest: discovered.manifest,
+      manifestUrl: discovered.manifestUrl,
+    );
+    if (refreshed.id != source.id) {
+      throw const BookSourceProtocolException(
+        'The refreshed manifest changed the source ID. Remove the old source before adding it again.',
+      );
+    }
+    return upsert(refreshed);
   }
 
   Future<List<RegisteredBookSource>> remove(String id) async {

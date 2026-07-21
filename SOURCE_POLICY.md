@@ -19,7 +19,7 @@ Source Protocol（ORSP）实现。
 依据、隐私政策和服务条款，并对自己的访问、下载、缓存、转换、朗读、分享及其他使用行为
 负责。不得利用 Open Reading 或 ORSP 绕过 DRM、访问控制、认证、付费机制或实施侵权行为。
 
-ORSP 1.3 支持运营者名称、联系入口、内容许可和权利声明元数据。客户端展示这些字段仅用于
+ORSP 1.4 支持运营者名称、联系入口、内容许可和权利声明元数据。客户端展示这些字段仅用于
 提高透明度；字段缺失或运营者的自我声明均不构成 Open Reading 对其身份、授权或内容合法性
 的认证、推荐或背书。
 
@@ -53,7 +53,7 @@ Users must review authorization and service terms before adding a source and
 remain responsible for their own access and use. ORSP compatibility is a
 technical statement, not a certification of legality or licensing.
 
-ORSP 1.3 supports operator, contact, content-license, and rights-statement
+ORSP 1.4 supports operator, contact, content-license, and rights-statement
 metadata. The client displays these fields for transparency only. Missing
 fields and operator-supplied statements are not verification, endorsement, or
 certification by Open Reading.

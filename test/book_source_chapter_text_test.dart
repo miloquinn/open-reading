@@ -56,6 +56,29 @@ void main() {
     );
   });
 
+  test('plain and html source text recognize Unicode hard line breaks', () {
+    const plain = BookSourceChapterContent(
+      bookId: 'book',
+      chapterId: 'chapter',
+      title: 'Chapter',
+      content: '第一段\u2028第二段\u2029第三段\u0085第四段',
+      contentType: 'text/plain',
+    );
+    const html = BookSourceChapterContent(
+      bookId: 'book',
+      chapterId: 'chapter',
+      title: 'Chapter',
+      content: '<div>第一段\u2028第二段\u2029第三段</div>',
+      contentType: 'text/html',
+    );
+
+    expect(
+      readableBookSourceChapterText(plain),
+      '第一段\n第二段\n第三段\n第四段',
+    );
+    expect(readableBookSourceChapterText(html), '第一段\n第二段\n第三段');
+  });
+
   test('html mislabelled as plain text is still extracted as html', () {
     // Symmetric regression: a source that declares `text/plain` but returns
     // real HTML must still be parsed as HTML, otherwise the tags would leak

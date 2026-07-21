@@ -60,4 +60,20 @@ void main() {
     expect(chapters.single.isNeedSplitTitle, isFalse);
     expect(chapters.single.bodyIn(source), source);
   });
+
+  test('chapter splitting recognizes Unicode hard line breaks', () {
+    const source = '书籍说明\u2028前言正文\u2029第1章 开始\u2028第一段正文';
+    final chapters = parseTxtChapterSections(
+      source,
+      fallbackTitle: 'Book',
+      prefaceTitle: 'Preface',
+    );
+
+    expect(chapters.map((chapter) => chapter.title), <String>[
+      'Preface',
+      '第1章 开始',
+    ]);
+    expect(chapters[0].bodyIn(source), '书籍说明\u2028前言正文');
+    expect(chapters[1].bodyIn(source), '第一段正文');
+  });
 }

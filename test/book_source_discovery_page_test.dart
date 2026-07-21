@@ -89,6 +89,53 @@ void main() {
 
     expect(merged.map((result) => result.book.title), ['B1', 'A1', 'B2', 'A2']);
   });
+
+  testWidgets('large category sets use a searchable lazy picker',
+      (tester) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(430, 1100);
+    addTearDown(tester.view.reset);
+
+    final source = _source('source-a', 'Source A');
+    SharedPreferences.setMockInitialValues({
+      'open_reading_book_sources_v1': jsonEncode([source.toJson()]),
+    });
+    final client = _LargeCategoryDiscoveryClient();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(body: BookSourcesPage(client: client)),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Categories'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('bookSourceCategoryPickerButton')),
+        findsOneWidget);
+    expect(find.text('Category 000'), findsOneWidget);
+    expect(find.text('Category 499'), findsNothing);
+
+    await tester.tap(find.byKey(const Key('bookSourceCategoryPickerButton')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('bookSourceCategoryLazyList')), findsOneWidget);
+    expect(find.text('Category 499'), findsNothing);
+
+    await tester.enterText(
+      find.byKey(const Key('bookSourceCategorySearchField')),
+      '499',
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Category 499'), findsOneWidget);
+
+    await tester.tap(find.text('Category 499'));
+    await tester.pumpAndSettle();
+    expect(client.lastCategoryId, 'category-499');
+    expect(find.text('Category 499'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 }
 
 class _DiscoveryClient extends BookSourceClient {
@@ -148,6 +195,38 @@ class _DiscoveryClient extends BookSourceClient {
         '${source.name} latest 2',
         updatedAt: DateTime.utc(2026, 7, 17),
       ),
+    ]);
+  }
+}
+
+class _LargeCategoryDiscoveryClient extends _DiscoveryClient {
+  String? lastCategoryId;
+
+  @override
+  Future<List<BookSourceCategory>> getCategories(
+    RegisteredBookSource source,
+  ) async {
+    return List.generate(
+      500,
+      (index) => BookSourceCategory(
+        id: 'category-${index.toString().padLeft(3, '0')}',
+        name: 'Category ${index.toString().padLeft(3, '0')}',
+      ),
+      growable: false,
+    );
+  }
+
+  @override
+  Future<BookSourceSearchPage> browse(
+    RegisteredBookSource source, {
+    String? category,
+    String sort = 'latest',
+    int page = 1,
+    int pageSize = 20,
+  }) async {
+    lastCategoryId = category;
+    return _page([
+      _book('selected-book', 'Selected category book'),
     ]);
   }
 }

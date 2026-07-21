@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 
+import 'reader_text_characters.dart';
+
 /// A TXT chapter whose heading and body occupy separate source ranges.
 ///
 /// [bodyStart] always points past the matched heading line and any empty lines
@@ -90,7 +92,7 @@ List<_TxtChapterMatch> _findTxtChapterMatches(String text) {
   final matches = <_TxtChapterMatch>[];
   var offset = 0;
   while (offset < text.length) {
-    final lineBreak = text.indexOf('\n', offset);
+    final lineBreak = _findLineBreak(text, offset);
     final lineEnd = lineBreak < 0 ? text.length : lineBreak;
     final title = text.substring(offset, lineEnd).trim();
     final normalizedTitle =
@@ -99,12 +101,16 @@ List<_TxtChapterMatch> _findTxtChapterMatches(String text) {
       matches.add(
         _TxtChapterMatch(
           headingStart: offset,
-          bodyStart: lineBreak < 0 ? text.length : lineBreak + 1,
+          bodyStart: lineBreak < 0
+              ? text.length
+              : lineBreak + readerLineBreakLengthAt(text, lineBreak),
           title: normalizedTitle,
         ),
       );
     }
-    offset = lineBreak < 0 ? text.length : lineBreak + 1;
+    offset = lineBreak < 0
+        ? text.length
+        : lineBreak + readerLineBreakLengthAt(text, lineBreak);
   }
   return matches;
 }
@@ -112,10 +118,12 @@ List<_TxtChapterMatch> _findTxtChapterMatches(String text) {
 int _skipEmptyLines(String text, int start, int end) {
   var cursor = start;
   while (cursor < end) {
-    final lineBreak = text.indexOf('\n', cursor);
-    final lineEnd = lineBreak < 0 || lineBreak >= end ? end : lineBreak;
+    final lineBreak = _findLineBreak(text, cursor, end: end);
+    final lineEnd = lineBreak < 0 ? end : lineBreak;
     if (text.substring(cursor, lineEnd).trim().isNotEmpty) return cursor;
-    cursor = lineBreak < 0 || lineBreak >= end ? end : lineBreak + 1;
+    cursor = lineBreak < 0
+        ? end
+        : lineBreak + readerLineBreakLengthAt(text, lineBreak);
   }
   return cursor;
 }
@@ -124,16 +132,21 @@ int _trimBodyEnd(String text, int start, int end) {
   var cursor = end;
   while (cursor > start) {
     final codeUnit = text.codeUnitAt(cursor - 1);
-    if (codeUnit != 0x20 &&
-        codeUnit != 0x09 &&
-        codeUnit != 0x0A &&
-        codeUnit != 0x0D &&
-        codeUnit != 0x3000) {
+    if (!isReaderIndentCodeUnit(codeUnit) &&
+        !isReaderLineBreakCodeUnit(codeUnit)) {
       break;
     }
     cursor--;
   }
   return cursor;
+}
+
+int _findLineBreak(String text, int start, {int? end}) {
+  final limit = (end ?? text.length).clamp(0, text.length);
+  for (var offset = start.clamp(0, limit); offset < limit; offset++) {
+    if (isReaderLineBreakCodeUnit(text.codeUnitAt(offset))) return offset;
+  }
+  return -1;
 }
 
 @immutable

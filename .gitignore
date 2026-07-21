@@ -3,6 +3,7 @@
 *.log
 *.pyc
 *.swp
+**/~syncthing~*.tmp
 .DS_Store
 .atom/
 .build/

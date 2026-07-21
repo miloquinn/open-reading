@@ -146,6 +146,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get bookSourcesAdded => 'ソースを追加しました';
 
   @override
+  String get bookSourcesRefresh => 'ソースを更新';
+
+  @override
+  String get bookSourcesRefreshed => 'ソースを更新しました';
+
+  @override
+  String get bookSourcesRefreshFailed => 'このソースを更新できませんでした';
+
+  @override
   String get bookSourcesProtocolTitle => 'Open Reading Source Protocol';
 
   @override
@@ -165,11 +174,11 @@ class AppLocalizationsJa extends AppLocalizations {
   String get bookSourcesProtocolRepositoryOpenFailed => 'プロトコルのリポジトリを開けませんでした';
 
   @override
-  String get bookSourcesProtocolDialogTitle => 'オープンソースプロトコル v1.3';
+  String get bookSourcesProtocolDialogTitle => 'オープンソースプロトコル v1.4';
 
   @override
   String get bookSourcesProtocolDialogBody =>
-      'サービスは /.well-known/open-reading-source.json でディスカバリードキュメントを公開し、検索、書籍詳細、ページ分割された章一覧、本文取得を実装します。v1.3 は完全な章一覧のページングに対応し、ログイン不要の公開 HTTP(S) ソース向け運営者、連絡先、コンテンツライセンス、権利声明メタデータを引き続き利用できます。';
+      'サービスは /.well-known/open-reading-source.json でディスカバリードキュメントを公開し、コア読書機能である検索、書籍詳細、ページ分割された章一覧、本文取得を実装します。v1.4 は完全な章一覧のページングを維持し、これらのコア機能の宣言を必須とし、ログイン不要の公開 HTTP(S) ソース向け運営者、連絡先、コンテンツライセンス、権利声明メタデータを引き続き利用できます。';
 
   @override
   String get bookSourcesRightsDetails => '運営者と権利情報';
@@ -1792,182 +1801,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get changelogCurrentVersion => '現在のバージョン';
 
   @override
-  String get changelog226SourceParagraphs => 'オンライン章本文の段落境界と字下げが失われる問題を修正しました';
-
-  @override
-  String get changelog226OnlineFonts => '画面・読書用フォントをオンデマンド配信に変更し、アプリ容量を削減しました';
-
-  @override
-  String get changelog226AiSettings => 'AI 読書のモデル設定を拡充し、サービスのエラー表示を多言語化しました';
-
-  @override
-  String get changelog226SmoothChapterTurns =>
-      '準備済みレイアウトを再利用し、オンライン章間の横スライドを滑らかにしました';
-
-  @override
-  String get changelog226BackgroundDownloads =>
-      '共有ダウンロードキューと Android の進捗通知を追加し、画面を離れてもダウンロードを継続できるようにしました';
-
-  @override
-  String get changelog226AndroidIcon => 'Android ランチャーアイコンの主体を縮小し、周囲の余白を整えました';
-
-  @override
-  String get changelog225UnifiedTextReader =>
-      'ローカルファイルとオンラインソースで同じテキストページ分割・描画エンジンを使用するようにしました';
-
-  @override
-  String get changelog225SourceChapterTurn =>
-      '横スライドで章をまたぐ際にアニメーション完了前にページが再構築される引っかかりを修正しました';
-
-  @override
-  String get changelog225AppIcons =>
-      'モバイル、デスクトップ、Web、OpenHarmony のアプリアイコンを統一して更新しました';
-
-  @override
-  String get changelog224SourceCatalogPaging =>
-      'ソース対応を ORSP 1.3 に更新し、各ソースが宣言したページ上限に従って章一覧全体を取得するようにしました';
-
-  @override
-  String get changelog224SourceHtmlParagraphs =>
-      'ソース HTML が <br> で段落を区切る場合に段落境界が失われる問題を修正しました';
-
-  @override
-  String get changelog224MobileNavigation =>
-      'モバイルホームのフローティングナビゲーションを低くし、コンテンツ領域を広げました';
-
-  @override
-  String get changelog221TabletBackPage =>
-      'タブレット見開きの紙面裏側を修正し、右ページをめくると次の左ページが正しい向きで表示されるようにしました';
-
-  @override
-  String get changelog220TabletSpread =>
-      'タブレットに無効化可能な横向き見開き表示を追加し、左右ページで上部情報を分担しました';
-
-  @override
-  String get changelog220PageCurl =>
-      'ページめくりの追従、見開き中央の描画順、反発収束を作り直し、跳ね・尾引き・重なりを修正しました';
-
-  @override
-  String get changelog220ReaderPerformance =>
-      'TXT の起動遷移、書籍ソースの章プリフェッチ、ページ分割の再利用を最適化しました';
-
-  @override
-  String get changelog220NavigationThemes =>
-      'モバイルのフローティングナビでアイコンのみ／ラベル付き表示を切り替え、読書テーマを統一順序で並べ替え可能にしました';
-
-  @override
-  String get changelog220ReadingStats => '読書統計の詳細画面を統一された紙面スタイルで再設計しました';
-
-  @override
-  String get changelog220PageOrganization =>
-      '画面ソースを機能領域ごとに再編し、ファイル命名、モジュール境界、領域間参照を統一しました';
-
-  @override
-  String get changelog220OfficialUpdates =>
-      'GitHub と公式サイトの更新元を選べるようにし、Android では公式 APK をアプリ内でダウンロード・検証してシステムインストーラーへ渡せるようにしました';
-
-  @override
-  String get changelog220ReleaseDistribution =>
-      '公式サイトへの配布ミラーとダウンロード統計を追加し、資産、チェックサム、APK バージョン、署名の検証を強化しました';
-
-  @override
-  String get changelog220SourcePolicy =>
-      '第三者書籍ソースの責任範囲を明確化し、開発者製品と任意支援への入口を追加しました';
-
-  @override
-  String get changelog203DeveloperProducts => '設定画面に小元读书と小元读书社区へのリンクを追加しました';
-
-  @override
-  String get changelog203Donation =>
-      '任意の WeChat・Alipay 寄付入口を追加し、機能には影響しないことを明記しました';
-
-  @override
-  String get changelog202PaperInformation =>
-      '読書情報バーを各ページ内に配置し、横スライドやページめくりと一緒に動くよう修正しました';
-
-  @override
-  String get changelog202PageNumberInset => '画面の角丸で隠れないよう、ページ番号を画面端から内側へ調整しました';
-
-  @override
-  String get changelog201BackwardPageTurn =>
-      '前のページへの紙面めくりを改善し、画面中央からでも即座に追従して上下の手ぶれで綴じ目がずれないようにしました';
-
-  @override
-  String get changelog201SnapshotPreheat =>
-      '前後の隣接ページを同時にプリヒートし、最初の逆方向ページめくりの遅延を軽減しました';
-
-  @override
-  String get changelog201SourceFilters =>
-      'すべて／個別の書籍ソース絞り込みと最新書籍の均等な交互表示に対応しました';
-
-  @override
-  String get changelog120CustomFonts => 'カスタムフォントの取り込みと管理を強化';
-
-  @override
-  String get changelog120SystemBars => 'ステータスバーと読書コントロールを改善';
-
-  @override
-  String get changelog120BookAnimations => '本を開く・閉じるアニメーションを刷新';
-
-  @override
-  String get changelog120TabletLibrary => 'タブレットの本棚レイアウトを最適化';
-
-  @override
-  String get changelog120Typography => '余白0と1ページあたりの表示量を改善した読字レイアウト';
-
-  @override
-  String get changelog120VolumeKeys => '音量キーでのページ送りに対応';
-
-  @override
-  String get changelog120Import => '書籍インポート画面を安全領域対応で再設計';
-
-  @override
-  String get changelog120Covers => '表紙のない書籍に統一のシンプル表紙を生成';
-
-  @override
-  String get changelog120Licenses => 'アプリ内でオープンソースライセンスを閲覧可能に';
-
-  @override
-  String get changelog121ContinuousScroll => 'オンライン書籍に章単位と全巻連続スクロールを追加';
-
-  @override
-  String get changelog121Typography => '中国語本文の左右余白とページ分割・描画の不一致を修正';
-
-  @override
-  String get changelog124PaperLeaf => '紙面に追従するページ情報、クラシック折り、読書組版設定を追加';
-
-  @override
-  String get changelog122ContinuousTap => 'オンライン連続スクロールで中央タップの操作バー表示を復元';
-
-  @override
-  String get changelog200ReaderExperience => '上部情報、ページ番号、紙面めくり体験を刷新';
-
-  @override
-  String get changelog200CustomThemes => '複数のカスタム読書テーマ、画像背景、ドラッグ並べ替えに対応';
-
-  @override
-  String get changelog200Navigation => 'EPUB のページ分割と折りたたみ可能な階層目次を改善';
-
-  @override
-  String get changelog200KeepScreenOn => 'Android で読書中の画面常時点灯を実際に有効化';
-
-  @override
-  String get changelog110CustomFonts => 'カスタムフォントを追加';
-
-  @override
-  String get changelog110Bookmarks => 'ブックマーク追加機能を追加';
-
-  @override
-  String get changelog102Summary => '発見ページ、独立検索、読書設定を改善';
-
-  @override
-  String get changelog101Summary => '発見機能、ページ検索、オープンソースライセンス案内を追加';
-
-  @override
-  String get changelog100Summary => 'オープン書籍ソース、複数テーマ、ページめくり効果を追加';
-
-  @override
-  String get changelog091Summary => 'タブレット見開き表示とクロスプラットフォーム配布に対応';
+  String get changelogLoadFailed => '更新履歴を読み込めませんでした';
 
   @override
   String get settingsMaintainerLabel => 'メンテナー';

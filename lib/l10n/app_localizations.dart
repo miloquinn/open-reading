@@ -359,6 +359,24 @@ abstract class AppLocalizations {
   /// **'Source added'**
   String get bookSourcesAdded;
 
+  /// No description provided for @bookSourcesRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh source'**
+  String get bookSourcesRefresh;
+
+  /// No description provided for @bookSourcesRefreshed.
+  ///
+  /// In en, this message translates to:
+  /// **'Book source refreshed'**
+  String get bookSourcesRefreshed;
+
+  /// No description provided for @bookSourcesRefreshFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not refresh this book source'**
+  String get bookSourcesRefreshFailed;
+
   /// No description provided for @bookSourcesProtocolTitle.
   ///
   /// In en, this message translates to:
@@ -398,13 +416,13 @@ abstract class AppLocalizations {
   /// No description provided for @bookSourcesProtocolDialogTitle.
   ///
   /// In en, this message translates to:
-  /// **'Open source protocol v1.3'**
+  /// **'Open source protocol v1.4'**
   String get bookSourcesProtocolDialogTitle;
 
   /// No description provided for @bookSourcesProtocolDialogBody.
   ///
   /// In en, this message translates to:
-  /// **'A source publishes /.well-known/open-reading-source.json and implements search, book details, paginated chapter catalogs, and chapter content. Version 1.3 adds complete catalog pagination while retaining operator, contact, license, and rights-statement metadata for public HTTP(S) sources that do not require sign-in.'**
+  /// **'A source publishes /.well-known/open-reading-source.json and implements the Core Reading capabilities: search, book details, paginated chapter catalogs, and chapter content. Version 1.4 keeps complete catalog pagination, requires these core capabilities, and retains operator, contact, license, and rights-statement metadata for public HTTP(S) sources that do not require sign-in.'**
   String get bookSourcesProtocolDialogBody;
 
   /// No description provided for @bookSourcesRightsDetails.
@@ -3396,317 +3414,11 @@ abstract class AppLocalizations {
   /// **'Current version'**
   String get changelogCurrentVersion;
 
-  /// No description provided for @changelog226SourceParagraphs.
+  /// No description provided for @changelogLoadFailed.
   ///
   /// In en, this message translates to:
-  /// **'Fixed paragraph boundaries and first-line indentation for online chapter text'**
-  String get changelog226SourceParagraphs;
-
-  /// No description provided for @changelog226OnlineFonts.
-  ///
-  /// In en, this message translates to:
-  /// **'Moved interface and reader fonts to on-demand downloads to reduce the app size'**
-  String get changelog226OnlineFonts;
-
-  /// No description provided for @changelog226AiSettings.
-  ///
-  /// In en, this message translates to:
-  /// **'Expanded AI reading model settings and localized service error messages'**
-  String get changelog226AiSettings;
-
-  /// No description provided for @changelog226SmoothChapterTurns.
-  ///
-  /// In en, this message translates to:
-  /// **'Made horizontal turns between online chapters complete smoothly using warmed layouts'**
-  String get changelog226SmoothChapterTurns;
-
-  /// No description provided for @changelog226BackgroundDownloads.
-  ///
-  /// In en, this message translates to:
-  /// **'Added a shared download queue with Android progress notifications so downloads continue outside the active screen'**
-  String get changelog226BackgroundDownloads;
-
-  /// No description provided for @changelog226AndroidIcon.
-  ///
-  /// In en, this message translates to:
-  /// **'Reduced the Android launcher symbol\'s visual footprint for more balanced padding'**
-  String get changelog226AndroidIcon;
-
-  /// No description provided for @changelog225UnifiedTextReader.
-  ///
-  /// In en, this message translates to:
-  /// **'Unified local files and online sources on the same text pagination and rendering engine'**
-  String get changelog225UnifiedTextReader;
-
-  /// No description provided for @changelog225SourceChapterTurn.
-  ///
-  /// In en, this message translates to:
-  /// **'Fixed horizontal cross-chapter turns rebuilding the page before the animation finished'**
-  String get changelog225SourceChapterTurn;
-
-  /// No description provided for @changelog225AppIcons.
-  ///
-  /// In en, this message translates to:
-  /// **'Updated app icons consistently across mobile, desktop, web, and OpenHarmony'**
-  String get changelog225AppIcons;
-
-  /// No description provided for @changelog224SourceCatalogPaging.
-  ///
-  /// In en, this message translates to:
-  /// **'Updated source support to ORSP 1.3 and fetch complete chapter catalogs using each source\'s declared page-size limit'**
-  String get changelog224SourceCatalogPaging;
-
-  /// No description provided for @changelog224SourceHtmlParagraphs.
-  ///
-  /// In en, this message translates to:
-  /// **'Fixed paragraph boundaries being lost when source HTML separates paragraphs with <br> elements'**
-  String get changelog224SourceHtmlParagraphs;
-
-  /// No description provided for @changelog224MobileNavigation.
-  ///
-  /// In en, this message translates to:
-  /// **'Reduced the mobile home floating navigation height to leave more room for content'**
-  String get changelog224MobileNavigation;
-
-  /// No description provided for @changelog221TabletBackPage.
-  ///
-  /// In en, this message translates to:
-  /// **'Fixed tablet spread page-curl backs so turning the right page shows the next left page in normal reading orientation'**
-  String get changelog221TabletBackPage;
-
-  /// No description provided for @changelog220TabletSpread.
-  ///
-  /// In en, this message translates to:
-  /// **'Added an optional landscape tablet spread with top information split across the left and right pages'**
-  String get changelog220TabletSpread;
-
-  /// No description provided for @changelog220PageCurl.
-  ///
-  /// In en, this message translates to:
-  /// **'Rebuilt page-curl tracking, cross-spine layering, and settling to fix jumps, tails, and incorrect overlap'**
-  String get changelog220PageCurl;
-
-  /// No description provided for @changelog220ReaderPerformance.
-  ///
-  /// In en, this message translates to:
-  /// **'Improved TXT opening transitions, source chapter prefetching, and pagination reuse to reduce waiting'**
-  String get changelog220ReaderPerformance;
-
-  /// No description provided for @changelog220NavigationThemes.
-  ///
-  /// In en, this message translates to:
-  /// **'Added icon-only or labeled floating navigation and unified sorting for built-in and custom reader themes'**
-  String get changelog220NavigationThemes;
-
-  /// No description provided for @changelog220ReadingStats.
-  ///
-  /// In en, this message translates to:
-  /// **'Redesigned detailed reading statistics with a consistent paper-inspired layout'**
-  String get changelog220ReadingStats;
-
-  /// No description provided for @changelog220PageOrganization.
-  ///
-  /// In en, this message translates to:
-  /// **'Reorganized page source by feature area with consistent naming and module boundaries'**
-  String get changelog220PageOrganization;
-
-  /// No description provided for @changelog220OfficialUpdates.
-  ///
-  /// In en, this message translates to:
-  /// **'Added GitHub and official-site update choices; Android can download, verify, and hand official APKs to the system installer'**
-  String get changelog220OfficialUpdates;
-
-  /// No description provided for @changelog220ReleaseDistribution.
-  ///
-  /// In en, this message translates to:
-  /// **'Added official-site mirrors and download statistics with stricter asset, checksum, APK version, and signing verification'**
-  String get changelog220ReleaseDistribution;
-
-  /// No description provided for @changelog220SourcePolicy.
-  ///
-  /// In en, this message translates to:
-  /// **'Clarified third-party source responsibilities and added developer product and optional support entries'**
-  String get changelog220SourcePolicy;
-
-  /// No description provided for @changelog203DeveloperProducts.
-  ///
-  /// In en, this message translates to:
-  /// **'Added settings links for 小元读书 and 小元读书社区'**
-  String get changelog203DeveloperProducts;
-
-  /// No description provided for @changelog203Donation.
-  ///
-  /// In en, this message translates to:
-  /// **'Added optional WeChat and Alipay donation entries with no effect on app features'**
-  String get changelog203Donation;
-
-  /// No description provided for @changelog202PaperInformation.
-  ///
-  /// In en, this message translates to:
-  /// **'Embedded reader information in each paper page so it moves with slide and page-curl turns'**
-  String get changelog202PaperInformation;
-
-  /// No description provided for @changelog202PageNumberInset.
-  ///
-  /// In en, this message translates to:
-  /// **'Inset page numbers from screen edges to avoid rounded-corner clipping'**
-  String get changelog202PageNumberInset;
-
-  /// No description provided for @changelog201BackwardPageTurn.
-  ///
-  /// In en, this message translates to:
-  /// **'Improved backward simulated turns with immediate mid-screen tracking and a stable binding edge during vertical hand movement'**
-  String get changelog201BackwardPageTurn;
-
-  /// No description provided for @changelog201SnapshotPreheat.
-  ///
-  /// In en, this message translates to:
-  /// **'Preheated both adjacent pages together to reduce first backward-turn latency'**
-  String get changelog201SnapshotPreheat;
-
-  /// No description provided for @changelog201SourceFilters.
-  ///
-  /// In en, this message translates to:
-  /// **'Added all-source and per-source discovery filters with balanced latest-book interleaving'**
-  String get changelog201SourceFilters;
-
-  /// No description provided for @changelog120CustomFonts.
-  ///
-  /// In en, this message translates to:
-  /// **'Improved custom fonts with import and management'**
-  String get changelog120CustomFonts;
-
-  /// No description provided for @changelog120SystemBars.
-  ///
-  /// In en, this message translates to:
-  /// **'Polished the status bar and reading controls'**
-  String get changelog120SystemBars;
-
-  /// No description provided for @changelog120BookAnimations.
-  ///
-  /// In en, this message translates to:
-  /// **'Redesigned book open and close animations'**
-  String get changelog120BookAnimations;
-
-  /// No description provided for @changelog120TabletLibrary.
-  ///
-  /// In en, this message translates to:
-  /// **'Improved the tablet library layout'**
-  String get changelog120TabletLibrary;
-
-  /// No description provided for @changelog120Typography.
-  ///
-  /// In en, this message translates to:
-  /// **'Improved reader layout with zero margins and more text per page'**
-  String get changelog120Typography;
-
-  /// No description provided for @changelog120VolumeKeys.
-  ///
-  /// In en, this message translates to:
-  /// **'Added volume-key page turning on Android'**
-  String get changelog120VolumeKeys;
-
-  /// No description provided for @changelog120Import.
-  ///
-  /// In en, this message translates to:
-  /// **'Redesigned book import with safer bottom controls'**
-  String get changelog120Import;
-
-  /// No description provided for @changelog120Covers.
-  ///
-  /// In en, this message translates to:
-  /// **'Generated simple covers for books without artwork'**
-  String get changelog120Covers;
-
-  /// No description provided for @changelog120Licenses.
-  ///
-  /// In en, this message translates to:
-  /// **'Added offline open-source license viewing'**
-  String get changelog120Licenses;
-
-  /// No description provided for @changelog121ContinuousScroll.
-  ///
-  /// In en, this message translates to:
-  /// **'Added shared chapter-by-chapter and continuous whole-book scrolling for online sources'**
-  String get changelog121ContinuousScroll;
-
-  /// No description provided for @changelog121Typography.
-  ///
-  /// In en, this message translates to:
-  /// **'Fixed asymmetric Chinese text margins and aligned pagination with rendering'**
-  String get changelog121Typography;
-
-  /// No description provided for @changelog124PaperLeaf.
-  ///
-  /// In en, this message translates to:
-  /// **'Added paper-bound page chrome, classic fold animation, and reader typography controls'**
-  String get changelog124PaperLeaf;
-
-  /// No description provided for @changelog122ContinuousTap.
-  ///
-  /// In en, this message translates to:
-  /// **'Restored center-tap reader controls during continuous online scrolling'**
-  String get changelog122ContinuousTap;
-
-  /// No description provided for @changelog200ReaderExperience.
-  ///
-  /// In en, this message translates to:
-  /// **'Upgraded top information, page numbering, and simulated page turns'**
-  String get changelog200ReaderExperience;
-
-  /// No description provided for @changelog200CustomThemes.
-  ///
-  /// In en, this message translates to:
-  /// **'Added multiple custom reading themes, image backgrounds, and drag sorting'**
-  String get changelog200CustomThemes;
-
-  /// No description provided for @changelog200Navigation.
-  ///
-  /// In en, this message translates to:
-  /// **'Improved EPUB pagination and collapsible nested contents'**
-  String get changelog200Navigation;
-
-  /// No description provided for @changelog200KeepScreenOn.
-  ///
-  /// In en, this message translates to:
-  /// **'Enabled real keep-screen-on behavior while reading on Android'**
-  String get changelog200KeepScreenOn;
-
-  /// No description provided for @changelog110CustomFonts.
-  ///
-  /// In en, this message translates to:
-  /// **'Added custom fonts'**
-  String get changelog110CustomFonts;
-
-  /// No description provided for @changelog110Bookmarks.
-  ///
-  /// In en, this message translates to:
-  /// **'Added bookmark support'**
-  String get changelog110Bookmarks;
-
-  /// No description provided for @changelog102Summary.
-  ///
-  /// In en, this message translates to:
-  /// **'Improved discovery, standalone search, and reading settings'**
-  String get changelog102Summary;
-
-  /// No description provided for @changelog101Summary.
-  ///
-  /// In en, this message translates to:
-  /// **'Added discovery, paginated search, and open-source licensing notes'**
-  String get changelog101Summary;
-
-  /// No description provided for @changelog100Summary.
-  ///
-  /// In en, this message translates to:
-  /// **'Added open book sources, reading themes, and page-turn animation'**
-  String get changelog100Summary;
-
-  /// No description provided for @changelog091Summary.
-  ///
-  /// In en, this message translates to:
-  /// **'Added tablet spreads and cross-platform release support'**
-  String get changelog091Summary;
+  /// **'Could not load release history'**
+  String get changelogLoadFailed;
 
   /// Maintainer label in the about card
   ///

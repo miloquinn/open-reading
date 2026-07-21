@@ -303,7 +303,7 @@ class BookSourceClient {
   }
 
   /// Fetches the full chapter catalog, following pagination when the source
-  /// implements it (protocol 1.3). `pageSize` is capped to the source's own
+  /// implements it (protocol 1.4). `pageSize` is capped to the source's own
   /// declared `maxCatalogPageSize` (ORSP §3) — sending a larger value than a
   /// source advertises is a protocol violation the source may legitimately
   /// reject with 400, so it must never be hardcoded higher than what the

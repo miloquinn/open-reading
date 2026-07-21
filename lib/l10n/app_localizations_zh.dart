@@ -145,6 +145,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bookSourcesAdded => '书源已添加';
 
   @override
+  String get bookSourcesRefresh => '刷新书源';
+
+  @override
+  String get bookSourcesRefreshed => '书源已刷新';
+
+  @override
+  String get bookSourcesRefreshFailed => '无法刷新该书源';
+
+  @override
   String get bookSourcesProtocolTitle => 'Open Reading Source Protocol';
 
   @override
@@ -164,11 +173,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bookSourcesProtocolRepositoryOpenFailed => '无法打开书源协议仓库';
 
   @override
-  String get bookSourcesProtocolDialogTitle => '开放书源协议 v1.3';
+  String get bookSourcesProtocolDialogTitle => '开放书源协议 v1.4';
 
   @override
   String get bookSourcesProtocolDialogBody =>
-      '服务在 /.well-known/open-reading-source.json 发布发现文档，并实现搜索、书籍详情、分页章节目录与章节正文接口。v1.3 支持完整目录分页，并保留公开、无需登录的 HTTP(S) 书源运营者、联系方式、内容许可与权利声明元数据。';
+      '服务在 /.well-known/open-reading-source.json 发布发现文档，并实现核心阅读能力：搜索、书籍详情、分页章节目录与章节正文接口。v1.4 保留完整目录分页，要求书源声明这些核心能力，并保留公开、无需登录的 HTTP(S) 书源运营者、联系方式、内容许可与权利声明元数据。';
 
   @override
   String get bookSourcesRightsDetails => '运营者与权利信息';
@@ -1777,166 +1786,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get changelogCurrentVersion => '当前版本';
 
   @override
-  String get changelog226SourceParagraphs => '修复在线章节正文的段落边界与首行缩进';
-
-  @override
-  String get changelog226OnlineFonts => '界面与阅读字体改为按需下载，减小应用安装包体积';
-
-  @override
-  String get changelog226AiSettings => '完善 AI 阅读模型设置，并统一服务错误提示的本地化文案';
-
-  @override
-  String get changelog226SmoothChapterTurns => '复用预热布局，让在线书源水平跨章切换完整顺滑';
-
-  @override
-  String get changelog226BackgroundDownloads =>
-      '新增共享下载队列与 Android 进度通知，离开当前页面后下载仍会继续';
-
-  @override
-  String get changelog226AndroidIcon => '缩小 Android 启动器图标主体，增加更均衡的四周留白';
-
-  @override
-  String get changelog225UnifiedTextReader => '本地文件与在线书源统一使用同一套文字分页和渲染内核';
-
-  @override
-  String get changelog225SourceChapterTurn => '修复水平滑动跨章时动画未结束就重建页面导致的顿挫';
-
-  @override
-  String get changelog225AppIcons => '统一更新移动端、桌面端、Web 与鸿蒙应用图标';
-
-  @override
-  String get changelog224SourceCatalogPaging =>
-      '书源支持升级到 ORSP 1.3，并按各书源声明的单页上限完整获取章节目录';
-
-  @override
-  String get changelog224SourceHtmlParagraphs =>
-      '修复书源 HTML 使用 <br> 分隔段落时丢失段落边界的问题';
-
-  @override
-  String get changelog224MobileNavigation => '缩小手机首页悬浮导航高度，为内容留出更多空间';
-
-  @override
-  String get changelog221TabletBackPage => '修复平板双页仿真翻页纸背，右页翻动时会显示正向的下一左页内容';
-
-  @override
-  String get changelog220TabletSpread => '平板新增可关闭的横屏双页布局，左右页顶部信息分工显示';
-
-  @override
-  String get changelog220PageCurl => '重做仿真翻页跟手、跨书脊层级与回弹收尾，修复闪跳、甩尾和遮挡';
-
-  @override
-  String get changelog220ReaderPerformance =>
-      '优化 TXT 打开转场、书源章节预取和分页复用，降低打开与跨章等待';
-
-  @override
-  String get changelog220NavigationThemes => '手机悬浮导航支持图标文字切换，预设与自定义阅读主题可统一排序';
-
-  @override
-  String get changelog220ReadingStats => '阅读统计详情页采用统一书卷风格并重新设计各项统计内容';
-
-  @override
-  String get changelog220PageOrganization => '页面源码按功能域重新整理，统一文件命名、模块边界和跨域引用';
-
-  @override
-  String get changelog220OfficialUpdates =>
-      '更新检查新增 GitHub 与官网双来源；Android 可在应用内下载、校验并请求系统安装官网 APK';
-
-  @override
-  String get changelog220ReleaseDistribution =>
-      '官网新增安装包镜像与下载统计，发布流程强化资产、校验和、APK 版本与签名核验';
-
-  @override
-  String get changelog220SourcePolicy => '明确第三方书源责任边界，并新增开发者产品和自愿支持入口';
-
-  @override
-  String get changelog203DeveloperProducts => '设置页新增小元读书和小元读书社区入口';
-
-  @override
-  String get changelog203Donation => '新增自愿微信和支付宝捐赠入口，并明确不影响任何功能';
-
-  @override
-  String get changelog202PaperInformation => '阅读信息栏嵌入每张纸页，横滑和仿真翻页时随页面一起移动';
-
-  @override
-  String get changelog202PageNumberInset => '页码向屏幕内侧留出安全距离，避免被圆角遮挡';
-
-  @override
-  String get changelog201BackwardPageTurn => '优化上一页仿真翻页，中间起手立即跟手，纵向晃动不再带偏装订边';
-
-  @override
-  String get changelog201SnapshotPreheat => '前后相邻页同步预热，减少首次反向翻页卡顿';
-
-  @override
-  String get changelog201SourceFilters => '发现页支持全部或单一书源筛选，最新书籍在多个书源间均衡穿插';
-
-  @override
-  String get changelog120CustomFonts => '完善自定义字体，支持导入与管理';
-
-  @override
-  String get changelog120SystemBars => '美化状态栏与阅读控制栏';
-
-  @override
-  String get changelog120BookAnimations => '重做书籍打开与关闭动画';
-
-  @override
-  String get changelog120TabletLibrary => '优化平板书库布局';
-
-  @override
-  String get changelog120Typography => '优化阅读排版，支持零边距与同页更多文字';
-
-  @override
-  String get changelog120VolumeKeys => '接入音量键翻页';
-
-  @override
-  String get changelog120Import => '重构书籍导入，适配安全区更易用';
-
-  @override
-  String get changelog120Covers => '无封面书籍统一生成简约封面';
-
-  @override
-  String get changelog120Licenses => '新增应用内开源许可查看';
-
-  @override
-  String get changelog121ContinuousScroll => '在线书源补齐按章节滚动与整书连续滚动';
-
-  @override
-  String get changelog121Typography => '修复中文正文左右留白不对称并统一分页绘制';
-
-  @override
-  String get changelog124PaperLeaf => '新增纸页化页脚、经典折页动画与阅读排版设置';
-
-  @override
-  String get changelog122ContinuousTap => '修复在线连续滚动无法中间点击呼出控制栏';
-
-  @override
-  String get changelog200ReaderExperience => '升级顶部信息、纸页页码与仿真翻页体验';
-
-  @override
-  String get changelog200CustomThemes => '支持多套自定义阅读主题、图片背景与拖拽排序';
-
-  @override
-  String get changelog200Navigation => '优化 EPUB 分页与可折叠多级目录';
-
-  @override
-  String get changelog200KeepScreenOn => 'Android 阅读时保持屏幕常亮正式生效';
-
-  @override
-  String get changelog110CustomFonts => '新增自定义字体';
-
-  @override
-  String get changelog110Bookmarks => '新增加入书签';
-
-  @override
-  String get changelog102Summary => '优化发现页、独立搜索和阅读设置';
-
-  @override
-  String get changelog101Summary => '新增发现功能、分页搜索和开源许可说明';
-
-  @override
-  String get changelog100Summary => '新增开放书源、多主题和仿真翻页';
-
-  @override
-  String get changelog091Summary => '新增平板双页布局和跨平台发布支持';
+  String get changelogLoadFailed => '更新日志加载失败';
 
   @override
   String get settingsMaintainerLabel => '维护者';
@@ -3450,6 +3300,15 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get bookSourcesAdded => '書源已新增';
 
   @override
+  String get bookSourcesRefresh => '重新整理書源';
+
+  @override
+  String get bookSourcesRefreshed => '書源已重新整理';
+
+  @override
+  String get bookSourcesRefreshFailed => '無法重新整理此書源';
+
+  @override
   String get bookSourcesProtocolTitle => 'Open Reading Source Protocol';
 
   @override
@@ -3469,11 +3328,11 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get bookSourcesProtocolRepositoryOpenFailed => '無法開啟書源協定倉庫';
 
   @override
-  String get bookSourcesProtocolDialogTitle => '開放書源協定 v1.3';
+  String get bookSourcesProtocolDialogTitle => '開放書源協定 v1.4';
 
   @override
   String get bookSourcesProtocolDialogBody =>
-      '服務在 /.well-known/open-reading-source.json 發布探索文件，並實作搜尋、書籍詳情、分頁章節目錄與章節內文介面。v1.3 支援完整目錄分頁，並保留公開、無需登入的 HTTP(S) 書源營運者、聯絡方式、內容授權與權利聲明中繼資料。';
+      '服務在 /.well-known/open-reading-source.json 發布探索文件，並實作核心閱讀能力：搜尋、書籍詳情、分頁章節目錄與章節內文介面。v1.4 保留完整目錄分頁，要求書源宣告這些核心能力，並保留公開、無需登入的 HTTP(S) 書源營運者、聯絡方式、內容授權與權利聲明中繼資料。';
 
   @override
   String get bookSourcesRightsDetails => '營運者與權利資訊';
@@ -5039,166 +4898,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get changelogCurrentVersion => '目前版本';
 
   @override
-  String get changelog226SourceParagraphs => '修正線上章節正文的段落邊界與首行縮排';
-
-  @override
-  String get changelog226OnlineFonts => '介面與閱讀字型改為按需下載，縮小應用程式安裝包體積';
-
-  @override
-  String get changelog226AiSettings => '完善 AI 閱讀模型設定，並統一服務錯誤提示的本地化文案';
-
-  @override
-  String get changelog226SmoothChapterTurns => '重用預熱版面，讓線上書源水平跨章切換完整流暢';
-
-  @override
-  String get changelog226BackgroundDownloads =>
-      '新增共用下載佇列與 Android 進度通知，離開目前頁面後下載仍會繼續';
-
-  @override
-  String get changelog226AndroidIcon => '縮小 Android 啟動器圖示主體，增加更均衡的四周留白';
-
-  @override
-  String get changelog225UnifiedTextReader => '本機檔案與線上書源統一使用同一套文字分頁與繪製核心';
-
-  @override
-  String get changelog225SourceChapterTurn => '修正水平滑動跨章時動畫尚未結束就重建頁面造成的頓挫';
-
-  @override
-  String get changelog225AppIcons => '統一更新行動端、桌面端、Web 與鴻蒙應用程式圖示';
-
-  @override
-  String get changelog224SourceCatalogPaging =>
-      '書源支援升級至 ORSP 1.3，並依各書源宣告的單頁上限完整取得章節目錄';
-
-  @override
-  String get changelog224SourceHtmlParagraphs =>
-      '修正書源 HTML 使用 <br> 分隔段落時遺失段落邊界的問題';
-
-  @override
-  String get changelog224MobileNavigation => '縮小手機首頁懸浮導覽高度，為內容保留更多空間';
-
-  @override
-  String get changelog221TabletBackPage => '修正平板雙頁擬真翻頁紙背，右頁翻動時會顯示正向的下一張左頁內容';
-
-  @override
-  String get changelog220TabletSpread => '平板新增可關閉的橫向雙頁版面，左右頁頂部資訊分工顯示';
-
-  @override
-  String get changelog220PageCurl => '重做擬真翻頁跟手、跨書脊層級與回彈收尾，修正跳動、甩尾和遮擋';
-
-  @override
-  String get changelog220ReaderPerformance =>
-      '最佳化 TXT 開啟轉場、書源章節預取與分頁重用，減少開啟和跨章等待';
-
-  @override
-  String get changelog220NavigationThemes => '手機懸浮導覽支援圖示文字切換，預設與自訂閱讀主題可統一排序';
-
-  @override
-  String get changelog220ReadingStats => '閱讀統計詳情頁採用統一書卷風格並重新設計各項統計內容';
-
-  @override
-  String get changelog220PageOrganization => '頁面原始碼依功能領域重新整理，統一檔案命名、模組邊界與跨領域引用';
-
-  @override
-  String get changelog220OfficialUpdates =>
-      '更新檢查新增 GitHub 與官網雙來源；Android 可在應用程式內下載、校驗並請求系統安裝官網 APK';
-
-  @override
-  String get changelog220ReleaseDistribution =>
-      '官網新增安裝檔鏡像與下載統計，發布流程加強資產、校驗和、APK 版本與簽章驗證';
-
-  @override
-  String get changelog220SourcePolicy => '明確第三方書源責任邊界，並新增開發者產品和自願支持入口';
-
-  @override
-  String get changelog203DeveloperProducts => '設定頁新增小元读书和小元读书社区入口';
-
-  @override
-  String get changelog203Donation => '新增自願微信和支付寶捐贈入口，並明確不影響任何功能';
-
-  @override
-  String get changelog202PaperInformation => '閱讀資訊列嵌入每張紙頁，橫向滑動與擬真翻頁時會隨頁面一起移動';
-
-  @override
-  String get changelog202PageNumberInset => '頁碼向螢幕內側保留安全距離，避免被圓角遮擋';
-
-  @override
-  String get changelog201BackwardPageTurn => '最佳化上一頁擬真翻頁，從中央起手立即跟手，垂直晃動不再帶偏裝訂邊';
-
-  @override
-  String get changelog201SnapshotPreheat => '前後相鄰頁同步預熱，減少首次反向翻頁卡頓';
-
-  @override
-  String get changelog201SourceFilters => '發現頁支援全部或單一書源篩選，最新書籍在多個書源間均衡穿插';
-
-  @override
-  String get changelog120CustomFonts => '完善自訂字型，支援匯入與管理';
-
-  @override
-  String get changelog120SystemBars => '美化狀態列與閱讀控制列';
-
-  @override
-  String get changelog120BookAnimations => '重做書籍開啟與關閉動畫';
-
-  @override
-  String get changelog120TabletLibrary => '優化平板書庫版面';
-
-  @override
-  String get changelog120Typography => '優化閱讀排版，支援零邊距與同頁更多文字';
-
-  @override
-  String get changelog120VolumeKeys => '接入音量鍵翻頁';
-
-  @override
-  String get changelog120Import => '重構書籍匯入，適配安全區更易用';
-
-  @override
-  String get changelog120Covers => '無封面書籍統一產生簡約封面';
-
-  @override
-  String get changelog120Licenses => '新增應用內開源授權檢視';
-
-  @override
-  String get changelog121ContinuousScroll => '線上書源補齊按章節捲動與整書連續捲動';
-
-  @override
-  String get changelog121Typography => '修正中文正文左右留白不對稱並統一分頁繪製';
-
-  @override
-  String get changelog124PaperLeaf => '新增紙頁化頁腳、經典摺頁動畫與閱讀排版設定';
-
-  @override
-  String get changelog122ContinuousTap => '修正線上連續捲動無法點擊中央叫出控制列';
-
-  @override
-  String get changelog200ReaderExperience => '升級頂部資訊、紙頁頁碼與擬真翻頁體驗';
-
-  @override
-  String get changelog200CustomThemes => '支援多套自訂閱讀主題、圖片背景與拖曳排序';
-
-  @override
-  String get changelog200Navigation => '最佳化 EPUB 分頁與可摺疊多層目錄';
-
-  @override
-  String get changelog200KeepScreenOn => 'Android 閱讀時保持螢幕常亮正式生效';
-
-  @override
-  String get changelog110CustomFonts => '新增自訂字型';
-
-  @override
-  String get changelog110Bookmarks => '新增加入書籤';
-
-  @override
-  String get changelog102Summary => '最佳化發現頁、獨立搜尋和閱讀設定';
-
-  @override
-  String get changelog101Summary => '新增發現功能、分頁搜尋和開源授權說明';
-
-  @override
-  String get changelog100Summary => '新增開放書源、多主題和仿真翻頁';
-
-  @override
-  String get changelog091Summary => '新增平板雙頁版面和跨平台發布支援';
+  String get changelogLoadFailed => '更新日誌載入失敗';
 
   @override
   String get settingsMaintainerLabel => '維護者';

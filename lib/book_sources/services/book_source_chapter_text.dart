@@ -2,6 +2,7 @@ import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as html_parser;
 
 import '../protocol/book_source_protocol.dart';
+import '../../core/reader/reader_text_characters.dart';
 import 'book_source_text_paginator.dart';
 
 const _bookSourceBlockTags = {'p', 'div', 'li', 'blockquote'};
@@ -45,16 +46,12 @@ String readableBookSourceChapterText(
 
 bool _looksLikeHtml(String content) => _htmlTagOpener.hasMatch(content);
 
-/// Preserves the source's own line structure: BOM is stripped, CRLF/CR are
-/// folded to LF, but leading whitespace and blank lines are kept verbatim so
-/// downstream logic (page-marker cleanup, chapter-title stripping, and the
-/// shared layout layer) can decide what is structural.
+/// Preserves the source's own line structure: BOM is stripped and every hard
+/// Unicode line break is folded to a canonical paragraph boundary, while
+/// leading whitespace and blank lines remain available to downstream logic.
 List<String> _extractPlainTextParagraphs(String raw) {
-  final normalized = raw
-      .replaceFirst('\uFEFF', '')
-      .replaceAll('\r\n', '\n')
-      .replaceAll('\r', '\n');
-  return normalized.split('\n');
+  final normalized = raw.replaceFirst('\uFEFF', '');
+  return splitReaderTextLines(normalized);
 }
 
 /// Walks the parsed fragment and emits one canonical paragraph per block
@@ -93,7 +90,7 @@ List<String> _extractHtmlParagraphs(String raw) {
         // other paragraph separated only by `\n`). Treat it like an
         // implicit `<br>` so those paragraphs still get split instead of
         // being silently glued together by the `\s+` collapse in flush().
-        final lines = child.data.split(RegExp(r'\r\n|\r|\n'));
+        final lines = splitReaderTextLines(child.data);
         for (var i = 0; i < lines.length; i++) {
           if (i > 0) flush();
           segment.write(lines[i]);

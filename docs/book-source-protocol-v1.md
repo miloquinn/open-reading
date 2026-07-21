@@ -1,4 +1,4 @@
-# Open Reading Source Protocol v1.3
+# Open Reading Source Protocol v1.4
 
 Open Reading Source Protocol（ORSP）是一套面向电子书与连载文本的开放 HTTP
 协议。它把阅读器与具体内容站点解耦：阅读器只实现一次协议客户端，内容提供方或适配器
@@ -28,7 +28,7 @@ GET /.well-known/open-reading-source.json
 ```json
 {
   "protocol": "open-reading-source",
-  "protocolVersion": "1.3",
+  "protocolVersion": "1.4",
   "id": "org.example.public-books",
   "name": "Example Public Books",
   "description": "Public-domain books maintained by Example.org",
@@ -54,7 +54,7 @@ GET /.well-known/open-reading-source.json
 | `id` | 全局稳定标识，推荐反向域名 |
 | `name` | 展示名称 |
 | `apiBaseUrl` | API 根地址，必须是绝对 HTTP(S) URL |
-| `capabilities` | 能力列表；v1 必须包含 `search` |
+| `capabilities` | 能力列表；v1.4 必须包含核心阅读能力 `search`、`detail`、`catalog`、`content` |
 
 建议书源同时提供以下权利透明度字段。旧版 `1.x` 书源可以省略，但客户端应明确显示“未提供”，
 不得把缺少字段或运营者的自我声明理解为项目方对内容合法性的认证：
@@ -73,13 +73,13 @@ GET /.well-known/open-reading-source.json
 | `maxCatalogPageSize` | 章节目录接口（4.6 节）单页能接受的最大 `pageSize`；缺省时按 100 处理。客户端请求的 `pageSize` 不得超过这个值，超过时书源应返回 `400` |
 
 发现相关能力均为可选能力：`discover` 提供分区推荐，`categories` 提供分类定义，
-`browse` 提供分类或排序浏览。未声明这些能力的旧书源仍可正常参与搜索。
+`browse` 提供分类或排序浏览。未声明这些能力的书源仍可正常参与核心阅读流程。
 
 ## 3. 通用约定
 
 - 请求与响应编码为 UTF-8。
 - JSON 响应使用 `application/json`。
-- 客户端发送 `X-Open-Reading-Protocol: 1.3`。
+- 客户端发送 `X-Open-Reading-Protocol: 1.4`。
 - ID 是书源内部稳定、不透明的字符串。客户端不得推断 ID 格式。
 - 时间使用 ISO 8601，例如 `2026-07-11T10:00:00Z`。
 - 章节正文 `contentType` 仅允许 `text/plain`、`text/markdown`、`text/html`。
@@ -286,4 +286,4 @@ dart run tool/example_book_source_server.dart --host 0.0.0.0 --port 8788 \
 ```
 
 协议文本与参考实现随 Open Reading 项目按仓库许可证开放。建议第三方实现明确标注支持的
-协议版本，例如 `Open Reading Source Protocol 1.3 compatible`。
+协议版本，例如 `Open Reading Source Protocol 1.4 compatible`。

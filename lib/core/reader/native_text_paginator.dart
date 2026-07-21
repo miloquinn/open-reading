@@ -3,6 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
 
+import 'reader_text_characters.dart';
+
 typedef NativeTextSpanBuilder = TextSpan Function(int start, int end);
 
 /// 正文使用两端对齐，让中文软换行产生的不足一字宽余量分散到字间，
@@ -298,8 +300,7 @@ int _nextCodePointBoundary(String text, int start) {
 
 bool _endsParagraph(String text, int end) {
   if (end <= 0) return true;
-  final previous = text.codeUnitAt(end - 1);
-  return previous == 0x0A || previous == 0x0D;
+  return isReaderLineBreakCodeUnit(text.codeUnitAt(end - 1));
 }
 
 bool _isHighSurrogate(int codeUnit) => codeUnit >= 0xD800 && codeUnit <= 0xDBFF;

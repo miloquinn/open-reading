@@ -30,12 +30,28 @@ void main() {
     );
   });
 
+  test('recognizes Unicode hard breaks and display whitespace in TXT', () {
+    const source = '\u00a0第一段\u2028\u2003第二段\u2029\u202f第三段\u0085第四段\u000b第五段';
+    final layout = ReaderTextLayout.build(source, firstLineIndent: 2);
+
+    expect(
+      layout.text,
+      '\u3000\u3000第一段\u2028'
+      '\u3000\u3000第二段\u2029'
+      '\u3000\u3000第三段\u0085'
+      '\u3000\u3000第四段\u000b'
+      '\u3000\u3000第五段',
+    );
+    expect(
+        layout.sourceOffsetForDisplayOffset(layout.text.length), source.length);
+  });
+
   test('normalizes EPUB paragraph breaks without changing source offsets', () {
-    const source = '第一段\r\n\r\n第二段\n\n第三段';
+    const source = '第一段\r\n\r\n第二段\u2028\u2029第三段\n\n第四段';
     const expectedBySpacing = <int, String>{
-      0: '第一段\n第二段\n第三段',
-      1: '第一段\n\n第二段\n\n第三段',
-      2: '第一段\n\n\n第二段\n\n\n第三段',
+      0: '第一段\n第二段\n第三段\n第四段',
+      1: '第一段\n\n第二段\n\n第三段\n\n第四段',
+      2: '第一段\n\n\n第二段\n\n\n第三段\n\n\n第四段',
     };
 
     for (final entry in expectedBySpacing.entries) {

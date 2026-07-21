@@ -6,6 +6,15 @@ import 'package:xxread/book_sources/protocol/book_source_protocol.dart';
 import 'package:xxread/book_sources/services/book_source_client.dart';
 import 'package:xxread/book_sources/services/book_source_registry.dart';
 
+class _ManifestClient extends BookSourceClient {
+  _ManifestClient(this.source);
+
+  final DiscoveredBookSource source;
+
+  @override
+  Future<DiscoveredBookSource> discover(String input) async => source;
+}
+
 void main() {
   group('Open Reading Source Protocol', () {
     test('parses a compatible manifest', () {
@@ -44,7 +53,7 @@ void main() {
         'id': 'org.example.books',
         'name': 'Example Books',
         'apiBaseUrl': 'https://example.org/api/',
-        'capabilities': ['search'],
+        'capabilities': ['search', 'detail', 'catalog', 'content'],
         'maxCatalogPageSize': 40,
       });
 
@@ -59,7 +68,21 @@ void main() {
           'id': 'org.example.books',
           'name': 'Example Books',
           'apiBaseUrl': 'https://example.org/api/',
-          'capabilities': ['search'],
+          'capabilities': ['search', 'detail', 'catalog', 'content'],
+        }),
+        throwsA(isA<BookSourceProtocolException>()),
+      );
+    });
+
+    test('rejects a manifest that omits a core reading capability', () {
+      expect(
+        () => BookSourceManifest.fromJson({
+          'protocol': 'open-reading-source',
+          'protocolVersion': '1.3',
+          'id': 'org.example.books',
+          'name': 'Example Books',
+          'apiBaseUrl': 'https://example.org/api/',
+          'capabilities': ['search', 'catalog', 'content'],
         }),
         throwsA(isA<BookSourceProtocolException>()),
       );
@@ -208,6 +231,58 @@ void main() {
       expect(restored.contactUrl?.toString(), 'https://example.org/contact');
       expect(restored.contentLicense, 'Public Domain');
       expect(restored.rightsStatement, 'Public-domain works.');
+    });
+
+    test('refreshes a manifest without changing enabled state or added time',
+        () async {
+      final registry = BookSourceRegistry();
+      final original = RegisteredBookSource(
+        id: 'org.example.books',
+        name: 'Old name',
+        description: 'Old description',
+        manifestUrl: Uri.parse(
+          'https://example.org/.well-known/open-reading-source.json',
+        ),
+        apiBaseUrl: Uri.parse('https://example.org/api/'),
+        protocolVersion: '1.4',
+        languages: const ['en'],
+        capabilities: const {'search', 'detail', 'catalog', 'content'},
+        enabled: false,
+        addedAt: DateTime.utc(2026, 7, 11),
+      );
+      await registry.upsert(original);
+      final manifest = BookSourceManifest.fromJson({
+        'protocol': 'open-reading-source',
+        'protocolVersion': '1.4',
+        'id': 'org.example.books',
+        'name': 'New name',
+        'description': 'New description',
+        'apiBaseUrl': 'https://example.org/api/',
+        'capabilities': [
+          'search',
+          'discover',
+          'categories',
+          'browse',
+          'detail',
+          'catalog',
+          'content'
+        ],
+      });
+
+      final sources = await registry.refresh(
+        original,
+        _ManifestClient(
+          DiscoveredBookSource(
+            manifestUrl: original.manifestUrl,
+            manifest: manifest,
+          ),
+        ),
+      );
+
+      expect(sources.single.name, 'New name');
+      expect(sources.single.capabilities, contains('browse'));
+      expect(sources.single.enabled, isFalse);
+      expect(sources.single.addedAt, original.addedAt);
     });
   });
 }

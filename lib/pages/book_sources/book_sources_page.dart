@@ -307,6 +307,52 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
     }
   }
 
+  Future<void> _openCategoryPicker(
+    List<_SourcedCategory> categories,
+  ) async {
+    final size = MediaQuery.sizeOf(context);
+    final picker = _CategoryPickerPanel(
+      categories: categories,
+      selectedCategory: _selectedCategory,
+      title: context.l10n.discoverCategories,
+      searchLabel: context.l10n.search,
+      noResultsLabel: context.l10n.bookSourcesNoResults,
+    );
+    final _SourcedCategory? selected;
+    if (size.width >= 720) {
+      selected = await showDialog<_SourcedCategory>(
+        context: context,
+        builder: (context) => Dialog(
+          clipBehavior: Clip.antiAlias,
+          child: SizedBox(
+            width: (size.width - 48).clamp(320, 520).toDouble(),
+            height: (size.height - 48).clamp(320, 680).toDouble(),
+            child: picker,
+          ),
+        ),
+      );
+    } else {
+      selected = await showModalBottomSheet<_SourcedCategory>(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        clipBehavior: Clip.antiAlias,
+        builder: (context) => SizedBox(
+          height: MediaQuery.sizeOf(context).height * 0.82,
+          child: Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.viewInsetsOf(context).bottom,
+            ),
+            child: picker,
+          ),
+        ),
+      );
+    }
+    if (selected != null && mounted && selected != _selectedCategory) {
+      await _selectCategory(selected);
+    }
+  }
+
   void _openSearch() {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -583,28 +629,13 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
     if (categories.isEmpty) {
       return _buildUnsupportedMessage('categories');
     }
-    final multipleSources =
-        categories.map((category) => category.source.id).toSet().length > 1;
+    final selectedCategory = _selectedCategory ?? categories.first;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: categories.map((category) {
-            final selected = _selectedCategory == category;
-            return ChoiceChip(
-              selected: selected,
-              onSelected: (_) => unawaited(_selectCategory(category)),
-              avatar:
-                  selected ? const Icon(Icons.check_rounded, size: 16) : null,
-              label: Text(
-                multipleSources
-                    ? '${category.name} · ${category.source.name}'
-                    : category.name,
-              ),
-            );
-          }).toList(growable: false),
+        _CategoryPickerButton(
+          category: selectedCategory,
+          onTap: () => _openCategoryPicker(categories),
         ),
         const SizedBox(height: 18),
         if (_loadingCategoryBooks)
@@ -805,4 +836,234 @@ class _SourcedCategory {
     required this.id,
     required this.name,
   });
+}
+
+class _CategoryPickerButton extends StatelessWidget {
+  final _SourcedCategory category;
+  final VoidCallback onTap;
+
+  const _CategoryPickerButton({
+    required this.category,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: scheme.surfaceContainerLow,
+      borderRadius: BorderRadius.circular(16),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        key: const Key('bookSourceCategoryPickerButton'),
+        onTap: onTap,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 64),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: Row(
+              children: [
+                Icon(Icons.category_outlined, color: scheme.primary),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        category.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        category.source.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: scheme.onSurfaceVariant,
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Icon(Icons.unfold_more_rounded, color: scheme.onSurfaceVariant),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CategoryPickerPanel extends StatefulWidget {
+  final List<_SourcedCategory> categories;
+  final _SourcedCategory? selectedCategory;
+  final String title;
+  final String searchLabel;
+  final String noResultsLabel;
+
+  const _CategoryPickerPanel({
+    required this.categories,
+    required this.selectedCategory,
+    required this.title,
+    required this.searchLabel,
+    required this.noResultsLabel,
+  });
+
+  @override
+  State<_CategoryPickerPanel> createState() => _CategoryPickerPanelState();
+}
+
+class _CategoryPickerPanelState extends State<_CategoryPickerPanel> {
+  final TextEditingController _searchController = TextEditingController();
+  String _query = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  List<_CategoryPickerEntry> _entries() {
+    final query = _query.trim().toLowerCase();
+    final matches = widget.categories.where((category) {
+      if (query.isEmpty) return true;
+      return category.name.toLowerCase().contains(query) ||
+          category.source.name.toLowerCase().contains(query);
+    });
+    final entries = <_CategoryPickerEntry>[];
+    String? sourceId;
+    for (final category in matches) {
+      if (category.source.id != sourceId) {
+        sourceId = category.source.id;
+        entries.add(_CategoryPickerEntry.header(category.source.name));
+      }
+      entries.add(_CategoryPickerEntry.category(category));
+    }
+    return entries;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final entries = _entries();
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: scheme.surface,
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 18, 8, 10),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    widget.title,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                  ),
+                ),
+                IconButton(
+                  tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.close_rounded),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            child: TextField(
+              key: const Key('bookSourceCategorySearchField'),
+              controller: _searchController,
+              autofocus: false,
+              textInputAction: TextInputAction.search,
+              onChanged: (value) => setState(() => _query = value),
+              decoration: InputDecoration(
+                hintText: widget.searchLabel,
+                prefixIcon: const Icon(Icons.search_rounded),
+                suffixIcon: _query.isEmpty
+                    ? null
+                    : IconButton(
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _query = '');
+                        },
+                        icon: const Icon(Icons.clear_rounded),
+                      ),
+                border: const OutlineInputBorder(),
+              ),
+            ),
+          ),
+          const Divider(height: 1),
+          Expanded(
+            child: entries.isEmpty
+                ? Center(
+                    child: Text(
+                      widget.noResultsLabel,
+                      style: TextStyle(color: scheme.onSurfaceVariant),
+                    ),
+                  )
+                : ListView.builder(
+                    key: const Key('bookSourceCategoryLazyList'),
+                    itemCount: entries.length,
+                    itemBuilder: (context, index) {
+                      final entry = entries[index];
+                      final category = entry.category;
+                      if (category == null) {
+                        return Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 18, 20, 6),
+                          child: Text(
+                            entry.header!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelLarge
+                                ?.copyWith(
+                                  color: scheme.primary,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                          ),
+                        );
+                      }
+                      final selected = category == widget.selectedCategory;
+                      return ListTile(
+                        key: Key(
+                          'bookSourceCategory-${category.source.id}-${category.id}',
+                        ),
+                        selected: selected,
+                        title: Text(
+                          category.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        trailing: selected
+                            ? Icon(Icons.check_rounded, color: scheme.primary)
+                            : null,
+                        onTap: () => Navigator.of(context).pop(category),
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CategoryPickerEntry {
+  final String? header;
+  final _SourcedCategory? category;
+
+  const _CategoryPickerEntry.header(this.header) : category = null;
+
+  const _CategoryPickerEntry.category(this.category) : header = null;
 }

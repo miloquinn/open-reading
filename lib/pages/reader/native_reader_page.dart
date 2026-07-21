@@ -26,6 +26,7 @@ import 'package:xxread/core/reader/reader_margin_settings.dart';
 import 'package:xxread/core/reader/reader_safe_area.dart';
 import 'package:xxread/core/reader/reader_settings.dart';
 import 'package:xxread/core/reader/reader_system_ui.dart';
+import 'package:xxread/core/reader/reader_text_characters.dart';
 import 'package:xxread/core/reader/reader_text_pagination.dart';
 import 'package:xxread/core/reader/reader_theme_order.dart';
 import 'package:xxread/core/reader/reader_vertical_paging.dart';
@@ -2757,8 +2758,9 @@ List<_ReaderPageData> _paginateChapter(
       paragraphSpacing: paragraphSpacing,
       normalizeParagraphBreaks: normalizeParagraphBreaks,
       indentFirstParagraph: sourceOffset == 0 ||
-          chapter.plainText.codeUnitAt(sourceOffset - 1) == 0x0A ||
-          chapter.plainText.codeUnitAt(sourceOffset - 1) == 0x0D,
+          isReaderLineBreakCodeUnit(
+            chapter.plainText.codeUnitAt(sourceOffset - 1),
+          ),
       sourceSpanBuilder: (sourceStart, sourceEnd) =>
           _styledSpanForRange(chapter, sourceStart, sourceEnd, style),
     );
@@ -3126,7 +3128,7 @@ Future<List<Map<String, dynamic>>> _parseEpubChapters(Uint8List bytes) async {
       final blocks = <Map<String, String>>[];
       final plainText = StringBuffer();
       final elements = document.body?.querySelectorAll(
-            'h1,h2,h3,h4,h5,h6,p,li,blockquote,pre,a,img,svg image',
+            'h1,h2,h3,h4,h5,h6,p,div,section,article,li,dd,dt,blockquote,pre,stanza,v,subtitle,a,img,svg image',
           ) ??
           const <html_dom.Element>[];
       for (final element in elements) {
@@ -3162,12 +3164,10 @@ Future<List<Map<String, dynamic>>> _parseEpubChapters(Uint8List bytes) async {
         // 首行缩进出现在折行处而非每段真正的开头。
         final isPreformatted = element.localName == 'pre';
         final rawText = _epubElementOwnText(element);
-        final text = (isPreformatted
-                ? rawText
-                    .replaceAll(RegExp(r'[ \t]+'), ' ')
-                    .replaceAll(RegExp(r'\n\s*\n+'), '\n\n')
-                : rawText.replaceAll(RegExp(r'\s+'), ' '))
-            .trim();
+        final text = _normalizeEpubElementText(
+          rawText,
+          preformatted: isPreformatted,
+        );
         if (text.isNotEmpty) {
           if (plainText.isNotEmpty) plainText.write('\n\n');
           final startOffset = plainText.length;
@@ -3211,7 +3211,8 @@ Future<List<Map<String, dynamic>>> _parseEpubChapters(Uint8List bytes) async {
         }
       }
       if (blocks.isEmpty) {
-        final fallback = document.body?.text.trim() ?? '';
+        final fallback =
+            _extractHtmlParagraphText(document.body?.nodes ?? const []);
         if (fallback.isNotEmpty) {
           plainText.write(fallback);
           blocks.add(<String, String>{
@@ -3248,6 +3249,9 @@ bool _hasEpubTextBlockAncestor(html_dom.Element element) {
 }
 
 const Set<String> _epubTextBlockTags = <String>{
+  'address',
+  'article',
+  'div',
   'h1',
   'h2',
   'h3',
@@ -3256,9 +3260,32 @@ const Set<String> _epubTextBlockTags = <String>{
   'h6',
   'p',
   'li',
+  'dd',
+  'dt',
   'blockquote',
   'pre',
+  'section',
+  'stanza',
+  'subtitle',
+  'v',
 };
+
+String _normalizeEpubElementText(
+  String rawText, {
+  required bool preformatted,
+}) {
+  if (preformatted) {
+    return rawText
+        .replaceAll(RegExp(r'[ \t]+'), ' ')
+        .replaceAll(RegExp(r'\n\s*\n+'), '\n\n')
+        .trim();
+  }
+  return rawText
+      .split(RegExp(r'[\u000b\u000c\u0085\u2028\u2029]'))
+      .map((segment) => segment.replaceAll(RegExp(r'\s+'), ' ').trim())
+      .where((segment) => segment.isNotEmpty)
+      .join('\n\n');
+}
 
 /// 收集元素的自有文本：遇到嵌套的文本块子元素时跳过其子树，
 /// 该子树的文本由它自己作为独立块处理。
@@ -3267,6 +3294,10 @@ String _epubElementOwnText(html_dom.Element element) {
   void visit(html_dom.Node node) {
     for (final child in node.nodes) {
       if (child is html_dom.Element) {
+        if (child.localName == 'br') {
+          buffer.write('\u2029');
+          continue;
+        }
         if (_epubTextBlockTags.contains(child.localName)) continue;
         visit(child);
       } else if (child is html_dom.Text) {
@@ -3494,7 +3525,7 @@ List<_NativeChapter> _parseHtmlDocument(String source, String fallbackTitle) {
   final document = html_parser.parse(source);
   final headings = document.body?.querySelectorAll('h1,h2,h3,h4,h5,h6') ?? [];
   if (headings.isEmpty) {
-    final text = document.body?.text.trim() ?? '';
+    final text = _extractHtmlParagraphText(document.body?.nodes ?? const []);
     return <_NativeChapter>[
       _NativeChapter(
         id: 'html-0',
@@ -3513,7 +3544,7 @@ List<_NativeChapter> _parseHtmlDocument(String source, String fallbackTitle) {
     var node = heading.nextElementSibling;
     while (
         node != null && !RegExp(r'^h[1-6]$').hasMatch(node.localName ?? '')) {
-      final text = node.text.trim();
+      final text = _extractHtmlParagraphText(<html_dom.Node>[node]);
       if (text.isNotEmpty) buffer.writeln('$text\n');
       node = node.nextElementSibling;
     }
@@ -3550,7 +3581,8 @@ List<_NativeChapter> _parseFb2Document(String source, String fallbackTitle) {
       .allMatches(source)
       .toList();
   if (sections.isEmpty) {
-    final text = html_parser.parse(source).body?.text.trim() ?? '';
+    final document = html_parser.parse(source);
+    final text = _extractHtmlParagraphText(document.body?.nodes ?? const []);
     return <_NativeChapter>[
       _NativeChapter(
         id: 'fb2-0',
@@ -3568,7 +3600,11 @@ List<_NativeChapter> _parseFb2Document(String source, String fallbackTitle) {
     final title = titleMatch == null
         ? '$fallbackTitle ${index + 1}'
         : html_parser.parse(titleMatch.group(1)).body?.text.trim() ?? '';
-    final text = html_parser.parse(xml).body?.text.trim() ?? '';
+    final bodyXml =
+        titleMatch == null ? xml : xml.replaceFirst(titleMatch.group(0)!, '');
+    final text = _extractHtmlParagraphText(
+      html_parser.parseFragment(bodyXml).nodes,
+    );
     return _NativeChapter(
       id: 'fb2-$index',
       title: title,
@@ -3576,6 +3612,60 @@ List<_NativeChapter> _parseFb2Document(String source, String fallbackTitle) {
       blocks: <_NativeBlock>[_NativeBlock.text(text)],
     );
   });
+}
+
+const _htmlParagraphTags = <String>{
+  'address',
+  'article',
+  'blockquote',
+  'dd',
+  'div',
+  'dl',
+  'dt',
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
+  'li',
+  'p',
+  'section',
+  'stanza',
+  'subtitle',
+  'v',
+};
+
+String _extractHtmlParagraphText(Iterable<html_dom.Node> nodes) {
+  final output = StringBuffer();
+
+  void walk(Iterable<html_dom.Node> children, {bool preformatted = false}) {
+    for (final node in children) {
+      if (node is html_dom.Text) {
+        output.write(
+          preformatted ? node.data : node.data.replaceAll(RegExp(r'\s+'), ' '),
+        );
+        continue;
+      }
+      if (node is! html_dom.Element) continue;
+      final tag = (node.localName ?? '').toLowerCase();
+      if (tag == 'br' || tag == 'empty-line') {
+        output.write('\n');
+        continue;
+      }
+      final isParagraph = _htmlParagraphTags.contains(tag);
+      if (isParagraph) output.write('\n\n');
+      walk(node.nodes, preformatted: preformatted || tag == 'pre');
+      if (isParagraph) output.write('\n\n');
+    }
+  }
+
+  walk(nodes);
+  return output
+      .toString()
+      .replaceAll(RegExp(r'[ \t\u00a0]+'), ' ')
+      .replaceAll(RegExp(r'\n{3,}'), '\n\n')
+      .trim();
 }
 
 String _extractRtfText(Uint8List bytes) {

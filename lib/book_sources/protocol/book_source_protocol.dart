@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 const String openReadingSourceProtocol = 'open-reading-source';
-const String openReadingSourceProtocolVersion = '1.3';
+const String openReadingSourceProtocolVersion = '1.4';
 const String openReadingSourceProtocolRepositoryUrl =
     'https://github.com/miloquinn/open-reading-source-protocol';
 const String openReadingRightsReportUrl =
@@ -76,9 +76,10 @@ class BookSourceManifest {
 
     final apiBaseUrl = _httpUri(_requiredString(json, 'apiBaseUrl'));
     final capabilities = _stringList(json['capabilities']).toSet();
-    if (!capabilities.contains('search')) {
+    const coreCapabilities = {'search', 'detail', 'catalog', 'content'};
+    if (!capabilities.containsAll(coreCapabilities)) {
       throw const BookSourceProtocolException(
-        'A v1 source must declare the search capability.',
+        'A Core Reading source must declare search, detail, catalog, and content.',
       );
     }
 

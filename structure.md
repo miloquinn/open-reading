@@ -110,7 +110,7 @@ lib/
 - `pages/book_sources/book_source_management_page.dart`：原生协议书源管理。
 - `pages/settings/settings_page.dart`：应用设置、版本与维护入口；`SettingsPageController` 可从首页导航后定位到“支持开发”区域。
 - `pages/settings/custom_fonts_page.dart`：用户字体库的导入、应用、重命名和删除入口。
-- `pages/settings/about/changelog_page.dart`：应用内版本历史。
+- `pages/settings/about/changelog_page.dart` 与 `services/core/changelog_service.dart`：应用内版本历史异步加载与展示；版本、顺序和四语文案统一来自 `assets/changelog/changelog.json`，首项自动标记为当前版本，语言按完整 locale、语言代码、英文和任意可用语言逐级回退。新增版本只更新数据资产，不再修改页面代码或增加版本专属 ARB getter。
 - `pages/settings/about/open_source_licenses_page.dart`：应用、历史版本、内置字体及 Flutter/Dart 依赖的许可查看入口。
 - `pages/legal/user_agreement_page.dart`：首次使用协议、隐私与第三方书源责任确认；条款披露 GitHub/官网更新检查和官网下载统计，含原始 IP 的下载明细最多保留 30 天。
 
@@ -181,8 +181,9 @@ lib/
 - `core/reader/reader_layout.dart`：翻页模式、分页缓存指纹与阅读布局断点；最短边至少 600 才视为平板，双页仅在横屏且宽度至少 720 时可用，并继续受用户开关控制。`pageCurl` 固定使用经典折页，不再维护额外的仿真样式状态。
 - `core/reader/native_text_paginator.dart`：本地与在线纯文本分页共享实现；正文统一两端对齐，分页测量与最终绘制共用同一文字流；正文行高仅作用于行间，首行上方和末行下方的 leading 统一裁剪，配套 strut 不携带 `height`。分页可为第一页单独指定 `firstPageHeight`，供 EPUB 图片页缩小首屏文字区而让后续纯文字页恢复全高。
 - `core/reader/reader_text_pagination.dart`：本地文件与在线书源唯一的文字章节分页入口和 `ReaderTextPage` 页面模型；统一 canonical/display offset、首行缩进、段落间距、独占章节标题页、首屏特殊高度和 760px 单 leaf 内容宽度上限。书源兼容包装不再拥有独立分页算法。
+- `core/reader/reader_text_characters.dart`：TXT、EPUB、HTML/HTM/XHTML、Markdown、FB2、RTF、DOCX 与在线书源共享的硬换行和段首空白规则；覆盖 CR/LF、VT、FF、NEL、Unicode line/paragraph separator，以及常见 Unicode 空格和 BOM，保证各适配器与 Flutter 排版对段落起点的判断一致。
 - `core/reader/txt_chapter_parser.dart`：TXT 章节识别与标题/正文边界的单一实现；识别出的标题独立存储，正文范围跳过标题行和相邻空行，并输出 `isNeedSplitTitle` 供分页模式插入章节标题页。小文件解析缓存和大文件 UTF-8 索引共用该边界结果。
-- `core/reader/reader_text_layout.dart`：把首行缩进和段落间距投影成显示文字，并维护显示 UTF-16 boundary 到原文 boundary 的单调映射，保证书签和阅读进度仍使用 canonical offset；EPUB 解析器生成的连续段落换行只在显示层归一化，不改写规范文本。
+- `core/reader/reader_text_layout.dart`：把首行缩进和段落间距投影成显示文字，并维护显示 UTF-16 boundary 到原文 boundary 的单调映射，保证书签和阅读进度仍使用 canonical offset；所有可重排文本格式使用同一段首识别，EPUB 解析器生成的连续段落换行只在显示层归一化，不改写规范文本。
 - `core/reader/reader_page_turn_geometry.dart`：经典折页使用“局部装订始终为 x=0”的 leaf canonical 坐标；`bindingEdge` 只负责左右 leaf 的坐标换算，翻页方向不再移动书脊。几何显式区分 outgoing（当前页卷走）与 incoming（上一页展开）两种运动；手机 backward 按起手后的位移驱动折线，固定起手高度参与对角斜率，纵向移动会实时改变折痕。提交时双轴弹簧吸附到精确的 x=0 / x=width 竖直端点，使 shader 的透明/identity 终态分支稳定命中。
 - `core/reader/reader_leaf_status.dart`：分钟级时间、电量状态；Android/iOS 通过 `com.niki.xxread/reader_status` method channel 读取电量。分页模式选用阅读信息栏时，状态 revision 会参与纸页快照更新；上下翻页则由固定视口信息栏直接消费。
 - `core/reader/reader_safe_area.dart`：系统安全区、阅读信息栏预留、正文边距和页码位置。
@@ -230,7 +231,7 @@ EPUB 图片块与其后的正文共用同一个显示投影：携带图片的第
 
 - `BookSourceManifest`：书源身份、API 地址、语言和能力声明，以及可选的运营者、联系入口、内容许可、权利声明和章节目录单页上限。
 - `BookSourceBook`：在线书籍元数据。
-- `BookSourceChapter`：章节目录项；客户端按 ORSP 1.3 分页信封持续拉取，直至 `hasMore` 为 `false`。
+- `BookSourceChapter`：章节目录项；客户端按 ORSP 1.4 分页信封持续拉取，直至 `hasMore` 为 `false`。
 - `BookSourceChapterContent`：章节正文，支持纯文本、Markdown 和 HTML。
 - `BookSourceSearchPage`：分页搜索结果。
 - `BookSourceDiscoveryPage`：可选的发现页分区。
@@ -247,6 +248,8 @@ EPUB 图片块与其后的正文共用同一个显示投影：携带图片的第
 发现页默认聚合当前栏目下所有已启用且声明对应能力的书源，并允许按单一书源筛选。
 推荐分区和分类保留来源边界；最新列表保留各源内部顺序后按来源均衡穿插，每个书籍身份
 始终由 `sourceId + bookId` 共同确定。
+分类栏目只在主页面展示当前分类；完整分类集合在移动端底部面板或桌面对话框中按书源
+分组，并通过可搜索的惰性列表选择，避免分类数量随书源增长时同步构建全部标签。
 
 官方发行版不包含默认或预装书源，也不订阅官方书源目录；`BookSourceRegistry` 首次安装
 为空，只保存用户在本机主动添加的 URL。首次启动条款与每次新增书源分别要求确认第三方

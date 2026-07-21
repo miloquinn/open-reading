@@ -154,6 +154,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bookSourcesAdded => 'Source added';
 
   @override
+  String get bookSourcesRefresh => 'Refresh source';
+
+  @override
+  String get bookSourcesRefreshed => 'Book source refreshed';
+
+  @override
+  String get bookSourcesRefreshFailed => 'Could not refresh this book source';
+
+  @override
   String get bookSourcesProtocolTitle => 'Open Reading Source Protocol';
 
   @override
@@ -174,11 +183,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not open the protocol repository';
 
   @override
-  String get bookSourcesProtocolDialogTitle => 'Open source protocol v1.3';
+  String get bookSourcesProtocolDialogTitle => 'Open source protocol v1.4';
 
   @override
   String get bookSourcesProtocolDialogBody =>
-      'A source publishes /.well-known/open-reading-source.json and implements search, book details, paginated chapter catalogs, and chapter content. Version 1.3 adds complete catalog pagination while retaining operator, contact, license, and rights-statement metadata for public HTTP(S) sources that do not require sign-in.';
+      'A source publishes /.well-known/open-reading-source.json and implements the Core Reading capabilities: search, book details, paginated chapter catalogs, and chapter content. Version 1.4 keeps complete catalog pagination, requires these core capabilities, and retains operator, contact, license, and rights-statement metadata for public HTTP(S) sources that do not require sign-in.';
 
   @override
   String get bookSourcesRightsDetails => 'Operator and rights';
@@ -1856,209 +1865,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get changelogCurrentVersion => 'Current version';
 
   @override
-  String get changelog226SourceParagraphs =>
-      'Fixed paragraph boundaries and first-line indentation for online chapter text';
-
-  @override
-  String get changelog226OnlineFonts =>
-      'Moved interface and reader fonts to on-demand downloads to reduce the app size';
-
-  @override
-  String get changelog226AiSettings =>
-      'Expanded AI reading model settings and localized service error messages';
-
-  @override
-  String get changelog226SmoothChapterTurns =>
-      'Made horizontal turns between online chapters complete smoothly using warmed layouts';
-
-  @override
-  String get changelog226BackgroundDownloads =>
-      'Added a shared download queue with Android progress notifications so downloads continue outside the active screen';
-
-  @override
-  String get changelog226AndroidIcon =>
-      'Reduced the Android launcher symbol\'s visual footprint for more balanced padding';
-
-  @override
-  String get changelog225UnifiedTextReader =>
-      'Unified local files and online sources on the same text pagination and rendering engine';
-
-  @override
-  String get changelog225SourceChapterTurn =>
-      'Fixed horizontal cross-chapter turns rebuilding the page before the animation finished';
-
-  @override
-  String get changelog225AppIcons =>
-      'Updated app icons consistently across mobile, desktop, web, and OpenHarmony';
-
-  @override
-  String get changelog224SourceCatalogPaging =>
-      'Updated source support to ORSP 1.3 and fetch complete chapter catalogs using each source\'s declared page-size limit';
-
-  @override
-  String get changelog224SourceHtmlParagraphs =>
-      'Fixed paragraph boundaries being lost when source HTML separates paragraphs with <br> elements';
-
-  @override
-  String get changelog224MobileNavigation =>
-      'Reduced the mobile home floating navigation height to leave more room for content';
-
-  @override
-  String get changelog221TabletBackPage =>
-      'Fixed tablet spread page-curl backs so turning the right page shows the next left page in normal reading orientation';
-
-  @override
-  String get changelog220TabletSpread =>
-      'Added an optional landscape tablet spread with top information split across the left and right pages';
-
-  @override
-  String get changelog220PageCurl =>
-      'Rebuilt page-curl tracking, cross-spine layering, and settling to fix jumps, tails, and incorrect overlap';
-
-  @override
-  String get changelog220ReaderPerformance =>
-      'Improved TXT opening transitions, source chapter prefetching, and pagination reuse to reduce waiting';
-
-  @override
-  String get changelog220NavigationThemes =>
-      'Added icon-only or labeled floating navigation and unified sorting for built-in and custom reader themes';
-
-  @override
-  String get changelog220ReadingStats =>
-      'Redesigned detailed reading statistics with a consistent paper-inspired layout';
-
-  @override
-  String get changelog220PageOrganization =>
-      'Reorganized page source by feature area with consistent naming and module boundaries';
-
-  @override
-  String get changelog220OfficialUpdates =>
-      'Added GitHub and official-site update choices; Android can download, verify, and hand official APKs to the system installer';
-
-  @override
-  String get changelog220ReleaseDistribution =>
-      'Added official-site mirrors and download statistics with stricter asset, checksum, APK version, and signing verification';
-
-  @override
-  String get changelog220SourcePolicy =>
-      'Clarified third-party source responsibilities and added developer product and optional support entries';
-
-  @override
-  String get changelog203DeveloperProducts =>
-      'Added settings links for 小元读书 and 小元读书社区';
-
-  @override
-  String get changelog203Donation =>
-      'Added optional WeChat and Alipay donation entries with no effect on app features';
-
-  @override
-  String get changelog202PaperInformation =>
-      'Embedded reader information in each paper page so it moves with slide and page-curl turns';
-
-  @override
-  String get changelog202PageNumberInset =>
-      'Inset page numbers from screen edges to avoid rounded-corner clipping';
-
-  @override
-  String get changelog201BackwardPageTurn =>
-      'Improved backward simulated turns with immediate mid-screen tracking and a stable binding edge during vertical hand movement';
-
-  @override
-  String get changelog201SnapshotPreheat =>
-      'Preheated both adjacent pages together to reduce first backward-turn latency';
-
-  @override
-  String get changelog201SourceFilters =>
-      'Added all-source and per-source discovery filters with balanced latest-book interleaving';
-
-  @override
-  String get changelog120CustomFonts =>
-      'Improved custom fonts with import and management';
-
-  @override
-  String get changelog120SystemBars =>
-      'Polished the status bar and reading controls';
-
-  @override
-  String get changelog120BookAnimations =>
-      'Redesigned book open and close animations';
-
-  @override
-  String get changelog120TabletLibrary => 'Improved the tablet library layout';
-
-  @override
-  String get changelog120Typography =>
-      'Improved reader layout with zero margins and more text per page';
-
-  @override
-  String get changelog120VolumeKeys =>
-      'Added volume-key page turning on Android';
-
-  @override
-  String get changelog120Import =>
-      'Redesigned book import with safer bottom controls';
-
-  @override
-  String get changelog120Covers =>
-      'Generated simple covers for books without artwork';
-
-  @override
-  String get changelog120Licenses =>
-      'Added offline open-source license viewing';
-
-  @override
-  String get changelog121ContinuousScroll =>
-      'Added shared chapter-by-chapter and continuous whole-book scrolling for online sources';
-
-  @override
-  String get changelog121Typography =>
-      'Fixed asymmetric Chinese text margins and aligned pagination with rendering';
-
-  @override
-  String get changelog124PaperLeaf =>
-      'Added paper-bound page chrome, classic fold animation, and reader typography controls';
-
-  @override
-  String get changelog122ContinuousTap =>
-      'Restored center-tap reader controls during continuous online scrolling';
-
-  @override
-  String get changelog200ReaderExperience =>
-      'Upgraded top information, page numbering, and simulated page turns';
-
-  @override
-  String get changelog200CustomThemes =>
-      'Added multiple custom reading themes, image backgrounds, and drag sorting';
-
-  @override
-  String get changelog200Navigation =>
-      'Improved EPUB pagination and collapsible nested contents';
-
-  @override
-  String get changelog200KeepScreenOn =>
-      'Enabled real keep-screen-on behavior while reading on Android';
-
-  @override
-  String get changelog110CustomFonts => 'Added custom fonts';
-
-  @override
-  String get changelog110Bookmarks => 'Added bookmark support';
-
-  @override
-  String get changelog102Summary =>
-      'Improved discovery, standalone search, and reading settings';
-
-  @override
-  String get changelog101Summary =>
-      'Added discovery, paginated search, and open-source licensing notes';
-
-  @override
-  String get changelog100Summary =>
-      'Added open book sources, reading themes, and page-turn animation';
-
-  @override
-  String get changelog091Summary =>
-      'Added tablet spreads and cross-platform release support';
+  String get changelogLoadFailed => 'Could not load release history';
 
   @override
   String get settingsMaintainerLabel => 'Maintainer';

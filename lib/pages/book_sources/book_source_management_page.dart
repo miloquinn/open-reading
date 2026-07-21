@@ -224,6 +224,11 @@ class _BookSourceManagementPageState extends State<BookSourceManagementPage> {
               value: source.enabled,
               onChanged: (enabled) => _setSourceEnabled(source, enabled),
             ),
+            IconButton(
+              tooltip: context.l10n.bookSourcesRefresh,
+              onPressed: () => _refreshSource(source),
+              icon: const Icon(Icons.refresh_rounded),
+            ),
             PopupMenuButton<String>(
               tooltip: context.l10n.bookSourcesRemove,
               onSelected: (value) {
@@ -356,6 +361,27 @@ class _BookSourceManagementPageState extends State<BookSourceManagementPage> {
     final sources = await _registry.setEnabled(source.id, enabled);
     if (!mounted) return;
     setState(() => _sources = sources);
+  }
+
+  Future<void> _refreshSource(RegisteredBookSource source) async {
+    try {
+      final sources = await _registry.refresh(source, _client);
+      if (!mounted) return;
+      setState(() => _sources = sources);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.bookSourcesRefreshed)),
+      );
+    } on BookSourceProtocolException {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.bookSourcesRefreshFailed)),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.bookSourcesRefreshFailed)),
+      );
+    }
   }
 
   Future<void> _confirmRemoveSource(RegisteredBookSource source) async {

@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
 
+import 'reader_text_characters.dart';
+
 typedef ReaderSourceSpanBuilder = InlineSpan Function(
   int sourceStart,
   int sourceEnd,
@@ -96,11 +98,11 @@ class ReaderTextLayout {
       if (atParagraphStart) {
         final existingIndentStart = sourceCursor;
         while (sourceCursor < sourceText.length &&
-            _isIndentCodeUnit(sourceText.codeUnitAt(sourceCursor))) {
+            isReaderIndentCodeUnit(sourceText.codeUnitAt(sourceCursor))) {
           sourceCursor++;
         }
         if (sourceCursor < sourceText.length &&
-            !_isLineBreakCodeUnit(sourceText.codeUnitAt(sourceCursor))) {
+            !isReaderLineBreakCodeUnit(sourceText.codeUnitAt(sourceCursor))) {
           appendGenerated(
             List.filled(indent, '\u3000').join(),
             replacedSourceStart: existingIndentStart,
@@ -112,7 +114,7 @@ class ReaderTextLayout {
 
       final textStart = sourceCursor;
       while (sourceCursor < sourceText.length &&
-          !_isLineBreakCodeUnit(sourceText.codeUnitAt(sourceCursor))) {
+          !isReaderLineBreakCodeUnit(sourceText.codeUnitAt(sourceCursor))) {
         sourceCursor++;
       }
       appendSource(textStart, sourceCursor);
@@ -121,14 +123,8 @@ class ReaderTextLayout {
       final breakStart = sourceCursor;
       var logicalBreakCount = 0;
       while (sourceCursor < sourceText.length &&
-          _isLineBreakCodeUnit(sourceText.codeUnitAt(sourceCursor))) {
-        if (sourceText.codeUnitAt(sourceCursor) == 0x0D &&
-            sourceCursor + 1 < sourceText.length &&
-            sourceText.codeUnitAt(sourceCursor + 1) == 0x0A) {
-          sourceCursor += 2;
-        } else {
-          sourceCursor++;
-        }
+          isReaderLineBreakCodeUnit(sourceText.codeUnitAt(sourceCursor))) {
+        sourceCursor += readerLineBreakLengthAt(sourceText, sourceCursor);
         logicalBreakCount++;
       }
       if (normalizeParagraphBreaks && logicalBreakCount > 1) {
@@ -262,8 +258,3 @@ class _ReaderTextRun {
 
   bool get isGenerated => generatedText != null;
 }
-
-bool _isIndentCodeUnit(int codeUnit) =>
-    codeUnit == 0x20 || codeUnit == 0x09 || codeUnit == 0x3000;
-
-bool _isLineBreakCodeUnit(int codeUnit) => codeUnit == 0x0A || codeUnit == 0x0D;
