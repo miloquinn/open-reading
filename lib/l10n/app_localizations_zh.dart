@@ -1903,6 +1903,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsGithubOpenFailed => '无法打开 GitHub 链接';
 
   @override
+  String get settingsOfficialWebsite => '官网';
+
+  @override
+  String get settingsOfficialWebsiteSubtitle => '从 open.xxread.top 下载并安装';
+
+  @override
+  String get settingsOfficialWebsiteOpenFailed => '无法打开官网';
+
+  @override
   String get updateCheckNow => '检查更新';
 
   @override
@@ -5013,6 +5022,15 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get settingsGithubOpenFailed => '無法開啟 GitHub 連結';
+
+  @override
+  String get settingsOfficialWebsite => '官方網站';
+
+  @override
+  String get settingsOfficialWebsiteSubtitle => '從 open.xxread.top 下載並安裝';
+
+  @override
+  String get settingsOfficialWebsiteOpenFailed => '無法開啟官方網站';
 
   @override
   String get updateCheckNow => '檢查更新';

@@ -2,6 +2,27 @@
     "schemaVersion":  1,
     "entries":  [
                     {
+                        "version":  "2.2.8",
+                        "notes":  {
+                                      "en":  [
+                                                 "Restored automatic Android system-installer launch after an official-site APK finishes downloading",
+                                                 "Kept the verified completion notification as a retry path when the installer request is dismissed or the app is backgrounded"
+                                             ],
+                                      "zh":  [
+                                                 "修复 Android 从官网下载 APK 完成后不会自动拉起系统安装器的问题",
+                                                 "保留已校验下载完成通知，在安装请求被忽略或应用退到后台时可以重试"
+                                             ],
+                                      "zh-TW":  [
+                                                    "修正 Android 從官方網站下載 APK 完成後不會自動開啟系統安裝程式的問題",
+                                                    "保留已驗證的下載完成通知，在安裝要求被忽略或應用程式退到背景時可以重試"
+                                                ],
+                                      "ja":  [
+                                                 "公式サイトから APK のダウンロードが完了した後に Android のシステムインストーラーが自動で開かれない問題を修正しました",
+                                                 "インストーラーの要求を閉じた場合やアプリをバックグラウンドに移した場合に再試行できるよう、検証済み完了通知を残しました"
+                                             ]
+                                  }
+                    },
+                    {
                         "version":  "2.2.7",
                         "notes":  {
                                       "en":  [

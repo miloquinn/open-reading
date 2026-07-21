@@ -3636,6 +3636,24 @@ abstract class AppLocalizations {
   /// **'Could not open the GitHub link'**
   String get settingsGithubOpenFailed;
 
+  /// No description provided for @settingsOfficialWebsite.
+  ///
+  /// In en, this message translates to:
+  /// **'Official website'**
+  String get settingsOfficialWebsite;
+
+  /// No description provided for @settingsOfficialWebsiteSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Download and install from open.xxread.top'**
+  String get settingsOfficialWebsiteSubtitle;
+
+  /// No description provided for @settingsOfficialWebsiteOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the official website'**
+  String get settingsOfficialWebsiteOpenFailed;
+
   /// No description provided for @updateCheckNow.
   ///
   /// In en, this message translates to:

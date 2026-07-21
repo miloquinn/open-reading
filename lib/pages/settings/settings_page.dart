@@ -3650,6 +3650,15 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           const SizedBox(height: 10),
           _buildCommunityButton(
+            onPressed: _openOfficialWebsite,
+            backgroundColor: const Color(0xFF2D6A4F),
+            foregroundColor: Colors.white,
+            icon: const Icon(Icons.language_rounded),
+            title: l10n.settingsOfficialWebsite,
+            subtitle: l10n.settingsOfficialWebsiteSubtitle,
+          ),
+          const SizedBox(height: 10),
+          _buildCommunityButton(
             onPressed: _openGithubRepo,
             backgroundColor: const Color(0xFF181717),
             foregroundColor: Colors.white,
@@ -3898,6 +3907,20 @@ class _SettingsPageState extends State<SettingsPage> {
     if (!ok && mounted) {
       showSideToast(context, context.l10n.settingsGithubOpenFailed,
           icon: Icons.error_outline);
+    }
+  }
+
+  Future<void> _openOfficialWebsite() async {
+    final ok = await launchUrl(
+      Uri.parse('https://open.xxread.top/'),
+      mode: LaunchMode.externalApplication,
+    );
+    if (!ok && mounted) {
+      showSideToast(
+        context,
+        context.l10n.settingsOfficialWebsiteOpenFailed,
+        icon: Icons.error_outline,
+      );
     }
   }
 

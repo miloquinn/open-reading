@@ -2226,6 +2226,9 @@
   "@settingsGithubOpenFailed": {
     "description": "Toast when the GitHub link fails to open"
   },
+  "settingsOfficialWebsite": "Official website",
+  "settingsOfficialWebsiteSubtitle": "Download and install from open.xxread.top",
+  "settingsOfficialWebsiteOpenFailed": "Could not open the official website",
   "updateCheckNow": "Check for updates",
   "updateCheckNowSubtitle": "Get the latest version from GitHub or the official website",
   "updateAvailableTitle": "A new version is available",

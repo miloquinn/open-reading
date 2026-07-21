@@ -197,7 +197,15 @@ class AppUpdateDownloadService {
           expectedBuildNumber: asset.buildNumber,
         ),
       );
-      return 'downloaded';
+      // Keep the original in-app update flow: once the verified APK is ready,
+      // immediately hand it to the native bridge so Android can open the
+      // package installer (or the unknown-apps permission screen). The
+      // completion notification remains available as a retry path if the
+      // user dismisses that request or the app is backgrounded.
+      return await installDownloadedApk(
+        completedFile.path,
+        expectedBuildNumber: asset.buildNumber,
+      );
     } on AppUpdateException {
       await _notify(() => BackgroundDownloadNotifier.fail(notificationTask));
       rethrow;

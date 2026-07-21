@@ -1992,6 +1992,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsGithubOpenFailed => 'Could not open the GitHub link';
 
   @override
+  String get settingsOfficialWebsite => 'Official website';
+
+  @override
+  String get settingsOfficialWebsiteSubtitle =>
+      'Download and install from open.xxread.top';
+
+  @override
+  String get settingsOfficialWebsiteOpenFailed =>
+      'Could not open the official website';
+
+  @override
   String get updateCheckNow => 'Check for updates';
 
   @override

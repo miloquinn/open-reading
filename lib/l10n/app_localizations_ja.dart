@@ -1921,6 +1921,16 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsGithubOpenFailed => 'GitHub のリンクを開けませんでした';
 
   @override
+  String get settingsOfficialWebsite => '公式サイト';
+
+  @override
+  String get settingsOfficialWebsiteSubtitle =>
+      'open.xxread.top からダウンロードしてインストール';
+
+  @override
+  String get settingsOfficialWebsiteOpenFailed => '公式サイトを開けませんでした';
+
+  @override
   String get updateCheckNow => 'アップデートを確認';
 
   @override
