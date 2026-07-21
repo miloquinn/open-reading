@@ -78,7 +78,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   late final BookSourceClient _client = widget.client ?? BookSourceClient();
   late final BookSourceShelfService _shelfService =
       widget.shelfService ?? BookSourceShelfService(client: _client);
-  final PageController _pageController = PageController();
+  PageController _pageController = PageController();
   final ItemScrollController _verticalPageScrollController =
       ItemScrollController();
   final ItemPositionsListener _verticalPagePositionsListener =
@@ -572,6 +572,17 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     required double restoreProgress,
   }) {
     final normalizedProgress = restoreProgress.clamp(0.0, 1.0);
+    final preparedLayout = _preparedPagedLayoutForChapter(index, content);
+    final preparedPages = preparedLayout?.pages;
+    final preparedPageCount = preparedPages?.length ?? 1;
+    final preparedPageIndex = preparedPages == null
+        ? 0
+        : (_usesTwoPageLayout
+                ? _spreadStartForPage(
+                    ((preparedPageCount - 1) * normalizedProgress).round(),
+                  )
+                : ((preparedPageCount - 1) * normalizedProgress).round())
+            .clamp(0, preparedPageCount - 1);
     _pagedLayouts.removeWhere(
       (chapterIndex, _) => chapterIndex < index - 1 || chapterIndex > index + 2,
     );
@@ -583,35 +594,62 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       _content = content;
       _prefetchedContent[index] = content;
       _loadingContent = false;
-      _pageIndex = 0;
-      _pageCount = 1;
-      _paginatedPages = const [];
-      _paginationKey = null;
+      _pageIndex = preparedPageIndex;
+      _pageCount = preparedPageCount;
+      _paginatedPages = preparedPages ?? const [];
+      _paginationKey = preparedLayout?.fingerprint;
       _restorePageProgress = normalizedProgress;
-      _restorePagedPosition = true;
+      _restorePagedPosition = preparedLayout == null;
       _ignoreSlidePageChanges = true;
       _pendingSlideChapterIndex = null;
       _pendingSlideBoundaryViewIndex = null;
     });
+    if (_pageMode == BookSourcePageMode.horizontalSlide) {
+      _replaceSlidePageController(
+        initialPage: preparedPageIndex + (index > 0 ? 1 : 0),
+      );
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _ignoreSlidePageChanges = false;
+      });
+    }
     _scrollProgress.value = normalizedProgress;
-    _restoreScrollProgress(normalizedProgress);
     unawaited(_preloadAround(index));
   }
 
+  _BookSourcePagedLayout? _preparedPagedLayoutForChapter(
+    int index,
+    BookSourceChapterContent content,
+  ) {
+    if (_pageMode == BookSourcePageMode.verticalScroll ||
+        _pagedViewportSize.isEmpty) {
+      return null;
+    }
+    return _pagedLayoutFor(index, content, _pagedViewportSize);
+  }
+
+  void _replaceSlidePageController({required int initialPage}) {
+    final previous = _pageController;
+    _pageController = PageController(initialPage: initialPage);
+    WidgetsBinding.instance.addPostFrameCallback((_) => previous.dispose());
+  }
+
   Future<void> _preloadAround(int index) async {
-    final indexes = <int>{index - 1, index + 1, index + 2}
-        .where((value) => value >= 0 && value < _chapters.length);
-    await Future.wait(
-      indexes.map(
-        (chapterIndex) async {
-          try {
-            await _continuousContentFor(chapterIndex);
-          } catch (_) {
-            // Adjacent content is opportunistic and can be retried on demand.
-          }
-        },
-      ),
-    );
+    // The next chapter is the only cache entry needed for a forward turn.
+    // Load and lay it out before competing for a source connection with the
+    // backwards preview or the farther look-ahead chapter.
+    await _preloadChapter(index + 1);
+    for (final chapterIndex in <int>[index - 1, index + 2]) {
+      unawaited(_preloadChapter(chapterIndex));
+    }
+  }
+
+  Future<void> _preloadChapter(int index) async {
+    if (index < 0 || index >= _chapters.length) return;
+    try {
+      await _continuousContentFor(index);
+    } catch (_) {
+      // Adjacent content is opportunistic and can be retried on demand.
+    }
   }
 
   Future<BookSourceChapterContent> _continuousContentFor(int index) {
