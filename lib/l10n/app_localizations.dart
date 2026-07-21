@@ -3396,6 +3396,42 @@ abstract class AppLocalizations {
   /// **'Current version'**
   String get changelogCurrentVersion;
 
+  /// No description provided for @changelog226SourceParagraphs.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed paragraph boundaries and first-line indentation for online chapter text'**
+  String get changelog226SourceParagraphs;
+
+  /// No description provided for @changelog226OnlineFonts.
+  ///
+  /// In en, this message translates to:
+  /// **'Moved interface and reader fonts to on-demand downloads to reduce the app size'**
+  String get changelog226OnlineFonts;
+
+  /// No description provided for @changelog226AiSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Expanded AI reading model settings and localized service error messages'**
+  String get changelog226AiSettings;
+
+  /// No description provided for @changelog226SmoothChapterTurns.
+  ///
+  /// In en, this message translates to:
+  /// **'Made horizontal turns between online chapters complete smoothly using warmed layouts'**
+  String get changelog226SmoothChapterTurns;
+
+  /// No description provided for @changelog226BackgroundDownloads.
+  ///
+  /// In en, this message translates to:
+  /// **'Added a shared download queue with Android progress notifications so downloads continue outside the active screen'**
+  String get changelog226BackgroundDownloads;
+
+  /// No description provided for @changelog226AndroidIcon.
+  ///
+  /// In en, this message translates to:
+  /// **'Reduced the Android launcher symbol\'s visual footprint for more balanced padding'**
+  String get changelog226AndroidIcon;
+
   /// No description provided for @changelog225UnifiedTextReader.
   ///
   /// In en, this message translates to:

@@ -6,7 +6,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:crypto/crypto.dart';
@@ -225,11 +224,9 @@ class OnlineFontService {
           if (CancelToken.isCancel(error)) {
             throw const OnlineFontException(OnlineFontErrorCode.cancelled);
           }
-          throw OnlineFontException(
-              OnlineFontErrorCode.networkFailed, error);
+          throw OnlineFontException(OnlineFontErrorCode.networkFailed, error);
         } catch (error) {
-          throw OnlineFontException(
-              OnlineFontErrorCode.networkFailed, error);
+          throw OnlineFontException(OnlineFontErrorCode.networkFailed, error);
         }
 
         final bytes = await tempFile.readAsBytes();

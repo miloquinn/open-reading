@@ -99,8 +99,7 @@ void main() {
       FontCatalog.instrumentSans,
       FontCatalog.newsreader,
     ]);
-    final notifier =
-        await _loadNotifier(onlineFontService: onlineFontService);
+    final notifier = await _loadNotifier(onlineFontService: onlineFontService);
     addTearDown(notifier.dispose);
 
     await notifier.setAppFontId(FontCatalog.instrumentSansId);
@@ -130,8 +129,7 @@ void main() {
     final onlineFontService =
         await _seededOnlineFontService([FontCatalog.sourceHanSans]);
 
-    final notifier =
-        await _loadNotifier(onlineFontService: onlineFontService);
+    final notifier = await _loadNotifier(onlineFontService: onlineFontService);
     addTearDown(notifier.dispose);
 
     expect(notifier.appFontId, FontCatalog.sourceHanSansId);
@@ -139,8 +137,7 @@ void main() {
     expect(prefs.getString('app_font_id_v2'), FontCatalog.sourceHanSansId);
   });
 
-  test(
-      'legacy app font family falls back to system when not yet downloaded',
+  test('legacy app font family falls back to system when not yet downloaded',
       () async {
     SharedPreferences.setMockInitialValues({
       'app_font_family': 'SourceHanSansCN',

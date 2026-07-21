@@ -1662,7 +1662,8 @@ class _SettingsPageState extends State<SettingsPage> {
                               border: const OutlineInputBorder(),
                               suffixIcon: customMode
                                   ? IconButton(
-                                      tooltip: l10n.settingsAiFetchModelsTooltip,
+                                      tooltip:
+                                          l10n.settingsAiFetchModelsTooltip,
                                       onPressed:
                                           loadingModels ? null : fetchModels,
                                       icon: loadingModels
@@ -1741,7 +1742,8 @@ class _SettingsPageState extends State<SettingsPage> {
                               ),
                               decoration: InputDecoration(
                                 labelText: l10n.settingsAiTemperatureLabel,
-                                prefixIcon: const Icon(Icons.thermostat_rounded),
+                                prefixIcon:
+                                    const Icon(Icons.thermostat_rounded),
                                 border: const OutlineInputBorder(),
                               ),
                             ),
@@ -2547,8 +2549,10 @@ class _SettingsPageState extends State<SettingsPage> {
                               const SizedBox(height: 6),
                               Text(
                                 description,
-                                style:
-                                    Theme.of(context).textTheme.bodySmall?.copyWith(
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
                                       color: colorScheme.onSurfaceVariant,
                                       height: 1.45,
                                     ),
@@ -2673,7 +2677,8 @@ class _SettingsPageState extends State<SettingsPage> {
     final isOnline = option.isOnline;
     final isDownloaded =
         !isOnline || appSettings.isOnlineFontDownloaded(option.id);
-    final progress = isOnline ? appSettings.onlineFontProgress(option.id) : null;
+    final progress =
+        isOnline ? appSettings.onlineFontProgress(option.id) : null;
     final isDownloading = progress != null &&
         (progress.status == OnlineFontDownloadStatus.downloading ||
             progress.status == OnlineFontDownloadStatus.verifying ||
@@ -2688,7 +2693,7 @@ class _SettingsPageState extends State<SettingsPage> {
       description =
           '${l10n.fontDownloadHint} · ${_formatFileSize(option.onlineTotalBytes)}';
     } else if (isOnline && isDownloading) {
-      final percent = (progress!.fraction * 100).round();
+      final percent = (progress.fraction * 100).round();
       description = '${l10n.fontDownloading} $percent%';
     } else if (isOnline && isFailed) {
       description = l10n.fontDownloadFailed;
@@ -2781,7 +2786,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(4),
                     child: LinearProgressIndicator(
-                      value: progress!.fraction,
+                      value: progress.fraction,
                       minHeight: 4,
                       backgroundColor:
                           colorScheme.outline.withValues(alpha: 0.2),

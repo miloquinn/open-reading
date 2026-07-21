@@ -1856,6 +1856,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get changelogCurrentVersion => 'Current version';
 
   @override
+  String get changelog226SourceParagraphs =>
+      'Fixed paragraph boundaries and first-line indentation for online chapter text';
+
+  @override
+  String get changelog226OnlineFonts =>
+      'Moved interface and reader fonts to on-demand downloads to reduce the app size';
+
+  @override
+  String get changelog226AiSettings =>
+      'Expanded AI reading model settings and localized service error messages';
+
+  @override
+  String get changelog226SmoothChapterTurns =>
+      'Made horizontal turns between online chapters complete smoothly using warmed layouts';
+
+  @override
+  String get changelog226BackgroundDownloads =>
+      'Added a shared download queue with Android progress notifications so downloads continue outside the active screen';
+
+  @override
+  String get changelog226AndroidIcon =>
+      'Reduced the Android launcher symbol\'s visual footprint for more balanced padding';
+
+  @override
   String get changelog225UnifiedTextReader =>
       'Unified local files and online sources on the same text pagination and rendering engine';
 

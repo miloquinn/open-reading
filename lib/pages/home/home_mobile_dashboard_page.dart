@@ -1388,7 +1388,8 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
                   ),
                 ),
                 Text(
-                  translatePlanTaskDetail(context, task.detail, task.detailParams),
+                  translatePlanTaskDetail(
+                      context, task.detail, task.detailParams),
                   style: TextStyle(
                     fontSize: 12,
                     color: palette.secondaryTextColor,

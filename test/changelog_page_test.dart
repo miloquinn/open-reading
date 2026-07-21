@@ -17,6 +17,13 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('版本更新记录'), findsOneWidget);
+    expect(find.text('v2.2.6'), findsOneWidget);
+    expect(find.text('当前版本'), findsOneWidget);
+    expect(find.text('修复在线章节正文的段落边界与首行缩进'), findsOneWidget);
+    expect(
+      find.text('新增共享下载队列与 Android 进度通知，离开当前页面后下载仍会继续'),
+      findsOneWidget,
+    );
     expect(find.text('v2.2.5'), findsOneWidget);
     expect(
       find.text('本地文件与在线书源统一使用同一套文字分页和渲染内核'),
@@ -34,11 +41,25 @@ void main() {
     );
     expect(find.text('修复书源 HTML 使用 <br> 分隔段落时丢失段落边界的问题'), findsOneWidget);
     expect(find.text('缩小手机首页悬浮导航高度，为内容留出更多空间'), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.text('v2.2.1'),
+      100,
+      scrollable: find.byType(Scrollable),
+    );
+
     expect(find.text('v2.2.1'), findsOneWidget);
     expect(
       find.text('修复平板双页仿真翻页纸背，右页翻动时会显示正向的下一左页内容'),
       findsOneWidget,
     );
+
+    await tester.scrollUntilVisible(
+      find.text('v2.2.0'),
+      100,
+      scrollable: find.byType(Scrollable),
+    );
+
     expect(
       find.text('平板新增可关闭的横屏双页布局，左右页顶部信息分工显示'),
       findsOneWidget,
@@ -47,8 +68,6 @@ void main() {
       find.text('重做仿真翻页跟手、跨书脊层级与回弹收尾，修复闪跳、甩尾和遮挡'),
       findsOneWidget,
     );
-    expect(find.text('当前版本'), findsOneWidget);
-
     expect(find.text('v2.2.0'), findsOneWidget);
 
     await tester.scrollUntilVisible(

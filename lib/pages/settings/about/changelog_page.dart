@@ -39,8 +39,19 @@ class ChangelogPage extends StatelessWidget {
   List<_ChangelogEntry> _entries(AppLocalizations l10n) {
     return [
       _ChangelogEntry(
-        version: 'v2.2.5',
+        version: 'v2.2.6',
         current: true,
+        items: [
+          l10n.changelog226SourceParagraphs,
+          l10n.changelog226OnlineFonts,
+          l10n.changelog226AiSettings,
+          l10n.changelog226SmoothChapterTurns,
+          l10n.changelog226BackgroundDownloads,
+          l10n.changelog226AndroidIcon,
+        ],
+      ),
+      _ChangelogEntry(
+        version: 'v2.2.5',
         items: [
           l10n.changelog225UnifiedTextReader,
           l10n.changelog225SourceChapterTurn,

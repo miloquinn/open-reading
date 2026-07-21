@@ -3035,7 +3035,7 @@ TextSpan _styledSpanForRange(
   return TextSpan(style: base, children: children);
 }
 
-/// 获取 <img>/<svg><image> 元素的图片地址。
+/// 获取 `<img>`/`<svg><image>` 元素的图片地址。
 ///
 /// package:html 对带命名空间前缀的属性（如 xlink:href）使用 [html_dom.AttributeName]
 /// 作为 attributes map 的 key 而非普通字符串，直接用字符串字面量查找会失配，
@@ -3098,6 +3098,7 @@ Future<List<Map<String, dynamic>>> _parseEpubChapters(Uint8List bytes) async {
       indexNavChapters(chapter.SubChapters, depth + 1);
     }
   }
+
   indexNavChapters(epub.Chapters);
 
   final manifestHrefById = <String, String>{};

@@ -1777,6 +1777,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String get changelogCurrentVersion => '当前版本';
 
   @override
+  String get changelog226SourceParagraphs => '修复在线章节正文的段落边界与首行缩进';
+
+  @override
+  String get changelog226OnlineFonts => '界面与阅读字体改为按需下载，减小应用安装包体积';
+
+  @override
+  String get changelog226AiSettings => '完善 AI 阅读模型设置，并统一服务错误提示的本地化文案';
+
+  @override
+  String get changelog226SmoothChapterTurns => '复用预热布局，让在线书源水平跨章切换完整顺滑';
+
+  @override
+  String get changelog226BackgroundDownloads =>
+      '新增共享下载队列与 Android 进度通知，离开当前页面后下载仍会继续';
+
+  @override
+  String get changelog226AndroidIcon => '缩小 Android 启动器图标主体，增加更均衡的四周留白';
+
+  @override
   String get changelog225UnifiedTextReader => '本地文件与在线书源统一使用同一套文字分页和渲染内核';
 
   @override
@@ -5018,6 +5037,25 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get changelogCurrentVersion => '目前版本';
+
+  @override
+  String get changelog226SourceParagraphs => '修正線上章節正文的段落邊界與首行縮排';
+
+  @override
+  String get changelog226OnlineFonts => '介面與閱讀字型改為按需下載，縮小應用程式安裝包體積';
+
+  @override
+  String get changelog226AiSettings => '完善 AI 閱讀模型設定，並統一服務錯誤提示的本地化文案';
+
+  @override
+  String get changelog226SmoothChapterTurns => '重用預熱版面，讓線上書源水平跨章切換完整流暢';
+
+  @override
+  String get changelog226BackgroundDownloads =>
+      '新增共用下載佇列與 Android 進度通知，離開目前頁面後下載仍會繼續';
+
+  @override
+  String get changelog226AndroidIcon => '縮小 Android 啟動器圖示主體，增加更均衡的四周留白';
 
   @override
   String get changelog225UnifiedTextReader => '本機檔案與線上書源統一使用同一套文字分頁與繪製核心';

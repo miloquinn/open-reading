@@ -84,8 +84,7 @@ class AppSettingsNotifier extends ChangeNotifier {
 
   /// 在线字体是否已下载完成（可用于选择）。
   bool isOnlineFontDownloaded(String fontId) =>
-      _onlineFontService.isSupported &&
-      _onlineFontService.isDownloaded(fontId);
+      _onlineFontService.isSupported && _onlineFontService.isDownloaded(fontId);
 
   /// 在线字体当前的下载进度；未在下载中返回 null。
   OnlineFontDownloadProgress? onlineFontProgress(String fontId) =>

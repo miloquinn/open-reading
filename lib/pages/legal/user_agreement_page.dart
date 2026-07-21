@@ -251,17 +251,50 @@ class _UserAgreementPageState extends State<UserAgreementPage>
   Widget _buildAgreementPanel(ColorScheme scheme) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final sections = <(String, String)>[
-      (context.l10n.agreementV2Section1Title, context.l10n.agreementV2Section1Body),
-      (context.l10n.agreementV2Section2Title, context.l10n.agreementV2Section2Body),
-      (context.l10n.agreementV2Section3Title, context.l10n.agreementV2Section3Body),
-      (context.l10n.agreementV2Section4Title, context.l10n.agreementV2Section4Body),
-      (context.l10n.agreementV2Section5Title, context.l10n.agreementV2Section5Body),
-      (context.l10n.agreementV2Section6Title, context.l10n.agreementV2Section6Body),
-      (context.l10n.agreementV2Section7Title, context.l10n.agreementV2Section7Body),
-      (context.l10n.agreementV2Section8Title, context.l10n.agreementV2Section8Body),
-      (context.l10n.agreementV2Section9Title, context.l10n.agreementV2Section9Body),
-      (context.l10n.agreementV2Section10Title, context.l10n.agreementV2Section10Body),
-      (context.l10n.agreementV2Section11Title, context.l10n.agreementV2Section11Body),
+      (
+        context.l10n.agreementV2Section1Title,
+        context.l10n.agreementV2Section1Body
+      ),
+      (
+        context.l10n.agreementV2Section2Title,
+        context.l10n.agreementV2Section2Body
+      ),
+      (
+        context.l10n.agreementV2Section3Title,
+        context.l10n.agreementV2Section3Body
+      ),
+      (
+        context.l10n.agreementV2Section4Title,
+        context.l10n.agreementV2Section4Body
+      ),
+      (
+        context.l10n.agreementV2Section5Title,
+        context.l10n.agreementV2Section5Body
+      ),
+      (
+        context.l10n.agreementV2Section6Title,
+        context.l10n.agreementV2Section6Body
+      ),
+      (
+        context.l10n.agreementV2Section7Title,
+        context.l10n.agreementV2Section7Body
+      ),
+      (
+        context.l10n.agreementV2Section8Title,
+        context.l10n.agreementV2Section8Body
+      ),
+      (
+        context.l10n.agreementV2Section9Title,
+        context.l10n.agreementV2Section9Body
+      ),
+      (
+        context.l10n.agreementV2Section10Title,
+        context.l10n.agreementV2Section10Body
+      ),
+      (
+        context.l10n.agreementV2Section11Title,
+        context.l10n.agreementV2Section11Body
+      ),
     ];
     return Container(
       decoration: BoxDecoration(
@@ -331,8 +364,7 @@ class _UserAgreementPageState extends State<UserAgreementPage>
                         sections[i].$1,
                         sections[i].$2,
                       ),
-                      if (i != sections.length - 1)
-                        const SizedBox(height: 24),
+                      if (i != sections.length - 1) const SizedBox(height: 24),
                     ],
                   ],
                 ),
@@ -440,8 +472,7 @@ class _UserAgreementPageState extends State<UserAgreementPage>
                 ),
               ],
             ),
-            if (point != points.last)
-              const SizedBox(height: 8),
+            if (point != points.last) const SizedBox(height: 8),
           ],
         ],
       ),

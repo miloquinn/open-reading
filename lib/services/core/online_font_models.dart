@@ -16,7 +16,7 @@ class OnlineFontFile {
   /// 下载 URL（jsDelivr CDN 或 raw.githubusercontent.com）。
   final String url;
 
-  /// 本地保存文件名（含扩展名，存于 online_fonts/<font_id>/ 下）。
+  /// 本地保存文件名（含扩展名，存于 `online_fonts/<font_id>/` 下）。
   final String fileName;
 
   /// 预期字节数，用于进度展示与下载超额保护。

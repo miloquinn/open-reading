@@ -1792,6 +1792,26 @@ class AppLocalizationsJa extends AppLocalizations {
   String get changelogCurrentVersion => '現在のバージョン';
 
   @override
+  String get changelog226SourceParagraphs => 'オンライン章本文の段落境界と字下げが失われる問題を修正しました';
+
+  @override
+  String get changelog226OnlineFonts => '画面・読書用フォントをオンデマンド配信に変更し、アプリ容量を削減しました';
+
+  @override
+  String get changelog226AiSettings => 'AI 読書のモデル設定を拡充し、サービスのエラー表示を多言語化しました';
+
+  @override
+  String get changelog226SmoothChapterTurns =>
+      '準備済みレイアウトを再利用し、オンライン章間の横スライドを滑らかにしました';
+
+  @override
+  String get changelog226BackgroundDownloads =>
+      '共有ダウンロードキューと Android の進捗通知を追加し、画面を離れてもダウンロードを継続できるようにしました';
+
+  @override
+  String get changelog226AndroidIcon => 'Android ランチャーアイコンの主体を縮小し、周囲の余白を整えました';
+
+  @override
   String get changelog225UnifiedTextReader =>
       'ローカルファイルとオンラインソースで同じテキストページ分割・描画エンジンを使用するようにしました';
 
