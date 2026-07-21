@@ -467,6 +467,50 @@ class AppLocalizationsEn extends AppLocalizations {
   String get builtInFonts => 'Built-in fonts';
 
   @override
+  String get onlineFonts => 'Online fonts';
+
+  @override
+  String get fontDownload => 'Download';
+
+  @override
+  String get fontDownloading => 'Downloading…';
+
+  @override
+  String get fontDownloaded => 'Downloaded';
+
+  @override
+  String get fontDownloadFailed => 'Download failed, tap to retry';
+
+  @override
+  String get fontDownloadHint => 'First use requires download from GitHub';
+
+  @override
+  String get fontDeleteDownload => 'Delete download';
+
+  @override
+  String fontDeleteDownloadTitle(String name) {
+    return 'Delete downloaded \"$name\"?';
+  }
+
+  @override
+  String fontDeleteDownloadMessage(String size) {
+    return 'Will free $size of storage. Will re-download next time you use it.';
+  }
+
+  @override
+  String get fontDownloadCancelled => 'Download cancelled';
+
+  @override
+  String get fontDownloadNetworkFailed => 'Network error, download failed';
+
+  @override
+  String get fontDownloadInvalid => 'Downloaded font file is invalid';
+
+  @override
+  String get fontDownloadUnsupported =>
+      'Online font download is not supported on this platform';
+
+  @override
   String get importFont => 'Import font';
 
   @override
@@ -2864,4 +2908,541 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get importScanning => 'Scanning files…';
+
+  @override
+  String get settingsAiApiKeyConfigured => 'API Key configured';
+
+  @override
+  String get settingsAiApiKeyTapToConfigure => 'Tap to complete setup';
+
+  @override
+  String get settingsAiAddModel => 'Add model';
+
+  @override
+  String settingsAiSwitchedToModel(String model) {
+    return 'Switched to $model';
+  }
+
+  @override
+  String get settingsAiFillBaseUrlAndApiKey =>
+      'Please fill in Base URL and API Key first';
+
+  @override
+  String get settingsAiEditModelTitle => 'Configure model';
+
+  @override
+  String get settingsAiQuickCardSubtitle =>
+      'Each quick card binds to one model';
+
+  @override
+  String get settingsAiPresetModel => 'Preset model';
+
+  @override
+  String get settingsAiBaseUrlLabel => 'Base URL';
+
+  @override
+  String get settingsAiApiKeyLabel => 'API Key';
+
+  @override
+  String get settingsAiModelNameLabel => 'Model name';
+
+  @override
+  String get settingsAiFetchModelsTooltip => 'Auto-fetch models';
+
+  @override
+  String get settingsAiFetchModelsList => 'Auto-fetch model list';
+
+  @override
+  String get settingsAiSelectModel => 'Select a model';
+
+  @override
+  String get settingsAiTemperatureLabel => 'Temperature';
+
+  @override
+  String get settingsAiAddAndEnable => 'Add and enable';
+
+  @override
+  String get settingsAiModelMismatchClaude =>
+      'Claude provider model names usually start with \"claude\". Please check that provider and model match.';
+
+  @override
+  String get settingsAiModelMismatchGemini =>
+      'Gemini provider model names usually contain \"gemini\". Please check that provider and model match.';
+
+  @override
+  String get settingsAiModelMismatchGlm =>
+      'GLM provider model names usually start with \"glm\". Please check that provider and model match.';
+
+  @override
+  String get settingsAiModelMismatchMinimax =>
+      'MiniMax provider model names usually contain \"MiniMax\". Please check that provider and model match.';
+
+  @override
+  String get settingsAiModelListFormatUnrecognized =>
+      'Model list response format not recognized';
+
+  @override
+  String get settingsAiNoModelsReturned =>
+      'Server returned no available model list';
+
+  @override
+  String get settingsAiNoModelsAvailable => 'No models available';
+
+  @override
+  String settingsAiFetchModelsFailed(String error) {
+    return 'Failed to fetch models: $error';
+  }
+
+  @override
+  String get readerAiEnterQuestionFirst =>
+      'Please enter a question before sending';
+
+  @override
+  String get readerAiEmptyResponse =>
+      'Model returned empty response, please retry';
+
+  @override
+  String readerAiRequestFailed(String error) {
+    return 'Request failed: $error';
+  }
+
+  @override
+  String get readerAiUnknownError => 'Unknown error';
+
+  @override
+  String readerAiEmptyResponseError(String endpoint) {
+    return 'Server response is empty. This is usually caused by an incorrect Base URL, a gateway that does not forward to the model endpoint, or the server closing the connection early.\nRequest URL: $endpoint';
+  }
+
+  @override
+  String readerAiInvalidJsonError(
+      String provider, String endpoint, String snippet) {
+    return 'Server response is not valid JSON. The current endpoint may be incompatible with the $provider configuration.\nRequest URL: $endpoint\nResponse snippet: $snippet';
+  }
+
+  @override
+  String readerAiFailedReadBody(String status, String endpoint) {
+    return 'Request failed$status: could not read the server response. This is usually caused by an incorrect Base URL, the endpoint returning empty content, or the network truncating the response.\nRequest URL: $endpoint';
+  }
+
+  @override
+  String readerAiNetworkRequestFailed(
+      String status, String error, String endpoint) {
+    return 'Network request failed$status: $error\nRequest URL: $endpoint';
+  }
+
+  @override
+  String readerAiRequestFailedMinimaxHint(
+      String status, String text, String endpoint) {
+    return 'Request failed($status): $text\nSuggestions: 1) MiniMax temperature must be in (0,1]; 2) check that the model name matches the endpoint; 3) use only a single system instruction.\nRequest URL: $endpoint';
+  }
+
+  @override
+  String readerAiRequestFailedClaudeHint(
+      String status, String text, String endpoint) {
+    return 'Request failed($status): $text\nTip: Claude requires the anthropic-version request header.\nRequest URL: $endpoint';
+  }
+
+  @override
+  String readerAiRequestFailedProviderMismatchHint(
+      String status, String text, String endpoint) {
+    return 'Request failed($status): $text\nTip: Please confirm that the provider and API Key match; they cannot be mixed.\nRequest URL: $endpoint';
+  }
+
+  @override
+  String readerAiRequestFailedGeneric(
+      String status, String text, String endpoint) {
+    return 'Request failed($status): $text\nRequest URL: $endpoint';
+  }
+
+  @override
+  String readerAiMockSelectionResponse(
+      String selectedText, String before, String after) {
+    return 'AI (mock): The text you selected is \"$selectedText\".\n\nBefore: $before\nAfter: $after';
+  }
+
+  @override
+  String readerAiMockPageAnalysis(int chars) {
+    return 'AI (mock): This page has $chars characters. Focus on the arguments at the beginning and end of paragraphs.';
+  }
+
+  @override
+  String get readerAiMockGreeting => 'Hello';
+
+  @override
+  String readerAiMockChatResponse(String question, int chars) {
+    return 'AI (mock): You asked \"$question\".\n\nI have read the current page ($chars characters). You can continue asking.';
+  }
+
+  @override
+  String get readerAiMemorySummaryHeading => '[Book memory summary]';
+
+  @override
+  String get readerAiReadingAdviceHeading => '[Reading advice for you]';
+
+  @override
+  String get readerAiIndexedSnippetsHeading => '[Indexed hit snippets]';
+
+  @override
+  String get readerAiLocalFallbackIntro =>
+      'No online AI Key configured, answering based on local memory and index:';
+
+  @override
+  String get readerAiRelatedContentHeading => '[Related content]';
+
+  @override
+  String get readerAiNoRelatedContent =>
+      '[Related content] No usable snippets hit.';
+
+  @override
+  String get readerAiRelatedContentLocationHeading =>
+      '[Related content location]';
+
+  @override
+  String readerAiSnippetLocation(
+      String chapterId, int startOffset, int endOffset) {
+    return '- Location: $chapterId ($startOffset-$endOffset)';
+  }
+
+  @override
+  String get readerAiReadingSuggestionHeading => '[How to read]';
+
+  @override
+  String get readerAiNextStepHeading => '[Next step]';
+
+  @override
+  String get readerAiNextStepReadSnippet =>
+      '1) Read the hit snippet above first.';
+
+  @override
+  String get readerAiNextStepAskFollowUp =>
+      '2) Ask again with \"why/how/example\" and I will continue locating by index.';
+
+  @override
+  String get ttsSystemDefault => 'System default';
+
+  @override
+  String get ttsUnavailable => 'System TTS unavailable';
+
+  @override
+  String ttsUnsupportedLanguage(String language) {
+    return 'System does not support language: $language';
+  }
+
+  @override
+  String get ttsCallFailed => 'System TTS call failed';
+
+  @override
+  String get importErrorSourceMissing => 'Source file does not exist';
+
+  @override
+  String get importErrorHashFailed => 'Cannot verify file content';
+
+  @override
+  String get importErrorTargetNameExhausted =>
+      'Cannot allocate available name for import file';
+
+  @override
+  String get importErrorSourceNotMaterialized =>
+      'Source file not yet on local storage';
+
+  @override
+  String get importErrorCopyVerificationFailed =>
+      'Copied file does not match source';
+
+  @override
+  String get importErrorFileTooLarge => 'File exceeds 100MB import limit';
+
+  @override
+  String get importErrorSourcePrepareFailed => 'Cannot prepare import file';
+
+  @override
+  String get importErrorFailed => 'Book import failed';
+
+  @override
+  String get importUnknownTitle => 'Unknown title';
+
+  @override
+  String get importUnknownAuthor => 'Unknown author';
+
+  @override
+  String get bookUntitled => 'Untitled';
+
+  @override
+  String get homePlanTaskCompleteDailyGoal => 'Complete today\'s goal';
+
+  @override
+  String homePlanTaskReadMinutes(int minutes) {
+    return 'Read $minutes minutes';
+  }
+
+  @override
+  String get homePlanTaskCompleteFocusReading => 'Complete focus reading';
+
+  @override
+  String homePlanTaskFocusSession(int minutes) {
+    return 'At least 1 focus session of $minutes minutes';
+  }
+
+  @override
+  String get homePlanTaskKeepRhythm => 'Keep the rhythm';
+
+  @override
+  String get homePlanTaskWeekAchievedDays => 'Weekly achieved days ≥ 5';
+
+  @override
+  String get noteColorLightBlue => 'Light Blue';
+
+  @override
+  String get noteColorRed => 'Red';
+
+  @override
+  String get noteColorGreen => 'Green';
+
+  @override
+  String get noteColorPurple => 'Purple';
+
+  @override
+  String get noteColorGold => 'Gold';
+
+  @override
+  String get noteColorOrange => 'Orange';
+
+  @override
+  String get noteColorYellow => 'Yellow';
+
+  @override
+  String get noteColorDarkGreen => 'Dark Green';
+
+  @override
+  String get noteColorCustom => 'Custom';
+
+  @override
+  String noteShareBookHeader(String title, String author) {
+    return '📖 《$title》 - $author';
+  }
+
+  @override
+  String noteShareNoteLabel(String note) {
+    return '💭 Note: $note';
+  }
+
+  @override
+  String noteShareChapterLabel(String chapter) {
+    return '📍 $chapter';
+  }
+
+  @override
+  String noteSharePageLabel(int page) {
+    return '📄 Page $page';
+  }
+
+  @override
+  String noteShareHashtags(String type) {
+    return '#BookNotes #$type';
+  }
+
+  @override
+  String get accentPurple => 'Elegant Purple';
+
+  @override
+  String get accentPink => 'Cherry Pink';
+
+  @override
+  String get accentCyan => 'Fresh Cyan';
+
+  @override
+  String get accentBrown => 'Classic Brown';
+
+  @override
+  String get accentGrey => 'Elegant Grey';
+
+  @override
+  String get accentDeepPurple => 'Charming Purple';
+
+  @override
+  String get accentAmber => 'Amber Gold';
+
+  @override
+  String get accentLightGreen => 'Vivid Green';
+
+  @override
+  String get accentYellow => 'Sunshine Yellow';
+
+  @override
+  String get accentNeutralGrey => 'Minimal Grey';
+
+  @override
+  String get accentIndigo => 'Deep Indigo';
+
+  @override
+  String get accentDeepOrange => 'Flame Orange';
+
+  @override
+  String get glassPresetClear => 'Clear mode';
+
+  @override
+  String get glassPresetStandard => 'Standard mode';
+
+  @override
+  String get glassPresetDreamy => 'Dreamy mode';
+
+  @override
+  String get agreementV2HeroTitle => 'Keep reading on your own device.';
+
+  @override
+  String get agreementV2HeroBody =>
+      'OpenReading is an open-source, cross-platform, local-first ebook reader. It provides reading tools; it does not provide, host, or review books you import.';
+
+  @override
+  String get agreementV2LocalTitle => 'Local first';
+
+  @override
+  String get agreementV2LocalBody =>
+      'Books, progress, and notes generally remain on your device for you to manage and back up.';
+
+  @override
+  String get agreementV2OpenSourceTitle => 'AGPL-3.0 licensed';
+
+  @override
+  String get agreementV2OpenSourceBody =>
+      'Source code is provided under GNU AGPL v3.0 and the software is supplied “as is,” without warranties.';
+
+  @override
+  String agreementV2VersionLabel(String version) {
+    return 'Terms version $version';
+  }
+
+  @override
+  String get agreementV2Title => 'Terms of Use & Privacy Notice';
+
+  @override
+  String get agreementV2Subtitle => 'Please read before using OpenReading';
+
+  @override
+  String get agreementV2ImportantNotice =>
+      'Important: The official OpenReading app does not preinstall, bundle, or recommend any third-party book source, and its developers do not operate, represent, or host source content. You choose every imported file and source you add; use only content you are authorized to access.';
+
+  @override
+  String get agreementV2SourceBoundaryTitle => 'Third-party source boundary';
+
+  @override
+  String get agreementV2SourceBoundaryPoint1 =>
+      'The official project provides open-source reader software and the Open Reading Source Protocol only. It provides no source addresses or official source directory.';
+
+  @override
+  String get agreementV2SourceBoundaryPoint2 =>
+      'Every source address must be entered and added by you. The app connects directly to that independent service without routing content through a developer-operated server.';
+
+  @override
+  String get agreementV2SourceBoundaryPoint3 =>
+      'Protocol compatibility means only that an interface can connect; it does not prove legality or licensing. Source operators are responsible for their content, and you must review and use it lawfully.';
+
+  @override
+  String get agreementV2Section1Title => 'Scope and acceptance';
+
+  @override
+  String get agreementV2Section1Body =>
+      'These terms apply to your download, installation, and use of OpenReading and its included features. By selecting “Agree and continue,” you confirm that you have read, understood, and accepted them. If you do not agree, stop using and exit the app. A guardian must consent where required by local law.';
+
+  @override
+  String get agreementV2Section2Title => 'Open-source license';
+
+  @override
+  String get agreementV2Section2Body =>
+      'Future OpenReading versions are released under the GNU Affero General Public License v3.0. You may use, copy, modify, distribute, or sell the software under that license. A distributed modified version must provide its complete corresponding source under AGPL-3.0, and a modified version used to provide a network service must also offer corresponding source to users interacting with it. MIT rights already granted for v1.0.0 and earlier versions remain valid and are not revoked. These terms do not restrict rights granted by the open-source license. Third-party components remain subject to their own licenses.';
+
+  @override
+  String get agreementV2Section3Title => 'User content and rights';
+
+  @override
+  String get agreementV2Section3Body =>
+      '“User content” includes books, documents, images, metadata, links, and other material you import, download, open, convert, cache, annotate, or read aloud. You must have all rights and permissions required to use it. You are solely responsible for copyright, trademark, privacy, defamation, unlawful-content, malware, and other claims or losses involving user content. The software and its developers do not upload, sell, license, endorse, or review that content, and format support does not imply lawful permission to use a file.';
+
+  @override
+  String get agreementV2Section4Title => 'Prohibited use';
+
+  @override
+  String get agreementV2Section4Body =>
+      'You may not use the software to infringe intellectual property or other rights; distribute unlawful, harmful, or malicious content; bypass digital rights management, access controls, or paywalls; attack or disrupt third-party systems; or engage in activity prohibited by applicable law. You are responsible for complaints, claims, penalties, and losses resulting from your conduct.';
+
+  @override
+  String get agreementV2Section5Title => 'Book sources and third parties';
+
+  @override
+  String get agreementV2Section5Body =>
+      'The official app does not preinstall, distribute, or recommend book sources and does not operate an official source directory. Sources, network APIs, external links, online content, system text-to-speech, AI services, and other integrations you add are independently provided and controlled by third parties. They are not operated, represented, licensed, endorsed, or reviewed by the developers. Source operators are legally responsible for the content they provide. Before adding one, you must review its origin, content rights, privacy policy, and terms, and you are responsible for your own access, downloads, caching, distribution, and other use. To the fullest extent permitted by applicable law, the developers are not liable for third-party content, charges, data practices, outages, or infringement disputes.';
+
+  @override
+  String get agreementV2Section6Title => 'Data and privacy';
+
+  @override
+  String get agreementV2Section6Body =>
+      'OpenReading is local-first. Books, reading progress, notes, and settings are normally stored on your device. Unless you enable a network book source, cover search, AI, sync, or another online feature, the app does not need to send book text to the developers to provide local reading. Automatic and manual update checks contact GitHub and the official site at open.xxread.top with necessary technical parameters such as platform, processor architecture, and release channel; their servers process your IP address and User-Agent as part of ordinary network communication. When you download an installer from the official site, the backend records the version, architecture, download time, IP address, and User-Agent for download counts, security protection, and troubleshooting. Download-event records containing a raw IP are retained for no more than 30 days and then deleted; only aggregate statistics without raw IP addresses are kept longer. Update requests do not include book text, your library, notes, an account, or a unique device identifier. GitHub requests are also governed by GitHub’s privacy terms. When another online feature is used, queries, selected text, network information, or necessary parameters may be sent to the provider you selected under that provider’s policies. Protect your device, API keys, and backups; uninstalling, clearing data, device failure, or user error may permanently erase data.';
+
+  @override
+  String get agreementV2Section7Title => 'AI and automated output';
+
+  @override
+  String get agreementV2Section7Body =>
+      'AI summaries, answers, translations, recommendations, and other generated output may be inaccurate, incomplete, outdated, or misleading. They are reading aids only and are not legal, medical, financial, academic, or other professional advice. Verify output independently and do not rely on it for high-risk decisions. Material submitted to an AI provider is also governed by that provider’s terms.';
+
+  @override
+  String get agreementV2Section8Title => 'Disclaimer of warranties';
+
+  @override
+  String get agreementV2Section8Body =>
+      'To the fullest extent permitted by law, the software and related materials are provided “as is” and “as available,” without express, implied, or statutory warranties, including merchantability, fitness for a particular purpose, title, non-infringement, accuracy, compatibility, security, error-free operation, uninterrupted availability, or preservation of data. Open-source contributors have no duty to maintain, update, support, or fix the software.';
+
+  @override
+  String get agreementV2Section9Title => 'Limitation of liability';
+
+  @override
+  String get agreementV2Section9Body =>
+      'To the fullest extent permitted by law, developers, copyright holders, and contributors are not liable for direct, indirect, incidental, special, punitive, or consequential loss arising from installation, use, inability to use, user content, third-party services, data loss, device issues, business interruption, or security incidents, whether under contract, tort, or another theory. Liability that cannot legally be excluded remains limited to the minimum extent permitted by law.';
+
+  @override
+  String get agreementV2Section10Title => 'Indemnity';
+
+  @override
+  String get agreementV2Section10Body =>
+      'To the extent permitted by applicable law, you are responsible for and will hold developers, copyright holders, and contributors harmless from third-party claims, investigations, penalties, losses, and reasonable costs arising from your user content, unlawful or infringing conduct, breach of these terms, or use of third-party services.';
+
+  @override
+  String get agreementV2Section11Title => 'Changes, termination, and law';
+
+  @override
+  String get agreementV2Section11Body =>
+      'Features, maintenance status, and these terms may change as the open-source project, law, or risk controls evolve. Material updates may require renewed consent; if you disagree, stop using the app. You may uninstall at any time. Disputes should first be resolved informally. Subject to mandatory consumer protections, the law of the developer’s location and courts with lawful jurisdiction apply. If one provision is unenforceable, the rest remain effective.';
+
+  @override
+  String get agreementV2ConfirmLabel =>
+      'I have read and agree to the Terms of Use and Privacy Notice.';
+
+  @override
+  String get agreementV2SourceConfirmLabel =>
+      'I understand that the official project provides no book sources; sources and content I add come from independent third parties, and I will verify authorization and remain responsible for my own use.';
+
+  @override
+  String get agreementV2ExitLabel => 'Decline';
+
+  @override
+  String get agreementV2ContinueLabel => 'Agree and continue';
+
+  @override
+  String get agreementV2ExitDialogTitle => 'Decline the terms?';
+
+  @override
+  String get agreementV2ExitDialogBody =>
+      'You must accept the Terms of Use to continue using OpenReading. If you do not agree, please exit the app.';
+
+  @override
+  String get agreementV2CancelLabel => 'Go back';
+
+  @override
+  String get agreementV2ConfirmExitLabel => 'Exit';
+
+  @override
+  String get agreementV2SaveFailed =>
+      'Could not save your consent. Please try again.';
 }

@@ -23,7 +23,7 @@ class AppThemes {
   // 默认蓝色主题
   static const AppTheme blueTheme = AppTheme(
     name: 'blue',
-    displayName: '海洋蓝',
+    displayName: 'blue',
     lightColorScheme: ColorScheme(
       brightness: Brightness.light,
       primary: Color(0xFF1976D2),
@@ -91,7 +91,7 @@ class AppThemes {
   // 紫色主题
   static const AppTheme purpleTheme = AppTheme(
     name: 'purple',
-    displayName: '神秘紫',
+    displayName: 'purple',
     lightColorScheme: ColorScheme(
       brightness: Brightness.light,
       primary: Color(0xFF6A4C93),
@@ -159,7 +159,7 @@ class AppThemes {
   // 绿色主题
   static const AppTheme greenTheme = AppTheme(
     name: 'green',
-    displayName: '森林绿',
+    displayName: 'green',
     lightColorScheme: ColorScheme(
       brightness: Brightness.light,
       primary: Color(0xFF2E7D32),
@@ -227,7 +227,7 @@ class AppThemes {
   // 橙色主题
   static const AppTheme orangeTheme = AppTheme(
     name: 'orange',
-    displayName: '活力橙',
+    displayName: 'orange',
     lightColorScheme: ColorScheme(
       brightness: Brightness.light,
       primary: Color(0xFFFF6F00),
@@ -295,7 +295,7 @@ class AppThemes {
   // 红色主题
   static const AppTheme redTheme = AppTheme(
     name: 'red',
-    displayName: '热情红',
+    displayName: 'red',
     lightColorScheme: ColorScheme(
       brightness: Brightness.light,
       primary: Color(0xFFD32F2F),
@@ -410,7 +410,7 @@ class AppThemes {
 
     return AppTheme(
       name: 'custom',
-      displayName: '自定义',
+      displayName: 'custom',
       lightColorScheme: lightScheme,
       darkColorScheme: darkScheme,
     );
@@ -436,29 +436,29 @@ class AppThemes {
     Color(0xFFFF5722), // 深橙色
   ];
 
-  // 强调色名称对应
+  // 强调色名称对应（值为稳定 code，由 UI 层通过 accentColorDisplayName 翻译）
   static final Map<Color, String> accentColorNames = {
-    const Color(0xFF1976D2): '海洋蓝',
-    const Color(0xFF6A4C93): '优雅紫',
-    const Color(0xFF2E7D32): '森林绿',
-    const Color(0xFFFF6F00): '活力橙',
-    const Color(0xFFD32F2F): '热情红',
-    const Color(0xFFE91E63): '樱花粉',
-    const Color(0xFF00BCD4): '清新青',
-    const Color(0xFF795548): '古典棕',
-    const Color(0xFF607D8B): '优雅灰',
-    const Color(0xFF9C27B0): '魅力紫',
-    const Color(0xFFFF9800): '琥珀金',
-    const Color(0xFF4CAF50): '生机绿',
-    const Color(0xFFFFEB3B): '阳光黄',
-    const Color(0xFF9E9E9E): '简约灰',
-    const Color(0xFF3F51B5): '深邃蓝',
-    const Color(0xFFFF5722): '火焰橙',
+    const Color(0xFF1976D2): 'blue',
+    const Color(0xFF6A4C93): 'purple',
+    const Color(0xFF2E7D32): 'green',
+    const Color(0xFFFF6F00): 'orange',
+    const Color(0xFFD32F2F): 'red',
+    const Color(0xFFE91E63): 'pink',
+    const Color(0xFF00BCD4): 'cyan',
+    const Color(0xFF795548): 'brown',
+    const Color(0xFF607D8B): 'grey',
+    const Color(0xFF9C27B0): 'deepPurple',
+    const Color(0xFFFF9800): 'amber',
+    const Color(0xFF4CAF50): 'lightGreen',
+    const Color(0xFFFFEB3B): 'yellow',
+    const Color(0xFF9E9E9E): 'neutralGrey',
+    const Color(0xFF3F51B5): 'indigo',
+    const Color(0xFFFF5722): 'deepOrange',
   };
 
-  // 获取强调色名称
+  // 获取强调色名称 code（未匹配时返回 'custom'，由 UI 层翻译）
   static String getAccentColorName(Color color) {
-    return accentColorNames[color] ?? '自定义';
+    return accentColorNames[color] ?? 'custom';
   }
 
   // 全局强调色管理（与应用主题分离）

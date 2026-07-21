@@ -122,45 +122,45 @@ String? validateAIProviderSettings(
 }) {
   final normalized = settings.normalized();
   if (requireApiKey && normalized.apiKey.isEmpty) {
-    return 'API Key 不能为空';
+    return 'api_key_required';
   }
   if (normalized.model.isEmpty) {
-    return 'Model 不能为空';
+    return 'model_required';
   }
 
   final uri = Uri.tryParse(normalized.baseUrl);
   if (normalized.baseUrl.isEmpty ||
       uri == null ||
       !(uri.isScheme('http') || uri.isScheme('https'))) {
-    return 'Base URL 必须是合法的 http/https 地址';
+    return 'base_url_invalid';
   }
 
   if (!_isValidTemperature(normalized.provider, normalized.temperature)) {
     return normalized.provider == AIProviderType.minimax
-        ? 'MiniMax 的 Temperature 必须在 0.01 ~ 1.00 之间'
-        : 'Temperature 超出范围，请按提示填写';
+        ? 'temp_error_minimax'
+        : 'temp_error_out_of_range';
   }
 
   final model = normalized.model.toLowerCase();
   switch (normalized.provider) {
     case AIProviderType.claude:
       if (!model.startsWith('claude')) {
-        return 'Claude 服务商的模型名通常应以 claude 开头，请检查 provider 和 model 是否匹配';
+        return 'model_mismatch_claude';
       }
       break;
     case AIProviderType.gemini:
       if (!model.contains('gemini')) {
-        return 'Gemini 服务商的模型名通常应包含 gemini，请检查 provider 和 model 是否匹配';
+        return 'model_mismatch_gemini';
       }
       break;
     case AIProviderType.glm:
       if (!model.startsWith('glm')) {
-        return 'GLM 服务商的模型名通常应以 glm 开头，请检查 provider 和 model 是否匹配';
+        return 'model_mismatch_glm';
       }
       break;
     case AIProviderType.minimax:
       if (!model.contains('minimax')) {
-        return 'MiniMax 服务商的模型名通常应包含 MiniMax，请检查 provider 和 model 是否匹配';
+        return 'model_mismatch_minimax';
       }
       break;
     case AIProviderType.openai:
@@ -516,11 +516,26 @@ abstract class ConfigurableAIService implements AIService {
 }
 
 class AIServiceException implements Exception {
-  final String message;
-  const AIServiceException(this.message);
+  final String code;
+  final String? status;
+  final String? text;
+  final String? endpoint;
+  final String? error;
+  final String? provider;
+  final String? snippet;
+
+  const AIServiceException({
+    required this.code,
+    this.status,
+    this.text,
+    this.endpoint,
+    this.error,
+    this.provider,
+    this.snippet,
+  });
 
   @override
-  String toString() => message;
+  String toString() => code;
 }
 
 class ReaderHttpAIService implements ConfigurableAIService {
@@ -632,7 +647,7 @@ class ReaderHttpAIService implements ConfigurableAIService {
     final normalized = settings.normalized();
     final validationError = validateAIProviderSettings(normalized);
     if (validationError != null) {
-      throw AIServiceException(validationError);
+      throw AIServiceException(code: validationError);
     }
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_activeProviderKey, normalized.provider.value);
@@ -651,7 +666,7 @@ class ReaderHttpAIService implements ConfigurableAIService {
   ) async {
     final normalized = settings.normalized();
     if (normalized.apiKey.isEmpty) {
-      throw const AIServiceException('请先填写 API Key');
+      throw const AIServiceException(code: 'api_key_required');
     }
 
     final base = normalized.baseUrl.replaceAll(RegExp(r'/+$'), '');
@@ -672,12 +687,12 @@ class ReaderHttpAIService implements ConfigurableAIService {
         body = jsonDecode(body);
       }
       if (body is! Map) {
-        throw const AIServiceException('模型列表返回格式无法识别');
+        throw const AIServiceException(code: 'model_list_format_unrecognized');
       }
 
       final rawModels = body['data'] ?? body['models'];
       if (rawModels is! List) {
-        throw const AIServiceException('服务端没有返回可用模型列表');
+        throw const AIServiceException(code: 'no_models_returned');
       }
 
       final models = rawModels
@@ -697,15 +712,18 @@ class ReaderHttpAIService implements ConfigurableAIService {
         ..sort();
 
       if (models.isEmpty) {
-        throw const AIServiceException('没有获取到可用模型');
+        throw const AIServiceException(code: 'no_models_available');
       }
       return models;
     } on DioException catch (error) {
-      throw AIServiceException(_extractDioErrorMessage(error));
+      throw _extractDioException(error);
     } on AIServiceException {
       rethrow;
     } catch (error) {
-      throw AIServiceException('获取模型失败：$error');
+      throw AIServiceException(
+        code: 'fetch_models_failed',
+        error: error.toString(),
+      );
     }
   }
 
@@ -763,7 +781,7 @@ class ReaderHttpAIService implements ConfigurableAIService {
     final settings = await _resolveActiveSettings();
     final validationError = validateAIProviderSettings(settings);
     if (validationError != null) {
-      throw AIServiceException(validationError);
+      throw AIServiceException(code: validationError);
     }
 
     final context = _compactPageContext(pageText);
@@ -788,7 +806,7 @@ class ReaderHttpAIService implements ConfigurableAIService {
     ];
 
     if (!messages.any((m) => m['role'] == 'user')) {
-      throw const AIServiceException('请输入问题后再发送');
+      throw const AIServiceException(code: 'enter_question_first');
     }
 
     final endpoint = _buildEndpoint(settings);
@@ -810,14 +828,16 @@ class ReaderHttpAIService implements ConfigurableAIService {
         responseData: responseData,
       );
       if (answer.trim().isEmpty) {
-        throw const AIServiceException('模型返回为空，请重试');
+        throw const AIServiceException(code: 'empty_response');
       }
       return answer.trim();
     } on DioException catch (e) {
-      final msg = _extractDioErrorMessage(e);
-      throw AIServiceException(msg);
+      throw _extractDioException(e);
     } catch (e) {
-      throw AIServiceException('请求失败：$e');
+      throw AIServiceException(
+        code: 'request_failed',
+        error: e.toString(),
+      );
     }
   }
 
@@ -914,7 +934,8 @@ class ReaderHttpAIService implements ConfigurableAIService {
     final body = rawBody?.trim() ?? '';
     if (body.isEmpty) {
       throw AIServiceException(
-        '服务端返回为空，通常是 Base URL 配置错误、网关没有转发到模型接口，或服务端提前断开连接。\n请求地址：$endpoint',
+        code: 'empty_response_error',
+        endpoint: endpoint,
       );
     }
 
@@ -922,7 +943,10 @@ class ReaderHttpAIService implements ConfigurableAIService {
       return jsonDecode(body);
     } on FormatException {
       throw AIServiceException(
-        '服务端返回的不是合法 JSON，当前接口可能与 ${settings.provider.displayName} 配置不兼容。\n请求地址：$endpoint\n返回片段：${_truncateForError(body)}',
+        code: 'invalid_json_error',
+        provider: settings.provider.displayName,
+        endpoint: endpoint,
+        snippet: _truncateForError(body),
       );
     }
   }
@@ -1101,67 +1125,110 @@ class ReaderHttpAIService implements ConfigurableAIService {
     return buffer.toString();
   }
 
-  String _extractDioErrorMessage(DioException e) {
+  AIServiceException _extractDioException(DioException e) {
     final status = e.response?.statusCode;
+    final statusStr = status?.toString() ?? '';
     final data = e.response?.data;
     final endpoint = e.requestOptions.uri.toString();
     if (data is Map) {
-      final error = data['error'];
-      if (error is Map) {
-        final message = error['message'];
-        if (message is String && message.trim().isNotEmpty) {
-          return _enhanceProviderError(message, status, endpoint: endpoint);
-        }
-      }
-      final message = data['message'];
-      if (message is String && message.trim().isNotEmpty) {
-        return _enhanceProviderError(message, status, endpoint: endpoint);
-      }
-      final detail = data['detail'];
-      if (detail is String && detail.trim().isNotEmpty) {
-        return _enhanceProviderError(detail, status, endpoint: endpoint);
+      final message = _extractMapErrorMessage(data);
+      if (message != null) {
+        return _enhanceProviderException(message, statusStr, endpoint);
       }
     }
     if (data is String && data.trim().isNotEmpty) {
       try {
         final jsonMap = jsonDecode(data);
         if (jsonMap is Map) {
-          final msg = jsonMap['message'];
-          if (msg is String && msg.trim().isNotEmpty) {
-            return _enhanceProviderError(msg, status, endpoint: endpoint);
+          final msg = _extractMapErrorMessage(jsonMap);
+          if (msg != null) {
+            return _enhanceProviderException(msg, statusStr, endpoint);
           }
         }
       } catch (_) {
-        return _enhanceProviderError(data, status, endpoint: endpoint);
+        return _enhanceProviderException(data, statusStr, endpoint);
       }
     }
-    final rawError = e.error?.toString() ?? e.message ?? '未知错误';
+    final rawError = e.error?.toString() ?? e.message ?? '';
     if (_looksLikeMissingResponse(rawError)) {
-      return '请求失败${status == null ? '' : '($status)'}：未能读取服务端返回的数据，通常是 Base URL 配错、接口返回空内容，或网络把响应截断了。\n请求地址：$endpoint';
+      return AIServiceException(
+        code: 'failed_read_body',
+        status: statusStr,
+        endpoint: endpoint,
+      );
     }
-    return '网络请求失败${status == null ? '' : '($status)'}：$rawError\n请求地址：$endpoint';
+    return AIServiceException(
+      code: 'network_request_failed',
+      status: statusStr,
+      error: rawError,
+      endpoint: endpoint,
+    );
   }
 
-  String _enhanceProviderError(
+  /// Extract the first non-empty error message from a response Map.
+  String? _extractMapErrorMessage(Map data) {
+    final error = data['error'];
+    if (error is Map) {
+      final message = error['message'];
+      if (message is String && message.trim().isNotEmpty) {
+        return message;
+      }
+    }
+    final message = data['message'];
+    if (message is String && message.trim().isNotEmpty) {
+      return message;
+    }
+    final detail = data['detail'];
+    if (detail is String && detail.trim().isNotEmpty) {
+      return detail;
+    }
+    return null;
+  }
+
+  AIServiceException _enhanceProviderException(
     String message,
-    int? status, {
-    required String endpoint,
-  }) {
+    String status,
+    String endpoint,
+  ) {
     final text = message.trim();
     if (text.toLowerCase().contains('invalid chat setting')) {
-      return '请求失败($status)：$text\n建议检查：1) MiniMax 温度需在 (0,1]；2) 模型名与接口是否匹配；3) 仅使用单条 system 指令。\n请求地址：$endpoint';
+      return AIServiceException(
+        code: 'request_failed_minimax_hint',
+        status: status,
+        text: text,
+        endpoint: endpoint,
+      );
     }
     if (text.toLowerCase().contains('anthropic-version')) {
-      return '请求失败($status)：$text\n提示：Claude 必须携带 anthropic-version 请求头。\n请求地址：$endpoint';
+      return AIServiceException(
+        code: 'request_failed_claude_hint',
+        status: status,
+        text: text,
+        endpoint: endpoint,
+      );
     }
     if (text.toLowerCase().contains('api key not valid') ||
         text.toLowerCase().contains('invalid api key')) {
-      return '请求失败($status)：$text\n提示：请确认服务商与 API Key 对应，不可混用。\n请求地址：$endpoint';
+      return AIServiceException(
+        code: 'request_failed_provider_mismatch_hint',
+        status: status,
+        text: text,
+        endpoint: endpoint,
+      );
     }
     if (_looksLikeMissingResponse(text)) {
-      return '请求失败${status == null ? '' : '($status)'}：未能读取服务端返回的数据，通常是 Base URL 配错、接口返回空内容，或网络把响应截断了。\n请求地址：$endpoint';
+      return AIServiceException(
+        code: 'failed_read_body',
+        status: status,
+        endpoint: endpoint,
+      );
     }
-    return '请求失败($status)：$text\n请求地址：$endpoint';
+    return AIServiceException(
+      code: 'request_failed_generic',
+      status: status,
+      text: text,
+      endpoint: endpoint,
+    );
   }
 
   bool _looksLikeMissingResponse(String text) {
@@ -1266,7 +1333,11 @@ class MockAIService implements ConfigurableAIService {
     required AIRequestMeta meta,
   }) async {
     await Future<void>.delayed(const Duration(milliseconds: 450));
-    return 'AI(模拟): 你选择的内容是“$selectedText”。\n\n上文: ${_trim(contextBefore)}\n下文: ${_trim(contextAfter)}';
+    return _mockToken('mock_selection_response', {
+      'selectedText': selectedText,
+      'before': _trim(contextBefore),
+      'after': _trim(contextAfter),
+    });
   }
 
   @override
@@ -1275,7 +1346,9 @@ class MockAIService implements ConfigurableAIService {
     required AIRequestMeta meta,
   }) async {
     await Future<void>.delayed(const Duration(milliseconds: 450));
-    return 'AI(模拟): 本页共 ${pageText.length} 字，建议重点关注段落开头与结尾处的论点。';
+    return _mockToken('mock_page_analysis', {
+      'chars': pageText.length,
+    });
   }
 
   @override
@@ -1285,12 +1358,24 @@ class MockAIService implements ConfigurableAIService {
     required AIRequestMeta meta,
   }) async {
     await Future<void>.delayed(const Duration(milliseconds: 450));
-    final last = history.isNotEmpty ? history.last.content : '你好';
-    return 'AI(模拟): 你问的是「${_trim(last)}」。\n\n我已读取当前页（${pageText.length} 字），你可以继续追问。';
+    final last = history.isNotEmpty ? history.last.content : '';
+    if (last.trim().isEmpty) {
+      return _mockToken('mock_greeting', {});
+    }
+    return _mockToken('mock_chat_response', {
+      'question': _trim(last),
+      'chars': pageText.length,
+    });
   }
 
   String _trim(String text) {
     if (text.length <= 80) return text;
     return '${text.substring(0, 80)}...';
+  }
+
+  /// Encode a mock response as a token that the UI layer translates
+  /// via [translateMockAiResponse].
+  static String _mockToken(String code, Map<String, dynamic> params) {
+    return '[[mock:$code|${jsonEncode(params)}]]';
   }
 }

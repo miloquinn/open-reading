@@ -14,6 +14,7 @@ import 'package:xxread/services/books/book_services.dart';
 import 'package:xxread/services/core/core_services.dart';
 import 'package:xxread/services/library/library_event_bus_service.dart';
 import 'package:xxread/services/reading/reading_plan_service.dart';
+import 'package:xxread/services/reading/reading_plan_translator.dart';
 import 'package:xxread/services/reading/reading_stats_dao.dart';
 import 'package:xxread/utils/layout_helper.dart';
 import 'package:xxread/utils/localization_extension.dart';
@@ -1379,7 +1380,7 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  task.title,
+                  translatePlanTaskTitle(context, task.title),
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
@@ -1387,7 +1388,7 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
                   ),
                 ),
                 Text(
-                  task.detail,
+                  translatePlanTaskDetail(context, task.detail, task.detailParams),
                   style: TextStyle(
                     fontSize: 12,
                     color: palette.secondaryTextColor,

@@ -2,6 +2,7 @@
 // 技术要点：Material 3、自适应布局、状态语义与进度反馈。
 
 import 'package:flutter/material.dart';
+import 'package:xxread/services/books/book_import_translator.dart';
 
 import 'import_book_controller.dart';
 
@@ -251,7 +252,12 @@ class ImportQueueCard extends StatelessWidget {
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
-                            item.failure?.message ?? statusLabel,
+                            item.failure == null
+                                ? statusLabel
+                                : translateBookImportFailure(
+                                    context,
+                                    item.failure!,
+                                  ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style:

@@ -56,14 +56,22 @@ class BookImportSource {
       );
 }
 
+/// 服务层抛出的导入失败异常。
+///
+/// [code] 是稳定的错误标识符，UI 层通过
+/// `translateBookImportFailure(context, failure)` 解析为本地化文案。
+/// [message] 仅用于调试/日志，不应直接展示给用户。
 class BookImportFailure implements Exception {
   const BookImportFailure({
     required this.code,
-    required this.message,
+    this.message = '',
     this.cause,
   });
 
   final String code;
+
+  /// 调试信息，非用户可见文案。UI 应使用 [code] 经由
+  /// `translateBookImportFailure` 解析本地化文案。
   final String message;
   final Object? cause;
 

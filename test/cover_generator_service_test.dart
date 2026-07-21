@@ -1,18 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:xxread/l10n/app_localizations.dart';
 import 'package:xxread/services/books/cover_generator_service.dart';
 import 'package:xxread/widgets/generated_book_cover.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-
-  setUpAll(() async {
-    final loader = FontLoader('SourceHanSansCN')
-      ..addFont(rootBundle.load('assets/fonts/app/SourceHanSansCN-Regular.otf'))
-      ..addFont(rootBundle.load('assets/fonts/app/SourceHanSansCN-Bold.otf'));
-    await loader.load();
-  });
 
   testWidgets('same title and author produce the same cover across formats',
       (tester) async {
@@ -48,8 +42,16 @@ void main() {
   testWidgets('generated cover exposes book metadata and uses shared painter',
       (tester) async {
     await tester.pumpWidget(
-      const MaterialApp(
-        home: SizedBox(
+      MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: const <LocalizationsDelegate<dynamic>>[
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const SizedBox(
           width: 200,
           height: 300,
           child: GeneratedBookCover(title: '远方的灯', author: '林舟'),

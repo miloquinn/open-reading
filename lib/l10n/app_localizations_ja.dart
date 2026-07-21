@@ -449,6 +449,50 @@ class AppLocalizationsJa extends AppLocalizations {
   String get builtInFonts => '内蔵フォント';
 
   @override
+  String get onlineFonts => 'Online fonts';
+
+  @override
+  String get fontDownload => 'Download';
+
+  @override
+  String get fontDownloading => 'Downloading…';
+
+  @override
+  String get fontDownloaded => 'Downloaded';
+
+  @override
+  String get fontDownloadFailed => 'Download failed, tap to retry';
+
+  @override
+  String get fontDownloadHint => 'First use requires download from GitHub';
+
+  @override
+  String get fontDeleteDownload => 'Delete download';
+
+  @override
+  String fontDeleteDownloadTitle(String name) {
+    return 'Delete downloaded \"$name\"?';
+  }
+
+  @override
+  String fontDeleteDownloadMessage(String size) {
+    return 'Will free $size of storage. Will re-download next time you use it.';
+  }
+
+  @override
+  String get fontDownloadCancelled => 'Download cancelled';
+
+  @override
+  String get fontDownloadNetworkFailed => 'Network error, download failed';
+
+  @override
+  String get fontDownloadInvalid => 'Downloaded font file is invalid';
+
+  @override
+  String get fontDownloadUnsupported =>
+      'Online font download is not supported on this platform';
+
+  @override
   String get importFont => 'フォントをインポート';
 
   @override
@@ -2739,4 +2783,528 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get importScanning => 'ファイルを検索中…';
+
+  @override
+  String get settingsAiApiKeyConfigured => 'API Key 設定済み';
+
+  @override
+  String get settingsAiApiKeyTapToConfigure => 'タップして設定を完了';
+
+  @override
+  String get settingsAiAddModel => 'モデルを追加';
+
+  @override
+  String settingsAiSwitchedToModel(String model) {
+    return '$model に切り替えました';
+  }
+
+  @override
+  String get settingsAiFillBaseUrlAndApiKey =>
+      '先に Base URL と API Key を入力してください';
+
+  @override
+  String get settingsAiEditModelTitle => 'モデルを設定';
+
+  @override
+  String get settingsAiQuickCardSubtitle => '各クイックカードは1つのモデルに対応します';
+
+  @override
+  String get settingsAiPresetModel => 'プリセットモデル';
+
+  @override
+  String get settingsAiBaseUrlLabel => 'Base URL';
+
+  @override
+  String get settingsAiApiKeyLabel => 'API Key';
+
+  @override
+  String get settingsAiModelNameLabel => 'モデル名';
+
+  @override
+  String get settingsAiFetchModelsTooltip => 'モデルを自動取得';
+
+  @override
+  String get settingsAiFetchModelsList => 'モデル一覧を自動取得';
+
+  @override
+  String get settingsAiSelectModel => 'モデルを選択';
+
+  @override
+  String get settingsAiTemperatureLabel => 'Temperature';
+
+  @override
+  String get settingsAiAddAndEnable => '追加して有効化';
+
+  @override
+  String get settingsAiModelMismatchClaude =>
+      'Claude プロバイダーのモデル名は通常 claude で始まります。provider と model が一致しているか確認してください。';
+
+  @override
+  String get settingsAiModelMismatchGemini =>
+      'Gemini プロバイダーのモデル名には通常 gemini が含まれます。provider と model が一致しているか確認してください。';
+
+  @override
+  String get settingsAiModelMismatchGlm =>
+      'GLM プロバイダーのモデル名は通常 glm で始まります。provider と model が一致しているか確認してください。';
+
+  @override
+  String get settingsAiModelMismatchMinimax =>
+      'MiniMax プロバイダーのモデル名には通常 MiniMax が含まれます。provider と model が一致しているか確認してください。';
+
+  @override
+  String get settingsAiModelListFormatUnrecognized => 'モデル一覧のレスポンス形式を認識できません';
+
+  @override
+  String get settingsAiNoModelsReturned => 'サーバーから利用可能なモデル一覧が返されませんでした';
+
+  @override
+  String get settingsAiNoModelsAvailable => '利用可能なモデルがありません';
+
+  @override
+  String settingsAiFetchModelsFailed(String error) {
+    return 'モデルの取得に失敗しました：$error';
+  }
+
+  @override
+  String get readerAiEnterQuestionFirst => '送信前に質問を入力してください';
+
+  @override
+  String get readerAiEmptyResponse => 'モデルの応答が空です。再試行してください';
+
+  @override
+  String readerAiRequestFailed(String error) {
+    return 'リクエスト失敗：$error';
+  }
+
+  @override
+  String get readerAiUnknownError => '不明なエラー';
+
+  @override
+  String readerAiEmptyResponseError(String endpoint) {
+    return 'サーバーの応答が空です。通常は Base URL の設定ミス、ゲートウェイがモデル API へ転送していない、またはサーバーが接続を早期に切断したことが原因です。\nリクエスト URL：$endpoint';
+  }
+
+  @override
+  String readerAiInvalidJsonError(
+      String provider, String endpoint, String snippet) {
+    return 'サーバーの応答が有効な JSON ではありません。現在のエンドポイントは $provider 設定と互換性がない可能性があります。\nリクエスト URL：$endpoint\n応答断片：$snippet';
+  }
+
+  @override
+  String readerAiFailedReadBody(String status, String endpoint) {
+    return 'リクエスト失敗$status：サーバーの応答データを読み取れませんでした。通常は Base URL の設定ミス、エンドポイントが空の内容を返した、またはネットワークが応答を途中で切断したことが原因です。\nリクエスト URL：$endpoint';
+  }
+
+  @override
+  String readerAiNetworkRequestFailed(
+      String status, String error, String endpoint) {
+    return 'ネットワークリクエスト失敗$status：$error\nリクエスト URL：$endpoint';
+  }
+
+  @override
+  String readerAiRequestFailedMinimaxHint(
+      String status, String text, String endpoint) {
+    return 'リクエスト失敗($status)：$text\n確認事項：1) MiniMax の temperature は (0,1] の範囲；2) モデル名とエンドポイントが一致しているか；3) system 指令は1件のみ。\nリクエスト URL：$endpoint';
+  }
+
+  @override
+  String readerAiRequestFailedClaudeHint(
+      String status, String text, String endpoint) {
+    return 'リクエスト失敗($status)：$text\nヒント：Claude には anthropic-version リクエストヘッダーが必要です。\nリクエスト URL：$endpoint';
+  }
+
+  @override
+  String readerAiRequestFailedProviderMismatchHint(
+      String status, String text, String endpoint) {
+    return 'リクエスト失敗($status)：$text\nヒント：プロバイダーと API Key が一致しているか確認してください。混用はできません。\nリクエスト URL：$endpoint';
+  }
+
+  @override
+  String readerAiRequestFailedGeneric(
+      String status, String text, String endpoint) {
+    return 'リクエスト失敗($status)：$text\nリクエスト URL：$endpoint';
+  }
+
+  @override
+  String readerAiMockSelectionResponse(
+      String selectedText, String before, String after) {
+    return 'AI（モック）: 選択したテキストは「$selectedText」です。\n\n前文: $before\n後文: $after';
+  }
+
+  @override
+  String readerAiMockPageAnalysis(int chars) {
+    return 'AI（モック）: このページは $chars 文字です。段落の冒頭と末尾の論点に注目することをおすすめします。';
+  }
+
+  @override
+  String get readerAiMockGreeting => 'こんにちは';
+
+  @override
+  String readerAiMockChatResponse(String question, int chars) {
+    return 'AI（モック）: 質問は「$question」ですね。\n\n現在のページ（$chars 文字）を読みました。続けて質問できます。';
+  }
+
+  @override
+  String get readerAiMemorySummaryHeading => '【書籍の記憶サマリー】';
+
+  @override
+  String get readerAiReadingAdviceHeading => '【ユーザー向けの読書アドバイス】';
+
+  @override
+  String get readerAiIndexedSnippetsHeading => '【インデックス命中断片】';
+
+  @override
+  String get readerAiLocalFallbackIntro =>
+      'オンライン AI Key が未設定のため、ローカルの記憶とインデックスに基づいて回答します：';
+
+  @override
+  String get readerAiRelatedContentHeading => '【関連コンテンツ】';
+
+  @override
+  String get readerAiNoRelatedContent => '【関連コンテンツ】利用可能な断片が見つかりませんでした。';
+
+  @override
+  String get readerAiRelatedContentLocationHeading => '【関連コンテンツの位置】';
+
+  @override
+  String readerAiSnippetLocation(
+      String chapterId, int startOffset, int endOffset) {
+    return '- 位置：$chapterId ($startOffset-$endOffset)';
+  }
+
+  @override
+  String get readerAiReadingSuggestionHeading => '【読み方のヒント】';
+
+  @override
+  String get readerAiNextStepHeading => '【次のステップ】';
+
+  @override
+  String get readerAiNextStepReadSnippet => '1) 上の命中した断片を先に読んでください。';
+
+  @override
+  String get readerAiNextStepAskFollowUp =>
+      '2) 「なぜ/どうやって/例えば」でもう一度質問すると、インデックスで引き続き特定します。';
+
+  @override
+  String get ttsSystemDefault => 'システム標準';
+
+  @override
+  String get ttsUnavailable => 'システム TTS は利用できません';
+
+  @override
+  String ttsUnsupportedLanguage(String language) {
+    return 'システムが対応していない言語です: $language';
+  }
+
+  @override
+  String get ttsCallFailed => 'システム TTS の呼び出しに失敗しました';
+
+  @override
+  String get importErrorSourceMissing => 'ソースファイルが存在しません';
+
+  @override
+  String get importErrorHashFailed => 'ファイル内容を検証できません';
+
+  @override
+  String get importErrorTargetNameExhausted => 'インポートファイルに利用可能な名前を割り当てられません';
+
+  @override
+  String get importErrorSourceNotMaterialized => 'ソースファイルがまだローカルに準備されていません';
+
+  @override
+  String get importErrorCopyVerificationFailed => 'コピーしたファイルがソースと一致しません';
+
+  @override
+  String get importErrorFileTooLarge => 'ファイルが 100 MB のインポート上限を超えています';
+
+  @override
+  String get importErrorSourcePrepareFailed => 'インポートファイルを準備できません';
+
+  @override
+  String get importErrorFailed => '書籍のインポートに失敗しました';
+
+  @override
+  String get importUnknownTitle => '不明なタイトル';
+
+  @override
+  String get importUnknownAuthor => '不明な著者';
+
+  @override
+  String get bookUntitled => '無題';
+
+  @override
+  String get homePlanTaskCompleteDailyGoal => '今日の目標を達成';
+
+  @override
+  String homePlanTaskReadMinutes(int minutes) {
+    return '$minutes 分読む';
+  }
+
+  @override
+  String get homePlanTaskCompleteFocusReading => '集中読書を完了する';
+
+  @override
+  String homePlanTaskFocusSession(int minutes) {
+    return '最低1回 $minutes 分の集中セッション';
+  }
+
+  @override
+  String get homePlanTaskKeepRhythm => 'リズムを保つ';
+
+  @override
+  String get homePlanTaskWeekAchievedDays => '週の達成日数 ≥ 5';
+
+  @override
+  String get noteColorLightBlue => 'ライトブルー';
+
+  @override
+  String get noteColorRed => 'レッド';
+
+  @override
+  String get noteColorGreen => 'グリーン';
+
+  @override
+  String get noteColorPurple => 'パープル';
+
+  @override
+  String get noteColorGold => 'ゴールド';
+
+  @override
+  String get noteColorOrange => 'オレンジ';
+
+  @override
+  String get noteColorYellow => 'イエロー';
+
+  @override
+  String get noteColorDarkGreen => 'ダークグリーン';
+
+  @override
+  String get noteColorCustom => 'カスタム';
+
+  @override
+  String noteShareBookHeader(String title, String author) {
+    return '📖 『$title』 - $author';
+  }
+
+  @override
+  String noteShareNoteLabel(String note) {
+    return '💭 メモ：$note';
+  }
+
+  @override
+  String noteShareChapterLabel(String chapter) {
+    return '📍 $chapter';
+  }
+
+  @override
+  String noteSharePageLabel(int page) {
+    return '📄 $pageページ';
+  }
+
+  @override
+  String noteShareHashtags(String type) {
+    return '#読書メモ #$type';
+  }
+
+  @override
+  String get accentPurple => 'エレガントパープル';
+
+  @override
+  String get accentPink => 'チェリーピンク';
+
+  @override
+  String get accentCyan => 'フレッシュシアン';
+
+  @override
+  String get accentBrown => 'クラシックブラウン';
+
+  @override
+  String get accentGrey => 'エレガントグレー';
+
+  @override
+  String get accentDeepPurple => 'チャーミングパープル';
+
+  @override
+  String get accentAmber => 'アンバーゴールド';
+
+  @override
+  String get accentLightGreen => 'ビビッドグリーン';
+
+  @override
+  String get accentYellow => 'サンシャインイエロー';
+
+  @override
+  String get accentNeutralGrey => 'ミニマルグレー';
+
+  @override
+  String get accentIndigo => 'ディープインディゴ';
+
+  @override
+  String get accentDeepOrange => 'フレイムオレンジ';
+
+  @override
+  String get glassPresetClear => 'クリアモード';
+
+  @override
+  String get glassPresetStandard => 'スタンダードモード';
+
+  @override
+  String get glassPresetDreamy => 'ドリーミーモード';
+
+  @override
+  String get agreementV2HeroTitle => '読書を、自分の端末の中に。';
+
+  @override
+  String get agreementV2HeroBody =>
+      'OpenReading はオープンソース・クロスプラットフォーム・ローカルファーストの電子書籍リーダーです。読書のための機能を提供しますが、あなたが取り込んだ書籍を提供・ホスティング・審査することはありません。';
+
+  @override
+  String get agreementV2LocalTitle => 'ローカルファースト';
+
+  @override
+  String get agreementV2LocalBody =>
+      '書籍・進捗・メモは原則としてあなたの端末に保存され、管理とバックアップはあなた自身が行います。';
+
+  @override
+  String get agreementV2OpenSourceTitle => 'AGPL-3.0 ライセンス';
+
+  @override
+  String get agreementV2OpenSourceBody =>
+      'ソースコードは GNU AGPL v3.0 の下で提供され、ソフトウェアは「現状のまま」で提供されます。明示・黙示を問わずいかなる保証も付帯しません。';
+
+  @override
+  String agreementV2VersionLabel(String version) {
+    return '規約バージョン $version';
+  }
+
+  @override
+  String get agreementV2Title => '利用規約とプライバシーについて';
+
+  @override
+  String get agreementV2Subtitle => 'ご利用前に全文をお読みください。重要な条項は直接記載しています';
+
+  @override
+  String get agreementV2ImportantNotice =>
+      '重要：OpenReading の公式版にはサードパーティの書籍ソースはプリインストール、内蔵、推奨されておらず、開発者がそのコンテンツを運営、代理、ホスティングすることもありません。取り込むファイルと追加するソースはご自身で選択し、権利のあるコンテンツだけを利用してください。';
+
+  @override
+  String get agreementV2SourceBoundaryTitle => 'サードパーティソースの責任範囲';
+
+  @override
+  String get agreementV2SourceBoundaryPoint1 =>
+      '公式プロジェクトが提供するのはオープンソースの閲覧ソフトウェアと Open Reading Source Protocol だけであり、ソースのアドレスや公式一覧は提供しません。';
+
+  @override
+  String get agreementV2SourceBoundaryPoint2 =>
+      '各ソースのアドレスはあなたが自分で入力して追加します。アプリは開発者のコンテンツサーバーを経由せず、その独立したサービスへ直接接続します。';
+
+  @override
+  String get agreementV2SourceBoundaryPoint3 =>
+      'プロトコル互換性は接続可能であることだけを示し、コンテンツの適法性や許諾を証明しません。運営者が提供内容に責任を負い、あなたは追加前に確認して適法に利用します。';
+
+  @override
+  String get agreementV2Section1Title => '適用範囲と同意';
+
+  @override
+  String get agreementV2Section1Body =>
+      '本規約は、OpenReading ソフトウェアおよび付属機能のダウンロード・インストール・使用に適用されます。「同意して続ける」をタップすることで、本規約を読み、理解し、同意したものとみなされます。同意しない場合は、使用を中止しアプリを終了してください。お住まいの地域の法律が定める同意年齢に達していない場合は、保護者が内容を読み同意する必要があります。';
+
+  @override
+  String get agreementV2Section2Title => 'オープンソースソフトウェアとライセンス';
+
+  @override
+  String get agreementV2Section2Body =>
+      'OpenReading の今後のバージョンは GNU Affero General Public License v3.0 の下で公開されます。ライセンスに従って使用・複製・改変・頒布・販売できますが、改変版を頒布する場合は完全な対応ソースを AGPL-3.0 で提供し、改変版をネットワークサービスとして提供する場合も利用者に対応ソースを提供する必要があります。v1.0.0 以前に付与された MIT License の権利は引き続き有効で撤回されません。本規約はオープンソースライセンスが付与する権利を制限せず、サードパーティコンポーネントには各自のライセンスが適用されます。';
+
+  @override
+  String get agreementV2Section3Title => 'ユーザーコンテンツと著作権責任';
+
+  @override
+  String get agreementV2Section3Body =>
+      '“ユーザーコンテンツ”とは、あなたが取り込み、ダウンロードし、開き、変換し、キャッシュし、注釈を付け、読み上げ、またはその他の方法で処理する書籍・文書・画像・メタデータ・リンク等を指します。あなたはユーザーコンテンツについて適法な権利または必要な許諾を有していることを保証し、著作権・商標・プライバシー・名誉・違法情報・悪意あるファイル等に起因する紛争や損失について自ら責任を負います。ソフトウェアと開発者はユーザーコンテンツをアップロード・販売・許諾・推奨・審査せず、ある形式を読み込めることがそのコンテンツを適法に利用できることを意味するものでもありません。';
+
+  @override
+  String get agreementV2Section4Title => '禁止事項';
+
+  @override
+  String get agreementV2Section4Body =>
+      '本ソフトウェアを利用して知的財産権その他の正当な権利を侵害すること、違法・有害・悪意あるコンテンツを頒布すること、DRM・アクセス制御・課金制限を回避すること、第三者のシステムを攻撃・妨害すること、その他適用法に違反する活動を行うことはできません。あなたの利用行為に起因する苦情・請求・処罰・損失はあなたが負担します。';
+
+  @override
+  String get agreementV2Section5Title => 'ソース・リンク・サードパーティサービス';
+
+  @override
+  String get agreementV2Section5Body =>
+      '公式版は書籍ソースをプリインストール、配布、推奨せず、公式ソース一覧も運営しません。あなたが追加するソース、ネットワーク API、外部リンク、オンラインコンテンツ、システム TTS、AI サービスその他の機能は、独立した第三者が提供・管理し、開発者との間に運営、代理、許諾、推奨、内容審査の関係はありません。ソース運営者は提供内容について法的責任を負います。あなたは追加前に提供元、コンテンツの権利、プライバシーポリシー、利用規約を確認し、自身のアクセス、ダウンロード、キャッシュ、頒布その他の利用行為に責任を負います。適用法が認める最大限の範囲で、開発者は第三者のコンテンツ、課金、データ処理、停止、権利侵害紛争について責任を負いません。';
+
+  @override
+  String get agreementV2Section6Title => 'データとプライバシー';
+
+  @override
+  String get agreementV2Section6Body =>
+      '本ソフトウェアはローカルファースト設計であり、書籍・読書進捗・メモ・設定は通常あなたの端末に保存されます。ネットワークソース、カバー検索、AI、同期などのオンライン機能を有効にしない限り、ローカル読書のために書籍本文が開発者へ送信されることはありません。自動または手動で更新を確認すると、GitHub と公式サイト open.xxread.top に接続し、プラットフォーム、CPU アーキテクチャ、配信チャンネルなど必要な技術情報を送信します。通常のネットワーク通信として、サーバーは IP アドレスと User-Agent を処理します。公式サイトからインストールパッケージを取得する場合、ダウンロード回数の集計、セキュリティ対策、障害調査のため、バージョン、アーキテクチャ、時刻、IP、User-Agent を記録します。生の IP を含む明細は最長 30 日で削除し、その後は生の IP を含まない集計のみを保持します。これらの更新リクエストには、書籍本文、書庫、メモ、アカウント、端末固有 ID は含まれません。GitHub へのアクセスには同社のプライバシーポリシーも適用されます。その他のオンライン機能を有効にすると、関連するクエリ・テキスト断片・端末のネットワーク情報・必要なパラメーターが、あなたが選択したサードパーティサービスに送信される場合があり、詳細は当該サービスの規約に従います。端末・アクセスキー・バックアップはご自身で保護してください。アンインストール・データ消去・端末故障・誤操作によりデータが完全に失われる可能性があります。';
+
+  @override
+  String get agreementV2Section7Title => 'AI と自動生成出力';
+
+  @override
+  String get agreementV2Section7Body =>
+      'AI による要約・質問応答・翻訳・推薦その他の自動生成結果は、不正確・不完全・古い・誤解を招くものである可能性があります。これらは読書の補助のみを目的とし、法律・医療・投資・学術その他の専門的助言を構成しません。利用前に独自に検証し、リスクの高い判断の根拠にしないでください。AI サービスに送信した内容には当該サービス提供者の規約も適用されます。';
+
+  @override
+  String get agreementV2Section8Title => '無保証';
+
+  @override
+  String get agreementV2Section8Body =>
+      '適用法が認める最大限の範囲で、本ソフトウェアおよび関連資料は「現状のまま」「提供可能な状態で」提供され、商品性・特定目的適合性・権原・非侵害・正確性・互換性・安全性・無エラー・無中断・データ保全を含む、明示・黙示・法定のいかなる保証も行いません。オープンソースの貢献者には、保守・更新・サポート・欠陥修正の義務はありません。';
+
+  @override
+  String get agreementV2Section9Title => '責任の制限';
+
+  @override
+  String get agreementV2Section9Body =>
+      '適用法が認める最大限の範囲で、開発者・著作権者・貢献者は、本ソフトウェアのインストール・使用・使用不能、ユーザーコンテンツ、サードパーティサービス、データ損失、端末の異常、事業の中断、セキュリティ事故に起因する直接・間接・付随的・特別・懲罰的・結果的損害について、契約・不法行為その他いかなる法理に基づくかを問わず責任を負いません。法律上排除できない責任は本条の適用外ですが、法が許す最小限の範囲に制限されます。';
+
+  @override
+  String get agreementV2Section10Title => '補償';
+
+  @override
+  String get agreementV2Section10Body =>
+      'あなたのユーザーコンテンツ、違法な使用、権利侵害行為、本規約違反、またはサードパーティサービスの利用により、開発者・著作権者・貢献者が第三者からの請求・行政調査・処罰・損失・合理的費用を被った場合、適用法が認める範囲で、あなたが相応の責任を負い、これらの者に損害を及ぼさないものとします。';
+
+  @override
+  String get agreementV2Section11Title => '変更・終了・準拠法';
+
+  @override
+  String get agreementV2Section11Body =>
+      'ソフトウェアの機能、プロジェクトの保守状況、本規約は、オープンソースプロジェクトの発展、法律の変化、リスク管理の必要に応じて変更されることがあります。重要な変更の際、アプリは再同意を求めることがあります。新しい規約に同意しない場合は使用を中止してください。ソフトウェアはいつでもアンインストールできます。紛争はまず友好的な協議により解決を図ります。法律上の強行的な消費者保護を妨げない範囲で、開発者所在地の法律が適用され、管轄権を有する裁判所が扱います。一部の条項が無効となっても、その他の条項は引き続き有効です。';
+
+  @override
+  String get agreementV2ConfirmLabel => '上記の利用規約とプライバシー通知をすべて読み、同意します。';
+
+  @override
+  String get agreementV2SourceConfirmLabel =>
+      '公式プロジェクトが書籍ソースを提供しないこと、追加したソースとコンテンツは独立した第三者が提供することを理解し、許諾を自分で確認して自身の利用行為に責任を負います。';
+
+  @override
+  String get agreementV2ExitLabel => '同意しない';
+
+  @override
+  String get agreementV2ContinueLabel => '同意して続ける';
+
+  @override
+  String get agreementV2ExitDialogTitle => '規約に同意しませんか？';
+
+  @override
+  String get agreementV2ExitDialogBody =>
+      'OpenReading を利用するには利用規約への同意が必要です。同意しない場合はアプリを終了してください。';
+
+  @override
+  String get agreementV2CancelLabel => '戻る';
+
+  @override
+  String get agreementV2ConfirmExitLabel => '終了する';
+
+  @override
+  String get agreementV2SaveFailed => '同意状態を保存できませんでした。後でもう一度お試しください。';
 }

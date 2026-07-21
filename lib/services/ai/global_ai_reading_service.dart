@@ -255,18 +255,18 @@ class GlobalAIReadingService {
       final advice = (memory['readingAdvice'] as String?)?.trim() ?? '';
       if (summary.isNotEmpty) {
         buffer
-          ..writeln('【本书记忆摘要】')
+          ..writeln('[[readerAiMemorySummaryHeading]]')
           ..writeln(summary);
       }
       if (advice.isNotEmpty) {
         buffer
-          ..writeln('【针对用户的阅读建议】')
+          ..writeln('[[readerAiReadingAdviceHeading]]')
           ..writeln(advice);
       }
     }
 
     if (snippets.isNotEmpty) {
-      buffer.writeln('【索引命中片段】');
+      buffer.writeln('[[readerAiIndexedSnippetsHeading]]');
       for (var i = 0; i < snippets.length; i++) {
         final s = snippets[i];
         buffer
@@ -297,35 +297,37 @@ class GlobalAIReadingService {
     final advice = (memory?['readingAdvice'] as String?)?.trim() ?? '';
 
     final buffer = StringBuffer();
-    buffer.writeln('当前未配置在线 AI Key，先基于本地记忆和索引给你一个答案：');
+    buffer.writeln('[[readerAiLocalFallbackIntro]]');
 
     if (snippets.isEmpty) {
       if (summary.isNotEmpty) {
         buffer
-          ..writeln('\n【相关内容】')
+          ..writeln('\n[[readerAiRelatedContentHeading]]')
           ..writeln(summary);
       } else {
-        buffer.writeln('\n【相关内容】暂未命中可用片段。');
+        buffer.writeln('\n[[readerAiNoRelatedContent]]');
       }
     } else {
-      buffer.writeln('\n【相关内容定位】');
+      buffer.writeln('\n[[readerAiRelatedContentLocationHeading]]');
       for (final s in snippets) {
         buffer
-          ..writeln('- 位置：${s.chapterId} (${s.startOffset}-${s.endOffset})')
+          ..writeln(
+            '- [[snippetLocation:${s.chapterId}:${s.startOffset}:${s.endOffset}]]',
+          )
           ..writeln('  ${s.preview}');
       }
     }
 
     if (advice.isNotEmpty) {
       buffer
-        ..writeln('\n【建议怎么读】')
+        ..writeln('\n[[readerAiReadingSuggestionHeading]]')
         ..writeln(advice);
     }
 
     buffer
-      ..writeln('\n【下一步】')
-      ..writeln('1) 先读上面命中的片段。')
-      ..writeln('2) 用“为什么/如何/例子”再追问一次，我会继续按索引定位。');
+      ..writeln('\n[[readerAiNextStepHeading]]')
+      ..writeln('[[readerAiNextStepReadSnippet]]')
+      ..writeln('[[readerAiNextStepAskFollowUp]]');
 
     return buffer.toString().trim();
   }

@@ -220,7 +220,6 @@ class ImportBookController extends ChangeNotifier {
         index,
         BookImportFailure(
           code: 'source_prepare_failed',
-          message: '无法准备导入文件',
           cause: error,
         ),
       );

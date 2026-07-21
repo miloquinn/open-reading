@@ -1339,5 +1339,291 @@
   "importDone": "完了",
   "importSummary": "成功 {succeeded} 冊 · スキップ {skipped} 冊 · 失敗 {failed} 冊",
   "importNoSupportedFiles": "対応する本のファイルが見つかりません",
-  "importScanning": "ファイルを検索中…"
+  "importScanning": "ファイルを検索中…",
+  "settingsAiApiKeyConfigured": "API Key 設定済み",
+  "settingsAiApiKeyTapToConfigure": "タップして設定を完了",
+  "settingsAiAddModel": "モデルを追加",
+  "settingsAiSwitchedToModel": "{model} に切り替えました",
+  "@settingsAiSwitchedToModel": {
+    "placeholders": {
+        "model": {"type": "String"}
+    }
+  },
+  "settingsAiFillBaseUrlAndApiKey": "先に Base URL と API Key を入力してください",
+  "settingsAiEditModelTitle": "モデルを設定",
+  "settingsAiQuickCardSubtitle": "各クイックカードは1つのモデルに対応します",
+  "settingsAiPresetModel": "プリセットモデル",
+  "settingsAiBaseUrlLabel": "Base URL",
+  "settingsAiApiKeyLabel": "API Key",
+  "settingsAiModelNameLabel": "モデル名",
+  "settingsAiFetchModelsTooltip": "モデルを自動取得",
+  "settingsAiFetchModelsList": "モデル一覧を自動取得",
+  "settingsAiSelectModel": "モデルを選択",
+  "settingsAiTemperatureLabel": "Temperature",
+  "settingsAiAddAndEnable": "追加して有効化",
+  "settingsAiModelMismatchClaude": "Claude プロバイダーのモデル名は通常 claude で始まります。provider と model が一致しているか確認してください。",
+  "settingsAiModelMismatchGemini": "Gemini プロバイダーのモデル名には通常 gemini が含まれます。provider と model が一致しているか確認してください。",
+  "settingsAiModelMismatchGlm": "GLM プロバイダーのモデル名は通常 glm で始まります。provider と model が一致しているか確認してください。",
+  "settingsAiModelMismatchMinimax": "MiniMax プロバイダーのモデル名には通常 MiniMax が含まれます。provider と model が一致しているか確認してください。",
+  "settingsAiModelListFormatUnrecognized": "モデル一覧のレスポンス形式を認識できません",
+  "settingsAiNoModelsReturned": "サーバーから利用可能なモデル一覧が返されませんでした",
+  "settingsAiNoModelsAvailable": "利用可能なモデルがありません",
+  "settingsAiFetchModelsFailed": "モデルの取得に失敗しました：{error}",
+  "@settingsAiFetchModelsFailed": {
+    "placeholders": {
+        "error": {"type": "String"}
+    }
+  },
+  "readerAiEnterQuestionFirst": "送信前に質問を入力してください",
+  "readerAiEmptyResponse": "モデルの応答が空です。再試行してください",
+  "readerAiRequestFailed": "リクエスト失敗：{error}",
+  "@readerAiRequestFailed": {
+    "placeholders": {
+        "error": {"type": "String"}
+    }
+  },
+  "readerAiUnknownError": "不明なエラー",
+  "readerAiEmptyResponseError": "サーバーの応答が空です。通常は Base URL の設定ミス、ゲートウェイがモデル API へ転送していない、またはサーバーが接続を早期に切断したことが原因です。\nリクエスト URL：{endpoint}",
+  "@readerAiEmptyResponseError": {
+    "placeholders": {
+        "endpoint": {"type": "String"}
+    }
+  },
+  "readerAiInvalidJsonError": "サーバーの応答が有効な JSON ではありません。現在のエンドポイントは {provider} 設定と互換性がない可能性があります。\nリクエスト URL：{endpoint}\n応答断片：{snippet}",
+  "@readerAiInvalidJsonError": {
+    "placeholders": {
+        "provider": {"type": "String"},
+        "endpoint": {"type": "String"},
+        "snippet": {"type": "String"}
+    }
+  },
+  "readerAiFailedReadBody": "リクエスト失敗{status}：サーバーの応答データを読み取れませんでした。通常は Base URL の設定ミス、エンドポイントが空の内容を返した、またはネットワークが応答を途中で切断したことが原因です。\nリクエスト URL：{endpoint}",
+  "@readerAiFailedReadBody": {
+    "placeholders": {
+        "status": {"type": "String"},
+        "endpoint": {"type": "String"}
+    }
+  },
+  "readerAiNetworkRequestFailed": "ネットワークリクエスト失敗{status}：{error}\nリクエスト URL：{endpoint}",
+  "@readerAiNetworkRequestFailed": {
+    "placeholders": {
+        "status": {"type": "String"},
+        "error": {"type": "String"},
+        "endpoint": {"type": "String"}
+    }
+  },
+  "readerAiRequestFailedMinimaxHint": "リクエスト失敗({status})：{text}\n確認事項：1) MiniMax の temperature は (0,1] の範囲；2) モデル名とエンドポイントが一致しているか；3) system 指令は1件のみ。\nリクエスト URL：{endpoint}",
+  "@readerAiRequestFailedMinimaxHint": {
+    "placeholders": {
+        "status": {"type": "String"},
+        "text": {"type": "String"},
+        "endpoint": {"type": "String"}
+    }
+  },
+  "readerAiRequestFailedClaudeHint": "リクエスト失敗({status})：{text}\nヒント：Claude には anthropic-version リクエストヘッダーが必要です。\nリクエスト URL：{endpoint}",
+  "@readerAiRequestFailedClaudeHint": {
+    "placeholders": {
+        "status": {"type": "String"},
+        "text": {"type": "String"},
+        "endpoint": {"type": "String"}
+    }
+  },
+  "readerAiRequestFailedProviderMismatchHint": "リクエスト失敗({status})：{text}\nヒント：プロバイダーと API Key が一致しているか確認してください。混用はできません。\nリクエスト URL：{endpoint}",
+  "@readerAiRequestFailedProviderMismatchHint": {
+    "placeholders": {
+        "status": {"type": "String"},
+        "text": {"type": "String"},
+        "endpoint": {"type": "String"}
+    }
+  },
+  "readerAiRequestFailedGeneric": "リクエスト失敗({status})：{text}\nリクエスト URL：{endpoint}",
+  "@readerAiRequestFailedGeneric": {
+    "placeholders": {
+        "status": {"type": "String"},
+        "text": {"type": "String"},
+        "endpoint": {"type": "String"}
+    }
+  },
+  "readerAiMockSelectionResponse": "AI（モック）: 選択したテキストは「{selectedText}」です。\n\n前文: {before}\n後文: {after}",
+  "@readerAiMockSelectionResponse": {
+    "placeholders": {
+        "selectedText": {"type": "String"},
+        "before": {"type": "String"},
+        "after": {"type": "String"}
+    }
+  },
+  "readerAiMockPageAnalysis": "AI（モック）: このページは {chars} 文字です。段落の冒頭と末尾の論点に注目することをおすすめします。",
+  "@readerAiMockPageAnalysis": {
+    "placeholders": {
+        "chars": {"type": "int"}
+    }
+  },
+  "readerAiMockGreeting": "こんにちは",
+  "readerAiMockChatResponse": "AI（モック）: 質問は「{question}」ですね。\n\n現在のページ（{chars} 文字）を読みました。続けて質問できます。",
+  "@readerAiMockChatResponse": {
+    "placeholders": {
+        "question": {"type": "String"},
+        "chars": {"type": "int"}
+    }
+  },
+  "readerAiMemorySummaryHeading": "【書籍の記憶サマリー】",
+  "readerAiReadingAdviceHeading": "【ユーザー向けの読書アドバイス】",
+  "readerAiIndexedSnippetsHeading": "【インデックス命中断片】",
+  "readerAiLocalFallbackIntro": "オンライン AI Key が未設定のため、ローカルの記憶とインデックスに基づいて回答します：",
+  "readerAiRelatedContentHeading": "【関連コンテンツ】",
+  "readerAiNoRelatedContent": "【関連コンテンツ】利用可能な断片が見つかりませんでした。",
+  "readerAiRelatedContentLocationHeading": "【関連コンテンツの位置】",
+  "readerAiSnippetLocation": "- 位置：{chapterId} ({startOffset}-{endOffset})",
+  "@readerAiSnippetLocation": {
+    "placeholders": {
+        "chapterId": {"type": "String"},
+        "startOffset": {"type": "int"},
+        "endOffset": {"type": "int"}
+    }
+  },
+  "readerAiReadingSuggestionHeading": "【読み方のヒント】",
+  "readerAiNextStepHeading": "【次のステップ】",
+  "readerAiNextStepReadSnippet": "1) 上の命中した断片を先に読んでください。",
+  "readerAiNextStepAskFollowUp": "2) 「なぜ/どうやって/例えば」でもう一度質問すると、インデックスで引き続き特定します。",
+  "ttsSystemDefault": "システム標準",
+  "ttsUnavailable": "システム TTS は利用できません",
+  "ttsUnsupportedLanguage": "システムが対応していない言語です: {language}",
+  "@ttsUnsupportedLanguage": {
+    "placeholders": {
+        "language": {"type": "String"}
+    }
+  },
+  "ttsCallFailed": "システム TTS の呼び出しに失敗しました",
+  "importErrorSourceMissing": "ソースファイルが存在しません",
+  "importErrorHashFailed": "ファイル内容を検証できません",
+  "importErrorTargetNameExhausted": "インポートファイルに利用可能な名前を割り当てられません",
+  "importErrorSourceNotMaterialized": "ソースファイルがまだローカルに準備されていません",
+  "importErrorCopyVerificationFailed": "コピーしたファイルがソースと一致しません",
+  "importErrorFileTooLarge": "ファイルが 100 MB のインポート上限を超えています",
+  "importErrorSourcePrepareFailed": "インポートファイルを準備できません",
+  "importErrorFailed": "書籍のインポートに失敗しました",
+  "importUnknownTitle": "不明なタイトル",
+  "importUnknownAuthor": "不明な著者",
+  "bookUntitled": "無題",
+  "homePlanTaskCompleteDailyGoal": "今日の目標を達成",
+  "homePlanTaskReadMinutes": "{minutes} 分読む",
+  "@homePlanTaskReadMinutes": {
+    "placeholders": {
+        "minutes": {"type": "int"}
+    }
+  },
+  "homePlanTaskCompleteFocusReading": "集中読書を完了する",
+  "homePlanTaskFocusSession": "最低1回 {minutes} 分の集中セッション",
+  "@homePlanTaskFocusSession": {
+    "placeholders": {
+        "minutes": {"type": "int"}
+    }
+  },
+  "homePlanTaskKeepRhythm": "リズムを保つ",
+  "homePlanTaskWeekAchievedDays": "週の達成日数 ≥ 5",
+  "noteColorLightBlue": "ライトブルー",
+  "noteColorRed": "レッド",
+  "noteColorGreen": "グリーン",
+  "noteColorPurple": "パープル",
+  "noteColorGold": "ゴールド",
+  "noteColorOrange": "オレンジ",
+  "noteColorYellow": "イエロー",
+  "noteColorDarkGreen": "ダークグリーン",
+  "noteColorCustom": "カスタム",
+  "noteShareBookHeader": "📖 『{title}』 - {author}",
+  "@noteShareBookHeader": {
+    "placeholders": {
+        "title": {"type": "String"},
+        "author": {"type": "String"}
+    }
+  },
+  "noteShareNoteLabel": "💭 メモ：{note}",
+  "@noteShareNoteLabel": {
+    "placeholders": {
+        "note": {"type": "String"}
+    }
+  },
+  "noteShareChapterLabel": "📍 {chapter}",
+  "@noteShareChapterLabel": {
+    "placeholders": {
+        "chapter": {"type": "String"}
+    }
+  },
+  "noteSharePageLabel": "📄 {page}ページ",
+  "@noteSharePageLabel": {
+    "placeholders": {
+        "page": {"type": "int"}
+    }
+  },
+  "noteShareHashtags": "#読書メモ #{type}",
+  "@noteShareHashtags": {
+    "placeholders": {
+        "type": {"type": "String"}
+    }
+  },
+  "accentPurple": "エレガントパープル",
+  "accentPink": "チェリーピンク",
+  "accentCyan": "フレッシュシアン",
+  "accentBrown": "クラシックブラウン",
+  "accentGrey": "エレガントグレー",
+  "accentDeepPurple": "チャーミングパープル",
+  "accentAmber": "アンバーゴールド",
+  "accentLightGreen": "ビビッドグリーン",
+  "accentYellow": "サンシャインイエロー",
+  "accentNeutralGrey": "ミニマルグレー",
+  "accentIndigo": "ディープインディゴ",
+  "accentDeepOrange": "フレイムオレンジ",
+  "glassPresetClear": "クリアモード",
+  "glassPresetStandard": "スタンダードモード",
+  "glassPresetDreamy": "ドリーミーモード",
+  "agreementV2HeroTitle": "読書を、自分の端末の中に。",
+  "agreementV2HeroBody": "OpenReading はオープンソース・クロスプラットフォーム・ローカルファーストの電子書籍リーダーです。読書のための機能を提供しますが、あなたが取り込んだ書籍を提供・ホスティング・審査することはありません。",
+  "agreementV2LocalTitle": "ローカルファースト",
+  "agreementV2LocalBody": "書籍・進捗・メモは原則としてあなたの端末に保存され、管理とバックアップはあなた自身が行います。",
+  "agreementV2OpenSourceTitle": "AGPL-3.0 ライセンス",
+  "agreementV2OpenSourceBody": "ソースコードは GNU AGPL v3.0 の下で提供され、ソフトウェアは「現状のまま」で提供されます。明示・黙示を問わずいかなる保証も付帯しません。",
+  "agreementV2VersionLabel": "規約バージョン {version}",
+  "@agreementV2VersionLabel": {
+    "placeholders": {
+        "version": {"type": "String"}
+    }
+  },
+  "agreementV2Title": "利用規約とプライバシーについて",
+  "agreementV2Subtitle": "ご利用前に全文をお読みください。重要な条項は直接記載しています",
+  "agreementV2ImportantNotice": "重要：OpenReading の公式版にはサードパーティの書籍ソースはプリインストール、内蔵、推奨されておらず、開発者がそのコンテンツを運営、代理、ホスティングすることもありません。取り込むファイルと追加するソースはご自身で選択し、権利のあるコンテンツだけを利用してください。",
+  "agreementV2SourceBoundaryTitle": "サードパーティソースの責任範囲",
+  "agreementV2SourceBoundaryPoint1": "公式プロジェクトが提供するのはオープンソースの閲覧ソフトウェアと Open Reading Source Protocol だけであり、ソースのアドレスや公式一覧は提供しません。",
+  "agreementV2SourceBoundaryPoint2": "各ソースのアドレスはあなたが自分で入力して追加します。アプリは開発者のコンテンツサーバーを経由せず、その独立したサービスへ直接接続します。",
+  "agreementV2SourceBoundaryPoint3": "プロトコル互換性は接続可能であることだけを示し、コンテンツの適法性や許諾を証明しません。運営者が提供内容に責任を負い、あなたは追加前に確認して適法に利用します。",
+  "agreementV2Section1Title": "適用範囲と同意",
+  "agreementV2Section1Body": "本規約は、OpenReading ソフトウェアおよび付属機能のダウンロード・インストール・使用に適用されます。「同意して続ける」をタップすることで、本規約を読み、理解し、同意したものとみなされます。同意しない場合は、使用を中止しアプリを終了してください。お住まいの地域の法律が定める同意年齢に達していない場合は、保護者が内容を読み同意する必要があります。",
+  "agreementV2Section2Title": "オープンソースソフトウェアとライセンス",
+  "agreementV2Section2Body": "OpenReading の今後のバージョンは GNU Affero General Public License v3.0 の下で公開されます。ライセンスに従って使用・複製・改変・頒布・販売できますが、改変版を頒布する場合は完全な対応ソースを AGPL-3.0 で提供し、改変版をネットワークサービスとして提供する場合も利用者に対応ソースを提供する必要があります。v1.0.0 以前に付与された MIT License の権利は引き続き有効で撤回されません。本規約はオープンソースライセンスが付与する権利を制限せず、サードパーティコンポーネントには各自のライセンスが適用されます。",
+  "agreementV2Section3Title": "ユーザーコンテンツと著作権責任",
+  "agreementV2Section3Body": "“ユーザーコンテンツ”とは、あなたが取り込み、ダウンロードし、開き、変換し、キャッシュし、注釈を付け、読み上げ、またはその他の方法で処理する書籍・文書・画像・メタデータ・リンク等を指します。あなたはユーザーコンテンツについて適法な権利または必要な許諾を有していることを保証し、著作権・商標・プライバシー・名誉・違法情報・悪意あるファイル等に起因する紛争や損失について自ら責任を負います。ソフトウェアと開発者はユーザーコンテンツをアップロード・販売・許諾・推奨・審査せず、ある形式を読み込めることがそのコンテンツを適法に利用できることを意味するものでもありません。",
+  "agreementV2Section4Title": "禁止事項",
+  "agreementV2Section4Body": "本ソフトウェアを利用して知的財産権その他の正当な権利を侵害すること、違法・有害・悪意あるコンテンツを頒布すること、DRM・アクセス制御・課金制限を回避すること、第三者のシステムを攻撃・妨害すること、その他適用法に違反する活動を行うことはできません。あなたの利用行為に起因する苦情・請求・処罰・損失はあなたが負担します。",
+  "agreementV2Section5Title": "ソース・リンク・サードパーティサービス",
+  "agreementV2Section5Body": "公式版は書籍ソースをプリインストール、配布、推奨せず、公式ソース一覧も運営しません。あなたが追加するソース、ネットワーク API、外部リンク、オンラインコンテンツ、システム TTS、AI サービスその他の機能は、独立した第三者が提供・管理し、開発者との間に運営、代理、許諾、推奨、内容審査の関係はありません。ソース運営者は提供内容について法的責任を負います。あなたは追加前に提供元、コンテンツの権利、プライバシーポリシー、利用規約を確認し、自身のアクセス、ダウンロード、キャッシュ、頒布その他の利用行為に責任を負います。適用法が認める最大限の範囲で、開発者は第三者のコンテンツ、課金、データ処理、停止、権利侵害紛争について責任を負いません。",
+  "agreementV2Section6Title": "データとプライバシー",
+  "agreementV2Section6Body": "本ソフトウェアはローカルファースト設計であり、書籍・読書進捗・メモ・設定は通常あなたの端末に保存されます。ネットワークソース、カバー検索、AI、同期などのオンライン機能を有効にしない限り、ローカル読書のために書籍本文が開発者へ送信されることはありません。自動または手動で更新を確認すると、GitHub と公式サイト open.xxread.top に接続し、プラットフォーム、CPU アーキテクチャ、配信チャンネルなど必要な技術情報を送信します。通常のネットワーク通信として、サーバーは IP アドレスと User-Agent を処理します。公式サイトからインストールパッケージを取得する場合、ダウンロード回数の集計、セキュリティ対策、障害調査のため、バージョン、アーキテクチャ、時刻、IP、User-Agent を記録します。生の IP を含む明細は最長 30 日で削除し、その後は生の IP を含まない集計のみを保持します。これらの更新リクエストには、書籍本文、書庫、メモ、アカウント、端末固有 ID は含まれません。GitHub へのアクセスには同社のプライバシーポリシーも適用されます。その他のオンライン機能を有効にすると、関連するクエリ・テキスト断片・端末のネットワーク情報・必要なパラメーターが、あなたが選択したサードパーティサービスに送信される場合があり、詳細は当該サービスの規約に従います。端末・アクセスキー・バックアップはご自身で保護してください。アンインストール・データ消去・端末故障・誤操作によりデータが完全に失われる可能性があります。",
+  "agreementV2Section7Title": "AI と自動生成出力",
+  "agreementV2Section7Body": "AI による要約・質問応答・翻訳・推薦その他の自動生成結果は、不正確・不完全・古い・誤解を招くものである可能性があります。これらは読書の補助のみを目的とし、法律・医療・投資・学術その他の専門的助言を構成しません。利用前に独自に検証し、リスクの高い判断の根拠にしないでください。AI サービスに送信した内容には当該サービス提供者の規約も適用されます。",
+  "agreementV2Section8Title": "無保証",
+  "agreementV2Section8Body": "適用法が認める最大限の範囲で、本ソフトウェアおよび関連資料は「現状のまま」「提供可能な状態で」提供され、商品性・特定目的適合性・権原・非侵害・正確性・互換性・安全性・無エラー・無中断・データ保全を含む、明示・黙示・法定のいかなる保証も行いません。オープンソースの貢献者には、保守・更新・サポート・欠陥修正の義務はありません。",
+  "agreementV2Section9Title": "責任の制限",
+  "agreementV2Section9Body": "適用法が認める最大限の範囲で、開発者・著作権者・貢献者は、本ソフトウェアのインストール・使用・使用不能、ユーザーコンテンツ、サードパーティサービス、データ損失、端末の異常、事業の中断、セキュリティ事故に起因する直接・間接・付随的・特別・懲罰的・結果的損害について、契約・不法行為その他いかなる法理に基づくかを問わず責任を負いません。法律上排除できない責任は本条の適用外ですが、法が許す最小限の範囲に制限されます。",
+  "agreementV2Section10Title": "補償",
+  "agreementV2Section10Body": "あなたのユーザーコンテンツ、違法な使用、権利侵害行為、本規約違反、またはサードパーティサービスの利用により、開発者・著作権者・貢献者が第三者からの請求・行政調査・処罰・損失・合理的費用を被った場合、適用法が認める範囲で、あなたが相応の責任を負い、これらの者に損害を及ぼさないものとします。",
+  "agreementV2Section11Title": "変更・終了・準拠法",
+  "agreementV2Section11Body": "ソフトウェアの機能、プロジェクトの保守状況、本規約は、オープンソースプロジェクトの発展、法律の変化、リスク管理の必要に応じて変更されることがあります。重要な変更の際、アプリは再同意を求めることがあります。新しい規約に同意しない場合は使用を中止してください。ソフトウェアはいつでもアンインストールできます。紛争はまず友好的な協議により解決を図ります。法律上の強行的な消費者保護を妨げない範囲で、開発者所在地の法律が適用され、管轄権を有する裁判所が扱います。一部の条項が無効となっても、その他の条項は引き続き有効です。",
+  "agreementV2ConfirmLabel": "上記の利用規約とプライバシー通知をすべて読み、同意します。",
+  "agreementV2SourceConfirmLabel": "公式プロジェクトが書籍ソースを提供しないこと、追加したソースとコンテンツは独立した第三者が提供することを理解し、許諾を自分で確認して自身の利用行為に責任を負います。",
+  "agreementV2ExitLabel": "同意しない",
+  "agreementV2ContinueLabel": "同意して続ける",
+  "agreementV2ExitDialogTitle": "規約に同意しませんか？",
+  "agreementV2ExitDialogBody": "OpenReading を利用するには利用規約への同意が必要です。同意しない場合はアプリを終了してください。",
+  "agreementV2CancelLabel": "戻る",
+  "agreementV2ConfirmExitLabel": "終了する",
+  "agreementV2SaveFailed": "同意状態を保存できませんでした。後でもう一度お試しください。"
 }

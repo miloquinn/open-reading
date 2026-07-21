@@ -157,7 +157,6 @@ class BookImportService implements BookFileImporter {
       if (!await file.exists()) {
         throw const BookImportFailure(
           code: 'source_missing',
-          message: '源文件不存在',
         );
       }
 
@@ -179,7 +178,6 @@ class BookImportService implements BookFileImporter {
     } catch (error) {
       throw BookImportFailure(
         code: 'hash_failed',
-        message: '无法校验文件内容',
         cause: error,
       );
     }
@@ -213,7 +211,6 @@ class BookImportService implements BookFileImporter {
 
     throw const BookImportFailure(
       code: 'target_name_exhausted',
-      message: '无法为导入文件分配可用名称',
     );
   }
 
@@ -226,7 +223,6 @@ class BookImportService implements BookFileImporter {
     if (sourcePath == null) {
       throw const BookImportFailure(
         code: 'source_not_materialized',
-        message: '源文件尚未准备到本地',
       );
     }
 
@@ -234,7 +230,6 @@ class BookImportService implements BookFileImporter {
     if (!await sourceFile.exists()) {
       throw const BookImportFailure(
         code: 'source_missing',
-        message: '源文件不存在',
       );
     }
 
@@ -263,7 +258,6 @@ class BookImportService implements BookFileImporter {
       if (copiedHash != sourceHash) {
         throw const BookImportFailure(
           code: 'copy_verification_failed',
-          message: '复制后的文件与源文件不一致',
         );
       }
       await partial.rename(finalFile.path);
@@ -313,7 +307,6 @@ class BookImportService implements BookFileImporter {
       if (localPath == null) {
         throw const BookImportFailure(
           code: 'source_not_materialized',
-          message: '源文件尚未准备到本地',
         );
       }
 
@@ -321,14 +314,12 @@ class BookImportService implements BookFileImporter {
       if (!await sourceFile.exists()) {
         throw const BookImportFailure(
           code: 'source_missing',
-          message: '源文件不存在',
         );
       }
       final size = await sourceFile.length();
       if (size > 100 * 1024 * 1024) {
         throw const BookImportFailure(
           code: 'file_too_large',
-          message: '文件超过 100 MB 导入限制',
         );
       }
 
@@ -432,7 +423,6 @@ class BookImportService implements BookFileImporter {
     } catch (error) {
       throw BookImportFailure(
         code: 'import_failed',
-        message: '书籍导入失败',
         cause: error,
       );
     } finally {

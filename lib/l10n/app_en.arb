@@ -398,6 +398,29 @@
   },
   "customFontsLocalOnly": "Imported fonts are stored only on this device and are not synced automatically.",
   "builtInFonts": "Built-in fonts",
+  "onlineFonts": "Online fonts",
+  "fontDownload": "Download",
+  "fontDownloading": "Downloading…",
+  "fontDownloaded": "Downloaded",
+  "fontDownloadFailed": "Download failed, tap to retry",
+  "fontDownloadHint": "First use requires download from GitHub",
+  "fontDeleteDownload": "Delete download",
+  "fontDeleteDownloadTitle": "Delete downloaded \"{name}\"?",
+  "@fontDeleteDownloadTitle": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "fontDeleteDownloadMessage": "Will free {size} of storage. Will re-download next time you use it.",
+  "@fontDeleteDownloadMessage": {
+    "placeholders": {
+      "size": {"type": "String"}
+    }
+  },
+  "fontDownloadCancelled": "Download cancelled",
+  "fontDownloadNetworkFailed": "Network error, download failed",
+  "fontDownloadInvalid": "Downloaded font file is invalid",
+  "fontDownloadUnsupported": "Online font download is not supported on this platform",
   "importFont": "Import font",
   "importingFont": "Importing font…",
   "customFontImported": "Font imported",
@@ -2862,5 +2885,684 @@
   "importSummary": "{succeeded} imported · {skipped} skipped · {failed} failed",
   "@importSummary": {"placeholders": {"succeeded": {"type": "int"}, "skipped": {"type": "int"}, "failed": {"type": "int"}}},
   "importNoSupportedFiles": "No supported book files were found",
-  "importScanning": "Scanning files…"
+  "importScanning": "Scanning files…",
+  "settingsAiApiKeyConfigured": "API Key configured",
+  "@settingsAiApiKeyConfigured": {
+    "description": "Status text shown when an API key has been configured for a quick AI model card"
+  },
+  "settingsAiApiKeyTapToConfigure": "Tap to complete setup",
+  "@settingsAiApiKeyTapToConfigure": {
+    "description": "Hint shown when an API key is not yet configured for a quick AI model card"
+  },
+  "settingsAiAddModel": "Add model",
+  "@settingsAiAddModel": {
+    "description": "Button label to add a new AI model"
+  },
+  "settingsAiSwitchedToModel": "Switched to {model}",
+  "@settingsAiSwitchedToModel": {
+    "description": "Toast shown after switching to a different AI model",
+    "placeholders": {
+        "model": {"type": "String"}
+    }
+  },
+  "settingsAiFillBaseUrlAndApiKey": "Please fill in Base URL and API Key first",
+  "@settingsAiFillBaseUrlAndApiKey": {
+    "description": "Error shown when trying to fetch models without a Base URL or API Key"
+  },
+  "settingsAiEditModelTitle": "Configure model",
+  "@settingsAiEditModelTitle": {
+    "description": "Title shown when editing an existing AI model configuration"
+  },
+  "settingsAiQuickCardSubtitle": "Each quick card binds to one model",
+  "@settingsAiQuickCardSubtitle": {
+    "description": "Subtitle explaining that each quick AI card maps to a single model"
+  },
+  "settingsAiPresetModel": "Preset model",
+  "@settingsAiPresetModel": {
+    "description": "Label for the preset model segment in the AI model configuration sheet"
+  },
+  "settingsAiBaseUrlLabel": "Base URL",
+  "@settingsAiBaseUrlLabel": {
+    "description": "Input label for the AI provider Base URL field"
+  },
+  "settingsAiApiKeyLabel": "API Key",
+  "@settingsAiApiKeyLabel": {
+    "description": "Input label for the AI provider API Key field"
+  },
+  "settingsAiModelNameLabel": "Model name",
+  "@settingsAiModelNameLabel": {
+    "description": "Input label for the AI model name field"
+  },
+  "settingsAiFetchModelsTooltip": "Auto-fetch models",
+  "@settingsAiFetchModelsTooltip": {
+    "description": "Tooltip for the button that fetches available models from the provider"
+  },
+  "settingsAiFetchModelsList": "Auto-fetch model list",
+  "@settingsAiFetchModelsList": {
+    "description": "Button label to auto-fetch the list of available models"
+  },
+  "settingsAiSelectModel": "Select a model",
+  "@settingsAiSelectModel": {
+    "description": "Prompt shown above the fetched model list dropdown"
+  },
+  "settingsAiTemperatureLabel": "Temperature",
+  "@settingsAiTemperatureLabel": {
+    "description": "Input label for the AI temperature parameter field"
+  },
+  "settingsAiAddAndEnable": "Add and enable",
+  "@settingsAiAddAndEnable": {
+    "description": "Button label to add a new AI model and enable it immediately"
+  },
+  "settingsAiModelMismatchClaude": "Claude provider model names usually start with \"claude\". Please check that provider and model match.",
+  "@settingsAiModelMismatchClaude": {
+    "description": "Validation error when a Claude model name does not start with claude"
+  },
+  "settingsAiModelMismatchGemini": "Gemini provider model names usually contain \"gemini\". Please check that provider and model match.",
+  "@settingsAiModelMismatchGemini": {
+    "description": "Validation error when a Gemini model name does not contain gemini"
+  },
+  "settingsAiModelMismatchGlm": "GLM provider model names usually start with \"glm\". Please check that provider and model match.",
+  "@settingsAiModelMismatchGlm": {
+    "description": "Validation error when a GLM model name does not start with glm"
+  },
+  "settingsAiModelMismatchMinimax": "MiniMax provider model names usually contain \"MiniMax\". Please check that provider and model match.",
+  "@settingsAiModelMismatchMinimax": {
+    "description": "Validation error when a MiniMax model name does not contain MiniMax"
+  },
+  "settingsAiModelListFormatUnrecognized": "Model list response format not recognized",
+  "@settingsAiModelListFormatUnrecognized": {
+    "description": "AIServiceException when the model list response body is not a Map"
+  },
+  "settingsAiNoModelsReturned": "Server returned no available model list",
+  "@settingsAiNoModelsReturned": {
+    "description": "AIServiceException when the model list response has no data or models field"
+  },
+  "settingsAiNoModelsAvailable": "No models available",
+  "@settingsAiNoModelsAvailable": {
+    "description": "AIServiceException when the fetched model list is empty"
+  },
+  "settingsAiFetchModelsFailed": "Failed to fetch models: {error}",
+  "@settingsAiFetchModelsFailed": {
+    "description": "AIServiceException wrapping an unexpected error during model fetching",
+    "placeholders": {
+        "error": {"type": "String"}
+    }
+  },
+  "readerAiEnterQuestionFirst": "Please enter a question before sending",
+  "@readerAiEnterQuestionFirst": {
+    "description": "AIServiceException when no user message is present in the chat"
+  },
+  "readerAiEmptyResponse": "Model returned empty response, please retry",
+  "@readerAiEmptyResponse": {
+    "description": "AIServiceException when the AI response text is empty"
+  },
+  "readerAiRequestFailed": "Request failed: {error}",
+  "@readerAiRequestFailed": {
+    "description": "AIServiceException for a generic request failure",
+    "placeholders": {
+        "error": {"type": "String"}
+    }
+  },
+  "readerAiUnknownError": "Unknown error",
+  "@readerAiUnknownError": {
+    "description": "Fallback error text when the raw error string is empty"
+  },
+  "readerAiEmptyResponseError": "Server response is empty. This is usually caused by an incorrect Base URL, a gateway that does not forward to the model endpoint, or the server closing the connection early.\nRequest URL: {endpoint}",
+  "@readerAiEmptyResponseError": {
+    "description": "AIServiceException when the response body is empty",
+    "placeholders": {
+        "endpoint": {"type": "String"}
+    }
+  },
+  "readerAiInvalidJsonError": "Server response is not valid JSON. The current endpoint may be incompatible with the {provider} configuration.\nRequest URL: {endpoint}\nResponse snippet: {snippet}",
+  "@readerAiInvalidJsonError": {
+    "description": "AIServiceException when the response body cannot be parsed as JSON",
+    "placeholders": {
+        "provider": {"type": "String"},
+        "endpoint": {"type": "String"},
+        "snippet": {"type": "String"}
+    }
+  },
+  "readerAiFailedReadBody": "Request failed{status}: could not read the server response. This is usually caused by an incorrect Base URL, the endpoint returning empty content, or the network truncating the response.\nRequest URL: {endpoint}",
+  "@readerAiFailedReadBody": {
+    "description": "AIServiceException when the response body cannot be read; {status} is either empty or '(code)'",
+    "placeholders": {
+        "status": {"type": "String"},
+        "endpoint": {"type": "String"}
+    }
+  },
+  "readerAiNetworkRequestFailed": "Network request failed{status}: {error}\nRequest URL: {endpoint}",
+  "@readerAiNetworkRequestFailed": {
+    "description": "AIServiceException for a Dio network error; {status} is either empty or '(code)'",
+    "placeholders": {
+        "status": {"type": "String"},
+        "error": {"type": "String"},
+        "endpoint": {"type": "String"}
+    }
+  },
+  "readerAiRequestFailedMinimaxHint": "Request failed({status}): {text}\nSuggestions: 1) MiniMax temperature must be in (0,1]; 2) check that the model name matches the endpoint; 3) use only a single system instruction.\nRequest URL: {endpoint}",
+  "@readerAiRequestFailedMinimaxHint": {
+    "description": "AIServiceException with MiniMax-specific debugging hints",
+    "placeholders": {
+        "status": {"type": "String"},
+        "text": {"type": "String"},
+        "endpoint": {"type": "String"}
+    }
+  },
+  "readerAiRequestFailedClaudeHint": "Request failed({status}): {text}\nTip: Claude requires the anthropic-version request header.\nRequest URL: {endpoint}",
+  "@readerAiRequestFailedClaudeHint": {
+    "description": "AIServiceException with Claude-specific debugging hints",
+    "placeholders": {
+        "status": {"type": "String"},
+        "text": {"type": "String"},
+        "endpoint": {"type": "String"}
+    }
+  },
+  "readerAiRequestFailedProviderMismatchHint": "Request failed({status}): {text}\nTip: Please confirm that the provider and API Key match; they cannot be mixed.\nRequest URL: {endpoint}",
+  "@readerAiRequestFailedProviderMismatchHint": {
+    "description": "AIServiceException hinting that the provider and API key may be mismatched",
+    "placeholders": {
+        "status": {"type": "String"},
+        "text": {"type": "String"},
+        "endpoint": {"type": "String"}
+    }
+  },
+  "readerAiRequestFailedGeneric": "Request failed({status}): {text}\nRequest URL: {endpoint}",
+  "@readerAiRequestFailedGeneric": {
+    "description": "Generic AIServiceException for a non-200 response with body text",
+    "placeholders": {
+        "status": {"type": "String"},
+        "text": {"type": "String"},
+        "endpoint": {"type": "String"}
+    }
+  },
+  "readerAiMockSelectionResponse": "AI (mock): The text you selected is \"{selectedText}\".\n\nBefore: {before}\nAfter: {after}",
+  "@readerAiMockSelectionResponse": {
+    "description": "Mock AI response shown when AI is not configured, for a text selection query",
+    "placeholders": {
+        "selectedText": {"type": "String"},
+        "before": {"type": "String"},
+        "after": {"type": "String"}
+    }
+  },
+  "readerAiMockPageAnalysis": "AI (mock): This page has {chars} characters. Focus on the arguments at the beginning and end of paragraphs.",
+  "@readerAiMockPageAnalysis": {
+    "description": "Mock AI response shown when AI is not configured, for a page analysis query",
+    "placeholders": {
+        "chars": {"type": "int"}
+    }
+  },
+  "readerAiMockGreeting": "Hello",
+  "@readerAiMockGreeting": {
+    "description": "Mock AI greeting shown when no chat history exists"
+  },
+  "readerAiMockChatResponse": "AI (mock): You asked \"{question}\".\n\nI have read the current page ({chars} characters). You can continue asking.",
+  "@readerAiMockChatResponse": {
+    "description": "Mock AI response shown when AI is not configured, for a chat question",
+    "placeholders": {
+        "question": {"type": "String"},
+        "chars": {"type": "int"}
+    }
+  },
+  "readerAiMemorySummaryHeading": "[Book memory summary]",
+  "@readerAiMemorySummaryHeading": {
+    "description": "Heading written into the AI response buffer for the book memory summary section"
+  },
+  "readerAiReadingAdviceHeading": "[Reading advice for you]",
+  "@readerAiReadingAdviceHeading": {
+    "description": "Heading written into the AI response buffer for the reading advice section"
+  },
+  "readerAiIndexedSnippetsHeading": "[Indexed hit snippets]",
+  "@readerAiIndexedSnippetsHeading": {
+    "description": "Heading written into the AI response buffer for indexed snippet hits"
+  },
+  "readerAiLocalFallbackIntro": "No online AI Key configured, answering based on local memory and index:",
+  "@readerAiLocalFallbackIntro": {
+    "description": "Intro line shown when no online AI key is configured and a local fallback answer is given"
+  },
+  "readerAiRelatedContentHeading": "[Related content]",
+  "@readerAiRelatedContentHeading": {
+    "description": "Heading for the related content section in the local fallback response"
+  },
+  "readerAiNoRelatedContent": "[Related content] No usable snippets hit.",
+  "@readerAiNoRelatedContent": {
+    "description": "Shown when the local fallback has no related snippets and no summary"
+  },
+  "readerAiRelatedContentLocationHeading": "[Related content location]",
+  "@readerAiRelatedContentLocationHeading": {
+    "description": "Heading for the snippet location list in the local fallback response"
+  },
+  "readerAiSnippetLocation": "- Location: {chapterId} ({startOffset}-{endOffset})",
+  "@readerAiSnippetLocation": {
+    "description": "A single snippet location line in the local fallback response",
+    "placeholders": {
+        "chapterId": {"type": "String"},
+        "startOffset": {"type": "int"},
+        "endOffset": {"type": "int"}
+    }
+  },
+  "readerAiReadingSuggestionHeading": "[How to read]",
+  "@readerAiReadingSuggestionHeading": {
+    "description": "Heading for the reading suggestion section in the local fallback response"
+  },
+  "readerAiNextStepHeading": "[Next step]",
+  "@readerAiNextStepHeading": {
+    "description": "Heading for the next-step section in the local fallback response"
+  },
+  "readerAiNextStepReadSnippet": "1) Read the hit snippet above first.",
+  "@readerAiNextStepReadSnippet": {
+    "description": "First next-step instruction in the local fallback response"
+  },
+  "readerAiNextStepAskFollowUp": "2) Ask again with \"why/how/example\" and I will continue locating by index.",
+  "@readerAiNextStepAskFollowUp": {
+    "description": "Second next-step instruction in the local fallback response"
+  },
+  "ttsSystemDefault": "System default",
+  "@ttsSystemDefault": {
+    "description": "Fallback label for the current TTS voice when no voice is selected"
+  },
+  "ttsUnavailable": "System TTS unavailable",
+  "@ttsUnavailable": {
+    "description": "Error message when the system TTS engine is not available"
+  },
+  "ttsUnsupportedLanguage": "System does not support language: {language}",
+  "@ttsUnsupportedLanguage": {
+    "description": "Error message when the requested TTS language is not supported",
+    "placeholders": {
+        "language": {"type": "String"}
+    }
+  },
+  "ttsCallFailed": "System TTS call failed",
+  "@ttsCallFailed": {
+    "description": "Fallback error text when a TTS exception has an empty message"
+  },
+  "importErrorSourceMissing": "Source file does not exist",
+  "@importErrorSourceMissing": {
+    "description": "BookImportFailure message for a missing source file"
+  },
+  "importErrorHashFailed": "Cannot verify file content",
+  "@importErrorHashFailed": {
+    "description": "BookImportFailure message when file hashing fails"
+  },
+  "importErrorTargetNameExhausted": "Cannot allocate available name for import file",
+  "@importErrorTargetNameExhausted": {
+    "description": "BookImportFailure message when no available target filename can be found"
+  },
+  "importErrorSourceNotMaterialized": "Source file not yet on local storage",
+  "@importErrorSourceNotMaterialized": {
+    "description": "BookImportFailure message when the source file has not been materialized locally"
+  },
+  "importErrorCopyVerificationFailed": "Copied file does not match source",
+  "@importErrorCopyVerificationFailed": {
+    "description": "BookImportFailure message when the copied file hash differs from the source"
+  },
+  "importErrorFileTooLarge": "File exceeds 100MB import limit",
+  "@importErrorFileTooLarge": {
+    "description": "BookImportFailure message when the file exceeds the size limit"
+  },
+  "importErrorSourcePrepareFailed": "Cannot prepare import file",
+  "@importErrorSourcePrepareFailed": {
+    "description": "BookImportFailure message when the source file cannot be prepared"
+  },
+  "importErrorFailed": "Book import failed",
+  "@importErrorFailed": {
+    "description": "BookImportFailure message for a generic import failure"
+  },
+  "importUnknownTitle": "Unknown title",
+  "@importUnknownTitle": {
+    "description": "Fallback title used when no title can be extracted from a TXT file"
+  },
+  "importUnknownAuthor": "Unknown author",
+  "@importUnknownAuthor": {
+    "description": "Fallback author used when no author can be extracted from a TXT file"
+  },
+  "bookUntitled": "Untitled",
+  "@bookUntitled": {
+    "description": "Fallback title used when a book has no title"
+  },
+  "homePlanTaskCompleteDailyGoal": "Complete today's goal",
+  "@homePlanTaskCompleteDailyGoal": {
+    "description": "Reading plan task title for completing the daily reading goal"
+  },
+  "homePlanTaskReadMinutes": "Read {minutes} minutes",
+  "@homePlanTaskReadMinutes": {
+    "description": "Reading plan task detail for reading a number of minutes",
+    "placeholders": {
+        "minutes": {"type": "int"}
+    }
+  },
+  "homePlanTaskCompleteFocusReading": "Complete focus reading",
+  "@homePlanTaskCompleteFocusReading": {
+    "description": "Reading plan task title for completing a focus reading session"
+  },
+  "homePlanTaskFocusSession": "At least 1 focus session of {minutes} minutes",
+  "@homePlanTaskFocusSession": {
+    "description": "Reading plan task detail for completing a focus session",
+    "placeholders": {
+        "minutes": {"type": "int"}
+    }
+  },
+  "homePlanTaskKeepRhythm": "Keep the rhythm",
+  "@homePlanTaskKeepRhythm": {
+    "description": "Reading plan task title for maintaining the weekly reading rhythm"
+  },
+  "homePlanTaskWeekAchievedDays": "Weekly achieved days ≥ 5",
+  "@homePlanTaskWeekAchievedDays": {
+    "description": "Reading plan task detail for the weekly achieved-days target"
+  },
+  "noteColorLightBlue": "Light Blue",
+  "@noteColorLightBlue": {
+    "description": "Note highlight color name: light blue"
+  },
+  "noteColorRed": "Red",
+  "@noteColorRed": {
+    "description": "Note highlight color name: red"
+  },
+  "noteColorGreen": "Green",
+  "@noteColorGreen": {
+    "description": "Note highlight color name: green"
+  },
+  "noteColorPurple": "Purple",
+  "@noteColorPurple": {
+    "description": "Note highlight color name: purple"
+  },
+  "noteColorGold": "Gold",
+  "@noteColorGold": {
+    "description": "Note highlight color name: gold"
+  },
+  "noteColorOrange": "Orange",
+  "@noteColorOrange": {
+    "description": "Note highlight color name: orange"
+  },
+  "noteColorYellow": "Yellow",
+  "@noteColorYellow": {
+    "description": "Note highlight color name: yellow"
+  },
+  "noteColorDarkGreen": "Dark Green",
+  "@noteColorDarkGreen": {
+    "description": "Note highlight color name: dark green"
+  },
+  "noteColorCustom": "Custom",
+  "@noteColorCustom": {
+    "description": "Note highlight color name: custom color"
+  },
+  "noteShareBookHeader": "📖 《{title}》 - {author}",
+  "@noteShareBookHeader": {
+    "description": "Share text header line with book title and author",
+    "placeholders": {
+        "title": {"type": "String"},
+        "author": {"type": "String"}
+    }
+  },
+  "noteShareNoteLabel": "💭 Note: {note}",
+  "@noteShareNoteLabel": {
+    "description": "Share text line for the reader's note",
+    "placeholders": {
+        "note": {"type": "String"}
+    }
+  },
+  "noteShareChapterLabel": "📍 {chapter}",
+  "@noteShareChapterLabel": {
+    "description": "Share text line for the chapter name",
+    "placeholders": {
+        "chapter": {"type": "String"}
+    }
+  },
+  "noteSharePageLabel": "📄 Page {page}",
+  "@noteSharePageLabel": {
+    "description": "Share text line for the page number",
+    "placeholders": {
+        "page": {"type": "int"}
+    }
+  },
+  "noteShareHashtags": "#BookNotes #{type}",
+  "@noteShareHashtags": {
+    "description": "Share text hashtags line with the note type name",
+    "placeholders": {
+        "type": {"type": "String"}
+    }
+  },
+  "accentPurple": "Elegant Purple",
+  "@accentPurple": {
+    "description": "Accent color display name: elegant purple"
+  },
+  "accentPink": "Cherry Pink",
+  "@accentPink": {
+    "description": "Accent color display name: cherry pink"
+  },
+  "accentCyan": "Fresh Cyan",
+  "@accentCyan": {
+    "description": "Accent color display name: fresh cyan"
+  },
+  "accentBrown": "Classic Brown",
+  "@accentBrown": {
+    "description": "Accent color display name: classic brown"
+  },
+  "accentGrey": "Elegant Grey",
+  "@accentGrey": {
+    "description": "Accent color display name: elegant grey"
+  },
+  "accentDeepPurple": "Charming Purple",
+  "@accentDeepPurple": {
+    "description": "Accent color display name: charming purple"
+  },
+  "accentAmber": "Amber Gold",
+  "@accentAmber": {
+    "description": "Accent color display name: amber gold"
+  },
+  "accentLightGreen": "Vivid Green",
+  "@accentLightGreen": {
+    "description": "Accent color display name: vivid green"
+  },
+  "accentYellow": "Sunshine Yellow",
+  "@accentYellow": {
+    "description": "Accent color display name: sunshine yellow"
+  },
+  "accentNeutralGrey": "Minimal Grey",
+  "@accentNeutralGrey": {
+    "description": "Accent color display name: minimal grey"
+  },
+  "accentIndigo": "Deep Indigo",
+  "@accentIndigo": {
+    "description": "Accent color display name: deep indigo"
+  },
+  "accentDeepOrange": "Flame Orange",
+  "@accentDeepOrange": {
+    "description": "Accent color display name: flame orange"
+  },
+  "glassPresetClear": "Clear mode",
+  "@glassPresetClear": {
+    "description": "Glass effect preset name: clear mode (higher opacity, less blur)"
+  },
+  "glassPresetStandard": "Standard mode",
+  "@glassPresetStandard": {
+    "description": "Glass effect preset name: standard mode (default blur and opacity)"
+  },
+  "glassPresetDreamy": "Dreamy mode",
+  "@glassPresetDreamy": {
+    "description": "Glass effect preset name: dreamy mode (lower opacity, more blur)"
+  },
+  "agreementV2HeroTitle": "Keep reading on your own device.",
+  "@agreementV2HeroTitle": {
+    "description": "User agreement V2 hero title"
+  },
+  "agreementV2HeroBody": "OpenReading is an open-source, cross-platform, local-first ebook reader. It provides reading tools; it does not provide, host, or review books you import.",
+  "@agreementV2HeroBody": {
+    "description": "User agreement V2 hero body paragraph"
+  },
+  "agreementV2LocalTitle": "Local first",
+  "@agreementV2LocalTitle": {
+    "description": "User agreement V2 local-first principle title"
+  },
+  "agreementV2LocalBody": "Books, progress, and notes generally remain on your device for you to manage and back up.",
+  "@agreementV2LocalBody": {
+    "description": "User agreement V2 local-first principle body"
+  },
+  "agreementV2OpenSourceTitle": "AGPL-3.0 licensed",
+  "@agreementV2OpenSourceTitle": {
+    "description": "User agreement V2 open-source principle title"
+  },
+  "agreementV2OpenSourceBody": "Source code is provided under GNU AGPL v3.0 and the software is supplied “as is,” without warranties.",
+  "@agreementV2OpenSourceBody": {
+    "description": "User agreement V2 open-source principle body"
+  },
+  "agreementV2VersionLabel": "Terms version {version}",
+  "@agreementV2VersionLabel": {
+    "description": "User agreement V2 version label with version placeholder",
+    "placeholders": {
+        "version": {"type": "String"}
+    }
+  },
+  "agreementV2Title": "Terms of Use & Privacy Notice",
+  "@agreementV2Title": {
+    "description": "User agreement V2 panel title"
+  },
+  "agreementV2Subtitle": "Please read before using OpenReading",
+  "@agreementV2Subtitle": {
+    "description": "User agreement V2 panel subtitle"
+  },
+  "agreementV2ImportantNotice": "Important: The official OpenReading app does not preinstall, bundle, or recommend any third-party book source, and its developers do not operate, represent, or host source content. You choose every imported file and source you add; use only content you are authorized to access.",
+  "@agreementV2ImportantNotice": {
+    "description": "User agreement V2 important notice callout"
+  },
+  "agreementV2SourceBoundaryTitle": "Third-party source boundary",
+  "@agreementV2SourceBoundaryTitle": {
+    "description": "User agreement V2 source boundary card title"
+  },
+  "agreementV2SourceBoundaryPoint1": "The official project provides open-source reader software and the Open Reading Source Protocol only. It provides no source addresses or official source directory.",
+  "@agreementV2SourceBoundaryPoint1": {
+    "description": "User agreement V2 source boundary point 1"
+  },
+  "agreementV2SourceBoundaryPoint2": "Every source address must be entered and added by you. The app connects directly to that independent service without routing content through a developer-operated server.",
+  "@agreementV2SourceBoundaryPoint2": {
+    "description": "User agreement V2 source boundary point 2"
+  },
+  "agreementV2SourceBoundaryPoint3": "Protocol compatibility means only that an interface can connect; it does not prove legality or licensing. Source operators are responsible for their content, and you must review and use it lawfully.",
+  "@agreementV2SourceBoundaryPoint3": {
+    "description": "User agreement V2 source boundary point 3"
+  },
+  "agreementV2Section1Title": "Scope and acceptance",
+  "@agreementV2Section1Title": {
+    "description": "User agreement V2 section 1 title"
+  },
+  "agreementV2Section1Body": "These terms apply to your download, installation, and use of OpenReading and its included features. By selecting “Agree and continue,” you confirm that you have read, understood, and accepted them. If you do not agree, stop using and exit the app. A guardian must consent where required by local law.",
+  "@agreementV2Section1Body": {
+    "description": "User agreement V2 section 1 body"
+  },
+  "agreementV2Section2Title": "Open-source license",
+  "@agreementV2Section2Title": {
+    "description": "User agreement V2 section 2 title"
+  },
+  "agreementV2Section2Body": "Future OpenReading versions are released under the GNU Affero General Public License v3.0. You may use, copy, modify, distribute, or sell the software under that license. A distributed modified version must provide its complete corresponding source under AGPL-3.0, and a modified version used to provide a network service must also offer corresponding source to users interacting with it. MIT rights already granted for v1.0.0 and earlier versions remain valid and are not revoked. These terms do not restrict rights granted by the open-source license. Third-party components remain subject to their own licenses.",
+  "@agreementV2Section2Body": {
+    "description": "User agreement V2 section 2 body"
+  },
+  "agreementV2Section3Title": "User content and rights",
+  "@agreementV2Section3Title": {
+    "description": "User agreement V2 section 3 title"
+  },
+  "agreementV2Section3Body": "“User content” includes books, documents, images, metadata, links, and other material you import, download, open, convert, cache, annotate, or read aloud. You must have all rights and permissions required to use it. You are solely responsible for copyright, trademark, privacy, defamation, unlawful-content, malware, and other claims or losses involving user content. The software and its developers do not upload, sell, license, endorse, or review that content, and format support does not imply lawful permission to use a file.",
+  "@agreementV2Section3Body": {
+    "description": "User agreement V2 section 3 body"
+  },
+  "agreementV2Section4Title": "Prohibited use",
+  "@agreementV2Section4Title": {
+    "description": "User agreement V2 section 4 title"
+  },
+  "agreementV2Section4Body": "You may not use the software to infringe intellectual property or other rights; distribute unlawful, harmful, or malicious content; bypass digital rights management, access controls, or paywalls; attack or disrupt third-party systems; or engage in activity prohibited by applicable law. You are responsible for complaints, claims, penalties, and losses resulting from your conduct.",
+  "@agreementV2Section4Body": {
+    "description": "User agreement V2 section 4 body"
+  },
+  "agreementV2Section5Title": "Book sources and third parties",
+  "@agreementV2Section5Title": {
+    "description": "User agreement V2 section 5 title"
+  },
+  "agreementV2Section5Body": "The official app does not preinstall, distribute, or recommend book sources and does not operate an official source directory. Sources, network APIs, external links, online content, system text-to-speech, AI services, and other integrations you add are independently provided and controlled by third parties. They are not operated, represented, licensed, endorsed, or reviewed by the developers. Source operators are legally responsible for the content they provide. Before adding one, you must review its origin, content rights, privacy policy, and terms, and you are responsible for your own access, downloads, caching, distribution, and other use. To the fullest extent permitted by applicable law, the developers are not liable for third-party content, charges, data practices, outages, or infringement disputes.",
+  "@agreementV2Section5Body": {
+    "description": "User agreement V2 section 5 body"
+  },
+  "agreementV2Section6Title": "Data and privacy",
+  "@agreementV2Section6Title": {
+    "description": "User agreement V2 section 6 title"
+  },
+  "agreementV2Section6Body": "OpenReading is local-first. Books, reading progress, notes, and settings are normally stored on your device. Unless you enable a network book source, cover search, AI, sync, or another online feature, the app does not need to send book text to the developers to provide local reading. Automatic and manual update checks contact GitHub and the official site at open.xxread.top with necessary technical parameters such as platform, processor architecture, and release channel; their servers process your IP address and User-Agent as part of ordinary network communication. When you download an installer from the official site, the backend records the version, architecture, download time, IP address, and User-Agent for download counts, security protection, and troubleshooting. Download-event records containing a raw IP are retained for no more than 30 days and then deleted; only aggregate statistics without raw IP addresses are kept longer. Update requests do not include book text, your library, notes, an account, or a unique device identifier. GitHub requests are also governed by GitHub’s privacy terms. When another online feature is used, queries, selected text, network information, or necessary parameters may be sent to the provider you selected under that provider’s policies. Protect your device, API keys, and backups; uninstalling, clearing data, device failure, or user error may permanently erase data.",
+  "@agreementV2Section6Body": {
+    "description": "User agreement V2 section 6 body"
+  },
+  "agreementV2Section7Title": "AI and automated output",
+  "@agreementV2Section7Title": {
+    "description": "User agreement V2 section 7 title"
+  },
+  "agreementV2Section7Body": "AI summaries, answers, translations, recommendations, and other generated output may be inaccurate, incomplete, outdated, or misleading. They are reading aids only and are not legal, medical, financial, academic, or other professional advice. Verify output independently and do not rely on it for high-risk decisions. Material submitted to an AI provider is also governed by that provider’s terms.",
+  "@agreementV2Section7Body": {
+    "description": "User agreement V2 section 7 body"
+  },
+  "agreementV2Section8Title": "Disclaimer of warranties",
+  "@agreementV2Section8Title": {
+    "description": "User agreement V2 section 8 title"
+  },
+  "agreementV2Section8Body": "To the fullest extent permitted by law, the software and related materials are provided “as is” and “as available,” without express, implied, or statutory warranties, including merchantability, fitness for a particular purpose, title, non-infringement, accuracy, compatibility, security, error-free operation, uninterrupted availability, or preservation of data. Open-source contributors have no duty to maintain, update, support, or fix the software.",
+  "@agreementV2Section8Body": {
+    "description": "User agreement V2 section 8 body"
+  },
+  "agreementV2Section9Title": "Limitation of liability",
+  "@agreementV2Section9Title": {
+    "description": "User agreement V2 section 9 title"
+  },
+  "agreementV2Section9Body": "To the fullest extent permitted by law, developers, copyright holders, and contributors are not liable for direct, indirect, incidental, special, punitive, or consequential loss arising from installation, use, inability to use, user content, third-party services, data loss, device issues, business interruption, or security incidents, whether under contract, tort, or another theory. Liability that cannot legally be excluded remains limited to the minimum extent permitted by law.",
+  "@agreementV2Section9Body": {
+    "description": "User agreement V2 section 9 body"
+  },
+  "agreementV2Section10Title": "Indemnity",
+  "@agreementV2Section10Title": {
+    "description": "User agreement V2 section 10 title"
+  },
+  "agreementV2Section10Body": "To the extent permitted by applicable law, you are responsible for and will hold developers, copyright holders, and contributors harmless from third-party claims, investigations, penalties, losses, and reasonable costs arising from your user content, unlawful or infringing conduct, breach of these terms, or use of third-party services.",
+  "@agreementV2Section10Body": {
+    "description": "User agreement V2 section 10 body"
+  },
+  "agreementV2Section11Title": "Changes, termination, and law",
+  "@agreementV2Section11Title": {
+    "description": "User agreement V2 section 11 title"
+  },
+  "agreementV2Section11Body": "Features, maintenance status, and these terms may change as the open-source project, law, or risk controls evolve. Material updates may require renewed consent; if you disagree, stop using the app. You may uninstall at any time. Disputes should first be resolved informally. Subject to mandatory consumer protections, the law of the developer’s location and courts with lawful jurisdiction apply. If one provision is unenforceable, the rest remain effective.",
+  "@agreementV2Section11Body": {
+    "description": "User agreement V2 section 11 body"
+  },
+  "agreementV2ConfirmLabel": "I have read and agree to the Terms of Use and Privacy Notice.",
+  "@agreementV2ConfirmLabel": {
+    "description": "User agreement V2 terms consent checkbox label"
+  },
+  "agreementV2SourceConfirmLabel": "I understand that the official project provides no book sources; sources and content I add come from independent third parties, and I will verify authorization and remain responsible for my own use.",
+  "@agreementV2SourceConfirmLabel": {
+    "description": "User agreement V2 source boundary consent checkbox label"
+  },
+  "agreementV2ExitLabel": "Decline",
+  "@agreementV2ExitLabel": {
+    "description": "User agreement V2 exit/decline button label"
+  },
+  "agreementV2ContinueLabel": "Agree and continue",
+  "@agreementV2ContinueLabel": {
+    "description": "User agreement V2 agree-and-continue button label"
+  },
+  "agreementV2ExitDialogTitle": "Decline the terms?",
+  "@agreementV2ExitDialogTitle": {
+    "description": "User agreement V2 exit dialog title"
+  },
+  "agreementV2ExitDialogBody": "You must accept the Terms of Use to continue using OpenReading. If you do not agree, please exit the app.",
+  "@agreementV2ExitDialogBody": {
+    "description": "User agreement V2 exit dialog body"
+  },
+  "agreementV2CancelLabel": "Go back",
+  "@agreementV2CancelLabel": {
+    "description": "User agreement V2 exit dialog cancel button label"
+  },
+  "agreementV2ConfirmExitLabel": "Exit",
+  "@agreementV2ConfirmExitLabel": {
+    "description": "User agreement V2 exit dialog confirm button label"
+  },
+  "agreementV2SaveFailed": "Could not save your consent. Please try again.",
+  "@agreementV2SaveFailed": {
+    "description": "User agreement V2 save-failed snackbar message"
+  }
 }

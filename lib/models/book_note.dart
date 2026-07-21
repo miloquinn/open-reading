@@ -181,56 +181,53 @@ class BookNote {
   static const List<Map<String, dynamic>> noteTypes = [
     {
       'type': 'highlight',
-      'name': '高亮',
       'icon': Icons.highlight_alt,
     },
     {
       'type': 'underline',
-      'name': '下划线',
       'icon': Icons.format_underlined,
     },
     {
       'type': 'note',
-      'name': '笔记',
       'icon': Icons.note_alt,
     },
   ];
 
-  /// 获取颜色名称
+  /// 获取颜色 code（稳定标识，UI 层通过 `bookNoteColorName` 翻译为显示文案）
   static String getColorName(String colorHex) {
     switch (colorHex.toUpperCase()) {
       case '66CCFF':
-        return '浅蓝色';
+        return 'lightBlue';
       case 'FF0000':
-        return '红色';
+        return 'red';
       case '00FF00':
-        return '绿色';
+        return 'green';
       case 'EB3BFF':
-        return '紫色';
+        return 'purple';
       case 'FFD700':
-        return '金色';
+        return 'gold';
       case 'FF9800':
-        return '橙色';
+        return 'orange';
       case 'FFEB3B':
-        return '黄色';
+        return 'yellow';
       case '4CAF50':
-        return '深绿色';
+        return 'darkGreen';
       default:
-        return '自定义';
+        return 'custom';
     }
   }
 
-  /// 获取类型名称
+  /// 获取类型 code（稳定标识，UI 层通过 `bookNoteTypeName` 翻译为显示文案）
   static String getTypeName(String type) {
     switch (type) {
       case 'highlight':
-        return '高亮';
+        return 'highlight';
       case 'underline':
-        return '下划线';
+        return 'underline';
       case 'note':
-        return '笔记';
+        return 'note';
       default:
-        return '未知';
+        return 'unknown';
     }
   }
 
@@ -255,43 +252,20 @@ class BookNote {
   bool get isPureNote => type == 'note' && content.isEmpty;
 
   /// 转换为导出格式
+  ///
+  /// `type`/`color` 均为稳定 code（type code 与颜色 hex），不含本地化显示文案；
+  /// 如需展示给用户，UI 层应通过 `bookNoteTypeName` / `bookNoteColorName` 翻译。
   Map<String, dynamic> toExportMap() {
     return {
       'content': content,
       'note': readerNote,
-      'type': getTypeName(type),
-      'color': getColorName(color),
+      'type': type,
+      'color': color,
       'chapter': chapter,
       'page': pageNumber,
       'createTime': createTime?.toIso8601String(),
       'updateTime': updateTime.toIso8601String(),
     };
-  }
-
-  /// 生成分享文本
-  String toShareText(String bookTitle, String author) {
-    final buffer = StringBuffer();
-    buffer.writeln('📖 《$bookTitle》- $author');
-    buffer.writeln();
-
-    if (content.isNotEmpty) {
-      buffer.writeln('"$content"');
-      buffer.writeln();
-    }
-
-    if (hasNote) {
-      buffer.writeln('💭 笔记：$readerNote');
-      buffer.writeln();
-    }
-
-    buffer.writeln('📍 $chapter');
-    if (pageNumber != null) {
-      buffer.writeln('📄 第$pageNumber页');
-    }
-    buffer.writeln();
-    buffer.writeln('#读书笔记 #${getTypeName(type)}');
-
-    return buffer.toString();
   }
 
   @override

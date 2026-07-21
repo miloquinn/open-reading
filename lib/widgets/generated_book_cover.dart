@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 
 import '../services/books/cover_generator_service.dart';
+import '../utils/localization_extension.dart';
 
 class GeneratedBookCover extends StatelessWidget {
   const GeneratedBookCover({
@@ -15,6 +16,7 @@ class GeneratedBookCover extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final fallbackTitle = context.l10n.bookUntitled;
     final semanticsLabel = [title.trim(), author.trim()]
         .where((value) => value.isNotEmpty)
         .join('，');
@@ -22,7 +24,11 @@ class GeneratedBookCover extends StatelessWidget {
       image: true,
       label: semanticsLabel,
       child: CustomPaint(
-        painter: GeneratedBookCoverPainter(title: title, author: author),
+        painter: GeneratedBookCoverPainter(
+          title: title,
+          author: author,
+          fallbackTitle: fallbackTitle,
+        ),
         child: const SizedBox.expand(),
       ),
     );

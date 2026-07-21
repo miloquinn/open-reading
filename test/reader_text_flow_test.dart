@@ -1,16 +1,11 @@
 import 'package:flutter/painting.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:xxread/core/reader/native_text_paginator.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  setUpAll(() async {
-    final loader = FontLoader('SourceHanSerifCN')
-      ..addFont(rootBundle.load('assets/fonts/app/NotoSerifSC-Variable.ttf'));
-    await loader.load();
-  });
+  // 字体不内置后，测试用系统默认字体跑文本布局断言；不再 rootBundle.load 已删字体。
 
   const fontSize = 20.0;
   const lineHeight = 1.8;

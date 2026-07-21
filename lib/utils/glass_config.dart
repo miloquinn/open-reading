@@ -156,21 +156,21 @@ class GlassEffectConfig {
 
   // 预设1: 清晰模式 (透明度偏高，模糊偏低)
   static const GlassPreset clearMode = GlassPreset(
-    name: '清晰模式',
+    name: 'clear',
     blurReduction: 0.6, // 模糊强度 × 0.6
     opacityIncrease: 0.2, // 透明度 + 0.2
   );
 
   // 预设2: 毛玻璃模式 (标准设置)
   static const GlassPreset standardMode = GlassPreset(
-    name: '标准模式',
+    name: 'standard',
     blurReduction: 1.0, // 标准模糊
     opacityIncrease: 0.0, // 标准透明度
   );
 
   // 预设3: 朦胧模式 (透明度偏低，模糊偏高)
   static const GlassPreset dreamyMode = GlassPreset(
-    name: '朦胧模式',
+    name: 'dreamy',
     blurReduction: 1.4, // 模糊强度 × 1.4
     opacityIncrease: -0.15, // 透明度 - 0.15
   );

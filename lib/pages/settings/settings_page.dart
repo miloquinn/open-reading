@@ -21,6 +21,7 @@ import 'package:xxread/pages/settings/about/changelog_page.dart';
 import 'package:xxread/pages/settings/about/open_source_licenses_page.dart';
 import 'package:xxread/reader_core/ai/ai_service.dart';
 import 'package:xxread/services/core/core_services.dart';
+import 'package:xxread/services/core/online_font_models.dart';
 import 'package:xxread/utils/app_themes.dart';
 import 'package:xxread/utils/font_catalog_helper.dart';
 import 'package:xxread/utils/localization_extension.dart';
@@ -1179,6 +1180,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Widget _buildAiModelCard(_AiQuickModel item) {
+    final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     final selected = item.id == _activeAiQuickModelId;
     final configured = item.settings.isConfigured;
@@ -1252,7 +1254,9 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 const SizedBox(height: 7),
                 Text(
-                  configured ? 'API Key 已配置' : '点击完成配置',
+                  configured
+                      ? l10n.settingsAiApiKeyConfigured
+                      : l10n.settingsAiApiKeyTapToConfigure,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -1269,6 +1273,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Widget _buildAddAiModelCard() {
+    final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     return SizedBox(
       width: 112,
@@ -1297,7 +1302,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  '添加模型',
+                  l10n.settingsAiAddModel,
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
@@ -1326,7 +1331,10 @@ class _SettingsPageState extends State<SettingsPage> {
       });
       await _persistAiQuickModels();
       if (mounted) {
-        showSideToast(context, '已切换到 ${item.settings.model}');
+        showSideToast(
+          context,
+          context.l10n.settingsAiSwitchedToModel(item.settings.model),
+        );
       }
     } catch (error) {
       if (mounted) showSideToast(context, '$error');
@@ -1372,6 +1380,7 @@ class _SettingsPageState extends State<SettingsPage> {
       backgroundColor: Colors.transparent,
       builder: (sheetContext) => StatefulBuilder(
         builder: (sheetContext, setSheetState) {
+          final l10n = context.l10n;
           final scheme = Theme.of(sheetContext).colorScheme;
           final presets = AIModelPresets.byProvider(provider);
 
@@ -1391,7 +1400,7 @@ class _SettingsPageState extends State<SettingsPage> {
             final baseUrl = baseUrlController.text.trim();
             if (apiKey.isEmpty || baseUrl.isEmpty) {
               setSheetState(() {
-                errorText = '请先填写 Base URL 和 API Key';
+                errorText = l10n.settingsAiFillBaseUrlAndApiKey;
               });
               return;
             }
@@ -1489,7 +1498,9 @@ class _SettingsPageState extends State<SettingsPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  editing == null ? '添加模型' : '配置模型',
+                                  editing == null
+                                      ? l10n.settingsAiAddModel
+                                      : l10n.settingsAiEditModelTitle,
                                   style: Theme.of(sheetContext)
                                       .textTheme
                                       .titleLarge
@@ -1497,7 +1508,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 ),
                                 const SizedBox(height: 3),
                                 Text(
-                                  '每张快捷卡片只绑定一个模型',
+                                  l10n.settingsAiQuickCardSubtitle,
                                   style: Theme.of(sheetContext)
                                       .textTheme
                                       .bodySmall
@@ -1521,16 +1532,16 @@ class _SettingsPageState extends State<SettingsPage> {
                         padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
                         children: [
                           SegmentedButton<bool>(
-                            segments: const [
+                            segments: [
                               ButtonSegment(
                                 value: false,
-                                label: Text('预设模型'),
-                                icon: Icon(Icons.auto_awesome_outlined),
+                                label: Text(l10n.settingsAiPresetModel),
+                                icon: const Icon(Icons.auto_awesome_outlined),
                               ),
                               ButtonSegment(
                                 value: true,
-                                label: Text('自定义'),
-                                icon: Icon(Icons.tune_rounded),
+                                label: Text(l10n.settingsAiCustomButton),
+                                icon: const Icon(Icons.tune_rounded),
                               ),
                             ],
                             selected: {customMode},
@@ -1546,10 +1557,10 @@ class _SettingsPageState extends State<SettingsPage> {
                           const SizedBox(height: 18),
                           DropdownButtonFormField<AIProviderType>(
                             initialValue: provider,
-                            decoration: const InputDecoration(
-                              labelText: '大模型服务商',
-                              prefixIcon: Icon(Icons.hub_outlined),
-                              border: OutlineInputBorder(),
+                            decoration: InputDecoration(
+                              labelText: l10n.settingsAiProviderLabel,
+                              prefixIcon: const Icon(Icons.hub_outlined),
+                              border: const OutlineInputBorder(),
                             ),
                             items: AIProviderType.values
                                 .map(
@@ -1586,10 +1597,10 @@ class _SettingsPageState extends State<SettingsPage> {
                               ),
                               initialValue: selectedPreset,
                               isExpanded: true,
-                              decoration: const InputDecoration(
-                                labelText: '预设模型',
-                                prefixIcon: Icon(Icons.memory_rounded),
-                                border: OutlineInputBorder(),
+                              decoration: InputDecoration(
+                                labelText: l10n.settingsAiPresetModel,
+                                prefixIcon: const Icon(Icons.memory_rounded),
+                                border: const OutlineInputBorder(),
                               ),
                               items: presets
                                   .map(
@@ -1612,10 +1623,10 @@ class _SettingsPageState extends State<SettingsPage> {
                           TextFormField(
                             controller: baseUrlController,
                             enabled: customMode,
-                            decoration: const InputDecoration(
-                              labelText: 'Base URL',
-                              prefixIcon: Icon(Icons.link_rounded),
-                              border: OutlineInputBorder(),
+                            decoration: InputDecoration(
+                              labelText: l10n.settingsAiBaseUrlLabel,
+                              prefixIcon: const Icon(Icons.link_rounded),
+                              border: const OutlineInputBorder(),
                             ),
                           ),
                           const SizedBox(height: 16),
@@ -1623,7 +1634,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             controller: apiKeyController,
                             obscureText: _obscureAiApiKey,
                             decoration: InputDecoration(
-                              labelText: 'API Key',
+                              labelText: l10n.settingsAiApiKeyLabel,
                               prefixIcon: const Icon(Icons.key_rounded),
                               border: const OutlineInputBorder(),
                               suffixIcon: IconButton(
@@ -1646,12 +1657,12 @@ class _SettingsPageState extends State<SettingsPage> {
                             controller: modelController,
                             enabled: customMode,
                             decoration: InputDecoration(
-                              labelText: '模型型号',
+                              labelText: l10n.settingsAiModelNameLabel,
                               prefixIcon: const Icon(Icons.smart_toy_outlined),
                               border: const OutlineInputBorder(),
                               suffixIcon: customMode
                                   ? IconButton(
-                                      tooltip: '自动获取模型',
+                                      tooltip: l10n.settingsAiFetchModelsTooltip,
                                       onPressed:
                                           loadingModels ? null : fetchModels,
                                       icon: loadingModels
@@ -1674,14 +1685,14 @@ class _SettingsPageState extends State<SettingsPage> {
                               child: TextButton.icon(
                                 onPressed: loadingModels ? null : fetchModels,
                                 icon: const Icon(Icons.travel_explore_rounded),
-                                label: const Text('自动获取模型列表'),
+                                label: Text(l10n.settingsAiFetchModelsList),
                               ),
                             ),
                           ],
                           if (fetchedModels.isNotEmpty) ...[
                             const SizedBox(height: 8),
                             Text(
-                              '选择一个模型',
+                              l10n.settingsAiSelectModel,
                               style: Theme.of(sheetContext)
                                   .textTheme
                                   .titleSmall
@@ -1728,10 +1739,10 @@ class _SettingsPageState extends State<SettingsPage> {
                                   const TextInputType.numberWithOptions(
                                 decimal: true,
                               ),
-                              decoration: const InputDecoration(
-                                labelText: 'Temperature',
-                                prefixIcon: Icon(Icons.thermostat_rounded),
-                                border: OutlineInputBorder(),
+                              decoration: InputDecoration(
+                                labelText: l10n.settingsAiTemperatureLabel,
+                                prefixIcon: const Icon(Icons.thermostat_rounded),
+                                border: const OutlineInputBorder(),
                               ),
                             ),
                           ],
@@ -1755,7 +1766,11 @@ class _SettingsPageState extends State<SettingsPage> {
                         child: FilledButton.icon(
                           onPressed: saveModel,
                           icon: const Icon(Icons.add_task_rounded),
-                          label: Text(editing == null ? '添加并启用' : '保存并启用'),
+                          label: Text(
+                            editing == null
+                                ? l10n.settingsAiAddAndEnable
+                                : l10n.settingsAiSaveAndEnable,
+                          ),
                         ),
                       ),
                     ),
@@ -1911,7 +1926,7 @@ class _SettingsPageState extends State<SettingsPage> {
             }
           },
           decoration: InputDecoration(
-            labelText: 'API Key',
+            labelText: l10n.settingsAiApiKeyLabel,
             hintText: l10n.settingsAiApiKeyStoredLocally,
             prefixIcon: const Icon(Icons.key_rounded),
             border: const OutlineInputBorder(),
@@ -2418,195 +2433,213 @@ class _SettingsPageState extends State<SettingsPage> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (modalContext) {
-        var importing = false;
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            final builtInOptions = domain == FontDomain.app
-                ? FontCatalog.appFonts
-                : FontCatalog.readerFonts;
-            final customOptions = appSettings.availableCustomFonts;
-            final selectedId = domain == FontDomain.app
-                ? appSettings.appFontId
-                : appSettings.readerFontId;
-            final colorScheme = Theme.of(context).colorScheme;
+        return ListenableBuilder(
+          listenable: appSettings,
+          builder: (context, _) {
+            var importing = false;
+            return StatefulBuilder(
+              builder: (context, setModalState) {
+                final allBuiltIn = domain == FontDomain.app
+                    ? FontCatalog.appFonts
+                    : FontCatalog.readerFonts;
+                final systemOptions = allBuiltIn
+                    .where((option) => !option.isOnline)
+                    .toList(growable: false);
+                final onlineOptions = allBuiltIn
+                    .where((option) => option.isOnline)
+                    .toList(growable: false);
+                final customOptions = appSettings.availableCustomFonts;
+                final selectedId = domain == FontDomain.app
+                    ? appSettings.appFontId
+                    : appSettings.readerFontId;
+                final colorScheme = Theme.of(context).colorScheme;
 
-            Future<void> importFont() async {
-              setModalState(() => importing = true);
-              try {
-                final result = await appSettings.importCustomFont(domain);
-                if (result.status == CustomFontImportStatus.cancelled) {
-                  if (modalContext.mounted) {
-                    setModalState(() => importing = false);
+                Future<void> importFont() async {
+                  setModalState(() => importing = true);
+                  try {
+                    final result = await appSettings.importCustomFont(domain);
+                    if (result.status == CustomFontImportStatus.cancelled) {
+                      if (modalContext.mounted) {
+                        setModalState(() => importing = false);
+                      }
+                      return;
+                    }
+                    if (modalContext.mounted) {
+                      Navigator.of(modalContext).pop();
+                    }
+                    if (mounted) {
+                      final message =
+                          result.status == CustomFontImportStatus.duplicate
+                              ? l10n.customFontAlreadyImported
+                              : domain == FontDomain.app
+                                  ? l10n.customFontAppliedToApp
+                                  : l10n.customFontAppliedToReader;
+                      ScaffoldMessenger.of(this.context).showSnackBar(
+                        SnackBar(content: Text(message)),
+                      );
+                    }
+                  } on CustomFontException catch (error) {
+                    if (modalContext.mounted) {
+                      setModalState(() => importing = false);
+                      ScaffoldMessenger.of(modalContext).showSnackBar(
+                        SnackBar(
+                          content: Text(_customFontErrorText(l10n, error)),
+                        ),
+                      );
+                    }
                   }
-                  return;
                 }
-                if (modalContext.mounted) {
-                  Navigator.of(modalContext).pop();
-                }
-                if (mounted) {
-                  final message =
-                      result.status == CustomFontImportStatus.duplicate
-                          ? l10n.customFontAlreadyImported
-                          : domain == FontDomain.app
-                              ? l10n.customFontAppliedToApp
-                              : l10n.customFontAppliedToReader;
-                  ScaffoldMessenger.of(this.context).showSnackBar(
-                    SnackBar(content: Text(message)),
-                  );
-                }
-              } on CustomFontException catch (error) {
-                if (modalContext.mounted) {
-                  setModalState(() => importing = false);
-                  ScaffoldMessenger.of(modalContext).showSnackBar(
-                    SnackBar(
-                      content: Text(_customFontErrorText(l10n, error)),
-                    ),
-                  );
-                }
-              }
-            }
 
-            return Container(
-              constraints: BoxConstraints(
-                maxHeight: MediaQuery.sizeOf(context).height * 0.86,
-              ),
-              decoration: BoxDecoration(
-                color: colorScheme.surface,
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(28)),
-              ),
-              child: SafeArea(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      margin: const EdgeInsets.only(top: 12, bottom: 14),
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: colorScheme.onSurface.withValues(alpha: 0.3),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 2, 24, 12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.text_fields_rounded,
-                                color: colorScheme.primary,
-                              ),
-                              const SizedBox(width: 10),
-                              Text(
-                                title,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleLarge
-                                    ?.copyWith(fontWeight: FontWeight.w700),
-                              ),
-                            ],
+                Future<void> selectFont(String id) async {
+                  if (domain == FontDomain.app) {
+                    await appSettings.setAppFontId(id);
+                  } else {
+                    await appSettings.setReaderFontId(id);
+                  }
+                  if (modalContext.mounted) {
+                    Navigator.of(modalContext).pop();
+                  }
+                }
+
+                return Container(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.sizeOf(context).height * 0.86,
+                  ),
+                  decoration: BoxDecoration(
+                    color: colorScheme.surface,
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(28)),
+                  ),
+                  child: SafeArea(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          margin: const EdgeInsets.only(top: 12, bottom: 14),
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: colorScheme.onSurface.withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(2),
                           ),
-                          const SizedBox(height: 6),
-                          Text(
-                            description,
-                            style:
-                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(24, 2, 24, 12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.text_fields_rounded,
+                                    color: colorScheme.primary,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Text(
+                                    title,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleLarge
+                                        ?.copyWith(fontWeight: FontWeight.w700),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                description,
+                                style:
+                                    Theme.of(context).textTheme.bodySmall?.copyWith(
                                       color: colorScheme.onSurfaceVariant,
                                       height: 1.45,
                                     ),
-                          ),
-                          const SizedBox(height: 14),
-                          SizedBox(
-                            width: double.infinity,
-                            child: FilledButton.tonalIcon(
-                              onPressed: importing ||
-                                      !appSettings.customFontImportSupported
-                                  ? null
-                                  : importFont,
-                              icon: importing
-                                  ? const SizedBox(
-                                      width: 18,
-                                      height: 18,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : const Icon(Icons.add_rounded),
-                              label: Text(
-                                importing
-                                    ? l10n.importingFont
-                                    : l10n.importFont,
                               ),
-                            ),
-                          ),
-                          if (!appSettings.customFontImportSupported) ...[
-                            const SizedBox(height: 6),
-                            Text(
-                              l10n.customFontImportUnsupported,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
-                                  ?.copyWith(
-                                    color: colorScheme.onSurfaceVariant,
+                              const SizedBox(height: 14),
+                              SizedBox(
+                                width: double.infinity,
+                                child: FilledButton.tonalIcon(
+                                  onPressed: importing ||
+                                          !appSettings.customFontImportSupported
+                                      ? null
+                                      : importFont,
+                                  icon: importing
+                                      ? const SizedBox(
+                                          width: 18,
+                                          height: 18,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                      : const Icon(Icons.add_rounded),
+                                  label: Text(
+                                    importing
+                                        ? l10n.importingFont
+                                        : l10n.importFont,
                                   ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                    Flexible(
-                      child: ListView(
-                        shrinkWrap: true,
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                        children: [
-                          _fontSectionLabel(context, l10n.builtInFonts),
-                          ...builtInOptions.map(
-                            (option) => _fontOptionCard(
-                              context: context,
-                              option: option,
-                              selected: option.id == selectedId,
-                              onTap: () async {
-                                if (domain == FontDomain.app) {
-                                  await appSettings.setAppFontId(option.id);
-                                } else {
-                                  await appSettings.setReaderFontId(option.id);
-                                }
-                                if (modalContext.mounted) {
-                                  Navigator.of(modalContext).pop();
-                                }
-                              },
-                            ),
-                          ),
-                          if (customOptions.isNotEmpty) ...[
-                            _fontSectionLabel(context, l10n.customFonts),
-                            ...customOptions.map(
-                              (option) => _fontOptionCard(
-                                context: context,
-                                option: option,
-                                selected: option.id == selectedId,
-                                onTap: () async {
-                                  if (domain == FontDomain.app) {
-                                    await appSettings.setAppFontId(option.id);
-                                  } else {
-                                    await appSettings
-                                        .setReaderFontId(option.id);
-                                  }
-                                  if (modalContext.mounted) {
-                                    Navigator.of(modalContext).pop();
-                                  }
-                                },
+                                ),
                               ),
-                            ),
-                          ],
-                        ],
-                      ),
+                              if (!appSettings.customFontImportSupported) ...[
+                                const SizedBox(height: 6),
+                                Text(
+                                  l10n.customFontImportUnsupported,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
+                                        color: colorScheme.onSurfaceVariant,
+                                      ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                        Flexible(
+                          child: ListView(
+                            shrinkWrap: true,
+                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                            children: [
+                              _fontSectionLabel(context, l10n.builtInFonts),
+                              ...systemOptions.map(
+                                (option) => _fontOptionCard(
+                                  context: context,
+                                  appSettings: appSettings,
+                                  domain: domain,
+                                  option: option,
+                                  selected: option.id == selectedId,
+                                  onTap: () => selectFont(option.id),
+                                ),
+                              ),
+                              _fontSectionLabel(context, l10n.onlineFonts),
+                              ...onlineOptions.map(
+                                (option) => _fontOptionCard(
+                                  context: context,
+                                  appSettings: appSettings,
+                                  domain: domain,
+                                  option: option,
+                                  selected: option.id == selectedId,
+                                  onTap: () => selectFont(option.id),
+                                ),
+                              ),
+                              if (customOptions.isNotEmpty) ...[
+                                _fontSectionLabel(context, l10n.customFonts),
+                                ...customOptions.map(
+                                  (option) => _fontOptionCard(
+                                    context: context,
+                                    appSettings: appSettings,
+                                    domain: domain,
+                                    option: option,
+                                    selected: option.id == selectedId,
+                                    onTap: () => selectFont(option.id),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
+                  ),
+                );
+              },
             );
           },
         );
@@ -2629,22 +2662,63 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Widget _fontOptionCard({
     required BuildContext context,
+    required AppSettingsNotifier appSettings,
+    required FontDomain domain,
     required FontOption option,
     required bool selected,
-    required VoidCallback onTap,
+    required Future<void> Function() onTap,
   }) {
     final l10n = context.l10n;
     final colorScheme = Theme.of(context).colorScheme;
-    final description = option.isCustom
-        ? '${option.sourceFileName} · ${_formatFileSize(option.fileSize ?? 0)}'
-        : FontCatalog.descriptionFor(l10n, option);
+    final isOnline = option.isOnline;
+    final isDownloaded =
+        !isOnline || appSettings.isOnlineFontDownloaded(option.id);
+    final progress = isOnline ? appSettings.onlineFontProgress(option.id) : null;
+    final isDownloading = progress != null &&
+        (progress.status == OnlineFontDownloadStatus.downloading ||
+            progress.status == OnlineFontDownloadStatus.verifying ||
+            progress.status == OnlineFontDownloadStatus.registering);
+    final isFailed = progress?.status == OnlineFontDownloadStatus.failed;
+
+    String description;
+    if (option.isCustom) {
+      description =
+          '${option.sourceFileName} · ${_formatFileSize(option.fileSize ?? 0)}';
+    } else if (isOnline && !isDownloaded && !isDownloading) {
+      description =
+          '${l10n.fontDownloadHint} · ${_formatFileSize(option.onlineTotalBytes)}';
+    } else if (isOnline && isDownloading) {
+      final percent = (progress!.fraction * 100).round();
+      description = '${l10n.fontDownloading} $percent%';
+    } else if (isOnline && isFailed) {
+      description = l10n.fontDownloadFailed;
+    } else {
+      description = FontCatalog.descriptionFor(l10n, option);
+    }
+
+    Future<void> handleTap() async {
+      if (isOnline && !isDownloaded && !isDownloading) {
+        // 未下载：触发下载（不关闭弹窗，下载进度会通过 notifyListeners 刷新 UI）
+        await appSettings.downloadOnlineFont(option.id, domain: domain);
+        return;
+      }
+      if (isOnline && isDownloading) {
+        return; // 下载中禁用
+      }
+      // 系统字体 / 已下载在线字体 / 自定义字体：选中
+      await onTap();
+    }
+
+    final showCheck = selected && (isDownloaded || option.isCustom);
+    final showDownloadBadge = isOnline && !isDownloaded && !isDownloading;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(14),
-          onTap: onTap,
+          onTap: handleTap,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
@@ -2659,13 +2733,13 @@ class _SettingsPageState extends State<SettingsPage> {
                   ? colorScheme.primary.withValues(alpha: 0.08)
                   : Colors.transparent,
             ),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
                         FontCatalog.labelFor(l10n, option),
                         style: TextStyle(
                           inherit: false,
@@ -2680,40 +2754,143 @@ class _SettingsPageState extends State<SettingsPage> {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      const SizedBox(height: 3),
-                      Text(
-                        description,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: colorScheme.onSurfaceVariant,
-                          fontSize: 12,
-                          height: 1.35,
-                        ),
-                      ),
-                      const SizedBox(height: 7),
-                      Text(
-                        l10n.fontPreviewText,
-                        style: TextStyle(
-                          inherit: false,
-                          fontFamily: option.family,
-                          fontFamilyFallback: option.fallbackFamilies.isEmpty
-                              ? null
-                              : option.fallbackFamilies,
-                          color: colorScheme.onSurface,
-                          fontSize: 15,
-                          height: 1.3,
-                        ),
-                      ),
-                    ],
+                    ),
+                    if (showDownloadBadge)
+                      _downloadBadge(context, l10n.fontDownload),
+                    if (isOnline && isDownloaded && !selected)
+                      _downloadedBadge(context, l10n.fontDownloaded),
+                    if (isFailed)
+                      _failedBadge(context, l10n.fontDownloadFailed),
+                    if (showCheck)
+                      Icon(Icons.check_circle, color: colorScheme.primary),
+                  ],
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  description,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: colorScheme.onSurfaceVariant,
+                    fontSize: 12,
+                    height: 1.35,
                   ),
                 ),
-                if (selected)
-                  Icon(Icons.check_circle, color: colorScheme.primary),
+                if (isOnline && isDownloading) ...[
+                  const SizedBox(height: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: progress!.fraction,
+                      minHeight: 4,
+                      backgroundColor:
+                          colorScheme.outline.withValues(alpha: 0.2),
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(colorScheme.primary),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 7),
+                Text(
+                  l10n.fontPreviewText,
+                  style: TextStyle(
+                    inherit: false,
+                    fontFamily: option.family,
+                    fontFamilyFallback: option.fallbackFamilies.isEmpty
+                        ? null
+                        : option.fallbackFamilies,
+                    color: colorScheme.onSurface,
+                    fontSize: 15,
+                    height: 1.3,
+                  ),
+                ),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _downloadBadge(BuildContext context, String label) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: colorScheme.primary.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: colorScheme.primary.withValues(alpha: 0.4),
+          width: 0.8,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.cloud_download_outlined,
+              size: 14, color: colorScheme.primary),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: colorScheme.primary,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _downloadedBadge(BuildContext context, String label) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: colorScheme.tertiary.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.check_rounded, size: 12, color: colorScheme.tertiary),
+          const SizedBox(width: 3),
+          Text(
+            label,
+            style: TextStyle(
+              color: colorScheme.tertiary,
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _failedBadge(BuildContext context, String label) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: colorScheme.error.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.error_outline, size: 12, color: colorScheme.error),
+          const SizedBox(width: 3),
+          Text(
+            label,
+            style: TextStyle(
+              color: colorScheme.error,
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }

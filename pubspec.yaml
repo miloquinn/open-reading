@@ -16,10 +16,10 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 2.2.5+14134
+version: 2.2.6+14135
 
 environment:
-  sdk: '>=3.4.0 <4.0.0'
+  sdk: '>=3.6.0 <4.0.0'
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
 # consider running `flutter pub upgrade --major-versions`. Alternatively,
@@ -121,46 +121,11 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-  fonts:
-    - family: SourceHanSerifCN
-      fonts:
-        - asset: assets/fonts/app/NotoSerifSC-Variable.ttf
-          weight: 300
-        - asset: assets/fonts/app/NotoSerifSC-Variable.ttf
-          weight: 400
-        - asset: assets/fonts/app/NotoSerifSC-Variable.ttf
-          weight: 500
-        - asset: assets/fonts/app/NotoSerifSC-Variable.ttf
-          weight: 600
-        - asset: assets/fonts/app/NotoSerifSC-Variable.ttf
-          weight: 700
-    - family: SourceHanSansCN
-      fonts:
-        - asset: assets/fonts/app/SourceHanSansCN-Regular.otf
-        - asset: assets/fonts/app/SourceHanSansCN-Bold.otf
-          weight: 700
-    - family: InstrumentSans
-      fonts:
-        - asset: assets/fonts/app/InstrumentSans-Regular.ttf
-        - asset: assets/fonts/app/InstrumentSans-Medium.ttf
-          weight: 500
-        - asset: assets/fonts/app/InstrumentSans-SemiBold.ttf
-          weight: 600
-        - asset: assets/fonts/app/InstrumentSans-Bold.ttf
-          weight: 700
-    - family: Newsreader
-      fonts:
-        - asset: assets/fonts/reader/Newsreader-Regular.ttf
-        - asset: assets/fonts/reader/Newsreader-Italic.ttf
-          style: italic
-        - asset: assets/fonts/reader/Newsreader-Bold.ttf
-          weight: 700
-        - asset: assets/fonts/reader/Newsreader-BoldItalic.ttf
-          weight: 700
-          style: italic
-    - family: JetBrainsMono
-      fonts:
-        - asset: assets/fonts/reader/JetBrainsMono-Regular.ttf
+  #
+  # 字体不内置打包：所有非系统字体由 OnlineFontService 在用户首次选择时从
+  # GitHub 上游仓库（jsDelivr CDN 或 raw.githubusercontent.com）下载到 app 私有
+  # 目录，校验 SHA-256 后通过 FontLoader 运行时注册。License 文本仍打包在
+  # assets/fonts/licenses/ 以便离线展示。
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package

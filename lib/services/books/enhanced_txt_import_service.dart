@@ -590,7 +590,8 @@ class EnhancedTxtImportService {
       return _cleanTitle(fileTitle);
     }
 
-    return '未知标题';
+    // 标题无法提取时返回空串，UI 层通过 context.l10n.importUnknownTitle 兜底。
+    return '';
   }
 
   /// 智能作者提取
@@ -631,7 +632,8 @@ class EnhancedTxtImportService {
       }
     }
 
-    return '未知作者';
+    // 作者无法提取时返回空串，UI 层通过 context.l10n.importUnknownAuthor 兜底。
+    return '';
   }
 
   /// 简介提取

@@ -72,21 +72,12 @@ void main() {
   testWidgets('navigation sheet catalog marks the current chapter',
       (tester) async {
     // Pixel goldens differ across OS font rasterizers; assert structure instead.
-    final fontLoader = FontLoader('SourceHanSansCN')
-      ..addFont(rootBundle.load(
-        'assets/fonts/app/SourceHanSansCN-Regular.otf',
-      ))
-      ..addFont(rootBundle.load(
-        'assets/fonts/app/SourceHanSansCN-Bold.otf',
-      ));
-    await fontLoader.load();
     await tester.binding.setSurfaceSize(const Size(430, 760));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('zh'),
-        theme: ThemeData(fontFamily: 'SourceHanSansCN'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(

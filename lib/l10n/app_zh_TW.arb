@@ -1339,5 +1339,291 @@
   "importDone": "完成",
   "importSummary": "成功 {succeeded} 本 · 略過 {skipped} 本 · 失敗 {failed} 本",
   "importNoSupportedFiles": "沒有找到支援的書籍檔案",
-  "importScanning": "正在掃描檔案…"
+  "importScanning": "正在掃描檔案…",
+  "settingsAiApiKeyConfigured": "API Key 已設定",
+  "settingsAiApiKeyTapToConfigure": "點擊完成設定",
+  "settingsAiAddModel": "新增模型",
+  "settingsAiSwitchedToModel": "已切換到 {model}",
+  "@settingsAiSwitchedToModel": {
+    "placeholders": {
+        "model": {"type": "String"}
+    }
+  },
+  "settingsAiFillBaseUrlAndApiKey": "請先填寫 Base URL 和 API Key",
+  "settingsAiEditModelTitle": "設定模型",
+  "settingsAiQuickCardSubtitle": "每張快捷卡片只綁定一個模型",
+  "settingsAiPresetModel": "預設模型",
+  "settingsAiBaseUrlLabel": "Base URL",
+  "settingsAiApiKeyLabel": "API Key",
+  "settingsAiModelNameLabel": "模型型號",
+  "settingsAiFetchModelsTooltip": "自動取得模型",
+  "settingsAiFetchModelsList": "自動取得模型列表",
+  "settingsAiSelectModel": "選擇一個模型",
+  "settingsAiTemperatureLabel": "Temperature",
+  "settingsAiAddAndEnable": "新增並啟用",
+  "settingsAiModelMismatchClaude": "Claude 服務商的模型名通常應以 claude 開頭，請檢查 provider 和 model 是否匹配",
+  "settingsAiModelMismatchGemini": "Gemini 服務商的模型名通常應包含 gemini，請檢查 provider 和 model 是否匹配",
+  "settingsAiModelMismatchGlm": "GLM 服務商的模型名通常應以 glm 開頭，請檢查 provider 和 model 是否匹配",
+  "settingsAiModelMismatchMinimax": "MiniMax 服務商的模型名通常應包含 MiniMax，請檢查 provider 和 model 是否匹配",
+  "settingsAiModelListFormatUnrecognized": "模型列表返回格式無法識別",
+  "settingsAiNoModelsReturned": "服務端沒有返回可用模型列表",
+  "settingsAiNoModelsAvailable": "沒有取得到可用模型",
+  "settingsAiFetchModelsFailed": "取得模型失敗：{error}",
+  "@settingsAiFetchModelsFailed": {
+    "placeholders": {
+        "error": {"type": "String"}
+    }
+  },
+  "readerAiEnterQuestionFirst": "請先輸入問題再發送",
+  "readerAiEmptyResponse": "模型返回為空，請重試",
+  "readerAiRequestFailed": "請求失敗：{error}",
+  "@readerAiRequestFailed": {
+    "placeholders": {
+        "error": {"type": "String"}
+    }
+  },
+  "readerAiUnknownError": "未知錯誤",
+  "readerAiEmptyResponseError": "服務端返回為空，通常是 Base URL 設定錯誤、閘道沒有轉發到模型介面，或服務端提前斷開連線。\n請求位址：{endpoint}",
+  "@readerAiEmptyResponseError": {
+    "placeholders": {
+        "endpoint": {"type": "String"}
+    }
+  },
+  "readerAiInvalidJsonError": "服務端返回的不是合法 JSON，目前介面可能與 {provider} 設定不相容。\n請求位址：{endpoint}\n返回片段：{snippet}",
+  "@readerAiInvalidJsonError": {
+    "placeholders": {
+        "provider": {"type": "String"},
+        "endpoint": {"type": "String"},
+        "snippet": {"type": "String"}
+    }
+  },
+  "readerAiFailedReadBody": "請求失敗{status}：無法讀取服務端返回的資料，通常是 Base URL 設定錯誤、介面返回空內容，或網路將回應截斷了。\n請求位址：{endpoint}",
+  "@readerAiFailedReadBody": {
+    "placeholders": {
+        "status": {"type": "String"},
+        "endpoint": {"type": "String"}
+    }
+  },
+  "readerAiNetworkRequestFailed": "網路請求失敗{status}：{error}\n請求位址：{endpoint}",
+  "@readerAiNetworkRequestFailed": {
+    "placeholders": {
+        "status": {"type": "String"},
+        "error": {"type": "String"},
+        "endpoint": {"type": "String"}
+    }
+  },
+  "readerAiRequestFailedMinimaxHint": "請求失敗({status})：{text}\n建議檢查：1) MiniMax 溫度需在 (0,1]；2) 模型名與介面是否匹配；3) 僅使用單條 system 指令。\n請求位址：{endpoint}",
+  "@readerAiRequestFailedMinimaxHint": {
+    "placeholders": {
+        "status": {"type": "String"},
+        "text": {"type": "String"},
+        "endpoint": {"type": "String"}
+    }
+  },
+  "readerAiRequestFailedClaudeHint": "請求失敗({status})：{text}\n提示：Claude 必須攜帶 anthropic-version 請求標頭。\n請求位址：{endpoint}",
+  "@readerAiRequestFailedClaudeHint": {
+    "placeholders": {
+        "status": {"type": "String"},
+        "text": {"type": "String"},
+        "endpoint": {"type": "String"}
+    }
+  },
+  "readerAiRequestFailedProviderMismatchHint": "請求失敗({status})：{text}\n提示：請確認服務商與 API Key 對應，不可混用。\n請求位址：{endpoint}",
+  "@readerAiRequestFailedProviderMismatchHint": {
+    "placeholders": {
+        "status": {"type": "String"},
+        "text": {"type": "String"},
+        "endpoint": {"type": "String"}
+    }
+  },
+  "readerAiRequestFailedGeneric": "請求失敗({status})：{text}\n請求位址：{endpoint}",
+  "@readerAiRequestFailedGeneric": {
+    "placeholders": {
+        "status": {"type": "String"},
+        "text": {"type": "String"},
+        "endpoint": {"type": "String"}
+    }
+  },
+  "readerAiMockSelectionResponse": "AI(模擬): 你選擇的內容是\"{selectedText}\"。\n\n上文: {before}\n下文: {after}",
+  "@readerAiMockSelectionResponse": {
+    "placeholders": {
+        "selectedText": {"type": "String"},
+        "before": {"type": "String"},
+        "after": {"type": "String"}
+    }
+  },
+  "readerAiMockPageAnalysis": "AI(模擬): 本頁共 {chars} 字，建議重點關注段落開頭與結尾處的論點。",
+  "@readerAiMockPageAnalysis": {
+    "placeholders": {
+        "chars": {"type": "int"}
+    }
+  },
+  "readerAiMockGreeting": "你好",
+  "readerAiMockChatResponse": "AI(模擬): 你問的是「{question}」。\n\n我已讀取目前頁（{chars} 字），你可以繼續追問。",
+  "@readerAiMockChatResponse": {
+    "placeholders": {
+        "question": {"type": "String"},
+        "chars": {"type": "int"}
+    }
+  },
+  "readerAiMemorySummaryHeading": "【本書記憶摘要】",
+  "readerAiReadingAdviceHeading": "【針對使用者的閱讀建議】",
+  "readerAiIndexedSnippetsHeading": "【索引命中片段】",
+  "readerAiLocalFallbackIntro": "目前未設定線上 AI Key，先基於本機記憶和索引給你一個答案：",
+  "readerAiRelatedContentHeading": "【相關內容】",
+  "readerAiNoRelatedContent": "【相關內容】暫未命中可用片段。",
+  "readerAiRelatedContentLocationHeading": "【相關內容定位】",
+  "readerAiSnippetLocation": "- 位置：{chapterId} ({startOffset}-{endOffset})",
+  "@readerAiSnippetLocation": {
+    "placeholders": {
+        "chapterId": {"type": "String"},
+        "startOffset": {"type": "int"},
+        "endOffset": {"type": "int"}
+    }
+  },
+  "readerAiReadingSuggestionHeading": "【建議怎麼讀】",
+  "readerAiNextStepHeading": "【下一步】",
+  "readerAiNextStepReadSnippet": "1) 先讀上面命中的片段。",
+  "readerAiNextStepAskFollowUp": "2) 用「為什麼/如何/例子」再追問一次，我會繼續按索引定位。",
+  "ttsSystemDefault": "系統預設",
+  "ttsUnavailable": "系統 TTS 不可用",
+  "ttsUnsupportedLanguage": "系統不支援語言: {language}",
+  "@ttsUnsupportedLanguage": {
+    "placeholders": {
+        "language": {"type": "String"}
+    }
+  },
+  "ttsCallFailed": "系統 TTS 呼叫失敗",
+  "importErrorSourceMissing": "來源檔案不存在",
+  "importErrorHashFailed": "無法校驗檔案內容",
+  "importErrorTargetNameExhausted": "無法為匯入檔案分配可用名稱",
+  "importErrorSourceNotMaterialized": "來源檔案尚未準備到本機",
+  "importErrorCopyVerificationFailed": "複製後的檔案與來源檔案不一致",
+  "importErrorFileTooLarge": "檔案超過 100 MB 匯入限制",
+  "importErrorSourcePrepareFailed": "無法準備匯入檔案",
+  "importErrorFailed": "書籍匯入失敗",
+  "importUnknownTitle": "不明標題",
+  "importUnknownAuthor": "不明作者",
+  "bookUntitled": "未命名",
+  "homePlanTaskCompleteDailyGoal": "完成今日目標",
+  "homePlanTaskReadMinutes": "閱讀 {minutes} 分鐘",
+  "@homePlanTaskReadMinutes": {
+    "placeholders": {
+        "minutes": {"type": "int"}
+    }
+  },
+  "homePlanTaskCompleteFocusReading": "完成專注閱讀",
+  "homePlanTaskFocusSession": "至少 1 次 {minutes} 分鐘專注工作階段",
+  "@homePlanTaskFocusSession": {
+    "placeholders": {
+        "minutes": {"type": "int"}
+    }
+  },
+  "homePlanTaskKeepRhythm": "保持節奏",
+  "homePlanTaskWeekAchievedDays": "本週達標天數 ≥ 5 天",
+  "noteColorLightBlue": "淺藍色",
+  "noteColorRed": "紅色",
+  "noteColorGreen": "綠色",
+  "noteColorPurple": "紫色",
+  "noteColorGold": "金色",
+  "noteColorOrange": "橙色",
+  "noteColorYellow": "黃色",
+  "noteColorDarkGreen": "深綠色",
+  "noteColorCustom": "自訂",
+  "noteShareBookHeader": "📖 《{title}》- {author}",
+  "@noteShareBookHeader": {
+    "placeholders": {
+        "title": {"type": "String"},
+        "author": {"type": "String"}
+    }
+  },
+  "noteShareNoteLabel": "💭 筆記：{note}",
+  "@noteShareNoteLabel": {
+    "placeholders": {
+        "note": {"type": "String"}
+    }
+  },
+  "noteShareChapterLabel": "📍 {chapter}",
+  "@noteShareChapterLabel": {
+    "placeholders": {
+        "chapter": {"type": "String"}
+    }
+  },
+  "noteSharePageLabel": "📄 第{page}頁",
+  "@noteSharePageLabel": {
+    "placeholders": {
+        "page": {"type": "int"}
+    }
+  },
+  "noteShareHashtags": "#讀書筆記 #{type}",
+  "@noteShareHashtags": {
+    "placeholders": {
+        "type": {"type": "String"}
+    }
+  },
+  "accentPurple": "優雅紫",
+  "accentPink": "櫻花粉",
+  "accentCyan": "清新青",
+  "accentBrown": "古典棕",
+  "accentGrey": "優雅灰",
+  "accentDeepPurple": "魅力紫",
+  "accentAmber": "琥珀金",
+  "accentLightGreen": "生機綠",
+  "accentYellow": "陽光黃",
+  "accentNeutralGrey": "簡約灰",
+  "accentIndigo": "深邃藍",
+  "accentDeepOrange": "火焰橙",
+  "glassPresetClear": "清晰模式",
+  "glassPresetStandard": "標準模式",
+  "glassPresetDreamy": "朦朧模式",
+  "agreementV2HeroTitle": "把閱讀，留在自己的裝置裡。",
+  "agreementV2HeroBody": "開元閱讀是一款開源、跨平台、本機優先的電子書閱讀工具。它提供閱讀能力，但不提供、代管或審核你匯入的書籍。",
+  "agreementV2LocalTitle": "本機優先",
+  "agreementV2LocalBody": "書籍、進度與筆記原則上儲存在你的裝置中，由你自行管理與備份。",
+  "agreementV2OpenSourceTitle": "AGPL-3.0 開源",
+  "agreementV2OpenSourceBody": "原始碼依 GNU AGPL v3.0 提供；軟體按「原樣」交付，不附帶任何明示或默示擔保。",
+  "agreementV2VersionLabel": "條款版本 {version}",
+  "@agreementV2VersionLabel": {
+    "placeholders": {
+        "version": {"type": "String"}
+    }
+  },
+  "agreementV2Title": "使用條款與隱私說明",
+  "agreementV2Subtitle": "使用前請完整閱讀，重點條款已直接說明",
+  "agreementV2ImportantNotice": "特別提示：開元閱讀官方版本不預載、不內建、不推薦任何第三方書源，也不營運、代理或代管書源內容。你匯入的檔案和主動新增的書源均由你自行選擇；請僅存取和使用你有權使用的內容。",
+  "agreementV2SourceBoundaryTitle": "第三方書源責任邊界",
+  "agreementV2SourceBoundaryPoint1": "官方只提供開源閱讀軟體和 Open Reading Source Protocol，不提供書源位址或官方書源目錄。",
+  "agreementV2SourceBoundaryPoint2": "每個書源位址都必須由你主動輸入新增；App 直接連接該獨立第三方服務，不經過開發者內容伺服器。",
+  "agreementV2SourceBoundaryPoint3": "協定相容只代表介面可以連接，不代表內容合法或已獲授權。書源營運者負責其內容，你負責新增前審查並合法使用。",
+  "agreementV2Section1Title": "協議範圍與接受",
+  "agreementV2Section1Body": "本協議適用於你對開元閱讀軟體及其附帶功能的下載、安裝和使用。點擊「同意並繼續」即表示你已閱讀、理解並同意本協議；如你不同意，請停止使用並離開應用程式。若你未達到所在地法律規定的獨立同意年齡，應由監護人閱讀並同意。",
+  "agreementV2Section2Title": "開源軟體與授權",
+  "agreementV2Section2Body": "開元閱讀後續版本依 GNU Affero General Public License v3.0 發布。你可以依授權條款使用、複製、修改、散布或銷售軟體；散布修改版時必須依 AGPL-3.0 提供完整對應原始碼，修改版透過網路向使用者提供服務時也必須依授權條款向這些使用者提供對應原始碼。v1.0.0 及更早版本已取得的 MIT 授權繼續有效且不會撤回。本協議不限制開源授權已授予的權利；第三方元件仍適用各自授權條款。",
+  "agreementV2Section3Title": "使用者內容與著作權責任",
+  "agreementV2Section3Body": "“使用者內容”包括你匯入、下載、開啟、轉換、快取、標註、朗讀或以其他方式處理的書籍、文件、圖片、詮釋資料及連結。你須確保自己對使用者內容擁有合法權利或已取得必要授權，並自行承擔因內容引起的著作權、商標、隱私、名譽、違法資訊、惡意檔案及其他爭議或損失。軟體和開發者不上傳、出售、授權、背書或審核你的使用者內容，也不因軟體能夠讀取某種格式而表示該內容可以被合法使用。",
+  "agreementV2Section4Title": "禁止使用",
+  "agreementV2Section4Body": "你不得利用本軟體侵犯智慧財產權或其他合法權益，不得散布違法、有害或惡意內容，不得繞過數位版權保護、存取控制或付費限制，不得攻擊、干擾第三方系統，亦不得將本軟體用於任何違反適用法律的活動。因你的使用行為導致的申訴、求償、處罰或損失由你自行承擔。",
+  "agreementV2Section5Title": "書源、連結與第三方服務",
+  "agreementV2Section5Body": "官方版本不預載、不散布、不推薦書源，也不營運官方書源目錄。你新增的書源、網路介面、外部連結、線上內容、系統 TTS、AI 服務及其他第三方能力均由獨立第三方提供和控制，與開發者不存在營運、代理、授權、背書或內容審核關係。書源營運者依法負責其提供的內容；你須在新增前審查來源、內容授權、隱私政策和使用條款，並對自己的存取、下載、快取、散布及其他使用行為負責。在適用法律允許的最大範圍內，開發者不對第三方內容、收費、資料處理、服務中斷或侵權爭議承擔責任。",
+  "agreementV2Section6Title": "資料與隱私",
+  "agreementV2Section6Body": "本軟體採用本機優先設計，書籍、閱讀進度、筆記和設定通常儲存在你的裝置。除非你主動啟用連網書源、封面搜尋、AI、同步或其他連網功能，本軟體不會為了提供本機閱讀而主動將書籍內文傳送給開發者。應用程式自動或手動檢查更新時，會存取 GitHub 和官方網站 open.xxread.top，並傳送平台、處理器架構、發布頻道等必要技術參數；伺服器和網路服務會依正常通訊處理你的 IP 位址與 User-Agent。你從官方網站下載安裝套件時，後台會記錄版本、架構、下載時間、IP 和 User-Agent，用於下載次數統計、安全防護和故障排除；原始 IP 下載明細最多保留 30 天，之後刪除，長期僅保留不含原始 IP 的彙總統計。上述更新請求不包含書籍內文、書庫、筆記、帳戶或裝置唯一識別碼；存取 GitHub 時亦適用 GitHub 的隱私規則。啟用其他連網功能時，相關查詢、文字片段、裝置網路資訊或必要參數可能傳送給你選擇的第三方服務，具體以該服務規則為準。你應自行保護裝置、存取金鑰和備份；解除安裝、清除資料、裝置故障或誤操作可能導致資料永久遺失。",
+  "agreementV2Section7Title": "AI 與自動化輸出",
+  "agreementV2Section7Body": "AI 摘要、問答、翻譯、推薦或其他自動產生的結果可能不準確、不完整、過時或具有誤導性，僅供輔助閱讀，不構成法律、醫療、投資、學術或其他專業意見。你應獨立查核後再使用，不應依賴其作出高風險決定。你提交給 AI 服務的內容還受對應服務商條款約束。",
+  "agreementV2Section8Title": "無擔保聲明",
+  "agreementV2Section8Body": "在適用法律允許的最大範圍內，本軟體及相關資料均按「原樣」和「可用」狀態提供，不作任何明示、默示或法定擔保，包括但不限於適售性、特定用途適用性、權利完整、不侵權、準確性、相容性、安全性、無錯誤、不中斷或資料不遺失。開源貢獻者沒有義務提供維護、更新、技術支援或缺陷修復。",
+  "agreementV2Section9Title": "責任限制",
+  "agreementV2Section9Body": "在適用法律允許的最大範圍內，開發者、著作權人及貢獻者不對因安裝、使用或無法使用本軟體，使用者內容，第三方服務，資料遺失，裝置異常，業務中斷或安全事件產生的任何直接、間接、附帶、特殊、懲罰性或衍生性損失承擔責任，無論該責任基於契約、侵權或其他理論。法律不得排除的責任不受本條排除，但應限制在法律允許的最低範圍。",
+  "agreementV2Section10Title": "賠償與責任承擔",
+  "agreementV2Section10Body": "如因你的使用者內容、違法使用、侵權行為、違反本協議或使用第三方服務，導致開發者、著作權人或貢獻者遭受第三方求償、行政調查、處罰、損失或合理費用，你應在適用法律允許的範圍內承擔相應責任並使其免受損害。",
+  "agreementV2Section11Title": "變更、終止與適用規則",
+  "agreementV2Section11Body": "軟體功能、專案維護狀態和本協議可能因開源專案發展、法律變化或風險控制需要而調整。重大條款更新時，應用程式可要求你重新確認；不同意新條款的，你應停止使用。你可隨時解除安裝軟體。爭議優先友好協商；在不影響你依法享有的強制性消費者權益前提下，適用開發者所在地法律並由有管轄權的法院處理。若部分條款無效，其餘條款仍然有效。",
+  "agreementV2ConfirmLabel": "我已完整閱讀並同意以上使用條款與隱私說明。",
+  "agreementV2SourceConfirmLabel": "我已知悉官方不提供任何書源；我新增的書源及其內容由獨立第三方提供，我會自行確認授權並對自己的使用行為負責。",
+  "agreementV2ExitLabel": "不同意",
+  "agreementV2ContinueLabel": "同意並繼續",
+  "agreementV2ExitDialogTitle": "不同意條款？",
+  "agreementV2ExitDialogBody": "你需要同意使用條款後才能繼續使用開元閱讀。若不同意，請離開應用程式。",
+  "agreementV2CancelLabel": "返回閱讀",
+  "agreementV2ConfirmExitLabel": "確認離開",
+  "agreementV2SaveFailed": "無法儲存同意狀態，請稍後重試。"
 }

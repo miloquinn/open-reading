@@ -953,6 +953,84 @@ abstract class AppLocalizations {
   /// **'Built-in fonts'**
   String get builtInFonts;
 
+  /// No description provided for @onlineFonts.
+  ///
+  /// In en, this message translates to:
+  /// **'Online fonts'**
+  String get onlineFonts;
+
+  /// No description provided for @fontDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get fontDownload;
+
+  /// No description provided for @fontDownloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading…'**
+  String get fontDownloading;
+
+  /// No description provided for @fontDownloaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded'**
+  String get fontDownloaded;
+
+  /// No description provided for @fontDownloadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Download failed, tap to retry'**
+  String get fontDownloadFailed;
+
+  /// No description provided for @fontDownloadHint.
+  ///
+  /// In en, this message translates to:
+  /// **'First use requires download from GitHub'**
+  String get fontDownloadHint;
+
+  /// No description provided for @fontDeleteDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete download'**
+  String get fontDeleteDownload;
+
+  /// No description provided for @fontDeleteDownloadTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete downloaded \"{name}\"?'**
+  String fontDeleteDownloadTitle(String name);
+
+  /// No description provided for @fontDeleteDownloadMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Will free {size} of storage. Will re-download next time you use it.'**
+  String fontDeleteDownloadMessage(String size);
+
+  /// No description provided for @fontDownloadCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Download cancelled'**
+  String get fontDownloadCancelled;
+
+  /// No description provided for @fontDownloadNetworkFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Network error, download failed'**
+  String get fontDownloadNetworkFailed;
+
+  /// No description provided for @fontDownloadInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded font file is invalid'**
+  String get fontDownloadInvalid;
+
+  /// No description provided for @fontDownloadUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Online font download is not supported on this platform'**
+  String get fontDownloadUnsupported;
+
   /// No description provided for @importFont.
   ///
   /// In en, this message translates to:
@@ -5111,6 +5189,896 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Scanning files…'**
   String get importScanning;
+
+  /// Status text shown when an API key has been configured for a quick AI model card
+  ///
+  /// In en, this message translates to:
+  /// **'API Key configured'**
+  String get settingsAiApiKeyConfigured;
+
+  /// Hint shown when an API key is not yet configured for a quick AI model card
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to complete setup'**
+  String get settingsAiApiKeyTapToConfigure;
+
+  /// Button label to add a new AI model
+  ///
+  /// In en, this message translates to:
+  /// **'Add model'**
+  String get settingsAiAddModel;
+
+  /// Toast shown after switching to a different AI model
+  ///
+  /// In en, this message translates to:
+  /// **'Switched to {model}'**
+  String settingsAiSwitchedToModel(String model);
+
+  /// Error shown when trying to fetch models without a Base URL or API Key
+  ///
+  /// In en, this message translates to:
+  /// **'Please fill in Base URL and API Key first'**
+  String get settingsAiFillBaseUrlAndApiKey;
+
+  /// Title shown when editing an existing AI model configuration
+  ///
+  /// In en, this message translates to:
+  /// **'Configure model'**
+  String get settingsAiEditModelTitle;
+
+  /// Subtitle explaining that each quick AI card maps to a single model
+  ///
+  /// In en, this message translates to:
+  /// **'Each quick card binds to one model'**
+  String get settingsAiQuickCardSubtitle;
+
+  /// Label for the preset model segment in the AI model configuration sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Preset model'**
+  String get settingsAiPresetModel;
+
+  /// Input label for the AI provider Base URL field
+  ///
+  /// In en, this message translates to:
+  /// **'Base URL'**
+  String get settingsAiBaseUrlLabel;
+
+  /// Input label for the AI provider API Key field
+  ///
+  /// In en, this message translates to:
+  /// **'API Key'**
+  String get settingsAiApiKeyLabel;
+
+  /// Input label for the AI model name field
+  ///
+  /// In en, this message translates to:
+  /// **'Model name'**
+  String get settingsAiModelNameLabel;
+
+  /// Tooltip for the button that fetches available models from the provider
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-fetch models'**
+  String get settingsAiFetchModelsTooltip;
+
+  /// Button label to auto-fetch the list of available models
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-fetch model list'**
+  String get settingsAiFetchModelsList;
+
+  /// Prompt shown above the fetched model list dropdown
+  ///
+  /// In en, this message translates to:
+  /// **'Select a model'**
+  String get settingsAiSelectModel;
+
+  /// Input label for the AI temperature parameter field
+  ///
+  /// In en, this message translates to:
+  /// **'Temperature'**
+  String get settingsAiTemperatureLabel;
+
+  /// Button label to add a new AI model and enable it immediately
+  ///
+  /// In en, this message translates to:
+  /// **'Add and enable'**
+  String get settingsAiAddAndEnable;
+
+  /// Validation error when a Claude model name does not start with claude
+  ///
+  /// In en, this message translates to:
+  /// **'Claude provider model names usually start with \"claude\". Please check that provider and model match.'**
+  String get settingsAiModelMismatchClaude;
+
+  /// Validation error when a Gemini model name does not contain gemini
+  ///
+  /// In en, this message translates to:
+  /// **'Gemini provider model names usually contain \"gemini\". Please check that provider and model match.'**
+  String get settingsAiModelMismatchGemini;
+
+  /// Validation error when a GLM model name does not start with glm
+  ///
+  /// In en, this message translates to:
+  /// **'GLM provider model names usually start with \"glm\". Please check that provider and model match.'**
+  String get settingsAiModelMismatchGlm;
+
+  /// Validation error when a MiniMax model name does not contain MiniMax
+  ///
+  /// In en, this message translates to:
+  /// **'MiniMax provider model names usually contain \"MiniMax\". Please check that provider and model match.'**
+  String get settingsAiModelMismatchMinimax;
+
+  /// AIServiceException when the model list response body is not a Map
+  ///
+  /// In en, this message translates to:
+  /// **'Model list response format not recognized'**
+  String get settingsAiModelListFormatUnrecognized;
+
+  /// AIServiceException when the model list response has no data or models field
+  ///
+  /// In en, this message translates to:
+  /// **'Server returned no available model list'**
+  String get settingsAiNoModelsReturned;
+
+  /// AIServiceException when the fetched model list is empty
+  ///
+  /// In en, this message translates to:
+  /// **'No models available'**
+  String get settingsAiNoModelsAvailable;
+
+  /// AIServiceException wrapping an unexpected error during model fetching
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to fetch models: {error}'**
+  String settingsAiFetchModelsFailed(String error);
+
+  /// AIServiceException when no user message is present in the chat
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a question before sending'**
+  String get readerAiEnterQuestionFirst;
+
+  /// AIServiceException when the AI response text is empty
+  ///
+  /// In en, this message translates to:
+  /// **'Model returned empty response, please retry'**
+  String get readerAiEmptyResponse;
+
+  /// AIServiceException for a generic request failure
+  ///
+  /// In en, this message translates to:
+  /// **'Request failed: {error}'**
+  String readerAiRequestFailed(String error);
+
+  /// Fallback error text when the raw error string is empty
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown error'**
+  String get readerAiUnknownError;
+
+  /// AIServiceException when the response body is empty
+  ///
+  /// In en, this message translates to:
+  /// **'Server response is empty. This is usually caused by an incorrect Base URL, a gateway that does not forward to the model endpoint, or the server closing the connection early.\nRequest URL: {endpoint}'**
+  String readerAiEmptyResponseError(String endpoint);
+
+  /// AIServiceException when the response body cannot be parsed as JSON
+  ///
+  /// In en, this message translates to:
+  /// **'Server response is not valid JSON. The current endpoint may be incompatible with the {provider} configuration.\nRequest URL: {endpoint}\nResponse snippet: {snippet}'**
+  String readerAiInvalidJsonError(
+      String provider, String endpoint, String snippet);
+
+  /// AIServiceException when the response body cannot be read; {status} is either empty or '(code)'
+  ///
+  /// In en, this message translates to:
+  /// **'Request failed{status}: could not read the server response. This is usually caused by an incorrect Base URL, the endpoint returning empty content, or the network truncating the response.\nRequest URL: {endpoint}'**
+  String readerAiFailedReadBody(String status, String endpoint);
+
+  /// AIServiceException for a Dio network error; {status} is either empty or '(code)'
+  ///
+  /// In en, this message translates to:
+  /// **'Network request failed{status}: {error}\nRequest URL: {endpoint}'**
+  String readerAiNetworkRequestFailed(
+      String status, String error, String endpoint);
+
+  /// AIServiceException with MiniMax-specific debugging hints
+  ///
+  /// In en, this message translates to:
+  /// **'Request failed({status}): {text}\nSuggestions: 1) MiniMax temperature must be in (0,1]; 2) check that the model name matches the endpoint; 3) use only a single system instruction.\nRequest URL: {endpoint}'**
+  String readerAiRequestFailedMinimaxHint(
+      String status, String text, String endpoint);
+
+  /// AIServiceException with Claude-specific debugging hints
+  ///
+  /// In en, this message translates to:
+  /// **'Request failed({status}): {text}\nTip: Claude requires the anthropic-version request header.\nRequest URL: {endpoint}'**
+  String readerAiRequestFailedClaudeHint(
+      String status, String text, String endpoint);
+
+  /// AIServiceException hinting that the provider and API key may be mismatched
+  ///
+  /// In en, this message translates to:
+  /// **'Request failed({status}): {text}\nTip: Please confirm that the provider and API Key match; they cannot be mixed.\nRequest URL: {endpoint}'**
+  String readerAiRequestFailedProviderMismatchHint(
+      String status, String text, String endpoint);
+
+  /// Generic AIServiceException for a non-200 response with body text
+  ///
+  /// In en, this message translates to:
+  /// **'Request failed({status}): {text}\nRequest URL: {endpoint}'**
+  String readerAiRequestFailedGeneric(
+      String status, String text, String endpoint);
+
+  /// Mock AI response shown when AI is not configured, for a text selection query
+  ///
+  /// In en, this message translates to:
+  /// **'AI (mock): The text you selected is \"{selectedText}\".\n\nBefore: {before}\nAfter: {after}'**
+  String readerAiMockSelectionResponse(
+      String selectedText, String before, String after);
+
+  /// Mock AI response shown when AI is not configured, for a page analysis query
+  ///
+  /// In en, this message translates to:
+  /// **'AI (mock): This page has {chars} characters. Focus on the arguments at the beginning and end of paragraphs.'**
+  String readerAiMockPageAnalysis(int chars);
+
+  /// Mock AI greeting shown when no chat history exists
+  ///
+  /// In en, this message translates to:
+  /// **'Hello'**
+  String get readerAiMockGreeting;
+
+  /// Mock AI response shown when AI is not configured, for a chat question
+  ///
+  /// In en, this message translates to:
+  /// **'AI (mock): You asked \"{question}\".\n\nI have read the current page ({chars} characters). You can continue asking.'**
+  String readerAiMockChatResponse(String question, int chars);
+
+  /// Heading written into the AI response buffer for the book memory summary section
+  ///
+  /// In en, this message translates to:
+  /// **'[Book memory summary]'**
+  String get readerAiMemorySummaryHeading;
+
+  /// Heading written into the AI response buffer for the reading advice section
+  ///
+  /// In en, this message translates to:
+  /// **'[Reading advice for you]'**
+  String get readerAiReadingAdviceHeading;
+
+  /// Heading written into the AI response buffer for indexed snippet hits
+  ///
+  /// In en, this message translates to:
+  /// **'[Indexed hit snippets]'**
+  String get readerAiIndexedSnippetsHeading;
+
+  /// Intro line shown when no online AI key is configured and a local fallback answer is given
+  ///
+  /// In en, this message translates to:
+  /// **'No online AI Key configured, answering based on local memory and index:'**
+  String get readerAiLocalFallbackIntro;
+
+  /// Heading for the related content section in the local fallback response
+  ///
+  /// In en, this message translates to:
+  /// **'[Related content]'**
+  String get readerAiRelatedContentHeading;
+
+  /// Shown when the local fallback has no related snippets and no summary
+  ///
+  /// In en, this message translates to:
+  /// **'[Related content] No usable snippets hit.'**
+  String get readerAiNoRelatedContent;
+
+  /// Heading for the snippet location list in the local fallback response
+  ///
+  /// In en, this message translates to:
+  /// **'[Related content location]'**
+  String get readerAiRelatedContentLocationHeading;
+
+  /// A single snippet location line in the local fallback response
+  ///
+  /// In en, this message translates to:
+  /// **'- Location: {chapterId} ({startOffset}-{endOffset})'**
+  String readerAiSnippetLocation(
+      String chapterId, int startOffset, int endOffset);
+
+  /// Heading for the reading suggestion section in the local fallback response
+  ///
+  /// In en, this message translates to:
+  /// **'[How to read]'**
+  String get readerAiReadingSuggestionHeading;
+
+  /// Heading for the next-step section in the local fallback response
+  ///
+  /// In en, this message translates to:
+  /// **'[Next step]'**
+  String get readerAiNextStepHeading;
+
+  /// First next-step instruction in the local fallback response
+  ///
+  /// In en, this message translates to:
+  /// **'1) Read the hit snippet above first.'**
+  String get readerAiNextStepReadSnippet;
+
+  /// Second next-step instruction in the local fallback response
+  ///
+  /// In en, this message translates to:
+  /// **'2) Ask again with \"why/how/example\" and I will continue locating by index.'**
+  String get readerAiNextStepAskFollowUp;
+
+  /// Fallback label for the current TTS voice when no voice is selected
+  ///
+  /// In en, this message translates to:
+  /// **'System default'**
+  String get ttsSystemDefault;
+
+  /// Error message when the system TTS engine is not available
+  ///
+  /// In en, this message translates to:
+  /// **'System TTS unavailable'**
+  String get ttsUnavailable;
+
+  /// Error message when the requested TTS language is not supported
+  ///
+  /// In en, this message translates to:
+  /// **'System does not support language: {language}'**
+  String ttsUnsupportedLanguage(String language);
+
+  /// Fallback error text when a TTS exception has an empty message
+  ///
+  /// In en, this message translates to:
+  /// **'System TTS call failed'**
+  String get ttsCallFailed;
+
+  /// BookImportFailure message for a missing source file
+  ///
+  /// In en, this message translates to:
+  /// **'Source file does not exist'**
+  String get importErrorSourceMissing;
+
+  /// BookImportFailure message when file hashing fails
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot verify file content'**
+  String get importErrorHashFailed;
+
+  /// BookImportFailure message when no available target filename can be found
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot allocate available name for import file'**
+  String get importErrorTargetNameExhausted;
+
+  /// BookImportFailure message when the source file has not been materialized locally
+  ///
+  /// In en, this message translates to:
+  /// **'Source file not yet on local storage'**
+  String get importErrorSourceNotMaterialized;
+
+  /// BookImportFailure message when the copied file hash differs from the source
+  ///
+  /// In en, this message translates to:
+  /// **'Copied file does not match source'**
+  String get importErrorCopyVerificationFailed;
+
+  /// BookImportFailure message when the file exceeds the size limit
+  ///
+  /// In en, this message translates to:
+  /// **'File exceeds 100MB import limit'**
+  String get importErrorFileTooLarge;
+
+  /// BookImportFailure message when the source file cannot be prepared
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot prepare import file'**
+  String get importErrorSourcePrepareFailed;
+
+  /// BookImportFailure message for a generic import failure
+  ///
+  /// In en, this message translates to:
+  /// **'Book import failed'**
+  String get importErrorFailed;
+
+  /// Fallback title used when no title can be extracted from a TXT file
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown title'**
+  String get importUnknownTitle;
+
+  /// Fallback author used when no author can be extracted from a TXT file
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown author'**
+  String get importUnknownAuthor;
+
+  /// Fallback title used when a book has no title
+  ///
+  /// In en, this message translates to:
+  /// **'Untitled'**
+  String get bookUntitled;
+
+  /// Reading plan task title for completing the daily reading goal
+  ///
+  /// In en, this message translates to:
+  /// **'Complete today\'s goal'**
+  String get homePlanTaskCompleteDailyGoal;
+
+  /// Reading plan task detail for reading a number of minutes
+  ///
+  /// In en, this message translates to:
+  /// **'Read {minutes} minutes'**
+  String homePlanTaskReadMinutes(int minutes);
+
+  /// Reading plan task title for completing a focus reading session
+  ///
+  /// In en, this message translates to:
+  /// **'Complete focus reading'**
+  String get homePlanTaskCompleteFocusReading;
+
+  /// Reading plan task detail for completing a focus session
+  ///
+  /// In en, this message translates to:
+  /// **'At least 1 focus session of {minutes} minutes'**
+  String homePlanTaskFocusSession(int minutes);
+
+  /// Reading plan task title for maintaining the weekly reading rhythm
+  ///
+  /// In en, this message translates to:
+  /// **'Keep the rhythm'**
+  String get homePlanTaskKeepRhythm;
+
+  /// Reading plan task detail for the weekly achieved-days target
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly achieved days ≥ 5'**
+  String get homePlanTaskWeekAchievedDays;
+
+  /// Note highlight color name: light blue
+  ///
+  /// In en, this message translates to:
+  /// **'Light Blue'**
+  String get noteColorLightBlue;
+
+  /// Note highlight color name: red
+  ///
+  /// In en, this message translates to:
+  /// **'Red'**
+  String get noteColorRed;
+
+  /// Note highlight color name: green
+  ///
+  /// In en, this message translates to:
+  /// **'Green'**
+  String get noteColorGreen;
+
+  /// Note highlight color name: purple
+  ///
+  /// In en, this message translates to:
+  /// **'Purple'**
+  String get noteColorPurple;
+
+  /// Note highlight color name: gold
+  ///
+  /// In en, this message translates to:
+  /// **'Gold'**
+  String get noteColorGold;
+
+  /// Note highlight color name: orange
+  ///
+  /// In en, this message translates to:
+  /// **'Orange'**
+  String get noteColorOrange;
+
+  /// Note highlight color name: yellow
+  ///
+  /// In en, this message translates to:
+  /// **'Yellow'**
+  String get noteColorYellow;
+
+  /// Note highlight color name: dark green
+  ///
+  /// In en, this message translates to:
+  /// **'Dark Green'**
+  String get noteColorDarkGreen;
+
+  /// Note highlight color name: custom color
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get noteColorCustom;
+
+  /// Share text header line with book title and author
+  ///
+  /// In en, this message translates to:
+  /// **'📖 《{title}》 - {author}'**
+  String noteShareBookHeader(String title, String author);
+
+  /// Share text line for the reader's note
+  ///
+  /// In en, this message translates to:
+  /// **'💭 Note: {note}'**
+  String noteShareNoteLabel(String note);
+
+  /// Share text line for the chapter name
+  ///
+  /// In en, this message translates to:
+  /// **'📍 {chapter}'**
+  String noteShareChapterLabel(String chapter);
+
+  /// Share text line for the page number
+  ///
+  /// In en, this message translates to:
+  /// **'📄 Page {page}'**
+  String noteSharePageLabel(int page);
+
+  /// Share text hashtags line with the note type name
+  ///
+  /// In en, this message translates to:
+  /// **'#BookNotes #{type}'**
+  String noteShareHashtags(String type);
+
+  /// Accent color display name: elegant purple
+  ///
+  /// In en, this message translates to:
+  /// **'Elegant Purple'**
+  String get accentPurple;
+
+  /// Accent color display name: cherry pink
+  ///
+  /// In en, this message translates to:
+  /// **'Cherry Pink'**
+  String get accentPink;
+
+  /// Accent color display name: fresh cyan
+  ///
+  /// In en, this message translates to:
+  /// **'Fresh Cyan'**
+  String get accentCyan;
+
+  /// Accent color display name: classic brown
+  ///
+  /// In en, this message translates to:
+  /// **'Classic Brown'**
+  String get accentBrown;
+
+  /// Accent color display name: elegant grey
+  ///
+  /// In en, this message translates to:
+  /// **'Elegant Grey'**
+  String get accentGrey;
+
+  /// Accent color display name: charming purple
+  ///
+  /// In en, this message translates to:
+  /// **'Charming Purple'**
+  String get accentDeepPurple;
+
+  /// Accent color display name: amber gold
+  ///
+  /// In en, this message translates to:
+  /// **'Amber Gold'**
+  String get accentAmber;
+
+  /// Accent color display name: vivid green
+  ///
+  /// In en, this message translates to:
+  /// **'Vivid Green'**
+  String get accentLightGreen;
+
+  /// Accent color display name: sunshine yellow
+  ///
+  /// In en, this message translates to:
+  /// **'Sunshine Yellow'**
+  String get accentYellow;
+
+  /// Accent color display name: minimal grey
+  ///
+  /// In en, this message translates to:
+  /// **'Minimal Grey'**
+  String get accentNeutralGrey;
+
+  /// Accent color display name: deep indigo
+  ///
+  /// In en, this message translates to:
+  /// **'Deep Indigo'**
+  String get accentIndigo;
+
+  /// Accent color display name: flame orange
+  ///
+  /// In en, this message translates to:
+  /// **'Flame Orange'**
+  String get accentDeepOrange;
+
+  /// Glass effect preset name: clear mode (higher opacity, less blur)
+  ///
+  /// In en, this message translates to:
+  /// **'Clear mode'**
+  String get glassPresetClear;
+
+  /// Glass effect preset name: standard mode (default blur and opacity)
+  ///
+  /// In en, this message translates to:
+  /// **'Standard mode'**
+  String get glassPresetStandard;
+
+  /// Glass effect preset name: dreamy mode (lower opacity, more blur)
+  ///
+  /// In en, this message translates to:
+  /// **'Dreamy mode'**
+  String get glassPresetDreamy;
+
+  /// User agreement V2 hero title
+  ///
+  /// In en, this message translates to:
+  /// **'Keep reading on your own device.'**
+  String get agreementV2HeroTitle;
+
+  /// User agreement V2 hero body paragraph
+  ///
+  /// In en, this message translates to:
+  /// **'OpenReading is an open-source, cross-platform, local-first ebook reader. It provides reading tools; it does not provide, host, or review books you import.'**
+  String get agreementV2HeroBody;
+
+  /// User agreement V2 local-first principle title
+  ///
+  /// In en, this message translates to:
+  /// **'Local first'**
+  String get agreementV2LocalTitle;
+
+  /// User agreement V2 local-first principle body
+  ///
+  /// In en, this message translates to:
+  /// **'Books, progress, and notes generally remain on your device for you to manage and back up.'**
+  String get agreementV2LocalBody;
+
+  /// User agreement V2 open-source principle title
+  ///
+  /// In en, this message translates to:
+  /// **'AGPL-3.0 licensed'**
+  String get agreementV2OpenSourceTitle;
+
+  /// User agreement V2 open-source principle body
+  ///
+  /// In en, this message translates to:
+  /// **'Source code is provided under GNU AGPL v3.0 and the software is supplied “as is,” without warranties.'**
+  String get agreementV2OpenSourceBody;
+
+  /// User agreement V2 version label with version placeholder
+  ///
+  /// In en, this message translates to:
+  /// **'Terms version {version}'**
+  String agreementV2VersionLabel(String version);
+
+  /// User agreement V2 panel title
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Use & Privacy Notice'**
+  String get agreementV2Title;
+
+  /// User agreement V2 panel subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Please read before using OpenReading'**
+  String get agreementV2Subtitle;
+
+  /// User agreement V2 important notice callout
+  ///
+  /// In en, this message translates to:
+  /// **'Important: The official OpenReading app does not preinstall, bundle, or recommend any third-party book source, and its developers do not operate, represent, or host source content. You choose every imported file and source you add; use only content you are authorized to access.'**
+  String get agreementV2ImportantNotice;
+
+  /// User agreement V2 source boundary card title
+  ///
+  /// In en, this message translates to:
+  /// **'Third-party source boundary'**
+  String get agreementV2SourceBoundaryTitle;
+
+  /// User agreement V2 source boundary point 1
+  ///
+  /// In en, this message translates to:
+  /// **'The official project provides open-source reader software and the Open Reading Source Protocol only. It provides no source addresses or official source directory.'**
+  String get agreementV2SourceBoundaryPoint1;
+
+  /// User agreement V2 source boundary point 2
+  ///
+  /// In en, this message translates to:
+  /// **'Every source address must be entered and added by you. The app connects directly to that independent service without routing content through a developer-operated server.'**
+  String get agreementV2SourceBoundaryPoint2;
+
+  /// User agreement V2 source boundary point 3
+  ///
+  /// In en, this message translates to:
+  /// **'Protocol compatibility means only that an interface can connect; it does not prove legality or licensing. Source operators are responsible for their content, and you must review and use it lawfully.'**
+  String get agreementV2SourceBoundaryPoint3;
+
+  /// User agreement V2 section 1 title
+  ///
+  /// In en, this message translates to:
+  /// **'Scope and acceptance'**
+  String get agreementV2Section1Title;
+
+  /// User agreement V2 section 1 body
+  ///
+  /// In en, this message translates to:
+  /// **'These terms apply to your download, installation, and use of OpenReading and its included features. By selecting “Agree and continue,” you confirm that you have read, understood, and accepted them. If you do not agree, stop using and exit the app. A guardian must consent where required by local law.'**
+  String get agreementV2Section1Body;
+
+  /// User agreement V2 section 2 title
+  ///
+  /// In en, this message translates to:
+  /// **'Open-source license'**
+  String get agreementV2Section2Title;
+
+  /// User agreement V2 section 2 body
+  ///
+  /// In en, this message translates to:
+  /// **'Future OpenReading versions are released under the GNU Affero General Public License v3.0. You may use, copy, modify, distribute, or sell the software under that license. A distributed modified version must provide its complete corresponding source under AGPL-3.0, and a modified version used to provide a network service must also offer corresponding source to users interacting with it. MIT rights already granted for v1.0.0 and earlier versions remain valid and are not revoked. These terms do not restrict rights granted by the open-source license. Third-party components remain subject to their own licenses.'**
+  String get agreementV2Section2Body;
+
+  /// User agreement V2 section 3 title
+  ///
+  /// In en, this message translates to:
+  /// **'User content and rights'**
+  String get agreementV2Section3Title;
+
+  /// User agreement V2 section 3 body
+  ///
+  /// In en, this message translates to:
+  /// **'“User content” includes books, documents, images, metadata, links, and other material you import, download, open, convert, cache, annotate, or read aloud. You must have all rights and permissions required to use it. You are solely responsible for copyright, trademark, privacy, defamation, unlawful-content, malware, and other claims or losses involving user content. The software and its developers do not upload, sell, license, endorse, or review that content, and format support does not imply lawful permission to use a file.'**
+  String get agreementV2Section3Body;
+
+  /// User agreement V2 section 4 title
+  ///
+  /// In en, this message translates to:
+  /// **'Prohibited use'**
+  String get agreementV2Section4Title;
+
+  /// User agreement V2 section 4 body
+  ///
+  /// In en, this message translates to:
+  /// **'You may not use the software to infringe intellectual property or other rights; distribute unlawful, harmful, or malicious content; bypass digital rights management, access controls, or paywalls; attack or disrupt third-party systems; or engage in activity prohibited by applicable law. You are responsible for complaints, claims, penalties, and losses resulting from your conduct.'**
+  String get agreementV2Section4Body;
+
+  /// User agreement V2 section 5 title
+  ///
+  /// In en, this message translates to:
+  /// **'Book sources and third parties'**
+  String get agreementV2Section5Title;
+
+  /// User agreement V2 section 5 body
+  ///
+  /// In en, this message translates to:
+  /// **'The official app does not preinstall, distribute, or recommend book sources and does not operate an official source directory. Sources, network APIs, external links, online content, system text-to-speech, AI services, and other integrations you add are independently provided and controlled by third parties. They are not operated, represented, licensed, endorsed, or reviewed by the developers. Source operators are legally responsible for the content they provide. Before adding one, you must review its origin, content rights, privacy policy, and terms, and you are responsible for your own access, downloads, caching, distribution, and other use. To the fullest extent permitted by applicable law, the developers are not liable for third-party content, charges, data practices, outages, or infringement disputes.'**
+  String get agreementV2Section5Body;
+
+  /// User agreement V2 section 6 title
+  ///
+  /// In en, this message translates to:
+  /// **'Data and privacy'**
+  String get agreementV2Section6Title;
+
+  /// User agreement V2 section 6 body
+  ///
+  /// In en, this message translates to:
+  /// **'OpenReading is local-first. Books, reading progress, notes, and settings are normally stored on your device. Unless you enable a network book source, cover search, AI, sync, or another online feature, the app does not need to send book text to the developers to provide local reading. Automatic and manual update checks contact GitHub and the official site at open.xxread.top with necessary technical parameters such as platform, processor architecture, and release channel; their servers process your IP address and User-Agent as part of ordinary network communication. When you download an installer from the official site, the backend records the version, architecture, download time, IP address, and User-Agent for download counts, security protection, and troubleshooting. Download-event records containing a raw IP are retained for no more than 30 days and then deleted; only aggregate statistics without raw IP addresses are kept longer. Update requests do not include book text, your library, notes, an account, or a unique device identifier. GitHub requests are also governed by GitHub’s privacy terms. When another online feature is used, queries, selected text, network information, or necessary parameters may be sent to the provider you selected under that provider’s policies. Protect your device, API keys, and backups; uninstalling, clearing data, device failure, or user error may permanently erase data.'**
+  String get agreementV2Section6Body;
+
+  /// User agreement V2 section 7 title
+  ///
+  /// In en, this message translates to:
+  /// **'AI and automated output'**
+  String get agreementV2Section7Title;
+
+  /// User agreement V2 section 7 body
+  ///
+  /// In en, this message translates to:
+  /// **'AI summaries, answers, translations, recommendations, and other generated output may be inaccurate, incomplete, outdated, or misleading. They are reading aids only and are not legal, medical, financial, academic, or other professional advice. Verify output independently and do not rely on it for high-risk decisions. Material submitted to an AI provider is also governed by that provider’s terms.'**
+  String get agreementV2Section7Body;
+
+  /// User agreement V2 section 8 title
+  ///
+  /// In en, this message translates to:
+  /// **'Disclaimer of warranties'**
+  String get agreementV2Section8Title;
+
+  /// User agreement V2 section 8 body
+  ///
+  /// In en, this message translates to:
+  /// **'To the fullest extent permitted by law, the software and related materials are provided “as is” and “as available,” without express, implied, or statutory warranties, including merchantability, fitness for a particular purpose, title, non-infringement, accuracy, compatibility, security, error-free operation, uninterrupted availability, or preservation of data. Open-source contributors have no duty to maintain, update, support, or fix the software.'**
+  String get agreementV2Section8Body;
+
+  /// User agreement V2 section 9 title
+  ///
+  /// In en, this message translates to:
+  /// **'Limitation of liability'**
+  String get agreementV2Section9Title;
+
+  /// User agreement V2 section 9 body
+  ///
+  /// In en, this message translates to:
+  /// **'To the fullest extent permitted by law, developers, copyright holders, and contributors are not liable for direct, indirect, incidental, special, punitive, or consequential loss arising from installation, use, inability to use, user content, third-party services, data loss, device issues, business interruption, or security incidents, whether under contract, tort, or another theory. Liability that cannot legally be excluded remains limited to the minimum extent permitted by law.'**
+  String get agreementV2Section9Body;
+
+  /// User agreement V2 section 10 title
+  ///
+  /// In en, this message translates to:
+  /// **'Indemnity'**
+  String get agreementV2Section10Title;
+
+  /// User agreement V2 section 10 body
+  ///
+  /// In en, this message translates to:
+  /// **'To the extent permitted by applicable law, you are responsible for and will hold developers, copyright holders, and contributors harmless from third-party claims, investigations, penalties, losses, and reasonable costs arising from your user content, unlawful or infringing conduct, breach of these terms, or use of third-party services.'**
+  String get agreementV2Section10Body;
+
+  /// User agreement V2 section 11 title
+  ///
+  /// In en, this message translates to:
+  /// **'Changes, termination, and law'**
+  String get agreementV2Section11Title;
+
+  /// User agreement V2 section 11 body
+  ///
+  /// In en, this message translates to:
+  /// **'Features, maintenance status, and these terms may change as the open-source project, law, or risk controls evolve. Material updates may require renewed consent; if you disagree, stop using the app. You may uninstall at any time. Disputes should first be resolved informally. Subject to mandatory consumer protections, the law of the developer’s location and courts with lawful jurisdiction apply. If one provision is unenforceable, the rest remain effective.'**
+  String get agreementV2Section11Body;
+
+  /// User agreement V2 terms consent checkbox label
+  ///
+  /// In en, this message translates to:
+  /// **'I have read and agree to the Terms of Use and Privacy Notice.'**
+  String get agreementV2ConfirmLabel;
+
+  /// User agreement V2 source boundary consent checkbox label
+  ///
+  /// In en, this message translates to:
+  /// **'I understand that the official project provides no book sources; sources and content I add come from independent third parties, and I will verify authorization and remain responsible for my own use.'**
+  String get agreementV2SourceConfirmLabel;
+
+  /// User agreement V2 exit/decline button label
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get agreementV2ExitLabel;
+
+  /// User agreement V2 agree-and-continue button label
+  ///
+  /// In en, this message translates to:
+  /// **'Agree and continue'**
+  String get agreementV2ContinueLabel;
+
+  /// User agreement V2 exit dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Decline the terms?'**
+  String get agreementV2ExitDialogTitle;
+
+  /// User agreement V2 exit dialog body
+  ///
+  /// In en, this message translates to:
+  /// **'You must accept the Terms of Use to continue using OpenReading. If you do not agree, please exit the app.'**
+  String get agreementV2ExitDialogBody;
+
+  /// User agreement V2 exit dialog cancel button label
+  ///
+  /// In en, this message translates to:
+  /// **'Go back'**
+  String get agreementV2CancelLabel;
+
+  /// User agreement V2 exit dialog confirm button label
+  ///
+  /// In en, this message translates to:
+  /// **'Exit'**
+  String get agreementV2ConfirmExitLabel;
+
+  /// User agreement V2 save-failed snackbar message
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save your consent. Please try again.'**
+  String get agreementV2SaveFailed;
 }
 
 class _AppLocalizationsDelegate

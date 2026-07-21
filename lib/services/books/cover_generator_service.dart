@@ -14,16 +14,24 @@ class CoverGenerator {
   ///
   /// [format] 为兼容旧调用保留，但不再影响视觉结果。这样同一本书无论来自
   /// 本地文件还是在线书源，只要书名和作者一致，就会得到相同封面。
+  ///
+  /// [fallbackTitle] 在 [title] 为空时作为兜底标题绘制，由 UI 调用方通过
+  /// `context.l10n.bookUntitled` 传入；服务层调用方可不传（默认空串）。
   static Future<Uint8List> generateTextCover({
     required String title,
     String author = '',
     String format = '',
+    String fallbackTitle = '',
     int width = 400,
     int height = 600,
   }) async {
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
-    final painter = GeneratedBookCoverPainter(title: title, author: author);
+    final painter = GeneratedBookCoverPainter(
+      title: title,
+      author: author,
+      fallbackTitle: fallbackTitle,
+    );
     painter.paint(canvas, Size(width.toDouble(), height.toDouble()));
 
     final picture = recorder.endRecording();
@@ -69,13 +77,17 @@ class CoverGenerator {
 
 /// 可供图片生成器与 Flutter UI 共同复用的封面绘制器。
 class GeneratedBookCoverPainter extends CustomPainter {
-  GeneratedBookCoverPainter({required String title, required String author})
-      : title = _normalizeTitle(title),
+  GeneratedBookCoverPainter({
+    required String title,
+    required String author,
+    this.fallbackTitle = '',
+  })  : title = _normalizeTitle(title, fallbackTitle),
         author = _normalizeAuthor(author),
         palette = GeneratedBookCoverPalette.resolve(title, author);
 
   final String title;
   final String author;
+  final String fallbackTitle;
   final GeneratedBookCoverPalette palette;
 
   @override
@@ -240,7 +252,10 @@ void _paintText({
     text: TextSpan(
       text: text,
       style: TextStyle(
-        fontFamily: 'SourceHanSansCN',
+        // 字体不内置后改用系统字体；之前硬编码 'SourceHanSansCN' 在字体未下载
+        // 时也会回退到系统字体，行为等价但 null 让意图更清晰，避免对在线字体
+        // 下载状态的隐式依赖。
+        fontFamily: null,
         fontSize: fontSize,
         fontWeight: fontWeight,
         color: color,
@@ -259,9 +274,9 @@ void _paintText({
   painter.paint(canvas, Offset(rect.left, dy));
 }
 
-String _normalizeTitle(String title) {
+String _normalizeTitle(String title, [String fallbackTitle = '']) {
   final normalized = title.trim().replaceAll(RegExp(r'\s+'), ' ');
-  if (normalized.isEmpty) return '未命名';
+  if (normalized.isEmpty) return fallbackTitle;
   return normalized.runes.length <= 72
       ? normalized
       : '${String.fromCharCodes(normalized.runes.take(72))}…';

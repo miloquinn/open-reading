@@ -6,12 +6,26 @@ import 'book_source_text_paginator.dart';
 
 const _bookSourceBlockTags = {'p', 'div', 'li', 'blockquote'};
 
+/// Matches the opening of any HTML tag (`<p`, `</br`, `<img`, …) without
+/// requiring a closing `>`. Plain-text bodies never legitimately contain this
+/// sequence, so the presence of a tag opener is enough to route the payload
+/// through the HTML extraction path.
+final _htmlTagOpener = RegExp(r'</?[a-z][a-z0-9]*', caseSensitive: false);
+
 /// Converts a source payload into canonical chapter text.
 ///
 /// This adapter owns source-specific HTML extraction and repeated remote page
 /// marker cleanup. It deliberately does not inject indentation or paragraph
-/// spacing; those are display settings applied later by the shared reader text
-/// pipeline.
+/// spacing; those are display settings applied later by the shared reader
+/// text pipeline.
+///
+/// The parsing path is chosen by inspecting the content itself, not the
+/// declared `contentType`. Source declarations are unreliable in the wild:
+/// plain text is frequently labelled `text/html` and well-formed HTML
+/// occasionally arrives as `text/plain`. Probing the content routes each
+/// payload through the semantically correct path so the shared layout layer
+/// always receives properly paragraph-separated text, which is the only
+/// signal it can use to apply first-line indentation.
 String readableBookSourceChapterText(
   BookSourceChapterContent content, {
   String fallbackTitle = '',
@@ -20,17 +34,36 @@ String readableBookSourceChapterText(
     if (content.title.trim().isNotEmpty) content.title,
     if (fallbackTitle.trim().isNotEmpty) fallbackTitle,
   };
-  if (content.contentType != 'text/html') {
-    final normalized = content.content
-        .replaceFirst('\uFEFF', '')
-        .replaceAll('\r\n', '\n')
-        .replaceAll('\r', '\n');
-    final lines = removeRepeatedSourcePageMarkers(normalized.split('\n'));
-    return _removeRepeatedLeadingChapterTitle(lines, chapterTitles).join('\n');
-  }
 
+  final paragraphs = _looksLikeHtml(content.content)
+      ? _extractHtmlParagraphs(content.content)
+      : _extractPlainTextParagraphs(content.content);
+
+  final cleaned = removeRepeatedSourcePageMarkers(paragraphs);
+  return _removeRepeatedLeadingChapterTitle(cleaned, chapterTitles).join('\n');
+}
+
+bool _looksLikeHtml(String content) => _htmlTagOpener.hasMatch(content);
+
+/// Preserves the source's own line structure: BOM is stripped, CRLF/CR are
+/// folded to LF, but leading whitespace and blank lines are kept verbatim so
+/// downstream logic (page-marker cleanup, chapter-title stripping, and the
+/// shared layout layer) can decide what is structural.
+List<String> _extractPlainTextParagraphs(String raw) {
+  final normalized = raw
+      .replaceFirst('\uFEFF', '')
+      .replaceAll('\r\n', '\n')
+      .replaceAll('\r', '\n');
+  return normalized.split('\n');
+}
+
+/// Walks the parsed fragment and emits one canonical paragraph per block
+/// boundary, `<br>`, or literal newline found inside a text node. Runs of
+/// non-newline whitespace inside a segment are collapsed into a single
+/// space.
+List<String> _extractHtmlParagraphs(String raw) {
+  final fragment = html_parser.parseFragment(raw.replaceFirst('\uFEFF', ''));
   final paragraphs = <String>[];
-  final fragment = html_parser.parseFragment(content.content);
   final segment = StringBuffer();
 
   void flush() {
@@ -54,18 +87,31 @@ String readableBookSourceChapterText(
         }
         walk(child.nodes);
       } else if (child is dom.Text) {
-        segment.write(child.data);
+        // A literal newline inside a text node is the common shape for
+        // sources that dump mostly-plain paragraphs inside a wrapping tag
+        // (e.g. a chapter with one stray inline `<img>`/`<b>` and every
+        // other paragraph separated only by `\n`). Treat it like an
+        // implicit `<br>` so those paragraphs still get split instead of
+        // being silently glued together by the `\s+` collapse in flush().
+        final lines = child.data.split(RegExp(r'\r\n|\r|\n'));
+        for (var i = 0; i < lines.length; i++) {
+          if (i > 0) flush();
+          segment.write(lines[i]);
+        }
       }
     }
   }
 
   walk(fragment.nodes);
   flush();
-  final extracted = paragraphs.isEmpty
-      ? <String>[fragment.text?.trim() ?? '']
-      : removeRepeatedSourcePageMarkers(paragraphs);
-  return _removeRepeatedLeadingChapterTitle(extracted, chapterTitles)
-      .join('\n');
+  // Degenerate payloads (image-only chapters, unclosed tags, comments) may
+  // yield no extractable text; fall back to whatever the fragment exposes as
+  // plain text so the reader never renders a blank page.
+  if (paragraphs.isEmpty) {
+    final fallback = fragment.text?.trim() ?? '';
+    if (fallback.isNotEmpty) return [fallback];
+  }
+  return paragraphs;
 }
 
 List<String> _removeRepeatedLeadingChapterTitle(

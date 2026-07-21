@@ -9,11 +9,13 @@ import 'reading_stats_dao.dart';
 class ReadingPlanTask {
   final String title;
   final String detail;
+  final Map<String, dynamic>? detailParams;
   final bool completed;
 
   const ReadingPlanTask({
     required this.title,
     required this.detail,
+    this.detailParams,
     required this.completed,
   });
 }
@@ -125,18 +127,20 @@ class ReadingPlanService {
 
     final tasks = <ReadingPlanTask>[
       ReadingPlanTask(
-        title: '完成今日目标',
-        detail: '阅读 $dailyGoalMinutes 分钟',
+        title: 'complete_daily_goal',
+        detail: 'read_minutes',
+        detailParams: {'minutes': dailyGoalMinutes},
         completed: isGoalCompleted,
       ),
       ReadingPlanTask(
-        title: '完成专注阅读',
-        detail: '至少 1 次 $_focusSessionMinutes 分钟专注会话',
+        title: 'complete_focus_reading',
+        detail: 'focus_session',
+        detailParams: {'minutes': _focusSessionMinutes},
         completed: focusSessionsToday > 0,
       ),
       ReadingPlanTask(
-        title: '保持节奏',
-        detail: '本周达标天数 ≥ 5 天',
+        title: 'keep_rhythm',
+        detail: 'week_achieved_days',
         completed: weekAchievedDays >= 5,
       ),
     ];

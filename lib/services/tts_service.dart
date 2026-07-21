@@ -167,6 +167,7 @@ class TtsService extends ChangeNotifier {
   String _currentText = '';
   int _currentPosition = 0;
   String? _lastError;
+  String? _lastErrorLanguage;
   bool _isLoadingVoices = false;
   String? _voiceLoadError;
   List<TtsVoiceOption> _availableVoices = const <TtsVoiceOption>[];
@@ -178,6 +179,7 @@ class TtsService extends ChangeNotifier {
   bool get isInitializing => _isInitializing;
   bool get isAvailable => _isInitialized;
   String? get lastError => _lastError;
+  String? get lastErrorLanguage => _lastErrorLanguage;
   double get speechRate => _speechRate;
   double get speechVolume => _speechVolume;
   double get speechPitch => _speechPitch;
@@ -189,7 +191,7 @@ class TtsService extends ChangeNotifier {
   String? get voiceLoadError => _voiceLoadError;
   List<TtsVoiceOption> get availableVoices => _availableVoices;
   TtsVoiceOption? get currentVoice => _currentVoice;
-  String get currentVoiceLabel => _currentVoice?.title ?? '系统默认';
+  String get currentVoiceLabel => _currentVoice?.title ?? 'system_default';
 
   TtsService() {
     unawaited(initialize());
@@ -407,7 +409,7 @@ class TtsService extends ChangeNotifier {
     await initialize();
     final tts = _flutterTts;
     if (!_isInitialized || tts == null) {
-      _lastError = _lastError ?? '系统 TTS 不可用';
+      _lastError = _lastError ?? 'tts_unavailable';
       _notifySafe();
       return;
     }
@@ -440,7 +442,7 @@ class TtsService extends ChangeNotifier {
     await initialize();
     final tts = _flutterTts;
     if (!_isInitialized || tts == null) {
-      _lastError = _lastError ?? '系统 TTS 不可用';
+      _lastError = _lastError ?? 'tts_unavailable';
       _notifySafe();
       return;
     }
@@ -552,7 +554,7 @@ class TtsService extends ChangeNotifier {
     await initialize();
     final tts = _flutterTts;
     if (!_isInitialized || tts == null) {
-      _lastError = _lastError ?? '系统 TTS 不可用';
+      _lastError = _lastError ?? 'tts_unavailable';
       _notifySafe();
       return;
     }
@@ -730,7 +732,8 @@ class TtsService extends ChangeNotifier {
 
     final success = await _trySetLanguage(tts, normalized);
     if (!success) {
-      _lastError = '系统不支持语言: $normalized';
+      _lastError = 'tts_unsupported_language';
+      _lastErrorLanguage = normalized;
     } else {
       if (_currentVoice != null &&
           !_currentVoice!.matchesLanguage(normalized)) {
@@ -738,6 +741,7 @@ class TtsService extends ChangeNotifier {
         await _saveSettings();
       }
       _lastError = null;
+      _lastErrorLanguage = null;
     }
     _notifySafe();
   }
@@ -997,7 +1001,7 @@ class TtsService extends ChangeNotifier {
 
   String _toErrorText(Object error) {
     final raw = error.toString().trim();
-    if (raw.isEmpty) return '系统 TTS 调用失败';
+    if (raw.isEmpty) return 'tts_call_failed';
     return raw.length > 220 ? raw.substring(0, 220) : raw;
   }
 

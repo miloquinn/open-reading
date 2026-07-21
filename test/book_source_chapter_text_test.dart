@@ -35,6 +35,69 @@ void main() {
     );
   });
 
+  test('plain text mislabelled as html keeps paragraph breaks', () {
+    // Regression: sources that declare `text/html` but return plain,
+    // newline-separated text used to be routed through the HTML extractor,
+    // which collapsed every paragraph separator into a single space. The
+    // shared layout layer then saw one giant paragraph and could only indent
+    // the very first line. Content sniffing must route this payload through
+    // the plain-text path regardless of the declared content type.
+    const content = BookSourceChapterContent(
+      bookId: 'book',
+      chapterId: 'chapter',
+      title: 'Chapter',
+      content: '第一段\n第二段\n第三段',
+      contentType: 'text/html',
+    );
+
+    expect(
+      readableBookSourceChapterText(content),
+      '第一段\n第二段\n第三段',
+    );
+  });
+
+  test('html mislabelled as plain text is still extracted as html', () {
+    // Symmetric regression: a source that declares `text/plain` but returns
+    // real HTML must still be parsed as HTML, otherwise the tags would leak
+    // into the rendered text.
+    const content = BookSourceChapterContent(
+      bookId: 'book',
+      chapterId: 'chapter',
+      title: 'Chapter',
+      content: '<p>第一段</p><p>第二段</p>',
+      contentType: 'text/plain',
+    );
+
+    expect(
+      readableBookSourceChapterText(content),
+      '第一段\n第二段',
+    );
+  });
+
+  test(
+      'html paragraphs separated only by a bare newline still split '
+      'around a stray inline tag', () {
+    // Regression: a chapter wrapped in a single tag (routing it through the
+    // HTML extractor) but whose paragraphs are separated only by `\n`, with
+    // one stray inline tag (e.g. an illustration) in the middle. Previously
+    // the `\s+` collapse in flush() ate literal newlines just like any other
+    // whitespace, merging every paragraph around the stray tag into one
+    // line, so only the paragraphs next to a real block/`<br>` boundary got
+    // indented by the reader.
+    const content = BookSourceChapterContent(
+      bookId: 'book',
+      chapterId: 'chapter',
+      title: 'Chapter',
+      content: '<div>第一段\n第二段\n<img src="1.jpg"/>\n第三段\n第四段</div>',
+      contentType: 'text/html',
+    );
+
+    expect(
+      readableBookSourceChapterText(content),
+      '第一段\n第二段\n第三段\n第四段',
+    );
+  });
+
   test('removes a repeated plain-text chapter title only at the beginning', () {
     const content = BookSourceChapterContent(
       bookId: 'book',

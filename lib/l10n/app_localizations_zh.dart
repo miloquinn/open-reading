@@ -448,6 +448,49 @@ class AppLocalizationsZh extends AppLocalizations {
   String get builtInFonts => '内置字体';
 
   @override
+  String get onlineFonts => '在线字体';
+
+  @override
+  String get fontDownload => '下载';
+
+  @override
+  String get fontDownloading => '下载中…';
+
+  @override
+  String get fontDownloaded => '已下载';
+
+  @override
+  String get fontDownloadFailed => '下载失败，点此重试';
+
+  @override
+  String get fontDownloadHint => '首次使用需从 GitHub 下载';
+
+  @override
+  String get fontDeleteDownload => '删除下载';
+
+  @override
+  String fontDeleteDownloadTitle(String name) {
+    return '删除已下载的“$name”？';
+  }
+
+  @override
+  String fontDeleteDownloadMessage(String size) {
+    return '将释放 $size 存储空间。下次使用时会重新下载。';
+  }
+
+  @override
+  String get fontDownloadCancelled => '下载已取消';
+
+  @override
+  String get fontDownloadNetworkFailed => '网络错误，下载失败';
+
+  @override
+  String get fontDownloadInvalid => '下载的字体文件无效';
+
+  @override
+  String get fontDownloadUnsupported => '当前平台暂不支持在线下载字体';
+
+  @override
   String get importFont => '导入字体';
 
   @override
@@ -2702,6 +2745,525 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get importScanning => '正在扫描文件…';
+
+  @override
+  String get settingsAiApiKeyConfigured => 'API Key 已配置';
+
+  @override
+  String get settingsAiApiKeyTapToConfigure => '点击完成配置';
+
+  @override
+  String get settingsAiAddModel => '添加模型';
+
+  @override
+  String settingsAiSwitchedToModel(String model) {
+    return '已切换到 $model';
+  }
+
+  @override
+  String get settingsAiFillBaseUrlAndApiKey => '请先填写 Base URL 和 API Key';
+
+  @override
+  String get settingsAiEditModelTitle => '配置模型';
+
+  @override
+  String get settingsAiQuickCardSubtitle => '每张快捷卡片只绑定一个模型';
+
+  @override
+  String get settingsAiPresetModel => '预设模型';
+
+  @override
+  String get settingsAiBaseUrlLabel => 'Base URL';
+
+  @override
+  String get settingsAiApiKeyLabel => 'API Key';
+
+  @override
+  String get settingsAiModelNameLabel => '模型型号';
+
+  @override
+  String get settingsAiFetchModelsTooltip => '自动获取模型';
+
+  @override
+  String get settingsAiFetchModelsList => '自动获取模型列表';
+
+  @override
+  String get settingsAiSelectModel => '选择一个模型';
+
+  @override
+  String get settingsAiTemperatureLabel => 'Temperature';
+
+  @override
+  String get settingsAiAddAndEnable => '添加并启用';
+
+  @override
+  String get settingsAiModelMismatchClaude =>
+      'Claude 服务商的模型名通常应以 claude 开头，请检查 provider 和 model 是否匹配';
+
+  @override
+  String get settingsAiModelMismatchGemini =>
+      'Gemini 服务商的模型名通常应包含 gemini，请检查 provider 和 model 是否匹配';
+
+  @override
+  String get settingsAiModelMismatchGlm =>
+      'GLM 服务商的模型名通常应以 glm 开头，请检查 provider 和 model 是否匹配';
+
+  @override
+  String get settingsAiModelMismatchMinimax =>
+      'MiniMax 服务商的模型名通常应包含 MiniMax，请检查 provider 和 model 是否匹配';
+
+  @override
+  String get settingsAiModelListFormatUnrecognized => '模型列表返回格式无法识别';
+
+  @override
+  String get settingsAiNoModelsReturned => '服务端没有返回可用模型列表';
+
+  @override
+  String get settingsAiNoModelsAvailable => '没有获取到可用模型';
+
+  @override
+  String settingsAiFetchModelsFailed(String error) {
+    return '获取模型失败：$error';
+  }
+
+  @override
+  String get readerAiEnterQuestionFirst => '请输入问题后再发送';
+
+  @override
+  String get readerAiEmptyResponse => '模型返回为空，请重试';
+
+  @override
+  String readerAiRequestFailed(String error) {
+    return '请求失败：$error';
+  }
+
+  @override
+  String get readerAiUnknownError => '未知错误';
+
+  @override
+  String readerAiEmptyResponseError(String endpoint) {
+    return '服务端返回为空，通常是 Base URL 配置错误、网关没有转发到模型接口，或服务端提前断开连接。\n请求地址：$endpoint';
+  }
+
+  @override
+  String readerAiInvalidJsonError(
+      String provider, String endpoint, String snippet) {
+    return '服务端返回的不是合法 JSON，当前接口可能与 $provider 配置不兼容。\n请求地址：$endpoint\n返回片段：$snippet';
+  }
+
+  @override
+  String readerAiFailedReadBody(String status, String endpoint) {
+    return '请求失败$status：未能读取服务端返回的数据，通常是 Base URL 配错、接口返回空内容，或网络把响应截断了。\n请求地址：$endpoint';
+  }
+
+  @override
+  String readerAiNetworkRequestFailed(
+      String status, String error, String endpoint) {
+    return '网络请求失败$status：$error\n请求地址：$endpoint';
+  }
+
+  @override
+  String readerAiRequestFailedMinimaxHint(
+      String status, String text, String endpoint) {
+    return '请求失败($status)：$text\n建议检查：1) MiniMax 温度需在 (0,1]；2) 模型名与接口是否匹配；3) 仅使用单条 system 指令。\n请求地址：$endpoint';
+  }
+
+  @override
+  String readerAiRequestFailedClaudeHint(
+      String status, String text, String endpoint) {
+    return '请求失败($status)：$text\n提示：Claude 必须携带 anthropic-version 请求头。\n请求地址：$endpoint';
+  }
+
+  @override
+  String readerAiRequestFailedProviderMismatchHint(
+      String status, String text, String endpoint) {
+    return '请求失败($status)：$text\n提示：请确认服务商与 API Key 对应，不可混用。\n请求地址：$endpoint';
+  }
+
+  @override
+  String readerAiRequestFailedGeneric(
+      String status, String text, String endpoint) {
+    return '请求失败($status)：$text\n请求地址：$endpoint';
+  }
+
+  @override
+  String readerAiMockSelectionResponse(
+      String selectedText, String before, String after) {
+    return 'AI(模拟): 你选择的内容是\"$selectedText\"。\n\n上文: $before\n下文: $after';
+  }
+
+  @override
+  String readerAiMockPageAnalysis(int chars) {
+    return 'AI(模拟): 本页共 $chars 字，建议重点关注段落开头与结尾处的论点。';
+  }
+
+  @override
+  String get readerAiMockGreeting => '你好';
+
+  @override
+  String readerAiMockChatResponse(String question, int chars) {
+    return 'AI(模拟): 你问的是「$question」。\n\n我已读取当前页（$chars 字），你可以继续追问。';
+  }
+
+  @override
+  String get readerAiMemorySummaryHeading => '【本书记忆摘要】';
+
+  @override
+  String get readerAiReadingAdviceHeading => '【针对用户的阅读建议】';
+
+  @override
+  String get readerAiIndexedSnippetsHeading => '【索引命中片段】';
+
+  @override
+  String get readerAiLocalFallbackIntro => '当前未配置在线 AI Key，先基于本地记忆和索引给你一个答案：';
+
+  @override
+  String get readerAiRelatedContentHeading => '【相关内容】';
+
+  @override
+  String get readerAiNoRelatedContent => '【相关内容】暂未命中可用片段。';
+
+  @override
+  String get readerAiRelatedContentLocationHeading => '【相关内容定位】';
+
+  @override
+  String readerAiSnippetLocation(
+      String chapterId, int startOffset, int endOffset) {
+    return '- 位置：$chapterId ($startOffset-$endOffset)';
+  }
+
+  @override
+  String get readerAiReadingSuggestionHeading => '【建议怎么读】';
+
+  @override
+  String get readerAiNextStepHeading => '【下一步】';
+
+  @override
+  String get readerAiNextStepReadSnippet => '1) 先读上面命中的片段。';
+
+  @override
+  String get readerAiNextStepAskFollowUp => '2) 用\"为什么/如何/例子\"再追问一次，我会继续按索引定位。';
+
+  @override
+  String get ttsSystemDefault => '系统默认';
+
+  @override
+  String get ttsUnavailable => '系统 TTS 不可用';
+
+  @override
+  String ttsUnsupportedLanguage(String language) {
+    return '系统不支持语言: $language';
+  }
+
+  @override
+  String get ttsCallFailed => '系统 TTS 调用失败';
+
+  @override
+  String get importErrorSourceMissing => '源文件不存在';
+
+  @override
+  String get importErrorHashFailed => '无法校验文件内容';
+
+  @override
+  String get importErrorTargetNameExhausted => '无法为导入文件分配可用名称';
+
+  @override
+  String get importErrorSourceNotMaterialized => '源文件尚未准备到本地';
+
+  @override
+  String get importErrorCopyVerificationFailed => '复制后的文件与源文件不一致';
+
+  @override
+  String get importErrorFileTooLarge => '文件超过 100 MB 导入限制';
+
+  @override
+  String get importErrorSourcePrepareFailed => '无法准备导入文件';
+
+  @override
+  String get importErrorFailed => '书籍导入失败';
+
+  @override
+  String get importUnknownTitle => '未知标题';
+
+  @override
+  String get importUnknownAuthor => '未知作者';
+
+  @override
+  String get bookUntitled => '未命名';
+
+  @override
+  String get homePlanTaskCompleteDailyGoal => '完成今日目标';
+
+  @override
+  String homePlanTaskReadMinutes(int minutes) {
+    return '阅读 $minutes 分钟';
+  }
+
+  @override
+  String get homePlanTaskCompleteFocusReading => '完成专注阅读';
+
+  @override
+  String homePlanTaskFocusSession(int minutes) {
+    return '至少 1 次 $minutes 分钟专注会话';
+  }
+
+  @override
+  String get homePlanTaskKeepRhythm => '保持节奏';
+
+  @override
+  String get homePlanTaskWeekAchievedDays => '本周达标天数 ≥ 5 天';
+
+  @override
+  String get noteColorLightBlue => '浅蓝色';
+
+  @override
+  String get noteColorRed => '红色';
+
+  @override
+  String get noteColorGreen => '绿色';
+
+  @override
+  String get noteColorPurple => '紫色';
+
+  @override
+  String get noteColorGold => '金色';
+
+  @override
+  String get noteColorOrange => '橙色';
+
+  @override
+  String get noteColorYellow => '黄色';
+
+  @override
+  String get noteColorDarkGreen => '深绿色';
+
+  @override
+  String get noteColorCustom => '自定义';
+
+  @override
+  String noteShareBookHeader(String title, String author) {
+    return '📖 《$title》- $author';
+  }
+
+  @override
+  String noteShareNoteLabel(String note) {
+    return '💭 笔记：$note';
+  }
+
+  @override
+  String noteShareChapterLabel(String chapter) {
+    return '📍 $chapter';
+  }
+
+  @override
+  String noteSharePageLabel(int page) {
+    return '📄 第$page页';
+  }
+
+  @override
+  String noteShareHashtags(String type) {
+    return '#读书笔记 #$type';
+  }
+
+  @override
+  String get accentPurple => '优雅紫';
+
+  @override
+  String get accentPink => '樱花粉';
+
+  @override
+  String get accentCyan => '清新青';
+
+  @override
+  String get accentBrown => '古典棕';
+
+  @override
+  String get accentGrey => '优雅灰';
+
+  @override
+  String get accentDeepPurple => '魅力紫';
+
+  @override
+  String get accentAmber => '琥珀金';
+
+  @override
+  String get accentLightGreen => '生机绿';
+
+  @override
+  String get accentYellow => '阳光黄';
+
+  @override
+  String get accentNeutralGrey => '简约灰';
+
+  @override
+  String get accentIndigo => '深邃蓝';
+
+  @override
+  String get accentDeepOrange => '火焰橙';
+
+  @override
+  String get glassPresetClear => '清晰模式';
+
+  @override
+  String get glassPresetStandard => '标准模式';
+
+  @override
+  String get glassPresetDreamy => '朦胧模式';
+
+  @override
+  String get agreementV2HeroTitle => '把阅读，留在自己的设备里。';
+
+  @override
+  String get agreementV2HeroBody =>
+      '开元阅读是一款开源、跨平台、本地优先的电子书阅读工具。它提供阅读能力，但不提供、托管或审核你导入的书籍。';
+
+  @override
+  String get agreementV2LocalTitle => '本地优先';
+
+  @override
+  String get agreementV2LocalBody => '书籍、进度与笔记原则上保存在你的设备中，由你自行管理与备份。';
+
+  @override
+  String get agreementV2OpenSourceTitle => 'AGPL-3.0 开源';
+
+  @override
+  String get agreementV2OpenSourceBody =>
+      '源代码按 GNU AGPL v3.0 提供；软件按“原样”交付，不附带任何明示或默示担保。';
+
+  @override
+  String agreementV2VersionLabel(String version) {
+    return '条款版本 $version';
+  }
+
+  @override
+  String get agreementV2Title => '使用条款与隐私说明';
+
+  @override
+  String get agreementV2Subtitle => '使用前请完整阅读，重点条款已直接说明';
+
+  @override
+  String get agreementV2ImportantNotice =>
+      '特别提示：开元阅读官方版本不预装、不内置、不推荐任何第三方书源，也不运营、代理或托管书源内容。你导入的文件和主动添加的书源均由你自行选择；请仅访问和使用你有权使用的内容。';
+
+  @override
+  String get agreementV2SourceBoundaryTitle => '第三方书源责任边界';
+
+  @override
+  String get agreementV2SourceBoundaryPoint1 =>
+      '官方只提供开源阅读软件和 Open Reading Source Protocol，不提供书源地址或官方书源目录。';
+
+  @override
+  String get agreementV2SourceBoundaryPoint2 =>
+      '每个书源地址都必须由你主动输入添加；App 直接连接该独立第三方服务，不经过开发者内容服务器。';
+
+  @override
+  String get agreementV2SourceBoundaryPoint3 =>
+      '协议兼容只代表接口可连接，不代表内容合法或获得授权。书源运营者负责其内容，你负责添加前审查并合法使用。';
+
+  @override
+  String get agreementV2Section1Title => '协议范围与接受';
+
+  @override
+  String get agreementV2Section1Body =>
+      '本协议适用于你对开元阅读软件及其附带功能的下载、安装和使用。点击“同意并继续”即表示你已阅读、理解并同意本协议；如你不同意，请停止使用并退出应用。若你未达到所在地法律规定的独立同意年龄，应由监护人阅读并同意。';
+
+  @override
+  String get agreementV2Section2Title => '开源软件与许可';
+
+  @override
+  String get agreementV2Section2Body =>
+      '开源阅读后续版本按 GNU Affero General Public License v3.0 发布。你可以依许可证使用、复制、修改、分发或销售软件；分发修改版时必须按 AGPL-3.0 提供完整对应源代码，修改版通过网络向用户提供服务时也必须按许可证向这些用户提供对应源代码。v1.0.0 及更早版本已经获得的 MIT 授权继续有效且不会撤回。本协议不限制开源许可证已经授予的权利；第三方组件仍适用各自许可证。';
+
+  @override
+  String get agreementV2Section3Title => '用户内容与版权责任';
+
+  @override
+  String get agreementV2Section3Body =>
+      '“用户内容”包括你导入、下载、打开、转换、缓存、标注、朗读或以其他方式处理的书籍、文档、图片、元数据及链接。你须确保自己对用户内容拥有合法权利或已取得必要授权，并自行承担因内容引起的版权、商标、隐私、名誉、违法信息、恶意文件及其他争议或损失。软件和开发者不上传、出售、授权、背书或审核你的用户内容，也不因软件能够读取某种格式而表示该内容可以被合法使用。';
+
+  @override
+  String get agreementV2Section4Title => '禁止使用';
+
+  @override
+  String get agreementV2Section4Body =>
+      '你不得利用本软件侵犯知识产权或其他合法权益，不得传播违法、有害或恶意内容，不得绕过数字版权保护、访问控制或付费限制，不得攻击、干扰第三方系统，亦不得将本软件用于任何违反适用法律的活动。因你的使用行为导致的投诉、索赔、处罚或损失由你自行承担。';
+
+  @override
+  String get agreementV2Section5Title => '书源、链接与第三方服务';
+
+  @override
+  String get agreementV2Section5Body =>
+      '官方版本不预装、不分发、不推荐书源，也不运营官方书源目录。你添加的书源、网络接口、外部链接、在线内容、系统 TTS、AI 服务及其他第三方能力均由独立第三方提供和控制，与开发者不存在运营、代理、授权、背书或内容审核关系。书源运营者依法负责其提供的内容；你须在添加前审查来源、内容授权、隐私政策和使用条款，并对自己的访问、下载、缓存、传播及其他使用行为负责。在适用法律允许的最大范围内，开发者不对第三方内容、收费、数据处理、服务中断或侵权争议承担责任。';
+
+  @override
+  String get agreementV2Section6Title => '数据与隐私';
+
+  @override
+  String get agreementV2Section6Body =>
+      '本软件采用本地优先设计，书籍、阅读进度、笔记和设置通常保存在你的设备。除非你主动启用联网书源、封面搜索、AI、同步或其他联网功能，本软件不会为了提供本地阅读而主动将书籍正文发送给开发者。应用自动或手动检查更新时，会访问 GitHub 和官方站点 open.xxread.top，并发送平台、处理器架构、发布渠道等必要技术参数；服务器和网络服务会按正常通信处理你的 IP 地址与 User-Agent。你从官方站点下载安装包时，后台会记录版本、架构、下载时间、IP 和 User-Agent，用于下载次数统计、安全防护和故障排查；原始 IP 下载明细最多保留 30 天，之后删除，长期仅保留不含原始 IP 的汇总统计。上述更新请求不包含书籍正文、书架、笔记、账户或设备唯一标识；访问 GitHub 时还适用 GitHub 的隐私规则。启用其他联网功能时，相关查询、文本片段、设备网络信息或必要参数可能发送给你选择的第三方服务，具体以该服务规则为准。你应自行保护设备、访问密钥和备份；卸载、清理数据、设备故障或误操作可能导致数据永久丢失。';
+
+  @override
+  String get agreementV2Section7Title => 'AI 与自动化输出';
+
+  @override
+  String get agreementV2Section7Body =>
+      'AI 摘要、问答、翻译、推荐或其他自动生成结果可能不准确、不完整、过时或具有误导性，仅供辅助阅读，不构成法律、医疗、投资、学术或其他专业意见。你应独立核验后再使用，不应依赖其作出高风险决定。你提交给 AI 服务的内容还受对应服务商条款约束。';
+
+  @override
+  String get agreementV2Section8Title => '无担保声明';
+
+  @override
+  String get agreementV2Section8Body =>
+      '在适用法律允许的最大范围内，本软件及相关资料均按“原样”和“可用”状态提供，不作任何明示、默示或法定担保，包括但不限于适销性、特定用途适用性、权利完整、不侵权、准确性、兼容性、安全性、无错误、不中断或数据不丢失。开源贡献者没有义务提供维护、更新、技术支持或缺陷修复。';
+
+  @override
+  String get agreementV2Section9Title => '责任限制';
+
+  @override
+  String get agreementV2Section9Body =>
+      '在适用法律允许的最大范围内，开发者、版权人及贡献者不对因安装、使用或无法使用本软件，用户内容，第三方服务，数据丢失，设备异常，业务中断或安全事件产生的任何直接、间接、附带、特殊、惩罚性或后果性损失承担责任，无论该责任基于合同、侵权或其他理论。法律不得排除的责任不受本条排除，但应限制在法律允许的最低范围。';
+
+  @override
+  String get agreementV2Section10Title => '赔偿与责任承担';
+
+  @override
+  String get agreementV2Section10Body =>
+      '如因你的用户内容、违法使用、侵权行为、违反本协议或使用第三方服务，导致开发者、版权人或贡献者遭受第三方索赔、行政调查、处罚、损失或合理费用，你应在适用法律允许的范围内承担相应责任并使其免受损害。';
+
+  @override
+  String get agreementV2Section11Title => '变更、停止与适用规则';
+
+  @override
+  String get agreementV2Section11Body =>
+      '软件功能、项目维护状态和本协议可能因开源项目发展、法律变化或风险控制需要而调整。重大条款更新时，应用可要求你重新确认；不同意新条款的，你应停止使用。你可随时卸载软件。争议优先友好协商；在不影响你依法享有的强制性消费者权益前提下，适用开发者所在地法律并由有管辖权的法院处理。若部分条款无效，其余条款仍然有效。';
+
+  @override
+  String get agreementV2ConfirmLabel => '我已完整阅读并同意以上使用条款与隐私说明。';
+
+  @override
+  String get agreementV2SourceConfirmLabel =>
+      '我已知悉官方不提供任何书源；我添加的书源及其内容由独立第三方提供，我会自行确认授权并对自己的使用行为负责。';
+
+  @override
+  String get agreementV2ExitLabel => '不同意';
+
+  @override
+  String get agreementV2ContinueLabel => '同意并继续';
+
+  @override
+  String get agreementV2ExitDialogTitle => '不同意条款？';
+
+  @override
+  String get agreementV2ExitDialogBody => '你需要同意使用条款后才能继续使用开元阅读。若不同意，请退出应用。';
+
+  @override
+  String get agreementV2CancelLabel => '返回阅读';
+
+  @override
+  String get agreementV2ConfirmExitLabel => '确认退出';
+
+  @override
+  String get agreementV2SaveFailed => '无法保存同意状态，请稍后重试。';
 }
 
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).
@@ -5402,4 +5964,523 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get importScanning => '正在掃描檔案…';
+
+  @override
+  String get settingsAiApiKeyConfigured => 'API Key 已設定';
+
+  @override
+  String get settingsAiApiKeyTapToConfigure => '點擊完成設定';
+
+  @override
+  String get settingsAiAddModel => '新增模型';
+
+  @override
+  String settingsAiSwitchedToModel(String model) {
+    return '已切換到 $model';
+  }
+
+  @override
+  String get settingsAiFillBaseUrlAndApiKey => '請先填寫 Base URL 和 API Key';
+
+  @override
+  String get settingsAiEditModelTitle => '設定模型';
+
+  @override
+  String get settingsAiQuickCardSubtitle => '每張快捷卡片只綁定一個模型';
+
+  @override
+  String get settingsAiPresetModel => '預設模型';
+
+  @override
+  String get settingsAiBaseUrlLabel => 'Base URL';
+
+  @override
+  String get settingsAiApiKeyLabel => 'API Key';
+
+  @override
+  String get settingsAiModelNameLabel => '模型型號';
+
+  @override
+  String get settingsAiFetchModelsTooltip => '自動取得模型';
+
+  @override
+  String get settingsAiFetchModelsList => '自動取得模型列表';
+
+  @override
+  String get settingsAiSelectModel => '選擇一個模型';
+
+  @override
+  String get settingsAiTemperatureLabel => 'Temperature';
+
+  @override
+  String get settingsAiAddAndEnable => '新增並啟用';
+
+  @override
+  String get settingsAiModelMismatchClaude =>
+      'Claude 服務商的模型名通常應以 claude 開頭，請檢查 provider 和 model 是否匹配';
+
+  @override
+  String get settingsAiModelMismatchGemini =>
+      'Gemini 服務商的模型名通常應包含 gemini，請檢查 provider 和 model 是否匹配';
+
+  @override
+  String get settingsAiModelMismatchGlm =>
+      'GLM 服務商的模型名通常應以 glm 開頭，請檢查 provider 和 model 是否匹配';
+
+  @override
+  String get settingsAiModelMismatchMinimax =>
+      'MiniMax 服務商的模型名通常應包含 MiniMax，請檢查 provider 和 model 是否匹配';
+
+  @override
+  String get settingsAiModelListFormatUnrecognized => '模型列表返回格式無法識別';
+
+  @override
+  String get settingsAiNoModelsReturned => '服務端沒有返回可用模型列表';
+
+  @override
+  String get settingsAiNoModelsAvailable => '沒有取得到可用模型';
+
+  @override
+  String settingsAiFetchModelsFailed(String error) {
+    return '取得模型失敗：$error';
+  }
+
+  @override
+  String get readerAiEnterQuestionFirst => '請先輸入問題再發送';
+
+  @override
+  String get readerAiEmptyResponse => '模型返回為空，請重試';
+
+  @override
+  String readerAiRequestFailed(String error) {
+    return '請求失敗：$error';
+  }
+
+  @override
+  String get readerAiUnknownError => '未知錯誤';
+
+  @override
+  String readerAiEmptyResponseError(String endpoint) {
+    return '服務端返回為空，通常是 Base URL 設定錯誤、閘道沒有轉發到模型介面，或服務端提前斷開連線。\n請求位址：$endpoint';
+  }
+
+  @override
+  String readerAiInvalidJsonError(
+      String provider, String endpoint, String snippet) {
+    return '服務端返回的不是合法 JSON，目前介面可能與 $provider 設定不相容。\n請求位址：$endpoint\n返回片段：$snippet';
+  }
+
+  @override
+  String readerAiFailedReadBody(String status, String endpoint) {
+    return '請求失敗$status：無法讀取服務端返回的資料，通常是 Base URL 設定錯誤、介面返回空內容，或網路將回應截斷了。\n請求位址：$endpoint';
+  }
+
+  @override
+  String readerAiNetworkRequestFailed(
+      String status, String error, String endpoint) {
+    return '網路請求失敗$status：$error\n請求位址：$endpoint';
+  }
+
+  @override
+  String readerAiRequestFailedMinimaxHint(
+      String status, String text, String endpoint) {
+    return '請求失敗($status)：$text\n建議檢查：1) MiniMax 溫度需在 (0,1]；2) 模型名與介面是否匹配；3) 僅使用單條 system 指令。\n請求位址：$endpoint';
+  }
+
+  @override
+  String readerAiRequestFailedClaudeHint(
+      String status, String text, String endpoint) {
+    return '請求失敗($status)：$text\n提示：Claude 必須攜帶 anthropic-version 請求標頭。\n請求位址：$endpoint';
+  }
+
+  @override
+  String readerAiRequestFailedProviderMismatchHint(
+      String status, String text, String endpoint) {
+    return '請求失敗($status)：$text\n提示：請確認服務商與 API Key 對應，不可混用。\n請求位址：$endpoint';
+  }
+
+  @override
+  String readerAiRequestFailedGeneric(
+      String status, String text, String endpoint) {
+    return '請求失敗($status)：$text\n請求位址：$endpoint';
+  }
+
+  @override
+  String readerAiMockSelectionResponse(
+      String selectedText, String before, String after) {
+    return 'AI(模擬): 你選擇的內容是\"$selectedText\"。\n\n上文: $before\n下文: $after';
+  }
+
+  @override
+  String readerAiMockPageAnalysis(int chars) {
+    return 'AI(模擬): 本頁共 $chars 字，建議重點關注段落開頭與結尾處的論點。';
+  }
+
+  @override
+  String get readerAiMockGreeting => '你好';
+
+  @override
+  String readerAiMockChatResponse(String question, int chars) {
+    return 'AI(模擬): 你問的是「$question」。\n\n我已讀取目前頁（$chars 字），你可以繼續追問。';
+  }
+
+  @override
+  String get readerAiMemorySummaryHeading => '【本書記憶摘要】';
+
+  @override
+  String get readerAiReadingAdviceHeading => '【針對使用者的閱讀建議】';
+
+  @override
+  String get readerAiIndexedSnippetsHeading => '【索引命中片段】';
+
+  @override
+  String get readerAiLocalFallbackIntro => '目前未設定線上 AI Key，先基於本機記憶和索引給你一個答案：';
+
+  @override
+  String get readerAiRelatedContentHeading => '【相關內容】';
+
+  @override
+  String get readerAiNoRelatedContent => '【相關內容】暫未命中可用片段。';
+
+  @override
+  String get readerAiRelatedContentLocationHeading => '【相關內容定位】';
+
+  @override
+  String readerAiSnippetLocation(
+      String chapterId, int startOffset, int endOffset) {
+    return '- 位置：$chapterId ($startOffset-$endOffset)';
+  }
+
+  @override
+  String get readerAiReadingSuggestionHeading => '【建議怎麼讀】';
+
+  @override
+  String get readerAiNextStepHeading => '【下一步】';
+
+  @override
+  String get readerAiNextStepReadSnippet => '1) 先讀上面命中的片段。';
+
+  @override
+  String get readerAiNextStepAskFollowUp => '2) 用「為什麼/如何/例子」再追問一次，我會繼續按索引定位。';
+
+  @override
+  String get ttsSystemDefault => '系統預設';
+
+  @override
+  String get ttsUnavailable => '系統 TTS 不可用';
+
+  @override
+  String ttsUnsupportedLanguage(String language) {
+    return '系統不支援語言: $language';
+  }
+
+  @override
+  String get ttsCallFailed => '系統 TTS 呼叫失敗';
+
+  @override
+  String get importErrorSourceMissing => '來源檔案不存在';
+
+  @override
+  String get importErrorHashFailed => '無法校驗檔案內容';
+
+  @override
+  String get importErrorTargetNameExhausted => '無法為匯入檔案分配可用名稱';
+
+  @override
+  String get importErrorSourceNotMaterialized => '來源檔案尚未準備到本機';
+
+  @override
+  String get importErrorCopyVerificationFailed => '複製後的檔案與來源檔案不一致';
+
+  @override
+  String get importErrorFileTooLarge => '檔案超過 100 MB 匯入限制';
+
+  @override
+  String get importErrorSourcePrepareFailed => '無法準備匯入檔案';
+
+  @override
+  String get importErrorFailed => '書籍匯入失敗';
+
+  @override
+  String get importUnknownTitle => '不明標題';
+
+  @override
+  String get importUnknownAuthor => '不明作者';
+
+  @override
+  String get bookUntitled => '未命名';
+
+  @override
+  String get homePlanTaskCompleteDailyGoal => '完成今日目標';
+
+  @override
+  String homePlanTaskReadMinutes(int minutes) {
+    return '閱讀 $minutes 分鐘';
+  }
+
+  @override
+  String get homePlanTaskCompleteFocusReading => '完成專注閱讀';
+
+  @override
+  String homePlanTaskFocusSession(int minutes) {
+    return '至少 1 次 $minutes 分鐘專注工作階段';
+  }
+
+  @override
+  String get homePlanTaskKeepRhythm => '保持節奏';
+
+  @override
+  String get homePlanTaskWeekAchievedDays => '本週達標天數 ≥ 5 天';
+
+  @override
+  String get noteColorLightBlue => '淺藍色';
+
+  @override
+  String get noteColorRed => '紅色';
+
+  @override
+  String get noteColorGreen => '綠色';
+
+  @override
+  String get noteColorPurple => '紫色';
+
+  @override
+  String get noteColorGold => '金色';
+
+  @override
+  String get noteColorOrange => '橙色';
+
+  @override
+  String get noteColorYellow => '黃色';
+
+  @override
+  String get noteColorDarkGreen => '深綠色';
+
+  @override
+  String get noteColorCustom => '自訂';
+
+  @override
+  String noteShareBookHeader(String title, String author) {
+    return '📖 《$title》- $author';
+  }
+
+  @override
+  String noteShareNoteLabel(String note) {
+    return '💭 筆記：$note';
+  }
+
+  @override
+  String noteShareChapterLabel(String chapter) {
+    return '📍 $chapter';
+  }
+
+  @override
+  String noteSharePageLabel(int page) {
+    return '📄 第$page頁';
+  }
+
+  @override
+  String noteShareHashtags(String type) {
+    return '#讀書筆記 #$type';
+  }
+
+  @override
+  String get accentPurple => '優雅紫';
+
+  @override
+  String get accentPink => '櫻花粉';
+
+  @override
+  String get accentCyan => '清新青';
+
+  @override
+  String get accentBrown => '古典棕';
+
+  @override
+  String get accentGrey => '優雅灰';
+
+  @override
+  String get accentDeepPurple => '魅力紫';
+
+  @override
+  String get accentAmber => '琥珀金';
+
+  @override
+  String get accentLightGreen => '生機綠';
+
+  @override
+  String get accentYellow => '陽光黃';
+
+  @override
+  String get accentNeutralGrey => '簡約灰';
+
+  @override
+  String get accentIndigo => '深邃藍';
+
+  @override
+  String get accentDeepOrange => '火焰橙';
+
+  @override
+  String get glassPresetClear => '清晰模式';
+
+  @override
+  String get glassPresetStandard => '標準模式';
+
+  @override
+  String get glassPresetDreamy => '朦朧模式';
+
+  @override
+  String get agreementV2HeroTitle => '把閱讀，留在自己的裝置裡。';
+
+  @override
+  String get agreementV2HeroBody =>
+      '開元閱讀是一款開源、跨平台、本機優先的電子書閱讀工具。它提供閱讀能力，但不提供、代管或審核你匯入的書籍。';
+
+  @override
+  String get agreementV2LocalTitle => '本機優先';
+
+  @override
+  String get agreementV2LocalBody => '書籍、進度與筆記原則上儲存在你的裝置中，由你自行管理與備份。';
+
+  @override
+  String get agreementV2OpenSourceTitle => 'AGPL-3.0 開源';
+
+  @override
+  String get agreementV2OpenSourceBody =>
+      '原始碼依 GNU AGPL v3.0 提供；軟體按「原樣」交付，不附帶任何明示或默示擔保。';
+
+  @override
+  String agreementV2VersionLabel(String version) {
+    return '條款版本 $version';
+  }
+
+  @override
+  String get agreementV2Title => '使用條款與隱私說明';
+
+  @override
+  String get agreementV2Subtitle => '使用前請完整閱讀，重點條款已直接說明';
+
+  @override
+  String get agreementV2ImportantNotice =>
+      '特別提示：開元閱讀官方版本不預載、不內建、不推薦任何第三方書源，也不營運、代理或代管書源內容。你匯入的檔案和主動新增的書源均由你自行選擇；請僅存取和使用你有權使用的內容。';
+
+  @override
+  String get agreementV2SourceBoundaryTitle => '第三方書源責任邊界';
+
+  @override
+  String get agreementV2SourceBoundaryPoint1 =>
+      '官方只提供開源閱讀軟體和 Open Reading Source Protocol，不提供書源位址或官方書源目錄。';
+
+  @override
+  String get agreementV2SourceBoundaryPoint2 =>
+      '每個書源位址都必須由你主動輸入新增；App 直接連接該獨立第三方服務，不經過開發者內容伺服器。';
+
+  @override
+  String get agreementV2SourceBoundaryPoint3 =>
+      '協定相容只代表介面可以連接，不代表內容合法或已獲授權。書源營運者負責其內容，你負責新增前審查並合法使用。';
+
+  @override
+  String get agreementV2Section1Title => '協議範圍與接受';
+
+  @override
+  String get agreementV2Section1Body =>
+      '本協議適用於你對開元閱讀軟體及其附帶功能的下載、安裝和使用。點擊「同意並繼續」即表示你已閱讀、理解並同意本協議；如你不同意，請停止使用並離開應用程式。若你未達到所在地法律規定的獨立同意年齡，應由監護人閱讀並同意。';
+
+  @override
+  String get agreementV2Section2Title => '開源軟體與授權';
+
+  @override
+  String get agreementV2Section2Body =>
+      '開元閱讀後續版本依 GNU Affero General Public License v3.0 發布。你可以依授權條款使用、複製、修改、散布或銷售軟體；散布修改版時必須依 AGPL-3.0 提供完整對應原始碼，修改版透過網路向使用者提供服務時也必須依授權條款向這些使用者提供對應原始碼。v1.0.0 及更早版本已取得的 MIT 授權繼續有效且不會撤回。本協議不限制開源授權已授予的權利；第三方元件仍適用各自授權條款。';
+
+  @override
+  String get agreementV2Section3Title => '使用者內容與著作權責任';
+
+  @override
+  String get agreementV2Section3Body =>
+      '“使用者內容”包括你匯入、下載、開啟、轉換、快取、標註、朗讀或以其他方式處理的書籍、文件、圖片、詮釋資料及連結。你須確保自己對使用者內容擁有合法權利或已取得必要授權，並自行承擔因內容引起的著作權、商標、隱私、名譽、違法資訊、惡意檔案及其他爭議或損失。軟體和開發者不上傳、出售、授權、背書或審核你的使用者內容，也不因軟體能夠讀取某種格式而表示該內容可以被合法使用。';
+
+  @override
+  String get agreementV2Section4Title => '禁止使用';
+
+  @override
+  String get agreementV2Section4Body =>
+      '你不得利用本軟體侵犯智慧財產權或其他合法權益，不得散布違法、有害或惡意內容，不得繞過數位版權保護、存取控制或付費限制，不得攻擊、干擾第三方系統，亦不得將本軟體用於任何違反適用法律的活動。因你的使用行為導致的申訴、求償、處罰或損失由你自行承擔。';
+
+  @override
+  String get agreementV2Section5Title => '書源、連結與第三方服務';
+
+  @override
+  String get agreementV2Section5Body =>
+      '官方版本不預載、不散布、不推薦書源，也不營運官方書源目錄。你新增的書源、網路介面、外部連結、線上內容、系統 TTS、AI 服務及其他第三方能力均由獨立第三方提供和控制，與開發者不存在營運、代理、授權、背書或內容審核關係。書源營運者依法負責其提供的內容；你須在新增前審查來源、內容授權、隱私政策和使用條款，並對自己的存取、下載、快取、散布及其他使用行為負責。在適用法律允許的最大範圍內，開發者不對第三方內容、收費、資料處理、服務中斷或侵權爭議承擔責任。';
+
+  @override
+  String get agreementV2Section6Title => '資料與隱私';
+
+  @override
+  String get agreementV2Section6Body =>
+      '本軟體採用本機優先設計，書籍、閱讀進度、筆記和設定通常儲存在你的裝置。除非你主動啟用連網書源、封面搜尋、AI、同步或其他連網功能，本軟體不會為了提供本機閱讀而主動將書籍內文傳送給開發者。應用程式自動或手動檢查更新時，會存取 GitHub 和官方網站 open.xxread.top，並傳送平台、處理器架構、發布頻道等必要技術參數；伺服器和網路服務會依正常通訊處理你的 IP 位址與 User-Agent。你從官方網站下載安裝套件時，後台會記錄版本、架構、下載時間、IP 和 User-Agent，用於下載次數統計、安全防護和故障排除；原始 IP 下載明細最多保留 30 天，之後刪除，長期僅保留不含原始 IP 的彙總統計。上述更新請求不包含書籍內文、書庫、筆記、帳戶或裝置唯一識別碼；存取 GitHub 時亦適用 GitHub 的隱私規則。啟用其他連網功能時，相關查詢、文字片段、裝置網路資訊或必要參數可能傳送給你選擇的第三方服務，具體以該服務規則為準。你應自行保護裝置、存取金鑰和備份；解除安裝、清除資料、裝置故障或誤操作可能導致資料永久遺失。';
+
+  @override
+  String get agreementV2Section7Title => 'AI 與自動化輸出';
+
+  @override
+  String get agreementV2Section7Body =>
+      'AI 摘要、問答、翻譯、推薦或其他自動產生的結果可能不準確、不完整、過時或具有誤導性，僅供輔助閱讀，不構成法律、醫療、投資、學術或其他專業意見。你應獨立查核後再使用，不應依賴其作出高風險決定。你提交給 AI 服務的內容還受對應服務商條款約束。';
+
+  @override
+  String get agreementV2Section8Title => '無擔保聲明';
+
+  @override
+  String get agreementV2Section8Body =>
+      '在適用法律允許的最大範圍內，本軟體及相關資料均按「原樣」和「可用」狀態提供，不作任何明示、默示或法定擔保，包括但不限於適售性、特定用途適用性、權利完整、不侵權、準確性、相容性、安全性、無錯誤、不中斷或資料不遺失。開源貢獻者沒有義務提供維護、更新、技術支援或缺陷修復。';
+
+  @override
+  String get agreementV2Section9Title => '責任限制';
+
+  @override
+  String get agreementV2Section9Body =>
+      '在適用法律允許的最大範圍內，開發者、著作權人及貢獻者不對因安裝、使用或無法使用本軟體，使用者內容，第三方服務，資料遺失，裝置異常，業務中斷或安全事件產生的任何直接、間接、附帶、特殊、懲罰性或衍生性損失承擔責任，無論該責任基於契約、侵權或其他理論。法律不得排除的責任不受本條排除，但應限制在法律允許的最低範圍。';
+
+  @override
+  String get agreementV2Section10Title => '賠償與責任承擔';
+
+  @override
+  String get agreementV2Section10Body =>
+      '如因你的使用者內容、違法使用、侵權行為、違反本協議或使用第三方服務，導致開發者、著作權人或貢獻者遭受第三方求償、行政調查、處罰、損失或合理費用，你應在適用法律允許的範圍內承擔相應責任並使其免受損害。';
+
+  @override
+  String get agreementV2Section11Title => '變更、終止與適用規則';
+
+  @override
+  String get agreementV2Section11Body =>
+      '軟體功能、專案維護狀態和本協議可能因開源專案發展、法律變化或風險控制需要而調整。重大條款更新時，應用程式可要求你重新確認；不同意新條款的，你應停止使用。你可隨時解除安裝軟體。爭議優先友好協商；在不影響你依法享有的強制性消費者權益前提下，適用開發者所在地法律並由有管轄權的法院處理。若部分條款無效，其餘條款仍然有效。';
+
+  @override
+  String get agreementV2ConfirmLabel => '我已完整閱讀並同意以上使用條款與隱私說明。';
+
+  @override
+  String get agreementV2SourceConfirmLabel =>
+      '我已知悉官方不提供任何書源；我新增的書源及其內容由獨立第三方提供，我會自行確認授權並對自己的使用行為負責。';
+
+  @override
+  String get agreementV2ExitLabel => '不同意';
+
+  @override
+  String get agreementV2ContinueLabel => '同意並繼續';
+
+  @override
+  String get agreementV2ExitDialogTitle => '不同意條款？';
+
+  @override
+  String get agreementV2ExitDialogBody => '你需要同意使用條款後才能繼續使用開元閱讀。若不同意，請離開應用程式。';
+
+  @override
+  String get agreementV2CancelLabel => '返回閱讀';
+
+  @override
+  String get agreementV2ConfirmExitLabel => '確認離開';
+
+  @override
+  String get agreementV2SaveFailed => '無法儲存同意狀態，請稍後重試。';
 }

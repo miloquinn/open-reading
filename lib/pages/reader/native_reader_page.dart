@@ -3079,10 +3079,49 @@ Future<List<Map<String, dynamic>>> _parseEpubChapters(Uint8List bytes) async {
     }
   }
 
-  void append(List<EpubChapter>? chapters, [int depth = 0]) {
+  // epub.Chapters only covers files that have a navPoint in toc.ncx. Some
+  // EPUBs (e.g. color-plate pages exported without TOC entries) put extra
+  // XHTML files in the spine that never show up there, so building chapters
+  // from epub.Chapters alone silently drops those pages/images entirely.
+  // Walk the spine — the actual reading order — instead, and only borrow
+  // titles/depth from the NCX tree for files that happen to match one.
+  final titleByFile = <String, String>{};
+  final depthByFile = <String, int>{};
+  void indexNavChapters(List<EpubChapter>? chapters, [int depth = 0]) {
     if (chapters == null) return;
     for (final chapter in chapters) {
-      final document = html_parser.parse(chapter.HtmlContent ?? '');
+      final file = chapter.ContentFileName;
+      if (file != null) {
+        titleByFile[file] = chapter.Title ?? '';
+        depthByFile[file] = depth;
+      }
+      indexNavChapters(chapter.SubChapters, depth + 1);
+    }
+  }
+  indexNavChapters(epub.Chapters);
+
+  final manifestHrefById = <String, String>{};
+  for (final item in epub.Schema?.Package?.Manifest?.Items ?? const []) {
+    final id = item.Id;
+    final href = item.Href;
+    if (id != null && href != null) manifestHrefById[id] = href;
+  }
+
+  final htmlContent = epub.Content?.Html;
+  final spineFiles = <String>[];
+  for (final itemRef in epub.Schema?.Package?.Spine?.Items ?? const []) {
+    final href = manifestHrefById[itemRef.IdRef];
+    if (href == null) continue;
+    if (htmlContent == null || !htmlContent.containsKey(href)) continue;
+    spineFiles.add(href);
+  }
+
+  void append(List<String> files) {
+    for (final href in files) {
+      final decodedHref = Uri.decodeFull(href);
+      final title = titleByFile[decodedHref] ?? '';
+      final depth = depthByFile[decodedHref] ?? 0;
+      final document = html_parser.parse(htmlContent![href]?.Content ?? '');
       final blocks = <Map<String, String>>[];
       final plainText = StringBuffer();
       final elements = document.body?.querySelectorAll(
@@ -3184,18 +3223,17 @@ Future<List<Map<String, dynamic>>> _parseEpubChapters(Uint8List bytes) async {
       }
       if (plainText.isNotEmpty || blocks.isNotEmpty) {
         result.add(<String, dynamic>{
-          'id': chapter.ContentFileName ?? 'epub-${result.length}',
-          'title': chapter.Title ?? '',
+          'id': decodedHref,
+          'title': title,
           'depth': depth,
           'plainText': plainText.toString(),
           'blocks': blocks,
         });
       }
-      append(chapter.SubChapters, depth + 1);
     }
   }
 
-  append(epub.Chapters);
+  append(spineFiles);
   return result;
 }
 
