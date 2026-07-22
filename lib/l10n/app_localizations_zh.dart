@@ -1705,24 +1705,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsPageIntro => '只保留真正影响阅读体验的选项。';
 
   @override
-  String get settingsDeveloperProductsTitle => '开发者的其他产品';
-
-  @override
-  String get settingsXiaoyuanReadingTitle => '小元读书';
-
-  @override
-  String get settingsXiaoyuanReadingSubtitle => '面向用户的阅读产品，目前仅提供 iOS 版本';
-
-  @override
-  String get settingsXiaoyuanCommunityTitle => '小元读书社区';
-
-  @override
-  String get settingsXiaoyuanCommunitySubtitle => '阅读、创作与交流社区';
-
-  @override
-  String get settingsDeveloperProductOpenFailed => '无法打开产品网站';
-
-  @override
   String get settingsSupportDevelopmentTitle => '支持开发';
 
   @override
@@ -5254,24 +5236,6 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get settingsPageIntro => '只保留真正影響閱讀體驗的選項。';
-
-  @override
-  String get settingsDeveloperProductsTitle => '開發者的其他產品';
-
-  @override
-  String get settingsXiaoyuanReadingTitle => '小元读书';
-
-  @override
-  String get settingsXiaoyuanReadingSubtitle => '面向使用者的閱讀產品，目前僅提供 iOS 版本';
-
-  @override
-  String get settingsXiaoyuanCommunityTitle => '小元读书社区';
-
-  @override
-  String get settingsXiaoyuanCommunitySubtitle => '閱讀、創作與交流社群';
-
-  @override
-  String get settingsDeveloperProductOpenFailed => '無法開啟產品網站';
 
   @override
   String get settingsSupportDevelopmentTitle => '支持開發';

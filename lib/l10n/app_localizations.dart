@@ -3252,42 +3252,6 @@ abstract class AppLocalizations {
   /// **'Only the options that shape your reading experience.'**
   String get settingsPageIntro;
 
-  /// Section title for the developer's other products
-  ///
-  /// In en, this message translates to:
-  /// **'More from the developer'**
-  String get settingsDeveloperProductsTitle;
-
-  /// Brand name of the developer's iOS reading product
-  ///
-  /// In en, this message translates to:
-  /// **'小元读书'**
-  String get settingsXiaoyuanReadingTitle;
-
-  /// Description of the developer's iOS reading product
-  ///
-  /// In en, this message translates to:
-  /// **'A reader-focused product for end users, currently available on iOS only'**
-  String get settingsXiaoyuanReadingSubtitle;
-
-  /// Brand name of the developer's reading community
-  ///
-  /// In en, this message translates to:
-  /// **'小元读书社区'**
-  String get settingsXiaoyuanCommunityTitle;
-
-  /// Description of the developer's reading community
-  ///
-  /// In en, this message translates to:
-  /// **'A community for reading, writing, and conversation'**
-  String get settingsXiaoyuanCommunitySubtitle;
-
-  /// Toast shown when a promoted product website cannot be opened
-  ///
-  /// In en, this message translates to:
-  /// **'Could not open the product website'**
-  String get settingsDeveloperProductOpenFailed;
-
   /// Settings section title for voluntary donations
   ///
   /// In en, this message translates to:

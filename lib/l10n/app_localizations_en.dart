@@ -1782,27 +1782,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Only the options that shape your reading experience.';
 
   @override
-  String get settingsDeveloperProductsTitle => 'More from the developer';
-
-  @override
-  String get settingsXiaoyuanReadingTitle => '小元读书';
-
-  @override
-  String get settingsXiaoyuanReadingSubtitle =>
-      'A reader-focused product for end users, currently available on iOS only';
-
-  @override
-  String get settingsXiaoyuanCommunityTitle => '小元读书社区';
-
-  @override
-  String get settingsXiaoyuanCommunitySubtitle =>
-      'A community for reading, writing, and conversation';
-
-  @override
-  String get settingsDeveloperProductOpenFailed =>
-      'Could not open the product website';
-
-  @override
   String get settingsSupportDevelopmentTitle => 'Support development';
 
   @override

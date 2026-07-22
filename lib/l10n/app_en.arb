@@ -1950,30 +1950,6 @@
   "@settingsPageIntro": {
     "description": "Subtitle under the settings page title"
   },
-  "settingsDeveloperProductsTitle": "More from the developer",
-  "@settingsDeveloperProductsTitle": {
-    "description": "Section title for the developer's other products"
-  },
-  "settingsXiaoyuanReadingTitle": "小元读书",
-  "@settingsXiaoyuanReadingTitle": {
-    "description": "Brand name of the developer's iOS reading product"
-  },
-  "settingsXiaoyuanReadingSubtitle": "A reader-focused product for end users, currently available on iOS only",
-  "@settingsXiaoyuanReadingSubtitle": {
-    "description": "Description of the developer's iOS reading product"
-  },
-  "settingsXiaoyuanCommunityTitle": "小元读书社区",
-  "@settingsXiaoyuanCommunityTitle": {
-    "description": "Brand name of the developer's reading community"
-  },
-  "settingsXiaoyuanCommunitySubtitle": "A community for reading, writing, and conversation",
-  "@settingsXiaoyuanCommunitySubtitle": {
-    "description": "Description of the developer's reading community"
-  },
-  "settingsDeveloperProductOpenFailed": "Could not open the product website",
-  "@settingsDeveloperProductOpenFailed": {
-    "description": "Toast shown when a promoted product website cannot be opened"
-  },
   "settingsSupportDevelopmentTitle": "Support development",
   "@settingsSupportDevelopmentTitle": {
     "description": "Settings section title for voluntary donations"
