@@ -1,7 +1,7 @@
 # Open Reading 项目结构
 
 > 最后更新：2026-07-22
-> 当前版本：2.2.8
+> 当前版本：2.2.9
 > 本文记录稳定的项目结构、模块边界和核心数据结构，不罗列每个实现细节。
 
 ## 维护规则
@@ -183,7 +183,7 @@ lib/
 - `core/reader/reader_text_pagination.dart`：本地文件与在线书源唯一的文字章节分页入口和 `ReaderTextPage` 页面模型；统一 canonical/display offset、首行缩进、段落间距、独占章节标题页、首屏特殊高度和 760px 单 leaf 内容宽度上限。书源兼容包装不再拥有独立分页算法。
 - `core/reader/reader_text_characters.dart`：TXT、EPUB、HTML/HTM/XHTML、Markdown、FB2、RTF、DOCX 与在线书源共享的硬换行和段首空白规则；覆盖 CR/LF、VT、FF、NEL、Unicode line/paragraph separator，以及常见 Unicode 空格和 BOM，保证各适配器与 Flutter 排版对段落起点的判断一致。
 - `core/reader/txt_chapter_parser.dart`：TXT 章节识别与标题/正文边界的单一实现；识别出的标题独立存储，正文范围跳过标题行和相邻空行，并输出 `isNeedSplitTitle` 供分页模式插入章节标题页。小文件解析缓存和大文件 UTF-8 索引共用该边界结果。
-- `core/reader/reader_text_layout.dart`：把首行缩进和段落间距投影成显示文字，并维护显示 UTF-16 boundary 到原文 boundary 的单调映射，保证书签和阅读进度仍使用 canonical offset；所有可重排文本格式使用同一段首识别，EPUB 解析器生成的连续段落换行只在显示层归一化，不改写规范文本。
+- `core/reader/reader_text_layout.dart`：把首行缩进和段落间距投影成显示文字，并维护显示 UTF-16 boundary 到原文 boundary 的单调映射，保证书签和阅读进度仍使用 canonical offset；所有可重排文本格式使用同一段首识别，既有半角/全角空白统一替换为设置宽度。视觉缩进使用字形为空、Unicode 分类为宽字符而非空白的 Hangul Filler，避免 Flutter/SkParagraph 在两端对齐的长段落首行裁掉前导空白。EPUB 解析器生成的连续段落换行只在显示层归一化，不改写规范文本。
 - `core/reader/reader_page_turn_geometry.dart`：经典折页使用“局部装订始终为 x=0”的 leaf canonical 坐标；`bindingEdge` 只负责左右 leaf 的坐标换算，翻页方向不再移动书脊。几何显式区分 outgoing（当前页卷走）与 incoming（上一页展开）两种运动；手机 backward 按起手后的位移驱动折线，固定起手高度参与对角斜率，纵向移动会实时改变折痕。提交时双轴弹簧吸附到精确的 x=0 / x=width 竖直端点，使 shader 的透明/identity 终态分支稳定命中。
 - `core/reader/reader_leaf_status.dart`：分钟级时间、电量状态；Android/iOS 通过 `com.niki.xxread/reader_status` method channel 读取电量。分页模式选用阅读信息栏时，状态 revision 会参与纸页快照更新；上下翻页则由固定视口信息栏直接消费。
 - `core/reader/reader_safe_area.dart`：系统安全区、阅读信息栏预留、正文边距和页码位置。

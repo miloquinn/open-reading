@@ -2,21 +2,29 @@
     "schemaVersion":  1,
     "entries":  [
                     {
-                        "version":  "2.2.8",
+                        "version":  "2.2.9",
                         "notes":  {
                                       "en":  [
+                                                 "Fixed first-line indentation disappearing when justified long paragraphs wrap",
+                                                 "Applied the configured indent to quoted paragraphs and paragraphs with existing leading spaces across all reflowable formats",
                                                  "Restored automatic Android system-installer launch after an official-site APK finishes downloading",
                                                  "Kept the verified completion notification as a retry path when the installer request is dismissed or the app is backgrounded"
                                              ],
                                       "zh":  [
+                                                 "修复两端对齐长段落自动换行时首行缩进消失的问题",
+                                                 "引号开头及原文带空格的段落统一按阅读设置缩进，并覆盖全部可重排格式",
                                                  "修复 Android 从官网下载 APK 完成后不会自动拉起系统安装器的问题",
                                                  "保留已校验下载完成通知，在安装请求被忽略或应用退到后台时可以重试"
                                              ],
                                       "zh-TW":  [
+                                                    "修正左右對齊長段落自動換行時首行縮排消失的問題",
+                                                    "引號開頭及原文帶空格的段落統一依閱讀設定縮排，並涵蓋全部可重排格式",
                                                     "修正 Android 從官方網站下載 APK 完成後不會自動開啟系統安裝程式的問題",
                                                     "保留已驗證的下載完成通知，在安裝要求被忽略或應用程式退到背景時可以重試"
                                                 ],
                                       "ja":  [
+                                                 "両端揃えの長い段落が折り返すと先頭行の字下げが消える問題を修正しました",
+                                                 "引用符で始まる段落や先頭に空白がある段落にも、すべてのリフロー可能な形式で読書設定の字下げを適用しました",
                                                  "公式サイトから APK のダウンロードが完了した後に Android のシステムインストーラーが自動で開かれない問題を修正しました",
                                                  "インストーラーの要求を閉じた場合やアプリをバックグラウンドに移した場合に再試行できるよう、検証済み完了通知を残しました"
                                              ]

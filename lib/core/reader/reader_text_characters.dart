@@ -53,4 +53,5 @@ bool isReaderIndentCodeUnit(int codeUnit) =>
     codeUnit == 0x202F || // narrow no-break space
     codeUnit == 0x205F || // mathematical space
     codeUnit == 0x3000 || // ideographic space
+    codeUnit == 0x3164 || // hangul filler (non-trimmable visual indent)
     codeUnit == 0xFEFF; // BOM / zero-width no-break space

@@ -9,7 +9,10 @@ void main() {
     const source = '\u3000\u3000第一段\n第二段';
     final layout = ReaderTextLayout.build(source, firstLineIndent: 2);
 
-    expect(layout.text, '\u3000\u3000第一段\n\u3000\u3000第二段');
+    expect(
+      layout.text,
+      '\u3164\u3164第一段\n\u3164\u3164第二段',
+    );
     expect(layout.sourceOffsetForDisplayOffset(0), 0);
     expect(
       layout.sourceOffsetForDisplayOffset(layout.text.length),
@@ -36,14 +39,62 @@ void main() {
 
     expect(
       layout.text,
-      '\u3000\u3000第一段\u2028'
-      '\u3000\u3000第二段\u2029'
-      '\u3000\u3000第三段\u0085'
-      '\u3000\u3000第四段\u000b'
-      '\u3000\u3000第五段',
+      '\u3164\u3164第一段\u2028'
+      '\u3164\u3164第二段\u2029'
+      '\u3164\u3164第三段\u0085'
+      '\u3164\u3164第四段\u000b'
+      '\u3164\u3164第五段',
     );
     expect(
         layout.sourceOffsetForDisplayOffset(layout.text.length), source.length);
+  });
+
+  test('indents quoted paragraphs and replaces a single leading space', () {
+    const source = '“中文引号段落”\n "English quote"\n　普通段落';
+    final layout = ReaderTextLayout.build(source, firstLineIndent: 2);
+
+    expect(
+      layout.text,
+      '\u3164\u3164“中文引号段落”\n'
+      '\u3164\u3164"English quote"\n'
+      '\u3164\u3164普通段落',
+    );
+    expect(
+      layout.sourceOffsetForDisplayOffset(layout.text.length),
+      source.length,
+    );
+  });
+
+  testWidgets('justified wrapped paragraphs retain their first-line indent',
+      (tester) async {
+    const source = '“这是一个需要自动换行的长段落，用于确认两端对齐时首行缩进不会被排版引擎裁掉。”';
+    const style = TextStyle(fontSize: 20);
+    final layout = ReaderTextLayout.build(source, firstLineIndent: 2);
+    final painter = TextPainter(
+      text: layout.buildSpan(
+        0,
+        layout.text.length,
+        sourceSpanBuilder: (sourceStart, sourceEnd) => TextSpan(
+          text: source.substring(sourceStart, sourceEnd),
+          style: style,
+        ),
+        generatedStyle: style,
+      ),
+      textAlign: TextAlign.justify,
+      textDirection: TextDirection.ltr,
+    )..layout(maxWidth: 180);
+    final firstVisibleOffset = layout.text.indexOf('“');
+    final firstGlyphBoxes = painter.getBoxesForSelection(
+      TextSelection(
+        baseOffset: firstVisibleOffset,
+        extentOffset: firstVisibleOffset + 1,
+      ),
+    );
+
+    expect(painter.computeLineMetrics().length, greaterThan(1));
+    expect(firstGlyphBoxes, isNotEmpty);
+    expect(firstGlyphBoxes.first.left, greaterThanOrEqualTo(39));
+    painter.dispose();
   });
 
   test('normalizes EPUB paragraph breaks without changing source offsets', () {

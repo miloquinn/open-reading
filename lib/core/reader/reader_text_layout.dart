@@ -8,6 +8,11 @@ typedef ReaderSourceSpanBuilder = InlineSpan Function(
   int sourceEnd,
 );
 
+// SkParagraph discards leading whitespace when a justified paragraph wraps.
+// HANGUL FILLER is visually blank and full-width, but Unicode classifies it as
+// a letter, so Android and desktop paragraph engines cannot trim it as space.
+const _readerIndentCharacter = '\u3164';
+
 /// A display-only typography projection of canonical reader text.
 ///
 /// First-line indentation and paragraph spacing add or replace visual code
@@ -104,7 +109,7 @@ class ReaderTextLayout {
         if (sourceCursor < sourceText.length &&
             !isReaderLineBreakCodeUnit(sourceText.codeUnitAt(sourceCursor))) {
           appendGenerated(
-            List.filled(indent, '\u3000').join(),
+            List.filled(indent, _readerIndentCharacter).join(),
             replacedSourceStart: existingIndentStart,
             replacedSourceEnd: sourceCursor,
           );
