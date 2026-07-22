@@ -35,6 +35,7 @@ class BackgroundDownloadBridge(
             "progress" -> updateTask(call, result, DownloadNotificationAction.PROGRESS)
             "complete" -> updateTask(call, result, DownloadNotificationAction.COMPLETE)
             "fail" -> updateTask(call, result, DownloadNotificationAction.FAIL)
+            "cancel" -> updateTask(call, result, DownloadNotificationAction.CANCEL)
             "consumeNotificationTap" -> {
                 result.success(pendingTap)
                 pendingTap = null

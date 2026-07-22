@@ -2050,7 +2050,6 @@ Widget _gridCoverArt(BuildContext context, Book book) {
   final isMaterial3Style =
       theme.extension<UiStyleThemeExtension>()?.isMaterial3Style ?? false;
   if (book.coverImagePath != null && book.coverImagePath!.isNotEmpty) {
-    final fit = Platform.isAndroid ? BoxFit.contain : BoxFit.cover;
     // 有封面图片时，直接显示真实的书籍封面
     // cacheWidth 限制解码分辨率：网格封面显示宽度不会超过 ~240 逻辑像素，
     // 全分辨率解码原图会占用大量内存并在滑动切页时造成掉帧。
@@ -2063,7 +2062,7 @@ Widget _gridCoverArt(BuildContext context, Book book) {
         color: scheme.surface.withValues(alpha: isMaterial3Style ? 0.2 : 0.12),
         child: Image.file(
           File(book.coverImagePath!),
-          fit: fit,
+          fit: LayoutHelper.coverOnlyGridFit,
           cacheWidth: cacheWidth,
           gaplessPlayback: true,
           errorBuilder: (context, error, stackTrace) {

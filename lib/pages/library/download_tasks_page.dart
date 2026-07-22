@@ -27,6 +27,8 @@ class DownloadTasksPage extends StatelessWidget {
                   DownloadTaskState.completed =>
                     context.l10n.downloadTaskCompleted,
                   DownloadTaskState.failed => context.l10n.downloadTaskFailed,
+                  DownloadTaskState.cancelled =>
+                    context.l10n.downloadTaskCancelled,
                 };
                 return ListTile(
                   contentPadding: const EdgeInsets.symmetric(vertical: 8),
@@ -37,6 +39,7 @@ class DownloadTasksPage extends StatelessWidget {
                         Icons.downloading_rounded,
                       DownloadTaskState.completed => Icons.check_circle_rounded,
                       DownloadTaskState.failed => Icons.error_outline_rounded,
+                      DownloadTaskState.cancelled => Icons.cancel_outlined,
                     },
                   ),
                   title: Text(task.book.title,
@@ -61,6 +64,16 @@ class DownloadTasksPage extends StatelessWidget {
                       ],
                     ],
                   ),
+                  trailing: task.state == DownloadTaskState.queued ||
+                          task.state == DownloadTaskState.downloading
+                      ? IconButton(
+                          tooltip: context.l10n.downloadTaskCancel,
+                          onPressed: () => context
+                              .read<DownloadTaskController>()
+                              .cancelTask(task.id),
+                          icon: const Icon(Icons.close_rounded),
+                        )
+                      : null,
                 );
               },
             ),
@@ -84,10 +97,14 @@ class BookDownloadTaskDialog extends StatelessWidget {
       DownloadTaskState.downloading => context.l10n.downloadTaskDownloading,
       DownloadTaskState.completed => context.l10n.downloadTaskCompleted,
       DownloadTaskState.failed => context.l10n.downloadTaskFailed,
+      DownloadTaskState.cancelled => context.l10n.downloadTaskCancelled,
       null => context.l10n.downloadTaskFailed,
     };
     return PopScope(
-      canPop: false,
+      canPop: task == null ||
+          task.state == DownloadTaskState.completed ||
+          task.state == DownloadTaskState.failed ||
+          task.state == DownloadTaskState.cancelled,
       child: AlertDialog(
         title: Text(context.l10n.bookSourceDownloading),
         content: Column(
@@ -111,6 +128,14 @@ class BookDownloadTaskDialog extends StatelessWidget {
           ],
         ),
         actions: [
+          if (task != null &&
+              (task.state == DownloadTaskState.queued ||
+                  task.state == DownloadTaskState.downloading))
+            TextButton(
+              onPressed: () =>
+                  context.read<DownloadTaskController>().cancelTask(task.id),
+              child: Text(context.l10n.downloadTaskCancel),
+            ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: Text(context.l10n.downloadContinueInBackground),

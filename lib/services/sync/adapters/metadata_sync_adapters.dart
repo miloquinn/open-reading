@@ -165,11 +165,7 @@ class BooksSyncAdapter extends _BaseAdapter {
           'storage_type': row['storage_type'],
           'source_id': row['source_id'],
           'source_book_id': row['source_book_id'],
-          if (file != null) 'file_available': true,
-          if (file != null) 'file_size': file['file_size'],
-          if (file != null) 'file_name': file['file_name'],
-          if (file != null) 'blob_sha256': file['blob_sha256'],
-          if (file != null) 'remote_path': file['remote_path'],
+          ...bookFileSyncPayload(file),
         },
         deleted: false,
         clock: clock,
@@ -192,6 +188,26 @@ class BooksSyncAdapter extends _BaseAdapter {
       whereArgs: [id],
     );
   }
+}
+
+Map<String, Object?> bookFileSyncPayload(Map<String, Object?>? file) {
+  if (file == null) return const {};
+  return {
+    'file_available': true,
+    'file_size': file['file_size'],
+    'file_name': file['file_name'],
+    'blob_sha256': file['blob_sha256'],
+    'remote_path': file['remote_path'],
+    if (file['cover_remote_path'] != null) 'cover_available': true,
+    if (file['cover_file_size'] != null)
+      'cover_file_size': file['cover_file_size'],
+    if (file['cover_file_name'] != null)
+      'cover_file_name': file['cover_file_name'],
+    if (file['cover_blob_sha256'] != null)
+      'cover_blob_sha256': file['cover_blob_sha256'],
+    if (file['cover_remote_path'] != null)
+      'cover_remote_path': file['cover_remote_path'],
+  };
 }
 
 class ProgressSyncAdapter extends _BaseAdapter {

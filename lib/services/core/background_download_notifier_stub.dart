@@ -57,4 +57,6 @@ class BackgroundDownloadNotifier {
   }) async {}
 
   static Future<void> fail(BackgroundDownloadTask task) async {}
+
+  static Future<void> cancel(BackgroundDownloadTask task) async {}
 }

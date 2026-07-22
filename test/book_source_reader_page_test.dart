@@ -25,6 +25,9 @@ void main() {
 
   testWidgets('loads source chapters and navigates to the next chapter',
       (tester) async {
+    SharedPreferences.setMockInitialValues({
+      ReaderSettingsStore.pageModeKey: BookSourcePageMode.verticalScroll.name,
+    });
     final source = RegisteredBookSource(
       id: 'example.source',
       name: 'Example',
@@ -153,7 +156,11 @@ void main() {
     );
     await _pumpUntilFound(
       tester,
-      find.byKey(const ValueKey('book-source-reader-surface')),
+      find.byKey(const ValueKey('source-slide:chapter-1')),
+    );
+    expect(
+      find.byKey(const ValueKey('book-source-vertical-reading-window')),
+      findsNothing,
     );
 
     await tester.tapAt(const Offset(400, 300));

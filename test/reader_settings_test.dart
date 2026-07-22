@@ -4,6 +4,14 @@ import 'package:xxread/core/reader/reader_layout.dart';
 import 'package:xxread/core/reader/reader_settings.dart';
 
 void main() {
+  test('defaults page turning to horizontal slide', () async {
+    SharedPreferences.setMockInitialValues({});
+
+    final settings = await const ReaderSettingsStore().load();
+
+    expect(settings.pageMode, ReaderPageMode.horizontalSlide);
+  });
+
   test('migrates legacy vertical spacing into shared independent margins',
       () async {
     SharedPreferences.setMockInitialValues({

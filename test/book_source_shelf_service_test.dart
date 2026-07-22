@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -5,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:xxread/book_sources/models/registered_book_source.dart';
 import 'package:xxread/book_sources/protocol/book_source_protocol.dart';
+import 'package:xxread/book_sources/services/book_download_cancellation.dart';
 import 'package:xxread/book_sources/services/book_source_client.dart';
 import 'package:xxread/book_sources/services/book_source_shelf_service.dart';
 import 'package:xxread/book_sources/services/source_cover_cache.dart';
@@ -69,6 +71,89 @@ void main() {
     expect(await File(downloaded.coverImagePath!).exists(), isTrue);
     final text = await File(downloaded.filePath).readAsString();
     expect(text.indexOf('正文0'), lessThan(text.indexOf('正文6')));
+  });
+
+  test('streams completed batches before the whole book finishes', () async {
+    final directory = await Directory.systemTemp.createTemp('source-stream-');
+    addTearDown(() => directory.delete(recursive: true));
+    final client = _StreamingDownloadClient();
+    final service = BookSourceShelfService(
+      bookDao: _MemoryBookDao(),
+      client: client,
+      downloadDirectory: directory,
+    );
+
+    final download = service.downloadToLocal(
+      source: _source,
+      book: _sourceBook,
+    );
+    await client.secondBatchStarted.future;
+
+    final booksDirectory = Directory('${directory.path}/books');
+    final partials = await booksDirectory
+        .list()
+        .where((entry) => entry.path.endsWith('.part'))
+        .toList();
+    expect(partials, hasLength(1));
+    final partialText = await File(partials.single.path).readAsString();
+    expect(partialText, contains('正文0'));
+    expect(partialText, contains('正文2'));
+    expect(partialText, isNot(contains('正文3')));
+    expect(
+      await booksDirectory
+          .list()
+          .where((entry) => entry.path.endsWith('.txt'))
+          .isEmpty,
+      isTrue,
+    );
+
+    client.releaseSecondBatch.complete();
+    final downloaded = await download;
+    expect(client.maxActive, lessThanOrEqualTo(3));
+    expect(await File(downloaded.filePath).exists(), isTrue);
+    expect(
+      await booksDirectory
+          .list()
+          .where((entry) => entry.path.endsWith('.part'))
+          .isEmpty,
+      isTrue,
+    );
+  });
+
+  test('removes the partial file when a streaming download is cancelled',
+      () async {
+    final directory = await Directory.systemTemp.createTemp('source-cancel-');
+    addTearDown(() => directory.delete(recursive: true));
+    final client = _StreamingDownloadClient();
+    final cancellation = BookDownloadCancellation();
+    final service = BookSourceShelfService(
+      bookDao: _MemoryBookDao(),
+      client: client,
+      downloadDirectory: directory,
+    );
+
+    final download = service.downloadToLocal(
+      source: _source,
+      book: _sourceBook,
+      cancellation: cancellation,
+    );
+    await client.secondBatchStarted.future;
+    cancellation.cancel();
+    client.releaseSecondBatch.complete();
+
+    await expectLater(
+      download,
+      throwsA(isA<BookDownloadCancelledException>()),
+    );
+    final booksDirectory = Directory('${directory.path}/books');
+    expect(
+      await booksDirectory
+          .list()
+          .where((entry) =>
+              entry.path.endsWith('.part') || entry.path.endsWith('.txt'))
+          .isEmpty,
+      isTrue,
+    );
   });
 
   test('persists a source-provided cover for offline shelf display', () async {
@@ -155,8 +240,9 @@ class _DownloadClient extends BookSourceClient {
   @override
   Future<List<BookSourceChapter>> getChaptersForDownload(
     RegisteredBookSource source,
-    String bookId,
-  ) async =>
+    String bookId, {
+    BookDownloadCancellation? cancellation,
+  }) async =>
       List.generate(
         7,
         (index) => BookSourceChapter(
@@ -171,6 +257,7 @@ class _DownloadClient extends BookSourceClient {
     RegisteredBookSource source, {
     required String bookId,
     required String chapterId,
+    BookDownloadCancellation? cancellation,
   }) async {
     active++;
     if (active > maxActive) maxActive = active;
@@ -184,5 +271,54 @@ class _DownloadClient extends BookSourceClient {
       content: '正文$index',
       contentType: 'text/plain',
     );
+  }
+}
+
+class _StreamingDownloadClient extends BookSourceClient {
+  final secondBatchStarted = Completer<void>();
+  final releaseSecondBatch = Completer<void>();
+  int active = 0;
+  int maxActive = 0;
+
+  @override
+  Future<List<BookSourceChapter>> getChaptersForDownload(
+    RegisteredBookSource source,
+    String bookId, {
+    BookDownloadCancellation? cancellation,
+  }) async =>
+      List.generate(
+        6,
+        (index) => BookSourceChapter(
+          id: 'chapter-$index',
+          title: '第${index + 1}章',
+          order: index,
+        ),
+      );
+
+  @override
+  Future<BookSourceChapterContent> getChapterContentForDownload(
+    RegisteredBookSource source, {
+    required String bookId,
+    required String chapterId,
+    BookDownloadCancellation? cancellation,
+  }) async {
+    active++;
+    if (active > maxActive) maxActive = active;
+    try {
+      final index = int.parse(chapterId.split('-').last);
+      if (index >= 3) {
+        if (!secondBatchStarted.isCompleted) secondBatchStarted.complete();
+        await releaseSecondBatch.future;
+      }
+      return BookSourceChapterContent(
+        bookId: bookId,
+        chapterId: chapterId,
+        title: '',
+        content: '正文$index',
+        contentType: 'text/plain',
+      );
+    } finally {
+      active--;
+    }
   }
 }

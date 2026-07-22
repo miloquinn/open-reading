@@ -129,6 +129,33 @@ void main() {
     expect(notesAdapter.applyCount, 0);
     expect(await store.cursorFor('future-device'), 1);
   });
+
+  test('book file payload exposes the content-addressed cover reference', () {
+    expect(
+      bookFileSyncPayload(const {
+        'file_size': 10,
+        'file_name': 'book.txt',
+        'blob_sha256': 'book-hash',
+        'remote_path': 'blobs/books/book-hash',
+        'cover_blob_sha256': 'cover-hash',
+        'cover_file_name': 'cover.img',
+        'cover_file_size': 5,
+        'cover_remote_path': 'blobs/covers/cover-hash',
+      }),
+      {
+        'file_available': true,
+        'file_size': 10,
+        'file_name': 'book.txt',
+        'blob_sha256': 'book-hash',
+        'remote_path': 'blobs/books/book-hash',
+        'cover_available': true,
+        'cover_blob_sha256': 'cover-hash',
+        'cover_file_name': 'cover.img',
+        'cover_file_size': 5,
+        'cover_remote_path': 'blobs/covers/cover-hash',
+      },
+    );
+  });
 }
 
 class _RecordingAdapter implements MetadataSyncAdapter {

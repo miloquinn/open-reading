@@ -12,6 +12,7 @@ class ReaderSettings {
   static const int defaultFirstLineIndent = 2;
   static const int defaultParagraphSpacing = 0;
   static const String defaultThemeId = 'day';
+  static const ReaderPageMode defaultPageMode = ReaderPageMode.horizontalSlide;
   static const bool defaultTabletTwoPageEnabled = true;
 
   const ReaderSettings({
@@ -100,7 +101,7 @@ class ReaderSettingsStore {
   const ReaderSettingsStore();
 
   Future<ReaderSettings> load({
-    required ReaderPageMode fallbackPageMode,
+    ReaderPageMode fallbackPageMode = ReaderSettings.defaultPageMode,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final storedTopMargin = prefs.getDouble(topMarginKey);

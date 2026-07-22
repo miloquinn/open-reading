@@ -39,10 +39,33 @@
     {
       "layers" : [
         {
-          "blend-mode" : "lighten",
-          "fill" : {
-            "solid" : "display-p3:0.61121,0.83160,0.90417,1.00000"
-          },
+          "blend-mode" : "normal",
+          "fill-specializations" : [
+            {
+              "value" : {
+                "solid" : "display-p3:0.86255,0.94702,0.95435,1.00000"
+              }
+            },
+            {
+              "appearance" : "dark",
+              "value" : {
+                "linear-gradient" : [
+                  "display-p3:0.98862,0.99255,0.99469,1.00000",
+                  "display-p3:0.86255,0.94702,0.95435,1.00000"
+                ],
+                "orientation" : {
+                  "start" : {
+                    "x" : 0.5,
+                    "y" : 1
+                  },
+                  "stop" : {
+                    "x" : 0.5,
+                    "y" : 0
+                  }
+                }
+              }
+            }
+          ],
           "image-name" : "gpt2-left-page.png",
           "name" : "gpt2-left-page",
           "opacity" : 1,

@@ -34,7 +34,9 @@ void main() {
 
   testWidgets('reading settings expose all four page turning modes',
       (tester) async {
-    SharedPreferences.setMockInitialValues({});
+    SharedPreferences.setMockInitialValues({
+      ReaderSettingsStore.pageModeKey: ReaderPageMode.verticalScroll.name,
+    });
     await tester.pumpWidget(_testApp());
     await _pumpUntilFound(tester, find.textContaining('测试正文'));
 
@@ -443,7 +445,9 @@ void main() {
 
   testWidgets('preloads the next chapter without revealing reader controls',
       (tester) async {
-    SharedPreferences.setMockInitialValues({});
+    SharedPreferences.setMockInitialValues({
+      ReaderSettingsStore.pageModeKey: ReaderPageMode.verticalScroll.name,
+    });
     final client = _TrackingPageModeClient();
     await tester.pumpWidget(_testApp(client: client));
     await _pumpUntilFound(tester, find.textContaining('测试正文'));

@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 
 import '../models/registered_book_source.dart';
 import '../protocol/book_source_protocol.dart';
+import 'book_download_cancellation.dart';
 import 'book_source_chapter_cache.dart';
 
 class DiscoveredBookSource {
@@ -74,20 +75,32 @@ class BookSourceClient {
     Uri uri, {
     int maxBytes = maxResponseBytes,
     Duration? receiveTimeout,
+    BookDownloadCancellation? cancellation,
   }) async {
     ensureSafeTarget(uri);
     final cancelToken = CancelToken();
-    final response = await _dio.getUri<Object?>(
-      uri,
-      options: Options(receiveTimeout: receiveTimeout),
-      cancelToken: cancelToken,
-      onReceiveProgress: (received, total) {
-        if (received > maxBytes || total > maxBytes) {
-          cancelToken.cancel('Response exceeds $maxBytes bytes.');
-        }
-      },
-    );
-    return response.data;
+    void cancelRequest() => cancelToken.cancel('Book download cancelled.');
+    cancellation?.throwIfCancelled();
+    cancellation?.addListener(cancelRequest);
+    try {
+      final response = await _dio.getUri<Object?>(
+        uri,
+        options: Options(receiveTimeout: receiveTimeout),
+        cancelToken: cancelToken,
+        onReceiveProgress: (received, total) {
+          if (received > maxBytes || total > maxBytes) {
+            cancelToken.cancel('Response exceeds $maxBytes bytes.');
+          }
+        },
+      );
+      cancellation?.throwIfCancelled();
+      return response.data;
+    } on DioException {
+      cancellation?.throwIfCancelled();
+      rethrow;
+    } finally {
+      cancellation?.removeListener(cancelRequest);
+    }
   }
 
   static Uri normalizeManifestUri(String input) {
@@ -277,8 +290,9 @@ class BookSourceClient {
 
   Future<List<BookSourceChapter>> getChaptersForDownload(
     RegisteredBookSource source,
-    String bookId,
-  ) {
+    String bookId, {
+    BookDownloadCancellation? cancellation,
+  }) {
     return _fetchAllChapters(
       _apiUri(
         source.apiBaseUrl,
@@ -287,6 +301,7 @@ class BookSourceClient {
       pageSize: _chapterPageSizeFor(source),
       maxBytes: maxDownloadResponseBytes,
       receiveTimeout: downloadReceiveTimeout,
+      cancellation: cancellation,
     );
   }
 
@@ -316,10 +331,12 @@ class BookSourceClient {
     required int pageSize,
     required int maxBytes,
     required Duration? receiveTimeout,
+    BookDownloadCancellation? cancellation,
   }) async {
     final maxPages = (_maxChapters / pageSize).ceil();
     final chapters = <BookSourceChapter>[];
     for (var page = 1; page <= maxPages; page++) {
+      cancellation?.throwIfCancelled();
       final pageUri = uri.replace(
         queryParameters: {
           ...uri.queryParameters,
@@ -333,10 +350,11 @@ class BookSourceClient {
             pageUri,
             maxBytes: maxBytes,
             receiveTimeout: receiveTimeout,
+            cancellation: cancellation,
           ),
         );
         return BookSourceChapterPage.fromJson(json);
-      });
+      }, cancellation: cancellation);
       chapters.addAll(result.items);
       if (chapters.length >= _maxChapters) break;
       if (!result.hasMore || result.items.isEmpty) break;
@@ -377,8 +395,10 @@ class BookSourceClient {
     RegisteredBookSource source, {
     required String bookId,
     required String chapterId,
+    BookDownloadCancellation? cancellation,
   }) async {
-    return _chapterCache.getOrLoad(
+    cancellation?.throwIfCancelled();
+    final content = await _chapterCache.getOrLoad(
       sourceId: source.id,
       bookId: bookId,
       chapterId: chapterId,
@@ -395,12 +415,16 @@ class BookSourceClient {
                 uri,
                 maxBytes: maxDownloadResponseBytes,
                 receiveTimeout: downloadReceiveTimeout,
+                cancellation: cancellation,
               ),
             ),
           ),
+          cancellation: cancellation,
         );
       },
     );
+    cancellation?.throwIfCancelled();
+    return content;
   }
 
   Future<void> prefetchChapterContent(
@@ -424,8 +448,12 @@ class BookSourceClient {
   /// retry, so those fail immediately instead of wasting three attempts.
   /// A 429 with a `Retry-After` header is honored; otherwise attempts back
   /// off with increasing delay.
-  Future<T> _withRetries<T>(Future<T> Function() request) async {
+  Future<T> _withRetries<T>(
+    Future<T> Function() request, {
+    BookDownloadCancellation? cancellation,
+  }) async {
     for (var attempt = 1; attempt <= _maxRetryAttempts; attempt++) {
+      cancellation?.throwIfCancelled();
       try {
         return await request();
       } on DioException catch (error) {
@@ -435,7 +463,12 @@ class BookSourceClient {
             code: _sourceErrorCode(error),
           );
         }
-        await Future<void>.delayed(_retryDelay(error, attempt));
+        final delay = _retryDelay(error, attempt);
+        if (cancellation == null) {
+          await Future<void>.delayed(delay);
+        } else {
+          await cancellation.delay(delay);
+        }
       }
     }
     throw const BookSourceProtocolException('Source request failed.');

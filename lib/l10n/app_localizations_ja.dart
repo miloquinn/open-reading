@@ -1715,25 +1715,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsPageIntro => '読書体験に本当に影響する項目だけを残しています。';
 
   @override
-  String get settingsDeveloperProductsTitle => '開発者のその他のプロダクト';
-
-  @override
-  String get settingsXiaoyuanReadingTitle => '小元读书';
-
-  @override
-  String get settingsXiaoyuanReadingSubtitle =>
-      '読者向けの読書アプリです。現在は iOS 版のみ提供しています';
-
-  @override
-  String get settingsXiaoyuanCommunityTitle => '小元读书社区';
-
-  @override
-  String get settingsXiaoyuanCommunitySubtitle => '読書・創作・交流のためのコミュニティ';
-
-  @override
-  String get settingsDeveloperProductOpenFailed => '製品サイトを開けませんでした';
-
-  @override
   String get settingsSupportDevelopmentTitle => '開発を支援';
 
   @override
@@ -2430,6 +2411,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get downloadTaskFailed => 'ダウンロード失敗';
+
+  @override
+  String get downloadTaskCancelled => 'キャンセル済み';
+
+  @override
+  String get downloadTaskCancel => 'タスクをキャンセル';
 
   @override
   String get downloadContinueInBackground => 'バックグラウンドで続ける';

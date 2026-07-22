@@ -257,6 +257,11 @@ class RemoteBookDescriptor {
     this.fileName,
     this.sourceId,
     this.sourceBookId,
+    this.coverAvailable = false,
+    this.coverSizeBytes,
+    this.coverBlobSha256,
+    this.coverRemotePath,
+    this.coverFileName,
   });
 
   final String bookUid;
@@ -270,6 +275,11 @@ class RemoteBookDescriptor {
   final String? fileName;
   final String? sourceId;
   final String? sourceBookId;
+  final bool coverAvailable;
+  final int? coverSizeBytes;
+  final String? coverBlobSha256;
+  final String? coverRemotePath;
+  final String? coverFileName;
 }
 
 class BookFileTransferProgress {

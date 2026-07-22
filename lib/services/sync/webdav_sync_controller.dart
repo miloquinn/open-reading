@@ -312,6 +312,11 @@ class WebDavSyncController extends ChangeNotifier {
         fileName: payload['file_name'] as String?,
         sourceId: payload['source_id'] as String?,
         sourceBookId: payload['source_book_id'] as String?,
+        coverAvailable: payload['cover_available'] as bool? ?? false,
+        coverSizeBytes: (payload['cover_file_size'] as num?)?.toInt(),
+        coverBlobSha256: payload['cover_blob_sha256'] as String?,
+        coverRemotePath: payload['cover_remote_path'] as String?,
+        coverFileName: payload['cover_file_name'] as String?,
       );
     }).toList(growable: false);
   }

@@ -22,19 +22,30 @@ class WebDavBookFileService {
     WebDavClientFactory? clientFactory,
     BookFileImporter? importer,
     Future<Directory> Function()? temporaryDirectory,
+    Future<Directory> Function()? documentsDirectory,
+    Future<Database> Function()? database,
   })  : _configStore = configStore ?? SecureSyncConfigStore(),
         _databaseService = databaseService ?? DatabaseService(),
         _clientFactory = clientFactory ?? WebDavClient.standard,
         _importer = importer ?? BookImportService(),
-        _temporaryDirectory = temporaryDirectory ?? getTemporaryDirectory;
+        _temporaryDirectory = temporaryDirectory ?? getTemporaryDirectory,
+        _documentsDirectory =
+            documentsDirectory ?? getApplicationDocumentsDirectory,
+        _databaseProvider = database;
 
   static const int maxRecoverableFileBytes = 100 * 1024 * 1024;
+  static const int maxCoverFileBytes = 10 * 1024 * 1024;
 
   final SecureSyncConfigStore _configStore;
   final DatabaseService _databaseService;
   final WebDavClientFactory _clientFactory;
   final BookFileImporter _importer;
   final Future<Directory> Function() _temporaryDirectory;
+  final Future<Directory> Function() _documentsDirectory;
+  final Future<Database> Function()? _databaseProvider;
+
+  Future<Database> get _database =>
+      _databaseProvider?.call() ?? _databaseService.database;
 
   Future<RemoteBookDescriptor> upload(
     Book book, {
@@ -109,7 +120,8 @@ class WebDavBookFileService {
     final uid = await bookUidForMap(book.toMap());
     final fileName = path.basename(book.filePath);
     final remotePath = remoteSegments.join('/');
-    final db = await _databaseService.database;
+    final cover = await _uploadCover(client, book);
+    final db = await _database;
     await db.insert(
       'sync_book_files',
       {
@@ -119,6 +131,10 @@ class WebDavBookFileService {
         'file_name': fileName,
         'file_size': size,
         'remote_path': remotePath,
+        'cover_blob_sha256': cover?.sha256,
+        'cover_file_name': cover?.fileName,
+        'cover_file_size': cover?.sizeBytes,
+        'cover_remote_path': cover?.remotePath,
         'sync_enabled': 1,
         'updated_at': DateTime.now().toUtc().toIso8601String(),
       },
@@ -136,6 +152,11 @@ class WebDavBookFileService {
       fileName: fileName,
       sourceId: book.sourceId,
       sourceBookId: book.sourceBookId,
+      coverAvailable: cover != null,
+      coverSizeBytes: cover?.sizeBytes,
+      coverBlobSha256: cover?.sha256,
+      coverRemotePath: cover?.remotePath,
+      coverFileName: cover?.fileName,
     );
   }
 
@@ -172,6 +193,7 @@ class WebDavBookFileService {
         'open-reading-webdav-${DateTime.now().microsecondsSinceEpoch}-$safeFileName.part',
       ),
     );
+    File? coverPartial;
     try {
       await client.downloadFile(
         client.path(
@@ -202,6 +224,11 @@ class WebDavBookFileService {
           'The downloaded book checksum does not match its metadata.',
         );
       }
+      coverPartial = await _downloadCover(
+        client,
+        descriptor,
+        temporaryRoot,
+      );
       final extension = path.extension(safeFileName).replaceFirst('.', '');
       final result = await _importer.importFile(
         BookImportSource(
@@ -215,19 +242,42 @@ class WebDavBookFileService {
           sizeBytes: actualSize,
         ),
       );
-      final db = await _databaseService.database;
-      var restoredBook = result.book;
+      final restoredCoverPath = await _restoreCover(
+        result.book,
+        descriptor,
+        coverPartial,
+      );
+      final restoredTitle = descriptor.title.trim().isEmpty
+          ? result.book.title
+          : descriptor.title.trim();
+      final restoredAuthor = descriptor.author.trim().isEmpty
+          ? result.book.author
+          : descriptor.author.trim();
+      var restoredBook = result.book.copyWith(
+        title: restoredTitle,
+        author: restoredAuthor,
+        coverImagePath: restoredCoverPath,
+      );
+      final db = await _database;
+      final bookUpdates = <String, Object?>{
+        'title': restoredTitle,
+        'author': restoredAuthor,
+        if (restoredCoverPath != null) 'cover_image_path': restoredCoverPath,
+      };
       if (descriptor.sourceId != null && descriptor.sourceBookId != null) {
-        restoredBook = result.book.copyWith(
+        restoredBook = restoredBook.copyWith(
           sourceId: descriptor.sourceId,
           sourceBookId: descriptor.sourceBookId,
         );
+        bookUpdates.addAll({
+          'source_id': descriptor.sourceId,
+          'source_book_id': descriptor.sourceBookId,
+        });
+      }
+      if (restoredBook.id != null) {
         await db.update(
           'books',
-          {
-            'source_id': descriptor.sourceId,
-            'source_book_id': descriptor.sourceBookId,
-          },
+          bookUpdates,
           where: 'id = ?',
           whereArgs: [restoredBook.id],
         );
@@ -241,6 +291,10 @@ class WebDavBookFileService {
           'file_name': safeFileName,
           'file_size': actualSize,
           'remote_path': remotePath,
+          'cover_blob_sha256': descriptor.coverBlobSha256,
+          'cover_file_name': descriptor.coverFileName,
+          'cover_file_size': descriptor.coverSizeBytes,
+          'cover_remote_path': descriptor.coverRemotePath,
           'sync_enabled': 1,
           'updated_at': DateTime.now().toUtc().toIso8601String(),
         },
@@ -249,7 +303,136 @@ class WebDavBookFileService {
       return restoredBook;
     } finally {
       if (await partial.exists()) await partial.delete();
+      if (coverPartial != null && await coverPartial.exists()) {
+        await coverPartial.delete();
+      }
     }
+  }
+
+  Future<_RemoteCover?> _uploadCover(WebDavClient client, Book book) async {
+    final localPath = book.coverImagePath;
+    if (localPath == null || localPath.trim().isEmpty) return null;
+    final source = File(localPath);
+    if (!await source.exists()) return null;
+    final size = await source.length();
+    if (size <= 0 || size > maxCoverFileBytes) return null;
+    final hash = '${await sha256.bind(source.openRead()).first}';
+    final prefix = hash.substring(0, 2);
+    final remoteSegments = ['blobs', 'covers', 'sha256', prefix, hash];
+    final remoteUri = client.path(remoteSegments);
+    await client.ensureProtocolPath(
+      ['blobs', 'covers', 'sha256', prefix],
+    );
+    if (!await client.exists(remoteUri)) {
+      final temporary = client.path([
+        'blobs',
+        'covers',
+        'sha256',
+        prefix,
+        '.$hash.${DateTime.now().microsecondsSinceEpoch}.part',
+      ]);
+      try {
+        await client.putFile(temporary, source);
+        await client.move(temporary, remoteUri);
+      } finally {
+        try {
+          await client.delete(temporary);
+        } catch (_) {
+          // Cleanup must not hide the original cover upload result.
+        }
+      }
+    }
+    return _RemoteCover(
+      sha256: hash,
+      fileName: path.basename(source.path),
+      sizeBytes: size,
+      remotePath: remoteSegments.join('/'),
+    );
+  }
+
+  Future<File?> _downloadCover(
+    WebDavClient client,
+    RemoteBookDescriptor descriptor,
+    Directory temporaryRoot,
+  ) async {
+    if (!descriptor.coverAvailable) return null;
+    final remotePath = descriptor.coverRemotePath;
+    final expectedHash = descriptor.coverBlobSha256;
+    final fileName = descriptor.coverFileName;
+    final size = descriptor.coverSizeBytes;
+    if (remotePath == null ||
+        expectedHash == null ||
+        fileName == null ||
+        size == null ||
+        size <= 0 ||
+        size > maxCoverFileBytes) {
+      throw const WebDavSyncFailure(
+        WebDavSyncErrorCode.corruptRemoteData,
+        'The remote cover metadata is incomplete or invalid.',
+      );
+    }
+    final partial = File(
+      path.join(
+        temporaryRoot.path,
+        'open-reading-webdav-cover-${DateTime.now().microsecondsSinceEpoch}-${path.basename(fileName)}.part',
+      ),
+    );
+    try {
+      await client.downloadFile(
+        client.path(
+          remotePath
+              .split('/')
+              .where((segment) => segment.isNotEmpty)
+              .toList(growable: false),
+        ),
+        partial,
+      );
+      if (await partial.length() != size) {
+        throw const WebDavSyncFailure(
+          WebDavSyncErrorCode.corruptRemoteData,
+          'The downloaded cover size does not match its metadata.',
+        );
+      }
+      final actualHash = '${await sha256.bind(partial.openRead()).first}';
+      if (actualHash != expectedHash) {
+        throw const WebDavSyncFailure(
+          WebDavSyncErrorCode.corruptRemoteData,
+          'The downloaded cover checksum does not match its metadata.',
+        );
+      }
+      return partial;
+    } catch (_) {
+      if (await partial.exists()) await partial.delete();
+      rethrow;
+    }
+  }
+
+  Future<String?> _restoreCover(
+    Book imported,
+    RemoteBookDescriptor descriptor,
+    File? coverPartial,
+  ) async {
+    if (coverPartial == null) return imported.coverImagePath;
+    final existingPath = imported.coverImagePath;
+    late final File destination;
+    if (existingPath != null && existingPath.trim().isNotEmpty) {
+      destination = File(existingPath);
+    } else {
+      final documents = await _documentsDirectory();
+      final covers = Directory(path.join(documents.path, 'covers'));
+      await covers.create(recursive: true);
+      var extension = path.extension(descriptor.coverFileName ?? '');
+      if (extension.isEmpty || extension.length > 10) extension = '.img';
+      final hash = descriptor.coverBlobSha256 ??
+          sha256.convert(descriptor.bookUid.codeUnits).toString();
+      final shortHash = hash.substring(0, hash.length.clamp(0, 16));
+      destination = File(
+        path.join(covers.path, 'webdav-$shortHash$extension'),
+      );
+    }
+    await destination.parent.create(recursive: true);
+    await coverPartial.copy(destination.path);
+    return destination.path;
   }
 
   Future<StoredSyncCredentials> _credentials() async {
@@ -262,4 +445,18 @@ class WebDavBookFileService {
     }
     return credentials;
   }
+}
+
+class _RemoteCover {
+  const _RemoteCover({
+    required this.sha256,
+    required this.fileName,
+    required this.sizeBytes,
+    required this.remotePath,
+  });
+
+  final String sha256;
+  final String fileName;
+  final int sizeBytes;
+  final String remotePath;
 }

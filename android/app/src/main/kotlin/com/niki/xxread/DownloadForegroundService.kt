@@ -15,7 +15,7 @@ import androidx.core.content.ContextCompat
 import io.flutter.plugin.common.MethodCall
 import kotlin.math.abs
 
-enum class DownloadNotificationAction { BEGIN, PROGRESS, COMPLETE, FAIL }
+enum class DownloadNotificationAction { BEGIN, PROGRESS, COMPLETE, FAIL, CANCEL }
 
 data class DownloadNotificationTask(
     val id: String,
@@ -110,6 +110,11 @@ class DownloadForegroundService : Service() {
             DownloadNotificationAction.FAIL -> {
                 activeTasks.remove(task.id)
                 notificationManager().notify(notificationId(task.id), failureNotification(task))
+                startOrStopForeground()
+            }
+            DownloadNotificationAction.CANCEL -> {
+                activeTasks.remove(task.id)
+                notificationManager().cancel(notificationId(task.id))
                 startOrStopForeground()
             }
         }

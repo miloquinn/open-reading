@@ -34,7 +34,6 @@ import 'package:xxread/utils/system_ui_helper.dart';
 import 'package:xxread/utils/ui_style.dart';
 import 'package:xxread/widgets/app_brand_icon.dart';
 import 'package:xxread/widgets/contributors_view.dart';
-import 'package:xxread/widgets/developer_products_promotion.dart';
 import 'package:xxread/widgets/developer_support_card.dart';
 import 'package:xxread/widgets/reader_settings_controls.dart';
 import 'package:xxread/widgets/side_toast.dart';
@@ -1217,21 +1216,6 @@ class _SettingsPageState extends State<SettingsPage> {
                 value: _enableAutoSave,
                 onChanged: (value) => setState(() => _enableAutoSave = value),
                 icon: Icons.save_outlined,
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          _buildSectionCard(
-            title: l10n.settingsDeveloperProductsTitle,
-            icon: Icons.apps_rounded,
-            children: [
-              DeveloperProductsPromotion(
-                onOpenXiaoyuanReading: () => unawaited(
-                  _openDeveloperProduct('https://xxread.top/'),
-                ),
-                onOpenXiaoyuanCommunity: () => unawaited(
-                  _openDeveloperProduct('https://community.xxread.top/'),
-                ),
               ),
             ],
           ),
@@ -4303,21 +4287,6 @@ class _SettingsPageState extends State<SettingsPage> {
       showSideToast(
         context,
         context.l10n.settingsOfficialWebsiteOpenFailed,
-        icon: Icons.error_outline,
-        kind: SideToastKind.error,
-      );
-    }
-  }
-
-  Future<void> _openDeveloperProduct(String url) async {
-    final opened = await launchUrl(
-      Uri.parse(url),
-      mode: LaunchMode.externalApplication,
-    );
-    if (!opened && mounted) {
-      showSideToast(
-        context,
-        context.l10n.settingsDeveloperProductOpenFailed,
         icon: Icons.error_outline,
         kind: SideToastKind.error,
       );
