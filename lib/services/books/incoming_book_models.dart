@@ -60,13 +60,13 @@ class IncomingBookRequest {
       failureCount: rawFailures is List ? rawFailures.length : 0,
       items: rawItems is List
           ? rawItems
-              .whereType<Map>()
-              .map(
-                (row) => IncomingBookItem.fromMap(
-                  row.map((key, value) => MapEntry('$key', value)),
-                ),
-              )
-              .toList(growable: false)
+                .whereType<Map>()
+                .map(
+                  (row) => IncomingBookItem.fromMap(
+                    row.map((key, value) => MapEntry('$key', value)),
+                  ),
+                )
+                .toList(growable: false)
           : const [],
     );
   }

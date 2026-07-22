@@ -51,12 +51,11 @@ void showSideToast(
 }
 
 Duration _defaultDuration(SideToastKind kind) => switch (kind) {
-      SideToastKind.info ||
-      SideToastKind.success =>
-        const Duration(milliseconds: 2200),
-      SideToastKind.warning => const Duration(milliseconds: 2800),
-      SideToastKind.error => const Duration(milliseconds: 3400),
-    };
+  SideToastKind.info ||
+  SideToastKind.success => const Duration(milliseconds: 2200),
+  SideToastKind.warning => const Duration(milliseconds: 2800),
+  SideToastKind.error => const Duration(milliseconds: 3400),
+};
 
 class _SideToast extends StatefulWidget {
   final String message;
@@ -146,14 +145,16 @@ class _SideToastState extends State<_SideToast>
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final isMaterial3Style = Theme.of(context)
-            .extension<UiStyleThemeExtension>()
-            ?.isMaterial3Style ??
+    final isMaterial3Style =
+        Theme.of(
+          context,
+        ).extension<UiStyleThemeExtension>()?.isMaterial3Style ??
         false;
     final useBlur = !isMaterial3Style && !GlassEffectConfig.shouldDisableBlur;
     final mediaQuery = MediaQuery.of(context);
     final compact = mediaQuery.size.width < 700;
-    final background = widget.backgroundColor ??
+    final background =
+        widget.backgroundColor ??
         (isMaterial3Style
             ? scheme.surfaceContainerHigh
             : GlassEffectConfig.surfaceColor(context, opacity: 0.88));
@@ -164,7 +165,8 @@ class _SideToastState extends State<_SideToast>
       SideToastKind.warning => scheme.secondary,
       SideToastKind.error => scheme.error,
     };
-    final icon = widget.icon ??
+    final icon =
+        widget.icon ??
         switch (widget.kind) {
           SideToastKind.info => Icons.info_outline_rounded,
           SideToastKind.success => Icons.check_circle_outline_rounded,
@@ -176,14 +178,16 @@ class _SideToastState extends State<_SideToast>
         color: background,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color:
-              scheme.outline.withValues(alpha: isMaterial3Style ? 0.18 : 0.16),
+          color: scheme.outline.withValues(
+            alpha: isMaterial3Style ? 0.18 : 0.16,
+          ),
           width: 0.8,
         ),
         boxShadow: [
           BoxShadow(
-            color:
-                scheme.shadow.withValues(alpha: isMaterial3Style ? 0.08 : 0.16),
+            color: scheme.shadow.withValues(
+              alpha: isMaterial3Style ? 0.08 : 0.16,
+            ),
             blurRadius: isMaterial3Style ? 14 : 20,
             offset: const Offset(0, 8),
           ),
@@ -201,11 +205,7 @@ class _SideToastState extends State<_SideToast>
                 color: accent.withValues(alpha: isMaterial3Style ? 0.13 : 0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(
-                icon,
-                size: 16,
-                color: accent,
-              ),
+              child: Icon(icon, size: 16, color: accent),
             ),
             const SizedBox(width: 9),
             Flexible(
@@ -257,8 +257,10 @@ class _SideToastState extends State<_SideToast>
                           child: useBlur
                               ? BackdropFilter(
                                   enabled: useBlur,
-                                  filter:
-                                      ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                                  filter: ImageFilter.blur(
+                                    sigmaX: 12,
+                                    sigmaY: 12,
+                                  ),
                                   child: toastCard,
                                 )
                               : toastCard,

@@ -67,11 +67,11 @@ class ProgressiveBlur extends StatelessWidget {
                     Colors.transparent,
                     // 降低默认覆盖层不透明度，减少内容发灰
                     Theme.of(context).colorScheme.surface.withValues(
-                          alpha: GlassEffectConfig.effectiveOpacity(0.06),
-                        ),
+                      alpha: GlassEffectConfig.effectiveOpacity(0.06),
+                    ),
                     Theme.of(context).colorScheme.surface.withValues(
-                          alpha: GlassEffectConfig.effectiveOpacity(0.12),
-                        ),
+                      alpha: GlassEffectConfig.effectiveOpacity(0.12),
+                    ),
                   ],
             stops: stops ?? [0.0, 0.55, 1.0],
           ),
@@ -146,14 +146,12 @@ class ProgressiveBlurPresets {
                       colors: [
                         Colors.transparent,
                         // 明显降低覆盖层不透明度
-                        Theme.of(context)
-                            .colorScheme
-                            .surface
-                            .withValues(alpha: 0.04),
-                        Theme.of(context)
-                            .colorScheme
-                            .surface
-                            .withValues(alpha: 0.08),
+                        Theme.of(
+                          context,
+                        ).colorScheme.surface.withValues(alpha: 0.04),
+                        Theme.of(
+                          context,
+                        ).colorScheme.surface.withValues(alpha: 0.08),
                       ],
                       stops: const [0.0, 0.75, 1.0],
                     ),
@@ -194,22 +192,18 @@ class ProgressiveBlurPresets {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      Theme.of(context)
-                          .colorScheme
-                          .surface
-                          .withValues(alpha: 0.85),
-                      Theme.of(context)
-                          .colorScheme
-                          .surface
-                          .withValues(alpha: 0.65),
-                      Theme.of(context)
-                          .colorScheme
-                          .surface
-                          .withValues(alpha: 0.7),
-                      Theme.of(context)
-                          .colorScheme
-                          .surface
-                          .withValues(alpha: 0.9),
+                      Theme.of(
+                        context,
+                      ).colorScheme.surface.withValues(alpha: 0.85),
+                      Theme.of(
+                        context,
+                      ).colorScheme.surface.withValues(alpha: 0.65),
+                      Theme.of(
+                        context,
+                      ).colorScheme.surface.withValues(alpha: 0.7),
+                      Theme.of(
+                        context,
+                      ).colorScheme.surface.withValues(alpha: 0.9),
                     ],
                     stops: const [0.0, 0.3, 0.7, 1.0],
                   ),
@@ -283,7 +277,8 @@ class AdvancedProgressiveBlur extends StatelessWidget {
       filter: ImageFilter.blur(sigmaX: layer.blur, sigmaY: layer.blur),
       child: Container(
         decoration: BoxDecoration(
-          gradient: layer.gradient ??
+          gradient:
+              layer.gradient ??
               LinearGradient(colors: [Colors.transparent, layer.color]),
         ),
       ),

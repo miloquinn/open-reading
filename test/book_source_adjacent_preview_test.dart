@@ -11,13 +11,14 @@ import 'package:xxread/pages/reader/book_source_reader_page.dart';
 import 'package:xxread/widgets/reader_paper_page_leaf.dart';
 
 void main() {
-  testWidgets('previous-chapter slide preview renders the previous last page',
-      (tester) async {
+  testWidgets('previous-chapter slide preview renders the previous last page', (
+    tester,
+  ) async {
     SharedPreferences.setMockInitialValues({
       ReaderSettingsStore.pageModeKey: 'horizontalSlide',
       'book_source_reading_progress_v1:preview-source:preview-book':
           '{"chapterId":"chapter-2","chapterIndex":1,'
-              '"chapterProgress":0,"updatedAt":"2026-07-18T00:00:00.000Z"}',
+          '"chapterProgress":0,"updatedAt":"2026-07-18T00:00:00.000Z"}',
     });
 
     final client = _AdjacentPreviewClient();
@@ -83,13 +84,13 @@ void main() {
 }
 
 String _allText(WidgetTester tester) => <String>[
-      ...tester
-          .widgetList<Text>(find.byType(Text, skipOffstage: false))
-          .map((widget) => widget.data ?? widget.textSpan?.toPlainText() ?? ''),
-      ...tester
-          .widgetList<RichText>(find.byType(RichText, skipOffstage: false))
-          .map((widget) => widget.text.toPlainText()),
-    ].join('\n');
+  ...tester
+      .widgetList<Text>(find.byType(Text, skipOffstage: false))
+      .map((widget) => widget.data ?? widget.textSpan?.toPlainText() ?? ''),
+  ...tester
+      .widgetList<RichText>(find.byType(RichText, skipOffstage: false))
+      .map((widget) => widget.text.toPlainText()),
+].join('\n');
 
 Future<void> _pumpUntil(
   WidgetTester tester,
@@ -114,11 +115,10 @@ class _AdjacentPreviewClient extends BookSourceClient {
   Future<List<BookSourceChapter>> getChapters(
     RegisteredBookSource source,
     String bookId,
-  ) async =>
-      const [
-        BookSourceChapter(id: 'chapter-1', title: '上一章', order: 1),
-        BookSourceChapter(id: 'chapter-2', title: '当前章', order: 2),
-      ];
+  ) async => const [
+    BookSourceChapter(id: 'chapter-1', title: '上一章', order: 1),
+    BookSourceChapter(id: 'chapter-2', title: '当前章', order: 2),
+  ];
 
   @override
   Future<BookSourceChapterContent> getChapterContent(
@@ -129,14 +129,8 @@ class _AdjacentPreviewClient extends BookSourceClient {
     requestedChapterIds.add(chapterId);
     final isPrevious = chapterId == 'chapter-1';
     final content = isPrevious
-        ? '${List.generate(
-            120,
-            (index) => '上一章正文第$index段，用于确保章节被分成多页。',
-          ).join('\n')}\n$tailMarker'
-        : List.generate(
-            24,
-            (index) => '当前章节正文第$index段。',
-          ).join('\n');
+        ? '${List.generate(120, (index) => '上一章正文第$index段，用于确保章节被分成多页。').join('\n')}\n$tailMarker'
+        : List.generate(24, (index) => '当前章节正文第$index段。').join('\n');
     return BookSourceChapterContent(
       bookId: bookId,
       chapterId: chapterId,

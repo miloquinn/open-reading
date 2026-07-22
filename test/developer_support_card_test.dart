@@ -42,11 +42,10 @@ void main() {
 
     expect(find.text('微信捐赠'), findsWidgets);
     expect(
-        find.byKey(const ValueKey('wechat-donation-qr-image')), findsOneWidget);
-    expect(
-      find.text('捐赠完全自愿，不影响任何功能，也不构成购买或服务承诺。'),
+      find.byKey(const ValueKey('wechat-donation-qr-image')),
       findsOneWidget,
     );
+    expect(find.text('捐赠完全自愿，不影响任何功能，也不构成购买或服务承诺。'), findsOneWidget);
 
     await tester.tap(find.text('关闭'));
     await tester.pumpAndSettle();

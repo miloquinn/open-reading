@@ -20,9 +20,9 @@ class AndroidBookFolder {
   final bool permissionAvailable;
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'treeUri': treeUri,
-        'displayName': displayName,
-      };
+    'treeUri': treeUri,
+    'displayName': displayName,
+  };
 }
 
 class AndroidBookFolderRegistry {
@@ -30,9 +30,9 @@ class AndroidBookFolderRegistry {
     PlatformStorageBridge? bridge,
     BookImportSourceService? sourceService,
     Future<SharedPreferences> Function()? preferences,
-  })  : _bridge = bridge ?? PlatformStorageBridge(),
-        _sourceService = sourceService ?? BookImportSourceService(),
-        _preferences = preferences ?? SharedPreferences.getInstance;
+  }) : _bridge = bridge ?? PlatformStorageBridge(),
+       _sourceService = sourceService ?? BookImportSourceService(),
+       _preferences = preferences ?? SharedPreferences.getInstance;
 
   static const _metadataKey = 'android_book_folder_metadata_v1';
 
@@ -69,9 +69,8 @@ class AndroidBookFolderRegistry {
         )
         .toList();
     folders.sort(
-      (a, b) => a.displayName.toLowerCase().compareTo(
-            b.displayName.toLowerCase(),
-          ),
+      (a, b) =>
+          a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase()),
     );
     return folders;
   }

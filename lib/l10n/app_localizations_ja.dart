@@ -1531,7 +1531,11 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String readerStatusPaged(
-      int chapter, int chapterCount, int page, int pageCount) {
+    int chapter,
+    int chapterCount,
+    int page,
+    int pageCount,
+  ) {
     return '第 $chapter/$chapterCount 章 · $page/$pageCount ページ';
   }
 
@@ -2837,7 +2841,10 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String readerAiInvalidJsonError(
-      String provider, String endpoint, String snippet) {
+    String provider,
+    String endpoint,
+    String snippet,
+  ) {
     return 'サーバーの応答が有効な JSON ではありません。現在のエンドポイントは $provider 設定と互換性がない可能性があります。\nリクエスト URL：$endpoint\n応答断片：$snippet';
   }
 
@@ -2848,37 +2855,55 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String readerAiNetworkRequestFailed(
-      String status, String error, String endpoint) {
+    String status,
+    String error,
+    String endpoint,
+  ) {
     return 'ネットワークリクエスト失敗$status：$error\nリクエスト URL：$endpoint';
   }
 
   @override
   String readerAiRequestFailedMinimaxHint(
-      String status, String text, String endpoint) {
+    String status,
+    String text,
+    String endpoint,
+  ) {
     return 'リクエスト失敗($status)：$text\n確認事項：1) MiniMax の temperature は (0,1] の範囲；2) モデル名とエンドポイントが一致しているか；3) system 指令は1件のみ。\nリクエスト URL：$endpoint';
   }
 
   @override
   String readerAiRequestFailedClaudeHint(
-      String status, String text, String endpoint) {
+    String status,
+    String text,
+    String endpoint,
+  ) {
     return 'リクエスト失敗($status)：$text\nヒント：Claude には anthropic-version リクエストヘッダーが必要です。\nリクエスト URL：$endpoint';
   }
 
   @override
   String readerAiRequestFailedProviderMismatchHint(
-      String status, String text, String endpoint) {
+    String status,
+    String text,
+    String endpoint,
+  ) {
     return 'リクエスト失敗($status)：$text\nヒント：プロバイダーと API Key が一致しているか確認してください。混用はできません。\nリクエスト URL：$endpoint';
   }
 
   @override
   String readerAiRequestFailedGeneric(
-      String status, String text, String endpoint) {
+    String status,
+    String text,
+    String endpoint,
+  ) {
     return 'リクエスト失敗($status)：$text\nリクエスト URL：$endpoint';
   }
 
   @override
   String readerAiMockSelectionResponse(
-      String selectedText, String before, String after) {
+    String selectedText,
+    String before,
+    String after,
+  ) {
     return 'AI（モック）: 選択したテキストは「$selectedText」です。\n\n前文: $before\n後文: $after';
   }
 
@@ -2919,7 +2944,10 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String readerAiSnippetLocation(
-      String chapterId, int startOffset, int endOffset) {
+    String chapterId,
+    int startOffset,
+    int endOffset,
+  ) {
     return '- 位置：$chapterId ($startOffset-$endOffset)';
   }
 
@@ -3193,7 +3221,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get agreementV2Section6Body =>
-      '本ソフトウェアはローカルファースト設計であり、書籍・読書進捗・メモ・設定は通常あなたの端末に保存されます。ネットワークソース、カバー検索、AI、同期などのオンライン機能を有効にしない限り、ローカル読書のために書籍本文が開発者へ送信されることはありません。自動または手動で更新を確認すると、GitHub と公式サイト open.xxread.top に接続し、プラットフォーム、CPU アーキテクチャ、配信チャンネルなど必要な技術情報を送信します。通常のネットワーク通信として、サーバーは IP アドレスと User-Agent を処理します。公式サイトからインストールパッケージを取得する場合、ダウンロード回数の集計、セキュリティ対策、障害調査のため、バージョン、アーキテクチャ、時刻、IP、User-Agent を記録します。生の IP を含む明細は最長 30 日で削除し、その後は生の IP を含まない集計のみを保持します。これらの更新リクエストには、書籍本文、書庫、メモ、アカウント、端末固有 ID は含まれません。GitHub へのアクセスには同社のプライバシーポリシーも適用されます。その他のオンライン機能を有効にすると、関連するクエリ・テキスト断片・端末のネットワーク情報・必要なパラメーターが、あなたが選択したサードパーティサービスに送信される場合があり、詳細は当該サービスの規約に従います。端末・アクセスキー・バックアップはご自身で保護してください。アンインストール・データ消去・端末故障・誤操作によりデータが完全に失われる可能性があります。';
+      '本ソフトウェアはローカルファースト設計であり、書籍・読書進捗・メモ・設定は通常あなたの端末に保存されます。ネットワークソース、AI、同期などのオンライン機能を有効にしない限り、ローカル読書のために書籍本文が開発者へ送信されることはありません。自動または手動で更新を確認すると、GitHub と公式サイト open.xxread.top に接続し、プラットフォーム、CPU アーキテクチャ、配信チャンネルなど必要な技術情報を送信します。通常のネットワーク通信として、サーバーは IP アドレスと User-Agent を処理します。公式サイトからインストールパッケージを取得する場合、ダウンロード回数の集計、セキュリティ対策、障害調査のため、バージョン、アーキテクチャ、時刻、IP、User-Agent を記録します。生の IP を含む明細は最長 30 日で削除し、その後は生の IP を含まない集計のみを保持します。これらの更新リクエストには、書籍本文、書庫、メモ、アカウント、端末固有 ID は含まれません。GitHub へのアクセスには同社のプライバシーポリシーも適用されます。その他のオンライン機能を有効にすると、関連するクエリ・テキスト断片・端末のネットワーク情報・必要なパラメーターが、あなたが選択したサードパーティサービスに送信される場合があり、詳細は当該サービスの規約に従います。端末・アクセスキー・バックアップはご自身で保護してください。アンインストール・データ消去・端末故障・誤操作によりデータが完全に失われる可能性があります。';
 
   @override
   String get agreementV2Section7Title => 'AI と自動生成出力';

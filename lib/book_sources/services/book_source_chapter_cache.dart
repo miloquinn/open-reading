@@ -85,10 +85,7 @@ class BookSourceChapterCache {
     }
   }
 
-  Future<void> _writeDisk(
-    String key,
-    BookSourceChapterContent content,
-  ) async {
+  Future<void> _writeDisk(String key, BookSourceChapterContent content) async {
     try {
       final file = await _fileFor(key);
       await file.parent.create(recursive: true);
@@ -109,9 +106,7 @@ class BookSourceChapterCache {
 
   Future<File> _fileFor(String key) async {
     final temp = await getTemporaryDirectory();
-    return File(
-      path.join(temp.path, directoryName, '${_hash(key)}.json'),
-    );
+    return File(path.join(temp.path, directoryName, '${_hash(key)}.json'));
   }
 
   String _key(String sourceId, String bookId, String chapterId) =>

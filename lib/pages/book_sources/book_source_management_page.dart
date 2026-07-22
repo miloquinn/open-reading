@@ -88,9 +88,7 @@ class _BookSourceManagementPageState extends State<BookSourceManagementPage> {
                           Expanded(
                             child: Text(
                               context.l10n.bookSourcesManageTitle,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleLarge
+                              style: Theme.of(context).textTheme.titleLarge
                                   ?.copyWith(fontWeight: FontWeight.w800),
                             ),
                           ),
@@ -145,10 +143,7 @@ class _BookSourceManagementPageState extends State<BookSourceManagementPage> {
                 const SizedBox(height: 5),
                 Text(
                   context.l10n.bookSourcesNoSourcesDescription,
-                  style: TextStyle(
-                    color: scheme.onSurfaceVariant,
-                    height: 1.4,
-                  ),
+                  style: TextStyle(color: scheme.onSurfaceVariant, height: 1.4),
                 ),
               ],
             ),
@@ -286,9 +281,9 @@ class _BookSourceManagementPageState extends State<BookSourceManagementPage> {
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-                height: 1.2,
-              ),
+            fontWeight: FontWeight.w800,
+            height: 1.2,
+          ),
         ),
         const SizedBox(height: 5),
         Text(
@@ -361,10 +356,7 @@ class _BookSourceManagementPageState extends State<BookSourceManagementPage> {
     );
   }
 
-  Widget _buildSourceIcon(
-    RegisteredBookSource source, {
-    double size = 48,
-  }) {
+  Widget _buildSourceIcon(RegisteredBookSource source, {double size = 48}) {
     final scheme = Theme.of(context).colorScheme;
     final fallback = Container(
       width: size,
@@ -653,9 +645,8 @@ class _BookSourceManagementPageState extends State<BookSourceManagementPage> {
         responsibilityAccepted: responsibilityAccepted,
         errorText: errorText,
         sheet: sheet,
-        onResponsibilityChanged: (value) => setRouteState(
-          () => responsibilityAccepted = value,
-        ),
+        onResponsibilityChanged: (value) =>
+            setRouteState(() => responsibilityAccepted = value),
         onCancel: () => Navigator.pop(routeContext),
         onConnect: () => connect(routeContext, setRouteState),
       );
@@ -678,11 +669,7 @@ class _BookSourceManagementPageState extends State<BookSourceManagementPage> {
               constraints: BoxConstraints(
                 maxHeight: MediaQuery.sizeOf(context).height * 0.92,
               ),
-              child: buildPanel(
-                sheetContext,
-                setSheetState,
-                sheet: true,
-              ),
+              child: buildPanel(sheetContext, setSheetState, sheet: true),
             ),
           ),
         ),
@@ -695,11 +682,7 @@ class _BookSourceManagementPageState extends State<BookSourceManagementPage> {
           builder: (context, setDialogState) => Dialog(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 520, maxHeight: 720),
-              child: buildPanel(
-                dialogContext,
-                setDialogState,
-                sheet: false,
-              ),
+              child: buildPanel(dialogContext, setDialogState, sheet: false),
             ),
           ),
         ),
@@ -763,8 +746,9 @@ class _BookSourceManagementPageState extends State<BookSourceManagementPage> {
   }
 
   Future<void> _openRightsReport() async {
-    final opened =
-        await _openExternalUrl(Uri.parse(openReadingRightsReportUrl));
+    final opened = await _openExternalUrl(
+      Uri.parse(openReadingRightsReportUrl),
+    );
     if (!opened && mounted) {
       showSideToast(
         context,
@@ -846,11 +830,7 @@ class _AddBookSourcePanel extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    Icons.shield_outlined,
-                    size: 21,
-                    color: scheme.primary,
-                  ),
+                  Icon(Icons.shield_outlined, size: 21, color: scheme.primary),
                   const SizedBox(width: 11),
                   Expanded(
                     child: Text(

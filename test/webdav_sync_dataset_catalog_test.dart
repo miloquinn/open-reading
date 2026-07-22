@@ -24,9 +24,6 @@ void main() {
   test('supported datasets still follow the user scope', () {
     const scope = WebDavSyncScope(bookmarks: false);
     expect(SyncDatasetCatalog.isEnabled(SyncDataset.books, scope), isTrue);
-    expect(
-      SyncDatasetCatalog.isEnabled(SyncDataset.bookmarks, scope),
-      isFalse,
-    );
+    expect(SyncDatasetCatalog.isEnabled(SyncDataset.bookmarks, scope), isFalse);
   });
 }

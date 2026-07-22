@@ -403,10 +403,7 @@ extension _DetailedStatsOverviewView on _DetailedStatsPageState {
                     const SizedBox(height: 6),
                     Text(
                       context.l10n.statsMinutesOfTarget(minutes, minuteTarget),
-                      style: TextStyle(
-                        color: palette.mutedInk,
-                        fontSize: 13,
-                      ),
+                      style: TextStyle(color: palette.mutedInk, fontSize: 13),
                     ),
                   ],
                 ),
@@ -559,8 +556,9 @@ extension _DetailedStatsOverviewView on _DetailedStatsPageState {
       padding: EdgeInsets.only(bottom: isLast ? 0 : 15),
       margin: EdgeInsets.only(bottom: isLast ? 0 : 15),
       decoration: BoxDecoration(
-        border:
-            isLast ? null : Border(bottom: BorderSide(color: palette.border)),
+        border: isLast
+            ? null
+            : Border(bottom: BorderSide(color: palette.border)),
       ),
       child: Row(
         children: [

@@ -17,10 +17,10 @@ class WebDavSyncController extends ChangeNotifier {
     SyncEngine? engine,
     WebDavClientFactory? clientFactory,
     WebDavBookFileService? bookFileService,
-  })  : _configStore = configStore ?? SecureSyncConfigStore(),
-        _changeStore = changeStore ?? SyncChangeStore(),
-        _clientFactory = clientFactory ?? WebDavClient.standard,
-        _engine = engine {
+  }) : _configStore = configStore ?? SecureSyncConfigStore(),
+       _changeStore = changeStore ?? SyncChangeStore(),
+       _clientFactory = clientFactory ?? WebDavClient.standard,
+       _engine = engine {
     _bookFileService =
         bookFileService ?? WebDavBookFileService(configStore: _configStore);
   }
@@ -65,22 +65,23 @@ class WebDavSyncController extends ChangeNotifier {
 
   Future<void> initialize() async {
     _configuration = await _configStore.readConfiguration();
-    _scope = SyncDatasetCatalog.normalizeScope(
-      await _configStore.readScope(),
-    );
+    _scope = SyncDatasetCatalog.normalizeScope(await _configStore.readScope());
     _newBookUploadPolicy = await _configStore.readNewBookUploadPolicy();
     _pendingChanges = await _changeStore.pendingCount();
     final lastSuccess = await _changeStore.getState('last_successful_sync');
-    _lastSuccessfulSync =
-        lastSuccess == null ? null : DateTime.tryParse(lastSuccess)?.toLocal();
-    _status =
-        isConfigured ? WebDavSyncStatus.idle : WebDavSyncStatus.unconfigured;
+    _lastSuccessfulSync = lastSuccess == null
+        ? null
+        : DateTime.tryParse(lastSuccess)?.toLocal();
+    _status = isConfigured
+        ? WebDavSyncStatus.idle
+        : WebDavSyncStatus.unconfigured;
     await _refreshRemoteBooks();
     notifyListeners();
   }
 
   Future<ConnectionTestResult> testConnection(
-      WebDavSyncConfigDraft draft) async {
+    WebDavSyncConfigDraft draft,
+  ) async {
     _status = WebDavSyncStatus.testing;
     _phase = WebDavSyncPhase.connecting;
     _clearError();
@@ -98,15 +99,17 @@ class WebDavSyncController extends ChangeNotifier {
         _lastError = result.errorCode;
         _lastErrorMessage = result.message;
       }
-      _status =
-          isConfigured ? WebDavSyncStatus.idle : WebDavSyncStatus.unconfigured;
+      _status = isConfigured
+          ? WebDavSyncStatus.idle
+          : WebDavSyncStatus.unconfigured;
       _phase = WebDavSyncPhase.none;
       notifyListeners();
       return result;
     } on WebDavSyncFailure catch (error) {
       _setFailure(error);
-      _status =
-          isConfigured ? WebDavSyncStatus.idle : WebDavSyncStatus.unconfigured;
+      _status = isConfigured
+          ? WebDavSyncStatus.idle
+          : WebDavSyncStatus.unconfigured;
       _phase = WebDavSyncPhase.none;
       notifyListeners();
       return ConnectionTestResult(
@@ -134,10 +137,7 @@ class WebDavSyncController extends ChangeNotifier {
     if (running != null) return running;
     final future = _runSync();
     _running = future;
-    future.then<void>(
-      (_) => _running = null,
-      onError: (_) => _running = null,
-    );
+    future.then<void>((_) => _running = null, onError: (_) => _running = null);
     return future;
   }
 
@@ -161,10 +161,12 @@ class WebDavSyncController extends ChangeNotifier {
         changeStore: _changeStore,
         clientFactory: _clientFactory,
       );
-      final result = await engine.run(onPhase: (phase) {
-        _phase = phase;
-        notifyListeners();
-      });
+      final result = await engine.run(
+        onPhase: (phase) {
+          _phase = phase;
+          notifyListeners();
+        },
+      );
       _lastResult = result;
       _lastFailedPhase = WebDavSyncPhase.none;
       _lastSuccessfulSync = result.completedAt;
@@ -191,9 +193,7 @@ class WebDavSyncController extends ChangeNotifier {
       rethrow;
     } catch (error, stackTrace) {
       _lastFailedPhase = _phase;
-      debugPrint(
-        'WebDAV sync failed at ${_phase.name}: ${error.runtimeType}',
-      );
+      debugPrint('WebDAV sync failed at ${_phase.name}: ${error.runtimeType}');
       debugPrintStack(stackTrace: stackTrace);
       const failure = WebDavSyncFailure(
         WebDavSyncErrorCode.unknown,
@@ -229,9 +229,7 @@ class WebDavSyncController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> setNewBookUploadPolicy(
-    WebDavNewBookUploadPolicy policy,
-  ) async {
+  Future<void> setNewBookUploadPolicy(WebDavNewBookUploadPolicy policy) async {
     await _configStore.saveNewBookUploadPolicy(policy);
     _newBookUploadPolicy = policy;
     notifyListeners();
@@ -299,26 +297,27 @@ class WebDavSyncController extends ChangeNotifier {
     _remoteBooks = records
         .where((record) => !record.deleted && record.payload != null)
         .map((record) {
-      final payload = record.payload!;
-      return RemoteBookDescriptor(
-        bookUid: record.entityKey,
-        title: payload['title'] as String? ?? '',
-        author: payload['author'] as String? ?? '',
-        format: payload['format'] as String? ?? '',
-        fileAvailable: payload['file_available'] as bool? ?? false,
-        sizeBytes: (payload['file_size'] as num?)?.toInt(),
-        blobSha256: payload['blob_sha256'] as String?,
-        remotePath: payload['remote_path'] as String?,
-        fileName: payload['file_name'] as String?,
-        sourceId: payload['source_id'] as String?,
-        sourceBookId: payload['source_book_id'] as String?,
-        coverAvailable: payload['cover_available'] as bool? ?? false,
-        coverSizeBytes: (payload['cover_file_size'] as num?)?.toInt(),
-        coverBlobSha256: payload['cover_blob_sha256'] as String?,
-        coverRemotePath: payload['cover_remote_path'] as String?,
-        coverFileName: payload['cover_file_name'] as String?,
-      );
-    }).toList(growable: false);
+          final payload = record.payload!;
+          return RemoteBookDescriptor(
+            bookUid: record.entityKey,
+            title: payload['title'] as String? ?? '',
+            author: payload['author'] as String? ?? '',
+            format: payload['format'] as String? ?? '',
+            fileAvailable: payload['file_available'] as bool? ?? false,
+            sizeBytes: (payload['file_size'] as num?)?.toInt(),
+            blobSha256: payload['blob_sha256'] as String?,
+            remotePath: payload['remote_path'] as String?,
+            fileName: payload['file_name'] as String?,
+            sourceId: payload['source_id'] as String?,
+            sourceBookId: payload['source_book_id'] as String?,
+            coverAvailable: payload['cover_available'] as bool? ?? false,
+            coverSizeBytes: (payload['cover_file_size'] as num?)?.toInt(),
+            coverBlobSha256: payload['cover_blob_sha256'] as String?,
+            coverRemotePath: payload['cover_remote_path'] as String?,
+            coverFileName: payload['cover_file_name'] as String?,
+          );
+        })
+        .toList(growable: false);
   }
 
   void _setFailure(WebDavSyncFailure failure) {

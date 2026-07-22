@@ -19,12 +19,12 @@ import 'package:xxread/services/books/book_dao.dart';
 import 'package:xxread/services/books/enhanced_txt_import_service.dart';
 import 'package:xxread/services/books/text_preprocessor_helper.dart';
 import 'package:xxread/services/books/cover_generator_service.dart';
-import 'package:xxread/services/books/book_cover_fetcher_service.dart';
 import 'package:xxread/services/books/book_format_support.dart';
 import 'package:xxread/services/books/book_import_isolate_service.dart';
 import 'package:xxread/services/books/book_import_models.dart';
 import 'package:xxread/services/books/epub_image_extractor_service.dart';
 import 'package:xxread/services/books/book_image_map_service.dart';
+import 'package:xxread/services/books/web_book_file_store.dart';
 import 'package:xxread/services/library/library_event_bus_service.dart';
 import 'package:xxread/services/ai/global_ai_reading_service.dart';
 
@@ -61,12 +61,13 @@ class EnhancedBookMetadata {
 /// 导入进度回调函数类型
 typedef ImportProgressCallback = void Function(double progress, String message);
 
-typedef ImportMetadataExtractor = Future<EnhancedBookMetadata> Function(
-  String filePath,
-  String fileName,
-  String extension,
-  ImportProgressCallback? onProgress,
-);
+typedef ImportMetadataExtractor =
+    Future<EnhancedBookMetadata> Function(
+      String filePath,
+      String fileName,
+      String extension,
+      ImportProgressCallback? onProgress,
+    );
 
 /// 顶层函数：在 isolate 中解析 EPUB（zip 解压 + XML 解析是 CPU
 /// 密集操作，放主线程会掉帧）。
@@ -80,23 +81,27 @@ class BookImportService implements BookFileImporter {
     Future<Directory> Function()? documentsDirectory,
     ImportMetadataExtractor? metadataExtractor,
     Future<void> Function(Book book)? scheduleAnalysis,
-  })  : _store = store ?? BookDao(),
-        _documentsDirectory =
-            documentsDirectory ?? getApplicationDocumentsDirectory,
-        _metadataExtractorOverride = metadataExtractor,
-        _scheduleAnalysis = scheduleAnalysis ??
-            ((book) => GlobalAIReadingService()
-                .scheduleImportedBookAnalysis(book: book));
+    WebBookFileStore? webBookFileStore,
+  }) : _store = store ?? BookDao(),
+       _documentsDirectory =
+           documentsDirectory ?? getApplicationDocumentsDirectory,
+       _metadataExtractorOverride = metadataExtractor,
+       _webBookFileStore = webBookFileStore ?? WebBookFileStore(),
+       _scheduleAnalysis =
+           scheduleAnalysis ??
+           ((book) => GlobalAIReadingService().scheduleImportedBookAnalysis(
+             book: book,
+           ));
 
   final BookImportStore _store;
   final Future<Directory> Function() _documentsDirectory;
   final ImportMetadataExtractor? _metadataExtractorOverride;
+  final WebBookFileStore _webBookFileStore;
   final Future<void> Function(Book book) _scheduleAnalysis;
   // 旧的单文件选择入口暂时保留给尚未迁移的调用方；新队列只使用 _store。
   final _bookDao = BookDao();
   final _enhancedTxtService = EnhancedTxtImportService();
   final _preprocessor = TextPreprocessor();
-  final _coverFetcher = BookCoverFetcher();
   final _imageExtractor = EpubImageExtractor();
   final _imageMapService = BookImageMapService();
 
@@ -155,9 +160,7 @@ class BookImportService implements BookFileImporter {
     try {
       final file = File(filePath);
       if (!await file.exists()) {
-        throw const BookImportFailure(
-          code: 'source_missing',
-        );
+        throw const BookImportFailure(code: 'source_missing');
       }
 
       final fileSize = await file.length();
@@ -176,10 +179,7 @@ class BookImportService implements BookFileImporter {
     } on BookImportFailure {
       rethrow;
     } catch (error) {
-      throw BookImportFailure(
-        code: 'hash_failed',
-        cause: error,
-      );
+      throw BookImportFailure(code: 'hash_failed', cause: error);
     }
   }
 
@@ -209,9 +209,7 @@ class BookImportService implements BookFileImporter {
       }
     }
 
-    throw const BookImportFailure(
-      code: 'target_name_exhausted',
-    );
+    throw const BookImportFailure(code: 'target_name_exhausted');
   }
 
   Future<_PreparedImportFile> _prepareFile(
@@ -221,16 +219,12 @@ class BookImportService implements BookFileImporter {
   ) async {
     final sourcePath = source.localPath;
     if (sourcePath == null) {
-      throw const BookImportFailure(
-        code: 'source_not_materialized',
-      );
+      throw const BookImportFailure(code: 'source_not_materialized');
     }
 
     final sourceFile = File(sourcePath);
     if (!await sourceFile.exists()) {
-      throw const BookImportFailure(
-        code: 'source_missing',
-      );
+      throw const BookImportFailure(code: 'source_missing');
     }
 
     if (source.ownership == BookImportOwnership.managedInPlace) {
@@ -248,17 +242,12 @@ class BookImportService implements BookFileImporter {
       await _copyFileWithProgress(
         sourceFile,
         partial,
-        progressCallback: (value) => onProgress?.call(
-          BookImportPhase.copying,
-          value,
-          'copying',
-        ),
+        progressCallback: (value) =>
+            onProgress?.call(BookImportPhase.copying, value, 'copying'),
       );
       final copiedHash = await _calculateRequiredHash(partial.path);
       if (copiedHash != sourceHash) {
-        throw const BookImportFailure(
-          code: 'copy_verification_failed',
-        );
+        throw const BookImportFailure(code: 'copy_verification_failed');
       }
       await partial.rename(finalFile.path);
       return _PreparedImportFile(
@@ -297,6 +286,10 @@ class BookImportService implements BookFileImporter {
     BookImportSource source, {
     BookImportProgress? onProgress,
   }) async {
+    if (kIsWeb) {
+      return _importWebFile(source, onProgress: onProgress);
+    }
+
     _PreparedImportFile? prepared;
     String? createdCoverPath;
     var databaseCommitted = false;
@@ -305,22 +298,16 @@ class BookImportService implements BookFileImporter {
       onProgress?.call(BookImportPhase.checking, 0, 'checking');
       final localPath = source.localPath;
       if (localPath == null) {
-        throw const BookImportFailure(
-          code: 'source_not_materialized',
-        );
+        throw const BookImportFailure(code: 'source_not_materialized');
       }
 
       final sourceFile = File(localPath);
       if (!await sourceFile.exists()) {
-        throw const BookImportFailure(
-          code: 'source_missing',
-        );
+        throw const BookImportFailure(code: 'source_missing');
       }
       final size = await sourceFile.length();
       if (size > 100 * 1024 * 1024) {
-        throw const BookImportFailure(
-          code: 'file_too_large',
-        );
+        throw const BookImportFailure(code: 'file_too_large');
       }
 
       final sourceHash = await _calculateRequiredHash(localPath);
@@ -421,10 +408,7 @@ class BookImportService implements BookFileImporter {
     } on BookImportFailure {
       rethrow;
     } catch (error) {
-      throw BookImportFailure(
-        code: 'import_failed',
-        cause: error,
-      );
+      throw BookImportFailure(code: 'import_failed', cause: error);
     } finally {
       if (!databaseCommitted && prepared?.ownsFile == true) {
         final file = prepared!.file;
@@ -438,6 +422,96 @@ class BookImportService implements BookFileImporter {
           await cover.delete();
         }
       }
+    }
+  }
+
+  Future<BookImportResult> _importWebFile(
+    BookImportSource source, {
+    BookImportProgress? onProgress,
+  }) async {
+    final bytes = source.bytes;
+    final virtualPath = source.localPath;
+    if (bytes == null ||
+        virtualPath == null ||
+        !WebBookFileStore.isWebBookPath(virtualPath)) {
+      throw const BookImportFailure(code: 'source_not_materialized');
+    }
+    if (bytes.length > 100 * 1024 * 1024) {
+      throw const BookImportFailure(code: 'file_too_large');
+    }
+
+    final contentHash = WebBookFileStore.hashFromPath(virtualPath);
+    var storedBeforeImport = false;
+    try {
+      onProgress?.call(BookImportPhase.checking, 0, 'checking');
+      final duplicate = await _store.getBookByHash(contentHash);
+      if (duplicate != null) {
+        if (WebBookFileStore.isWebBookPath(duplicate.filePath) &&
+            await _webBookFileStore.exists(duplicate.filePath)) {
+          return BookImportResult(
+            source: source,
+            outcome: BookImportOutcome.duplicateSkipped,
+            book: duplicate,
+          );
+        }
+        await _webBookFileStore.put(virtualPath, bytes);
+        final repaired = await _store.updateBookStorageLocation(
+          book: duplicate,
+          filePath: virtualPath,
+          sourceKind: source.kind.storageValue,
+          sourceLocator: source.locator,
+          sourceModifiedTime: source.modifiedTime,
+        );
+        LibraryEventBus().notifyLibraryChanged();
+        return BookImportResult(
+          source: source,
+          outcome: BookImportOutcome.existingRepaired,
+          book: repaired,
+        );
+      }
+
+      onProgress?.call(BookImportPhase.analyzing, 0, 'analyzing');
+      final metadata = await _extractEnhancedMetadataFromBytes(
+        bytes,
+        source.displayName,
+        source.extension,
+        progressCallback: (progress, _) =>
+            onProgress?.call(BookImportPhase.analyzing, progress, 'analyzing'),
+      );
+      final candidate = Book(
+        title: metadata.title,
+        author: metadata.author,
+        filePath: virtualPath,
+        format: source.extension.toUpperCase(),
+        totalPages: metadata.estimatedPages,
+        contentHash: contentHash,
+        textEncoding: metadata.textEncoding,
+        sourceKind: source.kind.storageValue,
+        sourceLocator: source.locator,
+        sourceModifiedTime: source.modifiedTime,
+      );
+
+      onProgress?.call(BookImportPhase.saving, 0, 'saving');
+      storedBeforeImport = await _webBookFileStore.exists(virtualPath);
+      await _webBookFileStore.put(virtualPath, bytes);
+      final decision = await _store.insertIfAbsentByHash(candidate);
+      LibraryEventBus().notifyLibraryChanged();
+      return BookImportResult(
+        source: source,
+        outcome: decision.inserted
+            ? BookImportOutcome.imported
+            : BookImportOutcome.duplicateSkipped,
+        book: decision.book,
+      );
+    } on BookImportFailure {
+      rethrow;
+    } catch (error) {
+      if (!storedBeforeImport) {
+        try {
+          await _webBookFileStore.delete(virtualPath);
+        } catch (_) {}
+      }
+      throw BookImportFailure(code: 'import_failed', cause: error);
     }
   }
 
@@ -459,10 +533,12 @@ class BookImportService implements BookFileImporter {
       final normalized = <String, String>{};
       for (final entry in imageMapValue.entries) {
         final parts = entry.key.split('_');
-        final fileName =
-            parts.length >= 2 ? parts.sublist(1).join('_') : entry.key;
-        normalized['${bookId}_$fileName'] =
-            entry.value.replaceAll(RegExp(r'[\r\n\t]'), '').trim();
+        final fileName = parts.length >= 2
+            ? parts.sublist(1).join('_')
+            : entry.key;
+        normalized['${bookId}_$fileName'] = entry.value
+            .replaceAll(RegExp(r'[\r\n\t]'), '')
+            .trim();
       }
       await _imageMapService.saveImageMap(bookId, normalized);
     } catch (error) {
@@ -475,17 +551,16 @@ class BookImportService implements BookFileImporter {
   ///
   /// 参数 [progressCallback] 可选的进度回调函数，接收进度值(0.0-1.0)和描述信息
   /// 返回成功导入的Book对象，失败或取消返回null
-  Future<Book?> importBook({
-    ImportProgressCallback? progressCallback,
-  }) async {
+  Future<Book?> importBook({ImportProgressCallback? progressCallback}) async {
     try {
       progressCallback?.call(0.0, '选择文件中...');
 
       // 使用路径模式而非数据模式，避免大文件加载到内存
       FilePickerResult? result = await FilePicker.pickFiles(
         type: FileType.custom,
-        allowedExtensions:
-            BookFormatRegistry.pickerExtensions.toList(growable: false),
+        allowedExtensions: BookFormatRegistry.pickerExtensions.toList(
+          growable: false,
+        ),
         withData: false, // 关键修改：使用路径模式
       );
 
@@ -502,24 +577,30 @@ class BookImportService implements BookFileImporter {
         final fileSize = await sourceFile.length();
         final fileSizeMB = fileSize / 1024 / 1024;
         debugPrint(
-            '选择的文件: ${pickedFile.name}, 大小: ${fileSizeMB.toStringAsFixed(2)} MB');
+          '选择的文件: ${pickedFile.name}, 大小: ${fileSizeMB.toStringAsFixed(2)} MB',
+        );
 
         // 检查文件大小，对超大文件给出警告
         if (fileSizeMB > 100) {
           // 超过100MB，拒绝导入
-          throw Exception('文件过大无法导入\n\n'
-              '文件大小：${fileSizeMB.toStringAsFixed(1)} MB\n'
-              '限制大小：100 MB\n\n'
-              '建议：\n'
-              '1. 将书籍分割为多个较小的文件\n'
-              '2. 或压缩文件后再导入\n'
-              '3. 使用专门的大文件阅读器');
+          throw Exception(
+            '文件过大无法导入\n\n'
+            '文件大小：${fileSizeMB.toStringAsFixed(1)} MB\n'
+            '限制大小：100 MB\n\n'
+            '建议：\n'
+            '1. 将书籍分割为多个较小的文件\n'
+            '2. 或压缩文件后再导入\n'
+            '3. 使用专门的大文件阅读器',
+          );
         } else if (fileSizeMB > 50) {
           // 50-100MB，给出严重警告
           debugPrint(
-              '⚠️ 警告：文件非常大 (${fileSizeMB.toStringAsFixed(1)} MB)，可能导致性能问题');
+            '⚠️ 警告：文件非常大 (${fileSizeMB.toStringAsFixed(1)} MB)，可能导致性能问题',
+          );
           progressCallback?.call(
-              0.05, '文件较大 (${fileSizeMB.toStringAsFixed(0)}MB)，导入可能较慢...');
+            0.05,
+            '文件较大 (${fileSizeMB.toStringAsFixed(0)}MB)，导入可能较慢...',
+          );
         } else if (fileSizeMB > 30) {
           // 30-50MB，给出警告
           debugPrint('⚠️ 提示：文件较大 (${fileSizeMB.toStringAsFixed(1)} MB)');
@@ -581,11 +662,15 @@ class BookImportService implements BookFileImporter {
             newFilePath = join(booksDir.path, pickedFile.name);
           } else {
             // 添加数字后缀避免覆盖
-            final nameWithoutExt =
-                pickedFile.name.replaceAll(RegExp(r'\.[^.]+$'), '');
+            final nameWithoutExt = pickedFile.name.replaceAll(
+              RegExp(r'\.[^.]+$'),
+              '',
+            );
             final ext = pickedFile.extension ?? '';
-            newFilePath =
-                join(booksDir.path, '${nameWithoutExt}_$counter.$ext');
+            newFilePath = join(
+              booksDir.path,
+              '${nameWithoutExt}_$counter.$ext',
+            );
           }
           targetFile = File(newFilePath);
           counter++;
@@ -620,7 +705,8 @@ class BookImportService implements BookFileImporter {
             if (!existingFileExists) {
               // 旧文件不存在，更新数据库中的文件路径到新文件
               debugPrint(
-                  '旧文件不存在，更新文件路径: ${existingBook.filePath} -> $newFilePath');
+                '旧文件不存在，更新文件路径: ${existingBook.filePath} -> $newFilePath',
+              );
 
               progressCallback?.call(0.7, '更新文件路径...');
 
@@ -717,14 +803,16 @@ class BookImportService implements BookFileImporter {
                 final fileName = parts.sublist(1).join('_');
                 final newKey = '${bookIdStr}_$fileName';
                 // 🔧 清理路径：移除所有换行符和多余空白
-                final cleanPath =
-                    entry.value.replaceAll(RegExp(r'[\r\n\t]'), '').trim();
+                final cleanPath = entry.value
+                    .replaceAll(RegExp(r'[\r\n\t]'), '')
+                    .trim();
                 newImageMap[newKey] = cleanPath;
                 debugPrint('🔧 修复映射键: ${entry.key} -> $newKey');
               } else {
                 // 保持原样（以防万一）
-                final cleanPath =
-                    entry.value.replaceAll(RegExp(r'[\r\n\t]'), '').trim();
+                final cleanPath = entry.value
+                    .replaceAll(RegExp(r'[\r\n\t]'), '')
+                    .trim();
                 newImageMap[entry.key] = cleanPath;
               }
             }
@@ -788,8 +876,10 @@ class BookImportService implements BookFileImporter {
 
       final stream = file.openRead(0, maxBytesForMetadata);
       final chunks = await stream.toList();
-      final totalLength =
-          chunks.fold<int>(0, (sum, chunk) => sum + chunk.length);
+      final totalLength = chunks.fold<int>(
+        0,
+        (sum, chunk) => sum + chunk.length,
+      );
       final buffer = Uint8List(totalLength);
       int offset = 0;
       for (var chunk in chunks) {
@@ -804,57 +894,46 @@ class BookImportService implements BookFileImporter {
       final fileSizeMB = fileSize / 1024 / 1024;
       if (fileSizeMB > 10) {
         debugPrint(
-            '📖 完整读取${ext.toUpperCase()}文件 (${fileSizeMB.toStringAsFixed(1)} MB)');
+          '📖 完整读取${ext.toUpperCase()}文件 (${fileSizeMB.toStringAsFixed(1)} MB)',
+        );
       }
       progressCallback?.call(0.2, '加载文件内容...');
       bytes = await file.readAsBytes();
       progressCallback?.call(0.4, '解析文件格式...');
     }
 
+    return _extractEnhancedMetadataFromBytes(
+      bytes,
+      fileName,
+      extension,
+      progressCallback: progressCallback,
+    );
+  }
+
+  Future<EnhancedBookMetadata> _extractEnhancedMetadataFromBytes(
+    Uint8List bytes,
+    String fileName,
+    String extension, {
+    Function(double, String)? progressCallback,
+  }) async {
+    final ext = extension.toLowerCase();
     try {
-      EnhancedBookMetadata metadata;
-
-      switch (ext) {
-        case 'epub':
-          progressCallback?.call(0.5, '解析EPUB格式...');
-          metadata = await _extractEpubMetadata(bytes, fileName);
-          break;
-        case 'pdf':
-          progressCallback?.call(0.5, '解析PDF格式...');
-          metadata = await _extractPdfMetadata(bytes, fileName);
-          break;
-        case 'txt':
-          progressCallback?.call(0.5, '检测文本编码...');
-          metadata = await _extractTxtMetadata(bytes, fileName);
-          break;
-        case 'mobi':
-        case 'azw':
-        case 'azw3':
-          progressCallback?.call(0.5, '解析MOBI格式...');
-          metadata = await _extractMobiMetadata(bytes, fileName);
-          break;
-        case 'fb2':
-          progressCallback?.call(0.5, '解析FB2格式...');
-          metadata = await _extractFb2Metadata(bytes, fileName);
-          break;
-        case 'cbz':
-        case 'cbr':
-          progressCallback?.call(0.5, '解析漫画格式...');
-          metadata = await _extractComicMetadata(bytes, fileName);
-          break;
-        case 'rtf':
-          progressCallback?.call(0.5, '解析RTF格式...');
-          metadata = await _extractRtfMetadata(bytes, fileName);
-          break;
-        default:
-          progressCallback?.call(0.5, '提取基本信息...');
-          metadata = _extractBasicMetadata(bytes, fileName);
-      }
-
+      final metadata = switch (ext) {
+        'epub' => await _extractEpubMetadata(bytes, fileName),
+        'pdf' => await _extractPdfMetadata(bytes, fileName),
+        'txt' => await _extractTxtMetadata(bytes, fileName),
+        'mobi' ||
+        'azw' ||
+        'azw3' => await _extractMobiMetadata(bytes, fileName),
+        'fb2' => await _extractFb2Metadata(bytes, fileName),
+        'cbz' || 'cbr' => await _extractComicMetadata(bytes, fileName),
+        'rtf' => await _extractRtfMetadata(bytes, fileName),
+        _ => _extractBasicMetadata(bytes, fileName),
+      };
       progressCallback?.call(1.0, '元数据提取完成');
       return metadata;
-    } catch (e) {
-      debugPrint('❌ 元数据提取失败: $e');
+    } catch (error) {
+      debugPrint('❌ 元数据提取失败: $error');
       progressCallback?.call(0.8, '使用默认信息...');
       return _extractBasicMetadata(bytes, fileName);
     }
@@ -879,8 +958,9 @@ class BookImportService implements BookFileImporter {
       final title = epubBook.Title?.isNotEmpty == true
           ? epubBook.Title!
           : fileName.replaceAll(RegExp(r'\.(epub)$'), '');
-      final author =
-          epubBook.Author?.isNotEmpty == true ? epubBook.Author! : 'Unknown';
+      final author = epubBook.Author?.isNotEmpty == true
+          ? epubBook.Author!
+          : 'Unknown';
 
       // 🖼️ 提取图片（恢复为同步，确保图片可用）
       // 注意：虽然是同步，但图片数量通常不多（<10张），影响很小
@@ -897,7 +977,7 @@ class BookImportService implements BookFileImporter {
         debugPrint('⚠️ 图片提取失败: $e，继续导入流程');
       }
 
-      // Extract ISBN early (useful for cover fetching)
+      // Extract ISBN from embedded metadata.
       String? isbn;
       if (epubBook.Schema?.Package?.Metadata?.Identifiers?.isNotEmpty == true) {
         for (final identifier
@@ -909,31 +989,16 @@ class BookImportService implements BookFileImporter {
         }
       }
 
-      // Extract cover image with enhanced logic
+      // Prefer the embedded cover; otherwise generate one locally.
       Uint8List? coverImage;
       try {
-        // First try to extract from EPUB file
         coverImage = await _extractEpubCover(epubBook);
-
-        // If no embedded cover, try fetching from network
         if (coverImage == null) {
-          debugPrint('🌐 EPUB无内置封面，尝试从网络获取: $title');
-          coverImage = await _coverFetcher.fetchCoverQuick(
+          coverImage = await CoverGenerator.generateTextCover(
             title: title,
             author: author,
-            isbn: isbn,
+            format: 'EPUB',
           );
-
-          if (coverImage != null) {
-            debugPrint('✅ 从网络成功获取EPUB封面');
-          } else {
-            debugPrint('📝 网络未找到封面，生成EPUB默认封面');
-            coverImage = await CoverGenerator.generateTextCover(
-              title: title,
-              author: author,
-              format: 'EPUB',
-            );
-          }
         } else {
           debugPrint('✅ 成功从EPUB文件提取内置封面');
         }
@@ -956,8 +1021,9 @@ class BookImportService implements BookFileImporter {
       final allContent = await _getAllEpubContent(epubBook);
       if (allContent.isNotEmpty && allContent.length > 200) {
         // Take first 500 characters as description
-        description =
-            allContent.substring(0, allContent.length.clamp(0, 500)).trim();
+        description = allContent
+            .substring(0, allContent.length.clamp(0, 500))
+            .trim();
         if (description.length >= 500) {
           description = '${description.substring(0, 497)}...';
         }
@@ -1029,30 +1095,16 @@ class BookImportService implements BookFileImporter {
       final title = fileName.replaceAll(RegExp(r'\.(pdf)$'), '');
       const author = 'Unknown';
 
-      // 提取PDF封面（先尝试从PDF第一页，再尝试网络）
+      // 优先使用 PDF 第一页；失败时仅在本地生成默认封面。
       Uint8List? coverImage;
       try {
-        // Try extracting from PDF first page
         coverImage = await _extractPdfCover(bytes);
-
-        // If no PDF cover, try network
         if (coverImage == null) {
-          debugPrint('🌐 PDF无封面，尝试从网络获取: $title');
-          coverImage = await _coverFetcher.fetchCoverQuick(
+          coverImage = await CoverGenerator.generateTextCover(
             title: title,
             author: author,
+            format: 'PDF',
           );
-
-          if (coverImage != null) {
-            debugPrint('✅ 从网络成功获取PDF封面');
-          } else {
-            debugPrint('📝 网络未找到封面，生成PDF默认封面');
-            coverImage = await CoverGenerator.generateTextCover(
-              title: title,
-              author: author,
-              format: 'PDF',
-            );
-          }
         } else {
           debugPrint('✅ 成功从PDF提取封面（第一页）');
         }
@@ -1142,8 +1194,10 @@ class BookImportService implements BookFileImporter {
         );
 
         // 不要使用 trim()，否则会移除段首缩进
-        final lines =
-            content.split('\n').where((e) => e.trim().isNotEmpty).toList();
+        final lines = content
+            .split('\n')
+            .where((e) => e.trim().isNotEmpty)
+            .toList();
         var title = lines.isNotEmpty
             ? lines.first.substring(0, lines.first.length.clamp(0, 50))
             : fileName.replaceAll(RegExp(r'\.(txt)$'), '');
@@ -1161,37 +1215,17 @@ class BookImportService implements BookFileImporter {
         );
       }
 
-      // 尝试从网络获取封面，失败则生成默认封面
+      // TXT 没有嵌入封面，仅在本地生成默认封面。
       Uint8List? coverImage;
       try {
-        debugPrint('🌐 尝试从网络获取书籍封面: ${simpleMetadata.title}');
-        coverImage = await _coverFetcher.fetchCoverQuick(
+        coverImage = await CoverGenerator.generateTextCover(
           title: simpleMetadata.title,
           author: simpleMetadata.author,
+          format: 'TXT',
         );
-
-        if (coverImage != null) {
-          debugPrint('✅ 从网络成功获取封面');
-        } else {
-          debugPrint('📝 网络未找到封面，生成默认封面');
-          coverImage = await CoverGenerator.generateTextCover(
-            title: simpleMetadata.title,
-            author: simpleMetadata.author,
-            format: 'TXT',
-          );
-          debugPrint('✅ TXT默认封面生成成功');
-        }
+        debugPrint('✅ TXT默认封面生成成功');
       } catch (e) {
-        debugPrint('封面获取失败，生成默认封面: $e');
-        try {
-          coverImage = await CoverGenerator.generateTextCover(
-            title: simpleMetadata.title,
-            author: simpleMetadata.author,
-            format: 'TXT',
-          );
-        } catch (e2) {
-          debugPrint('默认封面生成也失败: $e2');
-        }
+        debugPrint('默认封面生成失败: $e');
       }
 
       debugPrint('✅ TXT元数据提取完成:');
@@ -1207,10 +1241,7 @@ class BookImportService implements BookFileImporter {
         language: simpleMetadata.language,
         coverImage: coverImage,
         textEncoding: resolvedEncoding,
-        additionalInfo: {
-          'format': 'TXT',
-          'fileSize': bytes.length,
-        },
+        additionalInfo: {'format': 'TXT', 'fileSize': bytes.length},
       );
     } catch (e, stackTrace) {
       debugPrint('❌ TXT元数据提取失败，回退到基础提取: $e');
@@ -1532,36 +1563,16 @@ class BookImportService implements BookFileImporter {
         );
       }
 
-      // 尝试从网络获取封面，失败则生成MOBI格式的默认封面
+      // MOBI/AZW 没有可用嵌入封面时，仅在本地生成默认封面。
       Uint8List? coverImage;
       try {
-        debugPrint('🌐 尝试从网络获取书籍封面: ${simpleMetadata.title}');
-        coverImage = await _coverFetcher.fetchCoverQuick(
+        coverImage = await CoverGenerator.generateTextCover(
           title: simpleMetadata.title,
           author: simpleMetadata.author,
+          format: 'MOBI',
         );
-
-        if (coverImage != null) {
-          debugPrint('✅ 从网络成功获取MOBI封面');
-        } else {
-          debugPrint('📝 网络未找到封面，生成MOBI默认封面');
-          coverImage = await CoverGenerator.generateTextCover(
-            title: simpleMetadata.title,
-            author: simpleMetadata.author,
-            format: 'MOBI',
-          );
-        }
       } catch (e) {
-        debugPrint('⚠️ 网络获取封面失败: $e，生成默认封面');
-        try {
-          coverImage = await CoverGenerator.generateTextCover(
-            title: simpleMetadata.title,
-            author: simpleMetadata.author,
-            format: 'MOBI',
-          );
-        } catch (genError) {
-          debugPrint('❌ MOBI封面生成失败: $genError');
-        }
+        debugPrint('❌ MOBI默认封面生成失败: $e');
       }
 
       debugPrint('✅ MOBI元数据提取完成:');
@@ -1580,10 +1591,7 @@ class BookImportService implements BookFileImporter {
         coverImage: coverImage,
         estimatedPages: simpleMetadata.estimatedPages,
         tags: null,
-        additionalInfo: {
-          'format': 'MOBI/AZW',
-          'fileSize': bytes.length,
-        },
+        additionalInfo: {'format': 'MOBI/AZW', 'fileSize': bytes.length},
       );
     } catch (e) {
       debugPrint('MOBI/AZW3 metadata extraction failed: $e');
@@ -1632,8 +1640,9 @@ class BookImportService implements BookFileImporter {
       }
 
       // Estimate pages based on typical comic book length
-      final estimatedPages =
-          extension == 'cbz' ? 25 : 30; // Comics typically 20-40 pages
+      final estimatedPages = extension == 'cbz'
+          ? 25
+          : 30; // Comics typically 20-40 pages
 
       return EnhancedBookMetadata(
         title: title,
@@ -1756,10 +1765,14 @@ class BookImportService implements BookFileImporter {
       final bookName = bookFileName.replaceAll(RegExp(r'\.[^.]+$'), '');
       // 文件名加入完整文件名（含扩展名）的哈希后缀，
       // 避免"同名不同格式"的书封面互相覆盖
-      final nameHash =
-          md5.convert(utf8.encode(bookFileName)).toString().substring(0, 8);
-      final coverPath =
-          join(coversDir.path, '${bookName}_${nameHash}_cover.jpg');
+      final nameHash = md5
+          .convert(utf8.encode(bookFileName))
+          .toString()
+          .substring(0, 8);
+      final coverPath = join(
+        coversDir.path,
+        '${bookName}_${nameHash}_cover.jpg',
+      );
       final coverFile = File(coverPath);
 
       await coverFile.writeAsBytes(imageBytes);

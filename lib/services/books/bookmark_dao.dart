@@ -28,10 +28,7 @@ class BookmarkDao {
     });
   }
 
-  Future<Bookmark?> getBookmarkByAnchorKey(
-    int bookId,
-    String anchorKey,
-  ) async {
+  Future<Bookmark?> getBookmarkByAnchorKey(int bookId, String anchorKey) async {
     final normalizedAnchorKey = anchorKey.trim();
     if (normalizedAnchorKey.isEmpty) return null;
     final db = await _databaseService.database;
@@ -121,10 +118,7 @@ class BookmarkDao {
     );
   }
 
-  Future<int> deleteBookmarkByAnchorKey(
-    int bookId,
-    String anchorKey,
-  ) async {
+  Future<int> deleteBookmarkByAnchorKey(int bookId, String anchorKey) async {
     final normalizedAnchorKey = anchorKey.trim();
     if (normalizedAnchorKey.isEmpty) return 0;
     final db = await _databaseService.database;

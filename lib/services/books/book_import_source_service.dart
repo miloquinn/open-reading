@@ -3,7 +3,9 @@
 
 import 'dart:io';
 
+import 'package:crypto/crypto.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:xxread/services/books/book_format_support.dart';
@@ -22,11 +24,11 @@ class BookImportSourceService implements BookImportSourcePreparer {
     PlatformStorageBridge? platformBridge,
     Future<Directory> Function()? documentsDirectory,
     Future<Directory> Function()? temporaryDirectory,
-  })  : _filePicker = filePicker ?? _pickSupportedFiles,
-        _platformBridge = platformBridge ?? PlatformStorageBridge(),
-        _documentsDirectory =
-            documentsDirectory ?? getApplicationDocumentsDirectory,
-        _temporaryDirectory = temporaryDirectory ?? getTemporaryDirectory;
+  }) : _filePicker = filePicker ?? _pickSupportedFiles,
+       _platformBridge = platformBridge ?? PlatformStorageBridge(),
+       _documentsDirectory =
+           documentsDirectory ?? getApplicationDocumentsDirectory,
+       _temporaryDirectory = temporaryDirectory ?? getTemporaryDirectory;
 
   /// 与 [BookFormatRegistry.pickerExtensions] 同步；格式变更只改注册表。
   static Set<String> get supportedExtensions =>
@@ -40,10 +42,11 @@ class BookImportSourceService implements BookImportSourcePreparer {
   static Future<FilePickerResult?> _pickSupportedFiles() {
     return FilePicker.pickFiles(
       type: FileType.custom,
-      allowedExtensions:
-          BookFormatRegistry.pickerExtensions.toList(growable: false),
+      allowedExtensions: BookFormatRegistry.pickerExtensions.toList(
+        growable: false,
+      ),
       allowMultiple: true,
-      withData: false,
+      withData: kIsWeb,
     );
   }
 
@@ -57,9 +60,30 @@ class BookImportSourceService implements BookImportSourcePreparer {
       final fileExtension = _normalizedExtension(
         pickedFile.extension ?? extension(pickedFile.name),
       );
-      if (path == null || !supportedExtensions.contains(fileExtension)) {
+      if (!supportedExtensions.contains(fileExtension)) {
         continue;
       }
+      if (kIsWeb) {
+        final bytes = pickedFile.bytes;
+        if (bytes == null) continue;
+        final contentHash = sha256.convert(bytes).toString();
+        final locator = 'web-book://$contentHash';
+        sources.add(
+          BookImportSource.withBytes(
+            id: '${BookImportSourceKind.filePicker.storageValue}:$locator',
+            kind: BookImportSourceKind.filePicker,
+            ownership: BookImportOwnership.externalCopy,
+            displayName: pickedFile.name,
+            extension: fileExtension,
+            locator: locator,
+            localPath: locator,
+            sizeBytes: pickedFile.size,
+            bytes: bytes,
+          ),
+        );
+        continue;
+      }
+      if (path == null) continue;
       final file = File(path);
       final stat = await file.stat();
       sources.add(
@@ -138,6 +162,7 @@ class BookImportSourceService implements BookImportSourcePreparer {
 
   @override
   Future<BookImportSource> prepare(BookImportSource source) async {
+    if (source.bytes != null) return source;
     if (source.localPath != null) return source;
 
     final temporaryRoot = await _temporaryDirectory();
@@ -164,18 +189,21 @@ class BookImportSourceService implements BookImportSourcePreparer {
       BookImportSourceKind.filePicker ||
       BookImportSourceKind.iosSharedDocuments ||
       BookImportSourceKind.systemOpen ||
-      BookImportSourceKind.systemShare =>
-        throw StateError('${source.kind.name} 来源缺少本地路径'),
+      BookImportSourceKind.systemShare => throw StateError(
+        '${source.kind.name} 来源缺少本地路径',
+      ),
     };
     return source.copyWithLocalPath(localPath);
   }
 
   @override
   Future<void> release(BookImportSource source) async {
+    if (source.bytes != null) return;
     final isMaterializedDocument =
         source.kind == BookImportSourceKind.androidTree ||
-            source.kind == BookImportSourceKind.iosICloud;
-    final isIncomingBook = source.kind == BookImportSourceKind.systemOpen ||
+        source.kind == BookImportSourceKind.iosICloud;
+    final isIncomingBook =
+        source.kind == BookImportSourceKind.systemOpen ||
         source.kind == BookImportSourceKind.systemShare;
     if (!isMaterializedDocument && !isIncomingBook) {
       return;
@@ -237,10 +265,7 @@ class BookImportSourceService implements BookImportSourcePreparer {
     final safeName = basename(displayName);
     for (var counter = 0; counter < 1000; counter++) {
       final candidate = File(
-        join(
-          directory.path,
-          counter == 0 ? safeName : '${counter}_$safeName',
-        ),
+        join(directory.path, counter == 0 ? safeName : '${counter}_$safeName'),
       );
       if (!await candidate.exists()) return candidate;
     }
@@ -264,8 +289,8 @@ class BookImportSourceService implements BookImportSourcePreparer {
     final result = byId.values.toList();
     result.sort((a, b) {
       final byName = a.displayName.toLowerCase().compareTo(
-            b.displayName.toLowerCase(),
-          );
+        b.displayName.toLowerCase(),
+      );
       return byName != 0 ? byName : a.locator.compareTo(b.locator);
     });
     return result;

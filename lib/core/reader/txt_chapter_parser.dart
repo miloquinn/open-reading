@@ -95,8 +95,9 @@ List<_TxtChapterMatch> _findTxtChapterMatches(String text) {
     final lineBreak = _findLineBreak(text, offset);
     final lineEnd = lineBreak < 0 ? text.length : lineBreak;
     final title = text.substring(offset, lineEnd).trim();
-    final normalizedTitle =
-        title.replaceFirst(RegExp(r'^#{1,6}\s*'), '').trim();
+    final normalizedTitle = title
+        .replaceFirst(RegExp(r'^#{1,6}\s*'), '')
+        .trim();
     if (normalizedTitle.length <= 80 && heading.hasMatch(normalizedTitle)) {
       matches.add(
         _TxtChapterMatch(

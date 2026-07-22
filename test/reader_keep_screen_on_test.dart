@@ -15,12 +15,13 @@ void main() {
     SharedPreferences.setMockInitialValues(<String, Object>{});
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, (call) async {
-      if (call.method == 'setKeepScreenOn') {
-        calls
-            .add((call.arguments as Map<Object?, Object?>)['enabled']! as bool);
-      }
-      return null;
-    });
+          if (call.method == 'setKeepScreenOn') {
+            calls.add(
+              (call.arguments as Map<Object?, Object?>)['enabled']! as bool,
+            );
+          }
+          return null;
+        });
     calls.clear();
     await ReaderKeepScreenOnController.resetForTesting();
   });
@@ -53,10 +54,7 @@ void main() {
 
     expect(calls, <bool>[true, false]);
     final prefs = await SharedPreferences.getInstance();
-    expect(
-      prefs.getBool(ReaderKeepScreenOnController.preferenceKey),
-      isFalse,
-    );
+    expect(prefs.getBool(ReaderKeepScreenOnController.preferenceKey), isFalse);
   });
 
   test('releases the flag only after the last reader exits', () async {

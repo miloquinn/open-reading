@@ -38,20 +38,22 @@ void main() {
     expect(geometry.foldEnd.dx, greaterThanOrEqualTo(0));
   });
 
-  test('incoming middle gesture starts from displacement instead of half page',
-      () {
-    final geometry = ReaderPageTurnGeometry.fromPointer(
-      size: size,
-      direction: ReaderPageTurnDirection.backward,
-      motion: ReaderPageTurnMotion.incoming,
-      pointer: const Offset(232, 420),
-      dragOrigin: const Offset(200, 400),
-    );
+  test(
+    'incoming middle gesture starts from displacement instead of half page',
+    () {
+      final geometry = ReaderPageTurnGeometry.fromPointer(
+        size: size,
+        direction: ReaderPageTurnDirection.backward,
+        motion: ReaderPageTurnMotion.incoming,
+        pointer: const Offset(232, 420),
+        dragOrigin: const Offset(200, 400),
+      );
 
-    expect(geometry.foldPoint.dx, closeTo(32, 0.001));
-    expect(geometry.foldPoint.dy, closeTo(420, 0.001));
-    expect(geometry.progress, closeTo(0.08, 0.001));
-  });
+      expect(geometry.foldPoint.dx, closeTo(32, 0.001));
+      expect(geometry.foldPoint.dy, closeTo(420, 0.001));
+      expect(geometry.progress, closeTo(0.08, 0.001));
+    },
+  );
 
   test('backward diagonal hand movement changes crease slope', () {
     final upper = ReaderPageTurnGeometry.fromPointer(

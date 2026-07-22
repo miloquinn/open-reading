@@ -25,7 +25,8 @@ double homeMobileFloatingNavWidthFor({
   required int itemCount,
 }) {
   if (screenWidth <= 0 || itemCount <= 0) return 0;
-  final desiredWidth = itemCount * kHomeMobileFloatingNavDesiredItemWidth +
+  final desiredWidth =
+      itemCount * kHomeMobileFloatingNavDesiredItemWidth +
       kHomeMobileFloatingNavExtraWidth;
   final maxWidth = (screenWidth - kHomeMobileFloatingNavScreenGap)
       .clamp(0.0, double.infinity)
@@ -40,7 +41,8 @@ double homeMobileFloatingNavItemWidthFor({
   required int itemCount,
 }) {
   if (itemCount <= 0) return 0;
-  final contentWidth = homeMobileFloatingNavWidthFor(
+  final contentWidth =
+      homeMobileFloatingNavWidthFor(
         screenWidth: screenWidth,
         itemCount: itemCount,
       ) -

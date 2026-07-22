@@ -96,11 +96,15 @@ void main() {
 
     ReaderThemes.setCustomThemes(const [first, second]);
 
-    expect(ReaderThemes.customThemes.map((theme) => theme.id),
-        ['custom:first', 'custom:second']);
+    expect(ReaderThemes.customThemes.map((theme) => theme.id), [
+      'custom:first',
+      'custom:second',
+    ]);
     expect(ReaderThemes.byId(second.id).background, second.background);
-    expect(ReaderThemes.byId(second.id).backgroundImagePath,
-        second.backgroundImagePath);
+    expect(
+      ReaderThemes.byId(second.id).backgroundImagePath,
+      second.backgroundImagePath,
+    );
     expect(ReaderThemes.byId(second.id).cacheKey, contains('night.webp'));
   });
 
@@ -121,10 +125,11 @@ void main() {
       'missing',
     ]);
 
-    expect(
-      ReaderThemes.orderedPalettes.take(3).map((theme) => theme.id),
-      ['green', 'custom:first', 'day'],
-    );
+    expect(ReaderThemes.orderedPalettes.take(3).map((theme) => theme.id), [
+      'green',
+      'custom:first',
+      'day',
+    ]);
     expect(ReaderThemes.themeOrder, hasLength(ReaderThemes.all.length + 1));
   });
 }

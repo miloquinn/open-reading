@@ -10,25 +10,28 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  test('updated terms require the current version and source acknowledgment',
-      () async {
-    expect(UserAgreementService.currentAgreementVersion, '2026-07-19.2');
+  test(
+    'updated terms require the current version and source acknowledgment',
+    () async {
+      expect(UserAgreementService.currentAgreementVersion, '2026-07-19.2');
 
-    SharedPreferences.setMockInitialValues({
-      'userAgreementAccepted': true,
-      'agreementAcceptedVersion': '2026-07-13.1',
-      'thirdPartySourceBoundaryAccepted': true,
-    });
+      SharedPreferences.setMockInitialValues({
+        'userAgreementAccepted': true,
+        'agreementAcceptedVersion': '2026-07-13.1',
+        'thirdPartySourceBoundaryAccepted': true,
+      });
 
-    expect(await UserAgreementService.hasUserAcceptedAgreement(), isFalse);
+      expect(await UserAgreementService.hasUserAcceptedAgreement(), isFalse);
 
-    await UserAgreementService.acceptAgreement(locale: 'en');
+      await UserAgreementService.acceptAgreement(locale: 'en');
 
-    expect(await UserAgreementService.hasUserAcceptedAgreement(), isTrue);
-  });
+      expect(await UserAgreementService.hasUserAcceptedAgreement(), isTrue);
+    },
+  );
 
-  testWidgets('welcome page requires separate third-party source consent',
-      (tester) async {
+  testWidgets('welcome page requires separate third-party source consent', (
+    tester,
+  ) async {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = const Size(430, 1100);
     addTearDown(tester.view.reset);
@@ -45,19 +48,18 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-        find.byKey(const Key('agreementSourceBoundaryCard')), findsOneWidget);
-    expect(
-      find.textContaining('provides no source addresses'),
+      find.byKey(const Key('agreementSourceBoundaryCard')),
       findsOneWidget,
     );
+    expect(find.textContaining('provides no source addresses'), findsOneWidget);
     expect(
       find.textContaining('retained for no more than 30 days'),
       findsOneWidget,
     );
 
     FilledButton continueButton() => tester.widget<FilledButton>(
-          find.byKey(const Key('agreementContinueButton')),
-        );
+      find.byKey(const Key('agreementContinueButton')),
+    );
 
     expect(continueButton().onPressed, isNull);
 

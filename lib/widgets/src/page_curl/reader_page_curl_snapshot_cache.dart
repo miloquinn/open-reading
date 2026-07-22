@@ -156,10 +156,10 @@ class _SnapshotRequestKey {
 
   @override
   int get hashCode => Object.hash(
-        pageKey,
-        contentRevision,
-        logicalSize,
-        pixelRatio,
-        generation,
-      );
+    pageKey,
+    contentRevision,
+    logicalSize,
+    pixelRatio,
+    generation,
+  );
 }

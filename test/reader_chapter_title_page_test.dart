@@ -9,18 +9,16 @@ void main() {
     expect(ReaderChapterTitlePage.titleFontSizeFor(24), 34);
   });
 
-  testWidgets('title page uses body color and centered elevated layout',
-      (tester) async {
+  testWidgets('title page uses body color and centered elevated layout', (
+    tester,
+  ) async {
     const bodyColor = Color(0xFF302B25);
     await tester.pumpWidget(
       const MaterialApp(
         home: SizedBox.expand(
           child: ReaderChapterTitlePage(
             title: '第十二章  风暴将至',
-            bodyStyle: TextStyle(
-              fontSize: 17.5,
-              color: bodyColor,
-            ),
+            bodyStyle: TextStyle(fontSize: 17.5, color: bodyColor),
           ),
         ),
       ),
@@ -34,10 +32,9 @@ void main() {
     expect(title.style?.fontSize, 31.5);
     expect(title.style?.color, bodyColor);
 
-    final elevatedAlign =
-        tester.widgetList<Align>(find.byType(Align)).singleWhere(
-              (align) => align.alignment == const Alignment(0, -0.16),
-            );
+    final elevatedAlign = tester
+        .widgetList<Align>(find.byType(Align))
+        .singleWhere((align) => align.alignment == const Alignment(0, -0.16));
     expect(elevatedAlign.alignment, const Alignment(0, -0.16));
   });
 }

@@ -221,9 +221,8 @@ class _ReaderCustomThemePageState extends State<ReaderCustomThemePage> {
                   max: 0.75,
                   divisions: 13,
                   onChanged: (value) => setState(
-                    () => _theme = _theme.copyWith(
-                      backgroundImageOpacity: value,
-                    ),
+                    () =>
+                        _theme = _theme.copyWith(backgroundImageOpacity: value),
                   ),
                 ),
               ],
@@ -469,9 +468,9 @@ class _BackgroundImageSetting extends StatelessWidget {
               children: [
                 Text(
                   context.l10n.readerCustomThemeBackgroundImage,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -487,9 +486,11 @@ class _BackgroundImageSetting extends StatelessWidget {
                   children: [
                     FilledButton.tonalIcon(
                       onPressed: supported ? onChoose : null,
-                      icon: Icon(hasImage
-                          ? Icons.swap_horiz_rounded
-                          : Icons.upload_rounded),
+                      icon: Icon(
+                        hasImage
+                            ? Icons.swap_horiz_rounded
+                            : Icons.upload_rounded,
+                      ),
                       label: Text(
                         hasImage
                             ? context.l10n.readerCustomThemeReplaceImage
@@ -560,12 +561,14 @@ class _ColorSettingTile extends StatelessWidget {
                     Text(
                       title,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w800,
-                          ),
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                     const SizedBox(height: 2),
-                    Text(subtitle,
-                        style: Theme.of(context).textTheme.bodySmall),
+                    Text(
+                      subtitle,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
                   ],
                 ),
               ),
@@ -698,9 +701,9 @@ class _ReaderColorPickerSheetState extends State<_ReaderColorPickerSheet> {
             const SizedBox(height: 18),
             Text(
               widget.title,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 16),
             GridView.builder(

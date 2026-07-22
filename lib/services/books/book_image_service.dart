@@ -129,7 +129,8 @@ class BookImageManager {
       _addToMemoryCache(imagePath, image);
 
       debugPrint(
-          '✅ 图片加载成功: ${path.basename(imagePath)} (${image.width}x${image.height})');
+        '✅ 图片加载成功: ${path.basename(imagePath)} (${image.width}x${image.height})',
+      );
       return image;
     } catch (e) {
       debugPrint('❌ 加载图片失败: $imagePath, 错误: $e');

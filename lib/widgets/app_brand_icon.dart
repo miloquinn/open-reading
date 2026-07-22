@@ -44,8 +44,9 @@ class AppBrandIcon extends StatelessWidget {
           fit: fit,
           errorBuilder: (context, error, stackTrace) {
             return ColoredBox(
-              color:
-                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.2),
               child: Icon(
                 Icons.auto_stories_rounded,
                 color: Theme.of(context).colorScheme.primary,

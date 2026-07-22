@@ -32,8 +32,9 @@ extension _DetailedStatsHeatmapView on _DetailedStatsPageState {
                   height: 11,
                   margin: const EdgeInsets.only(right: 4),
                   decoration: BoxDecoration(
-                    color:
-                        palette.accent.withValues(alpha: 0.12 + (index * 0.2)),
+                    color: palette.accent.withValues(
+                      alpha: 0.12 + (index * 0.2),
+                    ),
                     borderRadius: BorderRadius.circular(3),
                   ),
                 );
@@ -75,19 +76,12 @@ extension _DetailedStatsHeatmapView on _DetailedStatsPageState {
                   child: Text(
                     weekDays[day],
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: palette.mutedInk,
-                      fontSize: 9,
-                    ),
+                    style: TextStyle(color: palette.mutedInk, fontSize: 9),
                   ),
                 ),
                 const SizedBox(width: 4),
                 ...List.generate(weeks, (week) {
-                  final intensity = _readingIntensity(
-                    week,
-                    day,
-                    weeks: weeks,
-                  );
+                  final intensity = _readingIntensity(week, day, weeks: weeks);
                   return Expanded(
                     child: AspectRatio(
                       aspectRatio: 1,
@@ -111,11 +105,7 @@ extension _DetailedStatsHeatmapView on _DetailedStatsPageState {
     );
   }
 
-  double _readingIntensity(
-    int week,
-    int day, {
-    required int weeks,
-  }) {
+  double _readingIntensity(int week, int day, {required int weeks}) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final currentSunday = today.subtract(Duration(days: today.weekday % 7));

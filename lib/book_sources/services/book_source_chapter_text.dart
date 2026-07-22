@@ -120,8 +120,9 @@ List<String> _removeRepeatedLeadingChapterTitle(
       .where((value) => value.isNotEmpty)
       .toSet();
   if (values.isEmpty || titleKeys.isEmpty) return values;
-  final firstContentIndex =
-      values.indexWhere((value) => value.trim().isNotEmpty);
+  final firstContentIndex = values.indexWhere(
+    (value) => value.trim().isNotEmpty,
+  );
   if (firstContentIndex < 0 ||
       !titleKeys.contains(_chapterTitleKey(values[firstContentIndex]))) {
     return values;

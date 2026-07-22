@@ -3,37 +3,35 @@ import 'package:xxread/book_sources/protocol/book_source_protocol.dart';
 import 'package:xxread/book_sources/services/book_source_chapter_text.dart';
 
 void main() {
-  test('plain source text preserves paragraph structure and existing indent',
-      () {
-    const content = BookSourceChapterContent(
-      bookId: 'book',
-      chapterId: 'chapter',
-      title: 'Chapter',
-      content: '  第一段\r\n\r\n\t第二段',
-      contentType: 'text/plain',
-    );
+  test(
+    'plain source text preserves paragraph structure and existing indent',
+    () {
+      const content = BookSourceChapterContent(
+        bookId: 'book',
+        chapterId: 'chapter',
+        title: 'Chapter',
+        content: '  第一段\r\n\r\n\t第二段',
+        contentType: 'text/plain',
+      );
 
-    expect(
-      readableBookSourceChapterText(content),
-      '  第一段\n\n\t第二段',
-    );
-  });
+      expect(readableBookSourceChapterText(content), '  第一段\n\n\t第二段');
+    },
+  );
 
-  test('html extraction produces canonical paragraphs without visual indent',
-      () {
-    const content = BookSourceChapterContent(
-      bookId: 'book',
-      chapterId: 'chapter',
-      title: 'Chapter',
-      content: '<div><p>第一段</p><p>第二段<br>续行</p></div>',
-      contentType: 'text/html',
-    );
+  test(
+    'html extraction produces canonical paragraphs without visual indent',
+    () {
+      const content = BookSourceChapterContent(
+        bookId: 'book',
+        chapterId: 'chapter',
+        title: 'Chapter',
+        content: '<div><p>第一段</p><p>第二段<br>续行</p></div>',
+        contentType: 'text/html',
+      );
 
-    expect(
-      readableBookSourceChapterText(content),
-      '第一段\n第二段\n续行',
-    );
-  });
+      expect(readableBookSourceChapterText(content), '第一段\n第二段\n续行');
+    },
+  );
 
   test('plain text mislabelled as html keeps paragraph breaks', () {
     // Regression: sources that declare `text/html` but return plain,
@@ -50,10 +48,7 @@ void main() {
       contentType: 'text/html',
     );
 
-    expect(
-      readableBookSourceChapterText(content),
-      '第一段\n第二段\n第三段',
-    );
+    expect(readableBookSourceChapterText(content), '第一段\n第二段\n第三段');
   });
 
   test('plain and html source text recognize Unicode hard line breaks', () {
@@ -72,10 +67,7 @@ void main() {
       contentType: 'text/html',
     );
 
-    expect(
-      readableBookSourceChapterText(plain),
-      '第一段\n第二段\n第三段\n第四段',
-    );
+    expect(readableBookSourceChapterText(plain), '第一段\n第二段\n第三段\n第四段');
     expect(readableBookSourceChapterText(html), '第一段\n第二段\n第三段');
   });
 
@@ -91,14 +83,10 @@ void main() {
       contentType: 'text/plain',
     );
 
-    expect(
-      readableBookSourceChapterText(content),
-      '第一段\n第二段',
-    );
+    expect(readableBookSourceChapterText(content), '第一段\n第二段');
   });
 
-  test(
-      'html paragraphs separated only by a bare newline still split '
+  test('html paragraphs separated only by a bare newline still split '
       'around a stray inline tag', () {
     // Regression: a chapter wrapped in a single tag (routing it through the
     // HTML extractor) but whose paragraphs are separated only by `\n`, with
@@ -115,10 +103,7 @@ void main() {
       contentType: 'text/html',
     );
 
-    expect(
-      readableBookSourceChapterText(content),
-      '第一段\n第二段\n第三段\n第四段',
-    );
+    expect(readableBookSourceChapterText(content), '第一段\n第二段\n第三段\n第四段');
   });
 
   test('removes a repeated plain-text chapter title only at the beginning', () {
@@ -130,10 +115,7 @@ void main() {
       contentType: 'text/plain',
     );
 
-    expect(
-      readableBookSourceChapterText(content),
-      '正文第一段\n正文提到第一章 归来但不能删除',
-    );
+    expect(readableBookSourceChapterText(content), '正文第一段\n正文提到第一章 归来但不能删除');
   });
 
   test('uses the catalog title when chapter content omits its title field', () {
@@ -160,9 +142,6 @@ void main() {
       contentType: 'text/plain',
     );
 
-    expect(
-      readableBookSourceChapterText(content),
-      '第一章的故事从这里开始。\n第二段',
-    );
+    expect(readableBookSourceChapterText(content), '第一章的故事从这里开始。\n第二段');
   });
 }

@@ -19,19 +19,20 @@ class BookSourceReadingProgress {
     return BookSourceReadingProgress(
       chapterId: (json['chapterId'] as String?)?.trim() ?? '',
       chapterIndex: (json['chapterIndex'] as num?)?.toInt() ?? 0,
-      chapterProgress:
-          ((json['chapterProgress'] as num?)?.toDouble() ?? 0).clamp(0, 1),
-      updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? '') ??
+      chapterProgress: ((json['chapterProgress'] as num?)?.toDouble() ?? 0)
+          .clamp(0, 1),
+      updatedAt:
+          DateTime.tryParse(json['updatedAt'] as String? ?? '') ??
           DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'chapterId': chapterId,
-        'chapterIndex': chapterIndex,
-        'chapterProgress': chapterProgress.clamp(0, 1),
-        'updatedAt': updatedAt.toUtc().toIso8601String(),
-      };
+    'chapterId': chapterId,
+    'chapterIndex': chapterIndex,
+    'chapterProgress': chapterProgress.clamp(0, 1),
+    'updatedAt': updatedAt.toUtc().toIso8601String(),
+  };
 }
 
 class BookSourceReadingProgressStore {

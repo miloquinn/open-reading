@@ -15,7 +15,7 @@ class EpubImageExtractor {
   final BookImageManager imageManager;
 
   EpubImageExtractor({BookImageManager? imageManager})
-      : imageManager = imageManager ?? BookImageManager();
+    : imageManager = imageManager ?? BookImageManager();
 
   /// 从EPUB文件提取所有图片
   ///
@@ -153,8 +153,10 @@ class EpubImageExtractor {
   /// 返回：转换后的文本（图片用{{img:xxx}}占位符替换）
   String convertImagesToPlaceholders(String htmlContent) {
     // 替换img标签为占位符
-    final imgPattern =
-        RegExp(r'<img[^>]+src="([^"]+)"[^>]*>', caseSensitive: false);
+    final imgPattern = RegExp(
+      r'<img[^>]+src="([^"]+)"[^>]*>',
+      caseSensitive: false,
+    );
 
     return htmlContent.replaceAllMapped(imgPattern, (match) {
       final src = match.group(1);
@@ -168,8 +170,15 @@ class EpubImageExtractor {
   /// 判断文件是否为图片
   bool _isImageFile(String fileName) {
     final extension = path.extension(fileName).toLowerCase();
-    return ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.svg']
-        .contains(extension);
+    return [
+      '.jpg',
+      '.jpeg',
+      '.png',
+      '.gif',
+      '.webp',
+      '.bmp',
+      '.svg',
+    ].contains(extension);
   }
 
   /// 获取图片统计信息
@@ -200,12 +209,7 @@ class EpubImageExtractor {
       };
     } catch (e) {
       debugPrint('❌ 获取图片统计失败: $e');
-      return {
-        'count': 0,
-        'totalSize': 0,
-        'totalSizeMB': '0.00',
-        'types': {},
-      };
+      return {'count': 0, 'totalSize': 0, 'totalSizeMB': '0.00', 'types': {}};
     }
   }
 }

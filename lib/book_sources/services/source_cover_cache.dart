@@ -37,11 +37,12 @@ class SourceCoverCache {
     this.maxDiskAge = const Duration(days: 7),
     this.maxImageBytes = 8 * 1024 * 1024,
     this.maxMemoryBytes = 24 * 1024 * 1024,
-  })  : assert(maxConcurrent > 0),
-        assert(maxImageBytes > 0),
-        assert(maxMemoryBytes > 0),
-        _cacheDirectory = cacheDirectory {
-    _dio = dio ??
+  }) : assert(maxConcurrent > 0),
+       assert(maxImageBytes > 0),
+       assert(maxMemoryBytes > 0),
+       _cacheDirectory = cacheDirectory {
+    _dio =
+        dio ??
         Dio(
           BaseOptions(
             connectTimeout: const Duration(seconds: 8),
@@ -181,9 +182,7 @@ class SourceCoverCache {
         );
       }
       if (!contentType.toLowerCase().startsWith('image/')) {
-        throw const SourceCoverLoadException(
-          'Cover response is not an image.',
-        );
+        throw const SourceCoverLoadException('Cover response is not an image.');
       }
       return data is Uint8List ? data : Uint8List.fromList(data);
     } on DioException catch (error) {
@@ -195,10 +194,10 @@ class SourceCoverCache {
           DioExceptionType.receiveTimeout ||
           DioExceptionType.transformTimeout ||
           DioExceptionType.connectionError ||
-          DioExceptionType.unknown =>
-            true,
-          DioExceptionType.badResponse =>
-            _isTransientStatus(error.response?.statusCode ?? 0),
+          DioExceptionType.unknown => true,
+          DioExceptionType.badResponse => _isTransientStatus(
+            error.response?.statusCode ?? 0,
+          ),
           DioExceptionType.cancel || DioExceptionType.badCertificate => false,
         },
       );
@@ -324,8 +323,10 @@ class SourceCoverCache {
   Future<int> _directorySize(Directory directory) async {
     if (!await directory.exists()) return 0;
     var total = 0;
-    await for (final entity
-        in directory.list(recursive: true, followLinks: false)) {
+    await for (final entity in directory.list(
+      recursive: true,
+      followLinks: false,
+    )) {
       if (entity is File) {
         try {
           total += await entity.length();

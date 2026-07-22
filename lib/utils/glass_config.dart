@@ -100,20 +100,16 @@ class GlassEffectConfig {
   }) {
     final scheme = Theme.of(context).colorScheme;
     final resolvedBrightness = brightness ?? scheme.brightness;
-    final themedSource = source ??
+    final themedSource =
+        source ??
         Color.lerp(
           scheme.surface,
           scheme.primary,
           resolvedBrightness == Brightness.light ? 0.08 : 0.06,
         )!;
-    final base = chromeBaseColor(
-      themedSource,
-      resolvedBrightness,
-    );
+    final base = chromeBaseColor(themedSource, resolvedBrightness);
     return base.withValues(
-      alpha: effectiveOpacity(
-        opacity ?? chromeOpacityFor(resolvedBrightness),
-      ),
+      alpha: effectiveOpacity(opacity ?? chromeOpacityFor(resolvedBrightness)),
     );
   }
 
@@ -147,9 +143,9 @@ class GlassEffectConfig {
   }
 
   static Color surfaceColor(BuildContext context, {double opacity = 1.0}) {
-    return Theme.of(context).colorScheme.surface.withValues(
-          alpha: effectiveOpacity(opacity),
-        );
+    return Theme.of(
+      context,
+    ).colorScheme.surface.withValues(alpha: effectiveOpacity(opacity));
   }
 
   // ============ 快速配置预设 ============
@@ -234,9 +230,10 @@ class GlassEffectHelper {
     preset ??= GlassEffectConfig.standardMode;
     return {
       'blur': GlassEffectConfig.appBarBlur * preset.blurReduction,
-      'opacity': (GlassEffectConfig.chromeOpacityFor(brightness) +
-              preset.opacityIncrease)
-          .clamp(0.0, 1.0),
+      'opacity':
+          (GlassEffectConfig.chromeOpacityFor(brightness) +
+                  preset.opacityIncrease)
+              .clamp(0.0, 1.0),
     };
   }
 
@@ -248,9 +245,10 @@ class GlassEffectHelper {
     preset ??= GlassEffectConfig.standardMode;
     return {
       'blur': GlassEffectConfig.navigationBarBlur * preset.blurReduction,
-      'opacity': (GlassEffectConfig.chromeOpacityFor(brightness) +
-              preset.opacityIncrease)
-          .clamp(0.0, 1.0),
+      'opacity':
+          (GlassEffectConfig.chromeOpacityFor(brightness) +
+                  preset.opacityIncrease)
+              .clamp(0.0, 1.0),
     };
   }
 
@@ -266,9 +264,10 @@ class GlassEffectHelper {
         : GlassEffectConfig.readingBottomBarBlur;
     return {
       'blur': blur * preset.blurReduction,
-      'opacity': (GlassEffectConfig.chromeOpacityFor(brightness) +
-              preset.opacityIncrease)
-          .clamp(0.0, 1.0),
+      'opacity':
+          (GlassEffectConfig.chromeOpacityFor(brightness) +
+                  preset.opacityIncrease)
+              .clamp(0.0, 1.0),
     };
   }
 
@@ -300,8 +299,9 @@ class GlassEffectHelper {
           ),
           border: Border(
             bottom: BorderSide(
-              color:
-                  Theme.of(context).colorScheme.outline.withValues(alpha: 0.16),
+              color: Theme.of(
+                context,
+              ).colorScheme.outline.withValues(alpha: 0.16),
               width: 0.5,
             ),
           ),
@@ -343,14 +343,16 @@ class GlassEffectHelper {
           color: GlassEffectConfig.surfaceColor(context, opacity: 0.98),
           borderRadius: borderRadius,
           border: Border.all(
-            color:
-                Theme.of(context).colorScheme.outline.withValues(alpha: 0.16),
+            color: Theme.of(
+              context,
+            ).colorScheme.outline.withValues(alpha: 0.16),
             width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color:
-                  Theme.of(context).colorScheme.shadow.withValues(alpha: 0.12),
+              color: Theme.of(
+                context,
+              ).colorScheme.shadow.withValues(alpha: 0.12),
               blurRadius: 18,
               offset: const Offset(0, 8),
             ),
@@ -427,10 +429,7 @@ class GlassEffectHelper {
                 opacity: config['opacity']!,
               ),
               GlassEffectConfig.disableAllGlassEffects
-                  ? GlassEffectConfig.chromeSurfaceColor(
-                      context,
-                      opacity: 1.0,
-                    )
+                  ? GlassEffectConfig.chromeSurfaceColor(context, opacity: 1.0)
                   : Colors.transparent,
             ],
             stops: const [0.0, 0.7, 1.0],

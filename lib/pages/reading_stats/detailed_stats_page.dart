@@ -141,10 +141,7 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
       MapEntry(l10n.statsPeriodMorning, sumRange(9, 11)),
       MapEntry(l10n.statsPeriodAfternoon, sumRange(12, 17)),
       MapEntry(l10n.statsPeriodEvening, sumRange(18, 21)),
-      MapEntry(
-        l10n.statsPeriodLateNight,
-        sumRange(22, 23) + sumRange(0, 4),
-      ),
+      MapEntry(l10n.statsPeriodLateNight, sumRange(22, 23) + sumRange(0, 4)),
     ]..sort((a, b) => b.value.compareTo(a.value));
     return ranges.first.value <= 0 ? l10n.statsNoData : ranges.first.key;
   }
@@ -166,8 +163,8 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
 
   Future<void> _handleTabTap(int index) async {
     if (_isAnimatingFromTabTap || !_pageController.hasClients) return;
-    final current =
-        (_pageController.page ?? _tabController.index.toDouble()).round();
+    final current = (_pageController.page ?? _tabController.index.toDouble())
+        .round();
     if (current == index) return;
 
     _isAnimatingFromTabTap = true;
@@ -266,12 +263,7 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
       final key = date.toIso8601String().split('T').first;
       complete.add(
         byDate[key] ??
-            {
-              'date': key,
-              'readingTime': 0,
-              'pagesRead': 0,
-              'booksRead': 0,
-            },
+            {'date': key, 'readingTime': 0, 'pagesRead': 0, 'booksRead': 0},
       );
     }
     if (mounted) setState(() => _dailyStats = complete);
@@ -297,8 +289,9 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
       });
     }
     result.sort((a, b) {
-      final duration =
-          (b['readingTime'] as int).compareTo(a['readingTime'] as int);
+      final duration = (b['readingTime'] as int).compareTo(
+        a['readingTime'] as int,
+      );
       return duration != 0
           ? duration
           : (b['pagesRead'] as int).compareTo(a['pagesRead'] as int);
@@ -315,11 +308,14 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
     final perBook = _bookReadingStats.isNotEmpty
         ? _bookReadingStats
         : await _statsDao.getBookReadingStats();
-    final sorted = [...books]..sort((a, b) {
-        final aLast =
-            a.id == null ? 0 : (perBook[a.id!]?['lastReadMs'] as int?) ?? 0;
-        final bLast =
-            b.id == null ? 0 : (perBook[b.id!]?['lastReadMs'] as int?) ?? 0;
+    final sorted = [...books]
+      ..sort((a, b) {
+        final aLast = a.id == null
+            ? 0
+            : (perBook[a.id!]?['lastReadMs'] as int?) ?? 0;
+        final bLast = b.id == null
+            ? 0
+            : (perBook[b.id!]?['lastReadMs'] as int?) ?? 0;
         return aLast == bLast
             ? b.currentPage.compareTo(a.currentPage)
             : bLast.compareTo(aLast);
@@ -461,11 +457,7 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.calendar_today_rounded,
-              color: palette.accent,
-              size: 16,
-            ),
+            Icon(Icons.calendar_today_rounded, color: palette.accent, size: 16),
             if (!compact) ...[
               const SizedBox(width: 7),
               Text(
@@ -478,11 +470,7 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
               ),
             ],
             const SizedBox(width: 2),
-            Icon(
-              Icons.expand_more_rounded,
-              color: palette.accent,
-              size: 18,
-            ),
+            Icon(Icons.expand_more_rounded, color: palette.accent, size: 18),
           ],
         ),
       ),

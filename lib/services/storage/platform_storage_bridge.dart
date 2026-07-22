@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 
 class PlatformStorageBridge {
   PlatformStorageBridge({MethodChannel? channel})
-      : _channel = channel ?? const MethodChannel('com.niki.xxread/storage');
+    : _channel = channel ?? const MethodChannel('com.niki.xxread/storage');
 
   final MethodChannel _channel;
 
@@ -16,7 +16,8 @@ class PlatformStorageBridge {
   Future<List<Map<String, Object?>>> listAndroidDocuments(
     String treeUri,
   ) async {
-    final rows = await _channel.invokeListMethod<Map<Object?, Object?>>(
+    final rows =
+        await _channel.invokeListMethod<Map<Object?, Object?>>(
           'listDocuments',
           {'treeUri': treeUri},
         ) ??
@@ -25,7 +26,8 @@ class PlatformStorageBridge {
   }
 
   Future<List<Map<String, Object?>>> listPersistedAndroidDirectories() async {
-    final rows = await _channel.invokeListMethod<Map<Object?, Object?>>(
+    final rows =
+        await _channel.invokeListMethod<Map<Object?, Object?>>(
           'listPersistedDirectories',
         ) ??
         const [];
@@ -33,10 +35,9 @@ class PlatformStorageBridge {
   }
 
   Future<bool> releaseAndroidDirectory(String treeUri) async {
-    return await _channel.invokeMethod<bool>(
-          'releaseDirectory',
-          {'treeUri': treeUri},
-        ) ??
+    return await _channel.invokeMethod<bool>('releaseDirectory', {
+          'treeUri': treeUri,
+        }) ??
         false;
   }
 
@@ -44,13 +45,10 @@ class PlatformStorageBridge {
     required String documentUri,
     required String destinationPath,
   }) async {
-    final path = await _channel.invokeMethod<String>(
-      'materializeDocument',
-      {
-        'documentUri': documentUri,
-        'destinationPath': destinationPath,
-      },
-    );
+    final path = await _channel.invokeMethod<String>('materializeDocument', {
+      'documentUri': documentUri,
+      'destinationPath': destinationPath,
+    });
     if (path == null || path.isEmpty) {
       throw StateError('Android 文件物化没有返回本地路径');
     }
@@ -63,7 +61,8 @@ class PlatformStorageBridge {
   }
 
   Future<List<Map<String, Object?>>> listICloudDocuments() async {
-    final rows = await _channel.invokeListMethod<Map<Object?, Object?>>(
+    final rows =
+        await _channel.invokeListMethod<Map<Object?, Object?>>(
           'listICloudDocuments',
         ) ??
         const [];
@@ -76,10 +75,7 @@ class PlatformStorageBridge {
   }) async {
     final path = await _channel.invokeMethod<String>(
       'materializeICloudDocument',
-      {
-        'locator': locator,
-        'destinationPath': destinationPath,
-      },
+      {'locator': locator, 'destinationPath': destinationPath},
     );
     if (path == null || path.isEmpty) {
       throw StateError('iCloud 文件物化没有返回本地路径');
@@ -92,15 +88,13 @@ class PlatformStorageBridge {
     required String displayName,
     required String mimeType,
   }) async {
-    return await _channel.invokeMapMethod<String, Object?>(
-          'exportBookToDownloads',
-          {
-            'sourcePath': sourcePath,
-            'displayName': displayName,
-            'mimeType': mimeType,
-            'relativePath': 'Download/开元阅读',
-          },
-        ) ??
+    return await _channel
+            .invokeMapMethod<String, Object?>('exportBookToDownloads', {
+              'sourcePath': sourcePath,
+              'displayName': displayName,
+              'mimeType': mimeType,
+              'relativePath': 'Download/开元阅读',
+            }) ??
         const {'status': 'failure', 'errorCode': 'empty_result'};
   }
 
@@ -109,26 +103,17 @@ class PlatformStorageBridge {
     required String displayName,
     required String mimeType,
   }) async {
-    return await _channel.invokeMapMethod<String, Object?>(
-          'exportDocument',
-          {
-            'sourcePath': sourcePath,
-            'displayName': displayName,
-            'mimeType': mimeType,
-          },
-        ) ??
+    return await _channel.invokeMapMethod<String, Object?>('exportDocument', {
+          'sourcePath': sourcePath,
+          'displayName': displayName,
+          'mimeType': mimeType,
+        }) ??
         const {'status': 'failure', 'errorCode': 'empty_result'};
   }
 
-  List<Map<String, Object?>> _normalizeRows(
-    List<Map<Object?, Object?>> rows,
-  ) {
+  List<Map<String, Object?>> _normalizeRows(List<Map<Object?, Object?>> rows) {
     return rows
-        .map(
-          (row) => row.map(
-            (key, value) => MapEntry('$key', value),
-          ),
-        )
+        .map((row) => row.map((key, value) => MapEntry('$key', value)))
         .toList(growable: false);
   }
 }

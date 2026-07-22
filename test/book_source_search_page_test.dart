@@ -17,8 +17,9 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  testWidgets('discover page shows the empty-source call to action',
-      (tester) async {
+  testWidgets('discover page shows the empty-source call to action', (
+    tester,
+  ) async {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = const Size(390, 1000);
     addTearDown(tester.view.reset);
@@ -36,8 +37,9 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('search page focuses the query field and searches on submit',
-      (tester) async {
+  testWidgets('search page focuses the query field and searches on submit', (
+    tester,
+  ) async {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = const Size(390, 1000);
     addTearDown(tester.view.reset);
@@ -57,10 +59,7 @@ void main() {
     await tester.pumpAndSettle();
 
     final queryField = find.byKey(const Key('bookSourceQueryControl'));
-    expect(
-      tester.widget<TextField>(queryField).focusNode?.hasFocus,
-      isTrue,
-    );
+    expect(tester.widget<TextField>(queryField).focusNode?.hasFocus, isTrue);
 
     await tester.enterText(queryField, 'test');
     await tester.testTextInput.receiveAction(TextInputAction.search);
@@ -71,8 +70,9 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('loads the next source page when search results reach the end',
-      (tester) async {
+  testWidgets('loads the next source page when search results reach the end', (
+    tester,
+  ) async {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = const Size(390, 1000);
     addTearDown(tester.view.reset);
@@ -101,19 +101,13 @@ void main() {
     await tester.pumpAndSettle();
 
     if (client.requestedPages.length == 1) {
-      await tester.drag(
-        find.byType(CustomScrollView),
-        const Offset(0, -1600),
-      );
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -1600));
       await tester.pumpAndSettle();
     }
 
     expect(client.requestedPages, [1, 2]);
     // 第 11 本书在首屏之外，滚到底部让 Sliver 构建它再断言。
-    await tester.drag(
-      find.byType(CustomScrollView),
-      const Offset(0, -1600),
-    );
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -1600));
     await tester.pumpAndSettle();
     expect(find.text('Book 11'), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -148,15 +142,13 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Book 1'), findsNothing);
-    expect(
-      tester.widget<TextField>(queryField).controller?.text,
-      isEmpty,
-    );
+    expect(tester.widget<TextField>(queryField).controller?.text, isEmpty);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('scope chips switch between all sources and a single source',
-      (tester) async {
+  testWidgets('scope chips switch between all sources and a single source', (
+    tester,
+  ) async {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = const Size(390, 1000);
     addTearDown(tester.view.reset);
@@ -234,17 +226,17 @@ class _ScopeTrackingClient extends BookSourceClient {
 }
 
 RegisteredBookSource _source() => RegisteredBookSource(
-      id: 'source-a',
-      name: 'Source A',
-      description: '',
-      manifestUrl: Uri.parse('https://example.org/source.json'),
-      apiBaseUrl: Uri.parse('https://example.org/api/'),
-      protocolVersion: '1.1',
-      languages: const ['en'],
-      capabilities: const {'search'},
-      enabled: true,
-      addedAt: DateTime.utc(2026, 7, 13),
-    );
+  id: 'source-a',
+  name: 'Source A',
+  description: '',
+  manifestUrl: Uri.parse('https://example.org/source.json'),
+  apiBaseUrl: Uri.parse('https://example.org/api/'),
+  protocolVersion: '1.1',
+  languages: const ['en'],
+  capabilities: const {'search'},
+  enabled: true,
+  addedAt: DateTime.utc(2026, 7, 13),
+);
 
 class _PagingBookSourceClient extends BookSourceClient {
   final List<int> requestedPages = [];

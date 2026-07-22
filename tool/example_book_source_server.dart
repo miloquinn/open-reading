@@ -34,10 +34,7 @@ class ExampleBookSourceServer {
     );
   }
 
-  Future<Uri> start({
-    InternetAddress? address,
-    int port = 8787,
-  }) async {
+  Future<Uri> start({InternetAddress? address, int port = 8787}) async {
     if (_server != null) return baseUri;
     _server = await HttpServer.bind(
       address ?? InternetAddress.loopbackIPv4,
@@ -60,16 +57,12 @@ class ExampleBookSourceServer {
       } catch (error, stackTrace) {
         stderr.writeln('Example source request failed: $error');
         stderr.writeln(stackTrace);
-        _json(
-          request.response,
-          HttpStatus.internalServerError,
-          {
-            'error': {
-              'code': 'INTERNAL_ERROR',
-              'message': 'The example source could not process the request.',
-            },
+        _json(request.response, HttpStatus.internalServerError, {
+          'error': {
+            'code': 'INTERNAL_ERROR',
+            'message': 'The example source could not process the request.',
           },
-        );
+        });
       }
     }
   }
@@ -202,19 +195,23 @@ class ExampleBookSourceServer {
       request.uri.queryParameters['pageSize'],
       fallback: 20,
     ).clamp(1, 100);
-    final matched = _books.values.where((entry) {
-      if (query.isEmpty) return true;
-      final book = entry.book;
-      return '${book['title']} ${book['author']}'.toLowerCase().contains(query);
-    }).toList(growable: false);
+    final matched = _books.values
+        .where((entry) {
+          if (query.isEmpty) return true;
+          final book = entry.book;
+          return '${book['title']} ${book['author']}'.toLowerCase().contains(
+            query,
+          );
+        })
+        .toList(growable: false);
     final start = (page - 1) * pageSize;
     final items = start >= matched.length
         ? const <Map<String, Object>>[]
         : matched
-            .skip(start)
-            .take(pageSize)
-            .map((entry) => entry.book)
-            .toList(growable: false);
+              .skip(start)
+              .take(pageSize)
+              .map((entry) => entry.book)
+              .toList(growable: false);
 
     _json(request.response, HttpStatus.ok, {
       'items': items,
@@ -229,11 +226,7 @@ class ExampleBookSourceServer {
     final books = _books.values.map((entry) => entry.book).toList();
     _json(response, HttpStatus.ok, {
       'sections': [
-        {
-          'id': 'featured',
-          'title': '编辑精选',
-          'items': books,
-        },
+        {'id': 'featured', 'title': '编辑精选', 'items': books},
         {
           'id': 'recent',
           'title': '最近更新',
@@ -294,7 +287,10 @@ class ExampleBookSourceServer {
     final entry = _books[bookId];
     if (entry == null) {
       _notFound(
-          response, 'BOOK_NOT_FOUND', 'The requested book was not found.');
+        response,
+        'BOOK_NOT_FOUND',
+        'The requested book was not found.',
+      );
       return;
     }
     _json(response, HttpStatus.ok, entry.book);
@@ -330,7 +326,8 @@ class ExampleBookSourceServer {
       );
       return;
     }
-    final sortedChapters = [...entry.chapters]..sort((a, b) {
+    final sortedChapters = [...entry.chapters]
+      ..sort((a, b) {
         final byOrder = a.order.compareTo(b.order);
         return byOrder != 0 ? byOrder : a.id.compareTo(b.id);
       });
@@ -338,10 +335,10 @@ class ExampleBookSourceServer {
     final items = start >= sortedChapters.length
         ? const <Map<String, Object>>[]
         : sortedChapters
-            .skip(start)
-            .take(pageSize)
-            .map((chapter) => chapter.metadata)
-            .toList(growable: false);
+              .skip(start)
+              .take(pageSize)
+              .map((chapter) => chapter.metadata)
+              .toList(growable: false);
     _json(request.response, HttpStatus.ok, {
       'items': items,
       'page': page,
@@ -351,19 +348,19 @@ class ExampleBookSourceServer {
     });
   }
 
-  void _chapterContent(
-    HttpResponse response,
-    String bookId,
-    String chapterId,
-  ) {
+  void _chapterContent(HttpResponse response, String bookId, String chapterId) {
     final entry = _books[bookId];
     if (entry == null) {
       _notFound(
-          response, 'BOOK_NOT_FOUND', 'The requested book was not found.');
+        response,
+        'BOOK_NOT_FOUND',
+        'The requested book was not found.',
+      );
       return;
     }
-    final chapter =
-        entry.chapters.where((item) => item.id == chapterId).firstOrNull;
+    final chapter = entry.chapters
+        .where((item) => item.id == chapterId)
+        .firstOrNull;
     if (chapter == null) {
       _notFound(
         response,
@@ -385,12 +382,7 @@ class ExampleBookSourceServer {
     _error(response, HttpStatus.notFound, code, message);
   }
 
-  void _error(
-    HttpResponse response,
-    int status,
-    String code,
-    String message,
-  ) {
+  void _error(HttpResponse response, int status, String code, String message) {
     _json(response, status, {
       'error': {'code': code, 'message': message},
     });
@@ -441,11 +433,11 @@ class _ExampleChapter {
   });
 
   Map<String, Object> get metadata => {
-        'id': id,
-        'title': title,
-        'order': order,
-        'updatedAt': '2026-07-11T00:00:00Z',
-      };
+    'id': id,
+    'title': title,
+    'order': order,
+    'updatedAt': '2026-07-11T00:00:00Z',
+  };
 }
 
 const Map<String, _ExampleBook> _books = {
@@ -465,14 +457,16 @@ const Map<String, _ExampleBook> _books = {
         id: 'seed',
         title: '第一章 一颗种子',
         order: 1,
-        content: '清晨，阅读器收到了一颗没有名字的种子。'
+        content:
+            '清晨，阅读器收到了一颗没有名字的种子。'
             '它没有猜测种子会开什么花，而是先询问：你遵循什么协议？',
       ),
       _ExampleChapter(
         id: 'common-language',
         title: '第二章 共同的语言',
         order: 2,
-        content: '当发现、搜索、目录和正文都有了共同的语言，'
+        content:
+            '当发现、搜索、目录和正文都有了共同的语言，'
             '花园里的每一位开发者都可以种下自己的故事。',
       ),
     ],
@@ -493,7 +487,8 @@ const Map<String, _ExampleBook> _books = {
         id: 'night-reading',
         title: '第一章 夜读',
         order: 1,
-        content: '夜色落下时，书架没有发出声音。'
+        content:
+            '夜色落下时，书架没有发出声音。'
             '只有被翻开的那一页，替远方的作者继续说话。',
       ),
     ],
@@ -503,7 +498,8 @@ const Map<String, _ExampleBook> _books = {
       'id': 'paginated-serial',
       'title': '分页连载',
       'author': 'Open Reading',
-      'description': '用于验证章节目录分页的原创示例：本源在发现文档里把'
+      'description':
+          '用于验证章节目录分页的原创示例：本源在发现文档里把'
           'maxCatalogPageSize 声明为 2，客户端必须跟随 hasMore 翻页才能取全。',
       'categories': ['原创', '测试'],
       'status': 'ongoing',
@@ -605,12 +601,13 @@ Future<void> _printLanSourceUrls(int port) async {
     type: InternetAddressType.IPv4,
     includeLoopback: false,
   );
-  final addresses = interfaces
-      .expand((interface) => interface.addresses)
-      .map((address) => address.address)
-      .toSet()
-      .toList()
-    ..sort();
+  final addresses =
+      interfaces
+          .expand((interface) => interface.addresses)
+          .map((address) => address.address)
+          .toSet()
+          .toList()
+        ..sort();
   for (final address in addresses) {
     stdout.writeln('LAN source URL: http://$address:$port');
   }

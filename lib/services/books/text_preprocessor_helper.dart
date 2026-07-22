@@ -120,8 +120,9 @@ class TextPreprocessor {
     final trimmedLines = lines.map((line) => line.trim()).toList();
 
     // 步骤2: 移除空行并合并
-    final nonEmptyLines =
-        trimmedLines.where((line) => line.isNotEmpty).toList();
+    final nonEmptyLines = trimmedLines
+        .where((line) => line.isNotEmpty)
+        .toList();
 
     // 步骤3: 用单个换行符连接所有非空行（彻底去除段落间空行）
     return nonEmptyLines.join('\n');

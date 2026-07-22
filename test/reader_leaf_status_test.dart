@@ -2,8 +2,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:xxread/core/reader/reader_leaf_status.dart';
 
 void main() {
-  testWidgets('status revision changes only when leaf status pixels change',
-      (tester) async {
+  testWidgets('status revision changes only when leaf status pixels change', (
+    tester,
+  ) async {
     var now = DateTime(2026, 7, 18, 9, 5, 45);
     final source = _FakeBatterySource([
       const ReaderBatteryStatus(level: 73, charging: false),

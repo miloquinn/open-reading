@@ -88,9 +88,9 @@ class ImportSourcePanel extends StatelessWidget {
             Text(
               description,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                    height: 1.45,
-                  ),
+                color: scheme.onSurfaceVariant,
+                height: 1.45,
+              ),
             ),
             const SizedBox(height: 18),
             for (var index = 0; index < actions.length; index++) ...[
@@ -116,9 +116,9 @@ class ImportSourcePanel extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 busyLabel,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
               ),
             ],
             if (folderEntries.isNotEmpty) ...[
@@ -192,7 +192,8 @@ class ImportQueueCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final visual = _statusVisual(scheme, item.status);
-    final showProgress = item.status == ImportQueueItemStatus.preparing ||
+    final showProgress =
+        item.status == ImportQueueItemStatus.preparing ||
         item.status == ImportQueueItemStatus.importing;
 
     return Semantics(
@@ -233,8 +234,8 @@ class ImportQueueCard extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -242,8 +243,8 @@ class ImportQueueCard extends StatelessWidget {
                           ? item.source.extension.toUpperCase()
                           : '${item.source.extension.toUpperCase()} · $sizeLabel',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                          ),
+                        color: scheme.onSurfaceVariant,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Row(
@@ -260,11 +261,11 @@ class ImportQueueCard extends StatelessWidget {
                                   ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style:
-                                Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: visual.foreground,
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: visual.foreground,
+                                  fontWeight: FontWeight.w600,
+                                ),
                           ),
                         ),
                       ],
@@ -307,32 +308,31 @@ class ImportQueueCard extends StatelessWidget {
   ) {
     return switch (status) {
       ImportQueueItemStatus.queued => _ImportStatusVisual(
-          Icons.schedule_rounded,
-          scheme.surfaceContainerHighest,
-          scheme.onSurfaceVariant,
-        ),
+        Icons.schedule_rounded,
+        scheme.surfaceContainerHighest,
+        scheme.onSurfaceVariant,
+      ),
       ImportQueueItemStatus.preparing ||
-      ImportQueueItemStatus.importing =>
-        _ImportStatusVisual(
-          Icons.downloading_rounded,
-          scheme.primaryContainer,
-          scheme.onPrimaryContainer,
-        ),
+      ImportQueueItemStatus.importing => _ImportStatusVisual(
+        Icons.downloading_rounded,
+        scheme.primaryContainer,
+        scheme.onPrimaryContainer,
+      ),
       ImportQueueItemStatus.imported => _ImportStatusVisual(
-          Icons.check_circle_rounded,
-          scheme.tertiaryContainer,
-          scheme.onTertiaryContainer,
-        ),
+        Icons.check_circle_rounded,
+        scheme.tertiaryContainer,
+        scheme.onTertiaryContainer,
+      ),
       ImportQueueItemStatus.skipped => _ImportStatusVisual(
-          Icons.fast_forward_rounded,
-          scheme.secondaryContainer,
-          scheme.onSecondaryContainer,
-        ),
+        Icons.fast_forward_rounded,
+        scheme.secondaryContainer,
+        scheme.onSecondaryContainer,
+      ),
       ImportQueueItemStatus.failed => _ImportStatusVisual(
-          Icons.error_rounded,
-          scheme.errorContainer,
-          scheme.onErrorContainer,
-        ),
+        Icons.error_rounded,
+        scheme.errorContainer,
+        scheme.onErrorContainer,
+      ),
     };
   }
 }
@@ -368,9 +368,9 @@ class ImportQueueEmptyState extends StatelessWidget {
               body,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                    height: 1.45,
-                  ),
+                color: scheme.onSurfaceVariant,
+                height: 1.45,
+              ),
             ),
           ],
         ),
@@ -434,18 +434,20 @@ class ImportBottomBar extends StatelessWidget {
                           Text(
                             summary,
                             textAlign: TextAlign.center,
-                            style:
-                                Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: scheme.onSurfaceVariant,
-                                    ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: scheme.onSurfaceVariant),
                           ),
                           const SizedBox(height: 10),
                         ],
-                        for (var index = 0;
-                            index < buttons.length;
-                            index++) ...[
+                        for (
+                          var index = 0;
+                          index < buttons.length;
+                          index++
+                        ) ...[
                           SizedBox(
-                              width: double.infinity, child: buttons[index]),
+                            width: double.infinity,
+                            child: buttons[index],
+                          ),
                           if (index != buttons.length - 1)
                             const SizedBox(height: 8),
                         ],
@@ -457,10 +459,8 @@ class ImportBottomBar extends StatelessWidget {
                       Expanded(
                         child: Text(
                           summary,
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: scheme.onSurfaceVariant,
-                                  ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: scheme.onSurfaceVariant),
                         ),
                       ),
                       for (final button in buttons) ...[

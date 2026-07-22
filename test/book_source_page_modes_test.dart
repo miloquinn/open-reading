@@ -19,8 +19,9 @@ import 'package:xxread/widgets/reader_control_chrome.dart';
 import 'package:xxread/widgets/reader_settings_controls.dart';
 
 void main() {
-  testWidgets('opens a source chapter in horizontal slide mode',
-      (tester) async {
+  testWidgets('opens a source chapter in horizontal slide mode', (
+    tester,
+  ) async {
     SharedPreferences.setMockInitialValues({
       'native_reader_page_mode': 'horizontalSlide',
     });
@@ -32,8 +33,9 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('reading settings expose all four page turning modes',
-      (tester) async {
+  testWidgets('reading settings expose all four page turning modes', (
+    tester,
+  ) async {
     SharedPreferences.setMockInitialValues({
       ReaderSettingsStore.pageModeKey: ReaderPageMode.verticalScroll.name,
     });
@@ -70,14 +72,12 @@ void main() {
     await tester.pumpAndSettle();
 
     final prefs = await SharedPreferences.getInstance();
-    expect(
-      prefs.getBool(ReaderSettingsStore.scrollByChapterKey),
-      isFalse,
-    );
+    expect(prefs.getBool(ReaderSettingsStore.scrollByChapterKey), isFalse);
   });
 
-  testWidgets('source reader shares continuous whole-book scrolling setting',
-      (tester) async {
+  testWidgets('source reader shares continuous whole-book scrolling setting', (
+    tester,
+  ) async {
     SharedPreferences.setMockInitialValues({
       'native_reader_page_mode': 'verticalScroll',
       ReaderSettingsStore.scrollByChapterKey: false,
@@ -90,17 +90,16 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('continuous scrolling center tap shows reader controls',
-      (tester) async {
+  testWidgets('continuous scrolling center tap shows reader controls', (
+    tester,
+  ) async {
     SharedPreferences.setMockInitialValues({
       'native_reader_page_mode': 'verticalScroll',
       ReaderSettingsStore.scrollByChapterKey: false,
     });
 
     await tester.pumpWidget(_testApp());
-    final surface = find.byKey(
-      const ValueKey('book-source-reader-surface'),
-    );
+    final surface = find.byKey(const ValueKey('book-source-reader-surface'));
     await _pumpUntilFound(tester, surface);
 
     final hiddenTop = tester.widget<AnimatedPositioned>(
@@ -127,45 +126,45 @@ void main() {
     expect(visibleTop.top, greaterThan(-130));
   });
 
-  testWidgets('whole-book vertical paging keeps catalog and fixed title synced',
-      (tester) async {
-    SharedPreferences.setMockInitialValues({
-      'native_reader_page_mode': 'verticalScroll',
-      ReaderSettingsStore.scrollByChapterKey: false,
-    });
+  testWidgets(
+    'whole-book vertical paging keeps catalog and fixed title synced',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({
+        'native_reader_page_mode': 'verticalScroll',
+        ReaderSettingsStore.scrollByChapterKey: false,
+      });
 
-    await tester.pumpWidget(_testApp());
-    final surface = find.byKey(
-      const ValueKey('book-source-reader-surface'),
-    );
-    await _pumpUntilFound(tester, surface);
-    await tester.tapAt(tester.getRect(surface).center);
-    await tester.pumpAndSettle();
-    await tester.tap(find.byIcon(Icons.format_list_bulleted_rounded));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('第二章').last);
+      await tester.pumpWidget(_testApp());
+      final surface = find.byKey(const ValueKey('book-source-reader-surface'));
+      await _pumpUntilFound(tester, surface);
+      await tester.tapAt(tester.getRect(surface).center);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.format_list_bulleted_rounded));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('第二章').last);
 
-    final fixedSecondChapter = find.descendant(
-      of: find.byKey(const ValueKey('book-source-viewport-title')),
-      matching: find.text('第二章'),
-    );
-    await _pumpUntilFound(tester, fixedSecondChapter);
+      final fixedSecondChapter = find.descendant(
+        of: find.byKey(const ValueKey('book-source-viewport-title')),
+        matching: find.text('第二章'),
+      );
+      await _pumpUntilFound(tester, fixedSecondChapter);
 
-    expect(fixedSecondChapter, findsOneWidget);
-    final status = tester.widget<Text>(
-      find.byKey(const ValueKey('book-source-reader-status')),
-    );
-    expect(status.data, contains('2/2'));
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump();
-  });
+      expect(fixedSecondChapter, findsOneWidget);
+      final status = tester.widget<Text>(
+        find.byKey(const ValueKey('book-source-reader-status')),
+      );
+      expect(status.data, contains('2/2'));
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+    },
+  );
 
   testWidgets('restores normalized progress in a paged mode', (tester) async {
     SharedPreferences.setMockInitialValues({
       'native_reader_page_mode': 'instantPage',
       'book_source_reading_progress_v1:page-mode-source:book-1':
           '{"chapterId":"chapter-1","chapterIndex":0,'
-              '"chapterProgress":0.6,"updatedAt":"2026-07-12T00:00:00.000Z"}',
+          '"chapterProgress":0.6,"updatedAt":"2026-07-12T00:00:00.000Z"}',
     });
 
     await tester.pumpWidget(_testApp());
@@ -178,15 +177,12 @@ void main() {
     final status = tester.widget<Text>(statusFinder).data!;
     final fractions = RegExp(r'(\d+)/(\d+)').allMatches(status).toList();
     expect(fractions.length, 2);
-    expect(
-      int.parse(fractions[1].group(1)!),
-      greaterThan(1),
-      reason: status,
-    );
+    expect(int.parse(fractions[1].group(1)!), greaterThan(1), reason: status);
   });
 
-  testWidgets('line spacing change repaginates the current chapter',
-      (tester) async {
+  testWidgets('line spacing change repaginates the current chapter', (
+    tester,
+  ) async {
     SharedPreferences.setMockInitialValues({
       'native_reader_page_mode': 'instantPage',
       'native_reader_line_height': 1.4,
@@ -267,11 +263,10 @@ void main() {
     expect(find.byIcon(Icons.auto_stories_outlined), findsNothing);
   });
 
-  testWidgets('day reader settings stay light under system dark mode',
-      (tester) async {
-    SharedPreferences.setMockInitialValues({
-      'native_reader_theme': 'day',
-    });
+  testWidgets('day reader settings stay light under system dark mode', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({'native_reader_theme': 'day'});
     await tester.pumpWidget(_testApp(darkMode: true));
     await _pumpUntilFound(tester, find.textContaining('娴嬭瘯姝ｆ枃'));
 
@@ -292,8 +287,9 @@ void main() {
     expect(frame.palette.brightness, Brightness.light);
   });
 
-  testWidgets('horizontal slide supports left and right tap navigation',
-      (tester) async {
+  testWidgets('horizontal slide supports left and right tap navigation', (
+    tester,
+  ) async {
     SharedPreferences.setMockInitialValues({
       'native_reader_page_mode': 'horizontalSlide',
     });
@@ -304,11 +300,8 @@ void main() {
     await _pumpUntilFound(tester, statusFinder);
     String currentStatus() => tester.widget<Text>(statusFinder).data!;
     int currentPage() => int.parse(
-          RegExp(r'(\d+)/(\d+)')
-              .allMatches(currentStatus())
-              .toList()[1]
-              .group(1)!,
-        );
+      RegExp(r'(\d+)/(\d+)').allMatches(currentStatus()).toList()[1].group(1)!,
+    );
     final initialPage = currentPage();
     final pageTapDetector = tester
         .widgetList<GestureDetector>(
@@ -340,8 +333,9 @@ void main() {
     expect(currentPage(), initialPage);
   });
 
-  testWidgets('tap animation off switches a horizontal page immediately',
-      (tester) async {
+  testWidgets('tap animation off switches a horizontal page immediately', (
+    tester,
+  ) async {
     SharedPreferences.setMockInitialValues({
       ReaderSettingsStore.pageModeKey: ReaderPageMode.horizontalSlide.name,
       ReaderSettingsStore.tapPageAnimationKey: false,
@@ -352,11 +346,11 @@ void main() {
     );
     await _pumpUntilFound(tester, statusFinder);
     int currentPage() => int.parse(
-          RegExp(r'(\d+)/(\d+)')
-              .allMatches(tester.widget<Text>(statusFinder).data!)
-              .toList()[1]
-              .group(1)!,
-        );
+      RegExp(r'(\d+)/(\d+)')
+          .allMatches(tester.widget<Text>(statusFinder).data!)
+          .toList()[1]
+          .group(1)!,
+    );
     final initialPage = currentPage();
     final pageTapDetector = tester
         .widgetList<GestureDetector>(
@@ -396,21 +390,21 @@ void main() {
       );
       await _pumpUntilFound(tester, statusFinder);
       int currentPage() => int.parse(
-            RegExp(r'(\d+)/(\d+)')
-                .allMatches(tester.widget<Text>(statusFinder).data!)
-                .toList()[1]
-                .group(1)!,
-          );
+        RegExp(r'(\d+)/(\d+)')
+            .allMatches(tester.widget<Text>(statusFinder).data!)
+            .toList()[1]
+            .group(1)!,
+      );
       final initialPage = currentPage();
 
       await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .handlePlatformMessage(
-        channel.name,
-        channel.codec.encodeMethodCall(
-          const MethodCall('onVolumeKey', {'direction': 'next'}),
-        ),
-        (_) {},
-      );
+            channel.name,
+            channel.codec.encodeMethodCall(
+              const MethodCall('onVolumeKey', {'direction': 'next'}),
+            ),
+            (_) {},
+          );
       await tester.pumpAndSettle();
 
       expect(currentPage(), initialPage + 1);
@@ -423,8 +417,9 @@ void main() {
     }
   });
 
-  testWidgets('asks to add a directly opened source book on exit',
-      (tester) async {
+  testWidgets('asks to add a directly opened source book on exit', (
+    tester,
+  ) async {
     SharedPreferences.setMockInitialValues({});
     await tester.pumpWidget(_testApp(shelfService: _FakeShelfService()));
     await _pumpUntilFound(tester, find.textContaining('测试正文'));
@@ -443,17 +438,20 @@ void main() {
     expect(find.text('加入书架'), findsOneWidget);
   });
 
-  testWidgets('preloads the next chapter without revealing reader controls',
-      (tester) async {
+  testWidgets('preloads the next chapter without revealing reader controls', (
+    tester,
+  ) async {
     SharedPreferences.setMockInitialValues({
       ReaderSettingsStore.pageModeKey: ReaderPageMode.verticalScroll.name,
     });
     final client = _TrackingPageModeClient();
     await tester.pumpWidget(_testApp(client: client));
     await _pumpUntilFound(tester, find.textContaining('测试正文'));
-    for (var attempt = 0;
-        attempt < 20 && !client.requested.contains('chapter-2');
-        attempt++) {
+    for (
+      var attempt = 0;
+      attempt < 20 && !client.requested.contains('chapter-2');
+      attempt++
+    ) {
       await tester.pump(const Duration(milliseconds: 50));
     }
 
@@ -481,70 +479,66 @@ void main() {
   });
 
   testWidgets(
-      'vertical scrolling uses the shared chrome and chapter page status',
-      (tester) async {
-    SharedPreferences.setMockInitialValues({
-      'native_reader_page_mode': 'verticalScroll',
-    });
-    await tester.pumpWidget(_testApp());
-    final statusFinder = find.byKey(
-      const ValueKey('book-source-reader-status'),
-    );
-    await _pumpUntilFound(tester, statusFinder);
-    await tester.pump(const Duration(milliseconds: 200));
+    'vertical scrolling uses the shared chrome and chapter page status',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({
+        'native_reader_page_mode': 'verticalScroll',
+      });
+      await tester.pumpWidget(_testApp());
+      final statusFinder = find.byKey(
+        const ValueKey('book-source-reader-status'),
+      );
+      await _pumpUntilFound(tester, statusFinder);
+      await tester.pump(const Duration(milliseconds: 200));
 
-    expect(find.byType(ReaderControlBar), findsNWidgets(2));
-    final verticalList = tester.widget<ScrollablePositionedList>(
-      find.byType(ScrollablePositionedList),
-    );
-    expect(verticalList.itemCount, greaterThan(1));
-    final status = tester.widget<Text>(statusFinder).data!;
-    final fractions = RegExp(r'(\d+)/(\d+)').allMatches(status).toList();
-    expect(fractions.length, 2);
-    expect(
-      int.parse(fractions[1].group(2)!),
-      greaterThan(1),
-      reason: status,
-    );
-  });
+      expect(find.byType(ReaderControlBar), findsNWidgets(2));
+      final verticalList = tester.widget<ScrollablePositionedList>(
+        find.byType(ScrollablePositionedList),
+      );
+      expect(verticalList.itemCount, greaterThan(1));
+      final status = tester.widget<Text>(statusFinder).data!;
+      final fractions = RegExp(r'(\d+)/(\d+)').allMatches(status).toList();
+      expect(fractions.length, 2);
+      expect(int.parse(fractions[1].group(2)!), greaterThan(1), reason: status);
+    },
+  );
 }
 
 Widget _testApp({
   BookSourceShelfService? shelfService,
   BookSourceClient? client,
   bool darkMode = false,
-}) =>
-    MaterialApp(
-      theme: ThemeData.light(),
-      darkTheme: ThemeData.dark(),
-      themeMode: darkMode ? ThemeMode.dark : ThemeMode.light,
-      locale: const Locale('zh'),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: BookSourceReaderPage(
-        source: RegisteredBookSource(
-          id: 'page-mode-source',
-          name: '测试书源',
-          description: '',
-          manifestUrl: Uri.parse('https://example.org/source.json'),
-          apiBaseUrl: Uri.parse('https://example.org/api/'),
-          protocolVersion: '1.0',
-          languages: const ['zh-CN'],
-          capabilities: const {'catalog', 'content'},
-          enabled: true,
-          addedAt: DateTime.utc(2026, 7, 12),
-        ),
-        book: const BookSourceBook(
-          id: 'book-1',
-          title: '测试书籍',
-          author: '作者',
-          description: '',
-          categories: [],
-        ),
-        client: client ?? _PageModeClient(),
-        shelfService: shelfService,
-      ),
-    );
+}) => MaterialApp(
+  theme: ThemeData.light(),
+  darkTheme: ThemeData.dark(),
+  themeMode: darkMode ? ThemeMode.dark : ThemeMode.light,
+  locale: const Locale('zh'),
+  localizationsDelegates: AppLocalizations.localizationsDelegates,
+  supportedLocales: AppLocalizations.supportedLocales,
+  home: BookSourceReaderPage(
+    source: RegisteredBookSource(
+      id: 'page-mode-source',
+      name: '测试书源',
+      description: '',
+      manifestUrl: Uri.parse('https://example.org/source.json'),
+      apiBaseUrl: Uri.parse('https://example.org/api/'),
+      protocolVersion: '1.0',
+      languages: const ['zh-CN'],
+      capabilities: const {'catalog', 'content'},
+      enabled: true,
+      addedAt: DateTime.utc(2026, 7, 12),
+    ),
+    book: const BookSourceBook(
+      id: 'book-1',
+      title: '测试书籍',
+      author: '作者',
+      description: '',
+      categories: [],
+    ),
+    client: client ?? _PageModeClient(),
+    shelfService: shelfService,
+  ),
+);
 
 Future<void> _pumpUntilFound(WidgetTester tester, Finder finder) async {
   for (var attempt = 0; attempt < 40; attempt++) {
@@ -558,28 +552,26 @@ class _PageModeClient extends BookSourceClient {
   Future<List<BookSourceChapter>> getChapters(
     RegisteredBookSource source,
     String bookId,
-  ) async =>
-      const [
-        BookSourceChapter(id: 'chapter-1', title: '第一章', order: 1),
-        BookSourceChapter(id: 'chapter-2', title: '第二章', order: 2),
-      ];
+  ) async => const [
+    BookSourceChapter(id: 'chapter-1', title: '第一章', order: 1),
+    BookSourceChapter(id: 'chapter-2', title: '第二章', order: 2),
+  ];
 
   @override
   Future<BookSourceChapterContent> getChapterContent(
     RegisteredBookSource source, {
     required String bookId,
     required String chapterId,
-  }) async =>
-      BookSourceChapterContent(
-        bookId: bookId,
-        chapterId: chapterId,
-        title: chapterId == 'chapter-1' ? '' : '第二章',
-        content: List.generate(
-          80,
-          (index) => '测试正文第$index段，用于验证书源阅读分页模式。',
-        ).join('\n'),
-        contentType: 'text/plain',
-      );
+  }) async => BookSourceChapterContent(
+    bookId: bookId,
+    chapterId: chapterId,
+    title: chapterId == 'chapter-1' ? '' : '第二章',
+    content: List.generate(
+      80,
+      (index) => '测试正文第$index段，用于验证书源阅读分页模式。',
+    ).join('\n'),
+    contentType: 'text/plain',
+  );
 }
 
 class _TrackingPageModeClient extends _PageModeClient {
@@ -605,21 +597,19 @@ class _FakeShelfService extends BookSourceShelfService {
   Future<Book?> findShelfBook({
     required String sourceId,
     required String sourceBookId,
-  }) async =>
-      null;
+  }) async => null;
 
   @override
   Future<Book> addOnline({
     required RegisteredBookSource source,
     required BookSourceBook book,
-  }) async =>
-      Book(
-        id: 1,
-        title: book.title,
-        filePath: '',
-        format: 'source',
-        storageType: 'online',
-      );
+  }) async => Book(
+    id: 1,
+    title: book.title,
+    filePath: '',
+    format: 'source',
+    storageType: 'online',
+  );
 
   @override
   Future<void> updateShelfProgress({

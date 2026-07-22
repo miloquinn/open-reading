@@ -18,9 +18,9 @@ void main() {
     owner = Object();
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, (call) async {
-      calls.add(call);
-      return null;
-    });
+          calls.add(call);
+          return null;
+        });
   });
 
   tearDown(() async {
@@ -90,8 +90,8 @@ void main() {
 Future<void> _sendPlatformCall(MethodChannel channel, MethodCall call) async {
   await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
       .handlePlatformMessage(
-    channel.name,
-    channel.codec.encodeMethodCall(call),
-    (_) {},
-  );
+        channel.name,
+        channel.codec.encodeMethodCall(call),
+        (_) {},
+      );
 }

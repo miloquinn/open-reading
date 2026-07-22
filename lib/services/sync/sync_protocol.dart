@@ -23,22 +23,22 @@ class SyncOperation {
   final Map<String, dynamic>? payload;
 
   Map<String, Object?> toJson() => {
-        'dataset': dataset,
-        'record_id': recordId,
-        'entity_key': entityKey,
-        'hlc': hlc,
-        'deleted': deleted,
-        'payload': payload,
-      };
+    'dataset': dataset,
+    'record_id': recordId,
+    'entity_key': entityKey,
+    'hlc': hlc,
+    'deleted': deleted,
+    'payload': payload,
+  };
 
   factory SyncOperation.fromJson(Map<String, dynamic> json) => SyncOperation(
-        dataset: json['dataset'] as String,
-        recordId: json['record_id'] as String,
-        entityKey: json['entity_key'] as String,
-        hlc: json['hlc'] as String,
-        deleted: json['deleted'] as bool? ?? false,
-        payload: (json['payload'] as Map?)?.cast<String, dynamic>(),
-      );
+    dataset: json['dataset'] as String,
+    recordId: json['record_id'] as String,
+    entityKey: json['entity_key'] as String,
+    hlc: json['hlc'] as String,
+    deleted: json['deleted'] as bool? ?? false,
+    payload: (json['payload'] as Map?)?.cast<String, dynamic>(),
+  );
 }
 
 class SyncBatch {
@@ -121,24 +121,22 @@ class SyncBatch {
   }
 
   String encode() => jsonEncode({
-        ..._unsignedJson(deviceId, sequence, createdHlc, operations),
-        'sha256': sha256,
-      });
+    ..._unsignedJson(deviceId, sequence, createdHlc, operations),
+    'sha256': sha256,
+  });
 
   static Map<String, Object?> _unsignedJson(
     String deviceId,
     int sequence,
     String createdHlc,
     List<SyncOperation> operations,
-  ) =>
-      {
-        'schema_version': schemaVersion,
-        'device_id': deviceId,
-        'sequence': sequence,
-        'created_hlc': createdHlc,
-        'operations':
-            operations.map((operation) => operation.toJson()).toList(),
-      };
+  ) => {
+    'schema_version': schemaVersion,
+    'device_id': deviceId,
+    'sequence': sequence,
+    'created_hlc': createdHlc,
+    'operations': operations.map((operation) => operation.toJson()).toList(),
+  };
 }
 
 class RemoteDeviceHead {
@@ -155,11 +153,11 @@ class RemoteDeviceHead {
   final DateTime updatedAt;
 
   Map<String, Object?> toJson() => {
-        'device_id': deviceId,
-        'latest_sequence': latestSequence,
-        'latest_hlc': latestHlc,
-        'updated_at': updatedAt.toUtc().toIso8601String(),
-      };
+    'device_id': deviceId,
+    'latest_sequence': latestSequence,
+    'latest_hlc': latestHlc,
+    'updated_at': updatedAt.toUtc().toIso8601String(),
+  };
 
   factory RemoteDeviceHead.decode(String raw) {
     final json = (jsonDecode(raw) as Map).cast<String, dynamic>();
@@ -185,16 +183,17 @@ String _canonicalJson(Object? value) {
     return '[${value.map(_canonicalJson).join(',')}]';
   }
   if (value is Map) {
-    final entries = value.entries
-        .map((entry) => MapEntry(entry.key.toString(), entry.value))
-        .toList()
-      ..sort((a, b) => a.key.compareTo(b.key));
+    final entries =
+        value.entries
+            .map((entry) => MapEntry(entry.key.toString(), entry.value))
+            .toList()
+          ..sort((a, b) => a.key.compareTo(b.key));
     return '{${entries.map((entry) => '${jsonEncode(entry.key)}:${_canonicalJson(entry.value)}').join(',')}}';
   }
   throw ArgumentError('Unsupported canonical JSON value: ${value.runtimeType}');
 }
 
 WebDavSyncFailure corruptBatchFailure(Object error) => WebDavSyncFailure(
-      WebDavSyncErrorCode.corruptRemoteData,
-      'A remote metadata batch is invalid and was not applied.',
-    );
+  WebDavSyncErrorCode.corruptRemoteData,
+  'A remote metadata batch is invalid and was not applied.',
+);

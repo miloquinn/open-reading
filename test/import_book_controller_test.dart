@@ -95,36 +95,36 @@ void main() {
 }
 
 BookImportSource _source(String id) => BookImportSource(
-      id: id,
-      kind: BookImportSourceKind.filePicker,
-      ownership: BookImportOwnership.externalCopy,
-      displayName: '$id.txt',
-      extension: 'txt',
-      locator: '/tmp/$id.txt',
-      localPath: '/tmp/$id.txt',
-    );
+  id: id,
+  kind: BookImportSourceKind.filePicker,
+  ownership: BookImportOwnership.externalCopy,
+  displayName: '$id.txt',
+  extension: 'txt',
+  locator: '/tmp/$id.txt',
+  localPath: '/tmp/$id.txt',
+);
 
 BookImportResult _importedResult(String id) => BookImportResult(
-      source: _source(id),
-      outcome: BookImportOutcome.imported,
-      book: Book(
-        id: id.hashCode,
-        title: id,
-        filePath: '/managed/$id.txt',
-        format: 'TXT',
-      ),
-    );
+  source: _source(id),
+  outcome: BookImportOutcome.imported,
+  book: Book(
+    id: id.hashCode,
+    title: id,
+    filePath: '/managed/$id.txt',
+    format: 'TXT',
+  ),
+);
 
 BookImportResult _duplicateResult(String id) => BookImportResult(
-      source: _source(id),
-      outcome: BookImportOutcome.duplicateSkipped,
-      book: Book(
-        id: id.hashCode,
-        title: id,
-        filePath: '/managed/$id.txt',
-        format: 'TXT',
-      ),
-    );
+  source: _source(id),
+  outcome: BookImportOutcome.duplicateSkipped,
+  book: Book(
+    id: id.hashCode,
+    title: id,
+    filePath: '/managed/$id.txt',
+    format: 'TXT',
+  ),
+);
 
 class _PassthroughSourcePreparer implements BookImportSourcePreparer {
   const _PassthroughSourcePreparer();
@@ -197,12 +197,7 @@ class _RetryImporter implements BookFileImporter {
     return BookImportResult(
       source: source,
       outcome: BookImportOutcome.imported,
-      book: Book(
-        id: 1,
-        title: 'a',
-        filePath: '/managed/a.txt',
-        format: 'TXT',
-      ),
+      book: Book(id: 1, title: 'a', filePath: '/managed/a.txt', format: 'TXT'),
     );
   }
 }

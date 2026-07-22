@@ -127,9 +127,10 @@ class LayoutHelper {
     const double targetItemExtent = 168.0;
     const double horizontalPadding = 32.0;
     if (width <= 0) return 3;
-    return ((width - horizontalPadding) / targetItemExtent)
-        .round()
-        .clamp(3, 10);
+    return ((width - horizontalPadding) / targetItemExtent).round().clamp(
+      3,
+      10,
+    );
   }
 
   /// 纯封面网格密度。手机严格使用用户选择的 2/3 列；宽屏按相同的
@@ -142,9 +143,10 @@ class LayoutHelper {
     if (width < tabletBreakpoint) return normalizedColumns;
     final targetItemExtent = normalizedColumns == 2 ? 184.0 : 148.0;
     const horizontalPadding = 32.0;
-    return ((width - horizontalPadding) / targetItemExtent)
-        .round()
-        .clamp(normalizedColumns, 12);
+    return ((width - horizontalPadding) / targetItemExtent).round().clamp(
+      normalizedColumns,
+      12,
+    );
   }
 
   // 判断是否应该显示双页布局
@@ -166,14 +168,6 @@ class LayoutHelper {
   }
 }
 
-enum ScreenType {
-  mobile,
-  largeMobile,
-  tablet,
-  desktop,
-}
+enum ScreenType { mobile, largeMobile, tablet, desktop }
 
-enum NavigationType {
-  bottom,
-  rail,
-}
+enum NavigationType { bottom, rail }

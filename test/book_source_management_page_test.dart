@@ -32,8 +32,9 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('keeps dense source metadata readable on narrow phones',
-      (tester) async {
+  testWidgets('keeps dense source metadata readable on narrow phones', (
+    tester,
+  ) async {
     await BookSourceRegistry().upsert(
       RegisteredBookSource(
         id: 'org.example.long-source',
@@ -76,14 +77,17 @@ void main() {
       findsOneWidget,
     );
     expect(
-        find.text('A deliberately long connected source name'), findsOneWidget);
+      find.text('A deliberately long connected source name'),
+      findsOneWidget,
+    );
     expect(find.text('categories'), findsOneWidget);
     expect(find.text('Enabled'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('adding a source requires explicit third-party acknowledgment',
-      (tester) async {
+  testWidgets('adding a source requires explicit third-party acknowledgment', (
+    tester,
+  ) async {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = const Size(500, 1100);
     addTearDown(tester.view.reset);
@@ -106,8 +110,8 @@ void main() {
     );
     expect(find.textContaining('bypass sign-in, payment, DRM'), findsOneWidget);
     FilledButton connectButton() => tester.widget<FilledButton>(
-          find.byKey(const Key('bookSourceConnectButton')),
-        );
+      find.byKey(const Key('bookSourceConnectButton')),
+    );
     expect(connectButton().onPressed, isNull);
 
     await tester.tap(find.byKey(const Key('bookSourceResponsibilityCheckbox')));
@@ -117,8 +121,9 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('shows operator-supplied rights metadata as unverified',
-      (tester) async {
+  testWidgets('shows operator-supplied rights metadata as unverified', (
+    tester,
+  ) async {
     await BookSourceRegistry().upsert(
       RegisteredBookSource(
         id: 'org.example.public-books',

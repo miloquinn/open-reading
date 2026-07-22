@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:xxread/models/book.dart';
 import 'package:xxread/pages/reader/native_reader_page.dart';
 import 'package:xxread/services/books/book_storage_repair_service.dart';
+import 'package:xxread/services/books/web_book_file_store.dart';
 import 'package:xxread/utils/book_open_transition.dart';
 import 'package:xxread/utils/localization_extension.dart';
 import 'package:xxread/widgets/side_toast.dart';
@@ -32,9 +34,14 @@ class NativeReaderService {
     BookOpenAnimation? animation,
     bool waitForReaderClose = true,
   }) async {
-    final repaired =
-        await BookStorageRepairService().repairSingleBookIfNeeded(book);
-    if (!await File(repaired.filePath).exists()) {
+    final repaired = kIsWeb
+        ? book
+        : await BookStorageRepairService().repairSingleBookIfNeeded(book);
+    final fileExists = kIsWeb
+        ? WebBookFileStore.isWebBookPath(repaired.filePath) &&
+              await WebBookFileStore().exists(repaired.filePath)
+        : await File(repaired.filePath).exists();
+    if (!fileExists) {
       if (context.mounted) {
         showSideToast(
           context,

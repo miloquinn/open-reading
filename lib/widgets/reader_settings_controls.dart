@@ -238,9 +238,8 @@ class _ReaderSettingsSheetState extends State<ReaderSettingsSheet> {
             min: 0,
             max: 4,
             divisions: 4,
-            onChanged: (value) => setState(
-              () => _firstLineIndent = value.round(),
-            ),
+            onChanged: (value) =>
+                setState(() => _firstLineIndent = value.round()),
             onChangeEnd: (value) =>
                 widget.onFirstLineIndentChanged(value.round()),
           ),
@@ -252,9 +251,8 @@ class _ReaderSettingsSheetState extends State<ReaderSettingsSheet> {
             min: 0,
             max: 2,
             divisions: 2,
-            onChanged: (value) => setState(
-              () => _paragraphSpacing = value.round(),
-            ),
+            onChanged: (value) =>
+                setState(() => _paragraphSpacing = value.round()),
             onChangeEnd: (value) =>
                 widget.onParagraphSpacingChanged(value.round()),
           ),
@@ -348,10 +346,7 @@ class ReaderTopBarStyleSheet extends StatelessWidget {
 }
 
 class _ReaderTopBarStylePreview extends StatelessWidget {
-  const _ReaderTopBarStylePreview({
-    required this.style,
-    required this.palette,
-  });
+  const _ReaderTopBarStylePreview({required this.style, required this.palette});
 
   final ReaderTopBarStyle style;
   final ReaderThemePalette palette;
@@ -376,28 +371,31 @@ class _ReaderTopBarStylePreview extends StatelessWidget {
               height: 10,
               child: switch (style) {
                 ReaderTopBarStyle.system => Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('9:41', style: TextStyle(fontSize: 5, color: muted)),
-                      Icon(Icons.signal_cellular_alt_rounded,
-                          size: 7, color: muted),
-                    ],
-                  ),
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('9:41', style: TextStyle(fontSize: 5, color: muted)),
+                    Icon(
+                      Icons.signal_cellular_alt_rounded,
+                      size: 7,
+                      color: muted,
+                    ),
+                  ],
+                ),
                 ReaderTopBarStyle.reader => Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('9:41', style: TextStyle(fontSize: 5, color: muted)),
-                      Expanded(
-                        child: Text(
-                          '···',
-                          textAlign: TextAlign.center,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: 5, color: muted),
-                        ),
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('9:41', style: TextStyle(fontSize: 5, color: muted)),
+                    Expanded(
+                      child: Text(
+                        '···',
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 5, color: muted),
                       ),
-                      Icon(Icons.battery_full_rounded, size: 7, color: muted),
-                    ],
-                  ),
+                    ),
+                    Icon(Icons.battery_full_rounded, size: 7, color: muted),
+                  ],
+                ),
                 ReaderTopBarStyle.hidden => const SizedBox.shrink(),
               },
             ),
@@ -474,28 +472,30 @@ class ReaderPageModeSheet extends StatelessWidget {
                   if (mode != null) onSelected(mode);
                 },
                 child: Column(
-                  children: ReaderPageMode.values.expand((mode) sync* {
-                    yield RadioListTile<ReaderPageMode>(
-                      value: mode,
-                      title: Text(titleFor(mode)),
-                      subtitle: Text(hintFor(mode)),
-                    );
-                    if (mode == ReaderPageMode.verticalScroll &&
-                        selectedMode == ReaderPageMode.verticalScroll &&
-                        scrollByChapter != null) {
-                      yield SwitchListTile(
-                        contentPadding: const EdgeInsets.only(left: 24),
-                        value: scrollByChapter!,
-                        title: Text(scrollByChapterTitle!),
-                        subtitle: Text(
-                          scrollByChapter!
-                              ? scrollByChapterOnHint!
-                              : scrollByChapterOffHint!,
-                        ),
-                        onChanged: onScrollByChapterChanged,
-                      );
-                    }
-                  }).toList(growable: false),
+                  children: ReaderPageMode.values
+                      .expand((mode) sync* {
+                        yield RadioListTile<ReaderPageMode>(
+                          value: mode,
+                          title: Text(titleFor(mode)),
+                          subtitle: Text(hintFor(mode)),
+                        );
+                        if (mode == ReaderPageMode.verticalScroll &&
+                            selectedMode == ReaderPageMode.verticalScroll &&
+                            scrollByChapter != null) {
+                          yield SwitchListTile(
+                            contentPadding: const EdgeInsets.only(left: 24),
+                            value: scrollByChapter!,
+                            title: Text(scrollByChapterTitle!),
+                            subtitle: Text(
+                              scrollByChapter!
+                                  ? scrollByChapterOnHint!
+                                  : scrollByChapterOffHint!,
+                            ),
+                            onChanged: onScrollByChapterChanged,
+                          );
+                        }
+                      })
+                      .toList(growable: false),
                 ),
               ),
             ],
@@ -542,10 +542,7 @@ class ReaderSettingsSheetFrame extends StatelessWidget {
                   child: ReaderSettingsDragHandle(palette: palette),
                 ),
                 Flexible(
-                  child: SingleChildScrollView(
-                    padding: padding,
-                    child: child,
-                  ),
+                  child: SingleChildScrollView(padding: padding, child: child),
                 ),
               ],
             ),
@@ -636,8 +633,9 @@ class ReaderThemeStrip extends StatelessWidget {
                               decoration: BoxDecoration(
                                 color: colors.surfaceContainerHighest,
                                 shape: BoxShape.circle,
-                                border:
-                                    Border.all(color: colors.outlineVariant),
+                                border: Border.all(
+                                  color: colors.outlineVariant,
+                                ),
                               ),
                               child: Icon(
                                 Icons.add_rounded,
@@ -709,8 +707,8 @@ class ReaderThemeStrip extends StatelessWidget {
             icon: customTheme == null
                 ? _iconFor(palette.id)
                 : customTheme.hasBackgroundImage
-                    ? Icons.image_rounded
-                    : Icons.palette_rounded,
+                ? Icons.image_rounded
+                : Icons.palette_rounded,
             onTap: () => onSelected(palette.id),
           );
         },
@@ -719,15 +717,15 @@ class ReaderThemeStrip extends StatelessWidget {
   }
 
   IconData _iconFor(String id) => switch (id) {
-        'pureBlack' => Icons.brightness_1_rounded,
-        'night' => Icons.dark_mode_rounded,
-        'navy' => Icons.nights_stay_rounded,
-        'parchment' => Icons.auto_stories_rounded,
-        'green' => Icons.eco_rounded,
-        'rose' => Icons.local_florist_rounded,
-        'mist' => Icons.cloud_outlined,
-        _ => Icons.light_mode_rounded,
-      };
+    'pureBlack' => Icons.brightness_1_rounded,
+    'night' => Icons.dark_mode_rounded,
+    'navy' => Icons.nights_stay_rounded,
+    'parchment' => Icons.auto_stories_rounded,
+    'green' => Icons.eco_rounded,
+    'rose' => Icons.local_florist_rounded,
+    'mist' => Icons.cloud_outlined,
+    _ => Icons.light_mode_rounded,
+  };
 }
 
 class _ReaderThemeCard extends StatelessWidget {
@@ -879,15 +877,17 @@ class ReaderSettingSlider extends StatelessWidget {
               Expanded(
                 child: Text(
                   label,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
                 ),
               ),
               Container(
                 constraints: const BoxConstraints(minWidth: 44),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
                   color: colors.primaryContainer,
                   borderRadius: BorderRadius.circular(99),
@@ -896,10 +896,10 @@ class ReaderSettingSlider extends StatelessWidget {
                   valueLabel,
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: colors.onPrimaryContainer,
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                        fontWeight: FontWeight.w700,
-                      ),
+                    color: colors.onPrimaryContainer,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ],
@@ -907,17 +907,15 @@ class ReaderSettingSlider extends StatelessWidget {
           const SizedBox(height: 4),
           SliderTheme(
             data: Theme.of(context).sliderTheme.copyWith(
-                  trackHeight: 4,
-                  activeTrackColor: colors.primary,
-                  inactiveTrackColor: colors.outlineVariant,
-                  thumbColor: colors.primary,
-                  overlayColor: colors.primary.withValues(alpha: 0.12),
-                  thumbShape:
-                      const RoundSliderThumbShape(enabledThumbRadius: 9),
-                  overlayShape:
-                      const RoundSliderOverlayShape(overlayRadius: 20),
-                  showValueIndicator: ShowValueIndicator.never,
-                ),
+              trackHeight: 4,
+              activeTrackColor: colors.primary,
+              inactiveTrackColor: colors.outlineVariant,
+              thumbColor: colors.primary,
+              overlayColor: colors.primary.withValues(alpha: 0.12),
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 9),
+              overlayShape: const RoundSliderOverlayShape(overlayRadius: 20),
+              showValueIndicator: ShowValueIndicator.never,
+            ),
             child: Slider(
               value: value,
               min: min,
@@ -957,29 +955,29 @@ class ReaderMarginControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Column(
-        children: [
-          ReaderSettingSlider(
-            key: const ValueKey('reader-top-margin-slider'),
-            label: topLabel,
-            value: topMargin,
-            valueLabel: topMargin.round().toString(),
-            min: 0,
-            max: 40,
-            divisions: 40,
-            onChanged: onTopChanged,
-            onChangeEnd: onTopChangeEnd,
-          ),
-          ReaderSettingSlider(
-            key: const ValueKey('reader-bottom-margin-slider'),
-            label: bottomLabel,
-            value: bottomMargin,
-            valueLabel: bottomMargin.round().toString(),
-            min: 0,
-            max: 40,
-            divisions: 40,
-            onChanged: onBottomChanged,
-            onChangeEnd: onBottomChangeEnd,
-          ),
-        ],
-      );
+    children: [
+      ReaderSettingSlider(
+        key: const ValueKey('reader-top-margin-slider'),
+        label: topLabel,
+        value: topMargin,
+        valueLabel: topMargin.round().toString(),
+        min: 0,
+        max: 40,
+        divisions: 40,
+        onChanged: onTopChanged,
+        onChangeEnd: onTopChangeEnd,
+      ),
+      ReaderSettingSlider(
+        key: const ValueKey('reader-bottom-margin-slider'),
+        label: bottomLabel,
+        value: bottomMargin,
+        valueLabel: bottomMargin.round().toString(),
+        min: 0,
+        max: 40,
+        divisions: 40,
+        onChanged: onBottomChanged,
+        onChangeEnd: onBottomChangeEnd,
+      ),
+    ],
+  );
 }

@@ -27,28 +27,28 @@ class BookExportBackendResult {
     required this.displayName,
     this.location,
     this.uri,
-  })  : status = BookExportStatus.success,
-        error = null;
+  }) : status = BookExportStatus.success,
+       error = null;
 
   const BookExportBackendResult.cancelled()
-      : status = BookExportStatus.cancelled,
-        displayName = null,
-        location = null,
-        uri = null,
-        error = null;
+    : status = BookExportStatus.cancelled,
+      displayName = null,
+      location = null,
+      uri = null,
+      error = null;
 
   const BookExportBackendResult.unsupported()
-      : status = BookExportStatus.unsupported,
-        displayName = null,
-        location = null,
-        uri = null,
-        error = null;
+    : status = BookExportStatus.unsupported,
+      displayName = null,
+      location = null,
+      uri = null,
+      error = null;
 
   const BookExportBackendResult.failure([this.error])
-      : status = BookExportStatus.failure,
-        displayName = null,
-        location = null,
-        uri = null;
+    : status = BookExportStatus.failure,
+      displayName = null,
+      location = null,
+      uri = null;
 
   final BookExportStatus status;
   final String? displayName;
@@ -71,26 +71,26 @@ class BookExportResult {
     String? location,
     String? uri,
   }) : this._(
-          status: BookExportStatus.success,
-          displayName: displayName,
-          location: location,
-          uri: uri,
-        );
+         status: BookExportStatus.success,
+         displayName: displayName,
+         location: location,
+         uri: uri,
+       );
 
   const BookExportResult.cancelled()
-      : this._(status: BookExportStatus.cancelled);
+    : this._(status: BookExportStatus.cancelled);
 
   const BookExportResult.unsupported()
-      : this._(status: BookExportStatus.unsupported);
+    : this._(status: BookExportStatus.unsupported);
 
   const BookExportResult.notDownloaded()
-      : this._(status: BookExportStatus.notDownloaded);
+    : this._(status: BookExportStatus.notDownloaded);
 
   const BookExportResult.sourceMissing()
-      : this._(status: BookExportStatus.sourceMissing);
+    : this._(status: BookExportStatus.sourceMissing);
 
   const BookExportResult.failure([Object? error])
-      : this._(status: BookExportStatus.failure, error: error);
+    : this._(status: BookExportStatus.failure, error: error);
 
   final BookExportStatus status;
   final String? displayName;

@@ -32,13 +32,13 @@ MACOS_NOTARY_PRIVATE_KEY_BASE64
 
 ## 启用顺序
 
-1. 先升级并部署 `miloquinn/open-reading-web`，把正式 GitHub 资产映射从五个安装包扩展为六个，新增：
+1. 确认 `miloquinn/open-reading-web` 已部署 manifest 驱动的动态资产校验器，并允许：
 
    ```text
    (macos, zip, universal) -> OpenReading-macOS-universal-{version}.zip
    ```
 
-2. 为官网导入器补齐六资产供应链回归并部署生产。
+2. 确认官网导入器仍会严格校验平台、包类型、架构、规范文件名、GitHub Release 资产集合和 SHA-256；资产总数不得重新锁死。
 3. 写入上述五个 GitHub Environment Secrets。
 4. 设置仓库变量：
 
@@ -50,7 +50,7 @@ MACOS_NOTARY_PRIVATE_KEY_BASE64
 
 5. 只对新的版本 Tag 启用。已经发布的 Tag 受不可变资产集合保护，不能在重跑时追加 macOS 包。
 
-若官网尚未升级，不得打开变量；否则 GitHub Release 可以生成六资产，但官网的旧五资产验证器会拒绝镜像导入。
+若官网仍使用固定资产数量校验，不得打开变量；否则 GitHub Release 会生成 macOS 资产，但官网镜像导入会失败。
 
 ## 关闭
 

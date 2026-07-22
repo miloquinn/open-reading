@@ -17,8 +17,8 @@ class ReaderMarginSettings {
     double? bottom,
     double? legacyVertical,
   }) {
-    final legacyExtra =
-        ((legacyVertical ?? legacyDefault) - legacyDefault).clamp(min, max);
+    final legacyExtra = ((legacyVertical ?? legacyDefault) - legacyDefault)
+        .clamp(min, max);
     return ReaderMarginSettings(
       top: (top ?? defaultTop + legacyExtra).clamp(min, max),
       bottom: (bottom ?? defaultBottom + legacyExtra).clamp(min, max),

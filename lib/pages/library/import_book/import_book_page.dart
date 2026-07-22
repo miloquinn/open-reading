@@ -21,10 +21,7 @@ import 'import_book_controller.dart';
 import 'import_book_widgets.dart';
 
 class ImportBookPage extends StatefulWidget {
-  const ImportBookPage({
-    super.key,
-    this.initialSources = const [],
-  });
+  const ImportBookPage({super.key, this.initialSources = const []});
 
   final List<BookImportSource> initialSources;
 
@@ -143,8 +140,9 @@ class _ImportBookPageState extends State<ImportBookPage> {
     final selected = switch (sync.newBookUploadPolicy) {
       WebDavNewBookUploadPolicy.manual => const <Book>[],
       WebDavNewBookUploadPolicy.automatic => eligible,
-      WebDavNewBookUploadPolicy.askEveryTime =>
-        await _askWhichBooksToUpload(eligible),
+      WebDavNewBookUploadPolicy.askEveryTime => await _askWhichBooksToUpload(
+        eligible,
+      ),
     };
     if (selected.isEmpty || !mounted) return;
     await _uploadImportedBooks(sync, selected);
@@ -203,10 +201,10 @@ class _ImportBookPageState extends State<ImportBookPage> {
               onPressed: selectedIds.isEmpty
                   ? null
                   : () => Navigator.of(dialogContext).pop(
-                        books
-                            .where((book) => selectedIds.contains(book.id))
-                            .toList(growable: false),
-                      ),
+                      books
+                          .where((book) => selectedIds.contains(book.id))
+                          .toList(growable: false),
+                    ),
               child: Text(context.l10n.webDavFilesUploadSelected),
             ),
           ],
@@ -331,11 +329,11 @@ class _ImportBookPageState extends State<ImportBookPage> {
         math.min(math.max(value, 0), maximum);
 
     EdgeInsets clampPadding(EdgeInsets padding) => EdgeInsets.fromLTRB(
-          clampInset(padding.left, 96),
-          clampInset(padding.top, 96),
-          clampInset(padding.right, 96),
-          clampInset(padding.bottom, 64),
-        );
+      clampInset(padding.left, 96),
+      clampInset(padding.top, 96),
+      clampInset(padding.right, 96),
+      clampInset(padding.bottom, 64),
+    );
 
     return mediaQuery.copyWith(
       padding: clampPadding(mediaQuery.padding),
@@ -450,9 +448,7 @@ class _ImportBookPageState extends State<ImportBookPage> {
                   child: ListView(
                     controller: scrollController,
                     padding: const EdgeInsets.fromLTRB(16, 20, 16, 28),
-                    children: [
-                      _buildSourcePanel(dismissContext: sheetContext),
-                    ],
+                    children: [_buildSourcePanel(dismissContext: sheetContext)],
                   ),
                 );
               },
@@ -580,8 +576,8 @@ class _ImportBookPageState extends State<ImportBookPage> {
         Text(
           context.l10n.importQueueHint,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
         const SizedBox(height: 12),
         Expanded(
@@ -602,18 +598,20 @@ class _ImportBookPageState extends State<ImportBookPage> {
                       sizeLabel: _formatBytes(item.source.sizeBytes),
                       removeLabel: context.l10n.importRemove,
                       retryLabel: context.l10n.importRetry,
-                      onRemove: !_isBusy &&
+                      onRemove:
+                          !_isBusy &&
                               (item.status == ImportQueueItemStatus.queued ||
                                   item.status == ImportQueueItemStatus.failed)
                           ? () => _controller.removeQueued(item.source.id)
                           : null,
-                      onRetry: !_isBusy &&
+                      onRetry:
+                          !_isBusy &&
                               item.status == ImportQueueItemStatus.failed
                           ? () => unawaited(
-                                _runImportOperation(
-                                  () => _controller.retryOne(item.source.id),
-                                ),
-                              )
+                              _runImportOperation(
+                                () => _controller.retryOne(item.source.id),
+                              ),
+                            )
                           : null,
                     );
                   },
@@ -628,10 +626,8 @@ class _ImportBookPageState extends State<ImportBookPage> {
     final hasCompleted = _controller.completedCount > 0;
     final primaryLabel = _isBusy
         ? (_isSyncingImportedBooks
-            ? context.l10n.webDavNewBooksUploading(
-                _controller.succeededCount,
-              )
-            : context.l10n.importProcessing)
+              ? context.l10n.webDavNewBooksUploading(_controller.succeededCount)
+              : context.l10n.importProcessing)
         : context.l10n.importAction(_controller.queuedCount);
     return ImportBottomBar(
       summary: hasCompleted
@@ -648,12 +644,13 @@ class _ImportBookPageState extends State<ImportBookPage> {
       onPrimary: _isBusy
           ? () {}
           : _controller.queuedCount == 0
-              ? null
-              : () => unawaited(_startImport()),
+          ? null
+          : () => unawaited(_startImport()),
       onRetry: !_isBusy && _controller.failedCount > 0
           ? () => unawaited(_runImportOperation(_controller.retryFailed))
           : null,
-      onDone: !_isBusy &&
+      onDone:
+          !_isBusy &&
               _controller.queuedCount == 0 &&
               _controller.completedCount > 0
           ? _requestExit
@@ -666,12 +663,12 @@ class _ImportBookPageState extends State<ImportBookPage> {
       ImportQueueItemStatus.queued => context.l10n.importStatusQueued,
       ImportQueueItemStatus.preparing => context.l10n.importStatusPreparing,
       ImportQueueItemStatus.importing => switch (item.phase) {
-          BookImportPhase.queued => context.l10n.importStatusQueued,
-          BookImportPhase.checking => context.l10n.importStatusChecking,
-          BookImportPhase.copying => context.l10n.importStatusCopying,
-          BookImportPhase.analyzing => context.l10n.importStatusAnalyzing,
-          BookImportPhase.saving => context.l10n.importStatusSaving,
-        },
+        BookImportPhase.queued => context.l10n.importStatusQueued,
+        BookImportPhase.checking => context.l10n.importStatusChecking,
+        BookImportPhase.copying => context.l10n.importStatusCopying,
+        BookImportPhase.analyzing => context.l10n.importStatusAnalyzing,
+        BookImportPhase.saving => context.l10n.importStatusSaving,
+      },
       ImportQueueItemStatus.imported => context.l10n.importStatusImported,
       ImportQueueItemStatus.skipped => context.l10n.importStatusSkipped,
       ImportQueueItemStatus.failed => context.l10n.importStatusFailed,

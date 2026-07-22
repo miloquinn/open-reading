@@ -1,6 +1,8 @@
 // 文件说明：定义跨平台书籍导入的来源、进度、结果和存储边界。
 // 技术要点：类型化状态、来源所有权、可测试的导入器与数据存储接口。
 
+import 'dart:typed_data';
+
 import 'package:xxread/models/book.dart';
 
 enum BookImportSourceKind {
@@ -33,7 +35,34 @@ class BookImportSource {
     this.localPath,
     this.sizeBytes,
     this.modifiedTime,
+    this.bytes,
   });
+
+  factory BookImportSource.withBytes({
+    required String id,
+    required BookImportSourceKind kind,
+    required BookImportOwnership ownership,
+    required String displayName,
+    required String extension,
+    required String locator,
+    String? localPath,
+    int? sizeBytes,
+    int? modifiedTime,
+    required Uint8List bytes,
+  }) {
+    return BookImportSource(
+      id: id,
+      kind: kind,
+      ownership: ownership,
+      displayName: displayName,
+      extension: extension,
+      locator: locator,
+      localPath: localPath,
+      sizeBytes: sizeBytes,
+      modifiedTime: modifiedTime,
+      bytes: Uint8List.fromList(bytes).asUnmodifiableView(),
+    );
+  }
 
   final String id;
   final BookImportSourceKind kind;
@@ -44,18 +73,20 @@ class BookImportSource {
   final String? localPath;
   final int? sizeBytes;
   final int? modifiedTime;
+  final Uint8List? bytes;
 
   BookImportSource copyWithLocalPath(String path) => BookImportSource(
-        id: id,
-        kind: kind,
-        ownership: ownership,
-        displayName: displayName,
-        extension: extension,
-        locator: locator,
-        localPath: path,
-        sizeBytes: sizeBytes,
-        modifiedTime: modifiedTime,
-      );
+    id: id,
+    kind: kind,
+    ownership: ownership,
+    displayName: displayName,
+    extension: extension,
+    locator: locator,
+    localPath: path,
+    sizeBytes: sizeBytes,
+    modifiedTime: modifiedTime,
+    bytes: bytes,
+  );
 }
 
 /// 服务层抛出的导入失败异常。
@@ -64,11 +95,7 @@ class BookImportSource {
 /// `translateBookImportFailure(context, failure)` 解析为本地化文案。
 /// [message] 仅用于调试/日志，不应直接展示给用户。
 class BookImportFailure implements Exception {
-  const BookImportFailure({
-    required this.code,
-    this.message = '',
-    this.cause,
-  });
+  const BookImportFailure({required this.code, this.message = '', this.cause});
 
   final String code;
 
@@ -93,11 +120,8 @@ class BookImportResult {
   final Book book;
 }
 
-typedef BookImportProgress = void Function(
-  BookImportPhase phase,
-  double progress,
-  String message,
-);
+typedef BookImportProgress =
+    void Function(BookImportPhase phase, double progress, String message);
 
 abstract interface class BookFileImporter {
   Future<BookImportResult> importFile(

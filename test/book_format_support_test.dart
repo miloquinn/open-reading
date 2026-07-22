@@ -6,8 +6,10 @@ void main() {
     final picker = BookFormatRegistry.pickerExtensions;
 
     expect(picker, containsAll(<String>['txt', 'epub', 'pdf', 'mobi', 'azw3']));
-    expect(picker,
-        containsAll(<String>['fb2', 'rtf', 'doc', 'docx', 'cbz', 'cbr']));
+    expect(
+      picker,
+      containsAll(<String>['fb2', 'rtf', 'doc', 'docx', 'cbz', 'cbr']),
+    );
     expect(picker.contains('zip'), isFalse);
     expect(picker.contains('rar'), isFalse);
   });

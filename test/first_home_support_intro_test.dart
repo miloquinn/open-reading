@@ -75,8 +75,9 @@ void main() {
     expect(dismissed, isFalse);
   });
 
-  testWidgets('reduced motion exposes dismiss action immediately',
-      (tester) async {
+  testWidgets('reduced motion exposes dismiss action immediately', (
+    tester,
+  ) async {
     var dismissed = false;
 
     await tester.pumpWidget(

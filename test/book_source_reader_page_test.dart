@@ -23,8 +23,9 @@ import 'package:xxread/widgets/reader_top_information_bar.dart';
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  testWidgets('loads source chapters and navigates to the next chapter',
-      (tester) async {
+  testWidgets('loads source chapters and navigates to the next chapter', (
+    tester,
+  ) async {
     SharedPreferences.setMockInitialValues({
       ReaderSettingsStore.pageModeKey: BookSourcePageMode.verticalScroll.name,
     });
@@ -53,11 +54,7 @@ void main() {
       MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: BookSourceReaderPage(
-          source: source,
-          book: book,
-          client: client,
-        ),
+        home: BookSourceReaderPage(source: source, book: book, client: client),
       ),
     );
     await _pumpUntilFound(tester, find.text('第一章'));
@@ -69,16 +66,15 @@ void main() {
       1000,
     );
     await tester.pumpAndSettle();
-    final firstBody = find.textContaining(
-      '第一章正文',
-      findRichText: true,
-    );
+    final firstBody = find.textContaining('第一章正文', findRichText: true);
     await _pumpUntilFound(tester, firstBody);
     expect(firstBody, findsOneWidget);
 
-    for (var attempt = 0;
-        attempt < 4 && !client.requestedChapterIds.contains('chapter-2');
-        attempt++) {
+    for (
+      var attempt = 0;
+      attempt < 4 && !client.requestedChapterIds.contains('chapter-2');
+      attempt++
+    ) {
       await tester.fling(
         find.byKey(const ValueKey('book-source-reader-surface')),
         const Offset(0, -500),
@@ -123,17 +119,20 @@ void main() {
         ),
       ),
     );
-    for (var attempt = 0;
-        attempt < 30 && client.requestedChapterIds.isEmpty;
-        attempt++) {
+    for (
+      var attempt = 0;
+      attempt < 30 && client.requestedChapterIds.isEmpty;
+      attempt++
+    ) {
       await tester.pump(const Duration(milliseconds: 100));
     }
 
     expect(client.requestedChapterIds.first, 'chapter-2');
   });
 
-  testWidgets('uses the shared reader settings with independent margins',
-      (tester) async {
+  testWidgets('uses the shared reader settings with independent margins', (
+    tester,
+  ) async {
     final source = _testSource();
     const book = BookSourceBook(
       id: 'book-1',
@@ -206,8 +205,9 @@ void main() {
     BookSourcePageMode.verticalScroll,
     BookSourcePageMode.instantPage,
   ]) {
-    testWidgets('justifies source body text in ${mode.name} mode',
-        (tester) async {
+    testWidgets('justifies source body text in ${mode.name} mode', (
+      tester,
+    ) async {
       SharedPreferences.setMockInitialValues({
         ReaderSettingsStore.pageModeKey: mode.name,
       });
@@ -229,10 +229,7 @@ void main() {
           ),
         ),
       );
-      final bodyFinder = find.textContaining(
-        '第一章正文',
-        findRichText: true,
-      );
+      final bodyFinder = find.textContaining('第一章正文', findRichText: true);
       await _pumpUntilFound(
         tester,
         find.byKey(const ValueKey('book-source-reader-surface')),
@@ -253,8 +250,9 @@ void main() {
     });
   }
 
-  testWidgets('vertical source pages are clipped to one fixed reading window',
-      (tester) async {
+  testWidgets('vertical source pages are clipped to one fixed reading window', (
+    tester,
+  ) async {
     await tester.binding.setSurfaceSize(const Size(400, 800));
     SharedPreferences.setMockInitialValues({
       ReaderSettingsStore.pageModeKey: BookSourcePageMode.verticalScroll.name,
@@ -293,9 +291,9 @@ void main() {
         (widget) =>
             widget is SizedBox &&
             widget.key is ValueKey<String> &&
-            (widget.key! as ValueKey<String>)
-                .value
-                .startsWith('book-source-vertical-page:'),
+            (widget.key! as ValueKey<String>).value.startsWith(
+              'book-source-vertical-page:',
+            ),
       );
       expect(pageCells, findsWidgets);
       expect(
@@ -310,119 +308,124 @@ void main() {
   });
 
   testWidgets(
-      'tablet source page curl uses two leaves and a fixed center spine',
-      (tester) async {
-    await tester.binding.setSurfaceSize(const Size(1200, 800));
-    SharedPreferences.setMockInitialValues({
-      ReaderSettingsStore.pageModeKey: BookSourcePageMode.pageCurl.name,
-    });
-    try {
-      await tester.pumpWidget(
-        MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: BookSourceReaderPage(
-            source: _testSource(),
-            book: const BookSourceBook(
-              id: 'book-1',
-              title: 'Tablet source book',
-              author: 'Author',
-              description: '',
-              categories: [],
+    'tablet source page curl uses two leaves and a fixed center spine',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1200, 800));
+      SharedPreferences.setMockInitialValues({
+        ReaderSettingsStore.pageModeKey: BookSourcePageMode.pageCurl.name,
+      });
+      try {
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: BookSourceReaderPage(
+              source: _testSource(),
+              book: const BookSourceBook(
+                id: 'book-1',
+                title: 'Tablet source book',
+                author: 'Author',
+                description: '',
+                categories: [],
+              ),
+              client: _LongFakeBookSourceClient(),
             ),
-            client: _LongFakeBookSourceClient(),
           ),
-        ),
-      );
-      for (var attempt = 0; attempt < 40; attempt++) {
-        await tester.pump(const Duration(milliseconds: 100));
-        if (find.byType(ReaderShaderPageCurl).evaluate().length >= 2) break;
+        );
+        for (var attempt = 0; attempt < 40; attempt++) {
+          await tester.pump(const Duration(milliseconds: 100));
+          if (find.byType(ReaderShaderPageCurl).evaluate().length >= 2) break;
+        }
+
+        final curlFinder = find.byType(ReaderShaderPageCurl);
+        expect(curlFinder, findsNWidgets(2));
+        expect(find.byType(ReaderPageCurlSpread), findsOneWidget);
+        final spread = tester.widget<ReaderPageCurlSpread>(
+          find.byType(ReaderPageCurlSpread),
+        );
+        expect(spread.coordinator.gutterWidth, 24);
+        final curls = tester
+            .widgetList<ReaderShaderPageCurl>(curlFinder)
+            .toList();
+        expect(curls.every((curl) => curl.edgeDragOnly), isTrue);
+        expect(curls[0].bindingEdge, ReaderPageBindingEdge.right);
+        expect(curls[1].bindingEdge, ReaderPageBindingEdge.left);
+        expect(
+          (curls[0].currentPage.child as ReaderPaperPageLeaf)
+              .topInformationLayout,
+          ReaderTopInformationLayout.spreadLeft,
+        );
+        expect(
+          (curls[1].currentPage.child as ReaderPaperPageLeaf)
+              .topInformationLayout,
+          ReaderTopInformationLayout.spreadRight,
+        );
+        final rightCurl = curls[1];
+        final currentRightLeaf =
+            rightCurl.currentPage.child as ReaderPaperPageLeaf;
+        final nextLeftLeaf =
+            rightCurl.outgoingBackPage!.child as ReaderPaperPageLeaf;
+        final nextRightLeaf =
+            rightCurl.forwardPage!.child as ReaderPaperPageLeaf;
+        expect(
+          nextLeftLeaf.metadata.pageNumber,
+          currentRightLeaf.metadata.pageNumber + 1,
+        );
+        expect(
+          nextRightLeaf.metadata.pageNumber,
+          nextLeftLeaf.metadata.pageNumber + 1,
+        );
+        expect(
+          nextLeftLeaf.pageNumberPlacement,
+          ReaderPageNumberPlacement.bottomLeft,
+        );
+        expect(
+          nextLeftLeaf.topInformationLayout,
+          ReaderTopInformationLayout.spreadLeft,
+        );
+        expect(
+          nextRightLeaf.topInformationLayout,
+          ReaderTopInformationLayout.spreadRight,
+        );
+
+        final rects =
+            curlFinder
+                .evaluate()
+                .map((element) => tester.getRect(find.byWidget(element.widget)))
+                .toList()
+              ..sort((left, right) => left.left.compareTo(right.left));
+        expect(rects[0].right, closeTo(588, 0.1));
+        expect(rects[1].left, closeTo(612, 0.1));
+
+        final rightController = rightCurl.controller!;
+        final gesture = await tester.startGesture(
+          Offset(rects[1].right - 2, rects[1].center.dy),
+        );
+        await gesture.moveBy(const Offset(-90, -45));
+        await tester.pump();
+        await gesture.moveBy(const Offset(-20, 0));
+        await tester.pump();
+        expect(rightController.debugMotion, ReaderPageTurnMotion.outgoing);
+        expect(rightController.debugActiveSourceIsCurrent, isTrue);
+        expect(
+          spread.coordinator.activeBindingEdge,
+          ReaderPageBindingEdge.left,
+        );
+        await gesture.cancel();
+        for (var frame = 0; frame < 24; frame++) {
+          await tester.pump(const Duration(milliseconds: 50));
+        }
+      } finally {
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pump();
+        await tester.binding.setSurfaceSize(null);
       }
+    },
+  );
 
-      final curlFinder = find.byType(ReaderShaderPageCurl);
-      expect(curlFinder, findsNWidgets(2));
-      expect(find.byType(ReaderPageCurlSpread), findsOneWidget);
-      final spread = tester.widget<ReaderPageCurlSpread>(
-        find.byType(ReaderPageCurlSpread),
-      );
-      expect(spread.coordinator.gutterWidth, 24);
-      final curls =
-          tester.widgetList<ReaderShaderPageCurl>(curlFinder).toList();
-      expect(curls.every((curl) => curl.edgeDragOnly), isTrue);
-      expect(curls[0].bindingEdge, ReaderPageBindingEdge.right);
-      expect(curls[1].bindingEdge, ReaderPageBindingEdge.left);
-      expect(
-        (curls[0].currentPage.child as ReaderPaperPageLeaf)
-            .topInformationLayout,
-        ReaderTopInformationLayout.spreadLeft,
-      );
-      expect(
-        (curls[1].currentPage.child as ReaderPaperPageLeaf)
-            .topInformationLayout,
-        ReaderTopInformationLayout.spreadRight,
-      );
-      final rightCurl = curls[1];
-      final currentRightLeaf =
-          rightCurl.currentPage.child as ReaderPaperPageLeaf;
-      final nextLeftLeaf =
-          rightCurl.outgoingBackPage!.child as ReaderPaperPageLeaf;
-      final nextRightLeaf = rightCurl.forwardPage!.child as ReaderPaperPageLeaf;
-      expect(
-        nextLeftLeaf.metadata.pageNumber,
-        currentRightLeaf.metadata.pageNumber + 1,
-      );
-      expect(
-        nextRightLeaf.metadata.pageNumber,
-        nextLeftLeaf.metadata.pageNumber + 1,
-      );
-      expect(
-        nextLeftLeaf.pageNumberPlacement,
-        ReaderPageNumberPlacement.bottomLeft,
-      );
-      expect(
-        nextLeftLeaf.topInformationLayout,
-        ReaderTopInformationLayout.spreadLeft,
-      );
-      expect(
-        nextRightLeaf.topInformationLayout,
-        ReaderTopInformationLayout.spreadRight,
-      );
-
-      final rects = curlFinder
-          .evaluate()
-          .map((element) => tester.getRect(find.byWidget(element.widget)))
-          .toList()
-        ..sort((left, right) => left.left.compareTo(right.left));
-      expect(rects[0].right, closeTo(588, 0.1));
-      expect(rects[1].left, closeTo(612, 0.1));
-
-      final rightController = rightCurl.controller!;
-      final gesture = await tester.startGesture(
-        Offset(rects[1].right - 2, rects[1].center.dy),
-      );
-      await gesture.moveBy(const Offset(-90, -45));
-      await tester.pump();
-      await gesture.moveBy(const Offset(-20, 0));
-      await tester.pump();
-      expect(rightController.debugMotion, ReaderPageTurnMotion.outgoing);
-      expect(rightController.debugActiveSourceIsCurrent, isTrue);
-      expect(
-        spread.coordinator.activeBindingEdge,
-        ReaderPageBindingEdge.left,
-      );
-      await gesture.cancel();
-      for (var frame = 0; frame < 24; frame++) {
-        await tester.pump(const Duration(milliseconds: 50));
-      }
-    } finally {
-      await tester.pumpWidget(const SizedBox.shrink());
-      await tester.pump();
-      await tester.binding.setSurfaceSize(null);
-    }
-  });
-
-  testWidgets('tablet source reader can disable the two-page layout',
-      (tester) async {
+  testWidgets('tablet source reader can disable the two-page layout', (
+    tester,
+  ) async {
     await tester.binding.setSurfaceSize(const Size(1200, 800));
     SharedPreferences.setMockInitialValues({
       ReaderSettingsStore.pageModeKey: BookSourcePageMode.pageCurl.name,
@@ -447,419 +450,430 @@ void main() {
   });
 
   testWidgets(
-      'tablet spread progress tracks the last visible page and restores its left page',
-      (tester) async {
-    await tester.binding.setSurfaceSize(const Size(1200, 800));
-    SharedPreferences.setMockInitialValues({
-      ReaderSettingsStore.pageModeKey: BookSourcePageMode.pageCurl.name,
-    });
-    const store = BookSourceReadingProgressStore();
-    final content = _tabletChapterText(360);
-    try {
-      await tester.pumpWidget(
-        _buildTabletSourceReader(
-          _ConfigurableBookSourceClient({'chapter-1': content}),
-          progressStore: store,
-        ),
-      );
-      await _pumpUntilTabletCurls(tester);
-
-      var rightCurl = _spreadCurl(tester, ReaderPageBindingEdge.left);
-      expect(rightCurl.forwardPage, isNotNull);
-      await rightCurl.onTurnForward();
-      await tester.pump();
-
-      rightCurl = _spreadCurl(tester, ReaderPageBindingEdge.left);
-      final rightLeaf = rightCurl.currentPage.child as ReaderPaperPageLeaf;
-      expect(rightLeaf.metadata.pageNumber, greaterThan(2));
-      final expectedProgress = (rightLeaf.metadata.pageNumber - 1) /
-          (rightLeaf.metadata.pageCount - 1);
-
-      BookSourceReadingProgress? saved;
-      for (var attempt = 0; attempt < 10 && saved == null; attempt++) {
-        await tester.pump(const Duration(milliseconds: 100));
-        saved = await store.load(
-          sourceId: _testSource().id,
-          bookId: 'book-1',
-        );
-      }
-      expect(saved, isNotNull);
-      expect(saved!.chapterProgress, closeTo(expectedProgress, 0.000001));
-
-      await tester.pumpWidget(const SizedBox.shrink());
-      await tester.pump();
-      await tester.pumpWidget(
-        _buildTabletSourceReader(
-          _ConfigurableBookSourceClient({'chapter-1': content}),
-          progressStore: store,
-        ),
-      );
-      await _pumpUntilTabletCurls(tester);
-
-      final restoredLeft = _spreadCurl(
-        tester,
-        ReaderPageBindingEdge.right,
-      ).currentPage.child as ReaderPaperPageLeaf;
-      final restoredIndex = restoredLeft.metadata.pageNumber - 1;
-      final expectedRestoredIndex =
-          (((restoredLeft.metadata.pageCount - 1) * saved.chapterProgress)
-                      .round() ~/
-                  2) *
-              2;
-      expect(restoredIndex, expectedRestoredIndex);
-      expect(restoredIndex.isEven, isTrue);
-    } finally {
-      await tester.pumpWidget(const SizedBox.shrink());
-      await tester.pump();
-      await tester.binding.setSurfaceSize(null);
-    }
-  });
-
-  testWidgets(
-      'next chapter preview is ready even while a farther prefetch is pending',
-      (tester) async {
-    await tester.binding.setSurfaceSize(const Size(1200, 800));
-    SharedPreferences.setMockInitialValues({
-      ReaderSettingsStore.pageModeKey: BookSourcePageMode.pageCurl.name,
-    });
-    final client = _DelayedThirdChapterClient();
-    try {
-      await tester.pumpWidget(_buildTabletSourceReader(client));
-      final forwardCurl = await _pumpUntilSpreadTarget(
-        tester,
-        bindingEdge: ReaderPageBindingEdge.left,
-        forward: true,
-        pageIdentity: (identity) => identity.contains(':chapter-2:1:'),
-      );
-
-      expect(forwardCurl.forwardPage, isNotNull);
-      expect(client.requestedChapterIds, contains('chapter-3'));
-      expect(client.thirdChapterCompleted, isFalse);
-    } finally {
-      client.completeThirdChapter();
-      await tester.pumpWidget(const SizedBox.shrink());
-      await tester.pump();
-      await tester.binding.setSurfaceSize(null);
-    }
-  });
-
-  testWidgets('prefetched chapter turn does not wait for progress persistence',
-      (tester) async {
-    await tester.binding.setSurfaceSize(const Size(1200, 800));
-    SharedPreferences.setMockInitialValues({
-      ReaderSettingsStore.pageModeKey: BookSourcePageMode.pageCurl.name,
-    });
-    final store = _BlockingProgressStore();
-    final client = _ConfigurableBookSourceClient({
-      'chapter-1': 'Short first chapter.',
-      'chapter-2': _tabletChapterText(240),
-    });
-    try {
-      await tester.pumpWidget(
-        _buildTabletSourceReader(client, progressStore: store),
-      );
-      final forwardCurl = await _pumpUntilSpreadTarget(
-        tester,
-        bindingEdge: ReaderPageBindingEdge.left,
-        forward: true,
-        pageIdentity: (identity) => identity.contains(':chapter-2:1:'),
-      );
-
-      final turn = Future<void>.sync(forwardCurl.onTurnForward);
-      await tester.pump();
-
-      expect(store.saveStarted, isTrue);
-      expect(store.saveCompleted, isFalse);
-      expect(
-        _spreadCurl(tester, ReaderPageBindingEdge.left)
-            .currentPage
-            .key
-            .pageIdentity,
-        contains(':chapter-2:1:'),
-      );
-
-      store.completeSave();
-      await turn;
-    } finally {
-      store.completeSave();
-      await tester.pumpWidget(const SizedBox.shrink());
-      await tester.pump();
-      await tester.binding.setSurfaceSize(null);
-    }
-  });
-
-  testWidgets(
-      'horizontal slide commits a prefetched chapter only after the animation settles',
-      (tester) async {
-    await tester.binding.setSurfaceSize(const Size(800, 700));
-    SharedPreferences.setMockInitialValues({
-      ReaderSettingsStore.pageModeKey: BookSourcePageMode.horizontalSlide.name,
-    });
-    final store = _BlockingProgressStore();
-    final client = _ConfigurableBookSourceClient(const {
-      'chapter-1': 'Short first chapter.',
-      'chapter-2': 'Short second chapter.',
-    });
-    try {
-      await tester.pumpWidget(
-        MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: BookSourceReaderPage(
-            source: _testSource(),
-            book: const BookSourceBook(
-              id: 'book-1',
-              title: 'Horizontal source book',
-              author: 'Author',
-              description: '',
-              categories: [],
-            ),
-            client: client,
+    'tablet spread progress tracks the last visible page and restores its left page',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1200, 800));
+      SharedPreferences.setMockInitialValues({
+        ReaderSettingsStore.pageModeKey: BookSourcePageMode.pageCurl.name,
+      });
+      const store = BookSourceReadingProgressStore();
+      final content = _tabletChapterText(360);
+      try {
+        await tester.pumpWidget(
+          _buildTabletSourceReader(
+            _ConfigurableBookSourceClient({'chapter-1': content}),
             progressStore: store,
           ),
-        ),
-      );
-      await _pumpUntilFound(
-        tester,
-        find.byKey(const ValueKey('source-slide:chapter-1')),
-      );
-      for (var attempt = 0;
-          attempt < 30 && !client.requestedChapterIds.contains('chapter-2');
-          attempt++) {
-        await tester.pump(const Duration(milliseconds: 100));
-      }
-
-      var pageView = tester.widget<PageView>(find.byType(PageView));
-      final controller = pageView.controller!;
-      controller.jumpToPage(1);
-      await tester.pump();
-
-      unawaited(
-        controller.nextPage(
-          duration: const Duration(milliseconds: 280),
-          curve: Curves.easeOutCubic,
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 180));
-
-      expect(
-        find.byKey(const ValueKey('source-slide:chapter-1')),
-        findsOneWidget,
-      );
-
-      await tester.pump(const Duration(milliseconds: 160));
-      await _pumpUntilFound(
-        tester,
-        find.byKey(const ValueKey('source-slide:chapter-2')),
-      );
-
-      expect(store.saveStarted, isTrue);
-      expect(store.saveCompleted, isFalse);
-      expect(
-        client.requestedChapterIds.where((id) => id == 'chapter-2').length,
-        1,
-      );
-      pageView = tester.widget<PageView>(find.byType(PageView));
-      expect(pageView.key, const ValueKey('source-slide:chapter-2'));
-    } finally {
-      store.completeSave();
-      await tester.pumpWidget(const SizedBox.shrink());
-      await tester.pump();
-      await tester.binding.setSurfaceSize(null);
-    }
-  });
-
-  testWidgets(
-      'tablet forward chapter curl uses prefetched page one at half-page width without refetching',
-      (tester) async {
-    await tester.binding.setSurfaceSize(const Size(1200, 800));
-    SharedPreferences.setMockInitialValues({
-      ReaderSettingsStore.pageModeKey: BookSourcePageMode.pageCurl.name,
-    });
-    const store = BookSourceReadingProgressStore();
-    await store.save(
-      sourceId: _testSource().id,
-      bookId: 'book-1',
-      progress: BookSourceReadingProgress(
-        chapterId: 'chapter-1',
-        chapterIndex: 0,
-        chapterProgress: 1,
-        updatedAt: DateTime.utc(2026, 7, 19),
-      ),
-    );
-    final content = _tabletChapterText(240);
-    final client = _ConfigurableBookSourceClient({
-      'chapter-1': content,
-      'chapter-2': content,
-    });
-    try {
-      await tester.pumpWidget(
-        _buildTabletSourceReader(client, progressStore: store),
-      );
-      final forwardCurl = await _pumpUntilSpreadTarget(
-        tester,
-        bindingEdge: ReaderPageBindingEdge.left,
-        forward: true,
-        pageIdentity: (identity) => identity.contains(':chapter-2:1:'),
-      );
-
-      final nextLeaf = forwardCurl.forwardPage!.child as ReaderPaperPageLeaf;
-      final nextBackLeaf =
-          forwardCurl.outgoingBackPage!.child as ReaderPaperPageLeaf;
-      final currentLeft = _spreadCurl(
-        tester,
-        ReaderPageBindingEdge.right,
-      ).currentPage.child as ReaderPaperPageLeaf;
-      expect(nextBackLeaf.metadata.pageNumber, 1);
-      expect(
-        nextBackLeaf.topInformationLayout,
-        ReaderTopInformationLayout.spreadLeft,
-      );
-      expect(nextLeaf.metadata.pageNumber, 2);
-      expect(nextLeaf.metadata.pageCount, currentLeft.metadata.pageCount);
-      expect(
-        client.requestedChapterIds.where((id) => id == 'chapter-2').length,
-        1,
-      );
-
-      await forwardCurl.onTurnForward();
-      for (var attempt = 0; attempt < 20; attempt++) {
-        await tester.pump(const Duration(milliseconds: 50));
-        final currentIdentity = _spreadCurl(
-          tester,
-          ReaderPageBindingEdge.left,
-        ).currentPage.key.pageIdentity;
-        if (currentIdentity.contains(':chapter-2:1:')) break;
-      }
-      expect(
-        _spreadCurl(tester, ReaderPageBindingEdge.left)
-            .currentPage
-            .key
-            .pageIdentity,
-        contains(':chapter-2:1:'),
-      );
-      expect(
-        client.requestedChapterIds.where((id) => id == 'chapter-2').length,
-        1,
-      );
-    } finally {
-      await tester.pumpWidget(const SizedBox.shrink());
-      await tester.pump();
-      await tester.binding.setSurfaceSize(null);
-    }
-  });
-
-  testWidgets(
-      'tablet forward chapter curl previews title and body leaves for a short chapter',
-      (tester) async {
-    await tester.binding.setSurfaceSize(const Size(1200, 800));
-    SharedPreferences.setMockInitialValues({
-      ReaderSettingsStore.pageModeKey: BookSourcePageMode.pageCurl.name,
-    });
-    final client = _ConfigurableBookSourceClient(const {
-      'chapter-1': 'Short first chapter.',
-      'chapter-2': 'Short second chapter.',
-    });
-    try {
-      await tester.pumpWidget(_buildTabletSourceReader(client));
-      final forwardCurl = await _pumpUntilSpreadTarget(
-        tester,
-        bindingEdge: ReaderPageBindingEdge.left,
-        forward: true,
-        pageIdentity: (identity) => identity.contains(':chapter-2:1:'),
-      );
-
-      expect(
-        forwardCurl.forwardPage!.key.pageIdentity,
-        contains(':chapter-2:1:'),
-      );
-      expect(
-        forwardCurl.outgoingBackPage!.key.pageIdentity,
-        contains(':chapter-2:0:'),
-      );
-      expect(
-        forwardCurl.forwardPage!.key.pageIdentity,
-        isNot(contains('blank:')),
-      );
-      expect(
-        client.requestedChapterIds.where((id) => id == 'chapter-2').length,
-        1,
-      );
-    } finally {
-      await tester.pumpWidget(const SizedBox.shrink());
-      await tester.pump();
-      await tester.binding.setSurfaceSize(null);
-    }
-  });
-
-  testWidgets(
-      'tablet backward chapter curl targets the previous final spread left page',
-      (tester) async {
-    await tester.binding.setSurfaceSize(const Size(1200, 800));
-    SharedPreferences.setMockInitialValues({
-      ReaderSettingsStore.pageModeKey: BookSourcePageMode.pageCurl.name,
-    });
-    const store = BookSourceReadingProgressStore();
-    await store.save(
-      sourceId: _testSource().id,
-      bookId: 'book-1',
-      progress: BookSourceReadingProgress(
-        chapterId: 'chapter-2',
-        chapterIndex: 1,
-        chapterProgress: 0,
-        updatedAt: DateTime.utc(2026, 7, 19),
-      ),
-    );
-    final client = _ConfigurableBookSourceClient({
-      'chapter-1': _tabletChapterText(300),
-      'chapter-2': 'Short current chapter.',
-    });
-    try {
-      await tester.pumpWidget(
-        _buildTabletSourceReader(client, progressStore: store),
-      );
-      final backwardCurl = await _pumpUntilSpreadTarget(
-        tester,
-        bindingEdge: ReaderPageBindingEdge.right,
-        forward: false,
-        pageIdentity: (identity) => identity.contains(':chapter-1:'),
-      );
-
-      final previousLeaf =
-          backwardCurl.backwardPage!.child as ReaderPaperPageLeaf;
-      final previousBackLeaf =
-          backwardCurl.outgoingBackPage!.child as ReaderPaperPageLeaf;
-      final previousIndex = previousLeaf.metadata.pageNumber - 1;
-      final expectedIndex = ((previousLeaf.metadata.pageCount - 1) ~/ 2) * 2;
-      expect(previousLeaf.metadata.pageCount, greaterThan(2));
-      expect(previousIndex, expectedIndex);
-      expect(previousIndex.isEven, isTrue);
-      expect(
-        previousBackLeaf.topInformationLayout,
-        ReaderTopInformationLayout.spreadRight,
-      );
-      if (previousIndex + 1 < previousLeaf.metadata.pageCount) {
-        expect(previousBackLeaf.showPageNumber, isTrue);
-        expect(
-          previousBackLeaf.metadata.pageNumber,
-          previousLeaf.metadata.pageNumber + 1,
         );
-      } else {
-        expect(previousBackLeaf.showPageNumber, isFalse);
-      }
-      expect(
-        client.requestedChapterIds.where((id) => id == 'chapter-1').length,
-        1,
-      );
-    } finally {
-      await tester.pumpWidget(const SizedBox.shrink());
-      await tester.pump();
-      await tester.binding.setSurfaceSize(null);
-    }
-  });
+        await _pumpUntilTabletCurls(tester);
 
-  testWidgets('uses the light reader theme for status bar icon contrast',
-      (tester) async {
+        var rightCurl = _spreadCurl(tester, ReaderPageBindingEdge.left);
+        expect(rightCurl.forwardPage, isNotNull);
+        await rightCurl.onTurnForward();
+        await tester.pump();
+
+        rightCurl = _spreadCurl(tester, ReaderPageBindingEdge.left);
+        final rightLeaf = rightCurl.currentPage.child as ReaderPaperPageLeaf;
+        expect(rightLeaf.metadata.pageNumber, greaterThan(2));
+        final expectedProgress =
+            (rightLeaf.metadata.pageNumber - 1) /
+            (rightLeaf.metadata.pageCount - 1);
+
+        BookSourceReadingProgress? saved;
+        for (var attempt = 0; attempt < 10 && saved == null; attempt++) {
+          await tester.pump(const Duration(milliseconds: 100));
+          saved = await store.load(
+            sourceId: _testSource().id,
+            bookId: 'book-1',
+          );
+        }
+        expect(saved, isNotNull);
+        expect(saved!.chapterProgress, closeTo(expectedProgress, 0.000001));
+
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pump();
+        await tester.pumpWidget(
+          _buildTabletSourceReader(
+            _ConfigurableBookSourceClient({'chapter-1': content}),
+            progressStore: store,
+          ),
+        );
+        await _pumpUntilTabletCurls(tester);
+
+        final restoredLeft =
+            _spreadCurl(tester, ReaderPageBindingEdge.right).currentPage.child
+                as ReaderPaperPageLeaf;
+        final restoredIndex = restoredLeft.metadata.pageNumber - 1;
+        final expectedRestoredIndex =
+            (((restoredLeft.metadata.pageCount - 1) * saved.chapterProgress)
+                    .round() ~/
+                2) *
+            2;
+        expect(restoredIndex, expectedRestoredIndex);
+        expect(restoredIndex.isEven, isTrue);
+      } finally {
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pump();
+        await tester.binding.setSurfaceSize(null);
+      }
+    },
+  );
+
+  testWidgets(
+    'next chapter preview is ready even while a farther prefetch is pending',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1200, 800));
+      SharedPreferences.setMockInitialValues({
+        ReaderSettingsStore.pageModeKey: BookSourcePageMode.pageCurl.name,
+      });
+      final client = _DelayedThirdChapterClient();
+      try {
+        await tester.pumpWidget(_buildTabletSourceReader(client));
+        final forwardCurl = await _pumpUntilSpreadTarget(
+          tester,
+          bindingEdge: ReaderPageBindingEdge.left,
+          forward: true,
+          pageIdentity: (identity) => identity.contains(':chapter-2:1:'),
+        );
+
+        expect(forwardCurl.forwardPage, isNotNull);
+        expect(client.requestedChapterIds, contains('chapter-3'));
+        expect(client.thirdChapterCompleted, isFalse);
+      } finally {
+        client.completeThirdChapter();
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pump();
+        await tester.binding.setSurfaceSize(null);
+      }
+    },
+  );
+
+  testWidgets(
+    'prefetched chapter turn does not wait for progress persistence',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1200, 800));
+      SharedPreferences.setMockInitialValues({
+        ReaderSettingsStore.pageModeKey: BookSourcePageMode.pageCurl.name,
+      });
+      final store = _BlockingProgressStore();
+      final client = _ConfigurableBookSourceClient({
+        'chapter-1': 'Short first chapter.',
+        'chapter-2': _tabletChapterText(240),
+      });
+      try {
+        await tester.pumpWidget(
+          _buildTabletSourceReader(client, progressStore: store),
+        );
+        final forwardCurl = await _pumpUntilSpreadTarget(
+          tester,
+          bindingEdge: ReaderPageBindingEdge.left,
+          forward: true,
+          pageIdentity: (identity) => identity.contains(':chapter-2:1:'),
+        );
+
+        final turn = Future<void>.sync(forwardCurl.onTurnForward);
+        await tester.pump();
+
+        expect(store.saveStarted, isTrue);
+        expect(store.saveCompleted, isFalse);
+        expect(
+          _spreadCurl(
+            tester,
+            ReaderPageBindingEdge.left,
+          ).currentPage.key.pageIdentity,
+          contains(':chapter-2:1:'),
+        );
+
+        store.completeSave();
+        await turn;
+      } finally {
+        store.completeSave();
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pump();
+        await tester.binding.setSurfaceSize(null);
+      }
+    },
+  );
+
+  testWidgets(
+    'horizontal slide commits a prefetched chapter only after the animation settles',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(800, 700));
+      SharedPreferences.setMockInitialValues({
+        ReaderSettingsStore.pageModeKey:
+            BookSourcePageMode.horizontalSlide.name,
+      });
+      final store = _BlockingProgressStore();
+      final client = _ConfigurableBookSourceClient(const {
+        'chapter-1': 'Short first chapter.',
+        'chapter-2': 'Short second chapter.',
+      });
+      try {
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: BookSourceReaderPage(
+              source: _testSource(),
+              book: const BookSourceBook(
+                id: 'book-1',
+                title: 'Horizontal source book',
+                author: 'Author',
+                description: '',
+                categories: [],
+              ),
+              client: client,
+              progressStore: store,
+            ),
+          ),
+        );
+        await _pumpUntilFound(
+          tester,
+          find.byKey(const ValueKey('source-slide:chapter-1')),
+        );
+        for (
+          var attempt = 0;
+          attempt < 30 && !client.requestedChapterIds.contains('chapter-2');
+          attempt++
+        ) {
+          await tester.pump(const Duration(milliseconds: 100));
+        }
+
+        var pageView = tester.widget<PageView>(find.byType(PageView));
+        final controller = pageView.controller!;
+        controller.jumpToPage(1);
+        await tester.pump();
+
+        unawaited(
+          controller.nextPage(
+            duration: const Duration(milliseconds: 280),
+            curve: Curves.easeOutCubic,
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 180));
+
+        expect(
+          find.byKey(const ValueKey('source-slide:chapter-1')),
+          findsOneWidget,
+        );
+
+        await tester.pump(const Duration(milliseconds: 160));
+        await _pumpUntilFound(
+          tester,
+          find.byKey(const ValueKey('source-slide:chapter-2')),
+        );
+
+        expect(store.saveStarted, isTrue);
+        expect(store.saveCompleted, isFalse);
+        expect(
+          client.requestedChapterIds.where((id) => id == 'chapter-2').length,
+          1,
+        );
+        pageView = tester.widget<PageView>(find.byType(PageView));
+        expect(pageView.key, const ValueKey('source-slide:chapter-2'));
+      } finally {
+        store.completeSave();
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pump();
+        await tester.binding.setSurfaceSize(null);
+      }
+    },
+  );
+
+  testWidgets(
+    'tablet forward chapter curl uses prefetched page one at half-page width without refetching',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1200, 800));
+      SharedPreferences.setMockInitialValues({
+        ReaderSettingsStore.pageModeKey: BookSourcePageMode.pageCurl.name,
+      });
+      const store = BookSourceReadingProgressStore();
+      await store.save(
+        sourceId: _testSource().id,
+        bookId: 'book-1',
+        progress: BookSourceReadingProgress(
+          chapterId: 'chapter-1',
+          chapterIndex: 0,
+          chapterProgress: 1,
+          updatedAt: DateTime.utc(2026, 7, 19),
+        ),
+      );
+      final content = _tabletChapterText(240);
+      final client = _ConfigurableBookSourceClient({
+        'chapter-1': content,
+        'chapter-2': content,
+      });
+      try {
+        await tester.pumpWidget(
+          _buildTabletSourceReader(client, progressStore: store),
+        );
+        final forwardCurl = await _pumpUntilSpreadTarget(
+          tester,
+          bindingEdge: ReaderPageBindingEdge.left,
+          forward: true,
+          pageIdentity: (identity) => identity.contains(':chapter-2:1:'),
+        );
+
+        final nextLeaf = forwardCurl.forwardPage!.child as ReaderPaperPageLeaf;
+        final nextBackLeaf =
+            forwardCurl.outgoingBackPage!.child as ReaderPaperPageLeaf;
+        final currentLeft =
+            _spreadCurl(tester, ReaderPageBindingEdge.right).currentPage.child
+                as ReaderPaperPageLeaf;
+        expect(nextBackLeaf.metadata.pageNumber, 1);
+        expect(
+          nextBackLeaf.topInformationLayout,
+          ReaderTopInformationLayout.spreadLeft,
+        );
+        expect(nextLeaf.metadata.pageNumber, 2);
+        expect(nextLeaf.metadata.pageCount, currentLeft.metadata.pageCount);
+        expect(
+          client.requestedChapterIds.where((id) => id == 'chapter-2').length,
+          1,
+        );
+
+        await forwardCurl.onTurnForward();
+        for (var attempt = 0; attempt < 20; attempt++) {
+          await tester.pump(const Duration(milliseconds: 50));
+          final currentIdentity = _spreadCurl(
+            tester,
+            ReaderPageBindingEdge.left,
+          ).currentPage.key.pageIdentity;
+          if (currentIdentity.contains(':chapter-2:1:')) break;
+        }
+        expect(
+          _spreadCurl(
+            tester,
+            ReaderPageBindingEdge.left,
+          ).currentPage.key.pageIdentity,
+          contains(':chapter-2:1:'),
+        );
+        expect(
+          client.requestedChapterIds.where((id) => id == 'chapter-2').length,
+          1,
+        );
+      } finally {
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pump();
+        await tester.binding.setSurfaceSize(null);
+      }
+    },
+  );
+
+  testWidgets(
+    'tablet forward chapter curl previews title and body leaves for a short chapter',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1200, 800));
+      SharedPreferences.setMockInitialValues({
+        ReaderSettingsStore.pageModeKey: BookSourcePageMode.pageCurl.name,
+      });
+      final client = _ConfigurableBookSourceClient(const {
+        'chapter-1': 'Short first chapter.',
+        'chapter-2': 'Short second chapter.',
+      });
+      try {
+        await tester.pumpWidget(_buildTabletSourceReader(client));
+        final forwardCurl = await _pumpUntilSpreadTarget(
+          tester,
+          bindingEdge: ReaderPageBindingEdge.left,
+          forward: true,
+          pageIdentity: (identity) => identity.contains(':chapter-2:1:'),
+        );
+
+        expect(
+          forwardCurl.forwardPage!.key.pageIdentity,
+          contains(':chapter-2:1:'),
+        );
+        expect(
+          forwardCurl.outgoingBackPage!.key.pageIdentity,
+          contains(':chapter-2:0:'),
+        );
+        expect(
+          forwardCurl.forwardPage!.key.pageIdentity,
+          isNot(contains('blank:')),
+        );
+        expect(
+          client.requestedChapterIds.where((id) => id == 'chapter-2').length,
+          1,
+        );
+      } finally {
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pump();
+        await tester.binding.setSurfaceSize(null);
+      }
+    },
+  );
+
+  testWidgets(
+    'tablet backward chapter curl targets the previous final spread left page',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1200, 800));
+      SharedPreferences.setMockInitialValues({
+        ReaderSettingsStore.pageModeKey: BookSourcePageMode.pageCurl.name,
+      });
+      const store = BookSourceReadingProgressStore();
+      await store.save(
+        sourceId: _testSource().id,
+        bookId: 'book-1',
+        progress: BookSourceReadingProgress(
+          chapterId: 'chapter-2',
+          chapterIndex: 1,
+          chapterProgress: 0,
+          updatedAt: DateTime.utc(2026, 7, 19),
+        ),
+      );
+      final client = _ConfigurableBookSourceClient({
+        'chapter-1': _tabletChapterText(300),
+        'chapter-2': 'Short current chapter.',
+      });
+      try {
+        await tester.pumpWidget(
+          _buildTabletSourceReader(client, progressStore: store),
+        );
+        final backwardCurl = await _pumpUntilSpreadTarget(
+          tester,
+          bindingEdge: ReaderPageBindingEdge.right,
+          forward: false,
+          pageIdentity: (identity) => identity.contains(':chapter-1:'),
+        );
+
+        final previousLeaf =
+            backwardCurl.backwardPage!.child as ReaderPaperPageLeaf;
+        final previousBackLeaf =
+            backwardCurl.outgoingBackPage!.child as ReaderPaperPageLeaf;
+        final previousIndex = previousLeaf.metadata.pageNumber - 1;
+        final expectedIndex = ((previousLeaf.metadata.pageCount - 1) ~/ 2) * 2;
+        expect(previousLeaf.metadata.pageCount, greaterThan(2));
+        expect(previousIndex, expectedIndex);
+        expect(previousIndex.isEven, isTrue);
+        expect(
+          previousBackLeaf.topInformationLayout,
+          ReaderTopInformationLayout.spreadRight,
+        );
+        if (previousIndex + 1 < previousLeaf.metadata.pageCount) {
+          expect(previousBackLeaf.showPageNumber, isTrue);
+          expect(
+            previousBackLeaf.metadata.pageNumber,
+            previousLeaf.metadata.pageNumber + 1,
+          );
+        } else {
+          expect(previousBackLeaf.showPageNumber, isFalse);
+        }
+        expect(
+          client.requestedChapterIds.where((id) => id == 'chapter-1').length,
+          1,
+        );
+      } finally {
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pump();
+        await tester.binding.setSurfaceSize(null);
+      }
+    },
+  );
+
+  testWidgets('uses the light reader theme for status bar icon contrast', (
+    tester,
+  ) async {
     SharedPreferences.setMockInitialValues({
       ReaderSettingsStore.themeKey: 'day',
     });
@@ -894,8 +908,9 @@ void main() {
     expect(region.value.statusBarBrightness, Brightness.light);
   });
 
-  testWidgets('uses the dark reader theme for status bar icon contrast',
-      (tester) async {
+  testWidgets('uses the dark reader theme for status bar icon contrast', (
+    tester,
+  ) async {
     SharedPreferences.setMockInitialValues({
       ReaderSettingsStore.themeKey: 'night',
     });
@@ -932,17 +947,17 @@ void main() {
 }
 
 RegisteredBookSource _testSource() => RegisteredBookSource(
-      id: 'example.source',
-      name: 'Example',
-      description: '',
-      manifestUrl: Uri.parse('https://example.org/source.json'),
-      apiBaseUrl: Uri.parse('https://example.org/api/'),
-      protocolVersion: '1.0',
-      languages: const ['zh-CN'],
-      capabilities: const {'search', 'catalog', 'content'},
-      enabled: true,
-      addedAt: DateTime.utc(2026, 7, 12),
-    );
+  id: 'example.source',
+  name: 'Example',
+  description: '',
+  manifestUrl: Uri.parse('https://example.org/source.json'),
+  apiBaseUrl: Uri.parse('https://example.org/api/'),
+  protocolVersion: '1.0',
+  languages: const ['zh-CN'],
+  capabilities: const {'search', 'catalog', 'content'},
+  enabled: true,
+  addedAt: DateTime.utc(2026, 7, 12),
+);
 
 Future<void> _pumpUntilFound(WidgetTester tester, Finder finder) async {
   for (var attempt = 0; attempt < 30; attempt++) {
@@ -955,23 +970,22 @@ Widget _buildTabletSourceReader(
   BookSourceClient client, {
   BookSourceReadingProgressStore progressStore =
       const BookSourceReadingProgressStore(),
-}) =>
-    MaterialApp(
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: BookSourceReaderPage(
-        source: _testSource(),
-        book: const BookSourceBook(
-          id: 'book-1',
-          title: 'Tablet source book',
-          author: 'Author',
-          description: '',
-          categories: [],
-        ),
-        client: client,
-        progressStore: progressStore,
-      ),
-    );
+}) => MaterialApp(
+  localizationsDelegates: AppLocalizations.localizationsDelegates,
+  supportedLocales: AppLocalizations.supportedLocales,
+  home: BookSourceReaderPage(
+    source: _testSource(),
+    book: const BookSourceBook(
+      id: 'book-1',
+      title: 'Tablet source book',
+      author: 'Author',
+      description: '',
+      categories: [],
+    ),
+    client: client,
+    progressStore: progressStore,
+  ),
+);
 
 Future<void> _pumpUntilTabletCurls(WidgetTester tester) async {
   for (var attempt = 0; attempt < 60; attempt++) {
@@ -984,10 +998,9 @@ Future<void> _pumpUntilTabletCurls(WidgetTester tester) async {
 ReaderShaderPageCurl _spreadCurl(
   WidgetTester tester,
   ReaderPageBindingEdge bindingEdge,
-) =>
-    tester
-        .widgetList<ReaderShaderPageCurl>(find.byType(ReaderShaderPageCurl))
-        .singleWhere((curl) => curl.bindingEdge == bindingEdge);
+) => tester
+    .widgetList<ReaderShaderPageCurl>(find.byType(ReaderShaderPageCurl))
+    .singleWhere((curl) => curl.bindingEdge == bindingEdge);
 
 Future<ReaderShaderPageCurl> _pumpUntilSpreadTarget(
   WidgetTester tester, {
@@ -1006,9 +1019,9 @@ Future<ReaderShaderPageCurl> _pumpUntilSpreadTarget(
 }
 
 String _tabletChapterText(int paragraphCount) => List.generate(
-      paragraphCount,
-      (index) => 'Paragraph $index keeps both tablet leaves populated.',
-    ).join('\n');
+  paragraphCount,
+  (index) => 'Paragraph $index keeps both tablet leaves populated.',
+).join('\n');
 
 class _ConfigurableBookSourceClient extends BookSourceClient {
   _ConfigurableBookSourceClient(this.contents);
@@ -1020,19 +1033,18 @@ class _ConfigurableBookSourceClient extends BookSourceClient {
   Future<List<BookSourceChapter>> getChapters(
     RegisteredBookSource source,
     String bookId,
-  ) async =>
-      contents.keys
-          .toList()
-          .asMap()
-          .entries
-          .map(
-            (entry) => BookSourceChapter(
-              id: entry.value,
-              title: 'Tablet chapter',
-              order: entry.key,
-            ),
-          )
-          .toList();
+  ) async => contents.keys
+      .toList()
+      .asMap()
+      .entries
+      .map(
+        (entry) => BookSourceChapter(
+          id: entry.value,
+          title: 'Tablet chapter',
+          order: entry.key,
+        ),
+      )
+      .toList();
 
   @override
   Future<BookSourceChapterContent> getChapterContent(
@@ -1074,12 +1086,11 @@ class _DelayedThirdChapterClient extends BookSourceClient {
   Future<List<BookSourceChapter>> getChapters(
     RegisteredBookSource source,
     String bookId,
-  ) async =>
-      const [
-        BookSourceChapter(id: 'chapter-1', title: 'Chapter 1', order: 1),
-        BookSourceChapter(id: 'chapter-2', title: 'Chapter 2', order: 2),
-        BookSourceChapter(id: 'chapter-3', title: 'Chapter 3', order: 3),
-      ];
+  ) async => const [
+    BookSourceChapter(id: 'chapter-1', title: 'Chapter 1', order: 1),
+    BookSourceChapter(id: 'chapter-2', title: 'Chapter 2', order: 2),
+    BookSourceChapter(id: 'chapter-3', title: 'Chapter 3', order: 3),
+  ];
 
   @override
   Future<BookSourceChapterContent> getChapterContent(

@@ -26,9 +26,9 @@ void main() {
       ),
     );
 
-    final result = await BookExportService(backend: backend).export(
-      Book(title: 'Example', filePath: source.path, format: 'EPUB'),
-    );
+    final result = await BookExportService(
+      backend: backend,
+    ).export(Book(title: 'Example', filePath: source.path, format: 'EPUB'));
 
     expect(result.status, BookExportStatus.success);
     expect(backend.request?.sourcePath, source.path);
@@ -59,21 +59,23 @@ void main() {
     expect(backend.request?.mimeType, 'text/plain');
   });
 
-  test('restores the format extension for legacy extensionless paths',
-      () async {
-    final source = File('${sandbox.path}/legacy-book');
-    await source.writeAsString('content');
-    final backend = _RecordingBackend(
-      const BookExportBackendResult.success(displayName: 'legacy-book.txt'),
-    );
+  test(
+    'restores the format extension for legacy extensionless paths',
+    () async {
+      final source = File('${sandbox.path}/legacy-book');
+      await source.writeAsString('content');
+      final backend = _RecordingBackend(
+        const BookExportBackendResult.success(displayName: 'legacy-book.txt'),
+      );
 
-    await BookExportService(backend: backend).export(
-      Book(title: 'Legacy', filePath: source.path, format: 'TXT'),
-    );
+      await BookExportService(
+        backend: backend,
+      ).export(Book(title: 'Legacy', filePath: source.path, format: 'TXT'));
 
-    expect(backend.request?.suggestedName, 'legacy-book.txt');
-    expect(backend.request?.mimeType, 'text/plain');
-  });
+      expect(backend.request?.suggestedName, 'legacy-book.txt');
+      expect(backend.request?.mimeType, 'text/plain');
+    },
+  );
 
   test('online and missing books never call the backend', () async {
     final backend = _RecordingBackend(
@@ -82,12 +84,7 @@ void main() {
     final service = BookExportService(backend: backend);
 
     final online = await service.export(
-      Book(
-        title: 'Online',
-        filePath: '',
-        format: 'TXT',
-        storageType: 'online',
-      ),
+      Book(title: 'Online', filePath: '', format: 'TXT', storageType: 'online'),
     );
     expect(online.status, BookExportStatus.notDownloaded);
     expect(backend.request, isNull);

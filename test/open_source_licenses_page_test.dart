@@ -4,8 +4,9 @@ import 'package:xxread/l10n/app_localizations.dart';
 import 'package:xxread/pages/settings/about/open_source_licenses_page.dart';
 
 void main() {
-  testWidgets('shows project, font, and dependency license entries',
-      (tester) async {
+  testWidgets('shows project, font, and dependency license entries', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       const MaterialApp(
         locale: Locale('zh'),

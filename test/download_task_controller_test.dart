@@ -9,36 +9,68 @@ import 'package:xxread/models/book.dart';
 import 'package:xxread/services/library/download_task_controller.dart';
 
 void main() {
-  test('runs queued book downloads one at a time and preserves progress',
-      () async {
-    final service = _QueuedDownloadService();
-    final controller = DownloadTaskController();
-    final firstId = controller.enqueueBookDownload(
-      source: _source,
-      book: _book('first'),
-      shelfService: service,
-    );
-    final secondId = controller.enqueueBookDownload(
-      source: _source,
-      book: _book('second'),
-      shelfService: service,
-    );
+  test(
+    'runs queued book downloads one at a time and preserves progress',
+    () async {
+      final service = _QueuedDownloadService();
+      final controller = DownloadTaskController();
+      final firstId = controller.enqueueBookDownload(
+        source: _source,
+        book: _book('first'),
+        shelfService: service,
+      );
+      final secondId = controller.enqueueBookDownload(
+        source: _source,
+        book: _book('second'),
+        shelfService: service,
+      );
 
-    await _waitFor(
-      () =>
-          controller.taskById(firstId)?.state == DownloadTaskState.completed &&
-          controller.taskById(secondId)?.state == DownloadTaskState.completed,
-    );
+      await _waitFor(
+        () =>
+            controller.taskById(firstId)?.state ==
+                DownloadTaskState.completed &&
+            controller.taskById(secondId)?.state == DownloadTaskState.completed,
+      );
 
-    expect(service.maxActive, 1);
-    expect(service.downloadedIds, ['first', 'second']);
-    expect(controller.taskById(firstId)?.completed, 2);
-    expect(controller.taskById(firstId)?.total, 2);
-    expect(controller.hasActiveTasks, isFalse);
-  });
+      expect(service.maxActive, 1);
+      expect(service.downloadedIds, ['first', 'second']);
+      expect(controller.taskById(firstId)?.completed, 2);
+      expect(controller.taskById(firstId)?.total, 2);
+      expect(controller.hasActiveTasks, isFalse);
+    },
+  );
 
-  test('cancels an active task and continues with the next queued task',
-      () async {
+  test(
+    'cancels an active task and continues with the next queued task',
+    () async {
+      final service = _CancellableDownloadService();
+      final controller = DownloadTaskController();
+      final firstId = controller.enqueueBookDownload(
+        source: _source,
+        book: _book('first'),
+        shelfService: service,
+      );
+      final secondId = controller.enqueueBookDownload(
+        source: _source,
+        book: _book('second'),
+        shelfService: service,
+      );
+
+      await service.firstStarted.future;
+      expect(controller.cancelTask(firstId), isTrue);
+      await _waitFor(
+        () =>
+            controller.taskById(firstId)?.state ==
+                DownloadTaskState.cancelled &&
+            controller.taskById(secondId)?.state == DownloadTaskState.completed,
+      );
+
+      expect(service.completedIds, ['second']);
+      expect(controller.hasActiveTasks, isFalse);
+    },
+  );
+
+  test('cancels a queued task without starting it', () async {
     final service = _CancellableDownloadService();
     final controller = DownloadTaskController();
     final firstId = controller.enqueueBookDownload(
@@ -53,16 +85,46 @@ void main() {
     );
 
     await service.firstStarted.future;
-    expect(controller.cancelTask(firstId), isTrue);
+    expect(controller.cancelTask(secondId), isTrue);
+    service.finishFirst.complete();
     await _waitFor(
       () =>
-          controller.taskById(firstId)?.state == DownloadTaskState.cancelled &&
-          controller.taskById(secondId)?.state == DownloadTaskState.completed,
+          controller.taskById(firstId)?.state == DownloadTaskState.completed &&
+          controller.taskById(secondId)?.state == DownloadTaskState.cancelled,
     );
 
-    expect(service.completedIds, ['second']);
-    expect(controller.hasActiveTasks, isFalse);
+    expect(service.startedIds, ['first']);
   });
+
+  test(
+    'cancels an active task and continues with the next queued task',
+    () async {
+      final service = _CancellableDownloadService();
+      final controller = DownloadTaskController();
+      final firstId = controller.enqueueBookDownload(
+        source: _source,
+        book: _book('first'),
+        shelfService: service,
+      );
+      final secondId = controller.enqueueBookDownload(
+        source: _source,
+        book: _book('second'),
+        shelfService: service,
+      );
+
+      await service.firstStarted.future;
+      expect(controller.cancelTask(firstId), isTrue);
+      await _waitFor(
+        () =>
+            controller.taskById(firstId)?.state ==
+                DownloadTaskState.cancelled &&
+            controller.taskById(secondId)?.state == DownloadTaskState.completed,
+      );
+
+      expect(service.completedIds, ['second']);
+      expect(controller.hasActiveTasks, isFalse);
+    },
+  );
 
   test('cancels a queued task without starting it', () async {
     final service = _CancellableDownloadService();
@@ -113,12 +175,12 @@ final _source = RegisteredBookSource(
 );
 
 BookSourceBook _book(String id) => BookSourceBook(
-      id: id,
-      title: id,
-      author: 'Author',
-      description: '',
-      categories: const [],
-    );
+  id: id,
+  title: id,
+  author: 'Author',
+  description: '',
+  categories: const [],
+);
 
 class _QueuedDownloadService extends BookSourceShelfService {
   int active = 0;

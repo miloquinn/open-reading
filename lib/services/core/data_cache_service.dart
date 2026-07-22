@@ -327,8 +327,10 @@ class DataCacheService {
   Future<void> _clearAllPersistentData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final keys =
-          prefs.getKeys().where((key) => key.startsWith('cache_')).toList();
+      final keys = prefs
+          .getKeys()
+          .where((key) => key.startsWith('cache_'))
+          .toList();
 
       for (final key in keys) {
         await prefs.remove(key);
@@ -346,8 +348,10 @@ class DataCacheService {
 
     try {
       final prefs = await SharedPreferences.getInstance();
-      final cacheKeys =
-          prefs.getKeys().where((key) => key.startsWith('cache_')).toList();
+      final cacheKeys = prefs
+          .getKeys()
+          .where((key) => key.startsWith('cache_'))
+          .toList();
 
       int restoredCount = 0;
       for (final prefKey in cacheKeys) {

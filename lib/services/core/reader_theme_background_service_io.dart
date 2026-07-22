@@ -11,12 +11,7 @@ class ReaderThemeBackgroundService {
 
   static const int maxImageBytes = 20 * 1024 * 1024;
   static const String _directoryName = 'reader_theme_backgrounds';
-  static const Set<String> _extensions = {
-    '.jpg',
-    '.jpeg',
-    '.png',
-    '.webp',
-  };
+  static const Set<String> _extensions = {'.jpg', '.jpeg', '.png', '.webp'};
 
   bool get isSupported => true;
 

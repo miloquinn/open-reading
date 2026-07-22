@@ -15,17 +15,19 @@ class IoBookExportBackend implements BookExportBackend {
     PlatformStorageBridge? platformBridge,
     BookSaveFilePicker? saveFilePicker,
     TargetPlatform? platform,
-  })  : _platformBridge = platformBridge ?? PlatformStorageBridge(),
-        _saveFilePicker = saveFilePicker ?? _pickSavePath,
-        _platform = platform ?? defaultTargetPlatform;
+  }) : _platformBridge = platformBridge ?? PlatformStorageBridge(),
+       _saveFilePicker = saveFilePicker ?? _pickSavePath,
+       _platform = platform ?? defaultTargetPlatform;
 
   final PlatformStorageBridge _platformBridge;
   final BookSaveFilePicker _saveFilePicker;
   final TargetPlatform _platform;
 
   static Future<String?> _pickSavePath(String suggestedName) {
-    final extension =
-        path.extension(suggestedName).replaceFirst('.', '').toLowerCase();
+    final extension = path
+        .extension(suggestedName)
+        .replaceFirst('.', '')
+        .toLowerCase();
     return FilePicker.saveFile(
       fileName: suggestedName,
       type: extension.isEmpty ? FileType.any : FileType.custom,
@@ -82,12 +84,13 @@ class IoBookExportBackend implements BookExportBackend {
   BookExportBackendResult _fromNative(Map<String, Object?> row) {
     return switch (row['status']?.toString()) {
       'success' => BookExportBackendResult.success(
-          displayName: row['displayName']?.toString() ?? '',
-          location: row['displayLocation']?.toString() ??
-              row['destinationPath']?.toString() ??
-              row['location']?.toString(),
-          uri: row['uri']?.toString(),
-        ),
+        displayName: row['displayName']?.toString() ?? '',
+        location:
+            row['displayLocation']?.toString() ??
+            row['destinationPath']?.toString() ??
+            row['location']?.toString(),
+        uri: row['uri']?.toString(),
+      ),
       'cancelled' => const BookExportBackendResult.cancelled(),
       'unsupported' => const BookExportBackendResult.unsupported(),
       _ => BookExportBackendResult.failure(row['errorCode']),

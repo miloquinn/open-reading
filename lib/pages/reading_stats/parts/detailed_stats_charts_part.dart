@@ -104,10 +104,7 @@ extension _DetailedStatsChartsView on _DetailedStatsPageState {
           fontWeight: FontWeight.w700,
         ),
       ),
-      child: SizedBox(
-        height: 230,
-        child: LineChart(_lineChartData()),
-      ),
+      child: SizedBox(height: 230, child: LineChart(_lineChartData())),
     );
   }
 
@@ -122,15 +119,19 @@ extension _DetailedStatsChartsView on _DetailedStatsPageState {
       );
     }
 
-    final spots = data.asMap().entries.map((entry) {
-      final item = entry.value;
-      final value = switch (_selectedStatType) {
-        1 => ((item['pagesRead'] as int?) ?? 0).toDouble(),
-        2 => ((item['booksRead'] as int?) ?? 0).toDouble(),
-        _ => ((item['readingTime'] as int?) ?? 0).toDouble(),
-      };
-      return FlSpot(entry.key.toDouble(), value);
-    }).toList(growable: false);
+    final spots = data
+        .asMap()
+        .entries
+        .map((entry) {
+          final item = entry.value;
+          final value = switch (_selectedStatType) {
+            1 => ((item['pagesRead'] as int?) ?? 0).toDouble(),
+            2 => ((item['booksRead'] as int?) ?? 0).toDouble(),
+            _ => ((item['readingTime'] as int?) ?? 0).toDouble(),
+          };
+          return FlSpot(entry.key.toDouble(), value);
+        })
+        .toList(growable: false);
     final rawMax = spots.fold<double>(
       0,
       (current, spot) => math.max(current, spot.y),
@@ -139,10 +140,10 @@ extension _DetailedStatsChartsView on _DetailedStatsPageState {
     final interval = data.length <= 7
         ? 1
         : data.length <= 30
-            ? 5
-            : data.length <= 90
-                ? 15
-                : 45;
+        ? 5
+        : data.length <= 90
+        ? 15
+        : 45;
 
     return LineChartData(
       minX: 0,
@@ -153,17 +154,15 @@ extension _DetailedStatsChartsView on _DetailedStatsPageState {
       gridData: FlGridData(
         show: true,
         drawVerticalLine: false,
-        getDrawingHorizontalLine: (_) => FlLine(
-          color: palette.border,
-          strokeWidth: 1,
-          dashArray: [4, 5],
-        ),
+        getDrawingHorizontalLine: (_) =>
+            FlLine(color: palette.border, strokeWidth: 1, dashArray: [4, 5]),
       ),
       borderData: FlBorderData(show: false),
       titlesData: FlTitlesData(
         topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-        rightTitles:
-            const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        rightTitles: const AxisTitles(
+          sideTitles: SideTitles(showTitles: false),
+        ),
         leftTitles: AxisTitles(
           sideTitles: SideTitles(
             showTitles: true,
@@ -277,12 +276,15 @@ extension _DetailedStatsChartsView on _DetailedStatsPageState {
             ),
             borderData: FlBorderData(show: false),
             titlesData: FlTitlesData(
-              topTitles:
-                  const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              rightTitles:
-                  const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              leftTitles:
-                  const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              topTitles: const AxisTitles(
+                sideTitles: SideTitles(showTitles: false),
+              ),
+              rightTitles: const AxisTitles(
+                sideTitles: SideTitles(showTitles: false),
+              ),
+              leftTitles: const AxisTitles(
+                sideTitles: SideTitles(showTitles: false),
+              ),
               bottomTitles: AxisTitles(
                 sideTitles: SideTitles(
                   showTitles: true,
@@ -294,10 +296,7 @@ extension _DetailedStatsChartsView on _DetailedStatsPageState {
                       padding: const EdgeInsets.only(top: 7),
                       child: Text(
                         context.l10n.statsAxisHour(hour),
-                        style: TextStyle(
-                          color: palette.mutedInk,
-                          fontSize: 10,
-                        ),
+                        style: TextStyle(color: palette.mutedInk, fontSize: 10),
                       ),
                     );
                   },
@@ -505,11 +504,13 @@ extension _DetailedStatsChartsView on _DetailedStatsPageState {
 
   Widget _buildReadingSpeedChart() {
     final palette = _palette;
-    final values = _windowedDailyStats.map((item) {
-      final minutes = (item['readingTime'] as int?) ?? 0;
-      final pages = (item['pagesRead'] as int?) ?? 0;
-      return minutes <= 0 ? 0.0 : pages / minutes;
-    }).toList(growable: false);
+    final values = _windowedDailyStats
+        .map((item) {
+          final minutes = (item['readingTime'] as int?) ?? 0;
+          final pages = (item['pagesRead'] as int?) ?? 0;
+          return minutes <= 0 ? 0.0 : pages / minutes;
+        })
+        .toList(growable: false);
     final spots = values
         .asMap()
         .entries

@@ -32,8 +32,7 @@ class BookSourcesPage extends StatefulWidget {
   static List<RegisteredBookSource> searchTargets(
     Iterable<RegisteredBookSource> sources,
     String? selectedSourceId,
-  ) =>
-      SourceSearchPage.searchTargets(sources, selectedSourceId);
+  ) => SourceSearchPage.searchTargets(sources, selectedSourceId);
 
   /// 保留每个书源自己的 latest 顺序，再按来源轮流穿插。
   ///
@@ -47,9 +46,7 @@ class BookSourcesPage extends StatefulWidget {
     if (maxItemsPerSource <= 0) return const [];
     final queues = batches
         .where((batch) => batch.isNotEmpty)
-        .map(
-          (batch) => batch.take(maxItemsPerSource).toList(growable: false),
-        )
+        .map((batch) => batch.take(maxItemsPerSource).toList(growable: false))
         .toList();
     queues.sort((left, right) {
       final leftTime = left.first.book.updatedAt;
@@ -85,8 +82,9 @@ class BookSourcesPage extends StatefulWidget {
 class _BookSourcesPageState extends State<BookSourcesPage> {
   final BookSourceRegistry _registry = BookSourceRegistry();
   late final BookSourceClient _client;
-  late final BookSourceShelfService _shelfService =
-      BookSourceShelfService(client: _client);
+  late final BookSourceShelfService _shelfService = BookSourceShelfService(
+    client: _client,
+  );
   late final SourcedBookActions _actions = SourcedBookActions(
     context: context,
     client: _client,
@@ -144,10 +142,10 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
       .toList(growable: false);
 
   String _capabilityFor(_DiscoverSection section) => switch (section) {
-        _DiscoverSection.recommended => 'discover',
-        _DiscoverSection.categories => 'categories',
-        _DiscoverSection.latest => 'browse',
-      };
+    _DiscoverSection.recommended => 'discover',
+    _DiscoverSection.categories => 'categories',
+    _DiscoverSection.latest => 'browse',
+  };
 
   List<RegisteredBookSource> _sourcesFor(_DiscoverSection section) =>
       _targets(_capabilityFor(section));
@@ -164,10 +162,12 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
     _SectionCache next;
     try {
       next = switch (section) {
-        _DiscoverSection.recommended =>
-          _SectionCache.shelves(await _fetchShelves()),
-        _DiscoverSection.categories =>
-          _SectionCache.categories(await _fetchCategories()),
+        _DiscoverSection.recommended => _SectionCache.shelves(
+          await _fetchShelves(),
+        ),
+        _DiscoverSection.categories => _SectionCache.categories(
+          await _fetchCategories(),
+        ),
         _DiscoverSection.latest => _SectionCache.books(await _fetchLatest()),
       };
     } catch (error) {
@@ -264,7 +264,8 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
   }
 
   Future<void> _changeSection(_DiscoverSection section) async {
-    final selectedSourceStillAvailable = _selectedSourceId == null ||
+    final selectedSourceStillAvailable =
+        _selectedSourceId == null ||
         _sourcesFor(section).any((source) => source.id == _selectedSourceId);
     setState(() {
       _section = section;
@@ -307,9 +308,7 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
     }
   }
 
-  Future<void> _openCategoryPicker(
-    List<_SourcedCategory> categories,
-  ) async {
+  Future<void> _openCategoryPicker(List<_SourcedCategory> categories) async {
     final size = MediaQuery.sizeOf(context);
     final picker = _CategoryPickerPanel(
       categories: categories,
@@ -367,9 +366,7 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
 
   Future<void> _openSourceManagement() async {
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => const BookSourceManagementPage(),
-      ),
+      MaterialPageRoute<void>(builder: (_) => const BookSourceManagementPage()),
     );
     if (mounted) await _reloadAll();
   }
@@ -379,8 +376,9 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
     final useRailNavigation =
         NavigationContext.of(context)?.useRailNavigation ?? false;
     final mobileChrome = HomeMobileChromeScope.of(context);
-    final bottomPadding =
-        useRailNavigation ? 32.0 : mobileChrome.pageBottomPadding;
+    final bottomPadding = useRailNavigation
+        ? 32.0
+        : mobileChrome.pageBottomPadding;
 
     return Container(
       decoration: BoxDecoration(
@@ -491,9 +489,7 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
       },
       style: ButtonStyle(
         minimumSize: const WidgetStatePropertyAll(Size(44, 48)),
-        side: WidgetStatePropertyAll(
-          BorderSide(color: scheme.outlineVariant),
-        ),
+        side: WidgetStatePropertyAll(BorderSide(color: scheme.outlineVariant)),
       ),
     );
   }
@@ -565,18 +561,19 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
       ];
     }
     return switch (_section) {
-      _DiscoverSection.recommended =>
-        _buildShelvesSlivers(cache, bottomPadding),
-      _DiscoverSection.categories =>
-        _buildCategoriesSlivers(cache, bottomPadding),
+      _DiscoverSection.recommended => _buildShelvesSlivers(
+        cache,
+        bottomPadding,
+      ),
+      _DiscoverSection.categories => _buildCategoriesSlivers(
+        cache,
+        bottomPadding,
+      ),
       _DiscoverSection.latest => _buildLatestSlivers(cache, bottomPadding),
     };
   }
 
-  List<Widget> _buildShelvesSlivers(
-    _SectionCache cache,
-    double bottomPadding,
-  ) {
+  List<Widget> _buildShelvesSlivers(_SectionCache cache, double bottomPadding) {
     final shelves = (cache.shelves ?? const <_DiscoveryShelf>[])
         .where((shelf) => _matchesSelectedSource(shelf.source))
         .toList(growable: false);
@@ -611,9 +608,9 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
               Expanded(
                 child: Text(
                   shelf.title,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
                 ),
               ),
               _buildSourceBadge(shelf.source.name),
@@ -699,10 +696,7 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
     return slivers;
   }
 
-  List<Widget> _buildLatestSlivers(
-    _SectionCache cache,
-    double bottomPadding,
-  ) {
+  List<Widget> _buildLatestSlivers(_SectionCache cache, double bottomPadding) {
     final books = (cache.books ?? const <SourcedBook>[])
         .where((result) => _matchesSelectedSource(result.source))
         .toList(growable: false);
@@ -751,11 +745,11 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
   }
 
   Widget _centerSectionChild(Widget child) => Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1048),
-          child: child,
-        ),
-      );
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 1048),
+      child: child,
+    ),
+  );
 
   Widget _buildUnsupportedMessage(String capability) {
     final hasEnabledSources = _sources.any((source) => source.enabled);
@@ -801,9 +795,9 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
           Text(
             title,
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 6),
           Text(
@@ -855,35 +849,35 @@ class _SectionCache {
   final List<SourcedBook>? books;
 
   const _SectionCache.loading()
-      : loading = true,
-        error = null,
-        shelves = null,
-        categories = null,
-        books = null;
+    : loading = true,
+      error = null,
+      shelves = null,
+      categories = null,
+      books = null;
 
   const _SectionCache.error(String this.error)
-      : loading = false,
-        shelves = null,
-        categories = null,
-        books = null;
+    : loading = false,
+      shelves = null,
+      categories = null,
+      books = null;
 
   const _SectionCache.shelves(List<_DiscoveryShelf> this.shelves)
-      : loading = false,
-        error = null,
-        categories = null,
-        books = null;
+    : loading = false,
+      error = null,
+      categories = null,
+      books = null;
 
   const _SectionCache.categories(List<_SourcedCategory> this.categories)
-      : loading = false,
-        error = null,
-        shelves = null,
-        books = null;
+    : loading = false,
+      error = null,
+      shelves = null,
+      books = null;
 
   const _SectionCache.books(List<SourcedBook> this.books)
-      : loading = false,
-        error = null,
-        shelves = null,
-        categories = null;
+    : loading = false,
+      error = null,
+      shelves = null,
+      categories = null;
 }
 
 class _DiscoveryShelf {
@@ -914,10 +908,7 @@ class _CategoryPickerButton extends StatelessWidget {
   final _SourcedCategory category;
   final VoidCallback onTap;
 
-  const _CategoryPickerButton({
-    required this.category,
-    required this.onTap,
-  });
+  const _CategoryPickerButton({required this.category, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -946,10 +937,8 @@ class _CategoryPickerButton extends StatelessWidget {
                         category.name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w700),
                       ),
                       const SizedBox(height: 2),
                       Text(
@@ -957,8 +946,8 @@ class _CategoryPickerButton extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                            ),
+                          color: scheme.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ),
@@ -1038,8 +1027,8 @@ class _CategoryPickerPanelState extends State<_CategoryPickerPanel> {
                   child: Text(
                     widget.title,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
                 IconButton(
@@ -1096,9 +1085,7 @@ class _CategoryPickerPanelState extends State<_CategoryPickerPanel> {
                             entry.header!,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context)
-                                .textTheme
-                                .labelLarge
+                            style: Theme.of(context).textTheme.labelLarge
                                 ?.copyWith(
                                   color: scheme.primary,
                                   fontWeight: FontWeight.w700,

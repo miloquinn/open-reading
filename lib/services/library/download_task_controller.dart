@@ -40,17 +40,16 @@ class BookDownloadTask {
     int? total,
     Book? downloadedBook,
     Object? error,
-  }) =>
-      BookDownloadTask(
-        id: id,
-        source: source,
-        book: book,
-        state: state ?? this.state,
-        completed: completed ?? this.completed,
-        total: total ?? this.total,
-        downloadedBook: downloadedBook ?? this.downloadedBook,
-        error: error ?? this.error,
-      );
+  }) => BookDownloadTask(
+    id: id,
+    source: source,
+    book: book,
+    state: state ?? this.state,
+    completed: completed ?? this.completed,
+    total: total ?? this.total,
+    downloadedBook: downloadedBook ?? this.downloadedBook,
+    error: error ?? this.error,
+  );
 }
 
 /// Owns in-app book download queue state while the application is running.
@@ -65,10 +64,10 @@ class DownloadTaskController extends ChangeNotifier {
   List<BookDownloadTask> get tasks => List.unmodifiable(_tasks);
 
   bool get hasActiveTasks => _tasks.any(
-        (task) =>
-            task.state == DownloadTaskState.queued ||
-            task.state == DownloadTaskState.downloading,
-      );
+    (task) =>
+        task.state == DownloadTaskState.queued ||
+        task.state == DownloadTaskState.downloading,
+  );
 
   BookDownloadTask? taskById(String id) {
     for (final task in _tasks) {
@@ -134,7 +133,8 @@ class DownloadTaskController extends ChangeNotifier {
         );
         if (index < 0) return;
         final task = _tasks[index];
-        final cancellation = _cancellations[task.id] ??
+        final cancellation =
+            _cancellations[task.id] ??
             (_cancellations[task.id] = BookDownloadCancellation());
         _replace(index, task.copyWith(state: DownloadTaskState.downloading));
         final notificationTask = BackgroundDownloadTask(
@@ -144,7 +144,8 @@ class DownloadTaskController extends ChangeNotifier {
         );
         try {
           await _notify(
-              () => BackgroundDownloadNotifier.begin(notificationTask));
+            () => BackgroundDownloadNotifier.begin(notificationTask),
+          );
           final downloaded = await shelfService.downloadToLocal(
             source: task.source,
             book: task.book,
@@ -208,9 +209,7 @@ class DownloadTaskController extends ChangeNotifier {
               _tasks[currentIndex].state != DownloadTaskState.cancelled) {
             _replace(
               currentIndex,
-              _tasks[currentIndex].copyWith(
-                state: DownloadTaskState.cancelled,
-              ),
+              _tasks[currentIndex].copyWith(state: DownloadTaskState.cancelled),
             );
           }
           _cancellations.remove(task.id);

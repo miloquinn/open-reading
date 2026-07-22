@@ -57,9 +57,7 @@ void main() {
   });
 
   test('unsupported saved column counts fall back to three', () async {
-    SharedPreferences.setMockInitialValues({
-      'library_grid_columns_v1': 5,
-    });
+    SharedPreferences.setMockInitialValues({'library_grid_columns_v1': 5});
     final notifier = await _loadNotifier();
     addTearDown(notifier.dispose);
 

@@ -141,11 +141,7 @@ class SettingsPageController extends ChangeNotifier {
 }
 
 class SettingsPage extends StatefulWidget {
-  const SettingsPage({
-    super.key,
-    this.controller,
-    this.cacheManager,
-  });
+  const SettingsPage({super.key, this.controller, this.cacheManager});
 
   final SettingsPageController? controller;
   final AppCacheManager? cacheManager;
@@ -361,9 +357,8 @@ class _SettingsPageState extends State<SettingsPage> {
           final saved = decoded
               .whereType<Map>()
               .map(
-                (item) => _AiQuickModel.fromJson(
-                  Map<String, dynamic>.from(item),
-                ),
+                (item) =>
+                    _AiQuickModel.fromJson(Map<String, dynamic>.from(item)),
               )
               .whereType<_AiQuickModel>()
               .toList(growable: false);
@@ -388,7 +383,8 @@ class _SettingsPageState extends State<SettingsPage> {
         orElse: () => AIModelPresets.all.first,
       );
       final providerSettings = settingsByProvider[preset.provider];
-      final sameEndpoint = providerSettings != null &&
+      final sameEndpoint =
+          providerSettings != null &&
           providerSettings.baseUrl == preset.toSettings().baseUrl;
       final settings = preset.toSettings(
         apiKey: sameEndpoint ? providerSettings.apiKey : '',
@@ -412,10 +408,7 @@ class _SettingsPageState extends State<SettingsPage> {
       jsonEncode(_aiQuickModels.map((item) => item.toJson()).toList()),
     );
     if (_activeAiQuickModelId != null) {
-      await prefs.setString(
-        _activeAiQuickModelKey,
-        _activeAiQuickModelId!,
-      );
+      await prefs.setString(_activeAiQuickModelKey, _activeAiQuickModelId!);
     }
   }
 
@@ -542,8 +535,9 @@ class _SettingsPageState extends State<SettingsPage> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(dialogContext, false),
-                child:
-                    Text(MaterialLocalizations.of(context).cancelButtonLabel),
+                child: Text(
+                  MaterialLocalizations.of(context).cancelButtonLabel,
+                ),
               ),
               FilledButton(
                 onPressed: () => Navigator.pop(dialogContext, true),
@@ -556,11 +550,10 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   String _cacheCategoryTitle(AppCacheCategory category) => switch (category) {
-        AppCacheCategory.sourceCovers => context.l10n.settingsCacheSourceCovers,
-        AppCacheCategory.sourceData => context.l10n.settingsCacheSourceData,
-        AppCacheCategory.temporaryFiles =>
-          context.l10n.settingsCacheTemporaryFiles,
-      };
+    AppCacheCategory.sourceCovers => context.l10n.settingsCacheSourceCovers,
+    AppCacheCategory.sourceData => context.l10n.settingsCacheSourceData,
+    AppCacheCategory.temporaryFiles => context.l10n.settingsCacheTemporaryFiles,
+  };
 
   String _cacheCategorySubtitle(AppCacheCategory category) {
     if (_loadingCacheUsage) return context.l10n.settingsCacheCalculating;
@@ -613,16 +606,16 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   String _readerTopBarStyleTitle(ReaderTopBarStyle style) => switch (style) {
-        ReaderTopBarStyle.system => context.l10n.readerTopBarStyleSystem,
-        ReaderTopBarStyle.reader => context.l10n.readerTopBarStyleReader,
-        ReaderTopBarStyle.hidden => context.l10n.readerTopBarStyleHidden,
-      };
+    ReaderTopBarStyle.system => context.l10n.readerTopBarStyleSystem,
+    ReaderTopBarStyle.reader => context.l10n.readerTopBarStyleReader,
+    ReaderTopBarStyle.hidden => context.l10n.readerTopBarStyleHidden,
+  };
 
   String _readerTopBarStyleHint(ReaderTopBarStyle style) => switch (style) {
-        ReaderTopBarStyle.system => context.l10n.readerTopBarStyleSystemHint,
-        ReaderTopBarStyle.reader => context.l10n.readerTopBarStyleReaderHint,
-        ReaderTopBarStyle.hidden => context.l10n.readerTopBarStyleHiddenHint,
-      };
+    ReaderTopBarStyle.system => context.l10n.readerTopBarStyleSystemHint,
+    ReaderTopBarStyle.reader => context.l10n.readerTopBarStyleReaderHint,
+    ReaderTopBarStyle.hidden => context.l10n.readerTopBarStyleHiddenHint,
+  };
 
   Future<void> _showReaderTopBarStylePicker() async {
     final prefs = await SharedPreferences.getInstance();
@@ -656,7 +649,8 @@ class _SettingsPageState extends State<SettingsPage> {
     _aiModelController.text = normalized.model;
     _aiBaseUrlController.text = normalized.baseUrl;
     _aiTempController.text = normalized.temperature.toStringAsFixed(2);
-    _selectedAiPreset = AIModelPresets.match(normalized) ??
+    _selectedAiPreset =
+        AIModelPresets.match(normalized) ??
         AIModelPresets.defaultForProvider(normalized.provider);
   }
 
@@ -681,13 +675,15 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _stashCurrentAiDraft() {
-    _aiDraftByProvider[_selectedAiProvider] =
-        _buildAiDraftFromInputs(_selectedAiProvider);
+    _aiDraftByProvider[_selectedAiProvider] = _buildAiDraftFromInputs(
+      _selectedAiProvider,
+    );
   }
 
   void _onAiProviderChanged(AIProviderType provider) {
     _stashCurrentAiDraft();
-    final nextDraft = _aiDraftByProvider[provider] ??
+    final nextDraft =
+        _aiDraftByProvider[provider] ??
         AIModelPresets.defaultForProvider(provider).toSettings();
     setState(() {
       _selectedAiProvider = provider;
@@ -738,9 +734,10 @@ class _SettingsPageState extends State<SettingsPage> {
   Future<void> _showAiCustomConfigDialog() async {
     final l10n = context.l10n;
     _stashCurrentAiDraft();
-    final current = (_aiDraftByProvider[_selectedAiProvider] ??
-            AIProviderSettings.defaults(_selectedAiProvider))
-        .normalized();
+    final current =
+        (_aiDraftByProvider[_selectedAiProvider] ??
+                AIProviderSettings.defaults(_selectedAiProvider))
+            .normalized();
     final modelController = TextEditingController(text: current.model);
     final baseUrlController = TextEditingController(text: current.baseUrl);
     final tempController = TextEditingController(
@@ -767,11 +764,10 @@ class _SettingsPageState extends State<SettingsPage> {
                           _selectedAiProvider.displayName,
                         ),
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurface
-                                  .withValues(alpha: 0.68),
-                            ),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: 0.68),
+                        ),
                       ),
                       const SizedBox(height: 12),
                       TextFormField(
@@ -807,11 +803,10 @@ class _SettingsPageState extends State<SettingsPage> {
                       Text(
                         _aiTemperatureHint(_selectedAiProvider),
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurface
-                                  .withValues(alpha: 0.62),
-                            ),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: 0.62),
+                        ),
                       ),
                       if (errorText != null) ...[
                         const SizedBox(height: 10),
@@ -835,8 +830,9 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 FilledButton(
                   onPressed: () {
-                    final parsedTemp =
-                        double.tryParse(tempController.text.trim());
+                    final parsedTemp = double.tryParse(
+                      tempController.text.trim(),
+                    );
                     if (parsedTemp == null ||
                         !_validateAiTemperature(
                           _selectedAiProvider,
@@ -845,8 +841,8 @@ class _SettingsPageState extends State<SettingsPage> {
                       setDialogState(() {
                         errorText =
                             _selectedAiProvider == AIProviderType.minimax
-                                ? l10n.settingsAiTempErrorMinimax
-                                : l10n.settingsAiTempErrorOutOfRange;
+                            ? l10n.settingsAiTempErrorMinimax
+                            : l10n.settingsAiTempErrorOutOfRange;
                       });
                       return;
                     }
@@ -871,9 +867,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       return;
                     }
 
-                    Navigator.of(dialogContext).pop(
-                      nextSettings,
-                    );
+                    Navigator.of(dialogContext).pop(nextSettings);
                   },
                   child: Text(l10n.settingsApply),
                 ),
@@ -1072,9 +1066,8 @@ class _SettingsPageState extends State<SettingsPage> {
                 title: l10n.settingsHideNavigationLabelsTitle,
                 subtitle: l10n.settingsHideNavigationLabelsSubtitle,
                 value: appSettings.hideNavigationLabels,
-                onChanged: (value) => unawaited(
-                  appSettings.setHideNavigationLabels(value),
-                ),
+                onChanged: (value) =>
+                    unawaited(appSettings.setHideNavigationLabels(value)),
                 icon: Icons.label_off_outlined,
                 persistPageSettings: false,
               ),
@@ -1186,17 +1179,13 @@ class _SettingsPageState extends State<SettingsPage> {
           _buildSectionCard(
             title: l10n.settingsAiAssistantTitle,
             icon: Icons.auto_awesome_outlined,
-            children: [
-              _buildAiSettingsSection(),
-            ],
+            children: [_buildAiSettingsSection()],
           ),
           const SizedBox(height: 20),
           _buildSectionCard(
             title: l10n.appSettings,
             icon: Icons.language,
-            children: [
-              _buildLanguageSelector(appSettings),
-            ],
+            children: [_buildLanguageSelector(appSettings)],
           ),
           const SizedBox(height: 20),
           _buildSectionCard(
@@ -1227,12 +1216,10 @@ class _SettingsPageState extends State<SettingsPage> {
               icon: Icons.volunteer_activism_outlined,
               children: [
                 DeveloperSupportCard(
-                  onWechatTap: () => _showDonationDialog(
-                    DeveloperDonationMethod.wechat,
-                  ),
-                  onAlipayTap: () => _showDonationDialog(
-                    DeveloperDonationMethod.alipay,
-                  ),
+                  onWechatTap: () =>
+                      _showDonationDialog(DeveloperDonationMethod.wechat),
+                  onAlipayTap: () =>
+                      _showDonationDialog(DeveloperDonationMethod.alipay),
                 ),
               ],
             ),
@@ -1295,9 +1282,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   void _openBookSourceManagement() {
     Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => const BookSourceManagementPage(),
-      ),
+      MaterialPageRoute<void>(builder: (_) => const BookSourceManagementPage()),
     );
   }
 
@@ -1308,9 +1293,9 @@ class _SettingsPageState extends State<SettingsPage> {
         Text(
           l10n.settings,
           style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                fontWeight: FontWeight.w700,
-                height: 1.05,
-              ),
+            fontWeight: FontWeight.w700,
+            height: 1.05,
+          ),
         ),
         const Spacer(),
         InkWell(
@@ -1353,9 +1338,9 @@ class _SettingsPageState extends State<SettingsPage> {
               const SizedBox(width: 9),
               Text(
                 title,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
               ),
             ],
           ),
@@ -1376,34 +1361,49 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget _buildAiSettingsSection() {
     if (!_aiSettingsLoaded) {
       return const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         child: Center(child: CircularProgressIndicator()),
       );
     }
 
     final l10n = context.l10n;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 18),
+      padding: const EdgeInsets.only(bottom: 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 2, 20, 12),
-            child: Text(
-              l10n.settingsAiSwipeHint,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 9),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.swipe_rounded,
+                  size: 15,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    l10n.settingsAiSwipeHint,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      height: 1.2,
+                    ),
                   ),
+                ),
+              ],
             ),
           ),
           SizedBox(
-            height: 154,
+            height: 112,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               physics: const BouncingScrollPhysics(),
               itemCount: _aiQuickModels.length + 1,
-              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              separatorBuilder: (_, __) => const SizedBox(width: 10),
               itemBuilder: (context, index) {
                 if (index == _aiQuickModels.length) {
                   return _buildAddAiModelCard();
@@ -1423,25 +1423,38 @@ class _SettingsPageState extends State<SettingsPage> {
     final selected = item.id == _activeAiQuickModelId;
     final configured = item.settings.isConfigured;
     return SizedBox(
-      width: 184,
+      width: 172,
       child: Material(
         color: selected
-            ? scheme.primaryContainer.withValues(alpha: 0.7)
+            ? Color.alphaBlend(
+                scheme.primary.withValues(alpha: 0.09),
+                scheme.surfaceContainerLow,
+              )
             : scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(14),
         child: InkWell(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(14),
           onTap: () => _activateAiQuickModel(item),
           onLongPress: item.isCustom ? () => _removeAiQuickModel(item) : null,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),
-            padding: const EdgeInsets.all(16),
+            curve: Curves.easeOutCubic,
+            padding: const EdgeInsets.fromLTRB(12, 11, 12, 10),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color: selected ? scheme.primary : scheme.outlineVariant,
-                width: selected ? 1.6 : 1,
+                width: selected ? 1.4 : 1,
               ),
+              boxShadow: selected
+                  ? [
+                      BoxShadow(
+                        color: scheme.primary.withValues(alpha: 0.12),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ]
+                  : null,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1450,57 +1463,96 @@ class _SettingsPageState extends State<SettingsPage> {
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
+                        horizontal: 7,
+                        vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color: scheme.surface.withValues(alpha: 0.7),
+                        color: selected
+                            ? scheme.primary.withValues(alpha: 0.11)
+                            : scheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(99),
                       ),
-                      child: Text(
-                        item.settings.provider.displayName,
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.auto_awesome_rounded,
+                            size: 11,
+                            color: selected
+                                ? scheme.primary
+                                : scheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            item.settings.provider.displayName,
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
+                                  color: selected
+                                      ? scheme.primary
+                                      : scheme.onSurfaceVariant,
+                                  fontWeight: FontWeight.w700,
+                                  height: 1.1,
+                                ),
+                          ),
+                        ],
                       ),
                     ),
                     const Spacer(),
-                    Icon(
-                      selected
-                          ? Icons.check_circle_rounded
-                          : configured
-                              ? Icons.circle_rounded
-                              : Icons.key_off_rounded,
-                      size: 18,
-                      color: selected
-                          ? scheme.primary
-                          : configured
-                              ? scheme.onSurfaceVariant
-                              : scheme.error,
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 160),
+                      child: selected
+                          ? Icon(
+                              Icons.check_circle_rounded,
+                              key: const ValueKey('selected'),
+                              size: 18,
+                              color: scheme.primary,
+                            )
+                          : const SizedBox.square(
+                              key: ValueKey('not-selected'),
+                              dimension: 18,
+                            ),
                     ),
                   ],
                 ),
                 const Spacer(),
                 Text(
                   item.settings.model,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        height: 1.2,
-                      ),
-                ),
-                const SizedBox(height: 7),
-                Text(
-                  configured
-                      ? l10n.settingsAiApiKeyConfigured
-                      : l10n.settingsAiApiKeyTapToConfigure,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color:
-                            configured ? scheme.onSurfaceVariant : scheme.error,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    height: 1.1,
+                  ),
+                ),
+                const SizedBox(height: 7),
+                Row(
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: configured ? scheme.primary : scheme.error,
+                        shape: BoxShape.circle,
                       ),
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        configured
+                            ? l10n.settingsAiApiKeyConfigured
+                            : l10n.settingsAiApiKeyTapToConfigure,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: configured
+                              ? scheme.onSurfaceVariant
+                              : scheme.error,
+                          fontSize: 11,
+                          height: 1.1,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -1514,36 +1566,42 @@ class _SettingsPageState extends State<SettingsPage> {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     return SizedBox(
-      width: 112,
+      width: 94,
       child: Material(
         color: scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(14),
         child: InkWell(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(14),
           onTap: () => _showAiModelSheet(),
           child: DecoratedBox(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(14),
               border: Border.all(color: scheme.outlineVariant),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  width: 42,
-                  height: 42,
+                  width: 34,
+                  height: 34,
                   decoration: BoxDecoration(
                     color: scheme.primary.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(Icons.add_rounded, color: scheme.primary),
+                  child: Icon(
+                    Icons.add_rounded,
+                    size: 21,
+                    color: scheme.primary,
+                  ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 7),
                 Text(
                   l10n.settingsAiAddModel,
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ],
             ),
@@ -1596,13 +1654,15 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _showAiModelSheet({_AiQuickModel? editing}) async {
-    final initial = editing?.settings ??
+    final initial =
+        editing?.settings ??
         AIModelPresets.defaultForProvider(_selectedAiProvider).toSettings(
           apiKey: _aiDraftByProvider[_selectedAiProvider]?.apiKey ?? '',
         );
     var provider = initial.provider;
     var customMode = editing?.isCustom ?? false;
-    var selectedPreset = AIModelPresets.match(initial) ??
+    var selectedPreset =
+        AIModelPresets.match(initial) ??
         AIModelPresets.defaultForProvider(provider);
     final apiKeyController = TextEditingController(text: initial.apiKey);
     final baseUrlController = TextEditingController(text: initial.baseUrl);
@@ -1675,8 +1735,9 @@ class _SettingsPageState extends State<SettingsPage> {
           }
 
           Future<void> saveModel() async {
-            final temperature =
-                double.tryParse(temperatureController.text.trim());
+            final temperature = double.tryParse(
+              temperatureController.text.trim(),
+            );
             final settings = AIProviderSettings(
               provider: provider,
               apiKey: apiKeyController.text.trim(),
@@ -1905,8 +1966,9 @@ class _SettingsPageState extends State<SettingsPage> {
                                   ? IconButton(
                                       tooltip:
                                           l10n.settingsAiFetchModelsTooltip,
-                                      onPressed:
-                                          loadingModels ? null : fetchModels,
+                                      onPressed: loadingModels
+                                          ? null
+                                          : fetchModels,
                                       icon: loadingModels
                                           ? const SizedBox(
                                               width: 18,
@@ -1935,17 +1997,16 @@ class _SettingsPageState extends State<SettingsPage> {
                             const SizedBox(height: 8),
                             Text(
                               l10n.settingsAiSelectModel,
-                              style: Theme.of(sheetContext)
-                                  .textTheme
-                                  .titleSmall
+                              style: Theme.of(sheetContext).textTheme.titleSmall
                                   ?.copyWith(fontWeight: FontWeight.w700),
                             ),
                             const SizedBox(height: 8),
                             Container(
                               constraints: const BoxConstraints(maxHeight: 220),
                               decoration: BoxDecoration(
-                                border:
-                                    Border.all(color: scheme.outlineVariant),
+                                border: Border.all(
+                                  color: scheme.outlineVariant,
+                                ),
                                 borderRadius: BorderRadius.circular(14),
                               ),
                               child: ListView.builder(
@@ -1979,12 +2040,13 @@ class _SettingsPageState extends State<SettingsPage> {
                               controller: temperatureController,
                               keyboardType:
                                   const TextInputType.numberWithOptions(
-                                decimal: true,
-                              ),
+                                    decimal: true,
+                                  ),
                               decoration: InputDecoration(
                                 labelText: l10n.settingsAiTemperatureLabel,
-                                prefixIcon:
-                                    const Icon(Icons.thermostat_rounded),
+                                prefixIcon: const Icon(
+                                  Icons.thermostat_rounded,
+                                ),
                                 border: const OutlineInputBorder(),
                               ),
                             ),
@@ -2033,8 +2095,9 @@ class _SettingsPageState extends State<SettingsPage> {
 
     if (result == null || !mounted) return;
     setState(() {
-      final existingIndex =
-          _aiQuickModels.indexWhere((item) => item.id == result.id);
+      final existingIndex = _aiQuickModels.indexWhere(
+        (item) => item.id == result.id,
+      );
       if (existingIndex >= 0) {
         final next = [..._aiQuickModels];
         next[existingIndex] = result;
@@ -2068,13 +2131,13 @@ class _SettingsPageState extends State<SettingsPage> {
                 children: [
                   Text(
                     l10n.settingsAiLegacyIntro,
-                    style:
-                        Theme.of(routeContext).textTheme.bodyMedium?.copyWith(
-                              color: Theme.of(routeContext)
-                                  .colorScheme
-                                  .onSurfaceVariant,
-                              height: 1.5,
-                            ),
+                    style: Theme.of(routeContext).textTheme.bodyMedium
+                        ?.copyWith(
+                          color: Theme.of(
+                            routeContext,
+                          ).colorScheme.onSurfaceVariant,
+                          height: 1.5,
+                        ),
                   ),
                   const SizedBox(height: 24),
                   _buildAiConfigurationForm(setRouteState),
@@ -2091,9 +2154,10 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget _buildAiConfigurationForm(StateSetter setRouteState) {
     final l10n = context.l10n;
     final colorScheme = Theme.of(context).colorScheme;
-    final currentSettings = (_aiDraftByProvider[_selectedAiProvider] ??
-            AIProviderSettings.defaults(_selectedAiProvider))
-        .normalized();
+    final currentSettings =
+        (_aiDraftByProvider[_selectedAiProvider] ??
+                AIProviderSettings.defaults(_selectedAiProvider))
+            .normalized();
     final matchedPreset = AIModelPresets.match(currentSettings);
     final providerPresets = AIModelPresets.byProvider(_selectedAiProvider);
 
@@ -2194,8 +2258,11 @@ class _SettingsPageState extends State<SettingsPage> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.error_outline_rounded,
-                  size: 17, color: colorScheme.error),
+              Icon(
+                Icons.error_outline_rounded,
+                size: 17,
+                color: colorScheme.error,
+              ),
               const SizedBox(width: 7),
               Expanded(
                 child: Text(
@@ -2290,14 +2357,14 @@ class _SettingsPageState extends State<SettingsPage> {
                     Text(
                       l10n.settingsLibraryLayoutTitle,
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            fontWeight: FontWeight.w500,
-                          ),
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                     Text(
                       l10n.settingsLibraryLayoutSubtitle,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: scheme.onSurface.withValues(alpha: 0.6),
-                          ),
+                        color: scheme.onSurface.withValues(alpha: 0.6),
+                      ),
                     ),
                   ],
                 ),
@@ -2341,9 +2408,9 @@ class _SettingsPageState extends State<SettingsPage> {
             Text(
               l10n.settingsLibraryGridColumnsTitle,
               style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w600,
-                  ),
+                color: scheme.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const SizedBox(height: 8),
             SizedBox(
@@ -2367,9 +2434,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 selected: {appSettings.libraryGridColumns},
                 onSelectionChanged: (selection) {
                   if (selection.isEmpty) return;
-                  unawaited(
-                    appSettings.setLibraryGridColumns(selection.first),
-                  );
+                  unawaited(appSettings.setLibraryGridColumns(selection.first));
                 },
                 style: ButtonStyle(
                   minimumSize: const WidgetStatePropertyAll(Size(44, 44)),
@@ -2390,7 +2455,8 @@ class _SettingsPageState extends State<SettingsPage> {
     final accentSummary = themeNotifier.isUsingThemeAccent
         ? l10n.settingsAccentFollowTheme
         : l10n.settingsAccentValue(
-            AppThemes.getAccentColorName(themeNotifier.effectiveAccentColor!));
+            AppThemes.getAccentColorName(themeNotifier.effectiveAccentColor!),
+          );
     return Container(
       margin: const EdgeInsets.only(bottom: 1),
       child: Material(
@@ -2423,8 +2489,8 @@ class _SettingsPageState extends State<SettingsPage> {
                       Text(
                         l10n.settingsAppThemeTitle,
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              fontWeight: FontWeight.w500,
-                            ),
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                       Text(
                         l10n.settingsCurrentThemeSummary(
@@ -2432,10 +2498,10 @@ class _SettingsPageState extends State<SettingsPage> {
                           accentSummary,
                         ),
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurface.withValues(alpha: 0.6),
-                            ),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: 0.6),
+                        ),
                       ),
                     ],
                   ),
@@ -2494,16 +2560,16 @@ class _SettingsPageState extends State<SettingsPage> {
                       Text(
                         l10n.settingsAccentColorTitle,
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              fontWeight: FontWeight.w500,
-                            ),
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                       Text(
                         subtitle,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurface.withValues(alpha: 0.6),
-                            ),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: 0.6),
+                        ),
                       ),
                     ],
                   ),
@@ -2565,25 +2631,25 @@ class _SettingsPageState extends State<SettingsPage> {
     final l10n = context.l10n;
     final options =
         <({ThemeMode mode, String label, String hint, IconData icon})>[
-      (
-        mode: ThemeMode.system,
-        label: l10n.systemMode,
-        hint: l10n.settingsThemeModeSystemHint,
-        icon: Icons.brightness_auto,
-      ),
-      (
-        mode: ThemeMode.light,
-        label: l10n.lightMode,
-        hint: l10n.settingsThemeModeLightHint,
-        icon: Icons.light_mode,
-      ),
-      (
-        mode: ThemeMode.dark,
-        label: l10n.darkMode,
-        hint: l10n.settingsThemeModeDarkHint,
-        icon: Icons.dark_mode,
-      ),
-    ];
+          (
+            mode: ThemeMode.system,
+            label: l10n.systemMode,
+            hint: l10n.settingsThemeModeSystemHint,
+            icon: Icons.brightness_auto,
+          ),
+          (
+            mode: ThemeMode.light,
+            label: l10n.lightMode,
+            hint: l10n.settingsThemeModeLightHint,
+            icon: Icons.light_mode,
+          ),
+          (
+            mode: ThemeMode.dark,
+            label: l10n.darkMode,
+            hint: l10n.settingsThemeModeDarkHint,
+            icon: Icons.dark_mode,
+          ),
+        ];
 
     showModalBottomSheet(
       context: context,
@@ -2604,10 +2670,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Theme.of(modalContext)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.3),
+                    color: Theme.of(
+                      modalContext,
+                    ).colorScheme.onSurface.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -2657,17 +2722,14 @@ class _SettingsPageState extends State<SettingsPage> {
                             border: Border.all(
                               color: selected
                                   ? Theme.of(modalContext).colorScheme.primary
-                                  : Theme.of(modalContext)
-                                      .colorScheme
-                                      .outline
-                                      .withValues(alpha: 0.35),
+                                  : Theme.of(modalContext).colorScheme.outline
+                                        .withValues(alpha: 0.35),
                               width: selected ? 1.6 : 1,
                             ),
                             color: selected
-                                ? Theme.of(modalContext)
-                                    .colorScheme
-                                    .primary
-                                    .withValues(alpha: 0.08)
+                                ? Theme.of(
+                                    modalContext,
+                                  ).colorScheme.primary.withValues(alpha: 0.08)
                                 : Colors.transparent,
                           ),
                           child: Row(
@@ -2677,9 +2739,9 @@ class _SettingsPageState extends State<SettingsPage> {
                                 color: selected
                                     ? Theme.of(modalContext).colorScheme.primary
                                     : Theme.of(modalContext)
-                                        .colorScheme
-                                        .onSurface
-                                        .withValues(alpha: 0.75),
+                                          .colorScheme
+                                          .onSurface
+                                          .withValues(alpha: 0.75),
                                 size: 18,
                               ),
                               const SizedBox(width: 10),
@@ -2717,9 +2779,9 @@ class _SettingsPageState extends State<SettingsPage> {
                               if (selected)
                                 Icon(
                                   Icons.check_circle,
-                                  color: Theme.of(modalContext)
-                                      .colorScheme
-                                      .primary,
+                                  color: Theme.of(
+                                    modalContext,
+                                  ).colorScheme.primary,
                                 ),
                             ],
                           ),
@@ -2779,11 +2841,9 @@ class _SettingsPageState extends State<SettingsPage> {
           ? l10n.customFontsEmpty
           : l10n.customFontsCount(appSettings.customFonts.length),
       icon: Icons.folder_copy_outlined,
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => const CustomFontsPage(),
-        ),
-      ),
+      onTap: () => Navigator.of(
+        context,
+      ).push(MaterialPageRoute<void>(builder: (_) => const CustomFontsPage())),
     );
   }
 
@@ -2838,10 +2898,10 @@ class _SettingsPageState extends State<SettingsPage> {
                     if (mounted) {
                       final message =
                           result.status == CustomFontImportStatus.duplicate
-                              ? l10n.customFontAlreadyImported
-                              : domain == FontDomain.app
-                                  ? l10n.customFontAppliedToApp
-                                  : l10n.customFontAppliedToReader;
+                          ? l10n.customFontAlreadyImported
+                          : domain == FontDomain.app
+                          ? l10n.customFontAppliedToApp
+                          : l10n.customFontAppliedToReader;
                       showSideToast(
                         this.context,
                         message,
@@ -2877,8 +2937,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                   decoration: BoxDecoration(
                     color: colorScheme.surface,
-                    borderRadius:
-                        const BorderRadius.vertical(top: Radius.circular(28)),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(28),
+                    ),
                   ),
                   child: SafeArea(
                     child: Column(
@@ -2917,9 +2978,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               const SizedBox(height: 6),
                               Text(
                                 description,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
+                                style: Theme.of(context).textTheme.bodySmall
                                     ?.copyWith(
                                       color: colorScheme.onSurfaceVariant,
                                       height: 1.45,
@@ -2929,7 +2988,8 @@ class _SettingsPageState extends State<SettingsPage> {
                               SizedBox(
                                 width: double.infinity,
                                 child: FilledButton.tonalIcon(
-                                  onPressed: importing ||
+                                  onPressed:
+                                      importing ||
                                           !appSettings.customFontImportSupported
                                       ? null
                                       : importFont,
@@ -2953,9 +3013,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 const SizedBox(height: 6),
                                 Text(
                                   l10n.customFontImportUnsupported,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodySmall
+                                  style: Theme.of(context).textTheme.bodySmall
                                       ?.copyWith(
                                         color: colorScheme.onSurfaceVariant,
                                       ),
@@ -3025,9 +3083,9 @@ class _SettingsPageState extends State<SettingsPage> {
       child: Text(
         label,
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.w700,
-            ),
+          color: Theme.of(context).colorScheme.primary,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }
@@ -3045,9 +3103,11 @@ class _SettingsPageState extends State<SettingsPage> {
     final isOnline = option.isOnline;
     final isDownloaded =
         !isOnline || appSettings.isOnlineFontDownloaded(option.id);
-    final progress =
-        isOnline ? appSettings.onlineFontProgress(option.id) : null;
-    final isDownloading = progress != null &&
+    final progress = isOnline
+        ? appSettings.onlineFontProgress(option.id)
+        : null;
+    final isDownloading =
+        progress != null &&
         (progress.status == OnlineFontDownloadStatus.downloading ||
             progress.status == OnlineFontDownloadStatus.verifying ||
             progress.status == OnlineFontDownloadStatus.registering);
@@ -3156,10 +3216,12 @@ class _SettingsPageState extends State<SettingsPage> {
                     child: LinearProgressIndicator(
                       value: progress.fraction,
                       minHeight: 4,
-                      backgroundColor:
-                          colorScheme.outline.withValues(alpha: 0.2),
-                      valueColor:
-                          AlwaysStoppedAnimation<Color>(colorScheme.primary),
+                      backgroundColor: colorScheme.outline.withValues(
+                        alpha: 0.2,
+                      ),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        colorScheme.primary,
+                      ),
                     ),
                   ),
                 ],
@@ -3200,8 +3262,11 @@ class _SettingsPageState extends State<SettingsPage> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.cloud_download_outlined,
-              size: 14, color: colorScheme.primary),
+          Icon(
+            Icons.cloud_download_outlined,
+            size: 14,
+            color: colorScheme.primary,
+          ),
           const SizedBox(width: 4),
           Text(
             label,
@@ -3362,10 +3427,9 @@ class _SettingsPageState extends State<SettingsPage> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withValues(alpha: 0.3),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -3474,11 +3538,11 @@ class _SettingsPageState extends State<SettingsPage> {
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: 1.3,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                    ),
+                          crossAxisCount: 2,
+                          childAspectRatio: 1.3,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                        ),
                     itemCount: AppThemes.allThemes.length,
                     itemBuilder: (context, index) {
                       final theme = AppThemes.allThemes[index];
@@ -3497,10 +3561,8 @@ class _SettingsPageState extends State<SettingsPage> {
                             border: Border.all(
                               color: isSelected
                                   ? theme.lightColorScheme.primary
-                                  : Theme.of(context)
-                                      .colorScheme
-                                      .outline
-                                      .withValues(alpha: 0.2),
+                                  : Theme.of(context).colorScheme.outline
+                                        .withValues(alpha: 0.2),
                               width: isSelected ? 3 : 1,
                             ),
                             gradient: LinearGradient(
@@ -3682,10 +3744,8 @@ class _SettingsPageState extends State<SettingsPage> {
                               Icons.auto_awesome,
                               color: selectedColor == null
                                   ? Theme.of(context).colorScheme.primary
-                                  : Theme.of(context)
-                                      .colorScheme
-                                      .onSurface
-                                      .withValues(alpha: 0.6),
+                                  : Theme.of(context).colorScheme.onSurface
+                                        .withValues(alpha: 0.6),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
@@ -3749,11 +3809,11 @@ class _SettingsPageState extends State<SettingsPage> {
                     child: GridView.builder(
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 4,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                        childAspectRatio: 1.2,
-                      ),
+                            crossAxisCount: 4,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
+                            childAspectRatio: 1.2,
+                          ),
                       itemCount: AppThemes.accentColors.length,
                       itemBuilder: (context, index) {
                         final color = AppThemes.accentColors[index];
@@ -3805,9 +3865,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 colorName,
                                 style: TextStyle(
                                   fontSize: 10,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurface
+                                  color: Theme.of(context).colorScheme.onSurface
                                       .withValues(alpha: 0.8),
                                 ),
                                 textAlign: TextAlign.center,
@@ -3904,16 +3962,16 @@ class _SettingsPageState extends State<SettingsPage> {
                       Text(
                         title,
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              fontWeight: FontWeight.w500,
-                            ),
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                       Text(
                         subtitle,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurface.withValues(alpha: 0.6),
-                            ),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: 0.6),
+                        ),
                       ),
                     ],
                   ),
@@ -3962,8 +4020,9 @@ class _SettingsPageState extends State<SettingsPage> {
               AppBrandIcon(
                 size: 48,
                 borderRadius: 12,
-                border:
-                    Border.all(color: scheme.primary.withValues(alpha: 0.22)),
+                border: Border.all(
+                  color: scheme.primary.withValues(alpha: 0.22),
+                ),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -3973,16 +4032,16 @@ class _SettingsPageState extends State<SettingsPage> {
                     Text(
                       l10n.settingsAppName,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.3,
-                          ),
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.3,
+                      ),
                     ),
                     const SizedBox(height: 3),
                     Text(
                       l10n.settingsAboutTagline,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                          ),
+                        color: scheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
@@ -4087,24 +4146,21 @@ class _SettingsPageState extends State<SettingsPage> {
                     Text(
                       l10n.changelogHistoryTitle,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     const SizedBox(height: 3),
                     Text(
                       l10n.changelogHistorySubtitle,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                          ),
+                        color: scheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: 12),
-              Icon(
-                Icons.chevron_right_rounded,
-                color: scheme.onSurfaceVariant,
-              ),
+              Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
             ],
           ),
         ),
@@ -4133,24 +4189,21 @@ class _SettingsPageState extends State<SettingsPage> {
                     Text(
                       l10n.openSourceLicensesTitle,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     const SizedBox(height: 3),
                     Text(
                       l10n.openSourceLicensesSubtitle,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                          ),
+                        color: scheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: 12),
-              Icon(
-                Icons.chevron_right_rounded,
-                color: scheme.onSurfaceVariant,
-              ),
+              Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
             ],
           ),
         ),
@@ -4159,11 +4212,9 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _openChangelogHistory() {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => const ChangelogPage(),
-      ),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => const ChangelogPage()));
   }
 
   void _openSourceLicenses() {
@@ -4187,19 +4238,20 @@ class _SettingsPageState extends State<SettingsPage> {
       height: 60,
       child: FilledButton(
         onPressed: onPressed,
-        style: FilledButton.styleFrom(
-          backgroundColor: backgroundColor,
-          foregroundColor: foregroundColor,
-          padding: const EdgeInsets.symmetric(horizontal: 18),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
-          ),
-          elevation: 0,
-        ).copyWith(
-          overlayColor: WidgetStatePropertyAll(
-            foregroundColor.withValues(alpha: 0.12),
-          ),
-        ),
+        style:
+            FilledButton.styleFrom(
+              backgroundColor: backgroundColor,
+              foregroundColor: foregroundColor,
+              padding: const EdgeInsets.symmetric(horizontal: 18),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+              elevation: 0,
+            ).copyWith(
+              overlayColor: WidgetStatePropertyAll(
+                foregroundColor.withValues(alpha: 0.12),
+              ),
+            ),
         child: Row(
           children: [
             SizedBox(width: 24, height: 24, child: icon),
@@ -4250,18 +4302,18 @@ class _SettingsPageState extends State<SettingsPage> {
             width: 76,
             child: Text(
               label,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
             ),
           ),
           Expanded(
             child: Text(
               value,
               textAlign: TextAlign.right,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -4273,8 +4325,12 @@ class _SettingsPageState extends State<SettingsPage> {
     final uri = Uri.parse('https://github.com/miloquinn/open-reading');
     final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!ok && mounted) {
-      showSideToast(context, context.l10n.settingsGithubOpenFailed,
-          icon: Icons.error_outline, kind: SideToastKind.error);
+      showSideToast(
+        context,
+        context.l10n.settingsGithubOpenFailed,
+        icon: Icons.error_outline,
+        kind: SideToastKind.error,
+      );
     }
   }
 
@@ -4395,10 +4451,8 @@ class _SettingsPageState extends State<SettingsPage> {
                         children: [
                           Text(
                             title,
-                            style:
-                                Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                      fontWeight: FontWeight.w500,
-                                    ),
+                            style: Theme.of(context).textTheme.bodyLarge
+                                ?.copyWith(fontWeight: FontWeight.w500),
                           ),
                           if (badge != null)
                             Container(
@@ -4407,20 +4461,18 @@ class _SettingsPageState extends State<SettingsPage> {
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .secondaryContainer,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.secondaryContainer,
                                 borderRadius: BorderRadius.circular(999),
                               ),
                               child: Text(
                                 badge,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelSmall
+                                style: Theme.of(context).textTheme.labelSmall
                                     ?.copyWith(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSecondaryContainer,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSecondaryContainer,
                                       fontWeight: FontWeight.w600,
                                     ),
                               ),
@@ -4430,10 +4482,10 @@ class _SettingsPageState extends State<SettingsPage> {
                       Text(
                         subtitle,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurface.withValues(alpha: 0.6),
-                            ),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: 0.6),
+                        ),
                       ),
                     ],
                   ),
@@ -4495,14 +4547,14 @@ class _AiQuickModel {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'provider': settings.provider.value,
-        'apiKey': settings.apiKey,
-        'baseUrl': settings.baseUrl,
-        'model': settings.model,
-        'temperature': settings.temperature,
-        'isCustom': isCustom,
-      };
+    'id': id,
+    'provider': settings.provider.value,
+    'apiKey': settings.apiKey,
+    'baseUrl': settings.baseUrl,
+    'model': settings.model,
+    'temperature': settings.temperature,
+    'isCustom': isCustom,
+  };
 
   static _AiQuickModel? fromJson(Map<String, dynamic> json) {
     final id = json['id']?.toString() ?? '';
@@ -4528,8 +4580,5 @@ class _LanguageOption {
   final String code;
   final String label;
 
-  const _LanguageOption({
-    required this.code,
-    required this.label,
-  });
+  const _LanguageOption({required this.code, required this.label});
 }

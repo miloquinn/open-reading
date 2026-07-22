@@ -29,13 +29,11 @@ class AppUpdateDownloadService {
   static Future<String> installDownloadedApk(
     String path, {
     required String expectedBuildNumber,
-  }) =>
-      throw const AppUpdateException(AppUpdateFailure.unsupported);
+  }) => throw const AppUpdateException(AppUpdateFailure.unsupported);
 
   Future<String> downloadAndInstall(
     WebsiteReleaseAsset asset, {
     UpdateDownloadProgress? onProgress,
     CancelToken? cancelToken,
-  }) =>
-      throw const AppUpdateException(AppUpdateFailure.unsupported);
+  }) => throw const AppUpdateException(AppUpdateFailure.unsupported);
 }

@@ -18,9 +18,6 @@ abstract final class _IncomingPageTurnSettle {
         : ((current.dx - start.dx) / totalX).clamp(0.0, 1.0);
     final flattenLinear = (progress / _flattenByProgress).clamp(0.0, 1.0);
     final flatten = flattenLinear * flattenLinear * (3 - 2 * flattenLinear);
-    return Offset(
-      current.dx,
-      start.dy + (target.dy - start.dy) * flatten,
-    );
+    return Offset(current.dx, start.dy + (target.dy - start.dy) * flatten);
   }
 }

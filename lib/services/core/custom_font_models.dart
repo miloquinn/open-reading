@@ -28,10 +28,7 @@ class CustomFontRecord {
   final DateTime importedAt;
   final bool available;
 
-  CustomFontRecord copyWith({
-    String? displayName,
-    bool? available,
-  }) {
+  CustomFontRecord copyWith({String? displayName, bool? available}) {
     return CustomFontRecord(
       id: id,
       displayName: displayName ?? this.displayName,
@@ -47,16 +44,16 @@ class CustomFontRecord {
   }
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'id': id,
-        'displayName': displayName,
-        'runtimeFamily': runtimeFamily,
-        'fileName': fileName,
-        'relativePath': relativePath,
-        'format': format,
-        'sha256': sha256,
-        'fileSize': fileSize,
-        'importedAt': importedAt.toIso8601String(),
-      };
+    'id': id,
+    'displayName': displayName,
+    'runtimeFamily': runtimeFamily,
+    'fileName': fileName,
+    'relativePath': relativePath,
+    'format': format,
+    'sha256': sha256,
+    'fileSize': fileSize,
+    'importedAt': importedAt.toIso8601String(),
+  };
 
   factory CustomFontRecord.fromJson(Map<String, Object?> json) {
     return CustomFontRecord(
@@ -77,8 +74,8 @@ class CustomFontImportResult {
   const CustomFontImportResult({required this.status, this.font});
 
   const CustomFontImportResult.cancelled()
-      : status = CustomFontImportStatus.cancelled,
-        font = null;
+    : status = CustomFontImportStatus.cancelled,
+      font = null;
 
   final CustomFontImportStatus status;
   final CustomFontRecord? font;

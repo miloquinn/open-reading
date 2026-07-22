@@ -7,10 +7,7 @@ enum ReaderPageTurnDirection { forward, backward }
 
 enum ReaderPageTurnCorner { top, bottom }
 
-enum ReaderPageTurnAnchorMode {
-  nearestCorner,
-  followEdge,
-}
+enum ReaderPageTurnAnchorMode { nearestCorner, followEdge }
 
 /// Whether the visible leaf is being peeled away or unfolded into view.
 ///
@@ -70,8 +67,10 @@ class ReaderPageTurnGeometry {
     final anchorY = switch (anchorMode) {
       ReaderPageTurnAnchorMode.nearestCorner =>
         corner == ReaderPageTurnCorner.top ? 0.0 : size.height,
-      ReaderPageTurnAnchorMode.followEdge =>
-        canonicalOrigin.dy.clamp(0.0, size.height),
+      ReaderPageTurnAnchorMode.followEdge => canonicalOrigin.dy.clamp(
+        0.0,
+        size.height,
+      ),
     };
     final width = math.max(size.width, 1.0);
     final anchor = Offset(width, anchorY);
@@ -187,8 +186,10 @@ class ReaderPageTurnGeometry {
       canonicalLineA: lineA,
       canonicalLineB: lineB,
       progress: switch (motion) {
-        ReaderPageTurnMotion.outgoing =>
-          ((width - touch.dx) / width).clamp(0.0, 1.0),
+        ReaderPageTurnMotion.outgoing => ((width - touch.dx) / width).clamp(
+          0.0,
+          1.0,
+        ),
         ReaderPageTurnMotion.incoming =>
           ((touch.dx + width) / (width * 2)).clamp(0.0, 1.0),
       },
@@ -235,10 +236,8 @@ class ReaderPageTurnGeometry {
   Offset get reflectedCorner {
     final distance =
         (canonicalAnchor - canonicalFoldPoint).dx * canonicalFoldNormal.dx +
-            (canonicalAnchor - canonicalFoldPoint).dy * canonicalFoldNormal.dy;
-    return screenPoint(
-      canonicalAnchor - canonicalFoldNormal * (2 * distance),
-    );
+        (canonicalAnchor - canonicalFoldPoint).dy * canonicalFoldNormal.dy;
+    return screenPoint(canonicalAnchor - canonicalFoldNormal * (2 * distance));
   }
 
   Offset screenPoint(Offset canonical) => bindingOnRight
@@ -249,14 +248,12 @@ class ReaderPageTurnGeometry {
     Offset point,
     Size size, {
     required bool bindingOnRight,
-  }) =>
-      bindingOnRight ? Offset(size.width - point.dx, point.dy) : point;
+  }) => bindingOnRight ? Offset(size.width - point.dx, point.dy) : point;
 
   static Offset velocityToBindingSpace(
     Offset velocity, {
     required bool bindingOnRight,
-  }) =>
-      bindingOnRight ? Offset(-velocity.dx, velocity.dy) : velocity;
+  }) => bindingOnRight ? Offset(-velocity.dx, velocity.dy) : velocity;
 }
 
 (Offset, Offset) _bindingClampedTopBottom({

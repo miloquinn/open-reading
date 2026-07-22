@@ -34,14 +34,14 @@ class ReaderSafeAreaMetrics {
   double get readerTopBarTop => viewPadding.top + 4;
 
   double get pageNumberBottom => math.max(
-        _minimumPageNumberBottom,
-        viewPadding.bottom - _pageNumberSafeAreaOverlap,
-      );
+    _minimumPageNumberBottom,
+    viewPadding.bottom - _pageNumberSafeAreaOverlap,
+  );
 
   double get contentBottom => math.max(
-        viewPadding.bottom + bottomMargin,
-        pageNumberBottom + pageNumberReserve + pageNumberGap,
-      );
+    viewPadding.bottom + bottomMargin,
+    pageNumberBottom + pageNumberReserve + pageNumberGap,
+  );
 
   String get paginationSignature =>
       '${contentTop.toStringAsFixed(2)}:${contentBottom.toStringAsFixed(2)}:'

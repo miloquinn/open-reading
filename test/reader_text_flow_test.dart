@@ -16,10 +16,7 @@ void main() {
   );
   const twoLines = TextSpan(text: 'First line\nSecond line', style: style);
 
-  TextPainter layout({
-    StrutStyle? strut,
-    TextHeightBehavior? behavior,
-  }) {
+  TextPainter layout({StrutStyle? strut, TextHeightBehavior? behavior}) {
     return TextPainter(
       text: twoLines,
       textDirection: TextDirection.ltr,
@@ -85,10 +82,8 @@ void main() {
 
   test('paginator fits one extra line per page thanks to trimming', () {
     const text = 'line one\nline two\nline three\nline four';
-    TextSpan buildSpan(int start, int end) => TextSpan(
-          text: text.substring(start, end),
-          style: style,
-        );
+    TextSpan buildSpan(int start, int end) =>
+        TextSpan(text: text.substring(start, end), style: style);
     List<NativeTextPageRange> paginate(NativeTextFlowStyle flowStyle) {
       return NativeTextPaginator(
         maxWidth: 500,
@@ -99,20 +94,24 @@ void main() {
       ).paginate(text: text, spanBuilder: buildSpan);
     }
 
-    final untrimmed = paginate(const NativeTextFlowStyle(
-      textDirection: TextDirection.ltr,
-      textScaler: TextScaler.noScaling,
-      locale: null,
-      strutStyle: null,
-      textHeightBehavior: null,
-    ));
-    final trimmed = paginate(NativeTextFlowStyle(
-      textDirection: TextDirection.ltr,
-      textScaler: TextScaler.noScaling,
-      locale: null,
-      strutStyle: readerStrutStyle(style),
-      textHeightBehavior: readerTextHeightBehavior,
-    ));
+    final untrimmed = paginate(
+      const NativeTextFlowStyle(
+        textDirection: TextDirection.ltr,
+        textScaler: TextScaler.noScaling,
+        locale: null,
+        strutStyle: null,
+        textHeightBehavior: null,
+      ),
+    );
+    final trimmed = paginate(
+      NativeTextFlowStyle(
+        textDirection: TextDirection.ltr,
+        textScaler: TextScaler.noScaling,
+        locale: null,
+        strutStyle: readerStrutStyle(style),
+        textHeightBehavior: readerTextHeightBehavior,
+      ),
+    );
 
     expect(untrimmed.first.lineCount, 1);
     expect(trimmed.first.lineCount, 2);
@@ -129,17 +128,11 @@ void main() {
       textDirection: TextDirection.ltr,
       textScaler: TextScaler.noScaling,
       locale: Locale('zh', 'CN'),
-      strutStyle: StrutStyle(
-        fontFamily: 'SourceHanSerifCN',
-        fontSize: 20,
-      ),
+      strutStyle: StrutStyle(fontFamily: 'SourceHanSerifCN', fontSize: 20),
       textHeightBehavior: readerTextHeightBehavior,
     );
     final painter = flow.createPainter(
-      TextSpan(
-        text: List.filled(20, '开元阅读正文排版').join(),
-        style: bodyStyle,
-      ),
+      TextSpan(text: List.filled(20, '开元阅读正文排版').join(), style: bodyStyle),
     )..layout(maxWidth: width);
     final lines = painter.computeLineMetrics();
 

@@ -3,10 +3,8 @@ import 'package:flutter/painting.dart';
 
 import 'reader_text_characters.dart';
 
-typedef ReaderSourceSpanBuilder = InlineSpan Function(
-  int sourceStart,
-  int sourceEnd,
-);
+typedef ReaderSourceSpanBuilder =
+    InlineSpan Function(int sourceStart, int sourceEnd);
 
 // SkParagraph discards leading whitespace when a justified paragraph wraps.
 // HANGUL FILLER is visually blank and full-width, but Unicode classifies it as
@@ -34,8 +32,8 @@ class ReaderTextLayout {
     required this.text,
     required List<_ReaderTextRun> runs,
     required List<int> sourceBoundaries,
-  })  : _runs = runs,
-        _sourceBoundaries = sourceBoundaries;
+  }) : _runs = runs,
+       _sourceBoundaries = sourceBoundaries;
 
   factory ReaderTextLayout.build(
     String sourceText, {
@@ -239,21 +237,21 @@ class _ReaderTextRun {
     required int sourceStart,
     required int sourceEnd,
   }) : this._(
-          displayStart: displayStart,
-          displayEnd: displayEnd,
-          sourceStart: sourceStart,
-          sourceEnd: sourceEnd,
-        );
+         displayStart: displayStart,
+         displayEnd: displayEnd,
+         sourceStart: sourceStart,
+         sourceEnd: sourceEnd,
+       );
 
   const _ReaderTextRun.generated({
     required int displayStart,
     required int displayEnd,
     required String text,
   }) : this._(
-          displayStart: displayStart,
-          displayEnd: displayEnd,
-          generatedText: text,
-        );
+         displayStart: displayStart,
+         displayEnd: displayEnd,
+         generatedText: text,
+       );
 
   final int displayStart;
   final int displayEnd;

@@ -23,9 +23,7 @@ void main() {
       provider.MultiProvider(
         providers: [
           provider.ChangeNotifierProvider(create: (_) => ThemeNotifier()),
-          provider.ChangeNotifierProvider(
-            create: (_) => AppSettingsNotifier(),
-          ),
+          provider.ChangeNotifierProvider(create: (_) => AppSettingsNotifier()),
           provider.ChangeNotifierProvider(create: (_) => TtsService()),
         ],
         child: const XxReadApp(),

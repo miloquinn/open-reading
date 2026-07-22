@@ -1589,7 +1589,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String readerStatusPaged(
-      int chapter, int chapterCount, int page, int pageCount) {
+    int chapter,
+    int chapterCount,
+    int page,
+    int pageCount,
+  ) {
     return 'Chapter $chapter/$chapterCount · Page $page/$pageCount';
   }
 
@@ -2955,7 +2959,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String readerAiInvalidJsonError(
-      String provider, String endpoint, String snippet) {
+    String provider,
+    String endpoint,
+    String snippet,
+  ) {
     return 'Server response is not valid JSON. The current endpoint may be incompatible with the $provider configuration.\nRequest URL: $endpoint\nResponse snippet: $snippet';
   }
 
@@ -2966,37 +2973,55 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String readerAiNetworkRequestFailed(
-      String status, String error, String endpoint) {
+    String status,
+    String error,
+    String endpoint,
+  ) {
     return 'Network request failed$status: $error\nRequest URL: $endpoint';
   }
 
   @override
   String readerAiRequestFailedMinimaxHint(
-      String status, String text, String endpoint) {
+    String status,
+    String text,
+    String endpoint,
+  ) {
     return 'Request failed($status): $text\nSuggestions: 1) MiniMax temperature must be in (0,1]; 2) check that the model name matches the endpoint; 3) use only a single system instruction.\nRequest URL: $endpoint';
   }
 
   @override
   String readerAiRequestFailedClaudeHint(
-      String status, String text, String endpoint) {
+    String status,
+    String text,
+    String endpoint,
+  ) {
     return 'Request failed($status): $text\nTip: Claude requires the anthropic-version request header.\nRequest URL: $endpoint';
   }
 
   @override
   String readerAiRequestFailedProviderMismatchHint(
-      String status, String text, String endpoint) {
+    String status,
+    String text,
+    String endpoint,
+  ) {
     return 'Request failed($status): $text\nTip: Please confirm that the provider and API Key match; they cannot be mixed.\nRequest URL: $endpoint';
   }
 
   @override
   String readerAiRequestFailedGeneric(
-      String status, String text, String endpoint) {
+    String status,
+    String text,
+    String endpoint,
+  ) {
     return 'Request failed($status): $text\nRequest URL: $endpoint';
   }
 
   @override
   String readerAiMockSelectionResponse(
-      String selectedText, String before, String after) {
+    String selectedText,
+    String before,
+    String after,
+  ) {
     return 'AI (mock): The text you selected is \"$selectedText\".\n\nBefore: $before\nAfter: $after';
   }
 
@@ -3039,7 +3064,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String readerAiSnippetLocation(
-      String chapterId, int startOffset, int endOffset) {
+    String chapterId,
+    int startOffset,
+    int endOffset,
+  ) {
     return '- Location: $chapterId ($startOffset-$endOffset)';
   }
 
@@ -3317,7 +3345,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get agreementV2Section6Body =>
-      'OpenReading is local-first. Books, reading progress, notes, and settings are normally stored on your device. Unless you enable a network book source, cover search, AI, sync, or another online feature, the app does not need to send book text to the developers to provide local reading. Automatic and manual update checks contact GitHub and the official site at open.xxread.top with necessary technical parameters such as platform, processor architecture, and release channel; their servers process your IP address and User-Agent as part of ordinary network communication. When you download an installer from the official site, the backend records the version, architecture, download time, IP address, and User-Agent for download counts, security protection, and troubleshooting. Download-event records containing a raw IP are retained for no more than 30 days and then deleted; only aggregate statistics without raw IP addresses are kept longer. Update requests do not include book text, your library, notes, an account, or a unique device identifier. GitHub requests are also governed by GitHub’s privacy terms. When another online feature is used, queries, selected text, network information, or necessary parameters may be sent to the provider you selected under that provider’s policies. Protect your device, API keys, and backups; uninstalling, clearing data, device failure, or user error may permanently erase data.';
+      'OpenReading is local-first. Books, reading progress, notes, and settings are normally stored on your device. Unless you enable a network book source, AI, sync, or another online feature, the app does not need to send book text to the developers to provide local reading. Automatic and manual update checks contact GitHub and the official site at open.xxread.top with necessary technical parameters such as platform, processor architecture, and release channel; their servers process your IP address and User-Agent as part of ordinary network communication. When you download an installer from the official site, the backend records the version, architecture, download time, IP address, and User-Agent for download counts, security protection, and troubleshooting. Download-event records containing a raw IP are retained for no more than 30 days and then deleted; only aggregate statistics without raw IP addresses are kept longer. Update requests do not include book text, your library, notes, an account, or a unique device identifier. GitHub requests are also governed by GitHub’s privacy terms. When another online feature is used, queries, selected text, network information, or necessary parameters may be sent to the provider you selected under that provider’s policies. Protect your device, API keys, and backups; uninstalling, clearing data, device failure, or user error may permanently erase data.';
 
   @override
   String get agreementV2Section7Title => 'AI and automated output';

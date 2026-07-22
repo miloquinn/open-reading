@@ -16,8 +16,9 @@ extension _DetailedStatsBooksView on _DetailedStatsPageState {
 
   Widget _buildBooksSummary() {
     final palette = _palette;
-    final completed =
-        _bookStats.where((item) => (item['progress'] as double) >= 1).length;
+    final completed = _bookStats
+        .where((item) => (item['progress'] as double) >= 1)
+        .length;
     final inProgress = _bookStats.where((item) {
       final progress = item['progress'] as double;
       return progress > 0 && progress < 1;
@@ -69,14 +70,8 @@ extension _DetailedStatsBooksView on _DetailedStatsPageState {
                 context.l10n.statsTotal,
                 '${_bookStats.length}',
               ),
-              _buildSummaryMetric(
-                context.l10n.statsCompleted,
-                '$completed',
-              ),
-              _buildSummaryMetric(
-                context.l10n.statsInProgress,
-                '$inProgress',
-              ),
+              _buildSummaryMetric(context.l10n.statsCompleted, '$completed'),
+              _buildSummaryMetric(context.l10n.statsInProgress, '$inProgress'),
             ],
           ),
           const SizedBox(height: 16),
@@ -89,11 +84,7 @@ extension _DetailedStatsBooksView on _DetailedStatsPageState {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.schedule_rounded,
-                  color: palette.mutedInk,
-                  size: 16,
-                ),
+                Icon(Icons.schedule_rounded, color: palette.mutedInk, size: 16),
                 const SizedBox(width: 7),
                 Text(
                   context.l10n.statsMinutes(totalMinutes),
@@ -142,8 +133,9 @@ extension _DetailedStatsBooksView on _DetailedStatsPageState {
 
   Widget _buildBooksRanking() {
     final palette = _palette;
-    final hasDuration =
-        _bookStats.any((item) => (item['readingTime'] as int) > 0);
+    final hasDuration = _bookStats.any(
+      (item) => (item['readingTime'] as int) > 0,
+    );
     final title = hasDuration
         ? context.l10n.statsDurationRanking
         : context.l10n.statsProgressRanking;
@@ -193,8 +185,9 @@ extension _DetailedStatsBooksView on _DetailedStatsPageState {
       padding: EdgeInsets.only(bottom: isLast ? 0 : 16),
       margin: EdgeInsets.only(bottom: isLast ? 0 : 16),
       decoration: BoxDecoration(
-        border:
-            isLast ? null : Border(bottom: BorderSide(color: palette.border)),
+        border: isLast
+            ? null
+            : Border(bottom: BorderSide(color: palette.border)),
       ),
       child: Row(
         children: [
@@ -232,10 +225,7 @@ extension _DetailedStatsBooksView on _DetailedStatsPageState {
                       : context.l10n.statsPagesCount(pagesRead),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: palette.mutedInk,
-                    fontSize: 11,
-                  ),
+                  style: TextStyle(color: palette.mutedInk, fontSize: 11),
                 ),
                 const SizedBox(height: 9),
                 ClipRRect(

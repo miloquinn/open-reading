@@ -9,9 +9,9 @@ import 'sync_models.dart';
 
 class WebDavClient {
   WebDavClient({required Dio dio, required StoredSyncCredentials credentials})
-      : _dio = dio,
-        _credentials = credentials,
-        _origin = validateWebDavConfiguration(credentials.configuration);
+    : _dio = dio,
+      _credentials = credentials,
+      _origin = validateWebDavConfiguration(credentials.configuration);
 
   factory WebDavClient.standard(StoredSyncCredentials credentials) {
     return WebDavClient(
@@ -32,10 +32,7 @@ class WebDavClient {
   final Uri _origin;
   DateTime? lastServerDate;
 
-  Uri get protocolRoot => _pathUri([
-        ..._rootSegments,
-        'v1',
-      ]);
+  Uri get protocolRoot => _pathUri([..._rootSegments, 'v1']);
 
   List<String> get _rootSegments => _credentials.configuration.rootPath
       .split('/')
@@ -67,15 +64,20 @@ class WebDavClient {
       );
       final suffix =
           '${DateTime.now().microsecondsSinceEpoch}-${Random.secure().nextInt(1 << 32)}';
-      final testCollection =
-          _pathUri([..._rootSegments, '.open-reading-test-$suffix']);
+      final testCollection = _pathUri([
+        ..._rootSegments,
+        '.open-reading-test-$suffix',
+      ]);
       final testFile = testCollection.replace(
         pathSegments: [...testCollection.pathSegments, 'probe.txt'],
       );
       await _request('MKCOL', testCollection);
       try {
-        final put =
-            await _request('PUT', testFile, data: 'open-reading-webdav-probe');
+        final put = await _request(
+          'PUT',
+          testFile,
+          data: 'open-reading-webdav-probe',
+        );
         final get = await _request('GET', testFile);
         if (get.data != 'open-reading-webdav-probe') {
           throw const WebDavSyncFailure(
@@ -87,7 +89,8 @@ class WebDavClient {
         final allow = options.headers.value('allow')?.toUpperCase() ?? '';
         return ConnectionTestResult(
           success: true,
-          supportsEtag: put.headers.value('etag') != null ||
+          supportsEtag:
+              put.headers.value('etag') != null ||
               rootProbe.headers.value('etag') != null,
           supportsMove: allow.contains('MOVE'),
           serverDate: _serverDate(get),
@@ -124,11 +127,7 @@ class WebDavClient {
   }
 
   Future<void> ensureProtocolPath(List<String> relativeSegments) async {
-    await ensureCollection([
-      ..._rootSegments,
-      'v1',
-      ...relativeSegments,
-    ]);
+    await ensureCollection([..._rootSegments, 'v1', ...relativeSegments]);
   }
 
   Future<void> ensureCollection(List<String> segments) async {
@@ -228,7 +227,8 @@ class WebDavClient {
           'The WebDAV server returned an empty book-file response.',
         );
       }
-      final total = int.tryParse(
+      final total =
+          int.tryParse(
             response.headers.value(Headers.contentLengthHeader) ?? '',
           ) ??
           -1;
@@ -353,10 +353,7 @@ class WebDavClient {
           followRedirects: false,
           validateStatus: (_) => true,
           responseType: ResponseType.plain,
-          headers: {
-            'Authorization': _authorization,
-            ...?headers,
-          },
+          headers: {'Authorization': _authorization, ...?headers},
         ),
       );
       final status = response.statusCode ?? 0;
@@ -450,8 +447,7 @@ WebDavSyncFailure _dioFailure(DioException error) {
   final code = switch (error.type) {
     DioExceptionType.connectionTimeout ||
     DioExceptionType.sendTimeout ||
-    DioExceptionType.receiveTimeout =>
-      WebDavSyncErrorCode.timeout,
+    DioExceptionType.receiveTimeout => WebDavSyncErrorCode.timeout,
     DioExceptionType.badCertificate => WebDavSyncErrorCode.tls,
     DioExceptionType.connectionError => WebDavSyncErrorCode.network,
     _ => WebDavSyncErrorCode.network,

@@ -34,17 +34,16 @@ typedef UpdateDownloadProgress = void Function(int received, int total);
 
 class AppUpdateDownloadService {
   AppUpdateDownloadService({Dio? dio})
-      : _dio = dio ??
-            Dio(
-              BaseOptions(
-                connectTimeout: const Duration(seconds: 15),
-                receiveTimeout: const Duration(minutes: 10),
-                followRedirects: false,
-                headers: {
-                  if (!kIsWeb) 'User-Agent': 'OpenReading-AppUpdate',
-                },
-              ),
-            );
+    : _dio =
+          dio ??
+          Dio(
+            BaseOptions(
+              connectTimeout: const Duration(seconds: 15),
+              receiveTimeout: const Duration(minutes: 10),
+              followRedirects: false,
+              headers: {if (!kIsWeb) 'User-Agent': 'OpenReading-AppUpdate'},
+            ),
+          );
 
   static const _channel = MethodChannel('com.niki.xxread/app_update');
 
@@ -76,8 +75,10 @@ class AppUpdateDownloadService {
     final updatesDirectory = Directory('${cacheDirectory.path}/updates');
     await updatesDirectory.create(recursive: true);
     await _clearOldUpdateFiles(updatesDirectory);
-    final safeVersion =
-        asset.buildNumber.replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_');
+    final safeVersion = asset.buildNumber.replaceAll(
+      RegExp(r'[^a-zA-Z0-9._-]'),
+      '_',
+    );
     final baseName = safeVersion.isEmpty
         ? 'open-reading-update'
         : 'open-reading-$safeVersion';
@@ -223,13 +224,10 @@ class AppUpdateDownloadService {
     required String expectedBuildNumber,
   }) async {
     try {
-      return await _channel.invokeMethod<String>(
-            'installApk',
-            {
-              'path': path,
-              'expectedBuildNumber': expectedBuildNumber,
-            },
-          ) ??
+      return await _channel.invokeMethod<String>('installApk', {
+            'path': path,
+            'expectedBuildNumber': expectedBuildNumber,
+          }) ??
           'installer_opened';
     } on PlatformException catch (error) {
       throw AppUpdateException(AppUpdateFailure.install, error);

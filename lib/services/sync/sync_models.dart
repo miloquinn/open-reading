@@ -108,12 +108,12 @@ class WebDavSyncConfiguration {
   final bool autoSync;
 
   Map<String, Object?> toJson() => {
-        'server_url': serverUrl,
-        'username': username,
-        'root_path': rootPath,
-        'allow_insecure_private_http': allowInsecurePrivateHttp,
-        'auto_sync': autoSync,
-      };
+    'server_url': serverUrl,
+    'username': username,
+    'root_path': rootPath,
+    'allow_insecure_private_http': allowInsecurePrivateHttp,
+    'auto_sync': autoSync,
+  };
 
   factory WebDavSyncConfiguration.fromJson(Map<String, dynamic> json) =>
       WebDavSyncConfiguration(
@@ -131,15 +131,14 @@ class WebDavSyncConfiguration {
     String? rootPath,
     bool? allowInsecurePrivateHttp,
     bool? autoSync,
-  }) =>
-      WebDavSyncConfiguration(
-        serverUrl: serverUrl ?? this.serverUrl,
-        username: username ?? this.username,
-        rootPath: rootPath ?? this.rootPath,
-        allowInsecurePrivateHttp:
-            allowInsecurePrivateHttp ?? this.allowInsecurePrivateHttp,
-        autoSync: autoSync ?? this.autoSync,
-      );
+  }) => WebDavSyncConfiguration(
+    serverUrl: serverUrl ?? this.serverUrl,
+    username: username ?? this.username,
+    rootPath: rootPath ?? this.rootPath,
+    allowInsecurePrivateHttp:
+        allowInsecurePrivateHttp ?? this.allowInsecurePrivateHttp,
+    autoSync: autoSync ?? this.autoSync,
+  );
 }
 
 class WebDavSyncScope {
@@ -160,13 +159,13 @@ class WebDavSyncScope {
   final bool bookFiles;
 
   Map<String, Object?> toJson() => {
-        'books': books,
-        'progress': progress,
-        'bookmarks': bookmarks,
-        'notes': notes,
-        'reading_sessions': readingSessions,
-        'book_files': bookFiles,
-      };
+    'books': books,
+    'progress': progress,
+    'bookmarks': bookmarks,
+    'notes': notes,
+    'reading_sessions': readingSessions,
+    'book_files': bookFiles,
+  };
 
   factory WebDavSyncScope.fromJson(Map<String, dynamic> json) =>
       WebDavSyncScope(
@@ -185,15 +184,14 @@ class WebDavSyncScope {
     bool? notes,
     bool? readingSessions,
     bool? bookFiles,
-  }) =>
-      WebDavSyncScope(
-        books: books ?? this.books,
-        progress: progress ?? this.progress,
-        bookmarks: bookmarks ?? this.bookmarks,
-        notes: notes ?? this.notes,
-        readingSessions: readingSessions ?? this.readingSessions,
-        bookFiles: bookFiles ?? this.bookFiles,
-      );
+  }) => WebDavSyncScope(
+    books: books ?? this.books,
+    progress: progress ?? this.progress,
+    bookmarks: bookmarks ?? this.bookmarks,
+    notes: notes ?? this.notes,
+    readingSessions: readingSessions ?? this.readingSessions,
+    bookFiles: bookFiles ?? this.bookFiles,
+  );
 }
 
 class ConnectionTestResult {

@@ -24,9 +24,7 @@ class OpenReadingCurrentIcon extends StatelessWidget {
       label: 'Open Reading current reading position',
       child: SizedBox.square(
         dimension: size,
-        child: CustomPaint(
-          painter: _OpenReadingCurrentIconPainter(color),
-        ),
+        child: CustomPaint(painter: _OpenReadingCurrentIconPainter(color)),
       ),
     );
   }

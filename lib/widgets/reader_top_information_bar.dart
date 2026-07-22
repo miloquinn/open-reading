@@ -3,11 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/reader/reader_leaf_status.dart';
 import '../utils/reader_themes.dart';
 
-enum ReaderTopInformationLayout {
-  full,
-  spreadLeft,
-  spreadRight,
-}
+enum ReaderTopInformationLayout { full, spreadLeft, spreadRight }
 
 class ReaderTopInformationBar extends StatelessWidget {
   const ReaderTopInformationBar({
@@ -25,7 +21,8 @@ class ReaderTopInformationBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = Theme.of(context).textTheme.labelSmall?.copyWith(
+    final style =
+        Theme.of(context).textTheme.labelSmall?.copyWith(
           height: 1,
           fontSize: 10,
           fontWeight: FontWeight.w500,
@@ -66,15 +63,15 @@ class ReaderTopInformationBar extends StatelessWidget {
           );
     final semanticsParts = switch (layout) {
       ReaderTopInformationLayout.full => [
-          if (time.isNotEmpty) time,
-          title,
-          if (battery != null) '${battery.level}%',
-        ],
+        if (time.isNotEmpty) time,
+        title,
+        if (battery != null) '${battery.level}%',
+      ],
       ReaderTopInformationLayout.spreadLeft => [title],
       ReaderTopInformationLayout.spreadRight => [
-          if (time.isNotEmpty) time,
-          if (battery != null) '${battery.level}%',
-        ],
+        if (time.isNotEmpty) time,
+        if (battery != null) '${battery.level}%',
+      ],
     };
 
     return Semantics(
@@ -84,58 +81,58 @@ class ReaderTopInformationBar extends StatelessWidget {
         height: 16,
         child: switch (layout) {
           ReaderTopInformationLayout.full => Stack(
-              fit: StackFit.expand,
-              children: [
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(time, style: style),
-                ),
-                Center(
-                  child: FractionallySizedBox(
-                    widthFactor: 0.54,
-                    child: Text(
-                      title,
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: style.copyWith(
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.14,
-                      ),
+            fit: StackFit.expand,
+            children: [
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(time, style: style),
+              ),
+              Center(
+                child: FractionallySizedBox(
+                  widthFactor: 0.54,
+                  child: Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: style.copyWith(
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.14,
                     ),
                   ),
                 ),
-                if (batteryIndicator != null)
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: batteryIndicator,
-                  ),
+              ),
+              if (batteryIndicator != null)
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: batteryIndicator,
+                ),
+            ],
+          ),
+          ReaderTopInformationLayout.spreadLeft => Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: style.copyWith(
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.14,
+              ),
+            ),
+          ),
+          ReaderTopInformationLayout.spreadRight => Align(
+            alignment: Alignment.centerRight,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (time.isNotEmpty) Text(time, style: style),
+                if (time.isNotEmpty && batteryIndicator != null)
+                  const SizedBox(width: 8),
+                if (batteryIndicator != null) batteryIndicator,
               ],
             ),
-          ReaderTopInformationLayout.spreadLeft => Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: style.copyWith(
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.14,
-                ),
-              ),
-            ),
-          ReaderTopInformationLayout.spreadRight => Align(
-              alignment: Alignment.centerRight,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (time.isNotEmpty) Text(time, style: style),
-                  if (time.isNotEmpty && batteryIndicator != null)
-                    const SizedBox(width: 8),
-                  if (batteryIndicator != null) batteryIndicator,
-                ],
-              ),
-            ),
+          ),
         },
       ),
     );

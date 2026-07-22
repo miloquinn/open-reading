@@ -36,8 +36,9 @@ class BackgroundDownloadTap {
 class BackgroundDownloadNotifier {
   BackgroundDownloadNotifier._();
 
-  static const MethodChannel _channel =
-      MethodChannel('com.niki.xxread/background_downloads');
+  static const MethodChannel _channel = MethodChannel(
+    'com.niki.xxread/background_downloads',
+  );
   static final StreamController<BackgroundDownloadTap> _taps =
       StreamController<BackgroundDownloadTap>.broadcast();
   static final Map<String, DateTime> _lastProgressAt = {};
@@ -142,11 +143,11 @@ class BackgroundDownloadNotifier {
   }
 
   static Map<String, Object?> _taskArguments(BackgroundDownloadTask task) => {
-        'id': task.id,
-        'kind': task.kind.name,
-        'title': task.title,
-        if (task.bookId != null) 'bookId': task.bookId,
-      };
+    'id': task.id,
+    'kind': task.kind.name,
+    'title': task.title,
+    if (task.bookId != null) 'bookId': task.bookId,
+  };
 
   static Map<String, String> _stringMap(Object? value) {
     if (value is! Map) return const {};

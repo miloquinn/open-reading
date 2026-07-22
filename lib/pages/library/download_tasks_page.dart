@@ -32,18 +32,18 @@ class DownloadTasksPage extends StatelessWidget {
                 };
                 return ListTile(
                   contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                  leading: Icon(
-                    switch (task.state) {
-                      DownloadTaskState.queued => Icons.schedule_rounded,
-                      DownloadTaskState.downloading =>
-                        Icons.downloading_rounded,
-                      DownloadTaskState.completed => Icons.check_circle_rounded,
-                      DownloadTaskState.failed => Icons.error_outline_rounded,
-                      DownloadTaskState.cancelled => Icons.cancel_outlined,
-                    },
+                  leading: Icon(switch (task.state) {
+                    DownloadTaskState.queued => Icons.schedule_rounded,
+                    DownloadTaskState.downloading => Icons.downloading_rounded,
+                    DownloadTaskState.completed => Icons.check_circle_rounded,
+                    DownloadTaskState.failed => Icons.error_outline_rounded,
+                    DownloadTaskState.cancelled => Icons.cancel_outlined,
+                  }),
+                  title: Text(
+                    task.book.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  title: Text(task.book.title,
-                      maxLines: 1, overflow: TextOverflow.ellipsis),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -64,7 +64,8 @@ class DownloadTasksPage extends StatelessWidget {
                       ],
                     ],
                   ),
-                  trailing: task.state == DownloadTaskState.queued ||
+                  trailing:
+                      task.state == DownloadTaskState.queued ||
                           task.state == DownloadTaskState.downloading
                       ? IconButton(
                           tooltip: context.l10n.downloadTaskCancel,
@@ -101,7 +102,8 @@ class BookDownloadTaskDialog extends StatelessWidget {
       null => context.l10n.downloadTaskFailed,
     };
     return PopScope(
-      canPop: task == null ||
+      canPop:
+          task == null ||
           task.state == DownloadTaskState.completed ||
           task.state == DownloadTaskState.failed ||
           task.state == DownloadTaskState.cancelled,

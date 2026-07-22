@@ -20,20 +20,18 @@ void main() {
       path.join(root.path, AppCacheManager.updateDirectoryName),
     );
     final userDocuments = Directory(path.join(root.path, 'books'));
-    for (final directory in [
-      covers,
-      chapters,
-      updates,
-      userDocuments,
-    ]) {
+    for (final directory in [covers, chapters, updates, userDocuments]) {
       await directory.create(recursive: true);
     }
-    await File(path.join(covers.path, 'cover.img'))
-        .writeAsBytes(List.filled(5, 1));
-    await File(path.join(chapters.path, 'chapter.json'))
-        .writeAsBytes(List.filled(7, 1));
-    await File(path.join(updates.path, 'update.part'))
-        .writeAsBytes(List.filled(13, 1));
+    await File(
+      path.join(covers.path, 'cover.img'),
+    ).writeAsBytes(List.filled(5, 1));
+    await File(
+      path.join(chapters.path, 'chapter.json'),
+    ).writeAsBytes(List.filled(7, 1));
+    await File(
+      path.join(updates.path, 'update.part'),
+    ).writeAsBytes(List.filled(13, 1));
     final book = File(path.join(userDocuments.path, 'book.epub'));
     await book.writeAsBytes(List.filled(17, 1));
     var imageCacheClears = 0;
@@ -70,10 +68,7 @@ void main() {
   test('formats exact bytes and megabytes', () {
     expect(AppCacheManager.formatBytes(123), '123 B');
     expect(AppCacheManager.formatBytes(512 * 1024), '512.00 KB');
-    expect(
-      AppCacheManager.formatBytes(2 * 1024 * 1024),
-      '2.00 MB',
-    );
+    expect(AppCacheManager.formatBytes(2 * 1024 * 1024), '2.00 MB');
     expect(AppCacheManager.formatBytes(3 * 1024 * 1024 * 1024), '3.00 GB');
   });
 }

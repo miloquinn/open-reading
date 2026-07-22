@@ -41,32 +41,34 @@ void main() {
     expect(progress.last, (bytes.length, bytes.length));
   });
 
-  test('downloadFile streams into the target and reports byte progress',
-      () async {
-    final chunks = [
-      Uint8List.fromList([1, 2, 3]),
-      Uint8List.fromList([4, 5]),
-    ];
-    final adapter = _TransferAdapter(
-      statusCode: 200,
-      responseChunks: chunks,
-      responseHeaders: {
-        'content-length': ['5']
-      },
-    );
-    final client = _client(adapter);
-    final target = File('${temporaryDirectory.path}/download.part');
-    final progress = <(int, int)>[];
+  test(
+    'downloadFile streams into the target and reports byte progress',
+    () async {
+      final chunks = [
+        Uint8List.fromList([1, 2, 3]),
+        Uint8List.fromList([4, 5]),
+      ];
+      final adapter = _TransferAdapter(
+        statusCode: 200,
+        responseChunks: chunks,
+        responseHeaders: {
+          'content-length': ['5'],
+        },
+      );
+      final client = _client(adapter);
+      final target = File('${temporaryDirectory.path}/download.part');
+      final progress = <(int, int)>[];
 
-    await client.downloadFile(
-      client.path(const ['blobs', 'book.epub']),
-      target,
-      onProgress: (received, total) => progress.add((received, total)),
-    );
+      await client.downloadFile(
+        client.path(const ['blobs', 'book.epub']),
+        target,
+        onProgress: (received, total) => progress.add((received, total)),
+      );
 
-    expect(await target.readAsBytes(), [1, 2, 3, 4, 5]);
-    expect(progress, [(3, 5), (5, 5)]);
-  });
+      expect(await target.readAsBytes(), [1, 2, 3, 4, 5]);
+      expect(progress, [(3, 5), (5, 5)]);
+    },
+  );
 
   test('file upload maps WebDAV storage exhaustion to storageFull', () async {
     final source = File('${temporaryDirectory.path}/book.pdf');

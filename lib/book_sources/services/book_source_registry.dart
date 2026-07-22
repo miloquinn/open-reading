@@ -42,9 +42,7 @@ class BookSourceRegistry {
     }
   }
 
-  Future<List<RegisteredBookSource>> upsert(
-    RegisteredBookSource source,
-  ) async {
+  Future<List<RegisteredBookSource>> upsert(RegisteredBookSource source) async {
     final sources = (await load()).toList();
     final index = sources.indexWhere((item) => item.id == source.id);
     if (index >= 0) {
@@ -52,7 +50,8 @@ class BookSourceRegistry {
       // 防止书源 id 劫持：清单 id 由服务端自报，若同 id 的源来自
       // 不同域名，则拒绝静默覆盖已注册源的 API 地址。用户如确要
       // 更换域名，需先删除旧源再添加。
-      final sameOrigin = previous.manifestUrl.host == source.manifestUrl.host &&
+      final sameOrigin =
+          previous.manifestUrl.host == source.manifestUrl.host &&
           previous.apiBaseUrl.host == source.apiBaseUrl.host;
       if (!sameOrigin) {
         throw BookSourceProtocolException(
@@ -83,13 +82,12 @@ class BookSourceRegistry {
     return load();
   }
 
-  Future<List<RegisteredBookSource>> setEnabled(
-    String id,
-    bool enabled,
-  ) async {
+  Future<List<RegisteredBookSource>> setEnabled(String id, bool enabled) async {
     final sources = (await load())
-        .map((source) =>
-            source.id == id ? source.copyWith(enabled: enabled) : source)
+        .map(
+          (source) =>
+              source.id == id ? source.copyWith(enabled: enabled) : source,
+        )
         .toList(growable: false);
     await _save(sources);
     _changesController.add(null);

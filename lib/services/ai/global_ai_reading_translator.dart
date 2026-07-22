@@ -32,9 +32,7 @@ import '../../utils/localization_extension.dart';
 String localizeAiResponseBuffer(BuildContext context, String bufferText) {
   final l10n = context.l10n;
   // Replace snippet location tokens first (they have inline parameters).
-  final snippetRegex = RegExp(
-    r'\[\[snippetLocation:([^:]*):(\d+):(\d+)\]\]',
-  );
+  final snippetRegex = RegExp(r'\[\[snippetLocation:([^:]*):(\d+):(\d+)\]\]');
   var result = bufferText.replaceAllMapped(snippetRegex, (match) {
     return l10n.readerAiSnippetLocation(
       match.group(1)!,
@@ -65,10 +63,7 @@ String localizeAiResponseBuffer(BuildContext context, String bufferText) {
         '[[readerAiRelatedContentHeading]]',
         l10n.readerAiRelatedContentHeading,
       )
-      .replaceAll(
-        '[[readerAiNoRelatedContent]]',
-        l10n.readerAiNoRelatedContent,
-      )
+      .replaceAll('[[readerAiNoRelatedContent]]', l10n.readerAiNoRelatedContent)
       .replaceAll(
         '[[readerAiRelatedContentLocationHeading]]',
         l10n.readerAiRelatedContentLocationHeading,
@@ -77,10 +72,7 @@ String localizeAiResponseBuffer(BuildContext context, String bufferText) {
         '[[readerAiReadingSuggestionHeading]]',
         l10n.readerAiReadingSuggestionHeading,
       )
-      .replaceAll(
-        '[[readerAiNextStepHeading]]',
-        l10n.readerAiNextStepHeading,
-      )
+      .replaceAll('[[readerAiNextStepHeading]]', l10n.readerAiNextStepHeading)
       .replaceAll(
         '[[readerAiNextStepReadSnippet]]',
         l10n.readerAiNextStepReadSnippet,

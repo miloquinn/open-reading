@@ -1525,7 +1525,11 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String readerStatusPaged(
-      int chapter, int chapterCount, int page, int pageCount) {
+    int chapter,
+    int chapterCount,
+    int page,
+    int pageCount,
+  ) {
     return '第 $chapter/$chapterCount 章 · $page/$pageCount 页';
   }
 
@@ -2811,7 +2815,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String readerAiInvalidJsonError(
-      String provider, String endpoint, String snippet) {
+    String provider,
+    String endpoint,
+    String snippet,
+  ) {
     return '服务端返回的不是合法 JSON，当前接口可能与 $provider 配置不兼容。\n请求地址：$endpoint\n返回片段：$snippet';
   }
 
@@ -2822,37 +2829,55 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String readerAiNetworkRequestFailed(
-      String status, String error, String endpoint) {
+    String status,
+    String error,
+    String endpoint,
+  ) {
     return '网络请求失败$status：$error\n请求地址：$endpoint';
   }
 
   @override
   String readerAiRequestFailedMinimaxHint(
-      String status, String text, String endpoint) {
+    String status,
+    String text,
+    String endpoint,
+  ) {
     return '请求失败($status)：$text\n建议检查：1) MiniMax 温度需在 (0,1]；2) 模型名与接口是否匹配；3) 仅使用单条 system 指令。\n请求地址：$endpoint';
   }
 
   @override
   String readerAiRequestFailedClaudeHint(
-      String status, String text, String endpoint) {
+    String status,
+    String text,
+    String endpoint,
+  ) {
     return '请求失败($status)：$text\n提示：Claude 必须携带 anthropic-version 请求头。\n请求地址：$endpoint';
   }
 
   @override
   String readerAiRequestFailedProviderMismatchHint(
-      String status, String text, String endpoint) {
+    String status,
+    String text,
+    String endpoint,
+  ) {
     return '请求失败($status)：$text\n提示：请确认服务商与 API Key 对应，不可混用。\n请求地址：$endpoint';
   }
 
   @override
   String readerAiRequestFailedGeneric(
-      String status, String text, String endpoint) {
+    String status,
+    String text,
+    String endpoint,
+  ) {
     return '请求失败($status)：$text\n请求地址：$endpoint';
   }
 
   @override
   String readerAiMockSelectionResponse(
-      String selectedText, String before, String after) {
+    String selectedText,
+    String before,
+    String after,
+  ) {
     return 'AI(模拟): 你选择的内容是\"$selectedText\"。\n\n上文: $before\n下文: $after';
   }
 
@@ -2892,7 +2917,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String readerAiSnippetLocation(
-      String chapterId, int startOffset, int endOffset) {
+    String chapterId,
+    int startOffset,
+    int endOffset,
+  ) {
     return '- 位置：$chapterId ($startOffset-$endOffset)';
   }
 
@@ -3164,7 +3192,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get agreementV2Section6Body =>
-      '本软件采用本地优先设计，书籍、阅读进度、笔记和设置通常保存在你的设备。除非你主动启用联网书源、封面搜索、AI、同步或其他联网功能，本软件不会为了提供本地阅读而主动将书籍正文发送给开发者。应用自动或手动检查更新时，会访问 GitHub 和官方站点 open.xxread.top，并发送平台、处理器架构、发布渠道等必要技术参数；服务器和网络服务会按正常通信处理你的 IP 地址与 User-Agent。你从官方站点下载安装包时，后台会记录版本、架构、下载时间、IP 和 User-Agent，用于下载次数统计、安全防护和故障排查；原始 IP 下载明细最多保留 30 天，之后删除，长期仅保留不含原始 IP 的汇总统计。上述更新请求不包含书籍正文、书架、笔记、账户或设备唯一标识；访问 GitHub 时还适用 GitHub 的隐私规则。启用其他联网功能时，相关查询、文本片段、设备网络信息或必要参数可能发送给你选择的第三方服务，具体以该服务规则为准。你应自行保护设备、访问密钥和备份；卸载、清理数据、设备故障或误操作可能导致数据永久丢失。';
+      '本软件采用本地优先设计，书籍、阅读进度、笔记和设置通常保存在你的设备。除非你主动启用联网书源、AI、同步或其他联网功能，本软件不会为了提供本地阅读而主动将书籍正文发送给开发者。应用自动或手动检查更新时，会访问 GitHub 和官方站点 open.xxread.top，并发送平台、处理器架构、发布渠道等必要技术参数；服务器和网络服务会按正常通信处理你的 IP 地址与 User-Agent。你从官方站点下载安装包时，后台会记录版本、架构、下载时间、IP 和 User-Agent，用于下载次数统计、安全防护和故障排查；原始 IP 下载明细最多保留 30 天，之后删除，长期仅保留不含原始 IP 的汇总统计。上述更新请求不包含书籍正文、书架、笔记、账户或设备唯一标识；访问 GitHub 时还适用 GitHub 的隐私规则。启用其他联网功能时，相关查询、文本片段、设备网络信息或必要参数可能发送给你选择的第三方服务，具体以该服务规则为准。你应自行保护设备、访问密钥和备份；卸载、清理数据、设备故障或误操作可能导致数据永久丢失。';
 
   @override
   String get agreementV2Section7Title => 'AI 与自动化输出';
@@ -5064,7 +5092,11 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String readerStatusPaged(
-      int chapter, int chapterCount, int page, int pageCount) {
+    int chapter,
+    int chapterCount,
+    int page,
+    int pageCount,
+  ) {
     return '第 $chapter/$chapterCount 章 · $page/$pageCount 頁';
   }
 
@@ -6350,7 +6382,10 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String readerAiInvalidJsonError(
-      String provider, String endpoint, String snippet) {
+    String provider,
+    String endpoint,
+    String snippet,
+  ) {
     return '服務端返回的不是合法 JSON，目前介面可能與 $provider 設定不相容。\n請求位址：$endpoint\n返回片段：$snippet';
   }
 
@@ -6361,37 +6396,55 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String readerAiNetworkRequestFailed(
-      String status, String error, String endpoint) {
+    String status,
+    String error,
+    String endpoint,
+  ) {
     return '網路請求失敗$status：$error\n請求位址：$endpoint';
   }
 
   @override
   String readerAiRequestFailedMinimaxHint(
-      String status, String text, String endpoint) {
+    String status,
+    String text,
+    String endpoint,
+  ) {
     return '請求失敗($status)：$text\n建議檢查：1) MiniMax 溫度需在 (0,1]；2) 模型名與介面是否匹配；3) 僅使用單條 system 指令。\n請求位址：$endpoint';
   }
 
   @override
   String readerAiRequestFailedClaudeHint(
-      String status, String text, String endpoint) {
+    String status,
+    String text,
+    String endpoint,
+  ) {
     return '請求失敗($status)：$text\n提示：Claude 必須攜帶 anthropic-version 請求標頭。\n請求位址：$endpoint';
   }
 
   @override
   String readerAiRequestFailedProviderMismatchHint(
-      String status, String text, String endpoint) {
+    String status,
+    String text,
+    String endpoint,
+  ) {
     return '請求失敗($status)：$text\n提示：請確認服務商與 API Key 對應，不可混用。\n請求位址：$endpoint';
   }
 
   @override
   String readerAiRequestFailedGeneric(
-      String status, String text, String endpoint) {
+    String status,
+    String text,
+    String endpoint,
+  ) {
     return '請求失敗($status)：$text\n請求位址：$endpoint';
   }
 
   @override
   String readerAiMockSelectionResponse(
-      String selectedText, String before, String after) {
+    String selectedText,
+    String before,
+    String after,
+  ) {
     return 'AI(模擬): 你選擇的內容是\"$selectedText\"。\n\n上文: $before\n下文: $after';
   }
 
@@ -6431,7 +6484,10 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String readerAiSnippetLocation(
-      String chapterId, int startOffset, int endOffset) {
+    String chapterId,
+    int startOffset,
+    int endOffset,
+  ) {
     return '- 位置：$chapterId ($startOffset-$endOffset)';
   }
 
@@ -6703,7 +6759,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get agreementV2Section6Body =>
-      '本軟體採用本機優先設計，書籍、閱讀進度、筆記和設定通常儲存在你的裝置。除非你主動啟用連網書源、封面搜尋、AI、同步或其他連網功能，本軟體不會為了提供本機閱讀而主動將書籍內文傳送給開發者。應用程式自動或手動檢查更新時，會存取 GitHub 和官方網站 open.xxread.top，並傳送平台、處理器架構、發布頻道等必要技術參數；伺服器和網路服務會依正常通訊處理你的 IP 位址與 User-Agent。你從官方網站下載安裝套件時，後台會記錄版本、架構、下載時間、IP 和 User-Agent，用於下載次數統計、安全防護和故障排除；原始 IP 下載明細最多保留 30 天，之後刪除，長期僅保留不含原始 IP 的彙總統計。上述更新請求不包含書籍內文、書庫、筆記、帳戶或裝置唯一識別碼；存取 GitHub 時亦適用 GitHub 的隱私規則。啟用其他連網功能時，相關查詢、文字片段、裝置網路資訊或必要參數可能傳送給你選擇的第三方服務，具體以該服務規則為準。你應自行保護裝置、存取金鑰和備份；解除安裝、清除資料、裝置故障或誤操作可能導致資料永久遺失。';
+      '本軟體採用本機優先設計，書籍、閱讀進度、筆記和設定通常儲存在你的裝置。除非你主動啟用連網書源、AI、同步或其他連網功能，本軟體不會為了提供本機閱讀而主動將書籍內文傳送給開發者。應用程式自動或手動檢查更新時，會存取 GitHub 和官方網站 open.xxread.top，並傳送平台、處理器架構、發布頻道等必要技術參數；伺服器和網路服務會依正常通訊處理你的 IP 位址與 User-Agent。你從官方網站下載安裝套件時，後台會記錄版本、架構、下載時間、IP 和 User-Agent，用於下載次數統計、安全防護和故障排除；原始 IP 下載明細最多保留 30 天，之後刪除，長期僅保留不含原始 IP 的彙總統計。上述更新請求不包含書籍內文、書庫、筆記、帳戶或裝置唯一識別碼；存取 GitHub 時亦適用 GitHub 的隱私規則。啟用其他連網功能時，相關查詢、文字片段、裝置網路資訊或必要參數可能傳送給你選擇的第三方服務，具體以該服務規則為準。你應自行保護裝置、存取金鑰和備份；解除安裝、清除資料、裝置故障或誤操作可能導致資料永久遺失。';
 
   @override
   String get agreementV2Section7Title => 'AI 與自動化輸出';

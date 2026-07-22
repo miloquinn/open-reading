@@ -12,13 +12,10 @@ import 'package:dio/dio.dart';
 import 'online_font_models.dart';
 
 typedef OnlineFontDirectoryProvider = Future<dynamic> Function();
-typedef OnlineFontRegistrar = Future<void> Function(
-  String family,
-  Uint8List bytes,
-  FontStyle style,
-);
-typedef OnlineFontProgressCallback = void Function(
-    OnlineFontDownloadProgress progress);
+typedef OnlineFontRegistrar =
+    Future<void> Function(String family, Uint8List bytes, FontStyle style);
+typedef OnlineFontProgressCallback =
+    void Function(OnlineFontDownloadProgress progress);
 
 class OnlineFontService {
   OnlineFontService({
@@ -40,8 +37,7 @@ class OnlineFontService {
     String fontId, {
     required List<OnlineFontFile> files,
     required String family,
-  }) async =>
-      false;
+  }) async => false;
 
   Future<OnlineFontRecord> download({
     required String fontId,

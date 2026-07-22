@@ -95,25 +95,24 @@ class RegisteredBookSource {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'description': description,
-        'manifestUrl': manifestUrl.toString(),
-        'apiBaseUrl': apiBaseUrl.toString(),
-        if (iconUrl != null) 'iconUrl': iconUrl.toString(),
-        if (websiteUrl != null) 'websiteUrl': websiteUrl.toString(),
-        if (operatorName.isNotEmpty) 'operatorName': operatorName,
-        if (contactUrl != null) 'contactUrl': contactUrl.toString(),
-        if (contentLicense.isNotEmpty) 'contentLicense': contentLicense,
-        if (rightsStatement.isNotEmpty) 'rightsStatement': rightsStatement,
-        'protocolVersion': protocolVersion,
-        'languages': languages,
-        'capabilities': capabilities.toList()..sort(),
-        if (maxCatalogPageSize != null)
-          'maxCatalogPageSize': maxCatalogPageSize,
-        'enabled': enabled,
-        'addedAt': addedAt.toIso8601String(),
-      };
+    'id': id,
+    'name': name,
+    'description': description,
+    'manifestUrl': manifestUrl.toString(),
+    'apiBaseUrl': apiBaseUrl.toString(),
+    if (iconUrl != null) 'iconUrl': iconUrl.toString(),
+    if (websiteUrl != null) 'websiteUrl': websiteUrl.toString(),
+    if (operatorName.isNotEmpty) 'operatorName': operatorName,
+    if (contactUrl != null) 'contactUrl': contactUrl.toString(),
+    if (contentLicense.isNotEmpty) 'contentLicense': contentLicense,
+    if (rightsStatement.isNotEmpty) 'rightsStatement': rightsStatement,
+    'protocolVersion': protocolVersion,
+    'languages': languages,
+    'capabilities': capabilities.toList()..sort(),
+    if (maxCatalogPageSize != null) 'maxCatalogPageSize': maxCatalogPageSize,
+    'enabled': enabled,
+    'addedAt': addedAt.toIso8601String(),
+  };
 
   RegisteredBookSource copyWith({bool? enabled}) {
     return RegisteredBookSource(

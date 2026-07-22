@@ -190,34 +190,26 @@ class FontCatalog {
   static FontOption appFontForId(
     String? id, {
     List<FontOption> customFonts = const <FontOption>[],
-  }) =>
-      _fontForId(
-        id,
-        options: <FontOption>[...appFonts, ...customFonts],
-        fallback: defaultAppFont,
-      );
+  }) => _fontForId(
+    id,
+    options: <FontOption>[...appFonts, ...customFonts],
+    fallback: defaultAppFont,
+  );
 
   static FontOption readerFontForId(
     String? id, {
     List<FontOption> customFonts = const <FontOption>[],
-  }) =>
-      _fontForId(
-        id,
-        options: <FontOption>[...readerFonts, ...customFonts],
-        fallback: defaultReaderFont,
-      );
+  }) => _fontForId(
+    id,
+    options: <FontOption>[...readerFonts, ...customFonts],
+    fallback: defaultReaderFont,
+  );
 
-  static FontOption appFontForFamily(String? family) => _fontForFamily(
-        family,
-        options: appFonts,
-        fallback: defaultAppFont,
-      );
+  static FontOption appFontForFamily(String? family) =>
+      _fontForFamily(family, options: appFonts, fallback: defaultAppFont);
 
-  static FontOption readerFontForFamily(String? family) => _fontForFamily(
-        family,
-        options: readerFonts,
-        fallback: defaultReaderFont,
-      );
+  static FontOption readerFontForFamily(String? family) =>
+      _fontForFamily(family, options: readerFonts, fallback: defaultReaderFont);
 
   static FontOption _fontForId(
     String? id, {

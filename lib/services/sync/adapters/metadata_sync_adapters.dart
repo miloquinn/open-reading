@@ -22,11 +22,11 @@ class MetadataSyncAdapters {
     required SyncChangeStore store,
     DatabaseService? databaseService,
     Iterable<MetadataSyncAdapter>? registeredAdapters,
-  })  : _databaseService = databaseService ?? DatabaseService(),
-        _store = store,
-        adapters = registeredAdapters == null
-            ? []
-            : List<MetadataSyncAdapter>.of(registeredAdapters) {
+  }) : _databaseService = databaseService ?? DatabaseService(),
+       _store = store,
+       adapters = registeredAdapters == null
+           ? []
+           : List<MetadataSyncAdapter>.of(registeredAdapters) {
     if (registeredAdapters == null) {
       adapters.addAll([
         BooksSyncAdapter(store, _databaseService),
@@ -114,8 +114,9 @@ abstract class _BaseAdapter implements MetadataSyncAdapter {
     HybridLogicalClock clock,
   ) async {
     for (final record in await store.recordsForDataset(dataset)) {
-      final locallyObserved =
-          await store.getState('locally_observed:$dataset:${record.recordId}');
+      final locallyObserved = await store.getState(
+        'locally_observed:$dataset:${record.recordId}',
+      );
       if (!record.deleted &&
           locallyObserved == '1' &&
           !seen.contains(record.recordId)) {
@@ -326,11 +327,7 @@ class BookmarksSyncAdapter extends _BaseAdapter {
     }
     if (operation.deleted) {
       if (existingId != null) {
-        await txn.delete(
-          'bookmarks',
-          where: 'id = ?',
-          whereArgs: [existingId],
-        );
+        await txn.delete('bookmarks', where: 'id = ?', whereArgs: [existingId]);
       }
       return;
     }
@@ -514,13 +511,14 @@ class ReadingSessionsSyncAdapter extends _BaseAdapter {
     final existing = await txn.query(
       'reading_sessions',
       columns: ['id'],
-      where: 'startTimeMs = ? AND endTimeMs = ? AND '
+      where:
+          'startTimeMs = ? AND endTimeMs = ? AND '
           '((bookId IS NULL AND ? IS NULL) OR bookId = ?)',
       whereArgs: [
         payload['start_time_ms'],
         payload['end_time_ms'],
         bookId,
-        bookId
+        bookId,
       ],
       limit: 1,
     );

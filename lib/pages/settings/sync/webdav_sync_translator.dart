@@ -2,10 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:xxread/services/sync/sync_models.dart';
 import 'package:xxread/utils/localization_extension.dart';
 
-String webDavSyncErrorText(
-  BuildContext context,
-  WebDavSyncErrorCode? code,
-) {
+String webDavSyncErrorText(BuildContext context, WebDavSyncErrorCode? code) {
   switch (code) {
     case WebDavSyncErrorCode.invalidConfiguration:
       return context.l10n.webDavErrorInvalidConfiguration;
@@ -43,10 +40,7 @@ String webDavSyncErrorText(
   }
 }
 
-String webDavSyncFailurePhaseText(
-  BuildContext context,
-  WebDavSyncPhase phase,
-) {
+String webDavSyncFailurePhaseText(BuildContext context, WebDavSyncPhase phase) {
   final phaseText = switch (phase) {
     WebDavSyncPhase.connecting => context.l10n.webDavPhaseConnecting,
     WebDavSyncPhase.scanningLocal => context.l10n.webDavPhaseScanningLocal,

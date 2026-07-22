@@ -5,10 +5,7 @@ import 'package:xxread/utils/localization_extension.dart';
 import 'package:xxread/utils/page_style_helper.dart';
 
 class ChangelogPage extends StatefulWidget {
-  const ChangelogPage({
-    super.key,
-    this.service,
-  });
+  const ChangelogPage({super.key, this.service});
 
   final ChangelogService? service;
 
@@ -128,9 +125,9 @@ class _VersionCard extends StatelessWidget {
             children: [
               Text(
                 'v${entry.version}',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
               ),
               if (current) ...[
                 const SizedBox(width: 9),
@@ -146,9 +143,9 @@ class _VersionCard extends StatelessWidget {
                   child: Text(
                     currentLabel,
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: scheme.primary,
-                          fontWeight: FontWeight.w700,
-                        ),
+                      color: scheme.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ],
@@ -175,9 +172,9 @@ class _VersionCard extends StatelessWidget {
                     child: Text(
                       item,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                            height: 1.5,
-                          ),
+                        color: scheme.onSurfaceVariant,
+                        height: 1.5,
+                      ),
                     ),
                   ),
                 ],

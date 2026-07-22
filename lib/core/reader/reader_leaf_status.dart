@@ -6,10 +6,7 @@ import 'package:flutter/widgets.dart';
 
 @immutable
 class ReaderBatteryStatus {
-  const ReaderBatteryStatus({
-    required this.level,
-    required this.charging,
-  });
+  const ReaderBatteryStatus({required this.level, required this.charging});
 
   final int level;
   final bool charging;
@@ -23,8 +20,9 @@ class MethodChannelReaderBatteryStatusSource
     implements ReaderBatteryStatusSource {
   const MethodChannelReaderBatteryStatusSource();
 
-  static const MethodChannel _channel =
-      MethodChannel('com.niki.xxread/reader_status');
+  static const MethodChannel _channel = MethodChannel(
+    'com.niki.xxread/reader_status',
+  );
 
   @override
   Future<ReaderBatteryStatus?> read() async {
@@ -71,12 +69,12 @@ class ReaderLeafStatusController extends ChangeNotifier
     ReaderBatteryStatusSource batterySource =
         const MethodChannelReaderBatteryStatusSource(),
     DateTime Function()? now,
-  })  : _batterySource = batterySource,
-        _now = now ?? DateTime.now,
-        _value = ReaderLeafStatusData(
-          time: _minute(now?.call() ?? DateTime.now()),
-          revision: 0,
-        );
+  }) : _batterySource = batterySource,
+       _now = now ?? DateTime.now,
+       _value = ReaderLeafStatusData(
+         time: _minute(now?.call() ?? DateTime.now()),
+         revision: 0,
+       );
 
   final ReaderBatteryStatusSource _batterySource;
   final DateTime Function() _now;
@@ -159,10 +157,5 @@ class ReaderLeafStatusController extends ChangeNotifier
   }
 }
 
-DateTime _minute(DateTime value) => DateTime(
-      value.year,
-      value.month,
-      value.day,
-      value.hour,
-      value.minute,
-    );
+DateTime _minute(DateTime value) =>
+    DateTime(value.year, value.month, value.day, value.hour, value.minute);

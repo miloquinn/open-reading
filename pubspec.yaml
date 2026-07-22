@@ -16,10 +16,10 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 2.3.1+260722007
+version: 2.3.5+260722009
 
 environment:
-  sdk: '>=3.6.0 <4.0.0'
+  sdk: '>=3.12.0 <4.0.0'
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
 # consider running `flutter pub upgrade --major-versions`. Alternatively,
@@ -73,6 +73,7 @@ dependencies:
   # 字符编码支持（GB2312/GBK）
   gbk_codec: ^0.4.0
   flutter_secure_storage: ^10.3.1
+  sqflite_common_ffi_web: ^1.1.2
 
 dev_dependencies:
   flutter_test:

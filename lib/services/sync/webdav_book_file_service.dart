@@ -24,14 +24,14 @@ class WebDavBookFileService {
     Future<Directory> Function()? temporaryDirectory,
     Future<Directory> Function()? documentsDirectory,
     Future<Database> Function()? database,
-  })  : _configStore = configStore ?? SecureSyncConfigStore(),
-        _databaseService = databaseService ?? DatabaseService(),
-        _clientFactory = clientFactory ?? WebDavClient.standard,
-        _importer = importer ?? BookImportService(),
-        _temporaryDirectory = temporaryDirectory ?? getTemporaryDirectory,
-        _documentsDirectory =
-            documentsDirectory ?? getApplicationDocumentsDirectory,
-        _databaseProvider = database;
+  }) : _configStore = configStore ?? SecureSyncConfigStore(),
+       _databaseService = databaseService ?? DatabaseService(),
+       _clientFactory = clientFactory ?? WebDavClient.standard,
+       _importer = importer ?? BookImportService(),
+       _temporaryDirectory = temporaryDirectory ?? getTemporaryDirectory,
+       _documentsDirectory =
+           documentsDirectory ?? getApplicationDocumentsDirectory,
+       _databaseProvider = database;
 
   static const int maxRecoverableFileBytes = 100 * 1024 * 1024;
   static const int maxCoverFileBytes = 10 * 1024 * 1024;
@@ -78,9 +78,7 @@ class WebDavBookFileService {
     final prefix = hash.substring(0, 2);
     final remoteSegments = ['blobs', 'books', 'sha256', prefix, hash];
     final remoteUri = client.path(remoteSegments);
-    await client.ensureProtocolPath(
-      ['blobs', 'books', 'sha256', prefix],
-    );
+    await client.ensureProtocolPath(['blobs', 'books', 'sha256', prefix]);
     if (!await client.exists(remoteUri)) {
       final temporary = client.path([
         'blobs',
@@ -94,10 +92,7 @@ class WebDavBookFileService {
           temporary,
           source,
           onProgress: (sent, total) => onProgress?.call(
-            BookFileTransferProgress(
-              transferredBytes: sent,
-              totalBytes: total,
-            ),
+            BookFileTransferProgress(transferredBytes: sent, totalBytes: total),
           ),
         );
         await client.move(temporary, remoteUri);
@@ -110,10 +105,7 @@ class WebDavBookFileService {
       }
     } else {
       onProgress?.call(
-        BookFileTransferProgress(
-          transferredBytes: size,
-          totalBytes: size,
-        ),
+        BookFileTransferProgress(transferredBytes: size, totalBytes: size),
       );
     }
 
@@ -122,24 +114,20 @@ class WebDavBookFileService {
     final remotePath = remoteSegments.join('/');
     final cover = await _uploadCover(client, book);
     final db = await _database;
-    await db.insert(
-      'sync_book_files',
-      {
-        'book_uid': uid,
-        'local_book_id': book.id,
-        'blob_sha256': hash,
-        'file_name': fileName,
-        'file_size': size,
-        'remote_path': remotePath,
-        'cover_blob_sha256': cover?.sha256,
-        'cover_file_name': cover?.fileName,
-        'cover_file_size': cover?.sizeBytes,
-        'cover_remote_path': cover?.remotePath,
-        'sync_enabled': 1,
-        'updated_at': DateTime.now().toUtc().toIso8601String(),
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('sync_book_files', {
+      'book_uid': uid,
+      'local_book_id': book.id,
+      'blob_sha256': hash,
+      'file_name': fileName,
+      'file_size': size,
+      'remote_path': remotePath,
+      'cover_blob_sha256': cover?.sha256,
+      'cover_file_name': cover?.fileName,
+      'cover_file_size': cover?.sizeBytes,
+      'cover_remote_path': cover?.remotePath,
+      'sync_enabled': 1,
+      'updated_at': DateTime.now().toUtc().toIso8601String(),
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
     return RemoteBookDescriptor(
       bookUid: uid,
       title: book.title,
@@ -224,11 +212,7 @@ class WebDavBookFileService {
           'The downloaded book checksum does not match its metadata.',
         );
       }
-      coverPartial = await _downloadCover(
-        client,
-        descriptor,
-        temporaryRoot,
-      );
+      coverPartial = await _downloadCover(client, descriptor, temporaryRoot);
       final extension = path.extension(safeFileName).replaceFirst('.', '');
       final result = await _importer.importFile(
         BookImportSource(
@@ -282,24 +266,20 @@ class WebDavBookFileService {
           whereArgs: [restoredBook.id],
         );
       }
-      await db.insert(
-        'sync_book_files',
-        {
-          'book_uid': descriptor.bookUid,
-          'local_book_id': restoredBook.id,
-          'blob_sha256': expectedHash,
-          'file_name': safeFileName,
-          'file_size': actualSize,
-          'remote_path': remotePath,
-          'cover_blob_sha256': descriptor.coverBlobSha256,
-          'cover_file_name': descriptor.coverFileName,
-          'cover_file_size': descriptor.coverSizeBytes,
-          'cover_remote_path': descriptor.coverRemotePath,
-          'sync_enabled': 1,
-          'updated_at': DateTime.now().toUtc().toIso8601String(),
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      await db.insert('sync_book_files', {
+        'book_uid': descriptor.bookUid,
+        'local_book_id': restoredBook.id,
+        'blob_sha256': expectedHash,
+        'file_name': safeFileName,
+        'file_size': actualSize,
+        'remote_path': remotePath,
+        'cover_blob_sha256': descriptor.coverBlobSha256,
+        'cover_file_name': descriptor.coverFileName,
+        'cover_file_size': descriptor.coverSizeBytes,
+        'cover_remote_path': descriptor.coverRemotePath,
+        'sync_enabled': 1,
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
       return restoredBook;
     } finally {
       if (await partial.exists()) await partial.delete();
@@ -320,9 +300,7 @@ class WebDavBookFileService {
     final prefix = hash.substring(0, 2);
     final remoteSegments = ['blobs', 'covers', 'sha256', prefix, hash];
     final remoteUri = client.path(remoteSegments);
-    await client.ensureProtocolPath(
-      ['blobs', 'covers', 'sha256', prefix],
-    );
+    await client.ensureProtocolPath(['blobs', 'covers', 'sha256', prefix]);
     if (!await client.exists(remoteUri)) {
       final temporary = client.path([
         'blobs',
@@ -423,12 +401,11 @@ class WebDavBookFileService {
       await covers.create(recursive: true);
       var extension = path.extension(descriptor.coverFileName ?? '');
       if (extension.isEmpty || extension.length > 10) extension = '.img';
-      final hash = descriptor.coverBlobSha256 ??
+      final hash =
+          descriptor.coverBlobSha256 ??
           sha256.convert(descriptor.bookUid.codeUnits).toString();
       final shortHash = hash.substring(0, hash.length.clamp(0, 16));
-      destination = File(
-        path.join(covers.path, 'webdav-$shortHash$extension'),
-      );
+      destination = File(path.join(covers.path, 'webdav-$shortHash$extension'));
     }
     await destination.parent.create(recursive: true);
     await coverPartial.copy(destination.path);

@@ -30,12 +30,12 @@ class AppCacheManager {
     Directory? temporaryDirectory,
     Future<void> Function()? clearFlutterImageCache,
     int Function()? imageCacheBytesReader,
-  })  : _sourceCoverCache = sourceCoverCache ?? SourceCoverCache.instance,
-        _temporaryDirectory = temporaryDirectory,
-        _clearFlutterImageCache =
-            clearFlutterImageCache ?? _defaultClearFlutterImageCache,
-        _imageCacheBytesReader =
-            imageCacheBytesReader ?? _defaultImageCacheBytesReader;
+  }) : _sourceCoverCache = sourceCoverCache ?? SourceCoverCache.instance,
+       _temporaryDirectory = temporaryDirectory,
+       _clearFlutterImageCache =
+           clearFlutterImageCache ?? _defaultClearFlutterImageCache,
+       _imageCacheBytesReader =
+           imageCacheBytesReader ?? _defaultImageCacheBytesReader;
 
   static const String updateDirectoryName = 'updates';
 
@@ -52,8 +52,8 @@ class AppCacheManager {
     };
     bytesByCategory[AppCacheCategory.sourceCovers] =
         bytesByCategory[AppCacheCategory.sourceCovers]! +
-            _sourceCoverCache.memorySizeBytes +
-            _imageCacheBytesReader();
+        _sourceCoverCache.memorySizeBytes +
+        _imageCacheBytesReader();
     return AppCacheUsage(bytesByCategory);
   }
 
@@ -105,8 +105,10 @@ class AppCacheManager {
   Future<int> _directorySize(Directory directory) async {
     if (!await directory.exists()) return 0;
     var total = 0;
-    await for (final entity
-        in directory.list(recursive: true, followLinks: false)) {
+    await for (final entity in directory.list(
+      recursive: true,
+      followLinks: false,
+    )) {
       if (entity is! File) continue;
       try {
         total += await entity.length();

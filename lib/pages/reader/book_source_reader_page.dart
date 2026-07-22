@@ -167,33 +167,32 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
 
   ReaderThemePalette get _readerTheme => ReaderThemes.byId(_readerThemeId);
 
-  ThemeData get _readerThemeData => _readerTheme.toThemeData(
-        typography: Theme.of(context).textTheme,
-      );
+  ThemeData get _readerThemeData =>
+      _readerTheme.toThemeData(typography: Theme.of(context).textTheme);
 
   ReaderSettings get _readerSettings => ReaderSettings(
-        fontSize: _fontSize,
-        lineHeight: _lineHeight,
-        horizontalMargin: _horizontalMargin,
-        topMargin: _topMargin,
-        bottomMargin: _bottomMargin,
-        themeId: _readerThemeId,
-        pageMode: _pageMode,
-        firstLineIndent: _firstLineIndent,
-        paragraphSpacing: _paragraphSpacing,
-        pullBookmarkEnabled: _pullBookmarkEnabled,
-        tapPageAnimationEnabled: _tapPageAnimationEnabled,
-        tabletTwoPageEnabled: _tabletTwoPageEnabled,
-      );
+    fontSize: _fontSize,
+    lineHeight: _lineHeight,
+    horizontalMargin: _horizontalMargin,
+    topMargin: _topMargin,
+    bottomMargin: _bottomMargin,
+    themeId: _readerThemeId,
+    pageMode: _pageMode,
+    firstLineIndent: _firstLineIndent,
+    paragraphSpacing: _paragraphSpacing,
+    pullBookmarkEnabled: _pullBookmarkEnabled,
+    tapPageAnimationEnabled: _tapPageAnimationEnabled,
+    tabletTwoPageEnabled: _tabletTwoPageEnabled,
+  );
 
   ReaderSafeAreaMetrics get _readerSafeArea => ReaderSafeAreaMetrics(
-        viewPadding: MediaQuery.viewPaddingOf(context),
-        topMargin: _topMargin,
-        bottomMargin: _bottomMargin,
-        topChromeReserve: _topBarStyle == ReaderTopBarStyle.reader
-            ? ReaderSafeAreaMetrics.readerTopBarReserve
-            : 0,
-      );
+    viewPadding: MediaQuery.viewPaddingOf(context),
+    topMargin: _topMargin,
+    bottomMargin: _bottomMargin,
+    topChromeReserve: _topBarStyle == ReaderTopBarStyle.reader
+        ? ReaderSafeAreaMetrics.readerTopBarReserve
+        : 0,
+  );
 
   bool _shouldUseTwoPageLayout(Size size) =>
       _tabletTwoPageEnabled &&
@@ -202,8 +201,8 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
 
   Size _paginationViewport(Size viewport, bool usesTwoPageLayout) =>
       usesTwoPageLayout
-          ? Size((viewport.width - _spreadGutter) / 2, viewport.height)
-          : viewport;
+      ? Size((viewport.width - _spreadGutter) / 2, viewport.height)
+      : viewport;
 
   int _spreadStartForPage(int pageIndex) => (pageIndex ~/ 2) * 2;
 
@@ -216,8 +215,10 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
 
   double _pagedReadingProgress(int pageIndex, int pageCount) => pageCount <= 1
       ? 0
-      : (_lastVisiblePagedIndex(pageIndex, pageCount) / (pageCount - 1))
-          .clamp(0.0, 1.0);
+      : (_lastVisiblePagedIndex(pageIndex, pageCount) / (pageCount - 1)).clamp(
+          0.0,
+          1.0,
+        );
 
   @override
   void initState() {
@@ -228,10 +229,12 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       ..start();
     unawaited(ReaderKeepScreenOnController.activate(this));
     _startReadingSession();
-    _verticalPagePositionsListener.itemPositions
-        .addListener(_onVerticalPagePositionsChanged);
-    _verticalChapterPositionsListener.itemPositions
-        .addListener(_onVerticalChapterPositionsChanged);
+    _verticalPagePositionsListener.itemPositions.addListener(
+      _onVerticalPagePositionsChanged,
+    );
+    _verticalChapterPositionsListener.itemPositions.addListener(
+      _onVerticalChapterPositionsChanged,
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted || _readerSystemUiApplied) return;
       final topBarStyle = await ReaderSystemUiController.applySavedPreference();
@@ -314,10 +317,12 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     _controlsTimer?.cancel();
     unawaited(_saveProgress());
     unawaited(_flushReadingSession());
-    _verticalPagePositionsListener.itemPositions
-        .removeListener(_onVerticalPagePositionsChanged);
-    _verticalChapterPositionsListener.itemPositions
-        .removeListener(_onVerticalChapterPositionsChanged);
+    _verticalPagePositionsListener.itemPositions.removeListener(
+      _onVerticalPagePositionsChanged,
+    );
+    _verticalChapterPositionsListener.itemPositions.removeListener(
+      _onVerticalChapterPositionsChanged,
+    );
     _pageController.dispose();
     _scrollProgress.dispose();
     _spreadPageCurlCoordinator.dispose();
@@ -330,9 +335,8 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     super.dispose();
   }
 
-  Future<void> _applyReaderSystemUi() => ReaderSystemUiController.apply(
-        style: _topBarStyle,
-      );
+  Future<void> _applyReaderSystemUi() =>
+      ReaderSystemUiController.apply(style: _topBarStyle);
 
   void _onLeafStatusChanged() {
     if (mounted) setState(() {});
@@ -413,11 +417,11 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   }
 
   Future<void> _syncVolumeKeyPaging() => ReaderVolumeKeyController.activate(
-        owner: this,
-        pageTurningAvailable: _pageMode != BookSourcePageMode.verticalScroll,
-        onNextPage: () => unawaited(_handleVolumePageTurn(forward: true)),
-        onPreviousPage: () => unawaited(_handleVolumePageTurn(forward: false)),
-      );
+    owner: this,
+    pageTurningAvailable: _pageMode != BookSourcePageMode.verticalScroll,
+    onNextPage: () => unawaited(_handleVolumePageTurn(forward: true)),
+    onPreviousPage: () => unawaited(_handleVolumePageTurn(forward: false)),
+  );
 
   Future<void> _handleVolumePageTurn({required bool forward}) async {
     if (!mounted ||
@@ -429,8 +433,8 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     if (_pageMode == BookSourcePageMode.pageCurl) {
       final controller = _usesTwoPageLayout
           ? (forward
-              ? _spreadForwardPageCurlController
-              : _spreadBackwardPageCurlController)
+                ? _spreadForwardPageCurlController
+                : _spreadBackwardPageCurlController)
           : _pageCurlController;
       if (forward) {
         await controller.turnForward();
@@ -534,11 +538,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     final loadSerial = ++_chapterLoadSerial;
     final prefetched = _prefetchedContent[index];
     if (prefetched != null) {
-      _applyLoadedChapter(
-        index,
-        prefetched,
-        restoreProgress: restoreProgress,
-      );
+      _applyLoadedChapter(index, prefetched, restoreProgress: restoreProgress);
       return;
     }
     setState(() {
@@ -549,11 +549,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       final contentFuture = _continuousContentFor(index);
       final content = await contentFuture;
       if (!mounted || loadSerial != _chapterLoadSerial) return;
-      _applyLoadedChapter(
-        index,
-        content,
-        restoreProgress: restoreProgress,
-      );
+      _applyLoadedChapter(index, content, restoreProgress: restoreProgress);
     } catch (error) {
       if (!mounted || loadSerial != _chapterLoadSerial) return;
       setState(() {
@@ -576,11 +572,11 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     final preparedPageIndex = preparedPages == null
         ? 0
         : (_usesTwoPageLayout
-                ? _spreadStartForPage(
-                    ((preparedPageCount - 1) * normalizedProgress).round(),
-                  )
-                : ((preparedPageCount - 1) * normalizedProgress).round())
-            .clamp(0, preparedPageCount - 1);
+                  ? _spreadStartForPage(
+                      ((preparedPageCount - 1) * normalizedProgress).round(),
+                    )
+                  : ((preparedPageCount - 1) * normalizedProgress).round())
+              .clamp(0, preparedPageCount - 1);
     _pagedLayouts.removeWhere(
       (chapterIndex, _) => chapterIndex < index - 1 || chapterIndex > index + 2,
     );
@@ -658,37 +654,39 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     late final Future<BookSourceChapterContent> future;
     future = _client
         .getChapterContent(
-      widget.source,
-      bookId: widget.book.id,
-      chapterId: _chapters[index].id,
-    )
+          widget.source,
+          bookId: widget.book.id,
+          chapterId: _chapters[index].id,
+        )
         .then((content) {
-      _prefetchedContent[index] = content;
-      if (!mounted) {
-        return content;
-      }
-      final pageStep = _usesTwoPageLayout ? 2 : 1;
-      final updatesCurrentContent =
-          !_loadingContent && _chapterIndex == index && _content != content;
-      final revealsPagedBoundary = !_loadingContent &&
-          _pageMode != BookSourcePageMode.verticalScroll &&
-          ((index == _chapterIndex + 1 &&
-                  _pageIndex + pageStep >= _pageCount) ||
-              (index == _chapterIndex - 1 && _pageIndex < pageStep));
-      if (updatesCurrentContent || revealsPagedBoundary) {
-        setState(() {
-          if (updatesCurrentContent) {
-            _content = content;
+          _prefetchedContent[index] = content;
+          if (!mounted) {
+            return content;
+          }
+          final pageStep = _usesTwoPageLayout ? 2 : 1;
+          final updatesCurrentContent =
+              !_loadingContent && _chapterIndex == index && _content != content;
+          final revealsPagedBoundary =
+              !_loadingContent &&
+              _pageMode != BookSourcePageMode.verticalScroll &&
+              ((index == _chapterIndex + 1 &&
+                      _pageIndex + pageStep >= _pageCount) ||
+                  (index == _chapterIndex - 1 && _pageIndex < pageStep));
+          if (updatesCurrentContent || revealsPagedBoundary) {
+            setState(() {
+              if (updatesCurrentContent) {
+                _content = content;
+              }
+            });
+          }
+          _schedulePagedLayoutWarm(index);
+          return content;
+        })
+        .whenComplete(() {
+          if (identical(_continuousContentLoads[index], future)) {
+            _continuousContentLoads.remove(index);
           }
         });
-      }
-      _schedulePagedLayoutWarm(index);
-      return content;
-    }).whenComplete(() {
-      if (identical(_continuousContentLoads[index], future)) {
-        _continuousContentLoads.remove(index);
-      }
-    });
     _continuousContentLoads[index] = future;
     return future;
   }
@@ -745,8 +743,9 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       _restorePagedPosition = false;
       _restoreTextOffset = null;
     });
-    _scrollProgress.value =
-        _verticalPageCount <= 1 ? 0 : targetPage / (_verticalPageCount - 1);
+    _scrollProgress.value = _verticalPageCount <= 1
+        ? 0
+        : targetPage / (_verticalPageCount - 1);
     await WidgetsBinding.instance.endOfFrame;
     if (!mounted || !_verticalChapterScrollController.isAttached) return;
     await _verticalChapterScrollController.scrollTo(
@@ -806,9 +805,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(context.l10n.bookSourceExitAddTitle),
-        content: Text(
-          context.l10n.bookSourceExitAddMessage(widget.book.title),
-        ),
+        content: Text(context.l10n.bookSourceExitAddMessage(widget.book.title)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
@@ -910,8 +907,9 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     final chapterIndex = _pendingSlideChapterIndex;
     final boundaryViewIndex = _pendingSlideBoundaryViewIndex;
     if (chapterIndex == null || boundaryViewIndex == null) return;
-    final settledViewIndex =
-        _pageController.hasClients ? _pageController.page?.round() : null;
+    final settledViewIndex = _pageController.hasClients
+        ? _pageController.page?.round()
+        : null;
     _pendingSlideChapterIndex = null;
     _pendingSlideBoundaryViewIndex = null;
     if (settledViewIndex != boundaryViewIndex) return;
@@ -920,12 +918,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     // future before replacing the PageView with the target chapter.
     Timer.run(() {
       if (!mounted) return;
-      unawaited(
-        _loadChapter(
-          chapterIndex,
-          restoreProgress: restoreProgress,
-        ),
-      );
+      unawaited(_loadChapter(chapterIndex, restoreProgress: restoreProgress));
     });
   }
 
@@ -1048,9 +1041,12 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       final id = await _bookmarkDao.insertBookmark(bookmark);
       if (!mounted) return;
       setState(() {
-        _bookmarks = [..._bookmarks, bookmark.copyWith(id: id)]..sort((a, b) =>
-            (a.chapterIndex ?? a.pageNumber)
-                .compareTo(b.chapterIndex ?? b.pageNumber));
+        _bookmarks = [..._bookmarks, bookmark.copyWith(id: id)]
+          ..sort(
+            (a, b) => (a.chapterIndex ?? a.pageNumber).compareTo(
+              b.chapterIndex ?? b.pageNumber,
+            ),
+          );
       });
       showSideToast(
         context,
@@ -1087,15 +1083,18 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
 
   Future<void> _jumpToBookmark(Bookmark bookmark) async {
     final raw = bookmark.canonicalLocator;
-    final locator =
-        raw == null ? null : LocatorCodec.decodeCanonicalLocator(raw);
+    final locator = raw == null
+        ? null
+        : LocatorCodec.decodeCanonicalLocator(raw);
     final chapterId = locator?.chapterId ?? locator?.textAnchor?.chapterId;
     var chapterIndex = chapterId == null
         ? -1
         : _chapters.indexWhere((chapter) => chapter.id == chapterId);
     if (chapterIndex < 0) {
-      chapterIndex = (bookmark.chapterIndex ?? bookmark.pageNumber)
-          .clamp(0, _chapters.length - 1);
+      chapterIndex = (bookmark.chapterIndex ?? bookmark.pageNumber).clamp(
+        0,
+        _chapters.length - 1,
+      );
     }
     _restoreTextOffset = locator?.textAnchor?.startOffsetUtf16;
     if (_pageMode == BookSourcePageMode.verticalScroll && !_scrollByChapter) {
@@ -1121,10 +1120,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     // books with thousands of chapters.
     final navigationChapters = [
       for (var index = 0; index < _chapters.length; index++)
-        ReaderNavigationChapter(
-          title: _chapters[index].title,
-          index: index,
-        ),
+        ReaderNavigationChapter(title: _chapters[index].title, index: index),
     ];
     await showModalBottomSheet<void>(
       context: context,
@@ -1197,7 +1193,8 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     bool? tapPageAnimationEnabled,
     bool? tabletTwoPageEnabled,
   }) async {
-    final repaginate = fontSize != null ||
+    final repaginate =
+        fontSize != null ||
         lineHeight != null ||
         firstLineIndent != null ||
         paragraphSpacing != null ||
@@ -1218,10 +1215,14 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         ReaderMarginSettings.horizontalMin,
         ReaderMarginSettings.horizontalMax,
       );
-      _topMargin = (topMargin ?? _topMargin)
-          .clamp(ReaderMarginSettings.min, ReaderMarginSettings.max);
-      _bottomMargin = (bottomMargin ?? _bottomMargin)
-          .clamp(ReaderMarginSettings.min, ReaderMarginSettings.max);
+      _topMargin = (topMargin ?? _topMargin).clamp(
+        ReaderMarginSettings.min,
+        ReaderMarginSettings.max,
+      );
+      _bottomMargin = (bottomMargin ?? _bottomMargin).clamp(
+        ReaderMarginSettings.min,
+        ReaderMarginSettings.max,
+      );
       _readerThemeId = ReaderThemes.byId(themeId ?? _readerThemeId).id;
       _pageMode = pageMode ?? _pageMode;
       _pullBookmarkEnabled = pullBookmarkEnabled ?? _pullBookmarkEnabled;
@@ -1246,7 +1247,8 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
 
   Future<void> _setTopBarStyle(ReaderTopBarStyle style) async {
     if (_topBarStyle == style) return;
-    final repaginate = (_topBarStyle == ReaderTopBarStyle.reader) !=
+    final repaginate =
+        (_topBarStyle == ReaderTopBarStyle.reader) !=
         (style == ReaderTopBarStyle.reader);
     final currentProgress = _currentReadingProgress;
     final currentTextOffset = _currentTextOffset;
@@ -1290,33 +1292,32 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   }
 
   String _pageModeTitle(BookSourcePageMode mode) => switch (mode) {
-        BookSourcePageMode.verticalScroll => context.l10n.pageTurningScroll,
-        BookSourcePageMode.instantPage => context.l10n.readerModeHorizontalPage,
-        BookSourcePageMode.horizontalSlide => context.l10n.pageTurningSlide,
-        BookSourcePageMode.pageCurl => context.l10n.readerModePageCurl,
-      };
+    BookSourcePageMode.verticalScroll => context.l10n.pageTurningScroll,
+    BookSourcePageMode.instantPage => context.l10n.readerModeHorizontalPage,
+    BookSourcePageMode.horizontalSlide => context.l10n.pageTurningSlide,
+    BookSourcePageMode.pageCurl => context.l10n.readerModePageCurl,
+  };
 
   String _pageModeHint(BookSourcePageMode mode) => switch (mode) {
-        BookSourcePageMode.verticalScroll =>
-          context.l10n.readerModeVerticalScrollHint,
-        BookSourcePageMode.instantPage =>
-          context.l10n.readerModeHorizontalPageHint,
-        BookSourcePageMode.horizontalSlide =>
-          context.l10n.readerModeHorizontalSlideHint,
-        BookSourcePageMode.pageCurl => context.l10n.readerModePageCurlHint,
-      };
+    BookSourcePageMode.verticalScroll =>
+      context.l10n.readerModeVerticalScrollHint,
+    BookSourcePageMode.instantPage => context.l10n.readerModeHorizontalPageHint,
+    BookSourcePageMode.horizontalSlide =>
+      context.l10n.readerModeHorizontalSlideHint,
+    BookSourcePageMode.pageCurl => context.l10n.readerModePageCurlHint,
+  };
 
   String _topBarStyleTitle(ReaderTopBarStyle style) => switch (style) {
-        ReaderTopBarStyle.system => context.l10n.readerTopBarStyleSystem,
-        ReaderTopBarStyle.reader => context.l10n.readerTopBarStyleReader,
-        ReaderTopBarStyle.hidden => context.l10n.readerTopBarStyleHidden,
-      };
+    ReaderTopBarStyle.system => context.l10n.readerTopBarStyleSystem,
+    ReaderTopBarStyle.reader => context.l10n.readerTopBarStyleReader,
+    ReaderTopBarStyle.hidden => context.l10n.readerTopBarStyleHidden,
+  };
 
   String _topBarStyleHint(ReaderTopBarStyle style) => switch (style) {
-        ReaderTopBarStyle.system => context.l10n.readerTopBarStyleSystemHint,
-        ReaderTopBarStyle.reader => context.l10n.readerTopBarStyleReaderHint,
-        ReaderTopBarStyle.hidden => context.l10n.readerTopBarStyleHiddenHint,
-      };
+    ReaderTopBarStyle.system => context.l10n.readerTopBarStyleSystemHint,
+    ReaderTopBarStyle.reader => context.l10n.readerTopBarStyleReaderHint,
+    ReaderTopBarStyle.hidden => context.l10n.readerTopBarStyleHiddenHint,
+  };
 
   Future<void> _showReadingSettings() async {
     _controlsTimer?.cancel();
@@ -1360,42 +1361,31 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         tapPageAnimationEnabled: _tapPageAnimationEnabled,
         tabletTwoPageEnabled: _tabletTwoPageEnabled,
         themeLabelFor: _readerThemeName,
-        onThemeChanged: (themeId) => unawaited(
-          _updateReadingSettings(themeId: themeId),
-        ),
+        onThemeChanged: (themeId) =>
+            unawaited(_updateReadingSettings(themeId: themeId)),
         onCustomThemeTap: _showCustomThemeEditor,
         onPageModeTap: _showPageModeSettings,
         onTopBarStyleTap: _showTopBarStyleSettings,
-        onFontSizeChanged: (value) => unawaited(
-          _updateReadingSettings(fontSize: value),
-        ),
-        onLineHeightChanged: (value) => unawaited(
-          _updateReadingSettings(lineHeight: value),
-        ),
-        onFirstLineIndentChanged: (value) => unawaited(
-          _updateReadingSettings(firstLineIndent: value),
-        ),
-        onParagraphSpacingChanged: (value) => unawaited(
-          _updateReadingSettings(paragraphSpacing: value),
-        ),
-        onHorizontalMarginChanged: (value) => unawaited(
-          _updateReadingSettings(horizontalMargin: value),
-        ),
-        onTopMarginChanged: (value) => unawaited(
-          _updateReadingSettings(topMargin: value),
-        ),
-        onBottomMarginChanged: (value) => unawaited(
-          _updateReadingSettings(bottomMargin: value),
-        ),
-        onPullBookmarkChanged: (value) => unawaited(
-          _updateReadingSettings(pullBookmarkEnabled: value),
-        ),
-        onTapPageAnimationChanged: (value) => unawaited(
-          _updateReadingSettings(tapPageAnimationEnabled: value),
-        ),
-        onTabletTwoPageChanged: (value) => unawaited(
-          _updateReadingSettings(tabletTwoPageEnabled: value),
-        ),
+        onFontSizeChanged: (value) =>
+            unawaited(_updateReadingSettings(fontSize: value)),
+        onLineHeightChanged: (value) =>
+            unawaited(_updateReadingSettings(lineHeight: value)),
+        onFirstLineIndentChanged: (value) =>
+            unawaited(_updateReadingSettings(firstLineIndent: value)),
+        onParagraphSpacingChanged: (value) =>
+            unawaited(_updateReadingSettings(paragraphSpacing: value)),
+        onHorizontalMarginChanged: (value) =>
+            unawaited(_updateReadingSettings(horizontalMargin: value)),
+        onTopMarginChanged: (value) =>
+            unawaited(_updateReadingSettings(topMargin: value)),
+        onBottomMarginChanged: (value) =>
+            unawaited(_updateReadingSettings(bottomMargin: value)),
+        onPullBookmarkChanged: (value) =>
+            unawaited(_updateReadingSettings(pullBookmarkEnabled: value)),
+        onTapPageAnimationChanged: (value) =>
+            unawaited(_updateReadingSettings(tapPageAnimationEnabled: value)),
+        onTabletTwoPageChanged: (value) =>
+            unawaited(_updateReadingSettings(tabletTwoPageEnabled: value)),
       ),
     );
     if (mounted) setState(() => _controlsVisible = false);
@@ -1424,7 +1414,8 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     if (result == null || !mounted) return;
     ReaderThemes.setCustomThemes(result.themes);
     ReaderThemes.setThemeOrder(result.themeOrder);
-    final nextThemeId = result.selectedThemeId ??
+    final nextThemeId =
+        result.selectedThemeId ??
         (ReaderCustomTheme.isCustomThemeId(_readerThemeId) &&
                 ReaderThemes.customThemeById(_readerThemeId) == null
             ? ReaderSettings.defaultThemeId
@@ -1448,8 +1439,8 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
           titleFor: _pageModeTitle,
           hintFor: (mode) => mode == BookSourcePageMode.verticalScroll
               ? (previewScrollByChapter
-                  ? context.l10n.readerModeVerticalScrollHint
-                  : context.l10n.readerModeWholeBookScrollHint)
+                    ? context.l10n.readerModeVerticalScrollHint
+                    : context.l10n.readerModeWholeBookScrollHint)
               : _pageModeHint(mode),
           onSelected: (mode) => Navigator.of(menuContext).pop(mode),
           scrollByChapter: previewScrollByChapter,
@@ -1491,9 +1482,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       key: const ValueKey('reader-system-ui-region'),
-      value: SystemUiHelper.overlayStyleForBackground(
-        _readerTheme.background,
-      ),
+      value: SystemUiHelper.overlayStyleForBackground(_readerTheme.background),
       child: PopScope(
         canPop: _allowPop,
         onPopInvokedWithResult: (didPop, _) {
@@ -1534,31 +1523,38 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
                       visible: _controlsVisible,
                       title: _chapters.isEmpty
                           ? widget.book.title
-                          : _chapters[
-                                  _chapterIndex.clamp(0, _chapters.length - 1)]
-                              .title,
+                          : _chapters[_chapterIndex.clamp(
+                                  0,
+                                  _chapters.length - 1,
+                                )]
+                                .title,
                       statusBottom: _readerSafeArea.pageNumberBottom,
                       showViewportStatus:
                           _pageMode == BookSourcePageMode.verticalScroll,
                       showViewportTitle:
                           _pageMode == BookSourcePageMode.verticalScroll &&
-                              _topBarStyle == ReaderTopBarStyle.reader,
+                          _topBarStyle == ReaderTopBarStyle.reader,
                       viewportTitleTop: _readerSafeArea.readerTopBarTop,
-                      viewportTitleKey:
-                          const ValueKey('book-source-viewport-title'),
+                      viewportTitleKey: const ValueKey(
+                        'book-source-viewport-title',
+                      ),
                       readerStatus: _leafStatusController.value,
-                      viewportStatusHorizontalPadding:
-                          math.max(24, _horizontalMargin),
+                      viewportStatusHorizontalPadding: math.max(
+                        24,
+                        _horizontalMargin,
+                      ),
                       statusBuilder: _buildReaderStatusText,
                       onBack: () => unawaited(_requestExit()),
                       onBookmark: _chapters.isEmpty
                           ? null
                           : () => unawaited(_toggleCurrentBookmark()),
-                      onTableOfContents:
-                          _chapters.isEmpty ? null : _showCatalog,
+                      onTableOfContents: _chapters.isEmpty
+                          ? null
+                          : _showCatalog,
                       onSettings: _showReadingSettings,
-                      backTooltip:
-                          MaterialLocalizations.of(context).backButtonTooltip,
+                      backTooltip: MaterialLocalizations.of(
+                        context,
+                      ).backButtonTooltip,
                       bookmarkTooltip: _currentPageIsBookmarked
                           ? context.l10n.bookmarkRemoved
                           : context.l10n.readerAddBookmark,
@@ -1608,10 +1604,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
               FilledButton(
                 onPressed: _chapters.isEmpty
                     ? _initialize
-                    : () => _loadChapter(
-                          _chapterIndex,
-                          saveCurrent: false,
-                        ),
+                    : () => _loadChapter(_chapterIndex, saveCurrent: false),
                 child: Text(context.l10n.retry),
               ),
             ],
@@ -1630,15 +1623,9 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
           final viewport = constraints.biggest;
           _verticalViewportSize = viewport;
           if (!_scrollByChapter) {
-            return _buildVerticalReadingWindow(
-              _buildVerticalBook(viewport),
-            );
+            return _buildVerticalReadingWindow(_buildVerticalBook(viewport));
           }
-          final layout = _verticalLayoutFor(
-            _chapterIndex,
-            content,
-            viewport,
-          );
+          final layout = _verticalLayoutFor(_chapterIndex, content, viewport);
           return _buildVerticalReadingWindow(
             _buildVerticalPageList(layout, viewport),
           );
@@ -1649,23 +1636,22 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       builder: (context, constraints) {
         final usesTwoPageLayout = _shouldUseTwoPageLayout(constraints.biggest);
         _usesTwoPageLayout = usesTwoPageLayout;
-        final paginationViewport =
-            _paginationViewport(constraints.biggest, usesTwoPageLayout);
+        final paginationViewport = _paginationViewport(
+          constraints.biggest,
+          usesTwoPageLayout,
+        );
         if (_pagedViewportSize != paginationViewport) {
           _pagedViewportSize = paginationViewport;
           _warmedPagedLayoutIndexes.clear();
         }
-        _ensurePagination(
-          paginationViewport,
-          content: content,
-        );
+        _ensurePagination(paginationViewport, content: content);
         _schedulePagedLayoutWarm(_chapterIndex + 1);
         return switch (_pageMode) {
           BookSourcePageMode.instantPage => _buildInstantReader(),
           BookSourcePageMode.horizontalSlide => _buildSlideReader(),
           BookSourcePageMode.pageCurl => _buildCurlReader(
-              usesTwoPageLayout: usesTwoPageLayout,
-            ),
+            usesTwoPageLayout: usesTwoPageLayout,
+          ),
           BookSourcePageMode.verticalScroll => const SizedBox.shrink(),
         };
       },
@@ -1673,29 +1659,28 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   }
 
   TextStyle get _bodyTextStyle => TextStyle(
-        inherit: false,
-        fontFamily: _readerFont.family,
-        fontFamilyFallback: _readerFont.fallbackFamilies.isEmpty
-            ? null
-            : _readerFont.fallbackFamilies,
-        color: _readerTheme.text,
-        fontSize: _fontSize,
-        height: _lineHeight,
-        letterSpacing: 0.2,
-      );
+    inherit: false,
+    fontFamily: _readerFont.family,
+    fontFamilyFallback: _readerFont.fallbackFamilies.isEmpty
+        ? null
+        : _readerFont.fallbackFamilies,
+    color: _readerTheme.text,
+    fontSize: _fontSize,
+    height: _lineHeight,
+    letterSpacing: 0.2,
+  );
 
   NativeTextFlowStyle _bodyTextFlowStyle({
     TextDirection? direction,
     TextScaler? textScaler,
     Locale? locale,
-  }) =>
-      NativeTextFlowStyle(
-        textDirection: direction ?? Directionality.of(context),
-        textScaler: textScaler ?? MediaQuery.textScalerOf(context),
-        locale: locale ?? Localizations.maybeLocaleOf(context),
-        strutStyle: readerStrutStyle(_bodyTextStyle),
-        textHeightBehavior: readerTextHeightBehavior,
-      );
+  }) => NativeTextFlowStyle(
+    textDirection: direction ?? Directionality.of(context),
+    textScaler: textScaler ?? MediaQuery.textScalerOf(context),
+    locale: locale ?? Localizations.maybeLocaleOf(context),
+    strutStyle: readerStrutStyle(_bodyTextStyle),
+    textHeightBehavior: readerTextHeightBehavior,
+  );
 
   ReaderViewportChromeMetrics get _verticalChrome =>
       ReaderViewportChromeMetrics(safeArea: _readerSafeArea);
@@ -1728,10 +1713,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     Size viewport,
   ) {
     final chrome = _verticalChrome;
-    final width = readerTextContentWidth(
-      viewport.width,
-      _horizontalMargin,
-    );
+    final width = readerTextContentWidth(viewport.width, _horizontalMargin);
     final height = _verticalPageExtentFor(viewport);
     final textScaler = MediaQuery.textScalerOf(context);
     final locale = Localizations.maybeLocaleOf(context);
@@ -1805,7 +1787,8 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       if (_verticalPageIndex > 0) {
         unawaited(
           _verticalChapterOffsetController.animateScroll(
-            offset: _verticalPageIndex *
+            offset:
+                _verticalPageIndex *
                 _verticalPageExtentFor(_verticalViewportSize),
             duration: const Duration(milliseconds: 1),
           ),
@@ -1848,8 +1831,9 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       return;
     }
     final primary = pickPrimaryReaderItem(
-      _verticalChapterPositionsListener.itemPositions.value
-          .map(_readerPosition),
+      _verticalChapterPositionsListener.itemPositions.value.map(
+        _readerPosition,
+      ),
     );
     if (primary == null) return;
     final nextChapter = primary.index.clamp(0, _chapters.length - 1);
@@ -1864,7 +1848,8 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       _verticalViewportSize,
     );
     final nextPage = readerPageIndexWithinItem(primary, layout.pages.length);
-    final movedForward = nextChapter > _chapterIndex ||
+    final movedForward =
+        nextChapter > _chapterIndex ||
         (nextChapter == _chapterIndex && nextPage > _verticalPageIndex);
     final chapterChanged = nextChapter != _chapterIndex;
     _verticalPageCount = layout.pages.length;
@@ -1896,9 +1881,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       ),
       height: _verticalPageExtentFor(viewport),
       child: Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: _horizontalMargin,
-        ),
+        padding: EdgeInsets.symmetric(horizontal: _horizontalMargin),
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(
@@ -1918,15 +1901,13 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     );
   }
 
-  Widget _buildVerticalChapter(
-    int chapterIndex,
-    Size viewport,
-  ) {
+  Widget _buildVerticalChapter(int chapterIndex, Size viewport) {
     final cached = _prefetchedContent[chapterIndex];
     Widget buildContent(BookSourceChapterContent content) {
       final layout = _verticalLayoutFor(chapterIndex, content, viewport);
-      final chapterTitle =
-          content.title.isEmpty ? _chapters[chapterIndex].title : content.title;
+      final chapterTitle = content.title.isEmpty
+          ? _chapters[chapterIndex].title
+          : content.title;
       return Column(
         children: [
           for (final page in layout.pages)
@@ -1969,7 +1950,8 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     _BookSourceVerticalLayout layout,
     Size viewport,
   ) {
-    final layoutStateChanged = _verticalPageCount != layout.pages.length ||
+    final layoutStateChanged =
+        _verticalPageCount != layout.pages.length ||
         _verticalPageIndex >= layout.pages.length;
     _verticalPageCount = layout.pages.length;
     _verticalPageIndex = _verticalPageIndex.clamp(0, layout.pages.length - 1);
@@ -1990,8 +1972,10 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         ),
         itemScrollController: _verticalPageScrollController,
         itemPositionsListener: _verticalPagePositionsListener,
-        initialScrollIndex:
-            _verticalPageIndex.clamp(0, layout.pages.length - 1),
+        initialScrollIndex: _verticalPageIndex.clamp(
+          0,
+          layout.pages.length - 1,
+        ),
         minCacheExtent: _verticalPageExtentFor(viewport),
         physics: const BouncingScrollPhysics(
           parent: AlwaysScrollableScrollPhysics(),
@@ -2010,17 +1994,15 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
 
   Widget _buildVerticalBook(Size viewport) {
     final content = _prefetchedContent[_chapterIndex] ?? _content!;
-    final currentLayout = _verticalLayoutFor(
-      _chapterIndex,
-      content,
-      viewport,
-    );
+    final currentLayout = _verticalLayoutFor(_chapterIndex, content, viewport);
     final layoutStateChanged =
         _verticalPageCount != currentLayout.pages.length ||
-            _verticalPageIndex >= currentLayout.pages.length;
+        _verticalPageIndex >= currentLayout.pages.length;
     _verticalPageCount = currentLayout.pages.length;
-    _verticalPageIndex =
-        _verticalPageIndex.clamp(0, currentLayout.pages.length - 1);
+    _verticalPageIndex = _verticalPageIndex.clamp(
+      0,
+      currentLayout.pages.length - 1,
+    );
     _pageIndex = _verticalPageIndex;
     if (layoutStateChanged) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -2060,10 +2042,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   ) {
     final top = _readerSafeArea.contentTop;
     final bottom = _readerSafeArea.contentBottom;
-    final width = readerTextContentWidth(
-      viewport.width,
-      _horizontalMargin,
-    );
+    final width = readerTextContentWidth(viewport.width, _horizontalMargin);
     final height = readerTextContentHeight(viewport.height, top, bottom);
     final textScaler = MediaQuery.textScalerOf(context);
     final locale = Localizations.maybeLocaleOf(context);
@@ -2100,10 +2079,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       paragraphSpacing: _paragraphSpacing,
       includeChapterTitlePage: true,
     );
-    final layout = _BookSourcePagedLayout(
-      fingerprint: key,
-      pages: pages,
-    );
+    final layout = _BookSourcePagedLayout(fingerprint: key, pages: pages);
     _pagedLayouts[chapterIndex] = layout;
     return layout;
   }
@@ -2118,7 +2094,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     final currentTextOffset = _paginatedPages.isEmpty
         ? null
         : _paginatedPages[_pageIndex.clamp(0, _paginatedPages.length - 1)]
-            .startOffset;
+              .startOffset;
     final pages = layout.pages;
     _paginationKey = key;
     _paginatedPages = pages;
@@ -2126,10 +2102,10 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     final restoredTarget = _restoreTextOffset != null
         ? bookSourcePageIndexForOffset(pages, _restoreTextOffset!)
         : _restorePagedPosition
-            ? ((_pageCount - 1) * _restorePageProgress).round()
-            : currentTextOffset != null
-                ? bookSourcePageIndexForOffset(pages, currentTextOffset)
-                : _pageIndex.clamp(0, _pageCount - 1);
+        ? ((_pageCount - 1) * _restorePageProgress).round()
+        : currentTextOffset != null
+        ? bookSourcePageIndexForOffset(pages, currentTextOffset)
+        : _pageIndex.clamp(0, _pageCount - 1);
     final target = _usesTwoPageLayout
         ? _spreadStartForPage(restoredTarget)
         : restoredTarget;
@@ -2142,11 +2118,9 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       _scrollProgress.value = pageProgress;
       if (_pageMode == BookSourcePageMode.verticalScroll) {
         _verticalPageCount = _pageCount;
-        _verticalPageIndex =
-            (pageProgress * (_verticalPageCount - 1)).round().clamp(
-                  0,
-                  _verticalPageCount - 1,
-                );
+        _verticalPageIndex = (pageProgress * (_verticalPageCount - 1))
+            .round()
+            .clamp(0, _verticalPageCount - 1);
       }
       setState(() {});
       if (_pageMode != BookSourcePageMode.horizontalSlide) return;
@@ -2178,7 +2152,8 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         ? _chapters[resolvedIndex].title
         : resolvedContent.title;
     final metadata = ReaderPaperPageMetadata(
-      pageIdentity: 'source:${widget.source.id}:${widget.book.id}:'
+      pageIdentity:
+          'source:${widget.source.id}:${widget.book.id}:'
           '${_chapters[resolvedIndex].id}:$pageIndex:${page.startOffset}',
       layoutFingerprint: layoutFingerprint,
       themeId: _readerTheme.cacheKey,
@@ -2236,7 +2211,8 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   }) {
     final resolvedIndex = chapterIndex ?? _chapterIndex;
     final metadata = ReaderPaperPageMetadata(
-      pageIdentity: 'source:${widget.source.id}:${widget.book.id}:'
+      pageIdentity:
+          'source:${widget.source.id}:${widget.book.id}:'
           '${_chapters[resolvedIndex].id}:$pageIndex:${page.startOffset}',
       layoutFingerprint: layoutFingerprint,
       themeId: _readerTheme.cacheKey,
@@ -2270,7 +2246,8 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     int pageCount,
     String layoutFingerprint,
     BookSourceChapterContent content,
-  })? _adjacentPageData(
+  })?
+  _adjacentPageData(
     int chapterIndex,
     Size viewport, {
     required int Function(int pageCount) selectPageIndex,
@@ -2290,10 +2267,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     );
   }
 
-  Widget? _buildAdjacentPreview(
-    int chapterIndex, {
-    required bool lastPage,
-  }) {
+  Widget? _buildAdjacentPreview(int chapterIndex, {required bool lastPage}) {
     if (_prefetchedContent[chapterIndex] == null) return null;
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -2324,13 +2298,14 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     final targetChapterIndex = _chapterIndex + (forward ? 1 : -1);
     final chapterTitle =
         targetChapterIndex >= 0 && targetChapterIndex < _chapters.length
-            ? _chapters[targetChapterIndex].title
-            : '';
+        ? _chapters[targetChapterIndex].title
+        : '';
     return ReaderPaperPageLeaf(
       palette: _readerTheme,
       safeArea: _readerSafeArea,
       metadata: ReaderPaperPageMetadata(
-        pageIdentity: 'source:${widget.source.id}:${widget.book.id}:'
+        pageIdentity:
+            'source:${widget.source.id}:${widget.book.id}:'
             'boundary:${forward ? 'forward' : 'backward'}'
             '${slotIdentity.isEmpty ? '' : ':$slotIdentity'}',
         layoutFingerprint: _paginationKey ?? 'unpaginated',
@@ -2360,24 +2335,24 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     ReaderTopInformationLayout topInformationLayout =
         ReaderTopInformationLayout.full,
     String slotIdentity = '',
-  }) =>
-      ReaderPageSnapshot(
-        key: ReaderPageSnapshotKey(
-          pageIdentity: 'source:${widget.source.id}:${widget.book.id}:'
-              'boundary:${forward ? 'forward' : 'backward'}'
-              '${slotIdentity.isEmpty ? '' : ':$slotIdentity'}',
-          layoutFingerprint: _paginationKey ?? 'unpaginated',
-          themeId: _readerTheme.cacheKey,
-        ),
-        contentRevision: _topBarStyle == ReaderTopBarStyle.reader
-            ? _leafStatusController.value.revision
-            : 0,
-        child: _buildBoundaryLeaf(
-          forward: forward,
-          topInformationLayout: topInformationLayout,
-          slotIdentity: slotIdentity,
-        ),
-      );
+  }) => ReaderPageSnapshot(
+    key: ReaderPageSnapshotKey(
+      pageIdentity:
+          'source:${widget.source.id}:${widget.book.id}:'
+          'boundary:${forward ? 'forward' : 'backward'}'
+          '${slotIdentity.isEmpty ? '' : ':$slotIdentity'}',
+      layoutFingerprint: _paginationKey ?? 'unpaginated',
+      themeId: _readerTheme.cacheKey,
+    ),
+    contentRevision: _topBarStyle == ReaderTopBarStyle.reader
+        ? _leafStatusController.value.revision
+        : 0,
+    child: _buildBoundaryLeaf(
+      forward: forward,
+      topInformationLayout: topInformationLayout,
+      slotIdentity: slotIdentity,
+    ),
+  );
 
   void _handlePageTap(TapUpDetails details, double width) {
     final x = details.localPosition.dx / width;
@@ -2418,8 +2393,8 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     if (_pageMode == BookSourcePageMode.pageCurl) {
       final controller = _usesTwoPageLayout
           ? (forward
-              ? _spreadForwardPageCurlController
-              : _spreadBackwardPageCurlController)
+                ? _spreadForwardPageCurlController
+                : _spreadBackwardPageCurlController)
           : _pageCurlController;
       if (forward) {
         await controller.turnForward();
@@ -2436,21 +2411,21 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   }
 
   Widget _buildInstantReader() => LayoutBuilder(
-        builder: (context, constraints) => Semantics(
-          label: _pageModeHint(BookSourcePageMode.instantPage),
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTapUp: (details) => _handlePageTap(details, constraints.maxWidth),
-            onHorizontalDragEnd: _handlePagedSwipe,
-            child: _buildPageLeaf(
-              _paginatedPages[_pageIndex],
-              pageIndex: _pageIndex,
-              pageCount: _pageCount,
-              layoutFingerprint: _paginationKey!,
-            ),
-          ),
+    builder: (context, constraints) => Semantics(
+      label: _pageModeHint(BookSourcePageMode.instantPage),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTapUp: (details) => _handlePageTap(details, constraints.maxWidth),
+        onHorizontalDragEnd: _handlePagedSwipe,
+        child: _buildPageLeaf(
+          _paginatedPages[_pageIndex],
+          pageIndex: _pageIndex,
+          pageCount: _pageCount,
+          layoutFingerprint: _paginationKey!,
         ),
-      );
+      ),
+    ),
+  );
 
   Widget _buildSlideReader() {
     _pageViewLeading = _chapterIndex > 0 ? 1 : 0;
@@ -2490,25 +2465,17 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         itemBuilder: (context, viewIndex) {
           final page = viewIndex - _pageViewLeading;
           if (page < 0) {
-            return _buildAdjacentPreview(
-                  _chapterIndex - 1,
-                  lastPage: true,
-                ) ??
+            return _buildAdjacentPreview(_chapterIndex - 1, lastPage: true) ??
                 _buildBoundaryLeaf(forward: false);
           }
           if (page >= _pageCount) {
-            return _buildAdjacentPreview(
-                  _chapterIndex + 1,
-                  lastPage: false,
-                ) ??
+            return _buildAdjacentPreview(_chapterIndex + 1, lastPage: false) ??
                 _buildBoundaryLeaf(forward: true);
           }
           return GestureDetector(
             behavior: HitTestBehavior.translucent,
-            onTapUp: (details) => _handlePageTap(
-              details,
-              MediaQuery.sizeOf(context).width,
-            ),
+            onTapUp: (details) =>
+                _handlePageTap(details, MediaQuery.sizeOf(context).width),
             child: _buildPageLeaf(
               _paginatedPages[page],
               pageIndex: page,
@@ -2533,21 +2500,21 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         final forwardData = _pageIndex + 1 < _pageCount
             ? null
             : _chapterIndex + 1 < _chapters.length
-                ? _adjacentPageData(
-                    _chapterIndex + 1,
-                    constraints.biggest,
-                    selectPageIndex: (_) => 0,
-                  )
-                : null;
+            ? _adjacentPageData(
+                _chapterIndex + 1,
+                constraints.biggest,
+                selectPageIndex: (_) => 0,
+              )
+            : null;
         final backwardData = _pageIndex > 0
             ? null
             : _chapterIndex > 0
-                ? _adjacentPageData(
-                    _chapterIndex - 1,
-                    constraints.biggest,
-                    selectPageIndex: (pageCount) => pageCount - 1,
-                  )
-                : null;
+            ? _adjacentPageData(
+                _chapterIndex - 1,
+                constraints.biggest,
+                selectPageIndex: (pageCount) => pageCount - 1,
+              )
+            : null;
         final currentSnapshot = _buildPageSnapshot(
           _paginatedPages[_pageIndex],
           pageIndex: _pageIndex,
@@ -2557,41 +2524,41 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         final forwardSnapshot = !hasForward
             ? null
             : _pageIndex + 1 < _pageCount
-                ? _buildPageSnapshot(
-                    _paginatedPages[_pageIndex + 1],
-                    pageIndex: _pageIndex + 1,
-                    pageCount: _pageCount,
-                    layoutFingerprint: _paginationKey!,
-                  )
-                : forwardData == null
-                    ? _buildBoundarySnapshot(forward: true)
-                    : _buildPageSnapshot(
-                        forwardData.page,
-                        pageIndex: forwardData.pageIndex,
-                        pageCount: forwardData.pageCount,
-                        layoutFingerprint: forwardData.layoutFingerprint,
-                        chapterIndex: _chapterIndex + 1,
-                        chapterContent: forwardData.content,
-                      );
+            ? _buildPageSnapshot(
+                _paginatedPages[_pageIndex + 1],
+                pageIndex: _pageIndex + 1,
+                pageCount: _pageCount,
+                layoutFingerprint: _paginationKey!,
+              )
+            : forwardData == null
+            ? _buildBoundarySnapshot(forward: true)
+            : _buildPageSnapshot(
+                forwardData.page,
+                pageIndex: forwardData.pageIndex,
+                pageCount: forwardData.pageCount,
+                layoutFingerprint: forwardData.layoutFingerprint,
+                chapterIndex: _chapterIndex + 1,
+                chapterContent: forwardData.content,
+              );
         final backwardSnapshot = !hasBackward
             ? null
             : _pageIndex > 0
-                ? _buildPageSnapshot(
-                    _paginatedPages[_pageIndex - 1],
-                    pageIndex: _pageIndex - 1,
-                    pageCount: _pageCount,
-                    layoutFingerprint: _paginationKey!,
-                  )
-                : backwardData == null
-                    ? _buildBoundarySnapshot(forward: false)
-                    : _buildPageSnapshot(
-                        backwardData.page,
-                        pageIndex: backwardData.pageIndex,
-                        pageCount: backwardData.pageCount,
-                        layoutFingerprint: backwardData.layoutFingerprint,
-                        chapterIndex: _chapterIndex - 1,
-                        chapterContent: backwardData.content,
-                      );
+            ? _buildPageSnapshot(
+                _paginatedPages[_pageIndex - 1],
+                pageIndex: _pageIndex - 1,
+                pageCount: _pageCount,
+                layoutFingerprint: _paginationKey!,
+              )
+            : backwardData == null
+            ? _buildBoundarySnapshot(forward: false)
+            : _buildPageSnapshot(
+                backwardData.page,
+                pageIndex: backwardData.pageIndex,
+                pageCount: backwardData.pageCount,
+                layoutFingerprint: backwardData.layoutFingerprint,
+                chapterIndex: _chapterIndex - 1,
+                chapterContent: backwardData.content,
+              );
         return GestureDetector(
           behavior: HitTestBehavior.translucent,
           onTapUp: (details) => _handlePageTap(details, constraints.maxWidth),
@@ -2616,19 +2583,19 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         final spreadStart = _spreadStartForPage(_pageIndex);
         final nextSpreadStart = spreadStart + 2;
         final hasPrevious = spreadStart >= 2 || _chapterIndex > 0;
-        final hasNext = nextSpreadStart < _pageCount ||
+        final hasNext =
+            nextSpreadStart < _pageCount ||
             _chapterIndex + 1 < _chapters.length;
-        final adjacentViewport = _paginationViewport(
-          constraints.biggest,
-          true,
-        );
+        final adjacentViewport = _paginationViewport(constraints.biggest, true);
         final previousChapterIndex = _chapterIndex - 1;
         final nextChapterIndex = _chapterIndex + 1;
         final usesPreviousChapter =
             spreadStart == 0 && previousChapterIndex >= 0;
-        final usesNextChapter = nextSpreadStart >= _pageCount &&
+        final usesNextChapter =
+            nextSpreadStart >= _pageCount &&
             nextChapterIndex < _chapters.length;
-        final previousChapterCached = usesPreviousChapter &&
+        final previousChapterCached =
+            usesPreviousChapter &&
             _prefetchedContent[previousChapterIndex] != null;
         final nextChapterCached =
             usesNextChapter && _prefetchedContent[nextChapterIndex] != null;
@@ -2687,156 +2654,137 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         final previousLeft = !hasPrevious
             ? null
             : spreadStart >= 2
-                ? _buildPageSnapshot(
-                    _paginatedPages[spreadStart - 2],
-                    pageIndex: spreadStart - 2,
-                    pageCount: _pageCount,
-                    layoutFingerprint: _paginationKey!,
-                    pageNumberPlacement: ReaderPageNumberPlacement.bottomLeft,
-                    topInformationLayout: ReaderTopInformationLayout.spreadLeft,
-                  )
-                : !previousChapterCached
-                    ? _buildBoundarySnapshot(
-                        forward: false,
-                        topInformationLayout:
-                            ReaderTopInformationLayout.spreadLeft,
-                        slotIdentity: 'spread-left',
-                      )
-                    : previousChapterLeftData == null
-                        ? _buildBlankSourceSnapshot(
-                            'previous-chapter-$previousChapterIndex-left',
-                            topInformationLayout:
-                                ReaderTopInformationLayout.spreadLeft,
-                            chapterTitle: _chapters[previousChapterIndex].title,
-                          )
-                        : _buildPageSnapshot(
-                            previousChapterLeftData.page,
-                            pageIndex: previousChapterLeftData.pageIndex,
-                            pageCount: previousChapterLeftData.pageCount,
-                            layoutFingerprint:
-                                previousChapterLeftData.layoutFingerprint,
-                            chapterIndex: previousChapterIndex,
-                            chapterContent: previousChapterLeftData.content,
-                            pageNumberPlacement:
-                                ReaderPageNumberPlacement.bottomLeft,
-                            topInformationLayout:
-                                ReaderTopInformationLayout.spreadLeft,
-                          );
+            ? _buildPageSnapshot(
+                _paginatedPages[spreadStart - 2],
+                pageIndex: spreadStart - 2,
+                pageCount: _pageCount,
+                layoutFingerprint: _paginationKey!,
+                pageNumberPlacement: ReaderPageNumberPlacement.bottomLeft,
+                topInformationLayout: ReaderTopInformationLayout.spreadLeft,
+              )
+            : !previousChapterCached
+            ? _buildBoundarySnapshot(
+                forward: false,
+                topInformationLayout: ReaderTopInformationLayout.spreadLeft,
+                slotIdentity: 'spread-left',
+              )
+            : previousChapterLeftData == null
+            ? _buildBlankSourceSnapshot(
+                'previous-chapter-$previousChapterIndex-left',
+                topInformationLayout: ReaderTopInformationLayout.spreadLeft,
+                chapterTitle: _chapters[previousChapterIndex].title,
+              )
+            : _buildPageSnapshot(
+                previousChapterLeftData.page,
+                pageIndex: previousChapterLeftData.pageIndex,
+                pageCount: previousChapterLeftData.pageCount,
+                layoutFingerprint: previousChapterLeftData.layoutFingerprint,
+                chapterIndex: previousChapterIndex,
+                chapterContent: previousChapterLeftData.content,
+                pageNumberPlacement: ReaderPageNumberPlacement.bottomLeft,
+                topInformationLayout: ReaderTopInformationLayout.spreadLeft,
+              );
         final previousRight = !hasPrevious
             ? null
             : spreadStart >= 2
-                ? _buildPageSnapshot(
-                    _paginatedPages[spreadStart - 1],
-                    pageIndex: spreadStart - 1,
-                    pageCount: _pageCount,
-                    layoutFingerprint: _paginationKey!,
-                    topInformationLayout:
-                        ReaderTopInformationLayout.spreadRight,
-                  )
-                : !previousChapterCached
-                    ? _buildBoundarySnapshot(
-                        forward: false,
-                        topInformationLayout:
-                            ReaderTopInformationLayout.spreadRight,
-                        slotIdentity: 'spread-right',
-                      )
-                    : previousChapterRightData == null
-                        ? _buildBlankSourceSnapshot(
-                            'previous-chapter-$previousChapterIndex-right',
-                            topInformationLayout:
-                                ReaderTopInformationLayout.spreadRight,
-                            chapterTitle: _chapters[previousChapterIndex].title,
-                          )
-                        : _buildPageSnapshot(
-                            previousChapterRightData.page,
-                            pageIndex: previousChapterRightData.pageIndex,
-                            pageCount: previousChapterRightData.pageCount,
-                            layoutFingerprint:
-                                previousChapterRightData.layoutFingerprint,
-                            chapterIndex: previousChapterIndex,
-                            chapterContent: previousChapterRightData.content,
-                            topInformationLayout:
-                                ReaderTopInformationLayout.spreadRight,
-                          );
+            ? _buildPageSnapshot(
+                _paginatedPages[spreadStart - 1],
+                pageIndex: spreadStart - 1,
+                pageCount: _pageCount,
+                layoutFingerprint: _paginationKey!,
+                topInformationLayout: ReaderTopInformationLayout.spreadRight,
+              )
+            : !previousChapterCached
+            ? _buildBoundarySnapshot(
+                forward: false,
+                topInformationLayout: ReaderTopInformationLayout.spreadRight,
+                slotIdentity: 'spread-right',
+              )
+            : previousChapterRightData == null
+            ? _buildBlankSourceSnapshot(
+                'previous-chapter-$previousChapterIndex-right',
+                topInformationLayout: ReaderTopInformationLayout.spreadRight,
+                chapterTitle: _chapters[previousChapterIndex].title,
+              )
+            : _buildPageSnapshot(
+                previousChapterRightData.page,
+                pageIndex: previousChapterRightData.pageIndex,
+                pageCount: previousChapterRightData.pageCount,
+                layoutFingerprint: previousChapterRightData.layoutFingerprint,
+                chapterIndex: previousChapterIndex,
+                chapterContent: previousChapterRightData.content,
+                topInformationLayout: ReaderTopInformationLayout.spreadRight,
+              );
         final nextLeft = !hasNext
             ? null
             : nextSpreadStart < _pageCount
-                ? _buildPageSnapshot(
-                    _paginatedPages[nextSpreadStart],
-                    pageIndex: nextSpreadStart,
-                    pageCount: _pageCount,
-                    layoutFingerprint: _paginationKey!,
-                    pageNumberPlacement: ReaderPageNumberPlacement.bottomLeft,
-                    topInformationLayout: ReaderTopInformationLayout.spreadLeft,
-                  )
-                : !nextChapterCached
-                    ? _buildBoundarySnapshot(
-                        forward: true,
-                        topInformationLayout:
-                            ReaderTopInformationLayout.spreadLeft,
-                        slotIdentity: 'spread-left',
-                      )
-                    : nextChapterLeftData == null
-                        ? _buildBlankSourceSnapshot(
-                            'next-chapter-$nextChapterIndex-left',
-                            topInformationLayout:
-                                ReaderTopInformationLayout.spreadLeft,
-                            chapterTitle: _chapters[nextChapterIndex].title,
-                          )
-                        : _buildPageSnapshot(
-                            nextChapterLeftData.page,
-                            pageIndex: nextChapterLeftData.pageIndex,
-                            pageCount: nextChapterLeftData.pageCount,
-                            layoutFingerprint:
-                                nextChapterLeftData.layoutFingerprint,
-                            chapterIndex: nextChapterIndex,
-                            chapterContent: nextChapterLeftData.content,
-                            pageNumberPlacement:
-                                ReaderPageNumberPlacement.bottomLeft,
-                            topInformationLayout:
-                                ReaderTopInformationLayout.spreadLeft,
-                          );
+            ? _buildPageSnapshot(
+                _paginatedPages[nextSpreadStart],
+                pageIndex: nextSpreadStart,
+                pageCount: _pageCount,
+                layoutFingerprint: _paginationKey!,
+                pageNumberPlacement: ReaderPageNumberPlacement.bottomLeft,
+                topInformationLayout: ReaderTopInformationLayout.spreadLeft,
+              )
+            : !nextChapterCached
+            ? _buildBoundarySnapshot(
+                forward: true,
+                topInformationLayout: ReaderTopInformationLayout.spreadLeft,
+                slotIdentity: 'spread-left',
+              )
+            : nextChapterLeftData == null
+            ? _buildBlankSourceSnapshot(
+                'next-chapter-$nextChapterIndex-left',
+                topInformationLayout: ReaderTopInformationLayout.spreadLeft,
+                chapterTitle: _chapters[nextChapterIndex].title,
+              )
+            : _buildPageSnapshot(
+                nextChapterLeftData.page,
+                pageIndex: nextChapterLeftData.pageIndex,
+                pageCount: nextChapterLeftData.pageCount,
+                layoutFingerprint: nextChapterLeftData.layoutFingerprint,
+                chapterIndex: nextChapterIndex,
+                chapterContent: nextChapterLeftData.content,
+                pageNumberPlacement: ReaderPageNumberPlacement.bottomLeft,
+                topInformationLayout: ReaderTopInformationLayout.spreadLeft,
+              );
         final nextRight = !hasNext
             ? null
             : nextSpreadStart < _pageCount
-                ? nextSpreadStart + 1 < _pageCount
-                    ? _buildPageSnapshot(
-                        _paginatedPages[nextSpreadStart + 1],
-                        pageIndex: nextSpreadStart + 1,
-                        pageCount: _pageCount,
-                        layoutFingerprint: _paginationKey!,
-                        topInformationLayout:
-                            ReaderTopInformationLayout.spreadRight,
-                      )
-                    : _buildBlankSourceSnapshot(
-                        'next-$nextSpreadStart-right',
-                        topInformationLayout:
-                            ReaderTopInformationLayout.spreadRight,
-                      )
-                : !nextChapterCached
-                    ? _buildBoundarySnapshot(
-                        forward: true,
-                        topInformationLayout:
-                            ReaderTopInformationLayout.spreadRight,
-                        slotIdentity: 'spread-right',
-                      )
-                    : nextChapterRightData == null
-                        ? _buildBlankSourceSnapshot(
-                            'next-chapter-$nextChapterIndex-right',
-                            topInformationLayout:
-                                ReaderTopInformationLayout.spreadRight,
-                          )
-                        : _buildPageSnapshot(
-                            nextChapterRightData.page,
-                            pageIndex: nextChapterRightData.pageIndex,
-                            pageCount: nextChapterRightData.pageCount,
-                            layoutFingerprint:
-                                nextChapterRightData.layoutFingerprint,
-                            chapterIndex: nextChapterIndex,
-                            chapterContent: nextChapterRightData.content,
-                            topInformationLayout:
-                                ReaderTopInformationLayout.spreadRight,
-                          );
+            ? nextSpreadStart + 1 < _pageCount
+                  ? _buildPageSnapshot(
+                      _paginatedPages[nextSpreadStart + 1],
+                      pageIndex: nextSpreadStart + 1,
+                      pageCount: _pageCount,
+                      layoutFingerprint: _paginationKey!,
+                      topInformationLayout:
+                          ReaderTopInformationLayout.spreadRight,
+                    )
+                  : _buildBlankSourceSnapshot(
+                      'next-$nextSpreadStart-right',
+                      topInformationLayout:
+                          ReaderTopInformationLayout.spreadRight,
+                    )
+            : !nextChapterCached
+            ? _buildBoundarySnapshot(
+                forward: true,
+                topInformationLayout: ReaderTopInformationLayout.spreadRight,
+                slotIdentity: 'spread-right',
+              )
+            : nextChapterRightData == null
+            ? _buildBlankSourceSnapshot(
+                'next-chapter-$nextChapterIndex-right',
+                topInformationLayout: ReaderTopInformationLayout.spreadRight,
+              )
+            : _buildPageSnapshot(
+                nextChapterRightData.page,
+                pageIndex: nextChapterRightData.pageIndex,
+                pageCount: nextChapterRightData.pageCount,
+                layoutFingerprint: nextChapterRightData.layoutFingerprint,
+                chapterIndex: nextChapterIndex,
+                chapterContent: nextChapterRightData.content,
+                topInformationLayout: ReaderTopInformationLayout.spreadRight,
+              );
 
         final left = ReaderShaderPageCurl(
           key: ValueKey(
@@ -2871,10 +2819,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
 
         return GestureDetector(
           behavior: HitTestBehavior.translucent,
-          onTapUp: (details) => _handlePageTap(
-            details,
-            constraints.maxWidth,
-          ),
+          onTapUp: (details) => _handlePageTap(details, constraints.maxWidth),
           child: _buildSourceSpread(left: left, right: right),
         );
       },
@@ -2886,42 +2831,40 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     ReaderTopInformationLayout topInformationLayout =
         ReaderTopInformationLayout.full,
     String chapterTitle = '',
-  }) =>
-      ReaderPageSnapshot(
-        key: ReaderPageSnapshotKey(
-          pageIdentity: 'source:${widget.source.id}:${widget.book.id}:'
-              'blank:$pageIdentity',
-          layoutFingerprint: _paginationKey ?? 'unpaginated',
-          themeId: _readerTheme.cacheKey,
-        ),
-        contentRevision: _topBarStyle == ReaderTopBarStyle.reader
-            ? _leafStatusController.value.revision
-            : 0,
-        child: ReaderPaperPageLeaf(
-          palette: _readerTheme,
-          safeArea: _readerSafeArea,
-          metadata: ReaderPaperPageMetadata(
-            pageIdentity: 'source:${widget.source.id}:${widget.book.id}:'
-                'blank:$pageIdentity',
-            layoutFingerprint: _paginationKey ?? 'unpaginated',
-            themeId: _readerTheme.cacheKey,
-            chapterTitle: chapterTitle,
-            pageNumber: 0,
-            pageCount: 0,
-          ),
-          horizontalPadding: math.max(14, _horizontalMargin),
-          showTopInformation: _topBarStyle == ReaderTopBarStyle.reader,
-          topInformationLayout: topInformationLayout,
-          showPageNumber: false,
-          status: _leafStatusController.value,
-          child: const SizedBox.expand(),
-        ),
-      );
+  }) => ReaderPageSnapshot(
+    key: ReaderPageSnapshotKey(
+      pageIdentity:
+          'source:${widget.source.id}:${widget.book.id}:'
+          'blank:$pageIdentity',
+      layoutFingerprint: _paginationKey ?? 'unpaginated',
+      themeId: _readerTheme.cacheKey,
+    ),
+    contentRevision: _topBarStyle == ReaderTopBarStyle.reader
+        ? _leafStatusController.value.revision
+        : 0,
+    child: ReaderPaperPageLeaf(
+      palette: _readerTheme,
+      safeArea: _readerSafeArea,
+      metadata: ReaderPaperPageMetadata(
+        pageIdentity:
+            'source:${widget.source.id}:${widget.book.id}:'
+            'blank:$pageIdentity',
+        layoutFingerprint: _paginationKey ?? 'unpaginated',
+        themeId: _readerTheme.cacheKey,
+        chapterTitle: chapterTitle,
+        pageNumber: 0,
+        pageCount: 0,
+      ),
+      horizontalPadding: math.max(14, _horizontalMargin),
+      showTopInformation: _topBarStyle == ReaderTopBarStyle.reader,
+      topInformationLayout: topInformationLayout,
+      showPageNumber: false,
+      status: _leafStatusController.value,
+      child: const SizedBox.expand(),
+    ),
+  );
 
-  Widget _buildSourceSpread({
-    required Widget left,
-    required Widget right,
-  }) {
+  Widget _buildSourceSpread({required Widget left, required Widget right}) {
     return ReaderPageCurlSpread(
       coordinator: _spreadPageCurlCoordinator,
       left: left,

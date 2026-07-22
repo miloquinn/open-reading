@@ -23,42 +23,44 @@ void main() {
       expect(metrics.floatingActionBottomMargin, 115);
     });
 
-    test('keeps the floating navigation compact with deliberate side margins',
-        () {
-      expect(
-        homeMobileFloatingNavWidthFor(screenWidth: 320, itemCount: 4),
-        284,
-      );
-      expect(
-        homeMobileFloatingNavWidthFor(screenWidth: 360, itemCount: 4),
-        324,
-      );
-      expect(
-        homeMobileFloatingNavWidthFor(screenWidth: 393, itemCount: 4),
-        357,
-      );
-      expect(
-        homeMobileFloatingNavWidthFor(screenWidth: 405, itemCount: 4),
-        368,
-      );
-      expect(
-        homeMobileFloatingNavWidthFor(screenWidth: 600, itemCount: 4),
-        368,
-      );
+    test(
+      'keeps the floating navigation compact with deliberate side margins',
+      () {
+        expect(
+          homeMobileFloatingNavWidthFor(screenWidth: 320, itemCount: 4),
+          284,
+        );
+        expect(
+          homeMobileFloatingNavWidthFor(screenWidth: 360, itemCount: 4),
+          324,
+        );
+        expect(
+          homeMobileFloatingNavWidthFor(screenWidth: 393, itemCount: 4),
+          357,
+        );
+        expect(
+          homeMobileFloatingNavWidthFor(screenWidth: 405, itemCount: 4),
+          368,
+        );
+        expect(
+          homeMobileFloatingNavWidthFor(screenWidth: 600, itemCount: 4),
+          368,
+        );
 
-      expect(
-        homeMobileFloatingNavItemWidthFor(screenWidth: 320, itemCount: 4),
-        69,
-      );
-      expect(
-        homeMobileFloatingNavItemWidthFor(screenWidth: 393, itemCount: 4),
-        closeTo(87.25, 0.001),
-      );
-      expect(
-        homeMobileFloatingNavItemWidthFor(screenWidth: 405, itemCount: 4),
-        90,
-      );
-    });
+        expect(
+          homeMobileFloatingNavItemWidthFor(screenWidth: 320, itemCount: 4),
+          69,
+        );
+        expect(
+          homeMobileFloatingNavItemWidthFor(screenWidth: 393, itemCount: 4),
+          closeTo(87.25, 0.001),
+        );
+        expect(
+          homeMobileFloatingNavItemWidthFor(screenWidth: 405, itemCount: 4),
+          90,
+        );
+      },
+    );
 
     test('uses Android system insets without platform-specific branches', () {
       final metrics = HomeMobileChromeMetrics.fromMediaQuery(

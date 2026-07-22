@@ -102,10 +102,8 @@ class _ReaderCustomThemesPageState extends State<ReaderCustomThemesPage> {
     );
     final created = await Navigator.of(context).push<ReaderCustomTheme>(
       MaterialPageRoute(
-        builder: (_) => ReaderCustomThemePage(
-          initialTheme: draft,
-          isNewTheme: true,
-        ),
+        builder: (_) =>
+            ReaderCustomThemePage(initialTheme: draft, isNewTheme: true),
       ),
     );
     if (created == null || !mounted) return;
@@ -179,9 +177,7 @@ class _ReaderCustomThemesPageState extends State<ReaderCustomThemesPage> {
     setState(() {
       final themeId = _themeOrder.removeAt(oldIndex);
       _themeOrder.insert(newIndex, themeId);
-      final customThemesById = {
-        for (final theme in _themes) theme.id: theme,
-      };
+      final customThemesById = {for (final theme in _themes) theme.id: theme};
       _themes
         ..clear()
         ..addAll(
@@ -264,17 +260,19 @@ class _ReaderCustomThemesPageState extends State<ReaderCustomThemesPage> {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.drag_indicator_rounded,
-                          color: colors.onSecondaryContainer),
+                      Icon(
+                        Icons.drag_indicator_rounded,
+                        color: colors.onSecondaryContainer,
+                      ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
                           context.l10n.readerCustomThemeReorderHint,
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: colors.onSecondaryContainer,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: colors.onSecondaryContainer,
+                                fontWeight: FontWeight.w600,
+                              ),
                         ),
                       ),
                     ],
@@ -466,16 +464,22 @@ class _ThemeManagementCard extends StatelessWidget {
                               ),
                             ),
                             if (selected)
-                              Icon(Icons.check_circle_rounded,
-                                  color: palette.accent, size: 21),
+                              Icon(
+                                Icons.check_circle_rounded,
+                                color: palette.accent,
+                                size: 21,
+                              ),
                           ],
                         ),
                         const Spacer(),
                         Row(
                           children: [
                             if (customTheme?.hasBackgroundImage ?? false) ...[
-                              Icon(Icons.image_rounded,
-                                  color: palette.secondaryText, size: 17),
+                              Icon(
+                                Icons.image_rounded,
+                                color: palette.secondaryText,
+                                size: 17,
+                              ),
                               const SizedBox(width: 5),
                             ],
                             for (final color in [

@@ -12,24 +12,26 @@ void main() {
     expect(settings.pageMode, ReaderPageMode.horizontalSlide);
   });
 
-  test('migrates legacy vertical spacing into shared independent margins',
-      () async {
-    SharedPreferences.setMockInitialValues({
-      ReaderSettingsStore.legacyVerticalMarginKey: 38.0,
-    });
+  test(
+    'migrates legacy vertical spacing into shared independent margins',
+    () async {
+      SharedPreferences.setMockInitialValues({
+        ReaderSettingsStore.legacyVerticalMarginKey: 38.0,
+      });
 
-    final settings = await const ReaderSettingsStore().load(
-      fallbackPageMode: ReaderPageMode.verticalScroll,
-    );
+      final settings = await const ReaderSettingsStore().load(
+        fallbackPageMode: ReaderPageMode.verticalScroll,
+      );
 
-    expect(settings.topMargin, 14);
-    expect(settings.bottomMargin, 10);
-    expect(settings.tabletTwoPageEnabled, isTrue);
+      expect(settings.topMargin, 14);
+      expect(settings.bottomMargin, 10);
+      expect(settings.tabletTwoPageEnabled, isTrue);
 
-    final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getDouble(ReaderSettingsStore.topMarginKey), 14);
-    expect(prefs.getDouble(ReaderSettingsStore.bottomMarginKey), 10);
-  });
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getDouble(ReaderSettingsStore.topMarginKey), 14);
+      expect(prefs.getDouble(ReaderSettingsStore.bottomMarginKey), 10);
+    },
+  );
 
   test('persists one settings model for every reader entry', () async {
     SharedPreferences.setMockInitialValues({});
@@ -79,22 +81,21 @@ void main() {
     expect(restored.copyWith(horizontalMargin: -1).horizontalMargin, 0);
   });
 
-  test('shares the chapter-scoped scrolling preference across readers',
-      () async {
-    SharedPreferences.setMockInitialValues({});
-    const store = ReaderSettingsStore();
+  test(
+    'shares the chapter-scoped scrolling preference across readers',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      const store = ReaderSettingsStore();
 
-    expect(await store.loadScrollByChapter(), isTrue);
+      expect(await store.loadScrollByChapter(), isTrue);
 
-    await store.saveScrollByChapter(false);
+      await store.saveScrollByChapter(false);
 
-    expect(await store.loadScrollByChapter(), isFalse);
-    final prefs = await SharedPreferences.getInstance();
-    expect(
-      prefs.getBool(ReaderSettingsStore.scrollByChapterKey),
-      isFalse,
-    );
-  });
+      expect(await store.loadScrollByChapter(), isFalse);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getBool(ReaderSettingsStore.scrollByChapterKey), isFalse);
+    },
+  );
 
   test('clamps typography and interaction settings', () async {
     SharedPreferences.setMockInitialValues({

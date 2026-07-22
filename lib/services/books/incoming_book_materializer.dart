@@ -89,8 +89,7 @@ class IncomingBookMaterializer {
       'pdf' => mime == 'application/pdf',
       'html' ||
       'htm' ||
-      'xhtml' =>
-        mime == 'text/html' || mime == 'application/xhtml+xml',
+      'xhtml' => mime == 'text/html' || mime == 'application/xhtml+xml',
       'fb2' => mime == 'application/x-fictionbook+xml' || mime == 'text/xml',
       _ => true,
     };
@@ -108,7 +107,8 @@ class IncomingBookMaterializer {
         return;
       }
       if (extension == 'epub') {
-        final hasZipMagic = header.length >= 4 &&
+        final hasZipMagic =
+            header.length >= 4 &&
             header[0] == 0x50 &&
             header[1] == 0x4b &&
             (header[2] == 0x03 || header[2] == 0x05 || header[2] == 0x07) &&
@@ -120,13 +120,15 @@ class IncomingBookMaterializer {
         return;
       }
       if (extension == 'txt' || extension == 'md' || extension == 'markdown') {
-        final looksLikePdf = header.length >= 5 &&
+        final looksLikePdf =
+            header.length >= 5 &&
             header[0] == 0x25 &&
             header[1] == 0x50 &&
             header[2] == 0x44 &&
             header[3] == 0x46 &&
             header[4] == 0x2d;
-        final looksLikeZip = header.length >= 4 &&
+        final looksLikeZip =
+            header.length >= 4 &&
             header[0] == 0x50 &&
             header[1] == 0x4b &&
             header[2] == 0x03 &&

@@ -76,32 +76,32 @@ void main() {
     );
   });
 
-  test('new-book upload policy is explicit and cleared with configuration',
-      () async {
-    final preferences = _MemoryPreferences();
-    final store = SecureSyncConfigStore(
-      secretStorage: _MemorySecrets(),
-      preferences: preferences,
-    );
+  test(
+    'new-book upload policy is explicit and cleared with configuration',
+    () async {
+      final preferences = _MemoryPreferences();
+      final store = SecureSyncConfigStore(
+        secretStorage: _MemorySecrets(),
+        preferences: preferences,
+      );
 
-    expect(
-      await store.readNewBookUploadPolicy(),
-      WebDavNewBookUploadPolicy.askEveryTime,
-    );
-    await store.saveNewBookUploadPolicy(
-      WebDavNewBookUploadPolicy.automatic,
-    );
-    expect(
-      await store.readNewBookUploadPolicy(),
-      WebDavNewBookUploadPolicy.automatic,
-    );
+      expect(
+        await store.readNewBookUploadPolicy(),
+        WebDavNewBookUploadPolicy.askEveryTime,
+      );
+      await store.saveNewBookUploadPolicy(WebDavNewBookUploadPolicy.automatic);
+      expect(
+        await store.readNewBookUploadPolicy(),
+        WebDavNewBookUploadPolicy.automatic,
+      );
 
-    await store.clear();
-    expect(
-      await store.readNewBookUploadPolicy(),
-      WebDavNewBookUploadPolicy.askEveryTime,
-    );
-  });
+      await store.clear();
+      expect(
+        await store.readNewBookUploadPolicy(),
+        WebDavNewBookUploadPolicy.askEveryTime,
+      );
+    },
+  );
 }
 
 class _MemorySecrets implements SyncSecretStorage {

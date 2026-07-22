@@ -29,14 +29,13 @@ class SyncDatasetCatalog {
   const SyncDatasetCatalog._();
 
   static bool isSupported(SyncDataset dataset) => switch (dataset) {
-        SyncDataset.books ||
-        SyncDataset.progress ||
-        SyncDataset.bookmarks ||
-        SyncDataset.readingSessions =>
-          true,
-        // Notes and highlights do not yet have a complete product surface.
-        SyncDataset.notes => false,
-      };
+    SyncDataset.books ||
+    SyncDataset.progress ||
+    SyncDataset.bookmarks ||
+    SyncDataset.readingSessions => true,
+    // Notes and highlights do not yet have a complete product surface.
+    SyncDataset.notes => false,
+  };
 
   static bool isEnabled(SyncDataset dataset, WebDavSyncScope scope) {
     if (!isSupported(dataset)) return false;
@@ -49,8 +48,6 @@ class SyncDatasetCatalog {
     };
   }
 
-  static WebDavSyncScope normalizeScope(WebDavSyncScope scope) =>
-      scope.copyWith(
-        notes: isSupported(SyncDataset.notes) ? scope.notes : false,
-      );
+  static WebDavSyncScope normalizeScope(WebDavSyncScope scope) => scope
+      .copyWith(notes: isSupported(SyncDataset.notes) ? scope.notes : false);
 }

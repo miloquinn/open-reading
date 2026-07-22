@@ -15,13 +15,14 @@ void main() {
     databaseFactory = databaseFactoryFfi;
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
-      const MethodChannel('plugins.flutter.io/path_provider'),
-      (_) async => Directory.systemTemp.path,
-    );
+          const MethodChannel('plugins.flutter.io/path_provider'),
+          (_) async => Directory.systemTemp.path,
+        );
   });
 
-  testWidgets('reading stats tabs render without mobile overflow',
-      (tester) async {
+  testWidgets('reading stats tabs render without mobile overflow', (
+    tester,
+  ) async {
     await tester.binding.setSurfaceSize(const Size(412, 915));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -49,22 +50,14 @@ void main() {
     expect(tester.takeException(), isNull);
 
     for (final pageTitle in ['阅读趋势分析', '书籍数量', '阅读成就']) {
-      await tester.fling(
-        find.byType(PageView),
-        const Offset(-360, 0),
-        1000,
-      );
+      await tester.fling(find.byType(PageView), const Offset(-360, 0), 1000);
       await tester.pump(const Duration(milliseconds: 350));
       expect(find.text(pageTitle), findsWidgets);
       expect(tester.takeException(), isNull);
     }
 
     for (var i = 0; i < 3; i++) {
-      await tester.fling(
-        find.byType(PageView),
-        const Offset(360, 0),
-        1000,
-      );
+      await tester.fling(find.byType(PageView), const Offset(360, 0), 1000);
       await tester.pump(const Duration(milliseconds: 350));
     }
     expect(find.text('阅读总览'), findsOneWidget);

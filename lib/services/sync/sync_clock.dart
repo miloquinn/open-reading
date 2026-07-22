@@ -1,6 +1,9 @@
 class HybridLogicalTimestamp implements Comparable<HybridLogicalTimestamp> {
   const HybridLogicalTimestamp(
-      this.physicalMillis, this.logical, this.deviceId);
+    this.physicalMillis,
+    this.logical,
+    this.deviceId,
+  );
 
   final int physicalMillis;
   final int logical;
@@ -35,7 +38,7 @@ class HybridLogicalTimestamp implements Comparable<HybridLogicalTimestamp> {
 
 class HybridLogicalClock {
   HybridLogicalClock({required this.deviceId, int Function()? nowMillis})
-      : _nowMillis = nowMillis ?? (() => DateTime.now().millisecondsSinceEpoch);
+    : _nowMillis = nowMillis ?? (() => DateTime.now().millisecondsSinceEpoch);
 
   final String deviceId;
   final int Function() _nowMillis;
@@ -55,9 +58,11 @@ class HybridLogicalClock {
 
   void observe(HybridLogicalTimestamp remote) {
     final now = _nowMillis();
-    final maxPhysical = [now, _physical, remote.physicalMillis].reduce(
-      (a, b) => a > b ? a : b,
-    );
+    final maxPhysical = [
+      now,
+      _physical,
+      remote.physicalMillis,
+    ].reduce((a, b) => a > b ? a : b);
     if (maxPhysical == _physical && maxPhysical == remote.physicalMillis) {
       _logical = (_logical > remote.logical ? _logical : remote.logical) + 1;
     } else if (maxPhysical == _physical) {

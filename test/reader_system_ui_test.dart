@@ -19,14 +19,14 @@ void main() {
     iosCalls.clear();
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, (call) async {
-      calls.add(call);
-      return null;
-    });
+          calls.add(call);
+          return null;
+        });
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(iosChannel, (call) async {
-      iosCalls.add(call);
-      return null;
-    });
+          iosCalls.add(call);
+          return null;
+        });
   });
 
   tearDown(() {
