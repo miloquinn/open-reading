@@ -1376,34 +1376,49 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget _buildAiSettingsSection() {
     if (!_aiSettingsLoaded) {
       return const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         child: Center(child: CircularProgressIndicator()),
       );
     }
 
     final l10n = context.l10n;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 18),
+      padding: const EdgeInsets.only(bottom: 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 2, 20, 12),
-            child: Text(
-              l10n.settingsAiSwipeHint,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 9),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.swipe_rounded,
+                  size: 15,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    l10n.settingsAiSwipeHint,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          height: 1.2,
+                        ),
                   ),
+                ),
+              ],
             ),
           ),
           SizedBox(
-            height: 154,
+            height: 112,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               physics: const BouncingScrollPhysics(),
               itemCount: _aiQuickModels.length + 1,
-              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              separatorBuilder: (_, __) => const SizedBox(width: 10),
               itemBuilder: (context, index) {
                 if (index == _aiQuickModels.length) {
                   return _buildAddAiModelCard();
@@ -1423,25 +1438,38 @@ class _SettingsPageState extends State<SettingsPage> {
     final selected = item.id == _activeAiQuickModelId;
     final configured = item.settings.isConfigured;
     return SizedBox(
-      width: 184,
+      width: 172,
       child: Material(
         color: selected
-            ? scheme.primaryContainer.withValues(alpha: 0.7)
+            ? Color.alphaBlend(
+                scheme.primary.withValues(alpha: 0.09),
+                scheme.surfaceContainerLow,
+              )
             : scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(14),
         child: InkWell(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(14),
           onTap: () => _activateAiQuickModel(item),
           onLongPress: item.isCustom ? () => _removeAiQuickModel(item) : null,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),
-            padding: const EdgeInsets.all(16),
+            curve: Curves.easeOutCubic,
+            padding: const EdgeInsets.fromLTRB(12, 11, 12, 10),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color: selected ? scheme.primary : scheme.outlineVariant,
-                width: selected ? 1.6 : 1,
+                width: selected ? 1.4 : 1,
               ),
+              boxShadow: selected
+                  ? [
+                      BoxShadow(
+                        color: scheme.primary.withValues(alpha: 0.12),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ]
+                  : null,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1450,57 +1478,98 @@ class _SettingsPageState extends State<SettingsPage> {
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
+                        horizontal: 7,
+                        vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color: scheme.surface.withValues(alpha: 0.7),
+                        color: selected
+                            ? scheme.primary.withValues(alpha: 0.11)
+                            : scheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(99),
                       ),
-                      child: Text(
-                        item.settings.provider.displayName,
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.auto_awesome_rounded,
+                            size: 11,
+                            color: selected
+                                ? scheme.primary
+                                : scheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            item.settings.provider.displayName,
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelSmall
+                                ?.copyWith(
+                                  color: selected
+                                      ? scheme.primary
+                                      : scheme.onSurfaceVariant,
+                                  fontWeight: FontWeight.w700,
+                                  height: 1.1,
+                                ),
+                          ),
+                        ],
                       ),
                     ),
                     const Spacer(),
-                    Icon(
-                      selected
-                          ? Icons.check_circle_rounded
-                          : configured
-                              ? Icons.circle_rounded
-                              : Icons.key_off_rounded,
-                      size: 18,
-                      color: selected
-                          ? scheme.primary
-                          : configured
-                              ? scheme.onSurfaceVariant
-                              : scheme.error,
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 160),
+                      child: selected
+                          ? Icon(
+                              Icons.check_circle_rounded,
+                              key: const ValueKey('selected'),
+                              size: 18,
+                              color: scheme.primary,
+                            )
+                          : const SizedBox.square(
+                              key: ValueKey('not-selected'),
+                              dimension: 18,
+                            ),
                     ),
                   ],
                 ),
                 const Spacer(),
                 Text(
                   item.settings.model,
-                  maxLines: 2,
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w800,
-                        height: 1.2,
+                        height: 1.1,
                       ),
                 ),
                 const SizedBox(height: 7),
-                Text(
-                  configured
-                      ? l10n.settingsAiApiKeyConfigured
-                      : l10n.settingsAiApiKeyTapToConfigure,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color:
-                            configured ? scheme.onSurfaceVariant : scheme.error,
+                Row(
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: configured ? scheme.primary : scheme.error,
+                        shape: BoxShape.circle,
                       ),
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        configured
+                            ? l10n.settingsAiApiKeyConfigured
+                            : l10n.settingsAiApiKeyTapToConfigure,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: configured
+                                  ? scheme.onSurfaceVariant
+                                  : scheme.error,
+                              fontSize: 11,
+                              height: 1.1,
+                            ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -1514,34 +1583,40 @@ class _SettingsPageState extends State<SettingsPage> {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     return SizedBox(
-      width: 112,
+      width: 94,
       child: Material(
         color: scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(14),
         child: InkWell(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(14),
           onTap: () => _showAiModelSheet(),
           child: DecoratedBox(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(14),
               border: Border.all(color: scheme.outlineVariant),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  width: 42,
-                  height: 42,
+                  width: 34,
+                  height: 34,
                   decoration: BoxDecoration(
                     color: scheme.primary.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(Icons.add_rounded, color: scheme.primary),
+                  child: Icon(
+                    Icons.add_rounded,
+                    size: 21,
+                    color: scheme.primary,
+                  ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 7),
                 Text(
                   l10n.settingsAiAddModel,
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
                 ),

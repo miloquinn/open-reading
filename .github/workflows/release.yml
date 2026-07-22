@@ -75,6 +75,78 @@ jobs:
       - name: Run tests
         run: flutter test
 
+  web:
+    name: Flutter Web
+    needs: verify-release
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out release source
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get --enforce-lockfile
+
+      - name: Generate localizations
+        run: flutter gen-l10n
+
+      - name: Build web release
+        run: flutter build web --release --base-href /
+
+      - name: Validate and package web release
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s build/web/sqlite3.wasm
+          test -s build/web/sqflite_sw.js
+          if [[ "$(head -c 4 build/web/sqlite3.wasm | od -An -tx1 | tr -d ' \n')" != "0061736d" ]]; then
+            echo "::error::build/web/sqlite3.wasm is not a WebAssembly module."
+            exit 1
+          fi
+          RELEASE_VERSION="${RELEASE_TAG#v}" python3 <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          version_path = Path("build/web/version.json")
+          if not version_path.is_file() or version_path.is_symlink():
+              raise SystemExit("build/web/version.json is missing or unsafe")
+          payload = json.loads(version_path.read_text(encoding="utf-8"))
+          required = {"app_name", "version", "build_number", "package_name"}
+          if set(payload) != required:
+              raise SystemExit("version.json has an unexpected field set")
+          if payload["version"] != os.environ["RELEASE_VERSION"]:
+              raise SystemExit("version.json does not match the release tag")
+          if not all(isinstance(payload[field], str) and payload[field] for field in required):
+              raise SystemExit("version.json fields must be non-empty strings")
+          if not payload["build_number"].isdigit():
+              raise SystemExit("version.json build_number must be numeric")
+          PY
+
+          mkdir -p web-release
+          tar -C build/web -czf web-release/open-reading-web.tar.gz .
+          (
+            cd web-release
+            sha256sum open-reading-web.tar.gz > open-reading-web.tar.gz.sha256
+          )
+
+      - name: Upload internal web deployment artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: flutter-web-deployment
+          path: web-release/*
+          if-no-files-found: error
+          retention-days: 7
+
   android:
     name: Android APKs
     needs: verify-release
@@ -555,6 +627,7 @@ jobs:
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           path: release-assets
+          pattern: "*-release"
           merge-multiple: true
 
       - name: Generate SHA-256 checksums
@@ -851,6 +924,159 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: gh release view "$RELEASE_TAG"
+
+  deploy-web:
+    name: Deploy Flutter Web
+    needs: [publish, web]
+    runs-on: ubuntu-latest
+    environment: release
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Download internal web deployment artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: flutter-web-deployment
+          path: web-deployment
+
+      - name: Upload and deploy Flutter Web
+        shell: bash
+        env:
+          SSH_HOST: ${{ secrets.OFFICIAL_SITE_SSH_HOST }}
+          SSH_PORT: ${{ secrets.OFFICIAL_SITE_SSH_PORT }}
+          SSH_USER: ${{ secrets.OFFICIAL_SITE_SSH_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.OFFICIAL_SITE_SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.OFFICIAL_SITE_SSH_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          for variable in \
+            SSH_HOST \
+            SSH_PORT \
+            SSH_USER \
+            SSH_PRIVATE_KEY \
+            SSH_KNOWN_HOSTS; do
+            if [[ -z "${!variable}" ]]; then
+              echo "::error::Required web deployment secret is missing: ${variable}"
+              exit 1
+            fi
+          done
+
+          if [[ ! "$SSH_HOST" =~ ^[0-9A-Za-z][0-9A-Za-z.-]{0,252}$ ]]; then
+            echo "::error::Official-site SSH host has an invalid format."
+            exit 1
+          fi
+          if [[ ! "$SSH_PORT" =~ ^[0-9]{1,5}$ ]] \
+            || ((10#$SSH_PORT < 1 || 10#$SSH_PORT > 65535)); then
+            echo "::error::Official-site SSH port has an invalid format."
+            exit 1
+          fi
+          if [[ "$SSH_USER" != "open-reading-release" ]]; then
+            echo "::error::Web deployment requires the restricted open-reading-release account."
+            exit 1
+          fi
+          if [[ ! "$RELEASE_TAG" =~ ^v[0-9A-Za-z][0-9A-Za-z._-]{0,63}$ ]] \
+            || [[ ! "$GITHUB_REPOSITORY" =~ ^[0-9A-Za-z_.-]+/[0-9A-Za-z_.-]+$ ]] \
+            || [[ ! "$GITHUB_RUN_ID" =~ ^[0-9]+$ ]] \
+            || [[ ! "$GITHUB_RUN_ATTEMPT" =~ ^[0-9]+$ ]]; then
+            echo "::error::Release identifiers have an invalid format."
+            exit 1
+          fi
+
+          umask 077
+          ssh_dir="${RUNNER_TEMP}/web-deployment-ssh"
+          identity_file="${ssh_dir}/identity"
+          known_hosts_file="${ssh_dir}/known_hosts"
+          remote_dir="/tmp/open-reading-web-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          target="${SSH_USER}@${SSH_HOST}"
+          mkdir -p "$ssh_dir"
+          printf '%s\n' "$SSH_PRIVATE_KEY" | sed 's/\r$//' > "$identity_file"
+          printf '%s\n' "$SSH_KNOWN_HOSTS" | sed 's/\r$//' > "$known_hosts_file"
+          chmod 600 "$identity_file" "$known_hosts_file"
+
+          host_lookup="$SSH_HOST"
+          if [[ "$SSH_PORT" != "22" ]]; then
+            host_lookup="[${SSH_HOST}]:${SSH_PORT}"
+          fi
+          if ! ssh-keygen -F "$host_lookup" -f "$known_hosts_file" >/dev/null; then
+            echo "::error::Pinned known_hosts does not contain the configured SSH host and port."
+            exit 1
+          fi
+
+          ssh_options=(
+            -i "$identity_file"
+            -p "$SSH_PORT"
+            -o BatchMode=yes
+            -o IdentitiesOnly=yes
+            -o StrictHostKeyChecking=yes
+            -o "UserKnownHostsFile=${known_hosts_file}"
+            -o GlobalKnownHostsFile=/dev/null
+            -o LogLevel=ERROR
+            -o ConnectTimeout=15
+            -o ConnectionAttempts=3
+          )
+          scp_options=(
+            -i "$identity_file"
+            -P "$SSH_PORT"
+            -o BatchMode=yes
+            -o IdentitiesOnly=yes
+            -o StrictHostKeyChecking=yes
+            -o "UserKnownHostsFile=${known_hosts_file}"
+            -o GlobalKnownHostsFile=/dev/null
+            -o LogLevel=ERROR
+            -o ConnectTimeout=15
+            -o ConnectionAttempts=3
+          )
+
+          remote_created=false
+          cleanup() {
+            if [[ "$remote_created" == true ]]; then
+              ssh "${ssh_options[@]}" "$target" \
+                "rm -rf -- '${remote_dir}'" >/dev/null 2>&1 || true
+            fi
+            rm -rf -- "$ssh_dir"
+          }
+          trap cleanup EXIT
+
+          ssh "${ssh_options[@]}" "$target" "mkdir -m 0700 -- '${remote_dir}'"
+          remote_created=true
+          scp "${scp_options[@]}" web-deployment/* "${target}:${remote_dir}/"
+          ssh "${ssh_options[@]}" "$target" \
+            "sudo -n -- /usr/local/sbin/open-reading-deploy-web \
+              --source '${remote_dir}' \
+              --tag '${RELEASE_TAG}' \
+              --repository '${GITHUB_REPOSITORY}' \
+              --run-id '${GITHUB_RUN_ID}' \
+              --run-attempt '${GITHUB_RUN_ATTEMPT}'"
+
+      - name: Verify deployed web version
+        shell: bash
+        run: |
+          set -euo pipefail
+          response_path="${RUNNER_TEMP}/deployed-web-version.json"
+          for attempt in {1..10}; do
+            if curl --fail --silent --show-error \
+              --header 'Cache-Control: no-cache' \
+              --connect-timeout 10 \
+              --max-time 30 \
+              "https://read.xxread.top/version.json?run=${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${attempt}" \
+              > "$response_path" \
+              && RELEASE_TAG="$RELEASE_TAG" VERSION_PATH="$response_path" python3 <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          payload = json.loads(Path(os.environ["VERSION_PATH"]).read_text(encoding="utf-8"))
+          if payload.get("version") != os.environ["RELEASE_TAG"].removeprefix("v"):
+              raise SystemExit("deployed version.json does not match the release tag")
+          PY
+            then
+              exit 0
+            fi
+            sleep 6
+          done
+          echo "::error::Deployed web version did not match ${RELEASE_TAG}."
+          exit 1
 
   mirror-official-site:
     name: Mirror release to official site

@@ -151,6 +151,7 @@ devtools_options.yaml
 
 # Agent-generated assets are never part of application releases
 /output/
+/Project.md
 
 # l10n tooling artifacts
 l10n_untranslated.json

@@ -1,0 +1,30 @@
+read.xxread.top {
+	tls /etc/caddy/certs/xxread.top.origin.crt /etc/caddy/certs/xxread.top.origin.key
+	encode zstd gzip
+	root * /srv/open-reading/flutter-web/current
+
+	@no_cache path / /index.html /version.json /flutter_bootstrap.js /flutter.js /main.dart.js /flutter_service_worker.js /manifest.json /sqflite_sw.js /sqlite3.wasm
+	header @no_cache Cache-Control "no-cache, no-store, must-revalidate"
+
+	@static_assets path /assets/* /canvaskit/* /icons/* /favicon.png
+	header @static_assets Cache-Control "public, max-age=3600"
+
+	try_files {path} /index.html
+	file_server
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		-Server
+	}
+
+	log {
+		output file /var/log/caddy/open-reading-web-access.log {
+			roll_size 20MiB
+			roll_keep 5
+			roll_keep_for 720h
+		}
+	}
+}

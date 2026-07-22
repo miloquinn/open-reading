@@ -2,6 +2,51 @@
     "schemaVersion":  1,
     "entries":  [
                     {
+                        "version":  "2.3.5",
+                        "notes":  {
+                                      "en":  [
+                                                 "Redesigned the home page around continuing the most recent book, reading rhythm, and a lightweight recent-books shelf",
+                                                 "Removed daily goals, reading plans, focus timers, and AI advice from the home page",
+                                                 "Added browser database persistence through an IndexedDB-backed SQLite compatibility layer",
+                                                 "Added validated Flutter Web release artifacts and atomic official-site deployment through the protected release environment",
+                                                 "Added a macOS Universal App pipeline with Developer ID signing, notarization, stapling, and Gatekeeper verification",
+                                                 "Removed unrelated product promotion from Settings and made AI model shortcuts more compact",
+                                                 "Standardized cover-grid cropping and refined Android and legacy iOS launcher icon safe areas",
+                                                 "Removed legacy online cover lookup during local imports; embedded covers are preferred and missing covers are generated locally"
+                                             ],
+                                      "zh":  [
+                                                 "首页改为聚焦继续阅读、阅读节奏和轻量最近阅读书架",
+                                                 "移除首页的每日目标、阅读计划、专注计时和 AI 阅读建议",
+                                                 "浏览器端通过基于 IndexedDB 的 SQLite 兼容层持久化结构化数据",
+                                                 "新增经过校验的 Flutter Web 发布产物和受保护环境下的官网原子部署",
+                                                 "新增 macOS Universal App、Developer ID 签名、公证、staple 与 Gatekeeper 验证链路",
+                                                 "设置页移除无关产品推广，并压缩 AI 快捷模型入口",
+                                                 "统一封面网格裁切并优化 Android 与旧版 iOS 启动图标安全区",
+                                                 "移除本地导入时残留的联网封面搜索，优先使用内置封面，否则仅在本地生成默认封面"
+                                             ],
+                                      "zh-TW":  [
+                                                    "首頁改為聚焦繼續閱讀、閱讀節奏與輕量最近閱讀書架",
+                                                    "移除首頁的每日目標、閱讀計畫、專注計時與 AI 閱讀建議",
+                                                    "瀏覽器端透過以 IndexedDB 為基礎的 SQLite 相容層保存結構化資料",
+                                                    "新增經過驗證的 Flutter Web 發布產物與受保護環境下的官網原子部署",
+                                                    "新增 macOS Universal App、Developer ID 簽署、公證、staple 與 Gatekeeper 驗證流程",
+                                                    "設定頁移除無關產品推廣，並壓縮 AI 快捷模型入口",
+                                                    "統一封面網格裁切並最佳化 Android 與舊版 iOS 啟動圖示安全區",
+                                                    "移除本機匯入時殘留的連網封面搜尋，優先使用內建封面，否則僅在本機產生預設封面"
+                                                ],
+                                      "ja":  [
+                                                 "ホーム画面を最近の本の続き、読書リズム、軽量な最近読んだ本の一覧に再設計しました",
+                                                 "ホーム画面から毎日の目標、読書プラン、集中タイマー、AI 読書アドバイスを削除しました",
+                                                 "IndexedDB ベースの SQLite 互換レイヤーでブラウザーの構造化データを永続化しました",
+                                                 "検証済み Flutter Web リリース成果物と保護された環境からの公式サイトへのアトミック配備を追加しました",
+                                                 "macOS Universal App、Developer ID 署名、公証、staple、Gatekeeper 検証のリリース工程を追加しました",
+                                                 "設定画面から無関係な製品紹介を削除し、AI モデルのショートカットをコンパクトにしました",
+                                                 "表紙グリッドのトリミングを統一し、Android と旧 iOS の起動アイコンの安全領域を調整しました",
+                                                 "ローカル読み込み時に残っていたオンライン表紙検索を削除し、埋め込み表紙を優先して、ない場合は端末内で既定表紙を生成するようにしました"
+                                             ]
+                                  }
+                    },
+                    {
                         "version":  "2.3.1",
                         "notes":  {
                                       "en":  [

@@ -37,6 +37,7 @@ import 'package:xxread/models/bookmark.dart';
 import 'package:xxread/services/books/book_dao.dart';
 import 'package:xxread/services/books/bookmark_dao.dart';
 import 'package:xxread/services/books/enhanced_txt_import_service.dart';
+import 'package:xxread/services/books/web_book_file_store.dart';
 import 'package:xxread/services/core/app_settings_service.dart';
 import 'package:xxread/services/reading/reading_stats_dao.dart';
 import 'package:xxread/utils/font_catalog_helper.dart';
@@ -78,7 +79,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     with WidgetsBindingObserver {
   static final Map<String, Future<List<_NativeChapter>>> _bookMemoryCache = {};
   static final Map<String, Map<String, List<_ReaderPageData>>>
-      _paginationMemoryCache = {};
+  _paginationMemoryCache = {};
   static const _spreadGutter = 24.0;
   static const _textStyle = TextStyle(
     fontSize: 19,
@@ -175,10 +176,12 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     _horizontalLastChapter = _chapterIndex + 1;
     final savedLocator = widget.book.toCanonicalLocator();
     _anchorOffset = savedLocator?.textAnchor?.startOffsetUtf16;
-    _verticalPagePositionsListener.itemPositions
-        .addListener(_onVerticalPagePositionsChanged);
-    _verticalChapterPositionsListener.itemPositions
-        .addListener(_onVerticalChapterPositionsChanged);
+    _verticalPagePositionsListener.itemPositions.addListener(
+      _onVerticalPagePositionsChanged,
+    );
+    _verticalChapterPositionsListener.itemPositions.addListener(
+      _onVerticalChapterPositionsChanged,
+    );
     unawaited(_loadPageMode());
     unawaited(_loadBookmarks());
   }
@@ -344,11 +347,12 @@ class _NativeReaderPageState extends State<NativeReaderPage>
   String get _bookCacheKey =>
       '${widget.book.format.toLowerCase() == 'txt' ? 'txt-parser-v5:' : ''}'
       '${widget.book.contentHash ?? widget.book.filePath}:'
-      '${widget.book.fileModifiedTime ?? File(widget.book.filePath).lastModifiedSync().millisecondsSinceEpoch}:'
+      '${widget.book.fileModifiedTime ?? (kIsWeb ? 0 : File(widget.book.filePath).lastModifiedSync().millisecondsSinceEpoch)}:'
       '${widget.book.textEncoding ?? 'auto'}';
 
   bool get _isLargeTxtBook {
     if (widget.book.format.toLowerCase() != 'txt') return false;
+    if (kIsWeb) return false;
     try {
       return File(widget.book.filePath).lengthSync() > _largeTxtFileThreshold;
     } catch (_) {
@@ -362,10 +366,12 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     _routeAnimation?.removeStatusListener(_onRouteAnimationStatusChanged);
     unawaited(_flushReadingSession());
     _pageController.dispose();
-    _verticalPagePositionsListener.itemPositions
-        .removeListener(_onVerticalPagePositionsChanged);
-    _verticalChapterPositionsListener.itemPositions
-        .removeListener(_onVerticalChapterPositionsChanged);
+    _verticalPagePositionsListener.itemPositions.removeListener(
+      _onVerticalPagePositionsChanged,
+    );
+    _verticalChapterPositionsListener.itemPositions.removeListener(
+      _onVerticalChapterPositionsChanged,
+    );
     _verticalScrollProgress.dispose();
     _spreadPageCurlCoordinator.dispose();
     _leafStatusController
@@ -377,9 +383,8 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     super.dispose();
   }
 
-  Future<void> _applyReaderSystemUi() => ReaderSystemUiController.apply(
-        style: _topBarStyle,
-      );
+  Future<void> _applyReaderSystemUi() =>
+      ReaderSystemUiController.apply(style: _topBarStyle);
 
   void _onLeafStatusChanged() {
     if (mounted) setState(() {});
@@ -428,11 +433,11 @@ class _NativeReaderPageState extends State<NativeReaderPage>
   }
 
   Future<void> _syncVolumeKeyPaging() => ReaderVolumeKeyController.activate(
-        owner: this,
-        pageTurningAvailable: _pageMode != NativePageMode.verticalScroll,
-        onNextPage: () => _handleVolumePageTurn(forward: true),
-        onPreviousPage: () => _handleVolumePageTurn(forward: false),
-      );
+    owner: this,
+    pageTurningAvailable: _pageMode != NativePageMode.verticalScroll,
+    onNextPage: () => _handleVolumePageTurn(forward: true),
+    onPreviousPage: () => _handleVolumePageTurn(forward: false),
+  );
 
   void _handleVolumePageTurn({required bool forward}) {
     if (!mounted ||
@@ -458,36 +463,35 @@ class _NativeReaderPageState extends State<NativeReaderPage>
 
   ReaderThemePalette get _readerTheme => ReaderThemes.byId(_readerThemeId);
 
-  ThemeData get _readerThemeData => _readerTheme.toThemeData(
-        typography: Theme.of(context).textTheme,
-      );
+  ThemeData get _readerThemeData =>
+      _readerTheme.toThemeData(typography: Theme.of(context).textTheme);
 
   ReaderSettings get _readerSettings => ReaderSettings(
-        fontSize: _fontSize,
-        lineHeight: _lineHeight,
-        horizontalMargin: _horizontalMargin,
-        topMargin: _topMargin,
-        bottomMargin: _bottomMargin,
-        themeId: _readerThemeId,
-        pageMode: _pageMode,
-        firstLineIndent: _firstLineIndent,
-        paragraphSpacing: _paragraphSpacing,
-        pullBookmarkEnabled: _pullBookmarkEnabled,
-        tapPageAnimationEnabled: _tapPageAnimationEnabled,
-        tabletTwoPageEnabled: _tabletTwoPageEnabled,
-      );
+    fontSize: _fontSize,
+    lineHeight: _lineHeight,
+    horizontalMargin: _horizontalMargin,
+    topMargin: _topMargin,
+    bottomMargin: _bottomMargin,
+    themeId: _readerThemeId,
+    pageMode: _pageMode,
+    firstLineIndent: _firstLineIndent,
+    paragraphSpacing: _paragraphSpacing,
+    pullBookmarkEnabled: _pullBookmarkEnabled,
+    tapPageAnimationEnabled: _tapPageAnimationEnabled,
+    tabletTwoPageEnabled: _tabletTwoPageEnabled,
+  );
 
   TextStyle get _readerTextStyle => TextStyle(
-        inherit: false,
-        fontFamily: _readerFont.family,
-        fontFamilyFallback: _readerFont.fallbackFamilies.isEmpty
-            ? null
-            : _readerFont.fallbackFamilies,
-        fontSize: _fontSize,
-        height: _lineHeight,
-        letterSpacing: _textStyle.letterSpacing,
-        color: _readerTheme.text,
-      );
+    inherit: false,
+    fontFamily: _readerFont.family,
+    fontFamilyFallback: _readerFont.fallbackFamilies.isEmpty
+        ? null
+        : _readerFont.fallbackFamilies,
+    fontSize: _fontSize,
+    height: _lineHeight,
+    letterSpacing: _textStyle.letterSpacing,
+    color: _readerTheme.text,
+  );
 
   NativeTextFlowStyle _readerTextFlowStyle({
     TextDirection? direction,
@@ -510,10 +514,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     await _readerSettingsStore.save(_readerSettings);
   }
 
-  Widget _buildStyledReaderText(
-    _NativeChapter chapter,
-    _ReaderPageData page,
-  ) {
+  Widget _buildStyledReaderText(_NativeChapter chapter, _ReaderPageData page) {
     final flowStyle = _readerTextFlowStyle();
     return ReaderTextPageContent(
       page: page,
@@ -526,13 +527,13 @@ class _NativeReaderPageState extends State<NativeReaderPage>
   }
 
   ReaderSafeAreaMetrics get _readerSafeArea => ReaderSafeAreaMetrics(
-        viewPadding: MediaQuery.viewPaddingOf(context),
-        topMargin: _topMargin,
-        bottomMargin: _bottomMargin,
-        topChromeReserve: _topBarStyle == ReaderTopBarStyle.reader
-            ? ReaderSafeAreaMetrics.readerTopBarReserve
-            : 0,
-      );
+    viewPadding: MediaQuery.viewPaddingOf(context),
+    topMargin: _topMargin,
+    bottomMargin: _bottomMargin,
+    topChromeReserve: _topBarStyle == ReaderTopBarStyle.reader
+        ? ReaderSafeAreaMetrics.readerTopBarReserve
+        : 0,
+  );
 
   double get _effectiveTopMargin => _readerSafeArea.contentTop;
 
@@ -545,10 +546,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
 
   Size _paginationSize(Size viewport, bool usesTwoPageLayout) {
     if (!usesTwoPageLayout) return viewport;
-    return Size(
-      (viewport.width - _spreadGutter) / 2,
-      viewport.height,
-    );
+    return Size((viewport.width - _spreadGutter) / 2, viewport.height);
   }
 
   int _spreadStartForPage(int pageIndex) => (pageIndex ~/ 2) * 2;
@@ -571,17 +569,22 @@ class _NativeReaderPageState extends State<NativeReaderPage>
         ReaderMarginSettings.horizontalMin,
         ReaderMarginSettings.horizontalMax,
       );
-      _topMargin = (topMargin ?? _topMargin)
-          .clamp(ReaderMarginSettings.min, ReaderMarginSettings.max);
-      _bottomMargin = (bottomMargin ?? _bottomMargin)
-          .clamp(ReaderMarginSettings.min, ReaderMarginSettings.max);
+      _topMargin = (topMargin ?? _topMargin).clamp(
+        ReaderMarginSettings.min,
+        ReaderMarginSettings.max,
+      );
+      _bottomMargin = (bottomMargin ?? _bottomMargin).clamp(
+        ReaderMarginSettings.min,
+        ReaderMarginSettings.max,
+      );
       _pageIndex = 0;
       _restoreAnchorAfterLayout = true;
     });
     await _readerSettingsStore.save(_readerSettings);
   }
 
-  String get _layoutSignature => '${_fontSize.toStringAsFixed(1)}:'
+  String get _layoutSignature =>
+      '${_fontSize.toStringAsFixed(1)}:'
       '${_lineHeight.toStringAsFixed(2)}:'
       '${_horizontalMargin.toStringAsFixed(1)}:'
       '${_topMargin.toStringAsFixed(1)}:'
@@ -590,7 +593,8 @@ class _NativeReaderPageState extends State<NativeReaderPage>
 
   Future<void> _setTopBarStyle(ReaderTopBarStyle style) async {
     if (_topBarStyle == style) return;
-    final repaginate = (_topBarStyle == ReaderTopBarStyle.reader) !=
+    final repaginate =
+        (_topBarStyle == ReaderTopBarStyle.reader) !=
         (style == ReaderTopBarStyle.reader);
     setState(() {
       _topBarStyle = style;
@@ -611,8 +615,10 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     _anchorOffset = page.startOffset;
     final bookId = widget.book.id;
     if (bookId == null) return;
-    final excerptEnd =
-        (page.startOffset + 72).clamp(0, chapter.plainText.length);
+    final excerptEnd = (page.startOffset + 72).clamp(
+      0,
+      chapter.plainText.length,
+    );
     final excerpt = chapter.plainText.substring(page.startOffset, excerptEnd);
     final locator = CanonicalLocator.fromComponents(
       format: BookFormat.fromFileExtension(widget.book.format),
@@ -659,7 +665,25 @@ class _NativeReaderPageState extends State<NativeReaderPage>
   Future<List<_NativeChapter>> _loadBook() async {
     final l10n = context.l10n;
     final format = widget.book.format.toLowerCase();
+    final webBytes = kIsWeb
+        ? await WebBookFileStore().read(widget.book.filePath)
+        : null;
+    if (kIsWeb && webBytes == null) {
+      throw StateError('Web 书籍文件不存在');
+    }
     if (format == 'txt') {
+      if (webBytes != null) {
+        final decoded = EnhancedTxtImportService().decodeWithOverride(
+          webBytes,
+          encodingOverride: widget.book.textEncoding,
+          verifyEncodingOverride: true,
+        );
+        return _parseTxtChapters(
+          decoded,
+          widget.book.title,
+          l10n.readerPrefaceTitle,
+        );
+      }
       final sourceFile = File(widget.book.filePath);
       final fileSize = await sourceFile.length();
       final useParsedCache = fileSize <= _largeTxtFileThreshold;
@@ -713,10 +737,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
       }
 
       // Small TXT books can keep using the JSON chapter cache.
-      final parsed = await compute(
-        _parseTxtFileInBackground,
-        parseArguments,
-      );
+      final parsed = await compute(_parseTxtFileInBackground, parseArguments);
       if (useParsedCache) {
         unawaited(
           compute(_writeParsedChapterCache, <String, dynamic>{
@@ -728,7 +749,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
       return parsed.map(_nativeChapterFromMap).toList(growable: false);
     }
 
-    final bytes = await File(widget.book.filePath).readAsBytes();
+    final bytes = webBytes ?? await File(widget.book.filePath).readAsBytes();
     switch (format) {
       case 'epub':
         final parsed = await compute(_parseEpubChapters, bytes);
@@ -838,9 +859,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
           curve: Curves.easeOutCubic,
         );
       } else {
-        _pageController.jumpToPage(
-          (_pageController.page?.round() ?? 0) + 1,
-        );
+        _pageController.jumpToPage((_pageController.page?.round() ?? 0) + 1);
       }
       return;
     }
@@ -903,11 +922,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     }
     if (_pageMode == NativePageMode.instantPage) {
       if (velocity < -350) {
-        _nextPage(
-          pages,
-          chapterCount,
-          usesTwoPageLayout: usesTwoPageLayout,
-        );
+        _nextPage(pages, chapterCount, usesTwoPageLayout: usesTwoPageLayout);
       } else if (velocity > 350) {
         _previousPage(
           pages,
@@ -1137,8 +1152,8 @@ class _NativeReaderPageState extends State<NativeReaderPage>
           titleFor: _pageModeTitle,
           hintFor: (mode) => mode == NativePageMode.verticalScroll
               ? (previewScrollByChapter
-                  ? context.l10n.readerModeVerticalScrollHint
-                  : context.l10n.readerModeWholeBookScrollHint)
+                    ? context.l10n.readerModeVerticalScrollHint
+                    : context.l10n.readerModeWholeBookScrollHint)
               : _pageModeHint(mode),
           onSelected: (mode) => Navigator.of(menuContext).pop(mode),
           scrollByChapter: previewScrollByChapter,
@@ -1177,32 +1192,31 @@ class _NativeReaderPageState extends State<NativeReaderPage>
   }
 
   String _pageModeTitle(NativePageMode mode) => switch (mode) {
-        NativePageMode.verticalScroll => context.l10n.pageTurningScroll,
-        NativePageMode.instantPage => context.l10n.readerModeHorizontalPage,
-        NativePageMode.horizontalSlide => context.l10n.pageTurningSlide,
-        NativePageMode.pageCurl => context.l10n.readerModePageCurl,
-      };
+    NativePageMode.verticalScroll => context.l10n.pageTurningScroll,
+    NativePageMode.instantPage => context.l10n.readerModeHorizontalPage,
+    NativePageMode.horizontalSlide => context.l10n.pageTurningSlide,
+    NativePageMode.pageCurl => context.l10n.readerModePageCurl,
+  };
 
   String _pageModeHint(NativePageMode mode) => switch (mode) {
-        NativePageMode.verticalScroll =>
-          context.l10n.readerModeVerticalScrollHint,
-        NativePageMode.instantPage => context.l10n.readerModeHorizontalPageHint,
-        NativePageMode.horizontalSlide =>
-          context.l10n.readerModeHorizontalSlideHint,
-        NativePageMode.pageCurl => context.l10n.readerModePageCurlHint,
-      };
+    NativePageMode.verticalScroll => context.l10n.readerModeVerticalScrollHint,
+    NativePageMode.instantPage => context.l10n.readerModeHorizontalPageHint,
+    NativePageMode.horizontalSlide =>
+      context.l10n.readerModeHorizontalSlideHint,
+    NativePageMode.pageCurl => context.l10n.readerModePageCurlHint,
+  };
 
   String _topBarStyleTitle(ReaderTopBarStyle style) => switch (style) {
-        ReaderTopBarStyle.system => context.l10n.readerTopBarStyleSystem,
-        ReaderTopBarStyle.reader => context.l10n.readerTopBarStyleReader,
-        ReaderTopBarStyle.hidden => context.l10n.readerTopBarStyleHidden,
-      };
+    ReaderTopBarStyle.system => context.l10n.readerTopBarStyleSystem,
+    ReaderTopBarStyle.reader => context.l10n.readerTopBarStyleReader,
+    ReaderTopBarStyle.hidden => context.l10n.readerTopBarStyleHidden,
+  };
 
   String _topBarStyleHint(ReaderTopBarStyle style) => switch (style) {
-        ReaderTopBarStyle.system => context.l10n.readerTopBarStyleSystemHint,
-        ReaderTopBarStyle.reader => context.l10n.readerTopBarStyleReaderHint,
-        ReaderTopBarStyle.hidden => context.l10n.readerTopBarStyleHiddenHint,
-      };
+    ReaderTopBarStyle.system => context.l10n.readerTopBarStyleSystemHint,
+    ReaderTopBarStyle.reader => context.l10n.readerTopBarStyleReaderHint,
+    ReaderTopBarStyle.hidden => context.l10n.readerTopBarStyleHiddenHint,
+  };
 
   _ReaderPageData _bookmarkPageFor(List<_ReaderPageData> pages) {
     if (_pageMode == NativePageMode.verticalScroll) {
@@ -1280,9 +1294,12 @@ class _NativeReaderPageState extends State<NativeReaderPage>
       final id = await _bookmarkDao.insertBookmark(bookmark);
       if (!mounted) return;
       setState(() {
-        _bookmarks = [..._bookmarks, bookmark.copyWith(id: id)]..sort((a, b) =>
-            (a.chapterIndex ?? a.pageNumber)
-                .compareTo(b.chapterIndex ?? b.pageNumber));
+        _bookmarks = [..._bookmarks, bookmark.copyWith(id: id)]
+          ..sort(
+            (a, b) => (a.chapterIndex ?? a.pageNumber).compareTo(
+              b.chapterIndex ?? b.pageNumber,
+            ),
+          );
       });
       showSideToast(
         context,
@@ -1330,8 +1347,10 @@ class _NativeReaderPageState extends State<NativeReaderPage>
         ? -1
         : chapters.indexWhere((chapter) => chapter.id == chapterId);
     if (chapterIndex < 0) {
-      chapterIndex = (bookmark.chapterIndex ?? bookmark.pageNumber)
-          .clamp(0, chapters.length - 1);
+      chapterIndex = (bookmark.chapterIndex ?? bookmark.pageNumber).clamp(
+        0,
+        chapters.length - 1,
+      );
     }
     _anchorOffset = locator?.textAnchor?.startOffsetUtf16;
     _restoreAnchorAfterLayout = true;
@@ -1454,31 +1473,30 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     if (!_pageCache.containsKey(key) && _pageCache.length >= 96) {
       _pageCache.remove(_pageCache.keys.first);
     }
-    return _pageCache.putIfAbsent(
-      key,
-      () {
-        final verticalChrome =
-            _pageMode == NativePageMode.verticalScroll ? _verticalChrome : null;
-        return _paginateChapter(
-          chapter,
-          maxWidth: readerTextContentWidth(size.width, _horizontalMargin),
-          maxHeight: verticalChrome?.contentHeight(size.height) ??
-              readerTextContentHeight(
-                size.height,
-                _effectiveTopMargin,
-                _effectiveBottomMargin,
-              ),
-          flowStyle: _readerTextFlowStyle(
-            direction: direction,
-            textScaler: textScaler,
-          ),
-          style: _readerTextStyle,
-          firstLineIndent: _firstLineIndent,
-          paragraphSpacing: _paragraphSpacing,
-          normalizeParagraphBreaks: widget.book.format.toLowerCase() == 'epub',
-        );
-      },
-    );
+    return _pageCache.putIfAbsent(key, () {
+      final verticalChrome = _pageMode == NativePageMode.verticalScroll
+          ? _verticalChrome
+          : null;
+      return _paginateChapter(
+        chapter,
+        maxWidth: readerTextContentWidth(size.width, _horizontalMargin),
+        maxHeight:
+            verticalChrome?.contentHeight(size.height) ??
+            readerTextContentHeight(
+              size.height,
+              _effectiveTopMargin,
+              _effectiveBottomMargin,
+            ),
+        flowStyle: _readerTextFlowStyle(
+          direction: direction,
+          textScaler: textScaler,
+        ),
+        style: _readerTextStyle,
+        firstLineIndent: _firstLineIndent,
+        paragraphSpacing: _paragraphSpacing,
+        normalizeParagraphBreaks: widget.book.format.toLowerCase() == 'epub',
+      );
+    });
   }
 
   String _paginationFingerprintFor(
@@ -1486,32 +1504,28 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     Size size,
     TextDirection direction,
     TextScaler textScaler,
-  ) =>
-      ReaderLayoutFingerprint(
-        contentKey: '$chapterIndex',
-        viewport: size,
-        fontSize: _fontSize,
-        lineHeight: _lineHeight,
-        horizontalMargin: _horizontalMargin,
-        verticalMargin: _topMargin + _bottomMargin,
-        textScaler: textScaler,
-        locale: Localizations.maybeLocaleOf(context),
-        pageMode: _pageMode,
-        firstLineIndent: _firstLineIndent,
-        paragraphSpacing: _paragraphSpacing,
-        textDirection: direction,
-        extra:
-            '${_pageMode == NativePageMode.verticalScroll ? _verticalChrome.paginationSignature : _readerSafeArea.paginationSignature}:'
-            '${_readerFont.id}',
-      ).cacheKey('native-line-v7');
+  ) => ReaderLayoutFingerprint(
+    contentKey: '$chapterIndex',
+    viewport: size,
+    fontSize: _fontSize,
+    lineHeight: _lineHeight,
+    horizontalMargin: _horizontalMargin,
+    verticalMargin: _topMargin + _bottomMargin,
+    textScaler: textScaler,
+    locale: Localizations.maybeLocaleOf(context),
+    pageMode: _pageMode,
+    firstLineIndent: _firstLineIndent,
+    paragraphSpacing: _paragraphSpacing,
+    textDirection: direction,
+    extra:
+        '${_pageMode == NativePageMode.verticalScroll ? _verticalChrome.paginationSignature : _readerSafeArea.paginationSignature}:'
+        '${_readerFont.id}',
+  ).cacheKey('native-line-v7');
 
   Widget _buildPage(_NativeChapter chapter, _ReaderPageData page) {
     final imageIndex = page.imageBlockIndex;
     if (imageIndex == null) {
-      return _buildStyledReaderText(
-        chapter,
-        page,
-      );
+      return _buildStyledReaderText(chapter, page);
     }
     final bytes = chapter.blocks[imageIndex].imageBytes;
     return Column(
@@ -1532,10 +1546,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
         if (page.text.isNotEmpty)
           Expanded(
             flex: _imagePageTextFlex,
-            child: _buildStyledReaderText(
-              chapter,
-              page,
-            ),
+            child: _buildStyledReaderText(chapter, page),
           ),
       ],
     );
@@ -1553,9 +1564,11 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     final result = <_BookPageRef>[];
     final safeFirst = firstChapter.clamp(0, chapters.length - 1);
     final safeLast = lastChapter.clamp(safeFirst, chapters.length - 1);
-    for (var chapterIndex = safeFirst;
-        chapterIndex <= safeLast;
-        chapterIndex++) {
+    for (
+      var chapterIndex = safeFirst;
+      chapterIndex <= safeLast;
+      chapterIndex++
+    ) {
       final chapterPages = _pagesFor(
         chapters[chapterIndex],
         chapterIndex,
@@ -1603,7 +1616,8 @@ class _NativeReaderPageState extends State<NativeReaderPage>
   ) {
     final page = bookPages[index];
     if (page.isBlank) return;
-    final movedForward = page.chapterIndex > _chapterIndex ||
+    final movedForward =
+        page.chapterIndex > _chapterIndex ||
         (page.chapterIndex == _chapterIndex && page.pageIndex > _pageIndex);
     final chapterChanged = page.chapterIndex != _chapterIndex;
     if (movedForward) _sessionPagesRead++;
@@ -1643,9 +1657,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
       if (bytes != null) images.add(bytes);
     }
     await Future.wait(
-      images.map(
-        (bytes) => precacheImage(MemoryImage(bytes), context),
-      ),
+      images.map((bytes) => precacheImage(MemoryImage(bytes), context)),
     );
   }
 
@@ -1709,8 +1721,9 @@ class _NativeReaderPageState extends State<NativeReaderPage>
       return;
     }
     final primary = pickPrimaryReaderItem(
-      _verticalChapterPositionsListener.itemPositions.value
-          .map(_readerPosition),
+      _verticalChapterPositionsListener.itemPositions.value.map(
+        _readerPosition,
+      ),
     );
     if (primary == null) return;
     final nextChapter = primary.index.clamp(0, _visibleChapters.length - 1);
@@ -1722,11 +1735,13 @@ class _NativeReaderPageState extends State<NativeReaderPage>
       _verticalTextScaler,
     );
     final nextPage = readerPageIndexWithinItem(primary, pages.length);
-    final movedForward = nextChapter > _chapterIndex ||
+    final movedForward =
+        nextChapter > _chapterIndex ||
         (nextChapter == _chapterIndex && nextPage > _pageIndex);
     final chapterChanged = nextChapter != _chapterIndex;
-    _verticalScrollProgress.value =
-        pages.length <= 1 ? 0 : (nextPage / (pages.length - 1)).clamp(0.0, 1.0);
+    _verticalScrollProgress.value = pages.length <= 1
+        ? 0
+        : (nextPage / (pages.length - 1)).clamp(0.0, 1.0);
     if (chapterChanged || nextPage != _pageIndex) {
       if (movedForward) _sessionPagesRead++;
       setState(() {
@@ -1757,17 +1772,13 @@ class _NativeReaderPageState extends State<NativeReaderPage>
       ),
       height: _verticalPageExtentFor(viewport),
       child: Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: _horizontalMargin,
-        ),
+        padding: EdgeInsets.symmetric(horizontal: _horizontalMargin),
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(
               maxWidth: readerMaxTextContentWidth,
             ),
-            child: SizedBox.expand(
-              child: _buildPage(chapter, page),
-            ),
+            child: SizedBox.expand(child: _buildPage(chapter, page)),
           ),
         ),
       ),
@@ -1819,10 +1830,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     );
   }
 
-  Widget _buildVerticalBook(
-    List<_NativeChapter> chapters,
-    Size viewport,
-  ) {
+  Widget _buildVerticalBook(List<_NativeChapter> chapters, Size viewport) {
     return ReaderVerticalPagingSurface(
       surfaceKey: const ValueKey('native-reader-surface'),
       onTap: _toggleControls,
@@ -1869,8 +1877,9 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     if (_pageMode == NativePageMode.horizontalSlide) {
       return PageView.builder(
         controller: _pageController,
-        itemCount:
-            usesTwoPageLayout ? (bookPages.length + 1) ~/ 2 : bookPages.length,
+        itemCount: usesTwoPageLayout
+            ? (bookPages.length + 1) ~/ 2
+            : bookPages.length,
         onPageChanged: (index) => _onBookPageChanged(
           usesTwoPageLayout ? index * 2 : index,
           bookPages,
@@ -1918,12 +1927,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
         );
       }
       if (usesTwoPageLayout) {
-        return _buildPageCurlSpread(
-          context,
-          chapters,
-          bookPages,
-          currentIndex,
-        );
+        return _buildPageCurlSpread(context, chapters, bookPages, currentIndex);
       }
       final current = bookPages[currentIndex];
       final forward = currentIndex + 1 < bookPages.length
@@ -1933,41 +1937,22 @@ class _NativeReaderPageState extends State<NativeReaderPage>
       return ReaderShaderPageCurl(
         key: ValueKey('native-curl:${widget.book.id ?? _bookCacheKey}'),
         controller: _pageCurlController,
-        currentPage: _buildBookPageSnapshot(
-          chapters,
-          current,
-        ),
+        currentPage: _buildBookPageSnapshot(chapters, current),
         forwardPage: forward != null
-            ? _buildBookPageSnapshot(
-                chapters,
-                forward,
-              )
+            ? _buildBookPageSnapshot(chapters, forward)
             : null,
         backwardPage: backward != null
-            ? _buildBookPageSnapshot(
-                chapters,
-                backward,
-              )
+            ? _buildBookPageSnapshot(chapters, backward)
             : null,
-        preparePages: () => _precacheBookPageImages(
-          context,
-          chapters,
-          [
-            current,
-            if (forward != null) forward,
-            if (backward != null) backward
-          ],
-        ),
-        onTurnForward: () => _onBookPageChanged(
-          currentIndex + 1,
-          bookPages,
-          chapters,
-        ),
-        onTurnBackward: () => _onBookPageChanged(
-          currentIndex - 1,
-          bookPages,
-          chapters,
-        ),
+        preparePages: () => _precacheBookPageImages(context, chapters, [
+          current,
+          if (forward != null) forward,
+          if (backward != null) backward,
+        ]),
+        onTurnForward: () =>
+            _onBookPageChanged(currentIndex + 1, bookPages, chapters),
+        onTurnBackward: () =>
+            _onBookPageChanged(currentIndex - 1, bookPages, chapters),
         paperColor: _readerTheme.background,
       );
     }
@@ -2083,8 +2068,9 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     final hasPreviousSpread = spreadStart >= 2;
     final hasNextSpread = nextSpreadStart < bookPages.length;
     final currentLeft = bookPages[spreadStart];
-    final currentRight =
-        spreadStart + 1 < bookPages.length ? bookPages[spreadStart + 1] : null;
+    final currentRight = spreadStart + 1 < bookPages.length
+        ? bookPages[spreadStart + 1]
+        : null;
     final previousLeft = hasPreviousSpread ? bookPages[spreadStart - 2] : null;
     final previousRight = hasPreviousSpread ? bookPages[spreadStart - 1] : null;
     final nextLeft = hasNextSpread ? bookPages[nextSpreadStart] : null;
@@ -2130,17 +2116,11 @@ class _NativeReaderPageState extends State<NativeReaderPage>
               pageNumberPlacement: ReaderPageNumberPlacement.bottomRight,
               topInformationLayout: ReaderTopInformationLayout.spreadRight,
             ),
-      preparePages: () => _precacheBookPageImages(
-        context,
-        chapters,
-        pagesToPrepare,
-      ),
+      preparePages: () =>
+          _precacheBookPageImages(context, chapters, pagesToPrepare),
       onTurnForward: () {},
-      onTurnBackward: () => _onBookPageChanged(
-        spreadStart - 2,
-        bookPages,
-        chapters,
-      ),
+      onTurnBackward: () =>
+          _onBookPageChanged(spreadStart - 2, bookPages, chapters),
       paperColor: _readerTheme.background,
     );
 
@@ -2170,30 +2150,23 @@ class _NativeReaderPageState extends State<NativeReaderPage>
             forwardPage: !hasNextSpread
                 ? null
                 : nextRight == null
-                    ? _buildBlankPageSnapshot(
-                        pageIdentity: 'spread-$nextSpreadStart-right',
-                        layoutFingerprint: nextLeft!.layoutFingerprint,
-                        topInformationLayout:
-                            ReaderTopInformationLayout.spreadRight,
-                      )
-                    : _buildBookPageSnapshot(
-                        chapters,
-                        nextRight,
-                        pageNumberPlacement:
-                            ReaderPageNumberPlacement.bottomRight,
-                        topInformationLayout:
-                            ReaderTopInformationLayout.spreadRight,
-                      ),
-            preparePages: () => _precacheBookPageImages(
-              context,
-              chapters,
-              pagesToPrepare,
-            ),
-            onTurnForward: () => _onBookPageChanged(
-              nextSpreadStart,
-              bookPages,
-              chapters,
-            ),
+                ? _buildBlankPageSnapshot(
+                    pageIdentity: 'spread-$nextSpreadStart-right',
+                    layoutFingerprint: nextLeft!.layoutFingerprint,
+                    topInformationLayout:
+                        ReaderTopInformationLayout.spreadRight,
+                  )
+                : _buildBookPageSnapshot(
+                    chapters,
+                    nextRight,
+                    pageNumberPlacement: ReaderPageNumberPlacement.bottomRight,
+                    topInformationLayout:
+                        ReaderTopInformationLayout.spreadRight,
+                  ),
+            preparePages: () =>
+                _precacheBookPageImages(context, chapters, pagesToPrepare),
+            onTurnForward: () =>
+                _onBookPageChanged(nextSpreadStart, bookPages, chapters),
             onTurnBackward: () {},
             paperColor: _readerTheme.background,
           );
@@ -2211,48 +2184,48 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     required String layoutFingerprint,
     ReaderTopInformationLayout topInformationLayout =
         ReaderTopInformationLayout.full,
-  }) =>
-      ReaderPageSnapshot(
-        key: ReaderPageSnapshotKey(
-          pageIdentity: 'native:${widget.book.id ?? _bookCacheKey}:'
-              '$pageIdentity',
-          layoutFingerprint: layoutFingerprint,
-          themeId: _readerTheme.cacheKey,
-        ),
-        contentRevision: _topBarStyle == ReaderTopBarStyle.reader
-            ? _leafStatusController.value.revision
-            : 0,
-        child: _buildBlankPageLeaf(
-          pageIdentity: pageIdentity,
-          layoutFingerprint: layoutFingerprint,
-          topInformationLayout: topInformationLayout,
-        ),
-      );
+  }) => ReaderPageSnapshot(
+    key: ReaderPageSnapshotKey(
+      pageIdentity:
+          'native:${widget.book.id ?? _bookCacheKey}:'
+          '$pageIdentity',
+      layoutFingerprint: layoutFingerprint,
+      themeId: _readerTheme.cacheKey,
+    ),
+    contentRevision: _topBarStyle == ReaderTopBarStyle.reader
+        ? _leafStatusController.value.revision
+        : 0,
+    child: _buildBlankPageLeaf(
+      pageIdentity: pageIdentity,
+      layoutFingerprint: layoutFingerprint,
+      topInformationLayout: topInformationLayout,
+    ),
+  );
 
   Widget _buildBlankPageLeaf({
     required String pageIdentity,
     required String layoutFingerprint,
     required ReaderTopInformationLayout topInformationLayout,
-  }) =>
-      ReaderPaperPageLeaf(
-        palette: _readerTheme,
-        safeArea: _readerSafeArea,
-        metadata: ReaderPaperPageMetadata(
-          pageIdentity: 'native:${widget.book.id ?? _bookCacheKey}:'
-              'blank:$pageIdentity',
-          layoutFingerprint: layoutFingerprint,
-          themeId: _readerTheme.cacheKey,
-          chapterTitle: '',
-          pageNumber: 0,
-          pageCount: 0,
-        ),
-        horizontalPadding: math.max(14, _horizontalMargin),
-        showTopInformation: _topBarStyle == ReaderTopBarStyle.reader,
-        topInformationLayout: topInformationLayout,
-        showPageNumber: false,
-        status: _leafStatusController.value,
-        child: const SizedBox.expand(),
-      );
+  }) => ReaderPaperPageLeaf(
+    palette: _readerTheme,
+    safeArea: _readerSafeArea,
+    metadata: ReaderPaperPageMetadata(
+      pageIdentity:
+          'native:${widget.book.id ?? _bookCacheKey}:'
+          'blank:$pageIdentity',
+      layoutFingerprint: layoutFingerprint,
+      themeId: _readerTheme.cacheKey,
+      chapterTitle: '',
+      pageNumber: 0,
+      pageCount: 0,
+    ),
+    horizontalPadding: math.max(14, _horizontalMargin),
+    showTopInformation: _topBarStyle == ReaderTopBarStyle.reader,
+    topInformationLayout: topInformationLayout,
+    showPageNumber: false,
+    status: _leafStatusController.value,
+    child: const SizedBox.expand(),
+  );
 
   ReaderPaperPageMetadata _nativePageMetadata(
     _NativeChapter chapter,
@@ -2266,7 +2239,8 @@ class _NativeReaderPageState extends State<NativeReaderPage>
         ? context.l10n.readerChapterFallback(chapterIndex + 1)
         : chapter.title;
     return ReaderPaperPageMetadata(
-      pageIdentity: 'native:${widget.book.id ?? _bookCacheKey}:'
+      pageIdentity:
+          'native:${widget.book.id ?? _bookCacheKey}:'
           '${chapter.id}:$pageIndex:${page.startOffset}',
       layoutFingerprint: layoutFingerprint,
       themeId: _readerTheme.cacheKey,
@@ -2318,19 +2292,14 @@ class _NativeReaderPageState extends State<NativeReaderPage>
             constraints: const BoxConstraints(
               maxWidth: readerMaxTextContentWidth,
             ),
-            child: SizedBox.expand(
-              child: _buildPage(chapter, page),
-            ),
+            child: SizedBox.expand(child: _buildPage(chapter, page)),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildSpread({
-    required Widget left,
-    Widget? right,
-  }) {
+  Widget _buildSpread({required Widget left, Widget? right}) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -2365,10 +2334,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     );
   }
 
-  String _readerStatus(
-    List<_ReaderPageData> pages,
-    int chapterCount,
-  ) {
+  String _readerStatus(List<_ReaderPageData> pages, int chapterCount) {
     final page = _pageIndex + 1;
     return context.l10n.readerStatusPaged(
       _chapterIndex + 1,
@@ -2399,8 +2365,9 @@ class _NativeReaderPageState extends State<NativeReaderPage>
 
   @override
   Widget build(BuildContext context) {
-    final systemUiOverlayStyle =
-        SystemUiHelper.overlayStyleForBackground(_readerTheme.background);
+    final systemUiOverlayStyle = SystemUiHelper.overlayStyleForBackground(
+      _readerTheme.background,
+    );
     if (!_routeEntranceCompleted ||
         !_readerDependenciesInitialized ||
         !_readerSettingsLoaded ||
@@ -2432,8 +2399,10 @@ class _NativeReaderPageState extends State<NativeReaderPage>
                 return Scaffold(
                   appBar: AppBar(title: Text(widget.book.title)),
                   body: Center(
-                      child: Text(context.l10n
-                          .readerOpenFailed(snapshot.error.toString()))),
+                    child: Text(
+                      context.l10n.readerOpenFailed(snapshot.error.toString()),
+                    ),
+                  ),
                 );
               }
               final chapters = snapshot.data;
@@ -2444,7 +2413,8 @@ class _NativeReaderPageState extends State<NativeReaderPage>
               }
               if (chapters.isEmpty) {
                 return Scaffold(
-                    body: Center(child: Text(context.l10n.readerNoContent)));
+                  body: Center(child: Text(context.l10n.readerNoContent)),
+                );
               }
 
               _chapterIndex = _chapterIndex.clamp(0, chapters.length - 1);
@@ -2470,8 +2440,8 @@ class _NativeReaderPageState extends State<NativeReaderPage>
                       );
                       final paginationGeometryChanged =
                           !_lastPaginationSize.isEmpty &&
-                              (_lastPaginationSize != paginationSize ||
-                                  _lastUsesTwoPageLayout != usesTwoPageLayout);
+                          (_lastPaginationSize != paginationSize ||
+                              _lastUsesTwoPageLayout != usesTwoPageLayout);
                       if (paginationGeometryChanged) {
                         _restoreAnchorAfterLayout = true;
                         _lastSavedLocation = null;
@@ -2490,17 +2460,17 @@ class _NativeReaderPageState extends State<NativeReaderPage>
                       _visibleUsesTwoPageLayout = usesTwoPageLayout;
                       final bookPages =
                           _pageMode == NativePageMode.horizontalSlide ||
-                                  _pageMode == NativePageMode.pageCurl
-                              ? _bookPagesFor(
-                                  chapters,
-                                  _horizontalFirstChapter,
-                                  _horizontalLastChapter,
-                                  paginationSize,
-                                  Directionality.of(context),
-                                  MediaQuery.textScalerOf(context),
-                                  padOddChapters: usesTwoPageLayout,
-                                )
-                              : const <_BookPageRef>[];
+                              _pageMode == NativePageMode.pageCurl
+                          ? _bookPagesFor(
+                              chapters,
+                              _horizontalFirstChapter,
+                              _horizontalLastChapter,
+                              paginationSize,
+                              Directionality.of(context),
+                              MediaQuery.textScalerOf(context),
+                              padOddChapters: usesTwoPageLayout,
+                            )
+                          : const <_BookPageRef>[];
                       if (_openPreviousChapterAtLastPage) {
                         _pageIndex = usesTwoPageLayout
                             ? _spreadStartForPage(pages.length - 1)
@@ -2515,12 +2485,12 @@ class _NativeReaderPageState extends State<NativeReaderPage>
                         final anchor = _anchorOffset!;
                         final restoredIndex =
                             anchor == 0 && pages.first.isChapterTitle
-                                ? 0
-                                : pages.indexWhere(
-                                    (page) =>
-                                        anchor >= page.startOffset &&
-                                        anchor < page.endOffset,
-                                  );
+                            ? 0
+                            : pages.indexWhere(
+                                (page) =>
+                                    anchor >= page.startOffset &&
+                                    anchor < page.endOffset,
+                              );
                         if (restoredIndex >= 0) _pageIndex = restoredIndex;
                         if (usesTwoPageLayout) {
                           _pageIndex = _spreadStartForPage(_pageIndex);
@@ -2546,7 +2516,8 @@ class _NativeReaderPageState extends State<NativeReaderPage>
                         }
                       }
                       if (_pageMode != NativePageMode.verticalScroll) {
-                        final locationKey = '$_chapterIndex:$_pageIndex:'
+                        final locationKey =
+                            '$_chapterIndex:$_pageIndex:'
                             '${pages[_pageIndex].startOffset}';
                         if (_lastSavedLocation != locationKey) {
                           _lastSavedLocation = locationKey;
@@ -2568,8 +2539,9 @@ class _NativeReaderPageState extends State<NativeReaderPage>
                               page.chapterIndex == _chapterIndex &&
                               page.pageIndex == _pageIndex,
                         );
-                        final targetControllerPage =
-                            usesTwoPageLayout ? targetPage ~/ 2 : targetPage;
+                        final targetControllerPage = usesTwoPageLayout
+                            ? targetPage ~/ 2
+                            : targetPage;
                         WidgetsBinding.instance.addPostFrameCallback((_) {
                           if (!_pageController.hasClients) return;
                           final current = _pageController.page?.round();
@@ -2581,8 +2553,10 @@ class _NativeReaderPageState extends State<NativeReaderPage>
                       }
 
                       final bookmarkPage = _bookmarkPageFor(pages);
-                      final currentBookmarkAnchorKey =
-                          _bookmarkAnchorKey(chapter, bookmarkPage);
+                      final currentBookmarkAnchorKey = _bookmarkAnchorKey(
+                        chapter,
+                        bookmarkPage,
+                      );
                       final currentPageIsBookmarked = _bookmarks.any(
                         (bookmark) =>
                             bookmark.anchorKey == currentBookmarkAnchorKey,
@@ -2596,9 +2570,8 @@ class _NativeReaderPageState extends State<NativeReaderPage>
                         addHint: context.l10n.readerPullBookmarkAddHint,
                         removeHint: context.l10n.readerPullBookmarkRemoveHint,
                         releaseHint: context.l10n.readerPullBookmarkReleaseHint,
-                        onTriggered: () => unawaited(
-                          _toggleBookmark(chapter, bookmarkPage),
-                        ),
+                        onTriggered: () =>
+                            unawaited(_toggleBookmark(chapter, bookmarkPage)),
                         child: Stack(
                           children: [
                             Positioned.fill(
@@ -2611,16 +2584,17 @@ class _NativeReaderPageState extends State<NativeReaderPage>
                                   chapters.length,
                                   usesTwoPageLayout,
                                 ),
-                                onHorizontalDragEnd: _pageMode ==
+                                onHorizontalDragEnd:
+                                    _pageMode ==
                                             NativePageMode.horizontalSlide ||
                                         _pageMode == NativePageMode.pageCurl
                                     ? null
                                     : (details) => _handleHorizontalSwipe(
-                                          details,
-                                          pages,
-                                          chapters.length,
-                                          usesTwoPageLayout,
-                                        ),
+                                        details,
+                                        pages,
+                                        chapters.length,
+                                        usesTwoPageLayout,
+                                      ),
                                 child: _buildReaderContent(
                                   chapters,
                                   chapter,
@@ -2648,20 +2622,23 @@ class _NativeReaderPageState extends State<NativeReaderPage>
                                   _pageMode == NativePageMode.verticalScroll,
                               showViewportTitle:
                                   _pageMode == NativePageMode.verticalScroll &&
-                                      _topBarStyle == ReaderTopBarStyle.reader,
+                                  _topBarStyle == ReaderTopBarStyle.reader,
                               viewportTitleTop: _readerSafeArea.readerTopBarTop,
                               viewportTitleKey: const ValueKey(
-                                  'native-reader-viewport-title'),
+                                'native-reader-viewport-title',
+                              ),
                               readerStatus: _leafStatusController.value,
-                              viewportStatusHorizontalPadding:
-                                  math.max(24, _horizontalMargin),
+                              viewportStatusHorizontalPadding: math.max(
+                                24,
+                                _horizontalMargin,
+                              ),
                               statusBuilder: (context, style, key) =>
                                   _buildReaderStatusText(
-                                pages: pages,
-                                chapterCount: chapters.length,
-                                style: style,
-                                key: key,
-                              ),
+                                    pages: pages,
+                                    chapterCount: chapters.length,
+                                    style: style,
+                                    key: key,
+                                  ),
                               onBack: () => unawaited(_exitReader()),
                               onBookmark: () => unawaited(
                                 _toggleBookmark(chapter, bookmarkPage),
@@ -2673,8 +2650,9 @@ class _NativeReaderPageState extends State<NativeReaderPage>
                                 ),
                               ),
                               onSettings: _showReadingSettings,
-                              backTooltip: MaterialLocalizations.of(context)
-                                  .backButtonTooltip,
+                              backTooltip: MaterialLocalizations.of(
+                                context,
+                              ).backButtonTooltip,
                               bookmarkTooltip: currentPageIsBookmarked
                                   ? context.l10n.bookmarkRemoved
                                   : context.l10n.readerAddBookmark,
@@ -2683,8 +2661,9 @@ class _NativeReaderPageState extends State<NativeReaderPage>
                               settingsTooltip: context.l10n.readingSettings,
                               bookmarked: currentPageIsBookmarked,
                               bookmarkBusy: _bookmarkBusy,
-                              topKey:
-                                  const ValueKey('native-reader-top-controls'),
+                              topKey: const ValueKey(
+                                'native-reader-top-controls',
+                              ),
                               bottomKey: const ValueKey(
                                 'native-reader-bottom-controls',
                               ),
@@ -2758,7 +2737,8 @@ List<_ReaderPageData> _paginateChapter(
       firstLineIndent: firstLineIndent,
       paragraphSpacing: paragraphSpacing,
       normalizeParagraphBreaks: normalizeParagraphBreaks,
-      indentFirstParagraph: sourceOffset == 0 ||
+      indentFirstParagraph:
+          sourceOffset == 0 ||
           isReaderLineBreakCodeUnit(
             chapter.plainText.codeUnitAt(sourceOffset - 1),
           ),
@@ -2773,11 +2753,7 @@ List<_ReaderPageData> _paginateChapter(
     final offset = image.$1.clamp(cursor, chapter.plainText.length);
     final before = chapter.plainText.substring(cursor, offset);
     pages.addAll(
-      paginateRange(
-        before,
-        sourceOffset: cursor,
-        pageHeight: maxHeight,
-      ),
+      paginateRange(before, sourceOffset: cursor, pageHeight: maxHeight),
     );
 
     final nextImageOffset = imageIndex + 1 < imageOffsets.length
@@ -2787,8 +2763,8 @@ List<_ReaderPageData> _paginateChapter(
     final hasImage = chapter.blocks[image.$2].imageBytes != null;
     final inlineTextHeight = hasImage
         ? ((maxHeight - _imagePageGap).clamp(0, double.infinity) *
-            _imagePageTextFlex /
-            (_imagePageImageFlex + _imagePageTextFlex))
+              _imagePageTextFlex /
+              (_imagePageImageFlex + _imagePageTextFlex))
         : maxHeight;
     final inlineChunks = paginateRange(
       available,
@@ -2851,11 +2827,11 @@ class _NativeChapter {
     required List<_NativeBlock> blocks,
     this.depth = 0,
     this.isNeedSplitTitle = false,
-  })  : _plainText = plainText,
-        _blocks = blocks,
-        _dataPath = null,
-        _startOffset = 0,
-        _endOffset = 0;
+  }) : _plainText = plainText,
+       _blocks = blocks,
+       _dataPath = null,
+       _startOffset = 0,
+       _endOffset = 0;
 
   _NativeChapter.lazyFileText({
     required this.id,
@@ -2865,11 +2841,11 @@ class _NativeChapter {
     required int endOffset,
     this.depth = 0,
     this.isNeedSplitTitle = false,
-  })  : _plainText = null,
-        _blocks = null,
-        _dataPath = dataPath,
-        _startOffset = startOffset,
-        _endOffset = endOffset;
+  }) : _plainText = null,
+       _blocks = null,
+       _dataPath = dataPath,
+       _startOffset = startOffset,
+       _endOffset = endOffset;
 
   final String id;
   final String title;
@@ -2929,31 +2905,31 @@ class _ReaderPageData extends ReaderTextPage {
   });
 
   const _ReaderPageData.chapterTitle()
-      : imageBlockIndex = null,
-        super.chapterTitle();
+    : imageBlockIndex = null,
+      super.chapterTitle();
 
   factory _ReaderPageData.fromTextPage(ReaderTextPage page) => _ReaderPageData(
-        text: page.text,
-        startOffset: page.startOffset,
-        endOffset: page.endOffset,
-        layout: page.layout,
-        displayStart: page.displayStart,
-        displayEnd: page.displayEnd,
-        isChapterTitle: page.isChapterTitle,
-      );
+    text: page.text,
+    startOffset: page.startOffset,
+    endOffset: page.endOffset,
+    layout: page.layout,
+    displayStart: page.displayStart,
+    displayEnd: page.displayEnd,
+    isChapterTitle: page.isChapterTitle,
+  );
 
   final int? imageBlockIndex;
 
   _ReaderPageData copyWith({int? imageBlockIndex}) => _ReaderPageData(
-        text: text,
-        imageBlockIndex: imageBlockIndex ?? this.imageBlockIndex,
-        startOffset: startOffset,
-        endOffset: endOffset,
-        layout: layout,
-        displayStart: displayStart,
-        displayEnd: displayEnd,
-        isChapterTitle: isChapterTitle,
-      );
+    text: text,
+    imageBlockIndex: imageBlockIndex ?? this.imageBlockIndex,
+    startOffset: startOffset,
+    endOffset: endOffset,
+    layout: layout,
+    displayStart: displayStart,
+    displayEnd: displayEnd,
+    isChapterTitle: isChapterTitle,
+  );
 }
 
 class _NativeBlock {
@@ -2971,15 +2947,15 @@ class _NativeBlock {
   factory _NativeBlock.text(String text) => _NativeBlock._(text: text);
 
   factory _NativeBlock.fromMap(Map<String, String> map) => _NativeBlock._(
-        text: map['type'] == 'text' ? map['content'] : null,
-        imageBase64: map['type'] == 'image' ? map['content'] : null,
-        startOffset: int.tryParse(map['startOffset'] ?? '') ?? -1,
-        endOffset: int.tryParse(map['endOffset'] ?? '') ?? -1,
-        fontScale: double.tryParse(map['fontScale'] ?? '') ?? 1,
-        bold: map['bold'] == 'true',
-        italic: map['italic'] == 'true',
-        colorHex: map['color'],
-      );
+    text: map['type'] == 'text' ? map['content'] : null,
+    imageBase64: map['type'] == 'image' ? map['content'] : null,
+    startOffset: int.tryParse(map['startOffset'] ?? '') ?? -1,
+    endOffset: int.tryParse(map['endOffset'] ?? '') ?? -1,
+    fontScale: double.tryParse(map['fontScale'] ?? '') ?? 1,
+    bold: map['bold'] == 'true',
+    italic: map['italic'] == 'true',
+    colorHex: map['color'],
+  );
 
   final String? text;
   final String? imageBase64;
@@ -3018,22 +2994,25 @@ TextSpan _styledSpanForRange(
     final overlapStart = block.startOffset.clamp(start, end);
     final overlapEnd = block.endOffset.clamp(start, end);
     if (overlapStart > cursor) {
-      children.add(TextSpan(
-        text: chapter.plainText.substring(cursor, overlapStart),
-        style: base,
-      ));
+      children.add(
+        TextSpan(
+          text: chapter.plainText.substring(cursor, overlapStart),
+          style: base,
+        ),
+      );
     }
-    children.add(TextSpan(
-      text: chapter.plainText.substring(overlapStart, overlapEnd),
-      style: _styleForNativeBlock(block, base),
-    ));
+    children.add(
+      TextSpan(
+        text: chapter.plainText.substring(overlapStart, overlapEnd),
+        style: _styleForNativeBlock(block, base),
+      ),
+    );
     cursor = overlapEnd;
   }
   if (cursor < end) {
-    children.add(TextSpan(
-      text: chapter.plainText.substring(cursor, end),
-      style: base,
-    ));
+    children.add(
+      TextSpan(text: chapter.plainText.substring(cursor, end), style: base),
+    );
   }
   return TextSpan(style: base, children: children);
 }
@@ -3128,12 +3107,14 @@ Future<List<Map<String, dynamic>>> _parseEpubChapters(Uint8List bytes) async {
       final document = html_parser.parse(htmlContent![href]?.Content ?? '');
       final blocks = <Map<String, String>>[];
       final plainText = StringBuffer();
-      final elements = document.body?.querySelectorAll(
+      final elements =
+          document.body?.querySelectorAll(
             'h1,h2,h3,h4,h5,h6,p,div,section,article,li,dd,dt,blockquote,pre,stanza,v,subtitle,a,img,svg image',
           ) ??
           const <html_dom.Element>[];
       for (final element in elements) {
-        final isImage = element.localName == 'img' ||
+        final isImage =
+            element.localName == 'img' ||
             (element.localName == 'image' && element.namespaceUri != null);
         if (isImage) {
           final src = _epubImageSrc(element);
@@ -3193,10 +3174,9 @@ Future<List<Map<String, dynamic>>> _parseEpubChapters(Uint8List bytes) async {
             5: 1.1,
             6: 1.05,
           };
-          final color = RegExp(r'color\s*:\s*([^;]+)')
-              .firstMatch(styleSource)
-              ?.group(1)
-              ?.trim();
+          final color = RegExp(
+            r'color\s*:\s*([^;]+)',
+          ).firstMatch(styleSource)?.group(1)?.trim();
           blocks.add(<String, String>{
             'type': 'text',
             'content': text,
@@ -3212,8 +3192,9 @@ Future<List<Map<String, dynamic>>> _parseEpubChapters(Uint8List bytes) async {
         }
       }
       if (blocks.isEmpty) {
-        final fallback =
-            _extractHtmlParagraphText(document.body?.nodes ?? const []);
+        final fallback = _extractHtmlParagraphText(
+          document.body?.nodes ?? const [],
+        );
         if (fallback.isNotEmpty) {
           plainText.write(fallback);
           blocks.add(<String, String>{
@@ -3271,10 +3252,7 @@ const Set<String> _epubTextBlockTags = <String>{
   'v',
 };
 
-String _normalizeEpubElementText(
-  String rawText, {
-  required bool preformatted,
-}) {
+String _normalizeEpubElementText(String rawText, {required bool preformatted}) {
   if (preformatted) {
     return rawText
         .replaceAll(RegExp(r'[ \t]+'), ' ')
@@ -3338,9 +3316,7 @@ List<Map<String, dynamic>> _parseTxtFileInBackground(
       .toList(growable: false);
 }
 
-Map<String, dynamic> _indexTxtFileInBackground(
-  Map<String, dynamic> arguments,
-) {
+Map<String, dynamic> _indexTxtFileInBackground(Map<String, dynamic> arguments) {
   final bytes = File(arguments['path'] as String).readAsBytesSync();
   final decoded = EnhancedTxtImportService().decodeWithOverride(
     bytes,
@@ -3368,9 +3344,7 @@ Map<String, dynamic> _indexTxtFileInBackground(
     required bool isNeedSplitTitle,
   }) {
     final startByte = output.positionSync();
-    output.writeFromSync(
-      utf8.encode(decoded.substring(startChar, endChar)),
-    );
+    output.writeFromSync(utf8.encode(decoded.substring(startChar, endChar)));
     chapters.add(<String, dynamic>{
       'id': id,
       'title': title,
@@ -3480,12 +3454,13 @@ void _writeParsedChapterCache(Map<String, dynamic> arguments) {
   if (file.existsSync()) file.deleteSync();
   temporary.renameSync(cachePath);
 
-  final cachedFiles = file.parent
-      .listSync()
-      .whereType<File>()
-      .where((entry) => entry.path.endsWith('.json'))
-      .toList()
-    ..sort((a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()));
+  final cachedFiles =
+      file.parent
+          .listSync()
+          .whereType<File>()
+          .where((entry) => entry.path.endsWith('.json'))
+          .toList()
+        ..sort((a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()));
   for (final stale in cachedFiles.skip(3)) {
     stale.deleteSync();
   }
@@ -3503,23 +3478,23 @@ _NativeChapter _nativeChapterFromMap(Map<String, dynamic> chapter) {
   );
 }
 
-List<_NativeChapter> _nativeChaptersFromFileIndex(
-  Map<String, dynamic> index,
-) {
+List<_NativeChapter> _nativeChaptersFromFileIndex(Map<String, dynamic> index) {
   final dataPath = index['dataPath'] as String? ?? '';
   final chapters = index['chapters'] as List<dynamic>? ?? const [];
-  return chapters.map((chapter) {
-    final values = Map<String, dynamic>.from(chapter as Map);
-    return _NativeChapter.lazyFileText(
-      id: values['id'] as String? ?? '',
-      title: values['title'] as String? ?? '',
-      depth: values['depth'] as int? ?? 0,
-      isNeedSplitTitle: values['isNeedSplitTitle'] as bool? ?? false,
-      dataPath: dataPath,
-      startOffset: values['start'] as int? ?? 0,
-      endOffset: values['end'] as int? ?? 0,
-    );
-  }).toList(growable: false);
+  return chapters
+      .map((chapter) {
+        final values = Map<String, dynamic>.from(chapter as Map);
+        return _NativeChapter.lazyFileText(
+          id: values['id'] as String? ?? '',
+          title: values['title'] as String? ?? '',
+          depth: values['depth'] as int? ?? 0,
+          isNeedSplitTitle: values['isNeedSplitTitle'] as bool? ?? false,
+          dataPath: dataPath,
+          startOffset: values['start'] as int? ?? 0,
+          endOffset: values['end'] as int? ?? 0,
+        );
+      })
+      .toList(growable: false);
 }
 
 List<_NativeChapter> _parseHtmlDocument(String source, String fallbackTitle) {
@@ -3543,22 +3518,26 @@ List<_NativeChapter> _parseHtmlDocument(String source, String fallbackTitle) {
     final heading = headings[i];
     final buffer = StringBuffer('${heading.text.trim()}\n\n');
     var node = heading.nextElementSibling;
-    while (
-        node != null && !RegExp(r'^h[1-6]$').hasMatch(node.localName ?? '')) {
+    while (node != null &&
+        !RegExp(r'^h[1-6]$').hasMatch(node.localName ?? '')) {
       final text = _extractHtmlParagraphText(<html_dom.Node>[node]);
       if (text.isNotEmpty) buffer.writeln('$text\n');
       node = node.nextElementSibling;
     }
     final text = buffer.toString();
-    chapters.add(_NativeChapter(
-      id: heading.id.isNotEmpty ? heading.id : 'html-$i',
-      title: heading.text.trim(),
-      depth:
-          int.tryParse((heading.localName ?? 'h1').substring(1))?.clamp(1, 6) ??
-              1,
-      plainText: text,
-      blocks: <_NativeBlock>[_NativeBlock.text(text)],
-    ));
+    chapters.add(
+      _NativeChapter(
+        id: heading.id.isNotEmpty ? heading.id : 'html-$i',
+        title: heading.text.trim(),
+        depth:
+            int.tryParse(
+              (heading.localName ?? 'h1').substring(1),
+            )?.clamp(1, 6) ??
+            1,
+        plainText: text,
+        blocks: <_NativeBlock>[_NativeBlock.text(text)],
+      ),
+    );
   }
   return chapters;
 }
@@ -3577,10 +3556,11 @@ List<_NativeChapter> _parseMarkdownDocument(
 }
 
 List<_NativeChapter> _parseFb2Document(String source, String fallbackTitle) {
-  final sections = RegExp(r'<section\b[^>]*>(.*?)</section>',
-          caseSensitive: false, dotAll: true)
-      .allMatches(source)
-      .toList();
+  final sections = RegExp(
+    r'<section\b[^>]*>(.*?)</section>',
+    caseSensitive: false,
+    dotAll: true,
+  ).allMatches(source).toList();
   if (sections.isEmpty) {
     final document = html_parser.parse(source);
     final text = _extractHtmlParagraphText(document.body?.nodes ?? const []);
@@ -3595,14 +3575,17 @@ List<_NativeChapter> _parseFb2Document(String source, String fallbackTitle) {
   }
   return List<_NativeChapter>.generate(sections.length, (index) {
     final xml = sections[index].group(1) ?? '';
-    final titleMatch = RegExp(r'<title\b[^>]*>(.*?)</title>',
-            caseSensitive: false, dotAll: true)
-        .firstMatch(xml);
+    final titleMatch = RegExp(
+      r'<title\b[^>]*>(.*?)</title>',
+      caseSensitive: false,
+      dotAll: true,
+    ).firstMatch(xml);
     final title = titleMatch == null
         ? '$fallbackTitle ${index + 1}'
         : html_parser.parse(titleMatch.group(1)).body?.text.trim() ?? '';
-    final bodyXml =
-        titleMatch == null ? xml : xml.replaceFirst(titleMatch.group(0)!, '');
+    final bodyXml = titleMatch == null
+        ? xml
+        : xml.replaceFirst(titleMatch.group(0)!, '');
     final text = _extractHtmlParagraphText(
       html_parser.parseFragment(bodyXml).nodes,
     );
@@ -3672,8 +3655,10 @@ String _extractHtmlParagraphText(Iterable<html_dom.Node> nodes) {
 String _extractRtfText(Uint8List bytes) {
   final source = latin1.decode(bytes, allowInvalid: true);
   return source
-      .replaceAllMapped(RegExp(r"\\'([0-9a-fA-F]{2})"),
-          (match) => String.fromCharCode(int.parse(match.group(1)!, radix: 16)))
+      .replaceAllMapped(
+        RegExp(r"\\'([0-9a-fA-F]{2})"),
+        (match) => String.fromCharCode(int.parse(match.group(1)!, radix: 16)),
+      )
       .replaceAll(RegExp(r'\\par[d]?\b'), '\n')
       .replaceAll(RegExp(r'\\[a-zA-Z]+-?\d* ?'), '')
       .replaceAll(RegExp(r'[{}]'), '')
@@ -3684,9 +3669,9 @@ String _extractRtfText(Uint8List bytes) {
 String _extractDocxText(Uint8List bytes) {
   final archive = ZipDecoder().decodeBytes(bytes, verify: true);
   final document = archive.files.cast<ArchiveFile?>().firstWhere(
-        (file) => file?.name == 'word/document.xml',
-        orElse: () => null,
-      );
+    (file) => file?.name == 'word/document.xml',
+    orElse: () => null,
+  );
   if (document == null) {
     throw const FormatException('DOCX document.xml missing');
   }
@@ -3705,19 +3690,24 @@ String _extractDocxText(Uint8List bytes) {
 }
 
 List<_NativeChapter> _parseTxtChapters(
-    String text, String fallbackTitle, String prefaceTitle) {
+  String text,
+  String fallbackTitle,
+  String prefaceTitle,
+) {
   return parseTxtChapterSections(
-    text,
-    fallbackTitle: fallbackTitle,
-    prefaceTitle: prefaceTitle,
-  ).map((section) {
-    final body = section.bodyIn(text);
-    return _NativeChapter(
-      id: section.id,
-      title: section.title,
-      plainText: body,
-      blocks: <_NativeBlock>[_NativeBlock.text(body)],
-      isNeedSplitTitle: section.isNeedSplitTitle,
-    );
-  }).toList(growable: false);
+        text,
+        fallbackTitle: fallbackTitle,
+        prefaceTitle: prefaceTitle,
+      )
+      .map((section) {
+        final body = section.bodyIn(text);
+        return _NativeChapter(
+          id: section.id,
+          title: section.title,
+          plainText: body,
+          blocks: <_NativeBlock>[_NativeBlock.text(body)],
+          isNeedSplitTitle: section.isNeedSplitTitle,
+        );
+      })
+      .toList(growable: false);
 }

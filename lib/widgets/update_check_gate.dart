@@ -24,6 +24,9 @@ class _UpdateCheckGateState extends State<UpdateCheckGate> {
   @override
   void initState() {
     super.initState();
+    // Web 部署随 GitHub Release 自动替换静态文件，刷新页面即是最新版。
+    // 浏览器中再请求官网/GitHub 更新接口只会引入 CORS 失败。
+    if (kIsWeb) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(UpdatePromptController.check(context));
     });
@@ -67,7 +70,8 @@ class UpdatePromptController {
       }
       if (!context.mounted) return true;
 
-      final action = await showDialog<_UpdateAction>(
+      final action =
+          await showDialog<_UpdateAction>(
             context: context,
             builder: (dialogContext) => _UpdateDialog(result: result),
           ) ??
@@ -76,15 +80,18 @@ class UpdatePromptController {
 
       final handled = switch (action) {
         _UpdateAction.later => true,
-        _UpdateAction.github =>
-          await _openExternal(context, result.latestRelease.releaseUrl),
-        _UpdateAction.website => context.mounted
-            ? await _handleWebsiteUpdate(
-                context,
-                result.latestRelease,
-                downloadService ?? AppUpdateDownloadService(),
-              )
-            : false,
+        _UpdateAction.github => await _openExternal(
+          context,
+          result.latestRelease.releaseUrl,
+        ),
+        _UpdateAction.website =>
+          context.mounted
+              ? await _handleWebsiteUpdate(
+                  context,
+                  result.latestRelease,
+                  downloadService ?? AppUpdateDownloadService(),
+                )
+              : false,
       };
       if (!manual && handled) {
         await prefs.setString(_lastPromptedVersionKey, latestVersion);
@@ -108,7 +115,8 @@ class UpdatePromptController {
     AppUpdateDownloadService downloadService,
   ) async {
     if (defaultTargetPlatform != TargetPlatform.android || kIsWeb) {
-      final websiteUrl = release.websiteAsset?.websiteUrl ??
+      final websiteUrl =
+          release.websiteAsset?.websiteUrl ??
           Uri.parse('https://open.xxread.top/download');
       return _openExternal(context, websiteUrl);
     }
@@ -134,8 +142,7 @@ class UpdatePromptController {
     final message = switch (failure.failure) {
       AppUpdateFailure.cancelled => null,
       AppUpdateFailure.fileSize ||
-      AppUpdateFailure.checksum =>
-        context.l10n.updateIntegrityFailed,
+      AppUpdateFailure.checksum => context.l10n.updateIntegrityFailed,
       AppUpdateFailure.download => context.l10n.updateDownloadFailed,
       AppUpdateFailure.install => context.l10n.updateInstallFailed,
       AppUpdateFailure.unsupported => context.l10n.updateWebsiteUnavailable,
@@ -188,17 +195,14 @@ class _UpdateDialog extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              l10n.updateVersionSummary(
-                result.currentVersion,
-                release.version,
-              ),
+              l10n.updateVersionSummary(result.currentVersion, release.version),
             ),
             const SizedBox(height: 16),
             Text(
               l10n.updateNotesTitle,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 8),
             Flexible(
@@ -207,10 +211,9 @@ class _UpdateDialog extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .surfaceContainerHighest
-                      .withValues(alpha: 0.45),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: SingleChildScrollView(child: SelectableText(notes)),
@@ -230,7 +233,8 @@ class _UpdateDialog extends StatelessWidget {
           label: Text(l10n.updateFromGithub),
         ),
         FilledButton.icon(
-          onPressed: defaultTargetPlatform == TargetPlatform.android &&
+          onPressed:
+              defaultTargetPlatform == TargetPlatform.android &&
                   !kIsWeb &&
                   release.websiteAsset == null
               ? null
@@ -295,9 +299,9 @@ class _WebsiteUpdateProgressDialogState
       if (mounted) Navigator.of(context).pop(error);
     } catch (error) {
       if (mounted) {
-        Navigator.of(context).pop(
-          AppUpdateException(AppUpdateFailure.install, error),
-        );
+        Navigator.of(
+          context,
+        ).pop(AppUpdateException(AppUpdateFailure.install, error));
       }
     }
   }

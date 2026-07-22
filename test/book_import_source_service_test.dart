@@ -61,9 +61,9 @@ void main() {
     MethodCall? invocation;
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, (call) async {
-      invocation = call;
-      return '/tmp/materialized.epub';
-    });
+          invocation = call;
+          return '/tmp/materialized.epub';
+        });
     addTearDown(
       () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(channel, null),
@@ -90,31 +90,31 @@ void main() {
     var persistedUris = <String>{'content://tree/available'};
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, (call) async {
-      switch (call.method) {
-        case 'pickDirectory':
-          return <String, Object?>{
-            'treeUri': 'content://tree/available',
-            'displayName': 'Books',
-          };
-        case 'listDocuments':
-          return const <Object?>[];
-        case 'listPersistedDirectories':
-          return persistedUris
-              .map(
-                (uri) => <String, Object?>{
-                  'treeUri': uri,
-                  'displayName': 'Books',
-                },
-              )
-              .toList();
-        case 'releaseDirectory':
-          persistedUris.remove(
-            (call.arguments as Map<Object?, Object?>)['treeUri'],
-          );
-          return true;
-      }
-      return null;
-    });
+          switch (call.method) {
+            case 'pickDirectory':
+              return <String, Object?>{
+                'treeUri': 'content://tree/available',
+                'displayName': 'Books',
+              };
+            case 'listDocuments':
+              return const <Object?>[];
+            case 'listPersistedDirectories':
+              return persistedUris
+                  .map(
+                    (uri) => <String, Object?>{
+                      'treeUri': uri,
+                      'displayName': 'Books',
+                    },
+                  )
+                  .toList();
+            case 'releaseDirectory':
+              persistedUris.remove(
+                (call.arguments as Map<Object?, Object?>)['treeUri'],
+              );
+              return true;
+          }
+          return null;
+        });
     addTearDown(
       () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(channel, null),
@@ -151,19 +151,45 @@ void main() {
     );
 
     BookImportSource source(File file) => BookImportSource(
-          id: file.path,
-          kind: BookImportSourceKind.systemOpen,
-          ownership: BookImportOwnership.externalCopy,
-          displayName: p.basename(file.path),
-          extension: 'txt',
-          locator: 'system_open:test',
-          localPath: file.path,
-        );
+      id: file.path,
+      kind: BookImportSourceKind.systemOpen,
+      ownership: BookImportOwnership.externalCopy,
+      displayName: p.basename(file.path),
+      extension: 'txt',
+      locator: 'system_open:test',
+      localPath: file.path,
+    );
 
     await service.release(source(staged));
     await service.release(source(external));
 
     expect(await staged.exists(), isFalse);
     expect(await external.exists(), isTrue);
+  });
+
+  test('内存来源的准备与释放不访问临时目录或文件系统', () async {
+    var temporaryDirectoryCalls = 0;
+    final service = BookImportSourceService(
+      temporaryDirectory: () async {
+        temporaryDirectoryCalls++;
+        throw StateError('不应访问临时目录');
+      },
+    );
+    final source = BookImportSource.withBytes(
+      id: 'file_picker:web-book://${'a' * 64}',
+      kind: BookImportSourceKind.filePicker,
+      ownership: BookImportOwnership.externalCopy,
+      displayName: 'web.txt',
+      extension: 'txt',
+      locator: 'web-book://${'a' * 64}',
+      localPath: 'web-book://${'a' * 64}',
+      sizeBytes: 3,
+      bytes: Uint8List.fromList(<int>[1, 2, 3]),
+    );
+
+    expect(await service.prepare(source), same(source));
+    await service.release(source);
+
+    expect(temporaryDirectoryCalls, 0);
   });
 }

@@ -64,7 +64,7 @@ import 'app_localizations_zh.dart';
 /// property.
 abstract class AppLocalizations {
   AppLocalizations(String locale)
-      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -87,18 +87,18 @@ abstract class AppLocalizations {
   /// of delegates is preferred or required.
   static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
       <LocalizationsDelegate<dynamic>>[
-    delegate,
-    GlobalMaterialLocalizations.delegate,
-    GlobalCupertinoLocalizations.delegate,
-    GlobalWidgetsLocalizations.delegate,
-  ];
+        delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('en'),
     Locale('ja'),
     Locale('zh'),
-    Locale('zh', 'TW')
+    Locale('zh', 'TW'),
   ];
 
   /// The title of the application
@@ -2926,7 +2926,11 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Chapter {chapter}/{chapterCount} · Page {page}/{pageCount}'**
   String readerStatusPaged(
-      int chapter, int chapterCount, int page, int pageCount);
+    int chapter,
+    int chapterCount,
+    int page,
+    int pageCount,
+  );
 
   /// Bottom status bar in vertical scroll mode: current chapter position
   ///
@@ -5303,7 +5307,10 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Server response is not valid JSON. The current endpoint may be incompatible with the {provider} configuration.\nRequest URL: {endpoint}\nResponse snippet: {snippet}'**
   String readerAiInvalidJsonError(
-      String provider, String endpoint, String snippet);
+    String provider,
+    String endpoint,
+    String snippet,
+  );
 
   /// AIServiceException when the response body cannot be read; {status} is either empty or '(code)'
   ///
@@ -5316,42 +5323,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Network request failed{status}: {error}\nRequest URL: {endpoint}'**
   String readerAiNetworkRequestFailed(
-      String status, String error, String endpoint);
+    String status,
+    String error,
+    String endpoint,
+  );
 
   /// AIServiceException with MiniMax-specific debugging hints
   ///
   /// In en, this message translates to:
   /// **'Request failed({status}): {text}\nSuggestions: 1) MiniMax temperature must be in (0,1]; 2) check that the model name matches the endpoint; 3) use only a single system instruction.\nRequest URL: {endpoint}'**
   String readerAiRequestFailedMinimaxHint(
-      String status, String text, String endpoint);
+    String status,
+    String text,
+    String endpoint,
+  );
 
   /// AIServiceException with Claude-specific debugging hints
   ///
   /// In en, this message translates to:
   /// **'Request failed({status}): {text}\nTip: Claude requires the anthropic-version request header.\nRequest URL: {endpoint}'**
   String readerAiRequestFailedClaudeHint(
-      String status, String text, String endpoint);
+    String status,
+    String text,
+    String endpoint,
+  );
 
   /// AIServiceException hinting that the provider and API key may be mismatched
   ///
   /// In en, this message translates to:
   /// **'Request failed({status}): {text}\nTip: Please confirm that the provider and API Key match; they cannot be mixed.\nRequest URL: {endpoint}'**
   String readerAiRequestFailedProviderMismatchHint(
-      String status, String text, String endpoint);
+    String status,
+    String text,
+    String endpoint,
+  );
 
   /// Generic AIServiceException for a non-200 response with body text
   ///
   /// In en, this message translates to:
   /// **'Request failed({status}): {text}\nRequest URL: {endpoint}'**
   String readerAiRequestFailedGeneric(
-      String status, String text, String endpoint);
+    String status,
+    String text,
+    String endpoint,
+  );
 
   /// Mock AI response shown when AI is not configured, for a text selection query
   ///
   /// In en, this message translates to:
   /// **'AI (mock): The text you selected is \"{selectedText}\".\n\nBefore: {before}\nAfter: {after}'**
   String readerAiMockSelectionResponse(
-      String selectedText, String before, String after);
+    String selectedText,
+    String before,
+    String after,
+  );
 
   /// Mock AI response shown when AI is not configured, for a page analysis query
   ///
@@ -5418,7 +5443,10 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'- Location: {chapterId} ({startOffset}-{endOffset})'**
   String readerAiSnippetLocation(
-      String chapterId, int startOffset, int endOffset);
+    String chapterId,
+    int startOffset,
+    int endOffset,
+  );
 
   /// Heading for the reading suggestion section in the local fallback response
   ///
@@ -5897,7 +5925,7 @@ abstract class AppLocalizations {
   /// User agreement V2 section 6 body
   ///
   /// In en, this message translates to:
-  /// **'OpenReading is local-first. Books, reading progress, notes, and settings are normally stored on your device. Unless you enable a network book source, cover search, AI, sync, or another online feature, the app does not need to send book text to the developers to provide local reading. Automatic and manual update checks contact GitHub and the official site at open.xxread.top with necessary technical parameters such as platform, processor architecture, and release channel; their servers process your IP address and User-Agent as part of ordinary network communication. When you download an installer from the official site, the backend records the version, architecture, download time, IP address, and User-Agent for download counts, security protection, and troubleshooting. Download-event records containing a raw IP are retained for no more than 30 days and then deleted; only aggregate statistics without raw IP addresses are kept longer. Update requests do not include book text, your library, notes, an account, or a unique device identifier. GitHub requests are also governed by GitHub’s privacy terms. When another online feature is used, queries, selected text, network information, or necessary parameters may be sent to the provider you selected under that provider’s policies. Protect your device, API keys, and backups; uninstalling, clearing data, device failure, or user error may permanently erase data.'**
+  /// **'OpenReading is local-first. Books, reading progress, notes, and settings are normally stored on your device. Unless you enable a network book source, AI, sync, or another online feature, the app does not need to send book text to the developers to provide local reading. Automatic and manual update checks contact GitHub and the official site at open.xxread.top with necessary technical parameters such as platform, processor architecture, and release channel; their servers process your IP address and User-Agent as part of ordinary network communication. When you download an installer from the official site, the backend records the version, architecture, download time, IP address, and User-Agent for download counts, security protection, and troubleshooting. Download-event records containing a raw IP are retained for no more than 30 days and then deleted; only aggregate statistics without raw IP addresses are kept longer. Update requests do not include book text, your library, notes, an account, or a unique device identifier. GitHub requests are also governed by GitHub’s privacy terms. When another online feature is used, queries, selected text, network information, or necessary parameters may be sent to the provider you selected under that provider’s policies. Protect your device, API keys, and backups; uninstalling, clearing data, device failure, or user error may permanently erase data.'**
   String get agreementV2Section6Body;
 
   /// User agreement V2 section 7 title
@@ -6710,8 +6738,9 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   }
 
   throw FlutterError(
-      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-      'an issue with the localizations generation tool. Please file an issue '
-      'on GitHub with a reproducible sample app and the gen-l10n configuration '
-      'that was used.');
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.',
+  );
 }

@@ -85,9 +85,7 @@ void main(List<String> arguments) async {
       child: provider.MultiProvider(
         providers: [
           provider.ChangeNotifierProvider(create: (_) => ThemeNotifier()),
-          provider.ChangeNotifierProvider(
-            create: (_) => AppSettingsNotifier(),
-          ),
+          provider.ChangeNotifierProvider(create: (_) => AppSettingsNotifier()),
           provider.ChangeNotifierProvider(create: (_) => TtsService()),
           provider.ChangeNotifierProvider(
             create: (_) => DownloadTaskController(),
@@ -152,10 +150,7 @@ class _RestartableAppState extends State<RestartableApp> {
 
   @override
   Widget build(BuildContext context) {
-    return KeyedSubtree(
-      key: _subtreeKey,
-      child: widget.child,
-    );
+    return KeyedSubtree(key: _subtreeKey, child: widget.child);
   }
 }
 
@@ -419,10 +414,7 @@ class ThemeNotifier extends ChangeNotifier {
 }
 
 class XxReadApp extends StatefulWidget {
-  const XxReadApp({
-    super.key,
-    this.initialFilePaths = const [],
-  });
+  const XxReadApp({super.key, this.initialFilePaths = const []});
 
   final List<String> initialFilePaths;
 
@@ -462,8 +454,9 @@ class _XxReadAppState extends State<XxReadApp> with WidgetsBindingObserver {
       }),
     );
     _enqueueInitialDesktopBooks();
-    _notificationTapSubscription =
-        BackgroundDownloadNotifier.taps.listen(_handleNotificationTap);
+    _notificationTapSubscription = BackgroundDownloadNotifier.taps.listen(
+      _handleNotificationTap,
+    );
     unawaited(BackgroundDownloadNotifier.initialize());
     _bootstrapServices();
     _checkAgreementStatus();
@@ -526,9 +519,7 @@ class _XxReadAppState extends State<XxReadApp> with WidgetsBindingObserver {
     );
   }
 
-  Future<void> _openIncomingImportQueue(
-    List<BookImportSource> sources,
-  ) async {
+  Future<void> _openIncomingImportQueue(List<BookImportSource> sources) async {
     final context = _navigatorKey.currentContext;
     if (!mounted || context == null) {
       throw StateError('Navigator is not ready for incoming books');
@@ -611,26 +602,31 @@ class _XxReadAppState extends State<XxReadApp> with WidgetsBindingObserver {
       return;
     }
 
-    // 初始化图片管理器
-    try {
-      final appDocDir = await getApplicationDocumentsDirectory();
-      await BookImageManager().initialize(appDocDir.path);
-    } catch (e) {
-      debugPrint('图片管理器初始化失败: $e');
-      if (mounted) {
-        setState(() => _bootstrapError = _BootstrapError.imageManager);
+    // 浏览器没有 path_provider 的文件系统目录。Web 端的图片与书籍
+    // 持久化需要单独的浏览器存储实现，不应让本地文件系统的初始化
+    // 阻塞整个 Web 应用启动。
+    if (!kIsWeb) {
+      // 初始化图片管理器
+      try {
+        final appDocDir = await getApplicationDocumentsDirectory();
+        await BookImageManager().initialize(appDocDir.path);
+      } catch (e) {
+        debugPrint('图片管理器初始化失败: $e');
+        if (mounted) {
+          setState(() => _bootstrapError = _BootstrapError.imageManager);
+        }
+        return;
       }
-      return;
-    }
 
-    // 修复历史绝对路径（升级/重装后可能导致书籍与封面路径失效）
-    try {
-      await BookStorageRepairService().repairAllBooksIfNeeded();
-      // 清理历史残留的临时/无效文件，避免占用存储
-      await BookStorageRepairService().cleanupUnusedStorageArtifacts();
-    } catch (e) {
-      // 路径修复失败不阻塞启动
-      debugPrint('书籍路径修复失败（已忽略，不阻塞启动）: $e');
+      // 修复历史绝对路径（升级/重装后可能导致书籍与封面路径失效）
+      try {
+        await BookStorageRepairService().repairAllBooksIfNeeded();
+        // 清理历史残留的临时/无效文件，避免占用存储
+        await BookStorageRepairService().cleanupUnusedStorageArtifacts();
+      } catch (e) {
+        // 路径修复失败不阻塞启动
+        debugPrint('书籍路径修复失败（已忽略，不阻塞启动）: $e');
+      }
     }
 
     if (!mounted) return;
@@ -756,9 +752,7 @@ class _XxReadAppState extends State<XxReadApp> with WidgetsBindingObserver {
             GlobalCupertinoLocalizations.delegate,
           ],
           supportedLocales: AppLocalizations.supportedLocales,
-          home: Builder(
-            builder: (context) => _buildHome(context),
-          ),
+          home: Builder(builder: (context) => _buildHome(context)),
           // 移除 builder 中的系统UI更新，让各页面自行控制
           // 避免与阅读页面的全屏模式冲突
         );
@@ -816,9 +810,9 @@ class _XxReadAppState extends State<XxReadApp> with WidgetsBindingObserver {
               const SizedBox(height: 16),
               Text(
                 context.l10n.initializationFailed,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 8),
               Text(
@@ -876,17 +870,14 @@ class _XxReadAppState extends State<XxReadApp> with WidgetsBindingObserver {
                   ),
                   borderRadius: BorderRadius.circular(18),
                 ),
-                child: const AppBrandIcon(
-                  size: 56,
-                  borderRadius: 13,
-                ),
+                child: const AppBrandIcon(size: 56, borderRadius: 13),
               ),
               const SizedBox(height: 20),
               Text(
                 context.l10n.appTitle,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 40),
               CircularProgressIndicator(
@@ -965,8 +956,9 @@ class _XxReadAppState extends State<XxReadApp> with WidgetsBindingObserver {
   }) {
     final isDark = brightness == Brightness.dark;
     final isMaterial3Style = uiStyle == AppUiStyle.material3;
-    final systemBarColor =
-        isMaterial3Style ? colorScheme.surface : Colors.transparent;
+    final systemBarColor = isMaterial3Style
+        ? colorScheme.surface
+        : Colors.transparent;
 
     return ThemeData(
       useMaterial3: true,
@@ -993,8 +985,9 @@ class _XxReadAppState extends State<XxReadApp> with WidgetsBindingObserver {
           statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
           statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
           systemNavigationBarColor: systemBarColor,
-          systemNavigationBarIconBrightness:
-              isDark ? Brightness.light : Brightness.dark,
+          systemNavigationBarIconBrightness: isDark
+              ? Brightness.light
+              : Brightness.dark,
           systemNavigationBarDividerColor: Colors.transparent,
           systemStatusBarContrastEnforced: false,
           systemNavigationBarContrastEnforced: false,
@@ -1014,7 +1007,4 @@ class _XxReadAppState extends State<XxReadApp> with WidgetsBindingObserver {
 }
 
 /// 启动初始化失败的类型，文案在 build 时按当前语言解析。
-enum _BootstrapError {
-  dataService,
-  imageManager,
-}
+enum _BootstrapError { dataService, imageManager }

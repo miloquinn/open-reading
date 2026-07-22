@@ -1,7 +1,7 @@
 # Open Reading 项目结构
 
 > 最后更新：2026-07-22
-> 当前版本：2.3.1
+> 当前版本：2.3.5
 > 本文记录稳定的项目结构、模块边界和核心数据结构，不罗列每个实现细节。
 
 ## 维护规则
@@ -105,6 +105,7 @@ lib/
 ## 主要页面
 
 - `pages/home/home_shell_page.dart`：应用主壳和导航入口；手机悬浮底栏支持纯图标与“图标＋文字”两种模式，宽度在手机上取 `screenWidth - 36` 并以四项约 368px 为理想上限，选中底板按真实单项槽宽自适应；宽屏继续使用 `NavigationRail`。新用户完成欢迎协议后，主壳可挂载一次性开发者支持浮层。
+- `pages/home/home_mobile_dashboard_page.dart`：手机与宽屏共用的响应式首页；信息层级固定为“继续阅读 → 阅读节奏 → 最近阅读”，只读取本地书籍与阅读统计，不加载阅读计划或 AI 推荐。`home_dashboard_page.dart` 仅保留稳定路由类型并转交统一实现。
 - `pages/reading_stats/detailed_stats_page.dart`：阅读统计详情入口与数据加载；`reading_stats/parts/` 按公共样式、总览、图表、热力图、书籍排行和成就拆分页面模块，避免统计页继续膨胀为巨型文件。
 - `pages/library/library_page.dart`：本地与在线书架；书库顶部提供下载任务入口，WebDAV 配置后显示书籍文件入口并指示远端可用文件。本地书长按可把应用管理文件导出到系统位置，在线未下载记录不会显示误导性的导出入口。
 - `pages/library/download_tasks_page.dart`：跨平台书籍下载队列的状态查看页；等待中和下载中的任务可逐条取消，取消状态与失败状态分离展示。

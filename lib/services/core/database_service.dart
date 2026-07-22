@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 
 import 'package:xxread/data/migration/reading_schema_migration.dart';
 import 'package:xxread/data/migration/book_import_schema_migration.dart';
@@ -52,27 +53,28 @@ class DatabaseService {
   }
 
   Future<Database> _initDatabase() async {
-    if (!kIsWeb &&
-        (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+    if (kIsWeb) {
+      databaseFactory = databaseFactoryFfiWeb;
+    } else if ((Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
       sqfliteFfiInit();
       databaseFactory = databaseFactoryFfi;
     }
 
-    String dbPath;
-    if (!kIsWeb &&
-        (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+    String databasePath;
+    if (kIsWeb) {
+      // Web 端的 FFI 适配器使用 IndexedDB 虚拟文件系统，只需逻辑文件名。
+      databasePath = _dbName;
+    } else if ((Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
       // 桌面平台使用 path_provider
       final appDocDir = await getApplicationDocumentsDirectory();
-      dbPath = appDocDir.path;
+      databasePath = join(appDocDir.path, _dbName);
     } else {
       // 移动平台使用 sqflite 的默认路径
-      dbPath = await getDatabasesPath();
+      databasePath = join(await getDatabasesPath(), _dbName);
     }
 
-    final path = join(dbPath, _dbName);
-
     return await openDatabase(
-      path,
+      databasePath,
       version: _dbVersion,
       onConfigure: _onConfigure,
       onCreate: _onCreate,
@@ -171,8 +173,9 @@ class DatabaseService {
     if (oldVersion < 6) {
       // Add cover image path field to books table if it doesn't exist
       final tableInfo = await db.rawQuery('PRAGMA table_info(books)');
-      final hasCoverImagePath =
-          tableInfo.any((column) => column['name'] == 'cover_image_path');
+      final hasCoverImagePath = tableInfo.any(
+        (column) => column['name'] == 'cover_image_path',
+      );
       if (!hasCoverImagePath) {
         await db.execute('ALTER TABLE books ADD COLUMN cover_image_path TEXT');
       }
@@ -289,8 +292,9 @@ class DatabaseService {
     }
     if (oldVersion < 12) {
       final bookmarkInfo = await db.rawQuery('PRAGMA table_info(bookmarks)');
-      final bookmarkColumns =
-          bookmarkInfo.map((c) => c['name'] as String).toSet();
+      final bookmarkColumns = bookmarkInfo
+          .map((c) => c['name'] as String)
+          .toSet();
       if (!bookmarkColumns.contains('cfi')) {
         await db.execute('ALTER TABLE bookmarks ADD COLUMN cfi TEXT');
       }
@@ -305,8 +309,9 @@ class DatabaseService {
     }
     if (oldVersion < 15) {
       final tableInfo = await db.rawQuery('PRAGMA table_info(books)');
-      final columns =
-          tableInfo.map((column) => column['name'] as String).toSet();
+      final columns = tableInfo
+          .map((column) => column['name'] as String)
+          .toSet();
       if (!columns.contains('storage_type')) {
         await db.execute(
           "ALTER TABLE books ADD COLUMN storage_type TEXT NOT NULL DEFAULT 'local'",
@@ -328,8 +333,9 @@ class DatabaseService {
     }
     if (oldVersion < 16) {
       final bookmarkInfo = await db.rawQuery('PRAGMA table_info(bookmarks)');
-      final columns =
-          bookmarkInfo.map((column) => column['name'] as String).toSet();
+      final columns = bookmarkInfo
+          .map((column) => column['name'] as String)
+          .toSet();
       final additions = <String, String>{
         'anchor_key': 'TEXT',
         'chapter_index': 'INTEGER',

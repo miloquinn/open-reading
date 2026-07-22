@@ -2,11 +2,12 @@
 // 技术要点：服务层、Flutter。
 
 import 'dart:io';
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:xxread/models/book.dart';
 import 'package:xxread/services/core/database_service.dart';
 import 'package:xxread/services/books/book_image_map_service.dart';
 import 'package:xxread/services/books/book_import_models.dart';
+import 'package:xxread/services/books/web_book_file_store.dart';
 
 class BookDao implements BookImportStore {
   final _dbService = DatabaseService();
@@ -146,6 +147,7 @@ class BookDao implements BookImportStore {
   Future<void> deleteBook(int bookId) async {
     try {
       final db = await _dbService.database;
+      final book = await getBookById(bookId);
 
       // 🗑️ 删除相关缓存
       await _deleteBookCaches(bookId);
@@ -153,24 +155,21 @@ class BookDao implements BookImportStore {
       // 删除数据库记录。显式删除子表行：外键 CASCADE 依赖
       // PRAGMA foreign_keys 开启，这里手动删除保证历史数据也被清理。
       final result = await db.transaction((txn) async {
-        await txn.delete(
-          'bookmarks',
-          where: 'bookId = ?',
-          whereArgs: [bookId],
-        );
+        await txn.delete('bookmarks', where: 'bookId = ?', whereArgs: [bookId]);
         await txn.delete(
           'book_notes',
           where: 'book_id = ?',
           whereArgs: [bookId],
         );
-        return txn.delete(
-          'books',
-          where: 'id = ?',
-          whereArgs: [bookId],
-        );
+        return txn.delete('books', where: 'id = ?', whereArgs: [bookId]);
       });
       if (result == 0) {
         throw Exception('书籍不存在或已被删除');
+      }
+      if (kIsWeb &&
+          book != null &&
+          WebBookFileStore.isWebBookPath(book.filePath)) {
+        await WebBookFileStore().delete(book.filePath);
       }
 
       debugPrint('✅ 书籍已删除: $bookId（包括所有相关缓存）');
