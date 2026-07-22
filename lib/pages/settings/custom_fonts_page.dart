@@ -10,6 +10,7 @@ import 'package:xxread/services/core/core_services.dart';
 import 'package:xxread/utils/font_catalog_helper.dart';
 import 'package:xxread/utils/localization_extension.dart';
 import 'package:xxread/utils/page_style_helper.dart';
+import 'package:xxread/widgets/side_toast.dart';
 
 enum _CustomFontAction { app, reader, both, rename, delete }
 
@@ -98,13 +99,17 @@ class CustomFontsPage extends StatelessWidget {
       final message = result.status == CustomFontImportStatus.duplicate
           ? l10n.customFontAlreadyImported
           : l10n.customFontImported;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
+      showSideToast(
+        context,
+        message,
+        kind: SideToastKind.success,
       );
     } on CustomFontException catch (error) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_errorText(context, error))),
+      showSideToast(
+        context,
+        _errorText(context, error),
+        kind: SideToastKind.error,
       );
     }
   }
@@ -134,8 +139,10 @@ class CustomFontsPage extends StatelessWidget {
         return;
     }
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(context.l10n.customFontApplied)),
+    showSideToast(
+      context,
+      context.l10n.customFontApplied,
+      kind: SideToastKind.success,
     );
   }
 

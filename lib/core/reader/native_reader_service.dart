@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -29,27 +30,41 @@ class NativeReaderService {
     BuildContext context,
     Book book, {
     BookOpenAnimation? animation,
+    bool waitForReaderClose = true,
   }) async {
     final repaired =
         await BookStorageRepairService().repairSingleBookIfNeeded(book);
     if (!await File(repaired.filePath).exists()) {
       if (context.mounted) {
-        showSideToast(context, context.l10n.readerFileMissing);
+        showSideToast(
+          context,
+          context.l10n.readerFileMissing,
+          kind: SideToastKind.error,
+        );
       }
       return;
     }
     if (!_supportedFormats.contains(repaired.format.toLowerCase())) {
       if (context.mounted) {
-        showSideToast(context, context.l10n.readerUnsupportedFormat);
+        showSideToast(
+          context,
+          context.l10n.readerUnsupportedFormat,
+          kind: SideToastKind.warning,
+        );
       }
       return;
     }
     if (!context.mounted) return;
-    await Navigator.of(context).push<void>(
+    final navigation = Navigator.of(context).push<void>(
       BookOpenTransition.createRoute<void>(
         NativeReaderPage(book: repaired),
         animation: animation,
       ),
     );
+    if (waitForReaderClose) {
+      await navigation;
+    } else {
+      unawaited(navigation);
+    }
   }
 }

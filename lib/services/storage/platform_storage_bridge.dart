@@ -87,6 +87,39 @@ class PlatformStorageBridge {
     return path;
   }
 
+  Future<Map<String, Object?>> exportBookToDownloads({
+    required String sourcePath,
+    required String displayName,
+    required String mimeType,
+  }) async {
+    return await _channel.invokeMapMethod<String, Object?>(
+          'exportBookToDownloads',
+          {
+            'sourcePath': sourcePath,
+            'displayName': displayName,
+            'mimeType': mimeType,
+            'relativePath': 'Download/开元阅读',
+          },
+        ) ??
+        const {'status': 'failure', 'errorCode': 'empty_result'};
+  }
+
+  Future<Map<String, Object?>> exportDocument({
+    required String sourcePath,
+    required String displayName,
+    required String mimeType,
+  }) async {
+    return await _channel.invokeMapMethod<String, Object?>(
+          'exportDocument',
+          {
+            'sourcePath': sourcePath,
+            'displayName': displayName,
+            'mimeType': mimeType,
+          },
+        ) ??
+        const {'status': 'failure', 'errorCode': 'empty_result'};
+  }
+
   List<Map<String, Object?>> _normalizeRows(
     List<Map<Object?, Object?>> rows,
   ) {

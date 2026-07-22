@@ -1,7 +1,7 @@
 # Open Reading 项目结构
 
 > 最后更新：2026-07-22
-> 当前版本：2.2.9
+> 当前版本：2.3.0
 > 本文记录稳定的项目结构、模块边界和核心数据结构，不罗列每个实现细节。
 
 ## 维护规则
@@ -42,12 +42,15 @@ open-reading/
 ├─ test/                    单元、组件、回归和 Golden 测试
 ├─ tool/                    项目辅助脚本与官网下载校验工具
 ├─ shaders/                 阅读翻页等着色器资源
+├─ DESIGN.md                产品、交互与前端设计决策基线
 ├─ CHANGELOG.md             面向版本的正式变更记录
 ├─ structure.md             项目结构与数据结构基线
 └─ Log.md                   关键开发流水和决策记录
 ```
 
 `.dart_tool/`、`build/`、平台生成目录属于构建产物，不是源码结构的一部分。
+
+`docs/webdav-sync-design.md` 记录 WebDAV 跨设备同步协议、稳定身份、冲突规则与安全边界；`docs/webdav-sync-ux-design.md` 记录首次配置、同步概览、按书上传下载、书库入口、错误恢复、视觉和无障碍规范。当前实现以这两份文档和根目录 `DESIGN.md` 为设计契约。
 
 ## 持续集成与发布
 
@@ -75,7 +78,7 @@ lib/
 │  ├─ book_sources/         书源发现、搜索、管理与业务 widgets
 │  ├─ reader/               本地/书源阅读器与 themes
 │  ├─ reading_stats/        阅读统计页与 parts
-│  ├─ settings/             设置、字体、parts 与 about 页面
+│  ├─ settings/             设置、字体、WebDAV 同步、parts 与 about 页面
 │  └─ legal/                协议等法律页面
 ├─ reader_core/             AI 阅读等历史阅读核心能力
 ├─ services/
@@ -84,6 +87,7 @@ lib/
 │  ├─ core/                 数据库、设置、应用状态、缓存、更新、后台下载通知与自定义字体存储
 │  ├─ library/              书库事件、聚合服务和下载任务队列
 │  ├─ reading/              阅读统计与阅读计划
+│  ├─ sync/                 WebDAV 协议、变更存储、元数据适配器与书籍文件传输
 │  └─ storage/              平台存储桥接与 Android 文件夹授权
 ├─ utils/                   主题、字体、玻璃效果、本地化扩展等工具
 └─ widgets/                 可复用 UI，包含统一阅读器控制层
@@ -101,15 +105,20 @@ lib/
 
 - `pages/home/home_shell_page.dart`：应用主壳和导航入口；手机悬浮底栏支持纯图标与“图标＋文字”两种模式，宽度在手机上取 `screenWidth - 36` 并以四项约 368px 为理想上限，选中底板按真实单项槽宽自适应；宽屏继续使用 `NavigationRail`。新用户完成欢迎协议后，主壳可挂载一次性开发者支持浮层。
 - `pages/reading_stats/detailed_stats_page.dart`：阅读统计详情入口与数据加载；`reading_stats/parts/` 按公共样式、总览、图表、热力图、书籍排行和成就拆分页面模块，避免统计页继续膨胀为巨型文件。
-- `pages/library/library_page.dart`：本地与在线书架；书库顶部提供下载任务入口。
+- `pages/library/library_page.dart`：本地与在线书架；书库顶部提供下载任务入口，WebDAV 配置后显示书籍文件入口并指示远端可用文件。本地书长按可把应用管理文件导出到系统位置，在线未下载记录不会显示误导性的导出入口。
 - `pages/library/download_tasks_page.dart`：跨平台书籍下载队列的状态查看页。
 - `pages/library/import_book/import_book_page.dart`：跨平台书籍导入队列；手机确认态采用顶部安全标题栏、独立滚动书目区和页面内底部操作区，并对文件选择器返回的异常窗口 inset 做限幅。
+- `services/books/book_export_*`：统一书籍导出结果、文件名/MIME 校验和平台后端；Android 走 MediaStore `Download/开元阅读`，iOS 走系统文档导出器，桌面端走另存为并流式复制。
+- `services/books/incoming_book_*`：统一系统“打开方式/分享”入站请求、冷/热启动 FIFO、初始化/协议门禁、格式与文件头校验、单书导入后打开及多书导入队列；原生层必须先把临时 URI/URL 物化成本地暂存文件。
 - `pages/reader/native_reader_page.dart`：本地 TXT、EPUB 等内容适配器。
 - `pages/reader/book_source_reader_page.dart`：在线书源章节内容适配器。
 - `pages/book_sources/source_search_page.dart`：在线书源搜索与发现。
 - `pages/book_sources/book_source_management_page.dart`：原生协议书源管理。
 - `pages/settings/settings_page.dart`：应用设置、版本与维护入口；`SettingsPageController` 可从首页导航后定位到“支持开发”区域。
+- `pages/settings/sync/`：WebDAV 概览、安全配置和书籍文件管理页；元数据自动同步，原文件需先开启上传权限，再按书选择上传或下载。
+- `services/sync/`：本地优先的 WebDAV v1 同步实现。每台设备写入独立的不可变变更批次，使用 HLC、tombstone 和记录级 LWW 合并；书籍文件按 SHA-256 内容寻址去重。
 - `pages/settings/custom_fonts_page.dart`：用户字体库的导入、应用、重命名和删除入口。
+- `widgets/side_toast.dart`：应用内短反馈的统一浮层。手机在顶部居中、宽屏在右上展示，连续提示直接替换；普通/成功提示短暂停留，警告/错误略延长，并通过 `IgnorePointer` 保证通知出现时底层操作仍可点击。页面内不再直接使用底部 `SnackBar`。
 - `pages/settings/about/changelog_page.dart` 与 `services/core/changelog_service.dart`：应用内版本历史异步加载与展示；版本、顺序和四语文案统一来自 `assets/changelog/changelog.json`，首项自动标记为当前版本，语言按完整 locale、语言代码、英文和任意可用语言逐级回退。新增版本只更新数据资产，不再修改页面代码或增加版本专属 ARB getter。
 - `pages/settings/about/open_source_licenses_page.dart`：应用、历史版本、内置字体及 Flutter/Dart 依赖的许可查看入口。
 - `pages/legal/user_agreement_page.dart`：首次使用协议、隐私与第三方书源责任确认；条款披露 GitHub/官网更新检查和官网下载统计，含原始 IP 的下载明细最多保留 30 天。
@@ -121,7 +130,10 @@ lib/
 - `services/core/background_download_notifier*.dart` 与 `services/library/download_task_controller.dart`：应用内书籍下载采用单任务队列，保留章节级三并发；Android 将活跃任务同步到前台数据同步服务和系统通知，通知权限失败不影响下载。iOS 继续只展示应用内任务状态，更新跳转官网或 GitHub。
 - `widgets/update_check_gate.dart`：更新提示提供“稍后 / GitHub / 官网”三个选择。Android 官网路径在应用内后台下载、校验后直接进入系统安装器，完成通知可再次发起安装；iOS 当前打开官网下载页，后续上架后再切换 App Store。
 - `android/app/src/main/kotlin/com/niki/xxread/AppUpdateBridge.kt`：提供 ABI 查询、未知来源安装授权和 FileProvider 安装桥；打开安装器前复核 APK 包名、实际 versionCode 和当前已安装应用的签名身份，普通应用不能静默安装。
-- `android/app/src/main/kotlin/com/niki/xxread/DownloadForegroundService.kt` 与 `BackgroundDownloadBridge.kt`：Android 13+ 请求通知权限，使用前台 `dataSync` 服务更新书籍/APK 进度通知；完成通知把书籍 ID 或已验证 APK 路径送回 Flutter，由应用打开阅读器或系统安装器。
+- `android/app/src/main/kotlin/com/niki/xxread/DownloadForegroundService.kt` 与 `BackgroundDownloadBridge.kt`：Android 13+ 请求通知权限，使用前台 `dataSync` 服务更新书籍/APK 进度通知；Android 16+ 采用系统 `Notification.ProgressStyle` 并请求 promoted ongoing 展示，不满足系统或 OEM 条件时自动保留为普通进度通知。完成通知把书籍 ID 或已验证 APK 路径送回 Flutter，由应用打开阅读器或系统安装器。
+- `android/app/src/main/kotlin/com/niki/xxread/IncomingBookIntentBridge.kt`：接收 TXT/EPUB 的 `ACTION_VIEW`、`ACTION_SEND` 与 `ACTION_SEND_MULTIPLE`，在临时授权失效前流式物化、校验并持久化请求清单；Dart 完成导入后确认清理。`SafDirectoryBridge.kt` 同时负责通过 MediaStore 向公共下载目录导出书籍。
+- `ios/Runner/IncomingBookBridge.swift`、自定义 SceneDelegate 与 Share Extension：Document Types 负责“在开元阅读中打开”，Share Extension 通过 App Group inbox 把分享文件交给主应用；security-scoped URL 只在协调复制期间持有。`StorageBridge.swift` 负责系统文档导出面板。
+- macOS 注册书籍 Document Types 并把 open-files 事件物化到缓存；Windows/Linux 从启动参数接收文件，Linux bundle 附带 MIME `.desktop` 声明。系统关联是否自动注册仍取决于正式安装/打包方式。
 - 独立仓库 `miloquinn/open-reading-web` 负责 `open.xxread.top` 的页面、版本化 latest API、镜像导入、下载统计、后台、生产部署与运行数据安全；其发布和数据结构文档不再由客户端仓库重复维护。
 - `.github/workflows/release.yml` 在 GitHub Release 完成后仍通过受控 SSH 导入官网镜像，并使用 `tool/official_site/verify_official_download.py` 下载、核对官网 arm64 APK 的元数据、大小和 SHA-256。
 - `marketing/app-store/` 保存官网 WebP 的原始截图来源；界面更新时需要同步向独立官网仓库提交新的 `app/static/product/*-latest.webp`。
@@ -138,6 +150,7 @@ lib/
 - `FontCatalog` 维护 App 字体与阅读字体两套内置语义目录；用户字体作为共享资产同时合并到两套候选列表。
 - `AppSettingsNotifier` 分别保存 `app_font_id_v2` 与 `reader_font_id_v2`，同一用户字体可独立用于 App、阅读或两者。
 - `AppSettingsNotifier` 同时持久化手机底部导航文字显隐；设置页外观开关更新后，`HomeShellPage` 通过 Provider 立即重建底栏，默认保持纯图标模式。
+- `AppSettingsNotifier` 持久化书库卡片/纯封面网格模式与手机网格 2/3 列密度；手机严格按选择列数显示，平板和桌面按同一封面密度响应式增加列数。卡片模式保留既有书名、进度等信息，纯封面网格仍支持点击阅读与长按管理。
 - `CustomFontService` 在原生平台负责 TTF/OTF 校验、SHA-256 去重、运行时 `FontLoader` 注册、清单恢复和文件删除；Web 首版不提供持久化字体导入。
 - 用户字体使用 `custom_<hash>` 稳定 ID 和 `OpenReadingCustom_<hash>` 运行时 family，避免同名字体互相覆盖。
 - 删除正在使用的用户字体时，App 字体与阅读字体分别恢复各自默认值；阅读字体 ID 仍参与分页布局签名。
@@ -296,7 +309,7 @@ rights-report Issue 表单，第三方书源内容投诉优先指向其运营者
 ## SQLite 数据结构
 
 - 数据库文件：`xxread_v2.db`
-- 当前 schema 版本：17
+- 当前 schema 版本：18
 - 迁移策略：只向前、幂等检查后增加字段。
 
 主要表：
@@ -308,16 +321,21 @@ rights-report Issue 表单，第三方书源内容投诉优先指向其运营者
 | `book_notes` | 笔记、高亮和文本范围 | `book_id -> books.id`，级联删除 |
 | `reading_stats` | 按日期汇总的阅读时长 | 独立统计 |
 | `reading_sessions` | 单次阅读会话、页数和时长 | 可选关联 `bookId` |
+| `sync_records` | WebDAV 元数据镜像、HLC、tombstone 与待上传标记 | `(dataset, record_id)` 复合主键 |
+| `sync_device_cursors` | 各远端设备已应用的变更序号 | `remote_device_id` 主键 |
+| `sync_local_state` | 本设备 ID、待发布批次与同步水位 | 键值状态 |
+| `sync_book_files` | 已选书籍的远端 blob 摘要、大小和路径 | `book_uid` 主键，可关联本地书 |
 
 `books` 使用 `storage_type` 区分本地与在线书籍，并通过 `source_*` 字段保存可重建的来源信息。
 
 ## 持久化边界
 
-- SQLite：书籍、书签、笔记、阅读会话和核心业务数据。
-- SharedPreferences：阅读 UI 设置、App/阅读字体选择、手机底部导航文字显隐、应用偏好和轻量状态；自定义阅读主题以 JSON 列表保存，预设与自定义主题的统一顺序以稳定 ID 列表单独保存，两个阅读器共享，旧单主题记录首次读取时自动迁移。
+- SQLite：书籍、书签、笔记、阅读会话、WebDAV 变更镜像和书籍 blob 索引。
+- SharedPreferences：阅读 UI 设置、App/阅读字体选择、书库布局与网格密度、手机底部导航文字显隐、WebDAV 地址/用户名/根目录/同步范围、应用偏好和轻量状态；自定义阅读主题以 JSON 列表保存，预设与自定义主题的统一顺序以稳定 ID 列表单独保存，两个阅读器共享，旧单主题记录首次读取时自动迁移。
+- 安全存储：WebDAV 密码只保存在 `flutter_secure_storage`，不写入 SharedPreferences、SQLite、远端批次或日志。
 - 应用私有目录：数据库、缓存、封面、应用管理的书籍文件，`custom_fonts/` 下的用户字体与清单，以及 `reader_theme_backgrounds/` 下由应用托管的阅读主题背景图片。
 - 用户授权目录：通过平台存储桥接原地管理或导入书籍。
-- 网络：仅在用户使用在线书源、封面、AI、同步或更新检查等功能时访问。
+- 网络：仅在用户使用在线书源、封面、AI、同步或更新检查等功能时访问。WebDAV 默认要求 HTTPS，只有用户显式允许时才可对私网/localhost 使用 HTTP；书籍恢复当前以 100 MiB 为安全上限。
 
 ## 测试结构
 

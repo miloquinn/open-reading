@@ -13,6 +13,8 @@
 		483F0502C40013DFB2DA9987 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7E246248190DEA64C21E47BF /* Pods_Runner.framework */; };
 		74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
 		B1C2D3E41F00000100BB0001 /* StorageBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C2D3E31F00000100BB0001 /* StorageBridge.swift */; };
+		C2D3E4F51F00000100CC0001 /* IncomingBookBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2D3E4F31F00000100CC0001 /* IncomingBookBridge.swift */; };
+		C2D3E4F61F00000100CC0001 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2D3E4F41F00000100CC0001 /* SceneDelegate.swift */; };
 		886063FC61A76EB95A2E95F6 /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 76F212DD40B7579E6AB1A1BF /* Pods_RunnerTests.framework */; };
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
@@ -58,6 +60,8 @@
 		74858FAE1ED2DC5600515810 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		B1C2D3E21F00000100BB0001 /* Runner.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Runner.entitlements; sourceTree = "<group>"; };
 		B1C2D3E31F00000100BB0001 /* StorageBridge.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StorageBridge.swift; sourceTree = "<group>"; };
+		C2D3E4F31F00000100CC0001 /* IncomingBookBridge.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IncomingBookBridge.swift; sourceTree = "<group>"; };
+		C2D3E4F41F00000100CC0001 /* SceneDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		76F212DD40B7579E6AB1A1BF /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = Flutter/Release.xcconfig; sourceTree = "<group>"; };
 		7E246248190DEA64C21E47BF /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -159,6 +163,8 @@
 				1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */,
 				74858FAE1ED2DC5600515810 /* AppDelegate.swift */,
 				B1C2D3E31F00000100BB0001 /* StorageBridge.swift */,
+				C2D3E4F31F00000100CC0001 /* IncomingBookBridge.swift */,
+				C2D3E4F41F00000100CC0001 /* SceneDelegate.swift */,
 				B1C2D3E21F00000100BB0001 /* Runner.entitlements */,
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
 			);
@@ -401,6 +407,8 @@
 			files = (
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
 				B1C2D3E41F00000100BB0001 /* StorageBridge.swift in Sources */,
+				C2D3E4F51F00000100CC0001 /* IncomingBookBridge.swift in Sources */,
+				C2D3E4F61F00000100CC0001 /* SceneDelegate.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

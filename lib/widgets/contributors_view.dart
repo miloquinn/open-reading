@@ -81,6 +81,7 @@ class _ContributorsViewState extends State<ContributorsView> {
         context,
         context.l10n.contributorsOpenProfileFailed,
         icon: Icons.error_outline_rounded,
+        kind: SideToastKind.error,
       );
     }
   }

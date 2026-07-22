@@ -7,7 +7,9 @@ enum BookImportSourceKind {
   filePicker('file_picker'),
   androidTree('android_tree'),
   iosSharedDocuments('ios_shared_documents'),
-  iosICloud('ios_icloud');
+  iosICloud('ios_icloud'),
+  systemOpen('system_open'),
+  systemShare('system_share');
 
   const BookImportSourceKind(this.storageValue);
 

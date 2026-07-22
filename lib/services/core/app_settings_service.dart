@@ -8,6 +8,11 @@ import '../../utils/font_catalog_helper.dart';
 import 'custom_font_service.dart';
 import 'online_font_service.dart';
 
+enum LibraryLayoutMode {
+  card,
+  grid,
+}
+
 class AppSettingsNotifier extends ChangeNotifier {
   static const String _keyAppLocale = 'app_locale';
   static const String _keyLegacyLocale = 'language';
@@ -16,12 +21,16 @@ class AppSettingsNotifier extends ChangeNotifier {
   static const String _keyLegacyAppFontFamily = 'app_font_family';
   static const String _keyHideNavigationLabels =
       'hide_home_navigation_labels_v1';
+  static const String _keyLibraryLayoutMode = 'library_layout_mode_v1';
+  static const String _keyLibraryGridColumns = 'library_grid_columns_v1';
 
   Locale? _locale;
   String _localeCode = 'system';
   String _appFontId = FontCatalog.defaultAppFont.id;
   String _readerFontId = FontCatalog.defaultReaderFont.id;
   bool _hideNavigationLabels = true;
+  LibraryLayoutMode _libraryLayoutMode = LibraryLayoutMode.card;
+  int _libraryGridColumns = 3;
   bool _isInitialized = false;
   final CustomFontService _customFontService;
   final OnlineFontService _onlineFontService;
@@ -39,6 +48,8 @@ class AppSettingsNotifier extends ChangeNotifier {
   String get appFontId => _appFontId;
   String get readerFontId => _readerFontId;
   bool get hideNavigationLabels => _hideNavigationLabels;
+  LibraryLayoutMode get libraryLayoutMode => _libraryLayoutMode;
+  int get libraryGridColumns => _libraryGridColumns;
 
   /// 用户自定义导入的字体列表（在线字体不在此列）。
   List<FontOption> get customFonts => _customFontService.fonts
@@ -195,6 +206,11 @@ class AppSettingsNotifier extends ChangeNotifier {
       customFonts: availableCustomFonts,
     ).id;
     _hideNavigationLabels = prefs.getBool(_keyHideNavigationLabels) ?? true;
+    _libraryLayoutMode = switch (prefs.getString(_keyLibraryLayoutMode)) {
+      'grid' => LibraryLayoutMode.grid,
+      _ => LibraryLayoutMode.card,
+    };
+    _libraryGridColumns = prefs.getInt(_keyLibraryGridColumns) == 2 ? 2 : 3;
     await _restoreSelectedFonts(prefs);
     _isInitialized = true;
     notifyListeners();
@@ -330,6 +346,23 @@ class AppSettingsNotifier extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_keyHideNavigationLabels, value);
+  }
+
+  Future<void> setLibraryLayoutMode(LibraryLayoutMode mode) async {
+    if (_libraryLayoutMode == mode) return;
+    _libraryLayoutMode = mode;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyLibraryLayoutMode, mode.name);
+  }
+
+  Future<void> setLibraryGridColumns(int columns) async {
+    final normalized = columns == 2 ? 2 : 3;
+    if (_libraryGridColumns == normalized) return;
+    _libraryGridColumns = normalized;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_keyLibraryGridColumns, normalized);
   }
 
   Future<void> prepareCustomFontPreviews() async {

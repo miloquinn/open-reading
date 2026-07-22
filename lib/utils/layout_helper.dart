@@ -129,6 +129,21 @@ class LayoutHelper {
         .clamp(3, 10);
   }
 
+  /// 纯封面网格密度。手机严格使用用户选择的 2/3 列；宽屏按相同的
+  /// 封面密度增加列数，避免平板或桌面仍只显示两三个超大封面。
+  static int coverOnlyGridColumnsForWidth(
+    double width, {
+    required int mobileColumns,
+  }) {
+    final normalizedColumns = mobileColumns == 2 ? 2 : 3;
+    if (width < tabletBreakpoint) return normalizedColumns;
+    final targetItemExtent = normalizedColumns == 2 ? 184.0 : 148.0;
+    const horizontalPadding = 32.0;
+    return ((width - horizontalPadding) / targetItemExtent)
+        .round()
+        .clamp(normalizedColumns, 12);
+  }
+
   // 判断是否应该显示双页布局
   static bool shouldShowDoublePage(BuildContext context) {
     final width = MediaQuery.of(context).size.width;

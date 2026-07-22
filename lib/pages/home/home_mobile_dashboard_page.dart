@@ -400,7 +400,7 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
           _focusRemaining = Duration.zero;
         });
         showSideToast(context, context.l10n.homeFocusCompleted(_focusMinutes),
-            icon: Icons.emoji_events_rounded);
+            icon: Icons.emoji_events_rounded, kind: SideToastKind.success);
         _loadAllStats();
       } else {
         setState(() {

@@ -8,19 +8,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:path/path.dart' as path;
 import 'package:provider/provider.dart' as provider;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'l10n/app_localizations.dart';
 import 'core/reader/native_reader_service.dart';
+import 'models/book.dart';
 import 'pages/home/home_shell_page.dart';
+import 'pages/library/import_book/import_book_page.dart';
 import 'pages/legal/user_agreement_page.dart';
 import 'services/books/book_services.dart';
+import 'services/books/book_format_support.dart';
 import 'services/core/app_update_download_service.dart';
 import 'services/core/background_download_notifier.dart';
 import 'services/core/core_services.dart';
 import 'services/library/download_task_controller.dart';
+import 'services/sync/webdav_sync_controller.dart';
 import 'utils/app_themes.dart';
 import 'services/tts_service.dart';
 import 'package:path_provider/path_provider.dart';
@@ -29,9 +34,10 @@ import 'utils/localization_extension.dart';
 import 'utils/font_catalog_helper.dart';
 import 'utils/ui_style.dart';
 import 'widgets/app_brand_icon.dart';
+import 'widgets/side_toast.dart';
 import 'widgets/update_check_gate.dart';
 
-void main() async {
+void main(List<String> arguments) async {
   // 确保可以在 runApp 前安全调用 SystemChrome
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -86,11 +92,41 @@ void main() async {
           provider.ChangeNotifierProvider(
             create: (_) => DownloadTaskController(),
           ),
+          provider.ChangeNotifierProvider(
+            create: (_) => WebDavSyncController(),
+          ),
         ],
-        child: const XxReadApp(),
+        child: XxReadApp(
+          initialFilePaths: _supportedDesktopFileArguments(arguments),
+        ),
       ),
     ),
   );
+}
+
+List<String> _supportedDesktopFileArguments(List<String> arguments) {
+  if (kIsWeb || Platform.isAndroid || Platform.isIOS) return const [];
+  final paths = <String>[];
+  for (final argument in arguments) {
+    var candidate = argument;
+    final uri = Uri.tryParse(argument);
+    if (uri != null && uri.scheme == 'file') {
+      try {
+        candidate = uri.toFilePath();
+      } catch (_) {
+        continue;
+      }
+    }
+    final file = File(candidate);
+    if (!file.existsSync()) continue;
+    final extension = BookFormatRegistry.normalizeExtension(
+      path.extension(candidate),
+    );
+    if (BookFormatRegistry.pickerExtensions.contains(extension)) {
+      paths.add(file.absolute.path);
+    }
+  }
+  return List<String>.unmodifiable(paths.toSet());
 }
 
 class RestartableApp extends StatefulWidget {
@@ -383,13 +419,18 @@ class ThemeNotifier extends ChangeNotifier {
 }
 
 class XxReadApp extends StatefulWidget {
-  const XxReadApp({super.key});
+  const XxReadApp({
+    super.key,
+    this.initialFilePaths = const [],
+  });
+
+  final List<String> initialFilePaths;
 
   @override
   State<XxReadApp> createState() => _XxReadAppState();
 }
 
-class _XxReadAppState extends State<XxReadApp> {
+class _XxReadAppState extends State<XxReadApp> with WidgetsBindingObserver {
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
   bool? _hasAcceptedAgreement;
   bool _isBootstrapped = false;
@@ -397,10 +438,30 @@ class _XxReadAppState extends State<XxReadApp> {
   _BootstrapError? _bootstrapError;
   StreamSubscription<BackgroundDownloadTap>? _notificationTapSubscription;
   BackgroundDownloadTap? _pendingNotificationTap;
+  bool _webDavSyncInitialized = false;
+  late final IncomingBookService _incomingBookService;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _incomingBookService = IncomingBookService(
+      bridge: IncomingBookPlatformBridge(),
+      materializer: IncomingBookMaterializer(),
+      importer: BookImportService(),
+      openBook: _openIncomingBook,
+      openImportQueue: _openIncomingImportQueue,
+      onFailure: _showIncomingBookFailure,
+      onProcessing: (processing) {
+        if (processing) _showIncomingBookProcessing();
+      },
+    );
+    unawaited(
+      _incomingBookService.start().catchError((Object error) {
+        debugPrint('入站书籍通道初始化失败: $error');
+      }),
+    );
+    _enqueueInitialDesktopBooks();
     _notificationTapSubscription =
         BackgroundDownloadNotifier.taps.listen(_handleNotificationTap);
     unawaited(BackgroundDownloadNotifier.initialize());
@@ -410,8 +471,125 @@ class _XxReadAppState extends State<XxReadApp> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _notificationTapSubscription?.cancel();
+    unawaited(_incomingBookService.dispose());
     super.dispose();
+  }
+
+  void _enqueueInitialDesktopBooks() {
+    if (widget.initialFilePaths.isEmpty) return;
+    final requestId =
+        'desktop:${DateTime.now().microsecondsSinceEpoch.toRadixString(16)}';
+    _incomingBookService.addRequest(
+      IncomingBookRequest(
+        requestId: requestId,
+        action: IncomingBookAction.open,
+        items: [
+          for (var index = 0; index < widget.initialFilePaths.length; index++)
+            IncomingBookItem(
+              id: '$requestId:$index',
+              displayName: path.basename(widget.initialFilePaths[index]),
+              localPath: widget.initialFilePaths[index],
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _syncIncomingBookReadiness() {
+    final ready = _isBootstrapped && _hasAcceptedAgreement == true;
+    if (!ready) {
+      unawaited(_incomingBookService.setReady(false));
+      return;
+    }
+    if (_navigatorKey.currentContext != null) {
+      unawaited(_incomingBookService.setReady(true));
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _syncIncomingBookReadiness();
+    });
+  }
+
+  Future<void> _openIncomingBook(Book book) async {
+    final context = _navigatorKey.currentContext;
+    if (!mounted || context == null) {
+      throw StateError('Navigator is not ready for an incoming book');
+    }
+    // Wait for repair and successful route insertion, but do not hold the
+    // incoming-request FIFO until the reader is closed.
+    await NativeReaderService.openBook(
+      context,
+      book,
+      waitForReaderClose: false,
+    );
+  }
+
+  Future<void> _openIncomingImportQueue(
+    List<BookImportSource> sources,
+  ) async {
+    final context = _navigatorKey.currentContext;
+    if (!mounted || context == null) {
+      throw StateError('Navigator is not ready for incoming books');
+    }
+    await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => ImportBookPage(initialSources: sources),
+      ),
+    );
+  }
+
+  void _showIncomingBookProcessing() {
+    final context = _navigatorKey.currentContext;
+    if (context != null) {
+      showSideToast(context, context.l10n.incomingBooksImporting);
+    }
+  }
+
+  void _showIncomingBookFailure(IncomingBookFailure failure) {
+    final context = _navigatorKey.currentContext;
+    if (context == null) {
+      debugPrint('入站书籍失败: ${failure.code}');
+      return;
+    }
+    final message = switch (failure.code) {
+      'no_book_file' => context.l10n.incomingBooksNoBookFile,
+      'permission_expired' => context.l10n.incomingBooksPermissionExpired,
+      'unsupported_format' => context.l10n.incomingBooksUnsupportedFormat,
+      'file_too_large' => context.l10n.incomingBooksFileTooLarge,
+      'too_many_files' => context.l10n.incomingBooksTooManyFiles,
+      'content_mismatch' => context.l10n.incomingBooksContentMismatch,
+      'partial_failure' => context.l10n.incomingBooksSomeFilesSkipped,
+      _ => context.l10n.incomingBooksImportFailed,
+    };
+    showSideToast(context, message, kind: SideToastKind.error);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_runAutomaticWebDavSyncIfNeeded());
+    }
+  }
+
+  Future<void> _runAutomaticWebDavSyncIfNeeded() async {
+    if (!_webDavSyncInitialized || !mounted) return;
+    final sync = provider.Provider.of<WebDavSyncController>(
+      context,
+      listen: false,
+    );
+    if (!sync.isConfigured || !sync.autoSync) return;
+    final lastSuccess = sync.lastSuccessfulSync;
+    if (lastSuccess != null &&
+        DateTime.now().difference(lastSuccess) < const Duration(minutes: 15)) {
+      return;
+    }
+    try {
+      await sync.syncNow();
+    } catch (error) {
+      debugPrint('WebDAV 自动同步失败（已保留本地变更）: $error');
+    }
   }
 
   Future<void> _bootstrapServices() async {
@@ -419,6 +597,7 @@ class _XxReadAppState extends State<XxReadApp> {
       _isBootstrapped = false;
       _bootstrapError = null;
     });
+    _syncIncomingBookReadiness();
 
     // 初始化缓存与应用状态服务
     try {
@@ -455,10 +634,25 @@ class _XxReadAppState extends State<XxReadApp> {
     }
 
     if (!mounted) return;
+    try {
+      final sync = provider.Provider.of<WebDavSyncController>(
+        context,
+        listen: false,
+      );
+      await sync.initialize();
+      _webDavSyncInitialized = true;
+      unawaited(_runAutomaticWebDavSyncIfNeeded());
+    } catch (error) {
+      // WebDAV 是可选能力，安全存储或远端初始化失败不能阻塞本地阅读。
+      debugPrint('WebDAV 同步初始化失败（已忽略）: $error');
+    }
+
+    if (!mounted) return;
     setState(() {
       _isBootstrapped = true;
       _bootstrapError = null;
     });
+    _syncIncomingBookReadiness();
     unawaited(_openPendingNotificationTap());
   }
 
@@ -469,6 +663,7 @@ class _XxReadAppState extends State<XxReadApp> {
     setState(() {
       _hasAcceptedAgreement = hasAccepted;
     });
+    _syncIncomingBookReadiness();
     unawaited(_openPendingNotificationTap());
     debugPrint('📋 协议状态检查: ${hasAccepted ? "已同意" : "未同意"}');
   }
@@ -479,6 +674,7 @@ class _XxReadAppState extends State<XxReadApp> {
       _hasAcceptedAgreement = true;
       _showFirstHomeSupportAfterAgreement = true;
     });
+    _syncIncomingBookReadiness();
     unawaited(_openPendingNotificationTap());
     debugPrint('✅ 用户协议已同意，进入主应用');
   }

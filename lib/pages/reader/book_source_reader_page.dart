@@ -987,6 +987,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         context.l10n.readerBookmarkRequiresShelf,
         duration: const Duration(milliseconds: 1900),
         icon: Icons.library_add_rounded,
+        kind: SideToastKind.warning,
       );
       return;
     }
@@ -1019,6 +1020,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
           context.l10n.bookmarkRemoved,
           duration: const Duration(milliseconds: 1600),
           icon: Icons.bookmark_remove_rounded,
+          kind: SideToastKind.success,
         );
         return;
       }
@@ -1057,6 +1059,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         context.l10n.bookmarkAdded,
         duration: const Duration(milliseconds: 1600),
         icon: Icons.bookmark_added_rounded,
+        kind: SideToastKind.success,
       );
     } catch (error) {
       debugPrint('toggle source bookmark failed: $error');
@@ -1080,6 +1083,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       context.l10n.bookmarkRemoved,
       duration: const Duration(milliseconds: 1600),
       icon: Icons.bookmark_remove_rounded,
+      kind: SideToastKind.success,
     );
   }
 

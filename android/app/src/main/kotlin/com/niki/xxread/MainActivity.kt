@@ -22,6 +22,7 @@ class MainActivity : FlutterActivity() {
     private val READER_STATUS_CHANNEL = "com.niki.xxread/reader_status"
     private var readerKeysChannel: MethodChannel? = null
     private var safDirectoryBridge: SafDirectoryBridge? = null
+    private var incomingBookIntentBridge: IncomingBookIntentBridge? = null
     private var appUpdateBridge: AppUpdateBridge? = null
     private var backgroundDownloadBridge: BackgroundDownloadBridge? = null
     @Volatile private var volumePagingEnabled: Boolean = false
@@ -104,6 +105,12 @@ class MainActivity : FlutterActivity() {
             this,
             flutterEngine.dartExecutor.binaryMessenger,
         )
+        incomingBookIntentBridge = IncomingBookIntentBridge(
+            this,
+            flutterEngine.dartExecutor.binaryMessenger,
+        ).also { bridge ->
+            bridge.handleIntent(intent)
+        }
         appUpdateBridge = AppUpdateBridge(
             this,
             flutterEngine.dartExecutor.binaryMessenger,
@@ -132,6 +139,9 @@ class MainActivity : FlutterActivity() {
         permissions: Array<out String>,
         grantResults: IntArray,
     ) {
+        if (safDirectoryBridge?.onRequestPermissionsResult(requestCode, grantResults) == true) {
+            return
+        }
         if (backgroundDownloadBridge?.onRequestPermissionsResult(requestCode, grantResults) == true) {
             return
         }
@@ -142,6 +152,15 @@ class MainActivity : FlutterActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         backgroundDownloadBridge?.onNewIntent(intent)
+        incomingBookIntentBridge?.handleIntent(intent)
+    }
+
+    override fun onDestroy() {
+        incomingBookIntentBridge?.dispose()
+        incomingBookIntentBridge = null
+        safDirectoryBridge?.dispose()
+        safDirectoryBridge = null
+        super.onDestroy()
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {

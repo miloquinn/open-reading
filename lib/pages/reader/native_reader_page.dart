@@ -1255,6 +1255,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
           context.l10n.bookmarkRemoved,
           duration: const Duration(milliseconds: 1600),
           icon: Icons.bookmark_remove_rounded,
+          kind: SideToastKind.success,
         );
         return;
       }
@@ -1290,6 +1291,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
         context.l10n.bookmarkAdded,
         duration: const Duration(milliseconds: 1600),
         icon: Icons.bookmark_added_rounded,
+        kind: SideToastKind.success,
       );
     } catch (error) {
       debugPrint('toggle bookmark failed: $error');
@@ -1313,6 +1315,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
       context.l10n.bookmarkRemoved,
       duration: const Duration(milliseconds: 1600),
       icon: Icons.bookmark_remove_rounded,
+      kind: SideToastKind.success,
     );
   }
 

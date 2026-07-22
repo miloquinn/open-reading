@@ -10,6 +10,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:xxread/data/migration/reading_schema_migration.dart';
 import 'package:xxread/data/migration/book_import_schema_migration.dart';
+import 'package:xxread/data/migration/webdav_sync_schema_migration.dart';
 
 class DatabaseService {
   static final DatabaseService _instance = DatabaseService._internal();
@@ -18,7 +19,7 @@ class DatabaseService {
 
   static Database? _database;
   static const String _dbName = 'xxread_v2.db';
-  static const int _dbVersion = 17;
+  static const int _dbVersion = 18;
   static Future<Database>? _openingDatabase;
 
   Future<Database> get database async {
@@ -347,6 +348,9 @@ class DatabaseService {
     if (oldVersion < 17) {
       await BookImportSchemaMigration.migrate(db);
     }
+    if (oldVersion < 18) {
+      await WebDavSyncSchemaMigration.migrate(db);
+    }
   }
 
   Future<void> _createTables(Database db) async {
@@ -443,6 +447,7 @@ class DatabaseService {
     await _createReadingStatsIndexes(db);
     await _createReadingSessionsIndexes(db);
     await _createBookNotesIndexes(db);
+    await WebDavSyncSchemaMigration.migrate(db);
   }
 
   /// 创建books表索引

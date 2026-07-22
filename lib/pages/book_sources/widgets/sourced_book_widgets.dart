@@ -17,6 +17,7 @@ import 'package:xxread/utils/localization_extension.dart';
 import 'package:xxread/utils/page_style_helper.dart';
 import 'package:xxread/utils/ui_style.dart';
 import 'package:xxread/widgets/generated_book_cover.dart';
+import 'package:xxread/widgets/side_toast.dart';
 
 /// 一本来自具体书源的书。
 class SourcedBook {
@@ -382,14 +383,12 @@ class SourcedBookActions {
         );
       }
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            existing == null
-                ? context.l10n.bookSourceAddedOnline
-                : context.l10n.bookSourceAlreadyOnShelf,
-          ),
-        ),
+      showSideToast(
+        context,
+        existing == null
+            ? context.l10n.bookSourceAddedOnline
+            : context.l10n.bookSourceAlreadyOnShelf,
+        kind: existing == null ? SideToastKind.success : SideToastKind.info,
       );
       return;
     }
@@ -409,8 +408,9 @@ class SourcedBookActions {
       builder: (_) => BookDownloadTaskDialog(taskId: taskId),
     );
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(context.l10n.downloadRunningInBackground)),
+    showSideToast(
+      context,
+      context.l10n.downloadRunningInBackground,
     );
   }
 }

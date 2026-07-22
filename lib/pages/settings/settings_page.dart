@@ -19,9 +19,12 @@ import 'package:xxread/pages/home/home_mobile_chrome.dart';
 import 'package:xxread/pages/home/home_shell_page.dart';
 import 'package:xxread/pages/settings/about/changelog_page.dart';
 import 'package:xxread/pages/settings/about/open_source_licenses_page.dart';
+import 'package:xxread/pages/settings/sync/webdav_sync_page.dart';
 import 'package:xxread/reader_core/ai/ai_service.dart';
 import 'package:xxread/services/core/core_services.dart';
 import 'package:xxread/services/core/online_font_models.dart';
+import 'package:xxread/services/sync/sync_models.dart';
+import 'package:xxread/services/sync/webdav_sync_controller.dart';
 import 'package:xxread/utils/app_themes.dart';
 import 'package:xxread/utils/font_catalog_helper.dart';
 import 'package:xxread/utils/localization_extension.dart';
@@ -755,7 +758,11 @@ class _SettingsPageState extends State<SettingsPage> {
       _aiSettingsError = null;
       _applyAiDraft(result);
     });
-    showSideToast(context, l10n.settingsAiCustomApplied);
+    showSideToast(
+      context,
+      l10n.settingsAiCustomApplied,
+      kind: SideToastKind.success,
+    );
   }
 
   Future<void> _saveAiSettings() async {
@@ -826,7 +833,11 @@ class _SettingsPageState extends State<SettingsPage> {
         _aiDraftByProvider[_selectedAiProvider] = settings;
         _selectedAiPreset = AIModelPresets.match(settings);
       });
-      showSideToast(context, context.l10n.settingsAiSettingsSaved);
+      showSideToast(
+        context,
+        context.l10n.settingsAiSettingsSaved,
+        kind: SideToastKind.success,
+      );
     } catch (e) {
       if (!mounted) {
         return;
@@ -885,6 +896,7 @@ class _SettingsPageState extends State<SettingsPage> {
     bool isDarkMode,
   ) {
     final l10n = context.l10n;
+    final webDavSync = Provider.of<WebDavSyncController>(context);
     final useRailNavigation =
         NavigationContext.of(context)?.useRailNavigation ?? false;
     final mobileChrome = HomeMobileChromeScope.of(context);
@@ -916,6 +928,7 @@ class _SettingsPageState extends State<SettingsPage> {
               _buildThemeToggle(themeNotifier),
               _buildAppThemeSelector(themeNotifier),
               _buildAccentColorSelector(themeNotifier),
+              _buildLibraryLayoutSelector(appSettings),
               _buildSwitchSetting(
                 title: l10n.settingsHideNavigationLabelsTitle,
                 subtitle: l10n.settingsHideNavigationLabelsSubtitle,
@@ -969,6 +982,25 @@ class _SettingsPageState extends State<SettingsPage> {
                 subtitle: l10n.settingsContentSourcesSubtitle,
                 onTap: _openBookSourceManagement,
                 icon: Icons.travel_explore_outlined,
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          _buildSectionCard(
+            title: l10n.settingsDataSyncTitle,
+            icon: Icons.cloud_sync_outlined,
+            children: [
+              _buildActionSetting(
+                title: l10n.settingsWebDavSyncTitle,
+                badge: l10n.webDavBetaBadge,
+                subtitle: _webDavSyncSubtitle(webDavSync),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const WebDavSyncPage(),
+                  ),
+                ),
+                icon: Icons.cloud_outlined,
+                trailing: _webDavSyncTrailing(webDavSync),
               ),
             ],
           ),
@@ -1053,6 +1085,49 @@ class _SettingsPageState extends State<SettingsPage> {
         ],
       ),
     );
+  }
+
+  String _webDavSyncSubtitle(WebDavSyncController sync) {
+    final l10n = context.l10n;
+    if (!sync.isConfigured) return l10n.webDavConfigureSubtitle;
+    if (sync.status == WebDavSyncStatus.syncing ||
+        sync.status == WebDavSyncStatus.testing) {
+      return l10n.webDavSyncing;
+    }
+    if (sync.status == WebDavSyncStatus.failed) {
+      return l10n.webDavSyncFailed;
+    }
+    if (sync.status == WebDavSyncStatus.partialFailure) {
+      return l10n.webDavPartialFailure;
+    }
+    if (sync.pendingChanges > 0) {
+      return l10n.webDavPendingChanges(sync.pendingChanges);
+    }
+    final lastSuccess = sync.lastSuccessfulSync;
+    if (lastSuccess == null) return l10n.webDavNeverSynced;
+    final local = lastSuccess.toLocal();
+    final material = MaterialLocalizations.of(context);
+    final date = material.formatShortDate(local);
+    final time = material.formatTimeOfDay(TimeOfDay.fromDateTime(local));
+    return l10n.webDavLastSync('$date $time');
+  }
+
+  Widget _webDavSyncTrailing(WebDavSyncController sync) {
+    if (sync.status == WebDavSyncStatus.syncing ||
+        sync.status == WebDavSyncStatus.testing) {
+      return const SizedBox.square(
+        dimension: 20,
+        child: CircularProgressIndicator(strokeWidth: 2),
+      );
+    }
+    if (sync.status == WebDavSyncStatus.failed ||
+        sync.status == WebDavSyncStatus.partialFailure) {
+      return Icon(
+        Icons.error_outline_rounded,
+        color: Theme.of(context).colorScheme.error,
+      );
+    }
+    return const Icon(Icons.chevron_right_rounded);
   }
 
   void _openBookSourceManagement() {
@@ -1334,10 +1409,13 @@ class _SettingsPageState extends State<SettingsPage> {
         showSideToast(
           context,
           context.l10n.settingsAiSwitchedToModel(item.settings.model),
+          kind: SideToastKind.success,
         );
       }
     } catch (error) {
-      if (mounted) showSideToast(context, '$error');
+      if (mounted) {
+        showSideToast(context, '$error', kind: SideToastKind.error);
+      }
     }
   }
 
@@ -2019,6 +2097,131 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  Widget _buildLibraryLayoutSelector(AppSettingsNotifier appSettings) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: scheme.tertiary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Icon(
+                  Icons.view_module_outlined,
+                  size: 16,
+                  color: scheme.tertiary,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.settingsLibraryLayoutTitle,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.w500,
+                          ),
+                    ),
+                    Text(
+                      l10n.settingsLibraryLayoutSubtitle,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: scheme.onSurface.withValues(alpha: 0.6),
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: SegmentedButton<LibraryLayoutMode>(
+              key: const ValueKey('settings-library-layout-selector'),
+              showSelectedIcon: false,
+              expandedInsets: EdgeInsets.zero,
+              segments: [
+                ButtonSegment(
+                  value: LibraryLayoutMode.card,
+                  icon: const Icon(Icons.view_agenda_outlined),
+                  label: Text(l10n.settingsLibraryLayoutCard),
+                ),
+                ButtonSegment(
+                  value: LibraryLayoutMode.grid,
+                  icon: const Icon(Icons.grid_view_rounded),
+                  label: Text(l10n.settingsLibraryLayoutGrid),
+                ),
+              ],
+              selected: {appSettings.libraryLayoutMode},
+              onSelectionChanged: (selection) {
+                if (selection.isEmpty) return;
+                unawaited(appSettings.setLibraryLayoutMode(selection.first));
+              },
+              style: ButtonStyle(
+                minimumSize: const WidgetStatePropertyAll(Size(44, 44)),
+                side: WidgetStatePropertyAll(
+                  BorderSide(color: scheme.outlineVariant),
+                ),
+              ),
+            ),
+          ),
+          if (appSettings.libraryLayoutMode == LibraryLayoutMode.grid) ...[
+            const SizedBox(height: 14),
+            Text(
+              l10n.settingsLibraryGridColumnsTitle,
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: SegmentedButton<int>(
+                key: const ValueKey('settings-library-grid-columns'),
+                showSelectedIcon: false,
+                expandedInsets: EdgeInsets.zero,
+                segments: [
+                  ButtonSegment(
+                    value: 2,
+                    icon: const Icon(Icons.view_column_outlined),
+                    label: Text(l10n.settingsLibraryGridTwoColumns),
+                  ),
+                  ButtonSegment(
+                    value: 3,
+                    icon: const Icon(Icons.view_week_outlined),
+                    label: Text(l10n.settingsLibraryGridThreeColumns),
+                  ),
+                ],
+                selected: {appSettings.libraryGridColumns},
+                onSelectionChanged: (selection) {
+                  if (selection.isEmpty) return;
+                  unawaited(
+                    appSettings.setLibraryGridColumns(selection.first),
+                  );
+                },
+                style: ButtonStyle(
+                  minimumSize: const WidgetStatePropertyAll(Size(44, 44)),
+                  side: WidgetStatePropertyAll(
+                    BorderSide(color: scheme.outlineVariant),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _buildAppThemeSelector(ThemeNotifier themeNotifier) {
     final l10n = context.l10n;
     final accentSummary = themeNotifier.isUsingThemeAccent
@@ -2476,17 +2679,19 @@ class _SettingsPageState extends State<SettingsPage> {
                               : domain == FontDomain.app
                                   ? l10n.customFontAppliedToApp
                                   : l10n.customFontAppliedToReader;
-                      ScaffoldMessenger.of(this.context).showSnackBar(
-                        SnackBar(content: Text(message)),
+                      showSideToast(
+                        this.context,
+                        message,
+                        kind: SideToastKind.success,
                       );
                     }
                   } on CustomFontException catch (error) {
                     if (modalContext.mounted) {
                       setModalState(() => importing = false);
-                      ScaffoldMessenger.of(modalContext).showSnackBar(
-                        SnackBar(
-                          content: Text(_customFontErrorText(l10n, error)),
-                        ),
+                      showSideToast(
+                        modalContext,
+                        _customFontErrorText(l10n, error),
+                        kind: SideToastKind.error,
                       );
                     }
                   }
@@ -3906,7 +4111,7 @@ class _SettingsPageState extends State<SettingsPage> {
     final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!ok && mounted) {
       showSideToast(context, context.l10n.settingsGithubOpenFailed,
-          icon: Icons.error_outline);
+          icon: Icons.error_outline, kind: SideToastKind.error);
     }
   }
 
@@ -3920,6 +4125,7 @@ class _SettingsPageState extends State<SettingsPage> {
         context,
         context.l10n.settingsOfficialWebsiteOpenFailed,
         icon: Icons.error_outline,
+        kind: SideToastKind.error,
       );
     }
   }
@@ -3934,6 +4140,7 @@ class _SettingsPageState extends State<SettingsPage> {
         context,
         context.l10n.settingsDeveloperProductOpenFailed,
         icon: Icons.error_outline,
+        kind: SideToastKind.error,
       );
     }
   }
@@ -3953,6 +4160,7 @@ class _SettingsPageState extends State<SettingsPage> {
         context,
         context.l10n.settingsTelegramOpenFailed,
         icon: Icons.error_outline,
+        kind: SideToastKind.error,
       );
     }
   }
@@ -3965,6 +4173,7 @@ class _SettingsPageState extends State<SettingsPage> {
         context,
         context.l10n.settingsQqChannelOpenFailed,
         icon: Icons.error_outline,
+        kind: SideToastKind.error,
       );
     }
   }
@@ -3988,6 +4197,7 @@ class _SettingsPageState extends State<SettingsPage> {
         context,
         context.l10n.settingsQqOpenFailed,
         icon: Icons.error_outline,
+        kind: SideToastKind.error,
       );
     }
   }
@@ -3998,6 +4208,7 @@ class _SettingsPageState extends State<SettingsPage> {
     required String subtitle,
     required VoidCallback onTap,
     required IconData icon,
+    String? badge,
     Widget? trailing,
   }) {
     return Container(
@@ -4029,11 +4240,44 @@ class _SettingsPageState extends State<SettingsPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        title,
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              fontWeight: FontWeight.w500,
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          Text(
+                            title,
+                            style:
+                                Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                          ),
+                          if (badge != null)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 7,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .secondaryContainer,
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: Text(
+                                badge,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .labelSmall
+                                    ?.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSecondaryContainer,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                              ),
                             ),
+                        ],
                       ),
                       Text(
                         subtitle,

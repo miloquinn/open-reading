@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:xxread/utils/localization_extension.dart';
 import 'package:xxread/widgets/app_brand_icon.dart';
+import 'package:xxread/widgets/side_toast.dart';
 
 class UserAgreementPage extends StatefulWidget {
   final VoidCallback onAgreed;
@@ -642,8 +643,10 @@ class _UserAgreementPageState extends State<UserAgreementPage>
       debugPrint('保存用户协议状态失败: $error');
       if (!mounted) return;
       setState(() => _saving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.agreementV2SaveFailed)),
+      showSideToast(
+        context,
+        context.l10n.agreementV2SaveFailed,
+        kind: SideToastKind.error,
       );
     }
   }

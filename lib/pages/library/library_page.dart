@@ -17,9 +17,12 @@ import 'package:xxread/models/book.dart';
 import 'package:xxread/pages/home/home_mobile_chrome.dart';
 import 'package:xxread/pages/home/home_shell_page.dart';
 import 'package:xxread/pages/reader/book_source_reader_page.dart';
+import 'package:xxread/pages/settings/sync/book_file_sync_page.dart';
 import 'package:xxread/services/books/book_services.dart';
+import 'package:xxread/services/core/app_settings_service.dart';
 import 'package:xxread/services/library/library_services.dart';
 import 'package:xxread/services/library/download_task_controller.dart';
+import 'package:xxread/services/sync/webdav_sync_controller.dart';
 import 'package:xxread/utils/book_open_transition.dart';
 import 'package:xxread/utils/glass_config.dart';
 import 'package:xxread/utils/layout_helper.dart';
@@ -78,6 +81,7 @@ class _LibraryPageState extends State<LibraryPage> {
   String _searchQuery = '';
   bool _searchBarVisible = false;
   _LibraryFilter _selectedFilter = _LibraryFilter.all;
+  final Set<String> _exportingBookPaths = <String>{};
 
   /// 每本书封面组件的 key，用于打开/退出动画捕获与回溯封面位置。
   final Map<int, GlobalKey> _coverKeys = <int, GlobalKey>{};
@@ -114,6 +118,7 @@ class _LibraryPageState extends State<LibraryPage> {
           showSideToast(
             context,
             context.l10n.bookSourceOnlineDataBroken('$error'),
+            kind: SideToastKind.error,
           );
         }
       }
@@ -352,6 +357,12 @@ class _LibraryPageState extends State<LibraryPage> {
   Widget _buildContent(BuildContext context,
       {required bool useRailNavigation}) {
     final books = _visibleBooks;
+    final libraryLayoutMode =
+        context.select<AppSettingsNotifier, LibraryLayoutMode>(
+            (settings) => settings.libraryLayoutMode);
+    final libraryGridColumns = context.select<AppSettingsNotifier, int>(
+      (settings) => settings.libraryGridColumns,
+    );
     final palette = PageStyleHelper.palette(context);
     final mobileChrome = HomeMobileChromeScope.of(context);
     // 手机模式：内容从屏幕顶端开始、滚动时穿过毛玻璃顶栏，
@@ -388,7 +399,16 @@ class _LibraryPageState extends State<LibraryPage> {
                       ? _buildRefreshableState(_buildEmptyLibrary())
                       : books.isEmpty
                           ? _buildRefreshableState(_buildNoSearchResult())
-                          : _buildBooksGrid(books, topPadding: listTopPadding),
+                          : libraryLayoutMode == LibraryLayoutMode.grid
+                              ? _buildCoverOnlyGrid(
+                                  books,
+                                  topPadding: listTopPadding,
+                                  mobileColumns: libraryGridColumns,
+                                )
+                              : _buildBooksGrid(
+                                  books,
+                                  topPadding: listTopPadding,
+                                ),
                 ),
         ),
       ],
@@ -438,6 +458,7 @@ class _LibraryPageState extends State<LibraryPage> {
   Widget _buildTopBar() {
     final palette = PageStyleHelper.palette(context);
     final scheme = Theme.of(context).colorScheme;
+    final webDavSync = context.watch<WebDavSyncController?>();
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       child: Row(
@@ -452,6 +473,21 @@ class _LibraryPageState extends State<LibraryPage> {
             ),
           ),
           const Spacer(),
+          if (webDavSync?.isConfigured ?? false) ...[
+            _buildTopBarIcon(
+              icon: Icons.cloud_sync_rounded,
+              active: webDavSync!.remoteBooks.any(
+                (book) => book.fileAvailable,
+              ),
+              tooltip: context.l10n.webDavBookFilesTitle,
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const BookFileSyncPage(),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
           _buildTopBarIcon(
             icon: Icons.downloading_rounded,
             active: context.watch<DownloadTaskController?>()?.hasActiveTasks ??
@@ -753,6 +789,96 @@ class _LibraryPageState extends State<LibraryPage> {
     );
   }
 
+  Widget _buildCoverOnlyGrid(
+    List<Book> books, {
+    required double topPadding,
+    required int mobileColumns,
+  }) {
+    final useRail =
+        LayoutHelper.getNavigationType(context) == NavigationType.rail;
+    final spacing = useRail ? 14.0 : 10.0;
+    final horizontalPadding = useRail ? 16.0 : 12.0;
+    final bottomPadding = useRail
+        ? MediaQuery.viewPaddingOf(context).bottom + 24
+        : HomeMobileChromeScope.of(context).pageBottomPadding;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final crossAxisCount = LayoutHelper.coverOnlyGridColumnsForWidth(
+          constraints.maxWidth,
+          mobileColumns: mobileColumns,
+        );
+        return GridView.builder(
+          key: const ValueKey('library-cover-grid'),
+          scrollCacheExtent: const ScrollCacheExtent.pixels(720),
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
+          ),
+          padding: EdgeInsets.fromLTRB(
+            horizontalPadding,
+            topPadding,
+            horizontalPadding,
+            bottomPadding,
+          ),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            crossAxisSpacing: spacing,
+            mainAxisSpacing: spacing + 2,
+            childAspectRatio: 2 / 3,
+          ),
+          itemCount: books.length,
+          itemBuilder: (context, index) {
+            final book = books[index];
+            final coverKey = _coverKeyFor(book);
+            return RepaintBoundary(
+              child: Semantics(
+                button: true,
+                label: book.title,
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(10),
+                    onTap: () async {
+                      final animation = BookOpenAnimation.fromCoverKey(
+                        coverKey,
+                        radius: BorderRadius.circular(10),
+                        coverBuilder: (context) => _gridCoverArt(context, book),
+                      );
+                      await _openBook(book, animation: animation);
+                    },
+                    onLongPress: () => _showBookOptions(book),
+                    child: SizedBox.expand(
+                      key: coverKey,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .shadow
+                                  .withValues(alpha: 0.14),
+                              blurRadius: 7,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: _gridCoverArt(context, book),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   Widget _buildBooksGrid(List<Book> books, {required double topPadding}) {
     final useRail =
         LayoutHelper.getNavigationType(context) == NavigationType.rail;
@@ -1045,6 +1171,47 @@ class _LibraryPageState extends State<LibraryPage> {
     showSideToast(context, context.l10n.downloadRunningInBackground);
   }
 
+  Future<void> _exportBook(Book book) async {
+    if (!_exportingBookPaths.add(book.filePath)) return;
+    showSideToast(context, context.l10n.bookExportInProgress);
+    try {
+      final result = await BookExportService().export(book);
+      if (!mounted) return;
+      switch (result.status) {
+        case BookExportStatus.success:
+          final location = result.location ?? result.displayName ?? book.title;
+          showSideToast(
+            context,
+            context.l10n.bookExportSuccess(location),
+            kind: SideToastKind.success,
+          );
+        case BookExportStatus.cancelled:
+          break;
+        case BookExportStatus.sourceMissing:
+        case BookExportStatus.notDownloaded:
+          showSideToast(
+            context,
+            context.l10n.bookExportSourceMissing,
+            kind: SideToastKind.warning,
+          );
+        case BookExportStatus.unsupported:
+          showSideToast(
+            context,
+            context.l10n.bookExportUnsupported,
+            kind: SideToastKind.warning,
+          );
+        case BookExportStatus.failure:
+          showSideToast(
+            context,
+            context.l10n.bookExportFailed,
+            kind: SideToastKind.error,
+          );
+      }
+    } finally {
+      _exportingBookPaths.remove(book.filePath);
+    }
+  }
+
   void _showBookOptions(Book book) {
     final scheme = Theme.of(context).colorScheme;
     final isMaterial3Style = _isMaterial3Style;
@@ -1264,6 +1431,27 @@ class _LibraryPageState extends State<LibraryPage> {
                         },
                       ),
                       const SizedBox(height: 8),
+                      if (!book.isOnline && book.filePath.isNotEmpty) ...[
+                        _buildOptionItem(
+                          context: context,
+                          icon: Icons.file_upload_outlined,
+                          iconColor: localScheme.secondary,
+                          title: context.l10n.libraryExportBook,
+                          subtitle: book.sourceId != null &&
+                                  book.format.toLowerCase() == 'txt'
+                              ? context.l10n.libraryExportDownloadedTxtHint
+                              : context.l10n.libraryExportOriginalHint,
+                          backgroundColor:
+                              localScheme.secondaryContainer.withValues(
+                            alpha: isMaterial3Style ? 0.44 : 0.15,
+                          ),
+                          onTap: () {
+                            Navigator.pop(context);
+                            unawaited(_exportBook(book));
+                          },
+                        ),
+                        const SizedBox(height: 8),
+                      ],
                       _buildOptionItem(
                         context: context,
                         icon: Icons.delete_outline_rounded,
@@ -1539,15 +1727,21 @@ class _LibraryPageState extends State<LibraryPage> {
                   navigator.pop();
                   _loadBooks();
                   if (!toastContext.mounted) return;
-                  showSideToast(toastContext,
-                      toastContext.l10n.libraryBookDeletedToast(book.title));
+                  showSideToast(
+                    toastContext,
+                    toastContext.l10n.libraryBookDeletedToast(book.title),
+                    kind: SideToastKind.success,
+                  );
                 } catch (e) {
                   if (!mounted) return;
                   navigator.pop();
 
                   if (!toastContext.mounted) return;
-                  showSideToast(toastContext,
-                      toastContext.l10n.libraryDeleteFailed('$e'));
+                  showSideToast(
+                    toastContext,
+                    toastContext.l10n.libraryDeleteFailed('$e'),
+                    kind: SideToastKind.error,
+                  );
                 }
               },
               child: Text(

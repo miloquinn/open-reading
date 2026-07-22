@@ -10,13 +10,16 @@ import '../utils/ui_style.dart';
 
 OverlayEntry? _activeSideToastEntry;
 
+enum SideToastKind { info, success, warning, error }
+
 void showSideToast(
   BuildContext context,
   String message, {
   Color? backgroundColor,
   Color? textColor,
-  Duration duration = const Duration(seconds: 3),
+  Duration? duration,
   IconData? icon,
+  SideToastKind kind = SideToastKind.info,
 }) {
   final overlay = Overlay.maybeOf(context, rootOverlay: true);
   if (overlay == null) return;
@@ -30,8 +33,11 @@ void showSideToast(
       message: message,
       backgroundColor: backgroundColor,
       textColor: textColor,
-      duration: duration,
+      duration: duration == null || duration <= Duration.zero
+          ? _defaultDuration(kind)
+          : duration,
       icon: icon,
+      kind: kind,
       onDismissed: () {
         if (identical(_activeSideToastEntry, entry)) {
           _activeSideToastEntry = null;
@@ -44,12 +50,21 @@ void showSideToast(
   overlay.insert(entry);
 }
 
+Duration _defaultDuration(SideToastKind kind) => switch (kind) {
+      SideToastKind.info ||
+      SideToastKind.success =>
+        const Duration(milliseconds: 2200),
+      SideToastKind.warning => const Duration(milliseconds: 2800),
+      SideToastKind.error => const Duration(milliseconds: 3400),
+    };
+
 class _SideToast extends StatefulWidget {
   final String message;
   final Color? backgroundColor;
   final Color? textColor;
   final Duration duration;
   final IconData? icon;
+  final SideToastKind kind;
   final VoidCallback onDismissed;
 
   const _SideToast({
@@ -58,6 +73,7 @@ class _SideToast extends StatefulWidget {
     required this.textColor,
     required this.duration,
     required this.icon,
+    required this.kind,
     required this.onDismissed,
   });
 
@@ -72,6 +88,7 @@ class _SideToastState extends State<_SideToast>
   late final Animation<double> _fadeAnimation;
   Timer? _autoDismissTimer;
   bool _dismissed = false;
+  bool _started = false;
 
   @override
   void initState() {
@@ -79,10 +96,10 @@ class _SideToastState extends State<_SideToast>
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 260),
-      reverseDuration: const Duration(milliseconds: 180),
+      reverseDuration: const Duration(milliseconds: 140),
     );
     _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, -0.18),
+      begin: const Offset(0, -0.22),
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
     _fadeAnimation = CurvedAnimation(
@@ -90,6 +107,19 @@ class _SideToastState extends State<_SideToast>
       curve: Curves.easeOutCubic,
       reverseCurve: Curves.easeIn,
     );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
+    final reduceMotion =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    if (reduceMotion) {
+      _controller.duration = Duration.zero;
+      _controller.reverseDuration = Duration.zero;
+    }
     _controller.forward();
     if (widget.duration > Duration.zero) {
       _autoDismissTimer = Timer(widget.duration, _dismissWithAnimation);
@@ -103,13 +133,6 @@ class _SideToastState extends State<_SideToast>
     if (mounted) {
       await _controller.reverse();
     }
-    widget.onDismissed();
-  }
-
-  void _dismissImmediately() {
-    if (_dismissed) return;
-    _dismissed = true;
-    _autoDismissTimer?.cancel();
     widget.onDismissed();
   }
 
@@ -128,105 +151,120 @@ class _SideToastState extends State<_SideToast>
             ?.isMaterial3Style ??
         false;
     final useBlur = !isMaterial3Style && !GlassEffectConfig.shouldDisableBlur;
-    final topInset = MediaQuery.of(context).padding.top;
+    final mediaQuery = MediaQuery.of(context);
+    final compact = mediaQuery.size.width < 700;
     final background = widget.backgroundColor ??
         (isMaterial3Style
             ? scheme.surfaceContainerHigh
-            : GlassEffectConfig.surfaceColor(context, opacity: 0.82));
+            : GlassEffectConfig.surfaceColor(context, opacity: 0.88));
     final foreground = widget.textColor ?? scheme.onSurface;
-    final icon = widget.icon ?? Icons.notifications_rounded;
+    final accent = switch (widget.kind) {
+      SideToastKind.info => scheme.primary,
+      SideToastKind.success => scheme.tertiary,
+      SideToastKind.warning => scheme.secondary,
+      SideToastKind.error => scheme.error,
+    };
+    final icon = widget.icon ??
+        switch (widget.kind) {
+          SideToastKind.info => Icons.info_outline_rounded,
+          SideToastKind.success => Icons.check_circle_outline_rounded,
+          SideToastKind.warning => Icons.warning_amber_rounded,
+          SideToastKind.error => Icons.error_outline_rounded,
+        };
     final toastCard = Container(
       decoration: BoxDecoration(
         color: background,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color:
-              scheme.outline.withValues(alpha: isMaterial3Style ? 0.24 : 0.22),
-          width: isMaterial3Style ? 0.9 : 1,
+              scheme.outline.withValues(alpha: isMaterial3Style ? 0.18 : 0.16),
+          width: 0.8,
         ),
         boxShadow: [
           BoxShadow(
             color:
-                scheme.shadow.withValues(alpha: isMaterial3Style ? 0.07 : 0.14),
-            blurRadius: isMaterial3Style ? 12 : 24,
-            offset: const Offset(0, 12),
+                scheme.shadow.withValues(alpha: isMaterial3Style ? 0.08 : 0.16),
+            blurRadius: isMaterial3Style ? 14 : 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
+        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
         child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 30,
-              height: 30,
+              width: 26,
+              height: 26,
               decoration: BoxDecoration(
-                color: isMaterial3Style
-                    ? scheme.primaryContainer
-                    : scheme.primary.withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(10),
+                color: accent.withValues(alpha: isMaterial3Style ? 0.13 : 0.15),
+                borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
                 icon,
-                size: 17,
-                color: isMaterial3Style
-                    ? scheme.onPrimaryContainer
-                    : scheme.primary,
+                size: 16,
+                color: accent,
               ),
             ),
-            const SizedBox(width: 10),
-            Expanded(
+            const SizedBox(width: 9),
+            Flexible(
               child: Text(
                 widget.message,
                 style: TextStyle(
                   color: foreground,
-                  fontSize: 14,
+                  fontSize: 13.5,
                   fontWeight: FontWeight.w600,
-                  height: 1.25,
+                  height: 1.3,
                 ),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
               ),
-            ),
-            IconButton(
-              icon: Icon(
-                Icons.close_rounded,
-                size: 18,
-                color: foreground.withValues(alpha: 0.75),
-              ),
-              splashRadius: 18,
-              onPressed: _dismissWithAnimation,
             ),
           ],
         ),
       ),
     );
 
-    return Positioned(
-      top: topInset + 10,
-      left: 12,
-      right: 12,
-      child: Align(
-        alignment: Alignment.topCenter,
-        child: Dismissible(
-          key: UniqueKey(),
-          direction: DismissDirection.up,
-          onDismissed: (_) => _dismissImmediately(),
-          child: SlideTransition(
-            position: _slideAnimation,
-            child: FadeTransition(
-              opacity: _fadeAnimation,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 560),
-                child: Material(
-                  color: Colors.transparent,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(18),
-                    child: useBlur
-                        ? BackdropFilter(
-                            enabled: useBlur,
-                            filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-                            child: toastCard,
-                          )
-                        : toastCard,
+    return Positioned.fill(
+      child: IgnorePointer(
+        child: SafeArea(
+          minimum: EdgeInsets.fromLTRB(
+            compact ? 12 : 24,
+            compact ? 8 : 16,
+            compact ? 12 : 24,
+            0,
+          ),
+          child: Align(
+            alignment: compact ? Alignment.topCenter : Alignment.topRight,
+            child: Semantics(
+              container: true,
+              liveRegion: true,
+              label: widget.message,
+              child: ExcludeSemantics(
+                child: SlideTransition(
+                  position: _slideAnimation,
+                  child: FadeTransition(
+                    opacity: _fadeAnimation,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: compact ? mediaQuery.size.width - 24 : 420,
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(14),
+                          child: useBlur
+                              ? BackdropFilter(
+                                  enabled: useBlur,
+                                  filter:
+                                      ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                                  child: toastCard,
+                                )
+                              : toastCard,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),

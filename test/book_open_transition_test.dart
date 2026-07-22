@@ -189,5 +189,27 @@ void main() {
     test('超宽桌面封顶 10 列', () {
       expect(LayoutHelper.bookGridColumnsForWidth(2400), 10);
     });
+
+    test('纯封面网格在手机上严格使用用户选择的列数', () {
+      expect(
+        LayoutHelper.coverOnlyGridColumnsForWidth(390, mobileColumns: 2),
+        2,
+      );
+      expect(
+        LayoutHelper.coverOnlyGridColumnsForWidth(390, mobileColumns: 3),
+        3,
+      );
+    });
+
+    test('纯封面网格在宽屏按所选密度增加列数', () {
+      expect(
+        LayoutHelper.coverOnlyGridColumnsForWidth(820, mobileColumns: 2),
+        4,
+      );
+      expect(
+        LayoutHelper.coverOnlyGridColumnsForWidth(820, mobileColumns: 3),
+        5,
+      );
+    });
   });
 }

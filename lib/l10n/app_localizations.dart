@@ -2597,6 +2597,108 @@ abstract class AppLocalizations {
   /// **'{format} · {pages} pages'**
   String libraryFormatAndPages(String format, int pages);
 
+  /// No description provided for @libraryExportBook.
+  ///
+  /// In en, this message translates to:
+  /// **'Export book'**
+  String get libraryExportBook;
+
+  /// No description provided for @libraryExportOriginalHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy the original file to another location'**
+  String get libraryExportOriginalHint;
+
+  /// No description provided for @libraryExportDownloadedTxtHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Export the downloaded book as a generated TXT file'**
+  String get libraryExportDownloadedTxtHint;
+
+  /// No description provided for @bookExportSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Exported to {location}'**
+  String bookExportSuccess(String location);
+
+  /// No description provided for @bookExportSourceMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'The book file is missing and cannot be exported'**
+  String get bookExportSourceMissing;
+
+  /// No description provided for @bookExportUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Book export is not supported on this platform yet'**
+  String get bookExportUnsupported;
+
+  /// No description provided for @bookExportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not export the book'**
+  String get bookExportFailed;
+
+  /// No description provided for @bookExportInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Exporting book…'**
+  String get bookExportInProgress;
+
+  /// No description provided for @incomingBooksImporting.
+  ///
+  /// In en, this message translates to:
+  /// **'Importing a book from another app…'**
+  String get incomingBooksImporting;
+
+  /// No description provided for @incomingBooksNoBookFile.
+  ///
+  /// In en, this message translates to:
+  /// **'The shared content does not contain an importable book file'**
+  String get incomingBooksNoBookFile;
+
+  /// No description provided for @incomingBooksPermissionExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'File access has expired. Share or open the file again'**
+  String get incomingBooksPermissionExpired;
+
+  /// No description provided for @incomingBooksUnsupportedFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'This book format is not supported'**
+  String get incomingBooksUnsupportedFormat;
+
+  /// No description provided for @incomingBooksFileTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'The file exceeds the 100 MB import limit'**
+  String get incomingBooksFileTooLarge;
+
+  /// No description provided for @incomingBooksTooManyFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many book files were shared at once. Add them in smaller batches'**
+  String get incomingBooksTooManyFiles;
+
+  /// No description provided for @incomingBooksSomeFilesSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'Some files could not be recognized; the remaining books will continue'**
+  String get incomingBooksSomeFilesSkipped;
+
+  /// No description provided for @incomingBooksContentMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The file format does not match its content'**
+  String get incomingBooksContentMismatch;
+
+  /// No description provided for @incomingBooksImportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not import the book from another app'**
+  String get incomingBooksImportFailed;
+
   /// Subtitle of the delete book option
   ///
   /// In en, this message translates to:
@@ -3515,6 +3617,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show icons only in the mobile bottom navigation'**
   String get settingsHideNavigationLabelsSubtitle;
+
+  /// Title of the library layout selector
+  ///
+  /// In en, this message translates to:
+  /// **'Library layout'**
+  String get settingsLibraryLayoutTitle;
+
+  /// Description of the card and cover-only grid library layouts
+  ///
+  /// In en, this message translates to:
+  /// **'Cards show reading details; Grid shows covers only at your chosen size'**
+  String get settingsLibraryLayoutSubtitle;
+
+  /// Card layout option for the library
+  ///
+  /// In en, this message translates to:
+  /// **'Cards'**
+  String get settingsLibraryLayoutCard;
+
+  /// Cover-only grid layout option for the library
+  ///
+  /// In en, this message translates to:
+  /// **'Grid'**
+  String get settingsLibraryLayoutGrid;
+
+  /// Title of the mobile library grid column selector
+  ///
+  /// In en, this message translates to:
+  /// **'Covers per row on phones'**
+  String get settingsLibraryGridColumnsTitle;
+
+  /// Two-column mobile library grid option
+  ///
+  /// In en, this message translates to:
+  /// **'2 columns'**
+  String get settingsLibraryGridTwoColumns;
+
+  /// Three-column mobile library grid option
+  ///
+  /// In en, this message translates to:
+  /// **'3 columns'**
+  String get settingsLibraryGridThreeColumns;
 
   /// Accent summary when following the app theme
   ///
@@ -5893,6 +6037,408 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not save your consent. Please try again.'**
   String get agreementV2SaveFailed;
+
+  /// Settings section title for data and sync
+  ///
+  /// In en, this message translates to:
+  /// **'Data & sync'**
+  String get settingsDataSyncTitle;
+
+  /// WebDAV sync settings entry title
+  ///
+  /// In en, this message translates to:
+  /// **'WebDAV sync'**
+  String get settingsWebDavSyncTitle;
+
+  /// WebDAV unconfigured status
+  ///
+  /// In en, this message translates to:
+  /// **'Not configured'**
+  String get webDavNotConfigured;
+
+  /// WebDAV entry subtitle before setup
+  ///
+  /// In en, this message translates to:
+  /// **'Sync reading data to your own WebDAV storage'**
+  String get webDavConfigureSubtitle;
+
+  /// WebDAV beta stability badge
+  ///
+  /// In en, this message translates to:
+  /// **'Beta · May be unstable'**
+  String get webDavBetaBadge;
+
+  /// WebDAV overview page title
+  ///
+  /// In en, this message translates to:
+  /// **'WebDAV sync'**
+  String get webDavPageTitle;
+
+  /// WebDAV connected status
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get webDavConnected;
+
+  /// WebDAV syncing status
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing'**
+  String get webDavSyncing;
+
+  /// WebDAV partial failure status
+  ///
+  /// In en, this message translates to:
+  /// **'Some items need attention'**
+  String get webDavPartialFailure;
+
+  /// WebDAV failed status
+  ///
+  /// In en, this message translates to:
+  /// **'Sync failed'**
+  String get webDavSyncFailed;
+
+  /// Count of pending WebDAV changes
+  ///
+  /// In en, this message translates to:
+  /// **'{count} changes waiting to sync'**
+  String webDavPendingChanges(int count);
+
+  /// Last successful WebDAV sync time
+  ///
+  /// In en, this message translates to:
+  /// **'Last sync: {time}'**
+  String webDavLastSync(String time);
+
+  /// WebDAV has never synced
+  ///
+  /// In en, this message translates to:
+  /// **'Not synced yet'**
+  String get webDavNeverSynced;
+
+  /// Manual WebDAV sync button
+  ///
+  /// In en, this message translates to:
+  /// **'Sync now'**
+  String get webDavSyncNow;
+
+  /// Open WebDAV setup button
+  ///
+  /// In en, this message translates to:
+  /// **'Set up WebDAV'**
+  String get webDavSetUp;
+
+  /// WebDAV connection section title
+  ///
+  /// In en, this message translates to:
+  /// **'Connection'**
+  String get webDavConnectionTitle;
+
+  /// WebDAV server URL field label
+  ///
+  /// In en, this message translates to:
+  /// **'WebDAV address'**
+  String get webDavServerUrl;
+
+  /// WebDAV username field label
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
+  String get webDavUsername;
+
+  /// WebDAV password field label
+  ///
+  /// In en, this message translates to:
+  /// **'App password'**
+  String get webDavPassword;
+
+  /// WebDAV password storage hint
+  ///
+  /// In en, this message translates to:
+  /// **'Stored securely on this device only'**
+  String get webDavPasswordHint;
+
+  /// WebDAV root folder field label
+  ///
+  /// In en, this message translates to:
+  /// **'Remote folder'**
+  String get webDavRootPath;
+
+  /// WebDAV connection test button
+  ///
+  /// In en, this message translates to:
+  /// **'Test connection'**
+  String get webDavTestConnection;
+
+  /// WebDAV connection test progress
+  ///
+  /// In en, this message translates to:
+  /// **'Testing connection…'**
+  String get webDavTestingConnection;
+
+  /// WebDAV connection test success
+  ///
+  /// In en, this message translates to:
+  /// **'Connection and write access verified'**
+  String get webDavConnectionSuccess;
+
+  /// WebDAV connection test failure
+  ///
+  /// In en, this message translates to:
+  /// **'Connection test failed: {reason}'**
+  String webDavConnectionFailed(String reason);
+
+  /// Save WebDAV configuration button
+  ///
+  /// In en, this message translates to:
+  /// **'Save configuration'**
+  String get webDavSaveConfiguration;
+
+  /// Automatic WebDAV sync switch
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic sync'**
+  String get webDavAutomaticSync;
+
+  /// Automatic WebDAV sync explanation
+  ///
+  /// In en, this message translates to:
+  /// **'Sync after launch or when the app returns to the foreground'**
+  String get webDavAutomaticSyncHint;
+
+  /// WebDAV scope section title
+  ///
+  /// In en, this message translates to:
+  /// **'Sync content'**
+  String get webDavSyncContent;
+
+  /// Sync scope for book metadata
+  ///
+  /// In en, this message translates to:
+  /// **'Library metadata'**
+  String get webDavScopeBooks;
+
+  /// Sync scope for reading progress
+  ///
+  /// In en, this message translates to:
+  /// **'Reading progress'**
+  String get webDavScopeProgress;
+
+  /// Sync scope for annotations
+  ///
+  /// In en, this message translates to:
+  /// **'Bookmarks, notes & highlights'**
+  String get webDavScopeAnnotations;
+
+  /// Sync scope for reading sessions
+  ///
+  /// In en, this message translates to:
+  /// **'Reading statistics'**
+  String get webDavScopeReadingSessions;
+
+  /// Sync scope for book files
+  ///
+  /// In en, this message translates to:
+  /// **'Book files'**
+  String get webDavScopeBookFiles;
+
+  /// Book file sync scope explanation
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which books to upload or download'**
+  String get webDavBookFilesHint;
+
+  /// Book file transfer feature-gate explanation
+  ///
+  /// In en, this message translates to:
+  /// **'Book file transfer will be enabled after metadata sync is stable'**
+  String get webDavBookFilesUnavailable;
+
+  /// WebDAV non-E2EE disclosure
+  ///
+  /// In en, this message translates to:
+  /// **'Data is sent over HTTPS, but your WebDAV provider can read unencrypted remote content.'**
+  String get webDavSecurityNotice;
+
+  /// Open WebDAV connection settings
+  ///
+  /// In en, this message translates to:
+  /// **'Connection settings'**
+  String get webDavConnectionDetails;
+
+  /// Clear local WebDAV configuration action
+  ///
+  /// In en, this message translates to:
+  /// **'Clear configuration'**
+  String get webDavClearConfiguration;
+
+  /// Clear WebDAV configuration dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Clear WebDAV configuration?'**
+  String get webDavClearConfigurationTitle;
+
+  /// Clear WebDAV configuration dialog body
+  ///
+  /// In en, this message translates to:
+  /// **'This removes the WebDAV address and login from this device. Local reading data and remote files will not be deleted.'**
+  String get webDavClearConfigurationMessage;
+
+  /// Clear WebDAV configuration confirmation
+  ///
+  /// In en, this message translates to:
+  /// **'Clear from this device'**
+  String get webDavClearConfigurationConfirm;
+
+  /// WebDAV sync activity page title
+  ///
+  /// In en, this message translates to:
+  /// **'Sync activity'**
+  String get webDavActivityTitle;
+
+  /// Empty WebDAV activity state
+  ///
+  /// In en, this message translates to:
+  /// **'No sync activity yet'**
+  String get webDavActivityEmpty;
+
+  /// WebDAV sync result summary
+  ///
+  /// In en, this message translates to:
+  /// **'Uploaded {uploaded}, downloaded {downloaded}'**
+  String webDavSyncCompleteSummary(int uploaded, int downloaded);
+
+  /// WebDAV authentication error
+  ///
+  /// In en, this message translates to:
+  /// **'The username, password, or folder permission is incorrect.'**
+  String get webDavErrorAuthentication;
+
+  /// WebDAV certificate error
+  ///
+  /// In en, this message translates to:
+  /// **'The server certificate could not be verified.'**
+  String get webDavErrorCertificate;
+
+  /// WebDAV permission error
+  ///
+  /// In en, this message translates to:
+  /// **'The remote folder is not writable.'**
+  String get webDavErrorPermission;
+
+  /// WebDAV timeout error
+  ///
+  /// In en, this message translates to:
+  /// **'The server did not respond in time.'**
+  String get webDavErrorTimeout;
+
+  /// Unsupported WebDAV error
+  ///
+  /// In en, this message translates to:
+  /// **'This WebDAV server does not support safe synchronization.'**
+  String get webDavErrorUnsupported;
+
+  /// WebDAV network error
+  ///
+  /// In en, this message translates to:
+  /// **'The network is unavailable. Changes remain saved on this device.'**
+  String get webDavErrorNetwork;
+
+  /// WebDAV corrupt remote data error
+  ///
+  /// In en, this message translates to:
+  /// **'Some remote sync data is damaged and was not applied.'**
+  String get webDavErrorCorruptData;
+
+  /// Unknown WebDAV error
+  ///
+  /// In en, this message translates to:
+  /// **'WebDAV could not complete the operation.'**
+  String get webDavErrorUnknown;
+
+  /// WebDAV book-file manager title
+  ///
+  /// In en, this message translates to:
+  /// **'Book files'**
+  String get webDavBookFilesTitle;
+
+  /// Book-file pending upload tab
+  ///
+  /// In en, this message translates to:
+  /// **'To upload'**
+  String get webDavFilesPendingUpload;
+
+  /// Book-file available download tab
+  ///
+  /// In en, this message translates to:
+  /// **'Available'**
+  String get webDavFilesAvailableDownload;
+
+  /// Book-file synced tab
+  ///
+  /// In en, this message translates to:
+  /// **'Synced'**
+  String get webDavFilesSynced;
+
+  /// Upload selected books action
+  ///
+  /// In en, this message translates to:
+  /// **'Upload selected'**
+  String get webDavFilesUploadSelected;
+
+  /// Download selected books action
+  ///
+  /// In en, this message translates to:
+  /// **'Download selected'**
+  String get webDavFilesDownloadSelected;
+
+  /// Selected book-file count and size
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected · {size}'**
+  String webDavFilesSelectedSummary(int count, String size);
+
+  /// Book file exists only locally
+  ///
+  /// In en, this message translates to:
+  /// **'Only on this device'**
+  String get webDavFilesOnlyLocal;
+
+  /// Book file exists only remotely
+  ///
+  /// In en, this message translates to:
+  /// **'File not downloaded to this device'**
+  String get webDavFilesOnlyRemote;
+
+  /// Global permission for explicit book-file uploads
+  ///
+  /// In en, this message translates to:
+  /// **'Allow book file uploads'**
+  String get webDavFilesUploadPermission;
+
+  /// Explains that enabling uploads does not upload every book
+  ///
+  /// In en, this message translates to:
+  /// **'Only books you explicitly select here will be uploaded'**
+  String get webDavFilesUploadPermissionHint;
+
+  /// Book file transfer size limit
+  ///
+  /// In en, this message translates to:
+  /// **'Files over 100 MiB are not supported in this release'**
+  String get webDavFilesTooLarge;
+
+  /// Empty book-file category
+  ///
+  /// In en, this message translates to:
+  /// **'No books in this category'**
+  String get webDavFilesEmpty;
+
+  /// Book-file transfer success
+  ///
+  /// In en, this message translates to:
+  /// **'Book-file transfer complete'**
+  String get webDavFilesTransferComplete;
 }
 
 class _AppLocalizationsDelegate

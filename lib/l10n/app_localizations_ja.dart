@@ -1343,6 +1343,60 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get libraryExportBook => '書籍を書き出す';
+
+  @override
+  String get libraryExportOriginalHint => '元のファイルをデバイス上の別の場所へコピーします';
+
+  @override
+  String get libraryExportDownloadedTxtHint => 'ダウンロード後に生成された TXT ファイルを書き出します';
+
+  @override
+  String bookExportSuccess(String location) {
+    return '$location に書き出しました';
+  }
+
+  @override
+  String get bookExportSourceMissing => '書籍ファイルが見つからないため書き出せません';
+
+  @override
+  String get bookExportUnsupported => 'このプラットフォームでは書籍の書き出しにまだ対応していません';
+
+  @override
+  String get bookExportFailed => '書籍を書き出せませんでした';
+
+  @override
+  String get bookExportInProgress => '書籍を書き出しています…';
+
+  @override
+  String get incomingBooksImporting => '別のアプリから書籍を読み込んでいます…';
+
+  @override
+  String get incomingBooksNoBookFile => '共有内容に読み込み可能な書籍ファイルがありません';
+
+  @override
+  String get incomingBooksPermissionExpired =>
+      'ファイルへのアクセス権が失効しました。もう一度共有または開いてください';
+
+  @override
+  String get incomingBooksUnsupportedFormat => 'この書籍形式には対応していません';
+
+  @override
+  String get incomingBooksFileTooLarge => 'ファイルが 100 MB の読み込み上限を超えています';
+
+  @override
+  String get incomingBooksTooManyFiles => '一度に共有された書籍が多すぎます。分けて追加してください';
+
+  @override
+  String get incomingBooksSomeFilesSkipped => '一部のファイルを認識できませんでした。残りの書籍を処理します';
+
+  @override
+  String get incomingBooksContentMismatch => 'ファイル形式と実際の内容が一致しません';
+
+  @override
+  String get incomingBooksImportFailed => '別のアプリから書籍を読み込めませんでした';
+
+  @override
   String get libraryDeleteBookHint => 'この本は完全に削除されます';
 
   @override
@@ -1854,6 +1908,28 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get settingsHideNavigationLabelsSubtitle =>
       'オンにすると、モバイルの下部ナビゲーションはアイコンのみ表示します';
+
+  @override
+  String get settingsLibraryLayoutTitle => 'ライブラリの表示';
+
+  @override
+  String get settingsLibraryLayoutSubtitle =>
+      'カードは読書情報を表示し、グリッドは選んだ大きさで表紙だけを表示します';
+
+  @override
+  String get settingsLibraryLayoutCard => 'カード';
+
+  @override
+  String get settingsLibraryLayoutGrid => 'グリッド';
+
+  @override
+  String get settingsLibraryGridColumnsTitle => 'スマートフォンの1行あたりの表紙数';
+
+  @override
+  String get settingsLibraryGridTwoColumns => '2列';
+
+  @override
+  String get settingsLibraryGridThreeColumns => '3列';
 
   @override
   String get settingsAccentFollowTheme => 'アクセントカラー：テーマに従う';
@@ -3195,4 +3271,217 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get agreementV2SaveFailed => '同意状態を保存できませんでした。後でもう一度お試しください。';
+
+  @override
+  String get settingsDataSyncTitle => 'データと同期';
+
+  @override
+  String get settingsWebDavSyncTitle => 'WebDAV 同期';
+
+  @override
+  String get webDavNotConfigured => '未設定';
+
+  @override
+  String get webDavConfigureSubtitle => '自分の WebDAV ストレージに読書データを同期します';
+
+  @override
+  String get webDavBetaBadge => 'ベータ · 不安定な場合があります';
+
+  @override
+  String get webDavPageTitle => 'WebDAV 同期';
+
+  @override
+  String get webDavConnected => '接続済み';
+
+  @override
+  String get webDavSyncing => '同期中';
+
+  @override
+  String get webDavPartialFailure => '確認が必要な項目があります';
+
+  @override
+  String get webDavSyncFailed => '同期に失敗しました';
+
+  @override
+  String webDavPendingChanges(int count) {
+    return '$count 件の変更が同期を待っています';
+  }
+
+  @override
+  String webDavLastSync(String time) {
+    return '最終同期：$time';
+  }
+
+  @override
+  String get webDavNeverSynced => 'まだ同期していません';
+
+  @override
+  String get webDavSyncNow => '今すぐ同期';
+
+  @override
+  String get webDavSetUp => 'WebDAV を設定';
+
+  @override
+  String get webDavConnectionTitle => '接続情報';
+
+  @override
+  String get webDavServerUrl => 'WebDAV アドレス';
+
+  @override
+  String get webDavUsername => 'ユーザー名';
+
+  @override
+  String get webDavPassword => 'アプリパスワード';
+
+  @override
+  String get webDavPasswordHint => 'この端末にのみ安全に保存されます';
+
+  @override
+  String get webDavRootPath => 'リモートフォルダー';
+
+  @override
+  String get webDavTestConnection => '接続をテスト';
+
+  @override
+  String get webDavTestingConnection => '接続をテストしています…';
+
+  @override
+  String get webDavConnectionSuccess => '接続と書き込み権限を確認しました';
+
+  @override
+  String webDavConnectionFailed(String reason) {
+    return '接続テストに失敗しました：$reason';
+  }
+
+  @override
+  String get webDavSaveConfiguration => '設定を保存';
+
+  @override
+  String get webDavAutomaticSync => '自動同期';
+
+  @override
+  String get webDavAutomaticSyncHint => '起動時またはアプリへ戻ったときに自動同期します';
+
+  @override
+  String get webDavSyncContent => '同期する内容';
+
+  @override
+  String get webDavScopeBooks => 'ライブラリ情報';
+
+  @override
+  String get webDavScopeProgress => '読書進捗';
+
+  @override
+  String get webDavScopeAnnotations => 'しおり・メモ・ハイライト';
+
+  @override
+  String get webDavScopeReadingSessions => '読書統計';
+
+  @override
+  String get webDavScopeBookFiles => '書籍ファイル';
+
+  @override
+  String get webDavBookFilesHint => 'アップロードまたはダウンロードする書籍を選択します';
+
+  @override
+  String get webDavBookFilesUnavailable => '書籍ファイル転送はメタデータ同期の安定後に有効になります';
+
+  @override
+  String get webDavSecurityNotice =>
+      'データは HTTPS で送信されますが、WebDAV 提供者は暗号化されていないリモート内容を読むことができます。';
+
+  @override
+  String get webDavConnectionDetails => '接続設定';
+
+  @override
+  String get webDavClearConfiguration => 'この端末の設定を消去';
+
+  @override
+  String get webDavClearConfigurationTitle => 'WebDAV 設定を消去しますか？';
+
+  @override
+  String get webDavClearConfigurationMessage =>
+      'この端末の WebDAV アドレスとログイン情報のみを削除します。端末の読書データやリモートファイルは削除されません。';
+
+  @override
+  String get webDavClearConfigurationConfirm => 'この端末から消去';
+
+  @override
+  String get webDavActivityTitle => '同期アクティビティ';
+
+  @override
+  String get webDavActivityEmpty => '同期履歴はまだありません';
+
+  @override
+  String webDavSyncCompleteSummary(int uploaded, int downloaded) {
+    return 'アップロード $uploaded 件、ダウンロード $downloaded 件';
+  }
+
+  @override
+  String get webDavErrorAuthentication => 'ユーザー名、パスワード、またはフォルダー権限が正しくありません。';
+
+  @override
+  String get webDavErrorCertificate => 'サーバー証明書を検証できませんでした。';
+
+  @override
+  String get webDavErrorPermission => 'リモートフォルダーに書き込めません。';
+
+  @override
+  String get webDavErrorTimeout => 'サーバーが時間内に応答しませんでした。';
+
+  @override
+  String get webDavErrorUnsupported => 'この WebDAV サーバーは安全な同期に必要な機能をサポートしていません。';
+
+  @override
+  String get webDavErrorNetwork => 'ネットワークを利用できません。変更はこの端末に保存されています。';
+
+  @override
+  String get webDavErrorCorruptData => '一部のリモート同期データが破損しているため適用しませんでした。';
+
+  @override
+  String get webDavErrorUnknown => 'WebDAV の処理を完了できませんでした。';
+
+  @override
+  String get webDavBookFilesTitle => '書籍ファイル';
+
+  @override
+  String get webDavFilesPendingUpload => 'アップロード待ち';
+
+  @override
+  String get webDavFilesAvailableDownload => 'ダウンロード可能';
+
+  @override
+  String get webDavFilesSynced => '同期済み';
+
+  @override
+  String get webDavFilesUploadSelected => '選択項目をアップロード';
+
+  @override
+  String get webDavFilesDownloadSelected => '選択項目をダウンロード';
+
+  @override
+  String webDavFilesSelectedSummary(int count, String size) {
+    return '$count 冊選択 · $size';
+  }
+
+  @override
+  String get webDavFilesOnlyLocal => 'この端末のみ';
+
+  @override
+  String get webDavFilesOnlyRemote => 'この端末にファイルがありません';
+
+  @override
+  String get webDavFilesUploadPermission => '書籍ファイルのアップロードを許可';
+
+  @override
+  String get webDavFilesUploadPermissionHint => 'このページで明示的に選択した書籍だけをアップロードします';
+
+  @override
+  String get webDavFilesTooLarge => 'このバージョンでは 100 MiB を超える書籍ファイルに対応していません';
+
+  @override
+  String get webDavFilesEmpty => 'この分類に書籍はありません';
+
+  @override
+  String get webDavFilesTransferComplete => '書籍ファイルの転送が完了しました';
 }

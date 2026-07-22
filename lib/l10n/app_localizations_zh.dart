@@ -1338,6 +1338,59 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get libraryExportBook => '导出书籍';
+
+  @override
+  String get libraryExportOriginalHint => '复制原文件到设备上的其他位置';
+
+  @override
+  String get libraryExportDownloadedTxtHint => '导出下载后生成的 TXT 文件';
+
+  @override
+  String bookExportSuccess(String location) {
+    return '已导出到 $location';
+  }
+
+  @override
+  String get bookExportSourceMissing => '书籍文件不存在，无法导出';
+
+  @override
+  String get bookExportUnsupported => '当前平台暂不支持导出书籍';
+
+  @override
+  String get bookExportFailed => '书籍导出失败';
+
+  @override
+  String get bookExportInProgress => '正在导出书籍…';
+
+  @override
+  String get incomingBooksImporting => '正在从其他应用导入书籍…';
+
+  @override
+  String get incomingBooksNoBookFile => '分享内容中没有可导入的书籍文件';
+
+  @override
+  String get incomingBooksPermissionExpired => '文件访问权限已失效，请重新分享或打开文件';
+
+  @override
+  String get incomingBooksUnsupportedFormat => '暂不支持这种书籍格式';
+
+  @override
+  String get incomingBooksFileTooLarge => '文件超过 100 MB 导入限制';
+
+  @override
+  String get incomingBooksTooManyFiles => '一次分享的书籍文件过多，请分批添加';
+
+  @override
+  String get incomingBooksSomeFilesSkipped => '部分文件无法识别，已继续处理其余书籍';
+
+  @override
+  String get incomingBooksContentMismatch => '文件格式与实际内容不匹配';
+
+  @override
+  String get incomingBooksImportFailed => '从其他应用导入书籍失败';
+
+  @override
   String get libraryDeleteBookHint => '将永久删除此书籍';
 
   @override
@@ -1837,6 +1890,27 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsHideNavigationLabelsSubtitle => '开启后，手机底部导航栏仅显示图标';
+
+  @override
+  String get settingsLibraryLayoutTitle => '书库布局';
+
+  @override
+  String get settingsLibraryLayoutSubtitle => '卡片展示阅读信息；网格仅显示封面，并可选择封面大小';
+
+  @override
+  String get settingsLibraryLayoutCard => '卡片';
+
+  @override
+  String get settingsLibraryLayoutGrid => '网格';
+
+  @override
+  String get settingsLibraryGridColumnsTitle => '手机每行封面数量';
+
+  @override
+  String get settingsLibraryGridTwoColumns => '2 列';
+
+  @override
+  String get settingsLibraryGridThreeColumns => '3 列';
 
   @override
   String get settingsAccentFollowTheme => '强调色：跟随主题';
@@ -3166,6 +3240,219 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get agreementV2SaveFailed => '无法保存同意状态，请稍后重试。';
+
+  @override
+  String get settingsDataSyncTitle => '数据与同步';
+
+  @override
+  String get settingsWebDavSyncTitle => 'WebDAV 同步';
+
+  @override
+  String get webDavNotConfigured => '尚未配置';
+
+  @override
+  String get webDavConfigureSubtitle => '将阅读数据同步到你自己的 WebDAV 空间';
+
+  @override
+  String get webDavBetaBadge => 'Beta · 可能不稳定';
+
+  @override
+  String get webDavPageTitle => 'WebDAV 同步';
+
+  @override
+  String get webDavConnected => '已连接';
+
+  @override
+  String get webDavSyncing => '正在同步';
+
+  @override
+  String get webDavPartialFailure => '部分内容需要处理';
+
+  @override
+  String get webDavSyncFailed => '同步失败';
+
+  @override
+  String webDavPendingChanges(int count) {
+    return '$count 项变更等待同步';
+  }
+
+  @override
+  String webDavLastSync(String time) {
+    return '上次同步：$time';
+  }
+
+  @override
+  String get webDavNeverSynced => '尚未同步';
+
+  @override
+  String get webDavSyncNow => '立即同步';
+
+  @override
+  String get webDavSetUp => '设置 WebDAV';
+
+  @override
+  String get webDavConnectionTitle => '连接信息';
+
+  @override
+  String get webDavServerUrl => 'WebDAV 地址';
+
+  @override
+  String get webDavUsername => '用户名';
+
+  @override
+  String get webDavPassword => '应用密码';
+
+  @override
+  String get webDavPasswordHint => '仅安全保存在当前设备';
+
+  @override
+  String get webDavRootPath => '远端目录';
+
+  @override
+  String get webDavTestConnection => '测试连接';
+
+  @override
+  String get webDavTestingConnection => '正在测试连接…';
+
+  @override
+  String get webDavConnectionSuccess => '连接与写入权限验证成功';
+
+  @override
+  String webDavConnectionFailed(String reason) {
+    return '连接测试失败：$reason';
+  }
+
+  @override
+  String get webDavSaveConfiguration => '保存配置';
+
+  @override
+  String get webDavAutomaticSync => '自动同步';
+
+  @override
+  String get webDavAutomaticSyncHint => '启动应用或回到前台时自动同步';
+
+  @override
+  String get webDavSyncContent => '同步内容';
+
+  @override
+  String get webDavScopeBooks => '书架信息';
+
+  @override
+  String get webDavScopeProgress => '阅读进度';
+
+  @override
+  String get webDavScopeAnnotations => '书签、笔记与高亮';
+
+  @override
+  String get webDavScopeReadingSessions => '阅读统计';
+
+  @override
+  String get webDavScopeBookFiles => '书籍原文件';
+
+  @override
+  String get webDavBookFilesHint => '选择需要上传或下载的书籍';
+
+  @override
+  String get webDavBookFilesUnavailable => '书籍文件传输将在元数据同步稳定后开放';
+
+  @override
+  String get webDavSecurityNotice =>
+      '数据通过 HTTPS 传输，但 WebDAV 服务提供方仍可读取未加密的远端内容。';
+
+  @override
+  String get webDavConnectionDetails => '连接配置';
+
+  @override
+  String get webDavClearConfiguration => '清除本机配置';
+
+  @override
+  String get webDavClearConfigurationTitle => '清除 WebDAV 配置？';
+
+  @override
+  String get webDavClearConfigurationMessage =>
+      '这会删除当前设备保存的 WebDAV 地址和登录信息，不会删除本机阅读数据或远端文件。';
+
+  @override
+  String get webDavClearConfigurationConfirm => '从本机清除';
+
+  @override
+  String get webDavActivityTitle => '同步活动';
+
+  @override
+  String get webDavActivityEmpty => '还没有同步记录';
+
+  @override
+  String webDavSyncCompleteSummary(int uploaded, int downloaded) {
+    return '上传 $uploaded 项，下载 $downloaded 项';
+  }
+
+  @override
+  String get webDavErrorAuthentication => '用户名、密码或目录权限不正确。';
+
+  @override
+  String get webDavErrorCertificate => '无法验证服务器证书。';
+
+  @override
+  String get webDavErrorPermission => '远端目录没有写入权限。';
+
+  @override
+  String get webDavErrorTimeout => '服务器没有及时响应。';
+
+  @override
+  String get webDavErrorUnsupported => '这个 WebDAV 服务不支持安全同步所需的能力。';
+
+  @override
+  String get webDavErrorNetwork => '当前网络不可用，变更仍已保存在本机。';
+
+  @override
+  String get webDavErrorCorruptData => '部分远端同步数据已损坏，因此没有应用。';
+
+  @override
+  String get webDavErrorUnknown => 'WebDAV 无法完成本次操作。';
+
+  @override
+  String get webDavBookFilesTitle => '书籍文件';
+
+  @override
+  String get webDavFilesPendingUpload => '待上传';
+
+  @override
+  String get webDavFilesAvailableDownload => '可下载';
+
+  @override
+  String get webDavFilesSynced => '已同步';
+
+  @override
+  String get webDavFilesUploadSelected => '上传所选';
+
+  @override
+  String get webDavFilesDownloadSelected => '下载所选';
+
+  @override
+  String webDavFilesSelectedSummary(int count, String size) {
+    return '已选择 $count 本 · $size';
+  }
+
+  @override
+  String get webDavFilesOnlyLocal => '仅在本机';
+
+  @override
+  String get webDavFilesOnlyRemote => '文件尚未下载到本机';
+
+  @override
+  String get webDavFilesUploadPermission => '允许上传书籍原文件';
+
+  @override
+  String get webDavFilesUploadPermissionHint => '只会上传你在此页明确选中的书籍';
+
+  @override
+  String get webDavFilesTooLarge => '当前版本暂不支持超过 100 MiB 的书籍文件';
+
+  @override
+  String get webDavFilesEmpty => '这个分类中没有书籍';
+
+  @override
+  String get webDavFilesTransferComplete => '书籍文件传输完成';
 }
 
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).
@@ -4459,6 +4746,59 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   }
 
   @override
+  String get libraryExportBook => '匯出書籍';
+
+  @override
+  String get libraryExportOriginalHint => '將原始檔案複製到裝置上的其他位置';
+
+  @override
+  String get libraryExportDownloadedTxtHint => '匯出下載後產生的 TXT 檔案';
+
+  @override
+  String bookExportSuccess(String location) {
+    return '已匯出到 $location';
+  }
+
+  @override
+  String get bookExportSourceMissing => '書籍檔案不存在，無法匯出';
+
+  @override
+  String get bookExportUnsupported => '目前平台暫不支援匯出書籍';
+
+  @override
+  String get bookExportFailed => '書籍匯出失敗';
+
+  @override
+  String get bookExportInProgress => '正在匯出書籍…';
+
+  @override
+  String get incomingBooksImporting => '正在從其他應用程式匯入書籍…';
+
+  @override
+  String get incomingBooksNoBookFile => '分享內容中沒有可匯入的書籍檔案';
+
+  @override
+  String get incomingBooksPermissionExpired => '檔案存取權限已失效，請重新分享或開啟檔案';
+
+  @override
+  String get incomingBooksUnsupportedFormat => '暫不支援這種書籍格式';
+
+  @override
+  String get incomingBooksFileTooLarge => '檔案超過 100 MB 匯入限制';
+
+  @override
+  String get incomingBooksTooManyFiles => '一次分享的書籍檔案過多，請分批加入';
+
+  @override
+  String get incomingBooksSomeFilesSkipped => '部分檔案無法識別，已繼續處理其餘書籍';
+
+  @override
+  String get incomingBooksContentMismatch => '檔案格式與實際內容不相符';
+
+  @override
+  String get incomingBooksImportFailed => '從其他應用程式匯入書籍失敗';
+
+  @override
   String get libraryDeleteBookHint => '將永久刪除此書籍';
 
   @override
@@ -4958,6 +5298,27 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get settingsHideNavigationLabelsSubtitle => '開啟後，手機底部導覽列僅顯示圖示';
+
+  @override
+  String get settingsLibraryLayoutTitle => '書庫版面';
+
+  @override
+  String get settingsLibraryLayoutSubtitle => '卡片顯示閱讀資訊；網格只顯示封面，並可選擇封面大小';
+
+  @override
+  String get settingsLibraryLayoutCard => '卡片';
+
+  @override
+  String get settingsLibraryLayoutGrid => '網格';
+
+  @override
+  String get settingsLibraryGridColumnsTitle => '手機每列封面數量';
+
+  @override
+  String get settingsLibraryGridTwoColumns => '2 列';
+
+  @override
+  String get settingsLibraryGridThreeColumns => '3 列';
 
   @override
   String get settingsAccentFollowTheme => '強調色：跟隨主題';
@@ -6287,4 +6648,217 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get agreementV2SaveFailed => '無法儲存同意狀態，請稍後重試。';
+
+  @override
+  String get settingsDataSyncTitle => '資料與同步';
+
+  @override
+  String get settingsWebDavSyncTitle => 'WebDAV 同步';
+
+  @override
+  String get webDavNotConfigured => '尚未設定';
+
+  @override
+  String get webDavConfigureSubtitle => '將閱讀資料同步到你自己的 WebDAV 空間';
+
+  @override
+  String get webDavBetaBadge => 'Beta · 可能不穩定';
+
+  @override
+  String get webDavPageTitle => 'WebDAV 同步';
+
+  @override
+  String get webDavConnected => '已連線';
+
+  @override
+  String get webDavSyncing => '正在同步';
+
+  @override
+  String get webDavPartialFailure => '部分內容需要處理';
+
+  @override
+  String get webDavSyncFailed => '同步失敗';
+
+  @override
+  String webDavPendingChanges(int count) {
+    return '$count 項變更等待同步';
+  }
+
+  @override
+  String webDavLastSync(String time) {
+    return '上次同步：$time';
+  }
+
+  @override
+  String get webDavNeverSynced => '尚未同步';
+
+  @override
+  String get webDavSyncNow => '立即同步';
+
+  @override
+  String get webDavSetUp => '設定 WebDAV';
+
+  @override
+  String get webDavConnectionTitle => '連線資訊';
+
+  @override
+  String get webDavServerUrl => 'WebDAV 位址';
+
+  @override
+  String get webDavUsername => '使用者名稱';
+
+  @override
+  String get webDavPassword => '應用程式密碼';
+
+  @override
+  String get webDavPasswordHint => '僅安全儲存在目前裝置';
+
+  @override
+  String get webDavRootPath => '遠端目錄';
+
+  @override
+  String get webDavTestConnection => '測試連線';
+
+  @override
+  String get webDavTestingConnection => '正在測試連線…';
+
+  @override
+  String get webDavConnectionSuccess => '連線與寫入權限驗證成功';
+
+  @override
+  String webDavConnectionFailed(String reason) {
+    return '連線測試失敗：$reason';
+  }
+
+  @override
+  String get webDavSaveConfiguration => '儲存設定';
+
+  @override
+  String get webDavAutomaticSync => '自動同步';
+
+  @override
+  String get webDavAutomaticSyncHint => '啟動應用程式或回到前景時自動同步';
+
+  @override
+  String get webDavSyncContent => '同步內容';
+
+  @override
+  String get webDavScopeBooks => '書庫資訊';
+
+  @override
+  String get webDavScopeProgress => '閱讀進度';
+
+  @override
+  String get webDavScopeAnnotations => '書籤、筆記與醒目標記';
+
+  @override
+  String get webDavScopeReadingSessions => '閱讀統計';
+
+  @override
+  String get webDavScopeBookFiles => '書籍原始檔';
+
+  @override
+  String get webDavBookFilesHint => '選擇需要上傳或下載的書籍';
+
+  @override
+  String get webDavBookFilesUnavailable => '書籍檔案傳輸將在中繼資料同步穩定後開放';
+
+  @override
+  String get webDavSecurityNotice =>
+      '資料透過 HTTPS 傳輸，但 WebDAV 服務提供者仍可讀取未加密的遠端內容。';
+
+  @override
+  String get webDavConnectionDetails => '連線設定';
+
+  @override
+  String get webDavClearConfiguration => '清除本機設定';
+
+  @override
+  String get webDavClearConfigurationTitle => '清除 WebDAV 設定？';
+
+  @override
+  String get webDavClearConfigurationMessage =>
+      '這會刪除目前裝置儲存的 WebDAV 位址和登入資訊，不會刪除本機閱讀資料或遠端檔案。';
+
+  @override
+  String get webDavClearConfigurationConfirm => '從本機清除';
+
+  @override
+  String get webDavActivityTitle => '同步活動';
+
+  @override
+  String get webDavActivityEmpty => '尚無同步記錄';
+
+  @override
+  String webDavSyncCompleteSummary(int uploaded, int downloaded) {
+    return '上傳 $uploaded 項，下載 $downloaded 項';
+  }
+
+  @override
+  String get webDavErrorAuthentication => '使用者名稱、密碼或目錄權限不正確。';
+
+  @override
+  String get webDavErrorCertificate => '無法驗證伺服器憑證。';
+
+  @override
+  String get webDavErrorPermission => '遠端目錄沒有寫入權限。';
+
+  @override
+  String get webDavErrorTimeout => '伺服器未及時回應。';
+
+  @override
+  String get webDavErrorUnsupported => '此 WebDAV 服務不支援安全同步所需的能力。';
+
+  @override
+  String get webDavErrorNetwork => '目前無法使用網路，變更仍已儲存在本機。';
+
+  @override
+  String get webDavErrorCorruptData => '部分遠端同步資料已損壞，因此未套用。';
+
+  @override
+  String get webDavErrorUnknown => 'WebDAV 無法完成這次操作。';
+
+  @override
+  String get webDavBookFilesTitle => '書籍檔案';
+
+  @override
+  String get webDavFilesPendingUpload => '待上傳';
+
+  @override
+  String get webDavFilesAvailableDownload => '可下載';
+
+  @override
+  String get webDavFilesSynced => '已同步';
+
+  @override
+  String get webDavFilesUploadSelected => '上傳所選';
+
+  @override
+  String get webDavFilesDownloadSelected => '下載所選';
+
+  @override
+  String webDavFilesSelectedSummary(int count, String size) {
+    return '已選擇 $count 本 · $size';
+  }
+
+  @override
+  String get webDavFilesOnlyLocal => '僅在本機';
+
+  @override
+  String get webDavFilesOnlyRemote => '檔案尚未下載到本機';
+
+  @override
+  String get webDavFilesUploadPermission => '允許上傳書籍原始檔案';
+
+  @override
+  String get webDavFilesUploadPermissionHint => '只會上傳你在此頁明確選取的書籍';
+
+  @override
+  String get webDavFilesTooLarge => '目前版本暫不支援超過 100 MiB 的書籍檔案';
+
+  @override
+  String get webDavFilesEmpty => '此分類中沒有書籍';
+
+  @override
+  String get webDavFilesTransferComplete => '書籍檔案傳輸完成';
 }

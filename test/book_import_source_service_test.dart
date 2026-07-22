@@ -136,4 +136,34 @@ void main() {
     expect(lost.displayName, 'Books');
     expect(lost.permissionAvailable, isFalse);
   });
+
+  test('系统入站来源只清理 incoming_books 暂存根目录内的文件', () async {
+    final temporary = await Directory.systemTemp.createTemp('incoming-root-');
+    addTearDown(() => temporary.delete(recursive: true));
+    final incomingRoot = Directory('${temporary.path}/incoming_books/request');
+    await incomingRoot.create(recursive: true);
+    final staged = File('${incomingRoot.path}/book.txt');
+    final external = File('${temporary.path}/external.txt');
+    await staged.writeAsString('staged');
+    await external.writeAsString('external');
+    final service = BookImportSourceService(
+      temporaryDirectory: () async => temporary,
+    );
+
+    BookImportSource source(File file) => BookImportSource(
+          id: file.path,
+          kind: BookImportSourceKind.systemOpen,
+          ownership: BookImportOwnership.externalCopy,
+          displayName: p.basename(file.path),
+          extension: 'txt',
+          locator: 'system_open:test',
+          localPath: file.path,
+        );
+
+    await service.release(source(staged));
+    await service.release(source(external));
+
+    expect(await staged.exists(), isFalse);
+    expect(await external.exists(), isTrue);
+  });
 }

@@ -1383,6 +1383,71 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get libraryExportBook => 'Export book';
+
+  @override
+  String get libraryExportOriginalHint =>
+      'Copy the original file to another location';
+
+  @override
+  String get libraryExportDownloadedTxtHint =>
+      'Export the downloaded book as a generated TXT file';
+
+  @override
+  String bookExportSuccess(String location) {
+    return 'Exported to $location';
+  }
+
+  @override
+  String get bookExportSourceMissing =>
+      'The book file is missing and cannot be exported';
+
+  @override
+  String get bookExportUnsupported =>
+      'Book export is not supported on this platform yet';
+
+  @override
+  String get bookExportFailed => 'Could not export the book';
+
+  @override
+  String get bookExportInProgress => 'Exporting book…';
+
+  @override
+  String get incomingBooksImporting => 'Importing a book from another app…';
+
+  @override
+  String get incomingBooksNoBookFile =>
+      'The shared content does not contain an importable book file';
+
+  @override
+  String get incomingBooksPermissionExpired =>
+      'File access has expired. Share or open the file again';
+
+  @override
+  String get incomingBooksUnsupportedFormat =>
+      'This book format is not supported';
+
+  @override
+  String get incomingBooksFileTooLarge =>
+      'The file exceeds the 100 MB import limit';
+
+  @override
+  String get incomingBooksTooManyFiles =>
+      'Too many book files were shared at once. Add them in smaller batches';
+
+  @override
+  String get incomingBooksSomeFilesSkipped =>
+      'Some files could not be recognized; the remaining books will continue';
+
+  @override
+  String get incomingBooksContentMismatch =>
+      'The file format does not match its content';
+
+  @override
+  String get incomingBooksImportFailed =>
+      'Could not import the book from another app';
+
+  @override
   String get libraryDeleteBookHint => 'This book will be permanently deleted';
 
   @override
@@ -1922,6 +1987,28 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settingsHideNavigationLabelsSubtitle =>
       'Show icons only in the mobile bottom navigation';
+
+  @override
+  String get settingsLibraryLayoutTitle => 'Library layout';
+
+  @override
+  String get settingsLibraryLayoutSubtitle =>
+      'Cards show reading details; Grid shows covers only at your chosen size';
+
+  @override
+  String get settingsLibraryLayoutCard => 'Cards';
+
+  @override
+  String get settingsLibraryLayoutGrid => 'Grid';
+
+  @override
+  String get settingsLibraryGridColumnsTitle => 'Covers per row on phones';
+
+  @override
+  String get settingsLibraryGridTwoColumns => '2 columns';
+
+  @override
+  String get settingsLibraryGridThreeColumns => '3 columns';
 
   @override
   String get settingsAccentFollowTheme => 'Accent color: follow theme';
@@ -3312,4 +3399,227 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get agreementV2SaveFailed =>
       'Could not save your consent. Please try again.';
+
+  @override
+  String get settingsDataSyncTitle => 'Data & sync';
+
+  @override
+  String get settingsWebDavSyncTitle => 'WebDAV sync';
+
+  @override
+  String get webDavNotConfigured => 'Not configured';
+
+  @override
+  String get webDavConfigureSubtitle =>
+      'Sync reading data to your own WebDAV storage';
+
+  @override
+  String get webDavBetaBadge => 'Beta · May be unstable';
+
+  @override
+  String get webDavPageTitle => 'WebDAV sync';
+
+  @override
+  String get webDavConnected => 'Connected';
+
+  @override
+  String get webDavSyncing => 'Syncing';
+
+  @override
+  String get webDavPartialFailure => 'Some items need attention';
+
+  @override
+  String get webDavSyncFailed => 'Sync failed';
+
+  @override
+  String webDavPendingChanges(int count) {
+    return '$count changes waiting to sync';
+  }
+
+  @override
+  String webDavLastSync(String time) {
+    return 'Last sync: $time';
+  }
+
+  @override
+  String get webDavNeverSynced => 'Not synced yet';
+
+  @override
+  String get webDavSyncNow => 'Sync now';
+
+  @override
+  String get webDavSetUp => 'Set up WebDAV';
+
+  @override
+  String get webDavConnectionTitle => 'Connection';
+
+  @override
+  String get webDavServerUrl => 'WebDAV address';
+
+  @override
+  String get webDavUsername => 'Username';
+
+  @override
+  String get webDavPassword => 'App password';
+
+  @override
+  String get webDavPasswordHint => 'Stored securely on this device only';
+
+  @override
+  String get webDavRootPath => 'Remote folder';
+
+  @override
+  String get webDavTestConnection => 'Test connection';
+
+  @override
+  String get webDavTestingConnection => 'Testing connection…';
+
+  @override
+  String get webDavConnectionSuccess => 'Connection and write access verified';
+
+  @override
+  String webDavConnectionFailed(String reason) {
+    return 'Connection test failed: $reason';
+  }
+
+  @override
+  String get webDavSaveConfiguration => 'Save configuration';
+
+  @override
+  String get webDavAutomaticSync => 'Automatic sync';
+
+  @override
+  String get webDavAutomaticSyncHint =>
+      'Sync after launch or when the app returns to the foreground';
+
+  @override
+  String get webDavSyncContent => 'Sync content';
+
+  @override
+  String get webDavScopeBooks => 'Library metadata';
+
+  @override
+  String get webDavScopeProgress => 'Reading progress';
+
+  @override
+  String get webDavScopeAnnotations => 'Bookmarks, notes & highlights';
+
+  @override
+  String get webDavScopeReadingSessions => 'Reading statistics';
+
+  @override
+  String get webDavScopeBookFiles => 'Book files';
+
+  @override
+  String get webDavBookFilesHint => 'Choose which books to upload or download';
+
+  @override
+  String get webDavBookFilesUnavailable =>
+      'Book file transfer will be enabled after metadata sync is stable';
+
+  @override
+  String get webDavSecurityNotice =>
+      'Data is sent over HTTPS, but your WebDAV provider can read unencrypted remote content.';
+
+  @override
+  String get webDavConnectionDetails => 'Connection settings';
+
+  @override
+  String get webDavClearConfiguration => 'Clear configuration';
+
+  @override
+  String get webDavClearConfigurationTitle => 'Clear WebDAV configuration?';
+
+  @override
+  String get webDavClearConfigurationMessage =>
+      'This removes the WebDAV address and login from this device. Local reading data and remote files will not be deleted.';
+
+  @override
+  String get webDavClearConfigurationConfirm => 'Clear from this device';
+
+  @override
+  String get webDavActivityTitle => 'Sync activity';
+
+  @override
+  String get webDavActivityEmpty => 'No sync activity yet';
+
+  @override
+  String webDavSyncCompleteSummary(int uploaded, int downloaded) {
+    return 'Uploaded $uploaded, downloaded $downloaded';
+  }
+
+  @override
+  String get webDavErrorAuthentication =>
+      'The username, password, or folder permission is incorrect.';
+
+  @override
+  String get webDavErrorCertificate =>
+      'The server certificate could not be verified.';
+
+  @override
+  String get webDavErrorPermission => 'The remote folder is not writable.';
+
+  @override
+  String get webDavErrorTimeout => 'The server did not respond in time.';
+
+  @override
+  String get webDavErrorUnsupported =>
+      'This WebDAV server does not support safe synchronization.';
+
+  @override
+  String get webDavErrorNetwork =>
+      'The network is unavailable. Changes remain saved on this device.';
+
+  @override
+  String get webDavErrorCorruptData =>
+      'Some remote sync data is damaged and was not applied.';
+
+  @override
+  String get webDavErrorUnknown => 'WebDAV could not complete the operation.';
+
+  @override
+  String get webDavBookFilesTitle => 'Book files';
+
+  @override
+  String get webDavFilesPendingUpload => 'To upload';
+
+  @override
+  String get webDavFilesAvailableDownload => 'Available';
+
+  @override
+  String get webDavFilesSynced => 'Synced';
+
+  @override
+  String get webDavFilesUploadSelected => 'Upload selected';
+
+  @override
+  String get webDavFilesDownloadSelected => 'Download selected';
+
+  @override
+  String webDavFilesSelectedSummary(int count, String size) {
+    return '$count selected · $size';
+  }
+
+  @override
+  String get webDavFilesOnlyLocal => 'Only on this device';
+
+  @override
+  String get webDavFilesOnlyRemote => 'File not downloaded to this device';
+
+  @override
+  String get webDavFilesUploadPermission => 'Allow book file uploads';
+
+  @override
+  String get webDavFilesUploadPermissionHint =>
+      'Only books you explicitly select here will be uploaded';
+
+  @override
+  String get webDavFilesTooLarge =>
+      'Files over 100 MiB are not supported in this release';
+
+  @override
+  String get webDavFilesEmpty => 'No books in this category';
+
+  @override
+  String get webDavFilesTransferComplete => 'Book-file transfer complete';
 }

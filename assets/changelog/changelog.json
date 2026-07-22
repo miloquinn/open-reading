@@ -2,6 +2,84 @@
     "schemaVersion":  1,
     "entries":  [
                     {
+                        "version":  "2.3.0",
+                        "notes":  {
+                                      "en":  [
+                                                 "Added ColorOS Fluid Cloud support for live book and official APK download progress, with standard notification fallback on unsupported systems",
+                                                 "Added local-first WebDAV sync for bookshelf metadata, reading progress, bookmarks, notes, highlights, and reading statistics",
+                                                 "Added manual and automatic synchronization with durable offline changes and deterministic cross-device conflict merging",
+                                                 "Added opt-in per-book file upload and download with SHA-256 deduplication and a 100 MiB safety limit",
+                                                 "Kept WebDAV passwords in secure storage, required HTTPS by default, restricted credential redirects, and disclosed that remote data is not end-to-end encrypted",
+                                                 "Added library book export and registered TXT/EPUB system open and share flows across supported platforms",
+                                                 "Added library card and cover-grid layouts with two- or three-column phone density",
+                                                 "Redesigned source cards and the mobile source-add panel so metadata and controls remain readable on narrow screens",
+                                                 "Replaced blocking bottom messages with accessible non-blocking top notifications throughout the app"
+                                             ],
+                                      "zh":  [
+                                                 "支持 ColorOS 流体云实时展示书籍与官网 APK 下载进度，不支持时自动回退普通通知",
+                                                 "新增本地优先的 WebDAV 同步，覆盖书架信息、阅读进度、书签、笔记、高亮与阅读统计",
+                                                 "支持手动与自动同步，离线变更可靠留存在本机，并确定性合并多设备冲突",
+                                                 "书籍原文件支持明确授权后的逐本上传与下载，并使用 SHA-256 去重和 100 MiB 安全上限",
+                                                 "WebDAV 密码仅存安全存储，默认要求 HTTPS、限制凭据重定向，并明确远端数据不是端到端加密",
+                                                 "书库支持导出本地书，TXT 与 EPUB 可从系统打开或分享至开元阅读",
+                                                 "书库新增卡片与纯封面网格布局，手机可选择每行 2 本或 3 本",
+                                                 "重做书源卡片与手机添加书源面板，窄屏下的来源信息和操作不再互相挤压",
+                                                 "应用内短反馈统一改为支持点击穿透和无障碍提示的顶部浮层"
+                                             ],
+                                      "zh-TW":  [
+                                                    "支援 ColorOS 流體雲即時顯示書籍與官方網站 APK 下載進度，不支援時自動回退一般通知",
+                                                    "新增本機優先的 WebDAV 同步，涵蓋書架資訊、閱讀進度、書籤、筆記、醒目標示與閱讀統計",
+                                                    "支援手動與自動同步，離線變更可靠保留在本機，並以確定性規則合併多裝置衝突",
+                                                    "書籍原始檔案支援明確授權後逐本上傳與下載，並使用 SHA-256 去重和 100 MiB 安全上限",
+                                                    "WebDAV 密碼只存於安全儲存空間，預設要求 HTTPS、限制憑證重新導向，並明確說明遠端資料不是端對端加密",
+                                                    "書庫支援匯出本機書籍，TXT 與 EPUB 可從系統開啟或分享至開元閱讀",
+                                                    "書庫新增卡片與純封面網格版面，手機可選擇每列 2 本或 3 本",
+                                                    "重新設計書源卡片與手機新增書源面板，窄螢幕下的來源資訊和操作不再互相擠壓",
+                                                    "應用程式內短暫回饋統一改為可點擊穿透並支援無障礙提示的頂部浮層"
+                                                ],
+                                      "ja":  [
+                                                 "ColorOS Fluid Cloud に書籍と公式 APK のダウンロード進捗をリアルタイム表示し、未対応環境では通常の通知へ自動的に切り替えるようにしました",
+                                                 "本棚情報、読書位置、しおり、メモ、ハイライト、読書統計を対象とするローカル優先の WebDAV 同期を追加しました",
+                                                 "手動・自動同期に対応し、オフライン変更を端末に安全に保持して複数端末の競合を決定的に統合します",
+                                                 "明示的に許可した書籍ファイルを個別にアップロード・ダウンロードでき、SHA-256 重複排除と 100 MiB の安全上限を適用します",
+                                                 "WebDAV パスワードを安全なストレージだけに保存し、既定で HTTPS を要求して認証情報のリダイレクトを制限し、リモートデータがエンドツーエンド暗号化されないことを明示しました",
+                                                 "ライブラリからローカル書籍を書き出し、TXT と EPUB をシステムから開く・共有する機能を追加しました",
+                                                 "ライブラリにカード表示と表紙のみのグリッド表示を追加し、スマートフォンでは1行2冊または3冊を選べるようにしました",
+                                                 "狭い画面でも情報と操作が読みやすいよう、書籍ソースカードとモバイルのソース追加パネルを再設計しました",
+                                                 "アプリ内の短い通知を、操作を妨げずアクセシビリティに対応した上部オーバーレイへ統一しました"
+                                             ]
+                                  }
+                    },
+                    {
+                        "version":  "2.2.10",
+                        "notes":  {
+                                      "en":  [
+                                                 "Added Android 16 system live progress notifications for book and official APK downloads",
+                                                 "Kept standard progress notifications as the fallback on older Android versions and unsupported OEM surfaces",
+                                                 "Added book export from the library, including Android Download/Open Reading output and system save panels on Apple and desktop platforms",
+                                                 "Registered Open Reading for TXT and EPUB open/share flows so external files can enter the existing import and reading workflow"
+                                             ],
+                                      "zh":  [
+                                                 "为书籍与官网 APK 下载新增 Android 16 系统原生实时进度通知",
+                                                 "旧版 Android 或 OEM 不支持提升展示时继续使用普通进度通知",
+                                                 "书库本地书支持导出，Android 默认保存到 Download/开元阅读，Apple 与桌面平台使用系统保存面板",
+                                                 "TXT 与 EPUB 可从系统打开或分享至开元阅读，并进入现有导入与阅读流程"
+                                             ],
+                                      "zh-TW":  [
+                                                    "為書籍與官方網站 APK 下載新增 Android 16 系統原生即時進度通知",
+                                                    "舊版 Android 或 OEM 不支援提升顯示時繼續使用一般進度通知",
+                                                    "書庫本機書籍支援匯出，Android 預設儲存到 Download/開元閱讀，Apple 與桌面平台使用系統儲存面板",
+                                                    "TXT 與 EPUB 可從系統開啟或分享至開元閱讀，並進入既有匯入與閱讀流程"
+                                                ],
+                                      "ja":  [
+                                                 "書籍と公式 APK のダウンロードに Android 16 のシステム標準ライブ進捗通知を追加しました",
+                                                 "旧バージョンの Android や未対応 OEM では通常の進捗通知を引き続き使用します",
+                                                 "ライブラリから書籍を書き出せるようになり、Android は Download/開元閱讀、Apple とデスクトップはシステム保存画面を使用します",
+                                                 "TXT と EPUB をシステムから開く、または共有して既存の読み込み・読書フローへ渡せるようになりました"
+                                             ]
+                                  }
+                    },
+                    {
                         "version":  "2.2.9",
                         "notes":  {
                                       "en":  [

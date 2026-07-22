@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../services/core/app_update_download_service.dart';
 import '../services/core/update_check_service.dart';
 import '../utils/localization_extension.dart';
+import 'side_toast.dart';
 
 class UpdateCheckGate extends StatefulWidget {
   const UpdateCheckGate({super.key, required this.child});
@@ -49,7 +50,11 @@ class UpdatePromptController {
 
       if (!result.hasUpdate) {
         if (manual) {
-          _showMessage(context, context.l10n.updateAlreadyLatest);
+          _showMessage(
+            context,
+            context.l10n.updateAlreadyLatest,
+            kind: SideToastKind.success,
+          );
         }
         return false;
       }
@@ -87,7 +92,11 @@ class UpdatePromptController {
       return true;
     } catch (_) {
       if (manual && context.mounted) {
-        _showMessage(context, context.l10n.updateCheckFailed);
+        _showMessage(
+          context,
+          context.l10n.updateCheckFailed,
+          kind: SideToastKind.error,
+        );
       }
       return false;
     }
@@ -106,7 +115,11 @@ class UpdatePromptController {
 
     final asset = release.websiteAsset;
     if (asset == null) {
-      _showMessage(context, context.l10n.updateWebsiteUnavailable);
+      _showMessage(
+        context,
+        context.l10n.updateWebsiteUnavailable,
+        kind: SideToastKind.error,
+      );
       return false;
     }
     final failure = await showDialog<AppUpdateException>(
@@ -127,22 +140,30 @@ class UpdatePromptController {
       AppUpdateFailure.install => context.l10n.updateInstallFailed,
       AppUpdateFailure.unsupported => context.l10n.updateWebsiteUnavailable,
     };
-    if (message != null) _showMessage(context, message);
+    if (message != null) {
+      _showMessage(context, message, kind: SideToastKind.error);
+    }
     return false;
   }
 
   static Future<bool> _openExternal(BuildContext context, Uri url) async {
     final opened = await launchUrl(url, mode: LaunchMode.externalApplication);
     if (!opened && context.mounted) {
-      _showMessage(context, context.l10n.updateOpenFailed);
+      _showMessage(
+        context,
+        context.l10n.updateOpenFailed,
+        kind: SideToastKind.error,
+      );
     }
     return opened;
   }
 
-  static void _showMessage(BuildContext context, String message) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+  static void _showMessage(
+    BuildContext context,
+    String message, {
+    SideToastKind kind = SideToastKind.info,
+  }) {
+    showSideToast(context, message, kind: kind);
   }
 }
 

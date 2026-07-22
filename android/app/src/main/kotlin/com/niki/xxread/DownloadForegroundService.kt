@@ -1,5 +1,6 @@
 package com.niki.xxread
 
+import android.annotation.TargetApi
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -8,6 +9,7 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.os.Bundle
 import android.os.IBinder
 import androidx.core.content.ContextCompat
 import io.flutter.plugin.common.MethodCall
@@ -50,6 +52,9 @@ class DownloadForegroundService : Service() {
         private const val EXTRA_ACTION = "action"
         private const val PROGRESS_CHANNEL = "background_download_progress"
         private const val COMPLETE_CHANNEL = "background_download_complete"
+        private const val ANDROID_16_API_LEVEL = 36
+        private const val EXTRA_REQUEST_PROMOTED_ONGOING =
+            "android.requestPromotedOngoing"
         private val activeTasks = linkedMapOf<String, DownloadNotificationTask>()
 
         fun updateTask(
@@ -139,19 +144,55 @@ class DownloadForegroundService : Service() {
     private fun progressNotification(task: DownloadNotificationTask): Notification {
         val total = task.total.coerceAtLeast(0)
         val completed = task.completed.coerceIn(0, total.coerceAtLeast(task.completed))
+        val percent = if (total > 0) {
+            ((completed.toLong() * 100L) / total.toLong()).toInt().coerceIn(0, 100)
+        } else {
+            0
+        }
         val detail = when {
             total <= 0 -> "正在准备下载"
             task.kind == "update" -> "已下载 $completed / $total 字节"
             else -> "已下载 $completed / $total 章"
         }
-        return notificationBuilder(PROGRESS_CHANNEL)
+        val builder = notificationBuilder(PROGRESS_CHANNEL)
             .setContentTitle(task.title)
             .setContentText(detail)
             .setContentIntent(tapIntent(task))
             .setOnlyAlertOnce(true)
             .setOngoing(true)
-            .setProgress(total, completed, total <= 0)
-            .build()
+
+        if (Build.VERSION.SDK_INT >= ANDROID_16_API_LEVEL) {
+            applyAndroid16LiveUpdate(builder, percent, total <= 0)
+        } else {
+            builder.setProgress(total, completed, total <= 0)
+        }
+        return builder.build()
+    }
+
+    @TargetApi(ANDROID_16_API_LEVEL)
+    private fun applyAndroid16LiveUpdate(
+        builder: Notification.Builder,
+        percent: Int,
+        indeterminate: Boolean,
+    ) {
+        val style = Notification.ProgressStyle()
+            .setStyledByProgress(true)
+            .setProgressIndeterminate(indeterminate)
+        if (!indeterminate) {
+            style
+                .setProgressSegments(
+                    listOf(Notification.ProgressStyle.Segment(100)),
+                )
+                .setProgress(percent)
+        }
+        builder
+            .setStyle(style)
+            .setShortCriticalText(if (indeterminate) "下载中" else "$percent%")
+            .addExtras(
+                Bundle().apply {
+                    putBoolean(EXTRA_REQUEST_PROMOTED_ONGOING, true)
+                },
+            )
     }
 
     private fun completionNotification(task: DownloadNotificationTask): Notification {

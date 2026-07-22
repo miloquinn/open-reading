@@ -58,6 +58,7 @@ import UIKit
 @objc class AppDelegate: FlutterAppDelegate, FlutterPluginRegistrant {
   private var readerImmersiveEnabled = false
   private var storageBridge: StorageBridge?
+  private var incomingBookBridge: IncomingBookBridge?
 
   override func application(
     _ application: UIApplication,
@@ -125,12 +126,26 @@ import UIKit
     }
 
     storageBridge = StorageBridge(messenger: messenger)
+    incomingBookBridge = IncomingBookBridge(messenger: messenger)
 
   }
 
   override func applicationDidBecomeActive(_ application: UIApplication) {
     super.applicationDidBecomeActive(application)
     applyReaderImmersiveIfPossible()
+    IncomingBookInbox.shared.consumeSharedExtensionInboxIfConfigured()
+  }
+
+  override func application(
+    _ app: UIApplication,
+    open url: URL,
+    options: [UIApplication.OpenURLOptionsKey: Any] = [:]
+  ) -> Bool {
+    if !IncomingBookInbox.uniqueSupportedFileURLs([url]).isEmpty {
+      IncomingBookInbox.shared.accept(urls: [url], action: "open")
+      return true
+    }
+    return super.application(app, open: url, options: options)
   }
 
   private func applyReaderImmersiveIfPossible() {

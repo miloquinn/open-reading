@@ -73,13 +73,18 @@ class _ImportBookPageState extends State<ImportBookPage> {
       if (!mounted) return;
       _controller.addSources(sources);
       if (sources.isEmpty) {
-        showSideToast(context, context.l10n.importNoSupportedFiles);
+        showSideToast(
+          context,
+          context.l10n.importNoSupportedFiles,
+          kind: SideToastKind.warning,
+        );
       }
     } catch (error) {
       if (mounted) {
         showSideToast(
           context,
           context.l10n.importFailedWithError(error.toString()),
+          kind: SideToastKind.error,
         );
       }
     } finally {

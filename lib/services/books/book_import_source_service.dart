@@ -162,7 +162,9 @@ class BookImportSourceService implements BookImportSourcePreparer {
           destinationPath: destination.path,
         ),
       BookImportSourceKind.filePicker ||
-      BookImportSourceKind.iosSharedDocuments =>
+      BookImportSourceKind.iosSharedDocuments ||
+      BookImportSourceKind.systemOpen ||
+      BookImportSourceKind.systemShare =>
         throw StateError('${source.kind.name} 来源缺少本地路径'),
     };
     return source.copyWithLocalPath(localPath);
@@ -170,8 +172,12 @@ class BookImportSourceService implements BookImportSourcePreparer {
 
   @override
   Future<void> release(BookImportSource source) async {
-    if (source.kind != BookImportSourceKind.androidTree &&
-        source.kind != BookImportSourceKind.iosICloud) {
+    final isMaterializedDocument =
+        source.kind == BookImportSourceKind.androidTree ||
+            source.kind == BookImportSourceKind.iosICloud;
+    final isIncomingBook = source.kind == BookImportSourceKind.systemOpen ||
+        source.kind == BookImportSourceKind.systemShare;
+    if (!isMaterializedDocument && !isIncomingBook) {
       return;
     }
     final localPath = source.localPath;
@@ -179,7 +185,7 @@ class BookImportSourceService implements BookImportSourcePreparer {
     final temporaryRoot = await _temporaryDirectory();
     final materializedRoot = join(
       temporaryRoot.path,
-      'book_import_sources',
+      isIncomingBook ? 'incoming_books' : 'book_import_sources',
     );
     if (!isWithin(materializedRoot, localPath)) return;
     final file = File(localPath);

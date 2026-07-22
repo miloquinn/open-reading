@@ -7,6 +7,7 @@ import 'package:xxread/utils/localization_extension.dart';
 import 'package:xxread/utils/reader_themes.dart';
 import 'package:xxread/widgets/reader_settings_controls.dart';
 import 'package:xxread/widgets/reader_theme_background.dart';
+import 'package:xxread/widgets/side_toast.dart';
 
 class ReaderCustomThemePage extends StatefulWidget {
   const ReaderCustomThemePage({
@@ -120,9 +121,7 @@ class _ReaderCustomThemePageState extends State<ReaderCustomThemePage> {
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+    showSideToast(context, message, kind: SideToastKind.error);
   }
 
   @override

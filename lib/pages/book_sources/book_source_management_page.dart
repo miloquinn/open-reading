@@ -9,6 +9,7 @@ import 'package:xxread/book_sources/services/book_source_registry.dart';
 import 'package:xxread/utils/layout_helper.dart';
 import 'package:xxread/utils/localization_extension.dart';
 import 'package:xxread/utils/page_style_helper.dart';
+import 'package:xxread/widgets/side_toast.dart';
 
 /// Low-frequency configuration for online content providers.
 ///
@@ -473,18 +474,24 @@ class _BookSourceManagementPageState extends State<BookSourceManagementPage> {
       final sources = await _registry.refresh(source, _client);
       if (!mounted) return;
       setState(() => _sources = sources);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.bookSourcesRefreshed)),
+      showSideToast(
+        context,
+        context.l10n.bookSourcesRefreshed,
+        kind: SideToastKind.success,
       );
     } on BookSourceProtocolException {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.bookSourcesRefreshFailed)),
+      showSideToast(
+        context,
+        context.l10n.bookSourcesRefreshFailed,
+        kind: SideToastKind.error,
       );
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.bookSourcesRefreshFailed)),
+      showSideToast(
+        context,
+        context.l10n.bookSourcesRefreshFailed,
+        kind: SideToastKind.error,
       );
     }
   }
@@ -621,10 +628,10 @@ class _BookSourceManagementPageState extends State<BookSourceManagementPage> {
         if (!mounted || !routeContext.mounted) return;
         Navigator.pop(routeContext);
         setState(() => _sources = sources);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${context.l10n.bookSourcesAdded}: ${source.name}'),
-          ),
+        showSideToast(
+          context,
+          '${context.l10n.bookSourcesAdded}: ${source.name}',
+          kind: SideToastKind.success,
         );
       } catch (error) {
         if (!routeContext.mounted) return;
@@ -747,10 +754,10 @@ class _BookSourceManagementPageState extends State<BookSourceManagementPage> {
       Uri.parse(openReadingSourceProtocolRepositoryUrl),
     );
     if (!opened && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.l10n.bookSourcesProtocolRepositoryOpenFailed),
-        ),
+      showSideToast(
+        context,
+        context.l10n.bookSourcesProtocolRepositoryOpenFailed,
+        kind: SideToastKind.error,
       );
     }
   }
@@ -759,8 +766,10 @@ class _BookSourceManagementPageState extends State<BookSourceManagementPage> {
     final opened =
         await _openExternalUrl(Uri.parse(openReadingRightsReportUrl));
     if (!opened && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.bookSourcesRightsReportOpenFailed)),
+      showSideToast(
+        context,
+        context.l10n.bookSourcesRightsReportOpenFailed,
+        kind: SideToastKind.error,
       );
     }
   }

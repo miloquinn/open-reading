@@ -1,12 +1,15 @@
 import Flutter
 import Foundation
+import UIKit
 
-final class StorageBridge {
+final class StorageBridge: NSObject, UIDocumentPickerDelegate {
   private static let channelName = "com.niki.xxread/storage"
   private static let containerIdentifier = "iCloud.com.niki.xxread"
 
   private let channel: FlutterMethodChannel
   private let fileManager: FileManager
+  private var pendingExportResult: FlutterResult?
+  private var pendingExportSourceURL: URL?
 
   init(messenger: FlutterBinaryMessenger, fileManager: FileManager = .default) {
     self.fileManager = fileManager
@@ -14,6 +17,7 @@ final class StorageBridge {
       name: Self.channelName,
       binaryMessenger: messenger
     )
+    super.init()
     channel.setMethodCallHandler { [weak self] call, result in
       self?.handle(call, result: result)
     }
@@ -55,9 +59,154 @@ final class StorageBridge {
           destinationPath: destinationPath
         )
       }
+    case "exportDocument":
+      guard let arguments = call.arguments as? [String: Any],
+            let sourcePath = arguments["sourcePath"] as? String,
+            !sourcePath.isEmpty else {
+        result(
+          FlutterError(
+            code: "invalid_args",
+            message: "sourcePath is required",
+            details: nil
+          )
+        )
+        return
+      }
+      exportDocument(sourcePath: sourcePath, result: result)
     default:
       result(FlutterMethodNotImplemented)
     }
+  }
+
+  private func exportDocument(sourcePath: String, result: @escaping FlutterResult) {
+    DispatchQueue.main.async { [weak self] in
+      guard let self else {
+        result(
+          FlutterError(
+            code: "export_failed",
+            message: "The iOS storage bridge is unavailable",
+            details: nil
+          )
+        )
+        return
+      }
+      guard self.pendingExportResult == nil else {
+        result(
+          FlutterError(
+            code: "export_in_progress",
+            message: "Another document export is already in progress",
+            details: nil
+          )
+        )
+        return
+      }
+
+      let sourceURL = URL(fileURLWithPath: sourcePath).standardizedFileURL
+      var isDirectory: ObjCBool = false
+      guard self.fileManager.fileExists(atPath: sourceURL.path, isDirectory: &isDirectory),
+            !isDirectory.boolValue,
+            self.fileManager.isReadableFile(atPath: sourceURL.path) else {
+        result(
+          FlutterError(
+            code: "source_missing",
+            message: "The source document does not exist or is not readable",
+            details: nil
+          )
+        )
+        return
+      }
+      guard let presenter = Self.topViewController(),
+            presenter.viewIfLoaded?.window != nil,
+            !presenter.isBeingDismissed else {
+        result(
+          FlutterError(
+            code: "export_failed",
+            message: "No active view controller is available to present the export picker",
+            details: nil
+          )
+        )
+        return
+      }
+
+      let picker = UIDocumentPickerViewController(
+        forExporting: [sourceURL],
+        asCopy: true
+      )
+      picker.delegate = self
+      picker.modalPresentationStyle = .formSheet
+      if let popover = picker.popoverPresentationController {
+        popover.sourceView = presenter.view
+        popover.sourceRect = CGRect(
+          x: presenter.view.bounds.midX,
+          y: presenter.view.bounds.midY,
+          width: 1,
+          height: 1
+        )
+        popover.permittedArrowDirections = []
+      }
+
+      self.pendingExportResult = result
+      self.pendingExportSourceURL = sourceURL
+      presenter.present(picker, animated: true)
+    }
+  }
+
+  func documentPicker(
+    _ controller: UIDocumentPickerViewController,
+    didPickDocumentsAt urls: [URL]
+  ) {
+    guard let result = takePendingExportResult() else { return }
+    let destinationURL = urls.first
+    let displayName = destinationURL?.lastPathComponent
+      ?? pendingExportSourceURL?.lastPathComponent
+    var payload: [String: Any] = ["status": "success"]
+    if let displayName {
+      payload["displayName"] = displayName
+    }
+    pendingExportSourceURL = nil
+    result(payload)
+  }
+
+  func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
+    guard let result = takePendingExportResult() else { return }
+    pendingExportSourceURL = nil
+    result(["status": "cancelled"])
+  }
+
+  private func takePendingExportResult() -> FlutterResult? {
+    let result = pendingExportResult
+    pendingExportResult = nil
+    return result
+  }
+
+  private static func topViewController() -> UIViewController? {
+    let root: UIViewController?
+    if #available(iOS 13.0, *) {
+      let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+      let window = scenes
+        .flatMap(\.windows)
+        .first(where: { $0.isKeyWindow })
+        ?? scenes.flatMap(\.windows).first
+      root = window?.rootViewController
+    } else {
+      root = UIApplication.shared.windows.first(where: { $0.isKeyWindow })?.rootViewController
+    }
+    return topViewController(from: root)
+  }
+
+  private static func topViewController(from viewController: UIViewController?) -> UIViewController? {
+    guard let viewController else { return nil }
+    if let presented = viewController.presentedViewController,
+       !presented.isBeingDismissed {
+      return topViewController(from: presented)
+    }
+    if let navigation = viewController as? UINavigationController {
+      return topViewController(from: navigation.visibleViewController)
+    }
+    if let tab = viewController as? UITabBarController {
+      return topViewController(from: tab.selectedViewController)
+    }
+    return viewController
   }
 
   private func perform(
