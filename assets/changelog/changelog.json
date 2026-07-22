@@ -2,6 +2,47 @@
     "schemaVersion":  1,
     "entries":  [
                     {
+                        "version":  "2.3.1",
+                        "notes":  {
+                                      "en":  [
+                                                 "Focused WebDAV sync on bookshelf metadata, reading progress, bookmarks, and reading statistics while reserving notes for a safe future migration",
+                                                 "Added ask-every-time, automatic, and manual upload policies for newly imported book files",
+                                                 "Improved Android WebDAV compatibility and failure-stage diagnostics",
+                                                 "Synced persistent book covers and preserved remote titles and authors when restoring book files",
+                                                 "Separated connection settings from sync-content switches, which now save immediately",
+                                                 "Added safe cache management and bounded, retryable source-cover caching",
+                                                 "Added per-task cancellation for queued and active book downloads"
+                                             ],
+                                      "zh":  [
+                                                 "WebDAV 当前聚焦书架信息、阅读进度、书签与阅读统计，笔记数据集保留用于未来安全迁移",
+                                                 "新导入书籍支持每次询问、自动上传和始终手动三种文件策略",
+                                                 "增强 Android WebDAV 兼容性并显示具体失败阶段",
+                                                 "书籍文件同步会传输持久封面，恢复时保持远端书名与作者",
+                                                 "连接配置与同步内容分开管理，同步范围开关修改后立即保存",
+                                                 "新增安全缓存管理和并发受限、可重试的书源封面缓存",
+                                                 "下载任务支持逐条取消等待中或下载中的书籍"
+                                             ],
+                                      "zh-TW":  [
+                                                    "WebDAV 目前聚焦書庫資訊、閱讀進度、書籤與閱讀統計，筆記資料集保留供未來安全遷移",
+                                                    "新匯入書籍支援每次詢問、自動上傳與始終手動三種檔案策略",
+                                                    "增強 Android WebDAV 相容性並顯示具體失敗階段",
+                                                    "書籍檔案同步會傳輸持久封面，還原時保留遠端書名與作者",
+                                                    "連線設定與同步內容分開管理，同步範圍開關變更後立即儲存",
+                                                    "新增安全快取管理及限制並行、可重試的書源封面快取",
+                                                    "下載任務支援逐項取消等待中或下載中的書籍"
+                                                ],
+                                      "ja":  [
+                                                 "WebDAV 同期を本棚情報、読書位置、しおり、読書統計に絞り、メモ用データセットは将来の安全な移行のため予約しました",
+                                                 "新しく読み込んだ書籍ファイルに毎回確認、自動アップロード、常に手動の3つの方針を追加しました",
+                                                 "Android の WebDAV 互換性と失敗段階の診断表示を改善しました",
+                                                 "書籍ファイルと永続表紙を同期し、復元時にリモートの書名と著者を保持するようにしました",
+                                                 "接続設定と同期内容を分離し、同期範囲の変更を即時保存するようにしました",
+                                                 "安全なキャッシュ管理と同時実行数を制限した再試行可能な表紙キャッシュを追加しました",
+                                                 "待機中または実行中の書籍ダウンロードをタスク単位でキャンセルできるようにしました"
+                                             ]
+                                  }
+                    },
+                    {
                         "version":  "2.3.0",
                         "notes":  {
                                       "en":  [

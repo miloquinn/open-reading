@@ -1,7 +1,7 @@
 # Open Reading 项目结构
 
 > 最后更新：2026-07-22
-> 当前版本：2.3.0
+> 当前版本：2.3.1
 > 本文记录稳定的项目结构、模块边界和核心数据结构，不罗列每个实现细节。
 
 ## 维护规则
@@ -107,7 +107,7 @@ lib/
 - `pages/home/home_shell_page.dart`：应用主壳和导航入口；手机悬浮底栏支持纯图标与“图标＋文字”两种模式，宽度在手机上取 `screenWidth - 36` 并以四项约 368px 为理想上限，选中底板按真实单项槽宽自适应；宽屏继续使用 `NavigationRail`。新用户完成欢迎协议后，主壳可挂载一次性开发者支持浮层。
 - `pages/reading_stats/detailed_stats_page.dart`：阅读统计详情入口与数据加载；`reading_stats/parts/` 按公共样式、总览、图表、热力图、书籍排行和成就拆分页面模块，避免统计页继续膨胀为巨型文件。
 - `pages/library/library_page.dart`：本地与在线书架；书库顶部提供下载任务入口，WebDAV 配置后显示书籍文件入口并指示远端可用文件。本地书长按可把应用管理文件导出到系统位置，在线未下载记录不会显示误导性的导出入口。
-- `pages/library/download_tasks_page.dart`：跨平台书籍下载队列的状态查看页。
+- `pages/library/download_tasks_page.dart`：跨平台书籍下载队列的状态查看页；等待中和下载中的任务可逐条取消，取消状态与失败状态分离展示。
 - `pages/library/import_book/import_book_page.dart`：跨平台书籍导入队列；手机确认态采用顶部安全标题栏、独立滚动书目区和页面内底部操作区，并对文件选择器返回的异常窗口 inset 做限幅。
 - `services/books/book_export_*`：统一书籍导出结果、文件名/MIME 校验和平台后端；Android 走 MediaStore `Download/开元阅读`，iOS 走系统文档导出器，桌面端走另存为并流式复制。
 - `services/books/incoming_book_*`：统一系统“打开方式/分享”入站请求、冷/热启动 FIFO、初始化/协议门禁、格式与文件头校验、单书导入后打开及多书导入队列；原生层必须先把临时 URI/URL 物化成本地暂存文件。
@@ -116,8 +116,8 @@ lib/
 - `pages/book_sources/source_search_page.dart`：在线书源搜索与发现。
 - `pages/book_sources/book_source_management_page.dart`：原生协议书源管理。
 - `pages/settings/settings_page.dart`：应用设置、版本与维护入口；`SettingsPageController` 可从首页导航后定位到“支持开发”区域。
-- `pages/settings/sync/`：WebDAV 概览、安全配置和书籍文件管理页；元数据自动同步，原文件需先开启上传权限，再按书选择上传或下载。新导入书籍提供“每次询问（默认）/ 自动上传 / 始终手动”三种策略；自动上传只处理符合安全限制的真正新增本地文件。
-- `services/sync/`：本地优先的 WebDAV v1 同步实现。每台设备写入独立的不可变变更批次，使用 HLC、tombstone 和记录级 LWW 合并；书籍文件按 SHA-256 内容寻址去重。`sync_dataset_catalog.dart` 分离稳定协议数据集与当前版本能力，暂未开放的笔记/高亮记录可保留在同步镜像中，但不会扫描或写入业务表。
+- `pages/settings/sync/`：WebDAV 概览、独立连接配置、即时保存的同步内容开关和书籍文件管理页；元数据自动同步，原文件需先开启上传权限，再按书选择上传或下载。新导入书籍提供“每次询问（默认）/ 自动上传 / 始终手动”三种策略；自动上传只处理符合安全限制的真正新增本地文件。
+- `services/sync/`：本地优先的 WebDAV v1 同步实现。每台设备写入独立的不可变变更批次，使用 HLC、tombstone 和记录级 LWW 合并；书籍原文件与持久封面分别按 SHA-256 内容寻址去重，恢复后由远端元数据校正书名、作者和封面。`sync_dataset_catalog.dart` 分离稳定协议数据集与当前版本能力，暂未开放的笔记/高亮记录可保留在同步镜像中，但不会扫描或写入业务表。
 - `pages/settings/custom_fonts_page.dart`：用户字体库的导入、应用、重命名和删除入口。
 - `widgets/side_toast.dart`：应用内短反馈的统一浮层。手机在顶部居中、宽屏在右上展示，连续提示直接替换；普通/成功提示短暂停留，警告/错误略延长，并通过 `IgnorePointer` 保证通知出现时底层操作仍可点击。页面内不再直接使用底部 `SnackBar`。
 - `pages/settings/about/changelog_page.dart` 与 `services/core/changelog_service.dart`：应用内版本历史异步加载与展示；版本、顺序和四语文案统一来自 `assets/changelog/changelog.json`，首项自动标记为当前版本，语言按完整 locale、语言代码、英文和任意可用语言逐级回退。新增版本只更新数据资产，不再修改页面代码或增加版本专属 ARB getter。
@@ -128,10 +128,10 @@ lib/
 
 - `services/core/update_check_service.dart`：并行查询 GitHub Releases 与 `open.xxread.top` 的版本化 latest API，按语义版本选择最新结果；官网异常、无匹配 ABI 或元数据无效时保留 GitHub 兜底。
 - `services/core/app_update_download_service*.dart`：Android 将官网 APK 下载到私有缓存的 `.part` 文件，只允许 `open.xxread.top` HTTPS 同域跳转，并以 512 MiB 为硬上限；下载进度或响应长度超过元数据声明时立即取消，完成后校验大小与 SHA-256 再原子改名。下载完成后立即把经校验的 APK 交给系统安装器，同时保留完成通知作为重试入口；Web/非 IO 平台使用安全桩实现。
-- `services/core/background_download_notifier*.dart` 与 `services/library/download_task_controller.dart`：应用内书籍下载采用单任务队列，保留章节级三并发；Android 将活跃任务同步到前台数据同步服务和系统通知，通知权限失败不影响下载。iOS 继续只展示应用内任务状态，更新跳转官网或 GitHub。
+- `services/core/background_download_notifier*.dart` 与 `services/library/download_task_controller.dart`：应用内书籍下载采用单任务队列，保留章节级三并发；每条任务拥有独立取消令牌，取消等待任务会直接跳过，取消活动任务会终止网络请求并继续下一条。Android 将活跃任务同步到前台数据同步服务和系统通知，通知权限失败不影响下载。iOS 继续只展示应用内任务状态，更新跳转官网或 GitHub。
 - `widgets/update_check_gate.dart`：更新提示提供“稍后 / GitHub / 官网”三个选择。Android 官网路径在应用内后台下载、校验后直接进入系统安装器，完成通知可再次发起安装；iOS 当前打开官网下载页，后续上架后再切换 App Store。
 - `android/app/src/main/kotlin/com/niki/xxread/AppUpdateBridge.kt`：提供 ABI 查询、未知来源安装授权和 FileProvider 安装桥；打开安装器前复核 APK 包名、实际 versionCode 和当前已安装应用的签名身份，普通应用不能静默安装。
-- `android/app/src/main/kotlin/com/niki/xxread/DownloadForegroundService.kt` 与 `BackgroundDownloadBridge.kt`：Android 13+ 请求通知权限，使用前台 `dataSync` 服务更新书籍/APK 进度通知；Android 16+ 采用系统 `Notification.ProgressStyle` 并请求 promoted ongoing 展示，不满足系统或 OEM 条件时自动保留为普通进度通知。完成通知把书籍 ID 或已验证 APK 路径送回 Flutter，由应用打开阅读器或系统安装器。
+- `android/app/src/main/kotlin/com/niki/xxread/DownloadForegroundService.kt` 与 `BackgroundDownloadBridge.kt`：Android 13+ 请求通知权限，使用前台 `dataSync` 服务更新书籍/APK 进度通知；Android 16+ 采用系统 `Notification.ProgressStyle` 并请求 promoted ongoing 展示，不满足系统或 OEM 条件时自动保留为普通进度通知。取消书籍任务会移除对应活跃项和通知；完成通知把书籍 ID 或已验证 APK 路径送回 Flutter，由应用打开阅读器或系统安装器。
 - `android/app/src/main/kotlin/com/niki/xxread/IncomingBookIntentBridge.kt`：接收 TXT/EPUB 的 `ACTION_VIEW`、`ACTION_SEND` 与 `ACTION_SEND_MULTIPLE`，在临时授权失效前流式物化、校验并持久化请求清单；Dart 完成导入后确认清理。`SafDirectoryBridge.kt` 同时负责通过 MediaStore 向公共下载目录导出书籍。
 - `ios/Runner/IncomingBookBridge.swift`、自定义 SceneDelegate 与 Share Extension：Document Types 负责“在开元阅读中打开”，Share Extension 通过 App Group inbox 把分享文件交给主应用；security-scoped URL 只在协调复制期间持有。`StorageBridge.swift` 负责系统文档导出面板。
 - macOS 注册书籍 Document Types 并把 open-files 事件物化到缓存；Windows/Linux 从启动参数接收文件，Linux bundle 附带 MIME `.desktop` 声明。系统关联是否自动注册仍取决于正式安装/打包方式。
@@ -258,7 +258,7 @@ EPUB 图片块与其后的正文共用同一个显示投影：携带图片的第
 - `BookSourceChapterText`：仅把 HTML/纯文本响应转换为 canonical chapter text，并清理重复远端页码；若正文最前面的首行/首段与接口标题或目录标题规范化后完全相同，则像本地 TXT 章节解析一样剥离该重复标题。不注入首行缩进、段间距或章节标题，这些展示语义全部交给共享文字阅读内核。
 - `BookSourceChapterCache`：章节正文的内存/磁盘缓存和并发去重；在线阅读器优先预取下一章并生成分页布局，再机会式准备上一章与更远的后一章，缓存始终限制在相邻范围。水平滑动到相邻章节时，真实预览页先在当前 `PageView` 内完成整段动画，只有 `ScrollEnd` 确认停在边界页后才提交章节状态；提交后复用已预热布局，并让新控制器直接挂接目标页，避免停稳后的可见重置。中途回滑会取消待提交切章，进度持久化不阻塞跨章提交。
 - `SourceCoverCache`：书源封面 URL 级请求去重、最多 4 路并发、瞬态失败单次退避重试、压缩字节内存 LRU 和应用缓存目录磁盘缓存；单 URL 驱逐使用独立 epoch，旧请求完成时不能覆盖或移除新请求。
-- `BookSourceShelfService`：在线书籍加入本地书架；书源提供远程封面时下载到文档目录的 `covers/` 作为书架持久封面，缺失时生成统一封面。
+- `BookSourceShelfService`：在线书籍加入本地书架；完整下载以最多 3 章为一批并发抓取，按目录顺序持续写入同目录 `.part` 文件，每批 flush 后释放正文对象，完成后再改名为正式 TXT，内存占用不随整书篇幅线性增长。任务级取消会停止目录/章节请求并删除未完成的 `.part`；书源提供远程封面时下载到文档目录的 `covers/` 作为书架持久封面，缺失时生成统一封面。
 - `BookSourceReadingProgressStore`：在线章节阅读进度。
 
 发现页默认聚合当前栏目下所有已启用且声明对应能力的书源，并允许按单一书源筛选。
@@ -330,7 +330,7 @@ rights-report Issue 表单，第三方书源内容投诉优先指向其运营者
 | `sync_records` | WebDAV 元数据镜像、HLC、tombstone 与待上传标记 | `(dataset, record_id)` 复合主键 |
 | `sync_device_cursors` | 各远端设备已应用的变更序号 | `remote_device_id` 主键 |
 | `sync_local_state` | 本设备 ID、待发布批次与同步水位 | 键值状态 |
-| `sync_book_files` | 已选书籍的远端 blob 摘要、大小和路径 | `book_uid` 主键，可关联本地书 |
+| `sync_book_files` | 已选书籍原文件及持久封面的远端 blob 摘要、大小和路径 | `book_uid` 主键，可关联本地书 |
 
 `books` 使用 `storage_type` 区分本地与在线书籍，并通过 `source_*` 字段保存可重建的来源信息。
 

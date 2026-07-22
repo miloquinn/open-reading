@@ -2737,6 +2737,8 @@
   "downloadTaskDownloading": "Downloading in background",
   "downloadTaskCompleted": "Download complete",
   "downloadTaskFailed": "Download failed",
+  "downloadTaskCancelled": "Cancelled",
+  "downloadTaskCancel": "Cancel task",
   "downloadContinueInBackground": "Continue in background",
   "downloadRunningInBackground": "Download continues in the background",
   "bookSourceExitAddTitle": "Add to shelf?",

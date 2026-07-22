@@ -2392,6 +2392,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get downloadTaskFailed => '下载失败';
 
   @override
+  String get downloadTaskCancelled => '已取消';
+
+  @override
+  String get downloadTaskCancel => '取消任务';
+
+  @override
   String get downloadContinueInBackground => '后台继续下载';
 
   @override
@@ -5923,6 +5929,12 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get downloadTaskFailed => '下載失敗';
+
+  @override
+  String get downloadTaskCancelled => '已取消';
+
+  @override
+  String get downloadTaskCancel => '取消任務';
 
   @override
   String get downloadContinueInBackground => '背景繼續下載';

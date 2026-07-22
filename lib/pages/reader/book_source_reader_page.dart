@@ -117,7 +117,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   double _topMargin = ReaderMarginSettings.defaultTop;
   double _bottomMargin = ReaderMarginSettings.defaultBottom;
   String _readerThemeId = ReaderThemes.day.id;
-  BookSourcePageMode _pageMode = BookSourcePageMode.verticalScroll;
+  BookSourcePageMode _pageMode = ReaderSettings.defaultPageMode;
   bool _pullBookmarkEnabled = false;
   bool _tapPageAnimationEnabled = true;
   bool _tabletTwoPageEnabled = ReaderSettings.defaultTabletTwoPageEnabled;
@@ -350,9 +350,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
           sourceId: widget.source.id,
           bookId: widget.book.id,
         ),
-        _readerSettingsStore.load(
-          fallbackPageMode: BookSourcePageMode.verticalScroll,
-        ),
+        _readerSettingsStore.load(),
         _readerSettingsStore.loadScrollByChapter(),
         _customThemeStore.loadAll(),
         _themeOrderStore.load(),

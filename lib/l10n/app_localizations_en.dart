@@ -2508,6 +2508,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadTaskFailed => 'Download failed';
 
   @override
+  String get downloadTaskCancelled => 'Cancelled';
+
+  @override
+  String get downloadTaskCancel => 'Cancel task';
+
+  @override
   String get downloadContinueInBackground => 'Continue in background';
 
   @override

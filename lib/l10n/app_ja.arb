@@ -1229,6 +1229,8 @@
   "downloadTaskDownloading": "バックグラウンドでダウンロード中",
   "downloadTaskCompleted": "ダウンロード完了",
   "downloadTaskFailed": "ダウンロード失敗",
+  "downloadTaskCancelled": "キャンセル済み",
+  "downloadTaskCancel": "タスクをキャンセル",
   "downloadContinueInBackground": "バックグラウンドで続ける",
   "downloadRunningInBackground": "ダウンロードをバックグラウンドで続行します",
   "bookSourceExitAddTitle": "本棚に追加しますか？",

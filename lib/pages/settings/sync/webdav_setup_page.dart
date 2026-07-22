@@ -26,7 +26,6 @@ class _WebDavSetupPageState extends State<WebDavSetupPage> {
   var _saving = false;
   var _connectionVerified = false;
   WebDavSyncErrorCode? _connectionError;
-  late WebDavSyncScope _scope;
 
   @override
   void initState() {
@@ -35,7 +34,6 @@ class _WebDavSetupPageState extends State<WebDavSetupPage> {
     _serverController.text = sync.serverUrl ?? '';
     _usernameController.text = sync.username ?? '';
     _rootController.text = sync.rootPath ?? 'OpenReading';
-    _scope = sync.scope;
   }
 
   @override
@@ -76,7 +74,6 @@ class _WebDavSetupPageState extends State<WebDavSetupPage> {
     setState(() => _saving = true);
     final sync = context.read<WebDavSyncController>();
     await sync.configure(_draft);
-    await sync.setScope(_scope);
     if (!mounted) return;
     setState(() => _saving = false);
     Navigator.of(context).pop();
@@ -263,65 +260,6 @@ class _WebDavSetupPageState extends State<WebDavSetupPage> {
                             ],
                           ),
                         ),
-                        const SizedBox(height: 20),
-                        _SectionCard(
-                          title: l10n.webDavSyncContent,
-                          icon: Icons.sync_alt_rounded,
-                          child: Column(
-                            children: [
-                              _ScopeSwitch(
-                                title: l10n.webDavScopeBooks,
-                                icon: Icons.library_books_outlined,
-                                value: _scope.books,
-                                onChanged: (value) => setState(
-                                  () => _scope = _scope.copyWith(books: value),
-                                ),
-                              ),
-                              _ScopeSwitch(
-                                title: l10n.webDavScopeProgress,
-                                icon: Icons.auto_stories_outlined,
-                                value: _scope.progress,
-                                onChanged: (value) => setState(
-                                  () =>
-                                      _scope = _scope.copyWith(progress: value),
-                                ),
-                              ),
-                              _ScopeSwitch(
-                                title: l10n.webDavScopeBookmarks,
-                                icon: Icons.bookmark_border_rounded,
-                                value: _scope.bookmarks,
-                                onChanged: (value) => setState(
-                                  () => _scope =
-                                      _scope.copyWith(bookmarks: value),
-                                ),
-                              ),
-                              _ScopeSwitch(
-                                title: l10n.webDavScopeReadingSessions,
-                                icon: Icons.bar_chart_rounded,
-                                value: _scope.readingSessions,
-                                onChanged: (value) => setState(
-                                  () => _scope = _scope.copyWith(
-                                    readingSessions: value,
-                                  ),
-                                ),
-                              ),
-                              _ScopeSwitch(
-                                title: l10n.webDavScopeBookFiles,
-                                subtitle: sync.fileCapabilities.uploadSupported
-                                    ? l10n.webDavBookFilesHint
-                                    : l10n.webDavBookFilesUnavailable,
-                                icon: Icons.cloud_upload_outlined,
-                                value: _scope.bookFiles &&
-                                    sync.fileCapabilities.uploadSupported,
-                                enabled: sync.fileCapabilities.uploadSupported,
-                                onChanged: (value) => setState(
-                                  () => _scope =
-                                      _scope.copyWith(bookFiles: value),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
                         const SizedBox(height: 16),
                         Container(
                           padding: const EdgeInsets.all(14),
@@ -407,36 +345,6 @@ class _SectionCard extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _ScopeSwitch extends StatelessWidget {
-  const _ScopeSwitch({
-    required this.title,
-    required this.icon,
-    required this.value,
-    required this.onChanged,
-    this.subtitle,
-    this.enabled = true,
-  });
-
-  final String title;
-  final String? subtitle;
-  final IconData icon;
-  final bool value;
-  final bool enabled;
-  final ValueChanged<bool> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return SwitchListTile.adaptive(
-      contentPadding: EdgeInsets.zero,
-      secondary: Icon(icon),
-      title: Text(title),
-      subtitle: subtitle == null ? null : Text(subtitle!),
-      value: value,
-      onChanged: enabled ? onChanged : null,
     );
   }
 }

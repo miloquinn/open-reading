@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:xxread/models/book.dart';
@@ -71,11 +72,13 @@ class _BookFileSyncPageState extends State<BookFileSyncPage>
         final file = File(book.filePath);
         if (!await file.exists()) continue;
         final uid = await bookUidForMap(book.toMap());
+        final coverBlobSha256 = await _coverBlobSha256(book.coverImagePath);
         local.add(
           _LocalFileEntry(
             book: book,
             bookUid: uid,
             sizeBytes: await file.length(),
+            coverBlobSha256: coverBlobSha256,
             remote: remoteByUid[uid],
           ),
         );
@@ -83,12 +86,10 @@ class _BookFileSyncPageState extends State<BookFileSyncPage>
       final localUids = local.map((item) => item.bookUid).toSet();
       if (!mounted) return;
       setState(() {
-        _pendingUpload = local
-            .where((item) => !(item.remote?.fileAvailable ?? false))
-            .toList(growable: false);
-        _synced = local
-            .where((item) => item.remote?.fileAvailable ?? false)
-            .toList(growable: false);
+        _pendingUpload =
+            local.where((item) => !item.isFullySynced).toList(growable: false);
+        _synced =
+            local.where((item) => item.isFullySynced).toList(growable: false);
         _availableDownload = remoteByUid.values
             .where(
               (item) => item.fileAvailable && !localUids.contains(item.bookUid),
@@ -643,13 +644,38 @@ class _LocalFileEntry {
     required this.book,
     required this.bookUid,
     required this.sizeBytes,
+    required this.coverBlobSha256,
     required this.remote,
   });
 
   final Book book;
   final String bookUid;
   final int sizeBytes;
+  final String? coverBlobSha256;
   final RemoteBookDescriptor? remote;
+
+  bool get isFullySynced {
+    final remote = this.remote;
+    if (remote == null || !remote.fileAvailable) return false;
+    final coverHash = coverBlobSha256;
+    if (coverHash == null) return true;
+    return remote.coverAvailable && remote.coverBlobSha256 == coverHash;
+  }
+}
+
+Future<String?> _coverBlobSha256(String? coverImagePath) async {
+  if (coverImagePath == null || coverImagePath.trim().isEmpty) return null;
+  final file = File(coverImagePath);
+  try {
+    if (!await file.exists()) return null;
+    final size = await file.length();
+    if (size <= 0 || size > WebDavBookFileService.maxCoverFileBytes) {
+      return null;
+    }
+    return '${await sha256.bind(file.openRead()).first}';
+  } on FileSystemException {
+    return null;
+  }
 }
 
 String _formatBytes(int bytes) {

@@ -2413,6 +2413,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get downloadTaskFailed => 'ダウンロード失敗';
 
   @override
+  String get downloadTaskCancelled => 'キャンセル済み';
+
+  @override
+  String get downloadTaskCancel => 'タスクをキャンセル';
+
+  @override
   String get downloadContinueInBackground => 'バックグラウンドで続ける';
 
   @override

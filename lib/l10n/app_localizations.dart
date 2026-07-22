@@ -4518,6 +4518,18 @@ abstract class AppLocalizations {
   /// **'Download failed'**
   String get downloadTaskFailed;
 
+  /// No description provided for @downloadTaskCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get downloadTaskCancelled;
+
+  /// No description provided for @downloadTaskCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel task'**
+  String get downloadTaskCancel;
+
   /// No description provided for @downloadContinueInBackground.
   ///
   /// In en, this message translates to:

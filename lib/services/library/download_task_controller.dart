@@ -3,11 +3,12 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:xxread/book_sources/models/registered_book_source.dart';
 import 'package:xxread/book_sources/protocol/book_source_protocol.dart';
+import 'package:xxread/book_sources/services/book_download_cancellation.dart';
 import 'package:xxread/book_sources/services/book_source_shelf_service.dart';
 import 'package:xxread/models/book.dart';
 import 'package:xxread/services/core/background_download_notifier.dart';
 
-enum DownloadTaskState { queued, downloading, completed, failed }
+enum DownloadTaskState { queued, downloading, completed, failed, cancelled }
 
 @immutable
 class BookDownloadTask {
@@ -57,6 +58,8 @@ class BookDownloadTask {
 /// continue after the UI is backgrounded.
 class DownloadTaskController extends ChangeNotifier {
   final List<BookDownloadTask> _tasks = <BookDownloadTask>[];
+  final Map<String, BookDownloadCancellation> _cancellations =
+      <String, BookDownloadCancellation>{};
   bool _workerRunning = false;
 
   List<BookDownloadTask> get tasks => List.unmodifiable(_tasks);
@@ -99,9 +102,26 @@ class DownloadTaskController extends ChangeNotifier {
         state: DownloadTaskState.queued,
       ),
     );
+    _cancellations[id] = BookDownloadCancellation();
     notifyListeners();
     unawaited(_runQueue(shelfService));
     return id;
+  }
+
+  bool cancelTask(String id) {
+    final index = _tasks.indexWhere((task) => task.id == id);
+    if (index < 0) return false;
+    final task = _tasks[index];
+    if (task.state != DownloadTaskState.queued &&
+        task.state != DownloadTaskState.downloading) {
+      return false;
+    }
+    _cancellations[id]?.cancel();
+    _replace(index, task.copyWith(state: DownloadTaskState.cancelled));
+    if (task.state == DownloadTaskState.queued) {
+      _cancellations.remove(id);
+    }
+    return true;
   }
 
   Future<void> _runQueue(BookSourceShelfService shelfService) async {
@@ -114,6 +134,8 @@ class DownloadTaskController extends ChangeNotifier {
         );
         if (index < 0) return;
         final task = _tasks[index];
+        final cancellation = _cancellations[task.id] ??
+            (_cancellations[task.id] = BookDownloadCancellation());
         _replace(index, task.copyWith(state: DownloadTaskState.downloading));
         final notificationTask = BackgroundDownloadTask(
           id: task.id,
@@ -126,11 +148,15 @@ class DownloadTaskController extends ChangeNotifier {
           final downloaded = await shelfService.downloadToLocal(
             source: task.source,
             book: task.book,
+            cancellation: cancellation,
             onProgress: (completed, total) {
               final currentIndex = _tasks.indexWhere(
                 (candidate) => candidate.id == task.id,
               );
-              if (currentIndex < 0) return;
+              if (currentIndex < 0 ||
+                  _tasks[currentIndex].state != DownloadTaskState.downloading) {
+                return;
+              }
               _replace(
                 currentIndex,
                 _tasks[currentIndex].copyWith(
@@ -149,6 +175,7 @@ class DownloadTaskController extends ChangeNotifier {
               );
             },
           );
+          cancellation.throwIfCancelled();
           final currentIndex = _tasks.indexWhere(
             (candidate) => candidate.id == task.id,
           );
@@ -172,11 +199,30 @@ class DownloadTaskController extends ChangeNotifier {
               ),
             ),
           );
+          _cancellations.remove(task.id);
+        } on BookDownloadCancelledException {
+          final currentIndex = _tasks.indexWhere(
+            (candidate) => candidate.id == task.id,
+          );
+          if (currentIndex >= 0 &&
+              _tasks[currentIndex].state != DownloadTaskState.cancelled) {
+            _replace(
+              currentIndex,
+              _tasks[currentIndex].copyWith(
+                state: DownloadTaskState.cancelled,
+              ),
+            );
+          }
+          _cancellations.remove(task.id);
+          await _notify(
+            () => BackgroundDownloadNotifier.cancel(notificationTask),
+          );
         } catch (error) {
           final currentIndex = _tasks.indexWhere(
             (candidate) => candidate.id == task.id,
           );
-          if (currentIndex >= 0) {
+          if (currentIndex >= 0 &&
+              _tasks[currentIndex].state != DownloadTaskState.cancelled) {
             _replace(
               currentIndex,
               _tasks[currentIndex].copyWith(
@@ -185,8 +231,17 @@ class DownloadTaskController extends ChangeNotifier {
               ),
             );
           }
-          await _notify(
-              () => BackgroundDownloadNotifier.fail(notificationTask));
+          if (currentIndex >= 0 &&
+              _tasks[currentIndex].state == DownloadTaskState.cancelled) {
+            await _notify(
+              () => BackgroundDownloadNotifier.cancel(notificationTask),
+            );
+          } else {
+            await _notify(
+              () => BackgroundDownloadNotifier.fail(notificationTask),
+            );
+          }
+          _cancellations.remove(task.id);
         }
       }
     } finally {

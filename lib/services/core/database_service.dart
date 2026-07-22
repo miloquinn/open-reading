@@ -19,7 +19,7 @@ class DatabaseService {
 
   static Database? _database;
   static const String _dbName = 'xxread_v2.db';
-  static const int _dbVersion = 18;
+  static const int _dbVersion = 19;
   static Future<Database>? _openingDatabase;
 
   Future<Database> get database async {
@@ -348,7 +348,7 @@ class DatabaseService {
     if (oldVersion < 17) {
       await BookImportSchemaMigration.migrate(db);
     }
-    if (oldVersion < 18) {
+    if (oldVersion < 19) {
       await WebDavSyncSchemaMigration.migrate(db);
     }
   }

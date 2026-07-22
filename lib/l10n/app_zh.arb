@@ -1475,6 +1475,8 @@
   "downloadTaskDownloading": "正在后台下载",
   "downloadTaskCompleted": "下载完成",
   "downloadTaskFailed": "下载失败",
+  "downloadTaskCancelled": "已取消",
+  "downloadTaskCancel": "取消任务",
   "downloadContinueInBackground": "后台继续下载",
   "downloadRunningInBackground": "下载任务已在后台继续",
   "bookSourceExitAddTitle": "加入书架？",

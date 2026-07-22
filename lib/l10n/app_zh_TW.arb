@@ -1229,6 +1229,8 @@
   "downloadTaskDownloading": "正在背景下載",
   "downloadTaskCompleted": "下載完成",
   "downloadTaskFailed": "下載失敗",
+  "downloadTaskCancelled": "已取消",
+  "downloadTaskCancel": "取消任務",
   "downloadContinueInBackground": "背景繼續下載",
   "downloadRunningInBackground": "下載任務已在背景繼續",
   "bookSourceExitAddTitle": "加入書架？",

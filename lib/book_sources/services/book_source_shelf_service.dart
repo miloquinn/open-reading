@@ -12,10 +12,13 @@ import '../../services/books/cover_generator_service.dart';
 import '../../services/library/library_event_bus_service.dart';
 import '../models/registered_book_source.dart';
 import '../protocol/book_source_protocol.dart';
+import 'book_download_cancellation.dart';
 import 'book_source_client.dart';
 import 'source_cover_cache.dart';
 
 class BookSourceShelfService {
+  static const int _downloadBatchSize = 3;
+
   BookSourceShelfService({
     BookDao? bookDao,
     BookSourceClient? client,
@@ -87,40 +90,22 @@ class BookSourceShelfService {
     required RegisteredBookSource source,
     required BookSourceBook book,
     void Function(int completed, int total)? onProgress,
+    BookDownloadCancellation? cancellation,
   }) async {
-    final chapters = [...await _client.getChaptersForDownload(source, book.id)]
-      ..sort((a, b) => a.order.compareTo(b.order));
+    cancellation?.throwIfCancelled();
+    final chapters = [
+      ...await _client.getChaptersForDownload(
+        source,
+        book.id,
+        cancellation: cancellation,
+      )
+    ]..sort((a, b) => a.order.compareTo(b.order));
+    cancellation?.throwIfCancelled();
     if (chapters.isEmpty) {
       throw const BookSourceProtocolException(
         'This book source returned an empty chapter catalog.',
       );
     }
-
-    final contents = List<BookSourceChapterContent?>.filled(
-      chapters.length,
-      null,
-    );
-    var nextIndex = 0;
-    var completed = 0;
-    onProgress?.call(0, chapters.length);
-
-    Future<void> worker() async {
-      while (true) {
-        final index = nextIndex++;
-        if (index >= chapters.length) return;
-        final chapter = chapters[index];
-        contents[index] = await _client.getChapterContentForDownload(
-          source,
-          bookId: book.id,
-          chapterId: chapter.id,
-        );
-        completed++;
-        onProgress?.call(completed, chapters.length);
-      }
-    }
-
-    final workerCount = chapters.length.clamp(1, 3);
-    await Future.wait(List.generate(workerCount, (_) => worker()));
 
     final documents =
         _downloadDirectory ?? await getApplicationDocumentsDirectory();
@@ -132,18 +117,70 @@ class BookSourceShelfService {
         '${_safeFileName(book.title)}-${_safeFileName(book.id)}.txt',
       ),
     );
-    final buffer = StringBuffer();
-    for (var index = 0; index < chapters.length; index++) {
-      final chapter = chapters[index];
-      final content = contents[index]!;
-      buffer
-        ..writeln(chapter.title)
-        ..writeln()
-        ..writeln(_plainText(content))
-        ..writeln()
-        ..writeln();
+    final temporaryFile = File(
+      '${file.path}.${DateTime.now().microsecondsSinceEpoch}.part',
+    );
+    IOSink? sink;
+    var completed = 0;
+    onProgress?.call(0, chapters.length);
+
+    try {
+      sink = temporaryFile.openWrite(mode: FileMode.write, encoding: utf8);
+      for (var offset = 0;
+          offset < chapters.length;
+          offset += _downloadBatchSize) {
+        cancellation?.throwIfCancelled();
+        final end = (offset + _downloadBatchSize).clamp(0, chapters.length);
+        final batch = chapters.sublist(offset, end);
+        final contents = await Future.wait(
+          batch.map((chapter) async {
+            final content = await _client.getChapterContentForDownload(
+              source,
+              bookId: book.id,
+              chapterId: chapter.id,
+              cancellation: cancellation,
+            );
+            cancellation?.throwIfCancelled();
+            completed++;
+            onProgress?.call(completed, chapters.length);
+            return content;
+          }),
+        );
+        cancellation?.throwIfCancelled();
+        for (var index = 0; index < batch.length; index++) {
+          sink
+            ..writeln(batch[index].title)
+            ..writeln()
+            ..writeln(_plainText(contents[index]))
+            ..writeln()
+            ..writeln();
+        }
+        await sink.flush();
+      }
+      cancellation?.throwIfCancelled();
+      await sink.close();
+      sink = null;
+      if (await file.exists()) await file.delete();
+      cancellation?.throwIfCancelled();
+      await temporaryFile.rename(file.path);
+    } catch (_) {
+      try {
+        await sink?.close();
+      } catch (_) {
+        // Preserve the download error; cleanup is best effort.
+      }
+      try {
+        if (await temporaryFile.exists()) await temporaryFile.delete();
+      } catch (_) {
+        // Preserve the download error; cleanup is best effort.
+      }
+      rethrow;
     }
-    await file.writeAsString(buffer.toString(), flush: true);
+
+    if (cancellation?.isCancelled ?? false) {
+      if (await file.exists()) await file.delete();
+      throw const BookDownloadCancelledException();
+    }
 
     final existing = await findShelfBook(
       sourceId: source.id,
@@ -151,6 +188,7 @@ class BookSourceShelfService {
     );
     final generatedCoverPath =
         existing?.coverImagePath ?? await _storedCoverPath(source, book);
+    cancellation?.throwIfCancelled();
     if (existing != null) {
       final downloaded = existing.copyWith(
         title: book.title,

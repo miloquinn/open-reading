@@ -8,6 +8,7 @@ import 'package:xxread/utils/page_style_helper.dart';
 
 import 'webdav_setup_page.dart';
 import 'book_file_sync_page.dart';
+import 'webdav_sync_content_page.dart';
 import 'webdav_sync_translator.dart';
 
 class WebDavSyncPage extends StatelessWidget {
@@ -248,6 +249,7 @@ class _ScopeCard extends StatelessWidget {
       if (sync.scope.progress) l10n.webDavScopeProgress,
       if (sync.scope.bookmarks) l10n.webDavScopeBookmarks,
       if (sync.scope.readingSessions) l10n.webDavScopeReadingSessions,
+      if (sync.scope.bookFiles) l10n.webDavScopeBookFiles,
     ];
     return _Card(
       child: ListTile(
@@ -257,7 +259,13 @@ class _ScopeCard extends StatelessWidget {
         subtitle: Text(enabled.join(' · ')),
         trailing: const Icon(Icons.chevron_right_rounded),
         enabled: sync.isConfigured,
-        onTap: sync.isConfigured ? () => _openSetup(context) : null,
+        onTap: sync.isConfigured
+            ? () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const WebDavSyncContentPage(),
+                  ),
+                )
+            : null,
       ),
     );
   }

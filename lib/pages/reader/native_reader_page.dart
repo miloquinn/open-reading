@@ -120,7 +120,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
   String? _lastSavedLocation;
   bool _openPreviousChapterAtLastPage = false;
   bool _controlsVisible = false;
-  NativePageMode _pageMode = NativePageMode.horizontalSlide;
+  NativePageMode _pageMode = ReaderSettings.defaultPageMode;
   bool _scrollByChapter = true;
   double _fontSize = 19;
   double _lineHeight = 1.75;
@@ -388,9 +388,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
   Future<void> _loadPageMode() async {
     try {
       final results = await Future.wait<Object?>([
-        _readerSettingsStore.load(
-          fallbackPageMode: NativePageMode.horizontalSlide,
-        ),
+        _readerSettingsStore.load(),
         _readerSettingsStore.loadScrollByChapter(),
         _customThemeStore.loadAll(),
         _themeOrderStore.load(),

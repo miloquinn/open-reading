@@ -40,5 +40,51 @@ void main() {
     final bookFileIndexNames =
         bookFileIndexes.map((row) => row['name']).toSet();
     expect(bookFileIndexNames, contains('idx_sync_book_files_local_book'));
+
+    final bookFileColumns = await database.rawQuery(
+      'PRAGMA table_info(sync_book_files)',
+    );
+    final bookFileColumnNames =
+        bookFileColumns.map((row) => row['name']).toSet();
+    expect(
+      bookFileColumnNames,
+      containsAll([
+        'cover_blob_sha256',
+        'cover_file_name',
+        'cover_file_size',
+        'cover_remote_path',
+      ]),
+    );
+  });
+
+  test('migration adds cover columns to an existing book-file table', () async {
+    await database.execute('''
+      CREATE TABLE sync_book_files(
+        book_uid TEXT PRIMARY KEY,
+        local_book_id INTEGER,
+        blob_sha256 TEXT NOT NULL,
+        file_name TEXT NOT NULL,
+        file_size INTEGER NOT NULL,
+        remote_path TEXT NOT NULL,
+        sync_enabled INTEGER NOT NULL DEFAULT 1,
+        updated_at TEXT NOT NULL
+      )
+    ''');
+
+    await WebDavSyncSchemaMigration.migrate(database);
+    await WebDavSyncSchemaMigration.migrate(database);
+
+    final columns = await database.rawQuery(
+      'PRAGMA table_info(sync_book_files)',
+    );
+    expect(
+      columns.map((row) => row['name']),
+      containsAll([
+        'cover_blob_sha256',
+        'cover_file_name',
+        'cover_file_size',
+        'cover_remote_path',
+      ]),
+    );
   });
 }

@@ -135,5 +135,7 @@
 	<string>用于从相册选择图片（如设置封面、导入阅读相关素材）以及保存相关图片到相册。</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>用于将应用内生成或导出的图片保存到你的相册。</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>用于兼容图片导入组件在处理照片时读取拍摄位置信息。开元阅读不会在后台获取位置，也不会将位置信息用于其他用途。</string>
 </dict>
 </plist>

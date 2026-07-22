@@ -135,6 +135,12 @@ class BackgroundDownloadNotifier {
     await _channel.invokeMethod<void>('fail', _taskArguments(task));
   }
 
+  static Future<void> cancel(BackgroundDownloadTask task) async {
+    if (!Platform.isAndroid) return;
+    _lastProgressAt.remove(task.id);
+    await _channel.invokeMethod<void>('cancel', _taskArguments(task));
+  }
+
   static Map<String, Object?> _taskArguments(BackgroundDownloadTask task) => {
         'id': task.id,
         'kind': task.kind.name,
