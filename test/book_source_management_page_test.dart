@@ -32,6 +32,56 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('keeps dense source metadata readable on narrow phones',
+      (tester) async {
+    await BookSourceRegistry().upsert(
+      RegisteredBookSource(
+        id: 'org.example.long-source',
+        name: 'A deliberately long connected source name',
+        description:
+            'A long source description that still needs useful reading width.',
+        manifestUrl: Uri.parse('https://example.org/source.json'),
+        apiBaseUrl: Uri.parse('https://example.org/api/'),
+        protocolVersion: '1.4',
+        languages: const ['en'],
+        capabilities: const {
+          'browse',
+          'catalog',
+          'categories',
+          'content',
+          'detail',
+          'discover',
+          'search',
+        },
+        enabled: true,
+        addedAt: DateTime.utc(2026, 7, 22),
+      ),
+    );
+
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(360, 800);
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: BookSourceManagementPage(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('bookSourceCard-org.example.long-source')),
+      findsOneWidget,
+    );
+    expect(
+        find.text('A deliberately long connected source name'), findsOneWidget);
+    expect(find.text('categories'), findsOneWidget);
+    expect(find.text('Enabled'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('adding a source requires explicit third-party acknowledgment',
       (tester) async {
     tester.view.devicePixelRatio = 1;

@@ -6,6 +6,7 @@ import 'package:xxread/book_sources/models/registered_book_source.dart';
 import 'package:xxread/book_sources/protocol/book_source_protocol.dart';
 import 'package:xxread/book_sources/services/book_source_client.dart';
 import 'package:xxread/book_sources/services/book_source_registry.dart';
+import 'package:xxread/utils/layout_helper.dart';
 import 'package:xxread/utils/localization_extension.dart';
 import 'package:xxread/utils/page_style_helper.dart';
 
@@ -159,113 +160,217 @@ class _BookSourceManagementPageState extends State<BookSourceManagementPage> {
   Widget _buildSourceCard(RegisteredBookSource source) {
     final scheme = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(14, 12, 8, 12),
-        decoration: _panelDecoration(radius: 18),
-        child: Row(
-          children: [
-            _buildSourceIcon(source),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    source.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    source.description.isEmpty
-                        ? source.apiBaseUrl.host
-                        : source.description,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: scheme.onSurfaceVariant,
-                      fontSize: 12,
-                      height: 1.3,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 4,
-                    children: source.capabilities
-                        .map(
-                          (capability) => Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 7,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: scheme.secondaryContainer,
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: Text(
-                              capability,
-                              style: TextStyle(
-                                color: scheme.onSecondaryContainer,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
+      padding: const EdgeInsets.only(bottom: 14),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 640;
+          return Container(
+            key: ValueKey('bookSourceCard-${source.id}'),
+            padding: EdgeInsets.fromLTRB(
+              compact ? 16 : 18,
+              compact ? 16 : 14,
+              compact ? 10 : 8,
+              compact ? 12 : 14,
+            ),
+            decoration: _panelDecoration(radius: 20),
+            child: compact
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildSourceIcon(source, size: 52),
+                          const SizedBox(width: 13),
+                          Expanded(child: _buildSourceSummary(source)),
+                          _buildSourceMenu(source),
+                        ],
+                      ),
+                      if (source.capabilities.isNotEmpty) ...[
+                        const SizedBox(height: 14),
+                        _buildCapabilityChips(source),
+                      ],
+                      const SizedBox(height: 14),
+                      Container(
+                        padding: const EdgeInsets.only(left: 12),
+                        decoration: BoxDecoration(
+                          color: scheme.surfaceContainer.withValues(alpha: 0.5),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                source.enabled
+                                    ? context.l10n.bookSourcesEnabled
+                                    : context.l10n.bookSourcesDisabled,
+                                style: TextStyle(
+                                  color: source.enabled
+                                      ? scheme.primary
+                                      : scheme.onSurfaceVariant,
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
                             ),
-                          ),
-                        )
-                        .toList(growable: false),
-                  ),
-                ],
-              ),
-            ),
-            Switch.adaptive(
-              value: source.enabled,
-              onChanged: (enabled) => _setSourceEnabled(source, enabled),
-            ),
-            IconButton(
-              tooltip: context.l10n.bookSourcesRefresh,
-              onPressed: () => _refreshSource(source),
-              icon: const Icon(Icons.refresh_rounded),
-            ),
-            PopupMenuButton<String>(
-              tooltip: context.l10n.bookSourcesRemove,
-              onSelected: (value) {
-                if (value == 'rights') _showSourceRightsDialog(source);
-                if (value == 'remove') _confirmRemoveSource(source);
-              },
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: 'rights',
-                  child: Text(context.l10n.bookSourcesRightsDetails),
-                ),
-                PopupMenuItem(
-                  value: 'remove',
-                  child: Row(
+                            Switch.adaptive(
+                              value: source.enabled,
+                              onChanged: (enabled) =>
+                                  _setSourceEnabled(source, enabled),
+                            ),
+                            IconButton(
+                              tooltip: context.l10n.bookSourcesRefresh,
+                              onPressed: () => _refreshSource(source),
+                              icon: const Icon(Icons.refresh_rounded),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  )
+                : Row(
                     children: [
-                      const Icon(Icons.delete_outline_rounded),
-                      const SizedBox(width: 10),
-                      Text(context.l10n.bookSourcesRemove),
+                      _buildSourceIcon(source),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildSourceSummary(source),
+                            if (source.capabilities.isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              _buildCapabilityChips(source),
+                            ],
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        source.enabled
+                            ? context.l10n.bookSourcesEnabled
+                            : context.l10n.bookSourcesDisabled,
+                        style: TextStyle(
+                          color: source.enabled
+                              ? scheme.primary
+                              : scheme.onSurfaceVariant,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      Switch.adaptive(
+                        value: source.enabled,
+                        onChanged: (enabled) =>
+                            _setSourceEnabled(source, enabled),
+                      ),
+                      IconButton(
+                        tooltip: context.l10n.bookSourcesRefresh,
+                        onPressed: () => _refreshSource(source),
+                        icon: const Icon(Icons.refresh_rounded),
+                      ),
+                      _buildSourceMenu(source),
                     ],
                   ),
-                ),
-              ],
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildSourceIcon(RegisteredBookSource source) {
+  Widget _buildSourceSummary(RegisteredBookSource source) {
+    final scheme = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          source.name,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+                height: 1.2,
+              ),
+        ),
+        const SizedBox(height: 5),
+        Text(
+          source.description.isEmpty
+              ? source.apiBaseUrl.host
+              : source.description,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: scheme.onSurfaceVariant,
+            fontSize: 13,
+            height: 1.4,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCapabilityChips(RegisteredBookSource source) {
+    final scheme = Theme.of(context).colorScheme;
+    final capabilities = source.capabilities.toList()..sort();
+    return Wrap(
+      spacing: 7,
+      runSpacing: 7,
+      children: capabilities
+          .map(
+            (capability) => Container(
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+              decoration: BoxDecoration(
+                color: scheme.secondaryContainer.withValues(alpha: 0.82),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                capability,
+                style: TextStyle(
+                  color: scheme.onSecondaryContainer,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          )
+          .toList(growable: false),
+    );
+  }
+
+  Widget _buildSourceMenu(RegisteredBookSource source) {
+    return PopupMenuButton<String>(
+      tooltip: context.l10n.bookSourcesRemove,
+      onSelected: (value) {
+        if (value == 'rights') _showSourceRightsDialog(source);
+        if (value == 'remove') _confirmRemoveSource(source);
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          value: 'rights',
+          child: Text(context.l10n.bookSourcesRightsDetails),
+        ),
+        PopupMenuItem(
+          value: 'remove',
+          child: Row(
+            children: [
+              const Icon(Icons.delete_outline_rounded),
+              const SizedBox(width: 10),
+              Text(context.l10n.bookSourcesRemove),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSourceIcon(
+    RegisteredBookSource source, {
+    double size = 48,
+  }) {
     final scheme = Theme.of(context).colorScheme;
     final fallback = Container(
-      width: 48,
-      height: 48,
+      width: size,
+      height: size,
       decoration: BoxDecoration(
         color: scheme.secondaryContainer,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(size * 0.29),
       ),
       alignment: Alignment.center,
       child: Text(
@@ -278,11 +383,11 @@ class _BookSourceManagementPageState extends State<BookSourceManagementPage> {
     );
     if (source.iconUrl == null) return fallback;
     return ClipRRect(
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(size * 0.29),
       child: Image.network(
         source.iconUrl.toString(),
-        width: 48,
-        height: 48,
+        width: size,
+        height: size,
         fit: BoxFit.cover,
         errorBuilder: (_, __, ___) => fallback,
       ),
@@ -497,161 +602,102 @@ class _BookSourceManagementPageState extends State<BookSourceManagementPage> {
     var connecting = false;
     var responsibilityAccepted = false;
     String? errorText;
-    await showDialog<void>(
-      context: context,
-      barrierDismissible: !connecting,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: Text(context.l10n.bookSourcesAddTitle),
-          content: SizedBox(
-            width: 440,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                TextField(
-                  controller: controller,
-                  enabled: !connecting,
-                  autofocus: true,
-                  keyboardType: TextInputType.url,
-                  textInputAction: TextInputAction.done,
-                  decoration: InputDecoration(
-                    labelText: context.l10n.bookSourcesUrlLabel,
-                    hintText: context.l10n.bookSourcesUrlHint,
-                    errorText: errorText,
-                    prefixIcon: const Icon(Icons.link_rounded),
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Container(
-                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .primaryContainer
-                        .withValues(alpha: 0.36),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withValues(alpha: 0.18),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(
-                            Icons.shield_outlined,
-                            size: 19,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          const SizedBox(width: 9),
-                          Expanded(
-                            child: Text(
-                              context.l10n.bookSourcesNoOfficialSourcesNotice,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
-                                  ?.copyWith(height: 1.45),
-                            ),
-                          ),
-                        ],
-                      ),
-                      Material(
-                        type: MaterialType.transparency,
-                        child: CheckboxListTile(
-                          key: const Key('bookSourceResponsibilityCheckbox'),
-                          value: responsibilityAccepted,
-                          enabled: !connecting,
-                          contentPadding: EdgeInsets.zero,
-                          controlAffinity: ListTileControlAffinity.leading,
-                          dense: true,
-                          title: Text(
-                            context.l10n.bookSourcesResponsibilityAck,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
-                                ?.copyWith(fontWeight: FontWeight.w600),
-                          ),
-                          onChanged: connecting
-                              ? null
-                              : (value) => setDialogState(
-                                    () =>
-                                        responsibilityAccepted = value ?? false,
-                                  ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (connecting) ...[
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                      const SizedBox(width: 10),
-                      Text(context.l10n.bookSourcesConnecting),
-                    ],
-                  ),
-                ],
-              ],
+
+    Future<void> connect(
+      BuildContext routeContext,
+      StateSetter setRouteState,
+    ) async {
+      setRouteState(() {
+        connecting = true;
+        errorText = null;
+      });
+      try {
+        final discovered = await _client.discover(controller.text);
+        final source = RegisteredBookSource.fromManifest(
+          manifest: discovered.manifest,
+          manifestUrl: discovered.manifestUrl,
+        );
+        final sources = await _registry.upsert(source);
+        if (!mounted || !routeContext.mounted) return;
+        Navigator.pop(routeContext);
+        setState(() => _sources = sources);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${context.l10n.bookSourcesAdded}: ${source.name}'),
+          ),
+        );
+      } catch (error) {
+        if (!routeContext.mounted) return;
+        setRouteState(() {
+          connecting = false;
+          errorText = error.toString();
+        });
+      }
+    }
+
+    Widget buildPanel(
+      BuildContext routeContext,
+      StateSetter setRouteState, {
+      required bool sheet,
+    }) {
+      return _AddBookSourcePanel(
+        controller: controller,
+        connecting: connecting,
+        responsibilityAccepted: responsibilityAccepted,
+        errorText: errorText,
+        sheet: sheet,
+        onResponsibilityChanged: (value) => setRouteState(
+          () => responsibilityAccepted = value,
+        ),
+        onCancel: () => Navigator.pop(routeContext),
+        onConnect: () => connect(routeContext, setRouteState),
+      );
+    }
+
+    if (LayoutHelper.isMobile(context)) {
+      await showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        showDragHandle: true,
+        builder: (sheetContext) => StatefulBuilder(
+          builder: (context, setSheetState) => AnimatedPadding(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOut,
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.viewInsetsOf(context).bottom,
+            ),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.sizeOf(context).height * 0.92,
+              ),
+              child: buildPanel(
+                sheetContext,
+                setSheetState,
+                sheet: true,
+              ),
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: connecting ? null : () => Navigator.pop(dialogContext),
-              child: Text(context.l10n.bookSourcesCancel),
-            ),
-            FilledButton(
-              key: const Key('bookSourceConnectButton'),
-              onPressed: connecting || !responsibilityAccepted
-                  ? null
-                  : () async {
-                      setDialogState(() {
-                        connecting = true;
-                        errorText = null;
-                      });
-                      try {
-                        final discovered =
-                            await _client.discover(controller.text);
-                        final source = RegisteredBookSource.fromManifest(
-                          manifest: discovered.manifest,
-                          manifestUrl: discovered.manifestUrl,
-                        );
-                        final sources = await _registry.upsert(source);
-                        if (!mounted || !dialogContext.mounted) return;
-                        Navigator.pop(dialogContext);
-                        setState(() => _sources = sources);
-                        ScaffoldMessenger.of(this.context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              '${this.context.l10n.bookSourcesAdded}: '
-                              '${source.name}',
-                            ),
-                          ),
-                        );
-                      } catch (error) {
-                        if (!dialogContext.mounted) return;
-                        setDialogState(() {
-                          connecting = false;
-                          errorText = error.toString();
-                        });
-                      }
-                    },
-              child: Text(context.l10n.bookSourcesConnect),
-            ),
-          ],
         ),
-      ),
-    );
+      );
+    } else {
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: !connecting,
+        builder: (dialogContext) => StatefulBuilder(
+          builder: (context, setDialogState) => Dialog(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520, maxHeight: 720),
+              child: buildPanel(
+                dialogContext,
+                setDialogState,
+                sheet: false,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
     controller.dispose();
   }
 
@@ -721,5 +767,147 @@ class _BookSourceManagementPageState extends State<BookSourceManagementPage> {
 
   Future<bool> _openExternalUrl(Uri url) {
     return launchUrl(url, mode: LaunchMode.externalApplication);
+  }
+}
+
+class _AddBookSourcePanel extends StatelessWidget {
+  final TextEditingController controller;
+  final bool connecting;
+  final bool responsibilityAccepted;
+  final String? errorText;
+  final bool sheet;
+  final ValueChanged<bool> onResponsibilityChanged;
+  final VoidCallback onCancel;
+  final VoidCallback onConnect;
+
+  const _AddBookSourcePanel({
+    required this.controller,
+    required this.connecting,
+    required this.responsibilityAccepted,
+    required this.errorText,
+    required this.sheet,
+    required this.onResponsibilityChanged,
+    required this.onCancel,
+    required this.onConnect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Material(
+      type: MaterialType.transparency,
+      child: SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(20, sheet ? 4 : 24, 20, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              context.l10n.bookSourcesAddTitle,
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 20),
+            TextField(
+              controller: controller,
+              enabled: !connecting,
+              autofocus: true,
+              keyboardType: TextInputType.url,
+              textInputAction: TextInputAction.done,
+              decoration: InputDecoration(
+                labelText: context.l10n.bookSourcesUrlLabel,
+                hintText: context.l10n.bookSourcesUrlHint,
+                errorText: errorText,
+                prefixIcon: const Icon(Icons.link_rounded),
+                border: const OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: scheme.primaryContainer.withValues(alpha: 0.32),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: scheme.primary.withValues(alpha: 0.18),
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.shield_outlined,
+                    size: 21,
+                    color: scheme.primary,
+                  ),
+                  const SizedBox(width: 11),
+                  Expanded(
+                    child: Text(
+                      context.l10n.bookSourcesNoOfficialSourcesNotice,
+                      style: theme.textTheme.bodySmall?.copyWith(height: 1.5),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            CheckboxListTile(
+              key: const Key('bookSourceResponsibilityCheckbox'),
+              value: responsibilityAccepted,
+              enabled: !connecting,
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              title: Text(
+                context.l10n.bookSourcesResponsibilityAck,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  height: 1.4,
+                ),
+              ),
+              onChanged: connecting
+                  ? null
+                  : (value) => onResponsibilityChanged(value ?? false),
+            ),
+            if (connecting) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(context.l10n.bookSourcesConnecting),
+                ],
+              ),
+            ],
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: connecting ? null : onCancel,
+                    child: Text(context.l10n.bookSourcesCancel),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    key: const Key('bookSourceConnectButton'),
+                    onPressed: connecting || !responsibilityAccepted
+                        ? null
+                        : onConnect,
+                    child: Text(context.l10n.bookSourcesConnect),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
