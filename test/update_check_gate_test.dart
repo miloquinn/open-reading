@@ -9,8 +9,9 @@ import 'package:xxread/widgets/update_check_gate.dart';
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  testWidgets('manual update check shows release notes and update action',
-      (tester) async {
+  testWidgets('manual update check shows release notes and update action', (
+    tester,
+  ) async {
     final service = _FakeUpdateCheckService(
       UpdateCheckResult(
         currentVersion: '0.9.1',
@@ -61,8 +62,9 @@ void main() {
     expect(find.text('Download from website'), findsOneWidget);
   });
 
-  testWidgets('automatic prompt is remembered only after user chooses later',
-      (tester) async {
+  testWidgets('automatic prompt is remembered only after user chooses later', (
+    tester,
+  ) async {
     final service = _FakeUpdateCheckService(
       UpdateCheckResult(
         currentVersion: '1.0.0',
@@ -91,10 +93,8 @@ void main() {
         home: Builder(
           builder: (context) => Scaffold(
             body: FilledButton(
-              onPressed: () => UpdatePromptController.check(
-                context,
-                service: service,
-              ),
+              onPressed: () =>
+                  UpdatePromptController.check(context, service: service),
               child: const Text('Check automatically'),
             ),
           ),

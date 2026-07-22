@@ -13,7 +13,7 @@ abstract interface class SyncSecretStorage {
 
 class FlutterSyncSecretStorage implements SyncSecretStorage {
   FlutterSyncSecretStorage([FlutterSecureStorage? storage])
-      : _storage = storage ?? const FlutterSecureStorage();
+    : _storage = storage ?? const FlutterSecureStorage();
 
   final FlutterSecureStorage _storage;
 
@@ -61,8 +61,8 @@ class SecureSyncConfigStore {
   SecureSyncConfigStore({
     SyncSecretStorage? secretStorage,
     SyncPreferences? preferences,
-  })  : _secretStorage = secretStorage ?? FlutterSyncSecretStorage(),
-        _preferences = preferences ?? SharedSyncPreferences();
+  }) : _secretStorage = secretStorage ?? FlutterSyncSecretStorage(),
+       _preferences = preferences ?? SharedSyncPreferences();
 
   static const _configurationKey = 'webdav_sync_configuration_v1';
   static const _scopeKey = 'webdav_sync_scope_v1';

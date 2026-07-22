@@ -4,8 +4,9 @@ import 'package:xxread/utils/reader_themes.dart';
 import 'package:xxread/widgets/reader_pull_bookmark.dart';
 
 void main() {
-  testWidgets('top-edge pull triggers only after crossing the threshold',
-      (tester) async {
+  testWidgets('top-edge pull triggers only after crossing the threshold', (
+    tester,
+  ) async {
     var triggered = 0;
     await tester.pumpWidget(
       MaterialApp(

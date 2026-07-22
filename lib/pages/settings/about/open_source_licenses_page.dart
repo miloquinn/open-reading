@@ -6,10 +6,7 @@ import 'package:xxread/utils/localization_extension.dart';
 import 'package:xxread/utils/page_style_helper.dart';
 
 class OpenSourceLicensesPage extends StatelessWidget {
-  const OpenSourceLicensesPage({
-    required this.appVersion,
-    super.key,
-  });
+  const OpenSourceLicensesPage({required this.appVersion, super.key});
 
   final String appVersion;
 
@@ -129,10 +126,7 @@ class OpenSourceLicensesPage extends StatelessWidget {
   }) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => _LicenseTextPage(
-          title: title,
-          assetPath: assetPath,
-        ),
+        builder: (_) => _LicenseTextPage(title: title, assetPath: assetPath),
       ),
     );
   }
@@ -163,9 +157,9 @@ class _IntroCard extends StatelessWidget {
             child: Text(
               text,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                    height: 1.55,
-                  ),
+                color: scheme.onSurfaceVariant,
+                height: 1.55,
+              ),
             ),
           ),
         ],
@@ -186,9 +180,9 @@ class _SectionTitle extends StatelessWidget {
       child: Text(
         title,
         style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.w800,
-            ),
+          color: Theme.of(context).colorScheme.primary,
+          fontWeight: FontWeight.w800,
+        ),
       ),
     );
   }
@@ -242,24 +236,21 @@ class _LicenseEntryCard extends StatelessWidget {
                     Text(
                       title,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     const SizedBox(height: 3),
                     Text(
                       subtitle,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                          ),
+                        color: scheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: 10),
-              Icon(
-                Icons.chevron_right_rounded,
-                color: scheme.onSurfaceVariant,
-              ),
+              Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
             ],
           ),
         ),
@@ -269,10 +260,7 @@ class _LicenseEntryCard extends StatelessWidget {
 }
 
 class _LicenseTextPage extends StatefulWidget {
-  const _LicenseTextPage({
-    required this.title,
-    required this.assetPath,
-  });
+  const _LicenseTextPage({required this.title, required this.assetPath});
 
   final String title;
   final String assetPath;
@@ -282,17 +270,15 @@ class _LicenseTextPage extends StatefulWidget {
 }
 
 class _LicenseTextPageState extends State<_LicenseTextPage> {
-  late final Future<String> _licenseText =
-      rootBundle.loadString(widget.assetPath);
+  late final Future<String> _licenseText = rootBundle.loadString(
+    widget.assetPath,
+  );
 
   @override
   Widget build(BuildContext context) {
     final palette = PageStyleHelper.palette(context);
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-        scrolledUnderElevation: 0,
-      ),
+      appBar: AppBar(title: Text(widget.title), scrolledUnderElevation: 0),
       body: Container(
         decoration: BoxDecoration(
           gradient: PageStyleHelper.backgroundGradient(context),
@@ -326,12 +312,11 @@ class _LicenseTextPageState extends State<_LicenseTextPage> {
                   child: SelectableText(
                     snapshot.data ?? '',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontFamily:
-                              defaultTargetPlatform == TargetPlatform.iOS
-                                  ? 'Menlo'
-                                  : 'monospace',
-                          height: 1.55,
-                        ),
+                      fontFamily: defaultTargetPlatform == TargetPlatform.iOS
+                          ? 'Menlo'
+                          : 'monospace',
+                      height: 1.55,
+                    ),
                   ),
                 ),
               );
@@ -344,10 +329,7 @@ class _LicenseTextPageState extends State<_LicenseTextPage> {
 }
 
 class _BundledLicense {
-  const _BundledLicense({
-    required this.name,
-    required this.assetPath,
-  });
+  const _BundledLicense({required this.name, required this.assetPath});
 
   final String name;
   final String assetPath;

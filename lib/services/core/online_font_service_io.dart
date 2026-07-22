@@ -18,31 +18,27 @@ import 'package:path_provider/path_provider.dart';
 import 'online_font_models.dart';
 
 typedef OnlineFontDirectoryProvider = Future<Directory> Function();
-typedef OnlineFontRegistrar = Future<void> Function(
-  String family,
-  Uint8List bytes,
-  FontStyle style,
-);
-typedef OnlineFontProgressCallback = void Function(
-    OnlineFontDownloadProgress progress);
+typedef OnlineFontRegistrar =
+    Future<void> Function(String family, Uint8List bytes, FontStyle style);
+typedef OnlineFontProgressCallback =
+    void Function(OnlineFontDownloadProgress progress);
 
 class OnlineFontService {
   OnlineFontService({
     OnlineFontDirectoryProvider? supportDirectory,
     OnlineFontRegistrar? registrar,
     Dio? dio,
-  })  : _supportDirectory = supportDirectory ?? getApplicationSupportDirectory,
-        _registrar = registrar ?? _registerFont,
-        _dio = dio ??
-            Dio(
-              BaseOptions(
-                connectTimeout: const Duration(seconds: 15),
-                receiveTimeout: const Duration(minutes: 10),
-                headers: {
-                  if (!kIsWeb) 'User-Agent': 'OpenReading-OnlineFont',
-                },
-              ),
-            );
+  }) : _supportDirectory = supportDirectory ?? getApplicationSupportDirectory,
+       _registrar = registrar ?? _registerFont,
+       _dio =
+           dio ??
+           Dio(
+             BaseOptions(
+               connectTimeout: const Duration(seconds: 15),
+               receiveTimeout: const Duration(minutes: 10),
+               headers: {if (!kIsWeb) 'User-Agent': 'OpenReading-OnlineFont'},
+             ),
+           );
 
   static const String _directoryName = 'online_fonts';
   static const String _manifestName = 'manifest.json';
@@ -234,7 +230,8 @@ class OnlineFontService {
         // 字节签名校验（TTF/OTF 魔数）。
         if (!_matchesFontSignature(bytes, path.extension(fileSpec.fileName))) {
           throw const OnlineFontException(
-              OnlineFontErrorCode.fileSignatureInvalid);
+            OnlineFontErrorCode.fileSignatureInvalid,
+          );
         }
 
         _emitProgress(
@@ -267,11 +264,13 @@ class OnlineFontService {
         }
 
         await tempFile.rename(destFile.path);
-        fileRecords.add(OnlineFontFileRecord(
-          fileName: fileSpec.fileName,
-          sha256: hash,
-          size: bytes.length,
-        ));
+        fileRecords.add(
+          OnlineFontFileRecord(
+            fileName: fileSpec.fileName,
+            sha256: hash,
+            size: bytes.length,
+          ),
+        );
         downloadedBytes = fileStartBytes + bytes.length;
         downloadedFiles++;
       }
@@ -357,20 +356,28 @@ class OnlineFontService {
       if (decoded is! List<Object?>) return;
       _records
         ..clear()
-        ..addAll(decoded
-            .whereType<Map<String, Object?>>()
-            .map(OnlineFontRecord.fromJson)
-            .fold<Map<String, OnlineFontRecord>>(<String, OnlineFontRecord>{},
+        ..addAll(
+          decoded
+              .whereType<Map<String, Object?>>()
+              .map(OnlineFontRecord.fromJson)
+              .fold<Map<String, OnlineFontRecord>>(
+                <String, OnlineFontRecord>{},
                 (map, record) {
-          // 清单里记录存在，但磁盘文件可能被外部删除，需逐个校验。
-          final fontDir = Directory(path.join(directory.path, record.id));
-          final allFilesPresent = record.files.every((fileRecord) {
-            final file = File(path.join(fontDir.path, fileRecord.fileName));
-            return file.existsSync();
-          });
-          if (allFilesPresent) map[record.id] = record;
-          return map;
-        }));
+                  // 清单里记录存在，但磁盘文件可能被外部删除，需逐个校验。
+                  final fontDir = Directory(
+                    path.join(directory.path, record.id),
+                  );
+                  final allFilesPresent = record.files.every((fileRecord) {
+                    final file = File(
+                      path.join(fontDir.path, fileRecord.fileName),
+                    );
+                    return file.existsSync();
+                  });
+                  if (allFilesPresent) map[record.id] = record;
+                  return map;
+                },
+              ),
+        );
     } catch (_) {
       _records.clear();
     }
@@ -385,8 +392,9 @@ class OnlineFontService {
     final temporary = File('${manifest.path}.tmp');
     try {
       await temporary.writeAsString(
-        const JsonEncoder.withIndent('  ')
-            .convert(_records.values.map((record) => record.toJson()).toList()),
+        const JsonEncoder.withIndent(
+          '  ',
+        ).convert(_records.values.map((record) => record.toJson()).toList()),
         flush: true,
       );
       if (await manifest.exists()) await manifest.delete();

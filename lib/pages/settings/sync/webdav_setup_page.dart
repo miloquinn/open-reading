@@ -46,11 +46,11 @@ class _WebDavSetupPageState extends State<WebDavSetupPage> {
   }
 
   WebDavSyncConfigDraft get _draft => WebDavSyncConfigDraft(
-        serverUrl: _serverController.text.trim(),
-        username: _usernameController.text.trim(),
-        password: _passwordController.text,
-        rootPath: _rootController.text.trim(),
-      );
+    serverUrl: _serverController.text.trim(),
+    username: _usernameController.text.trim(),
+    password: _passwordController.text,
+    rootPath: _rootController.text.trim(),
+  );
 
   Future<void> _testConnection() async {
     if (!_formKey.currentState!.validate()) return;
@@ -59,8 +59,9 @@ class _WebDavSetupPageState extends State<WebDavSetupPage> {
       _connectionVerified = false;
       _connectionError = null;
     });
-    final result =
-        await context.read<WebDavSyncController>().testConnection(_draft);
+    final result = await context.read<WebDavSyncController>().testConnection(
+      _draft,
+    );
     if (!mounted) return;
     setState(() {
       _testing = false;
@@ -140,14 +141,15 @@ class _WebDavSetupPageState extends State<WebDavSetupPage> {
                                 autofillHints: const [AutofillHints.username],
                                 decoration: InputDecoration(
                                   labelText: l10n.webDavUsername,
-                                  prefixIcon:
-                                      const Icon(Icons.person_outline_rounded),
+                                  prefixIcon: const Icon(
+                                    Icons.person_outline_rounded,
+                                  ),
                                 ),
                                 onChanged: _invalidateTest,
                                 validator: (value) =>
                                     (value?.trim().isNotEmpty ?? false)
-                                        ? null
-                                        : l10n.webDavErrorAuthentication,
+                                    ? null
+                                    : l10n.webDavErrorAuthentication,
                               ),
                               const SizedBox(height: 14),
                               TextFormField(
@@ -178,9 +180,9 @@ class _WebDavSetupPageState extends State<WebDavSetupPage> {
                                 onChanged: _invalidateTest,
                                 validator: (value) =>
                                     (value?.isNotEmpty ?? false) ||
-                                            hasStoredConfiguration
-                                        ? null
-                                        : l10n.webDavErrorAuthentication,
+                                        hasStoredConfiguration
+                                    ? null
+                                    : l10n.webDavErrorAuthentication,
                               ),
                               const SizedBox(height: 14),
                               TextFormField(
@@ -192,8 +194,8 @@ class _WebDavSetupPageState extends State<WebDavSetupPage> {
                                 onChanged: _invalidateTest,
                                 validator: (value) =>
                                     (value?.trim().isNotEmpty ?? false)
-                                        ? null
-                                        : l10n.webDavErrorUnknown,
+                                    ? null
+                                    : l10n.webDavErrorUnknown,
                               ),
                               const SizedBox(height: 18),
                               FilledButton.icon(
@@ -221,12 +223,13 @@ class _WebDavSetupPageState extends State<WebDavSetupPage> {
                                     width: double.infinity,
                                     padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
-                                      color: (_connectionVerified
-                                              ? Colors.green
-                                              : Theme.of(context)
-                                                  .colorScheme
-                                                  .error)
-                                          .withValues(alpha: 0.1),
+                                      color:
+                                          (_connectionVerified
+                                                  ? Colors.green
+                                                  : Theme.of(
+                                                      context,
+                                                    ).colorScheme.error)
+                                              .withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Row(
@@ -237,9 +240,9 @@ class _WebDavSetupPageState extends State<WebDavSetupPage> {
                                               : Icons.error_outline,
                                           color: _connectionVerified
                                               ? Colors.green
-                                              : Theme.of(context)
-                                                  .colorScheme
-                                                  .error,
+                                              : Theme.of(
+                                                  context,
+                                                ).colorScheme.error,
                                         ),
                                         const SizedBox(width: 10),
                                         Expanded(
@@ -282,8 +285,9 @@ class _WebDavSetupPageState extends State<WebDavSetupPage> {
                         ),
                         const SizedBox(height: 24),
                         FilledButton(
-                          onPressed:
-                              _connectionVerified && !_saving ? _save : null,
+                          onPressed: _connectionVerified && !_saving
+                              ? _save
+                              : null,
                           child: Text(l10n.webDavSaveConfiguration),
                         ),
                       ],
@@ -325,9 +329,9 @@ class _SectionCard extends StatelessWidget {
               const SizedBox(width: 9),
               Text(
                 title,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
               ),
             ],
           ),
@@ -339,10 +343,7 @@ class _SectionCard extends StatelessWidget {
             side: BorderSide(color: palette.border),
           ),
           clipBehavior: Clip.antiAlias,
-          child: Padding(
-            padding: const EdgeInsets.all(18),
-            child: child,
-          ),
+          child: Padding(padding: const EdgeInsets.all(18), child: child),
         ),
       ],
     );

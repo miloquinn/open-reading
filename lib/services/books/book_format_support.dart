@@ -192,14 +192,14 @@ class BookFormatRegistry {
 
   /// 文件选择器 / 扫描允许的扩展名（当前已接导入）。
   static Set<String> get pickerExtensions => <String>{
-        for (final spec in all)
-          if (spec.acceptInFilePicker) ...spec.extensions,
-      };
+    for (final spec in all)
+      if (spec.acceptInFilePicker) ...spec.extensions,
+  };
 
   /// 有明确阅读管线目标的扩展名（含 planned 容器，便于文档与后续实现）。
   static Set<String> get allKnownExtensions => <String>{
-        for (final spec in all) ...spec.extensions,
-      };
+    for (final spec in all) ...spec.extensions,
+  };
 
   static String normalizeExtension(String raw) {
     var ext = raw.trim().toLowerCase();

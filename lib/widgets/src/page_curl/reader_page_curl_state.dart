@@ -11,15 +11,17 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
   static const double _horizontalIntentRatio = 1.12;
   static const double _predictionHorizonSeconds = 0.14;
   static const double _commitProjection = 0.28;
-  static const Duration _middleDragCatchUpDuration =
-      Duration(milliseconds: 120);
+  static const Duration _middleDragCatchUpDuration = Duration(
+    milliseconds: 120,
+  );
   static const double _middleDragTiltStart = 0.55;
 
   final GlobalKey _currentKey = GlobalKey(debugLabel: 'curl-current');
   final GlobalKey _forwardKey = GlobalKey(debugLabel: 'curl-forward');
   final GlobalKey _backwardKey = GlobalKey(debugLabel: 'curl-backward');
-  final GlobalKey _outgoingBackKey =
-      GlobalKey(debugLabel: 'curl-outgoing-back');
+  final GlobalKey _outgoingBackKey = GlobalKey(
+    debugLabel: 'curl-outgoing-back',
+  );
   final _ReaderSnapshotCache _snapshotCache = _ReaderSnapshotCache(
     maxBytes: _snapshotBudgetBytes,
     maxEntries: 7,
@@ -92,10 +94,8 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
       }
       widget.coordinator?.addListener(_onCoordinatorAvailable);
     }
-    final pagesChanged = !_sameSnapshot(
-          oldWidget.currentPage,
-          widget.currentPage,
-        ) ||
+    final pagesChanged =
+        !_sameSnapshot(oldWidget.currentPage, widget.currentPage) ||
         !_sameOptionalSnapshot(oldWidget.forwardPage, widget.forwardPage) ||
         !_sameOptionalSnapshot(oldWidget.backwardPage, widget.backwardPage) ||
         !_sameOptionalSnapshot(
@@ -168,24 +168,16 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
   }
 
   Future<void> _warmSnapshots(int generation) async {
-    await _ensureSnapshot(
-      widget.currentPage,
-      _currentKey,
-      generation,
-    );
+    await _ensureSnapshot(widget.currentPage, _currentKey, generation);
     if (!mounted || generation != _captureGeneration) return;
     final adjacentCaptures = <Future<ui.Image?>>[];
     final forward = widget.forwardPage;
     if (forward != null) {
-      adjacentCaptures.add(
-        _ensureSnapshot(forward, _forwardKey, generation),
-      );
+      adjacentCaptures.add(_ensureSnapshot(forward, _forwardKey, generation));
     }
     final backward = widget.backwardPage;
     if (backward != null) {
-      adjacentCaptures.add(
-        _ensureSnapshot(backward, _backwardKey, generation),
-      );
+      adjacentCaptures.add(_ensureSnapshot(backward, _backwardKey, generation));
     }
     final outgoingBack = widget.outgoingBackPage;
     if (outgoingBack != null) {
@@ -286,8 +278,9 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
   }) async {
     await _preparePages(generation);
     if (!mounted || generation != _captureGeneration) return null;
-    final boundary = boundaryKey.currentContext?.findRenderObject()
-        as RenderRepaintBoundary?;
+    final boundary =
+        boundaryKey.currentContext?.findRenderObject()
+            as RenderRepaintBoundary?;
     if (boundary == null || !boundary.hasSize) return null;
     ui.Image? image;
     try {
@@ -328,14 +321,14 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
   }
 
   Set<ReaderPageSnapshotKey> get _protectedSnapshotKeys => {
-        widget.currentPage.key,
-        if (widget.forwardPage case final page?) page.key,
-        if (widget.backwardPage case final page?) page.key,
-        if (widget.outgoingBackPage case final page?) page.key,
-        if (_activeSourcePage case final page?) page.key,
-        if (_activeTargetPage case final page?) page.key,
-        if (_activeBackPage case final page?) page.key,
-      };
+    widget.currentPage.key,
+    if (widget.forwardPage case final page?) page.key,
+    if (widget.backwardPage case final page?) page.key,
+    if (widget.outgoingBackPage case final page?) page.key,
+    if (_activeSourcePage case final page?) page.key,
+    if (_activeTargetPage case final page?) page.key,
+    if (_activeBackPage case final page?) page.key,
+  };
 
   void _onPointerDown(PointerDownEvent event) {
     if (_phase != _PageTurnPhase.idle) return;
@@ -375,8 +368,8 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
       if (pendingDirection != null) {
         final movesTowardTurn =
             pendingDirection == ReaderPageTurnDirection.forward
-                ? delta.dx < 0
-                : delta.dx > 0;
+            ? delta.dx < 0
+            : delta.dx > 0;
         if (!movesTowardTurn ||
             delta.dx.abs() < delta.dy.abs() * _edgeHorizontalIntentRatio) {
           return;
@@ -397,7 +390,8 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
         direction,
         pointer: activationPoint,
         origin: activationPoint,
-        catchUpFromEdge: !startedFromEdge &&
+        catchUpFromEdge:
+            !startedFromEdge &&
             _motionFor(direction) == ReaderPageTurnMotion.outgoing,
       );
       if (!started) _resetToIdle();
@@ -563,9 +557,7 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
     );
   }
 
-  Future<void> _ensureActiveSnapshots(
-    ReaderPageTurnDirection direction,
-  ) async {
+  Future<void> _ensureActiveSnapshots(ReaderPageTurnDirection direction) async {
     final generation = _captureGeneration;
     final layers = _turnLayers(direction);
     if (layers == null) return;
@@ -581,17 +573,9 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
     final targetKey = _direction == direction && _activeTargetKey != null
         ? _activeTargetKey!
         : layers.targetKey;
-    await _ensureSnapshot(
-      source,
-      sourceKey,
-      generation,
-    );
+    await _ensureSnapshot(source, sourceKey, generation);
     if (!mounted || generation != _captureGeneration) return;
-    await _ensureSnapshot(
-      target,
-      targetKey,
-      generation,
-    );
+    await _ensureSnapshot(target, targetKey, generation);
     if (!mounted || generation != _captureGeneration) return;
     final back = _direction == direction && _activeBackPage != null
         ? _activeBackPage
@@ -615,11 +599,7 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
     final sourceKey = _direction == direction && _activeSourceKey != null
         ? _activeSourceKey!
         : layers.sourceKey;
-    await _ensureSnapshot(
-      source,
-      sourceKey,
-      _captureGeneration,
-    );
+    await _ensureSnapshot(source, sourceKey, _captureGeneration);
     if (!mounted) return;
     final back = _direction == direction && _activeBackPage != null
         ? _activeBackPage
@@ -661,7 +641,8 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
     final velocityTowardCommit = motion == ReaderPageTurnMotion.outgoing
         ? -canonicalVelocity.dx
         : canonicalVelocity.dx;
-    final projected = _geometry!.progress +
+    final projected =
+        _geometry!.progress +
         (velocityTowardCommit / math.max(_viewportSize.width, 1)) *
             _predictionHorizonSeconds;
     _startSpring(
@@ -680,9 +661,7 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
     }
   }
 
-  Future<void> _requestProgrammaticTurn(
-    ReaderPageTurnDirection direction,
-  ) {
+  Future<void> _requestProgrammaticTurn(ReaderPageTurnDirection direction) {
     if (_programmaticTurns.length >= _maxQueuedProgrammaticTurns) {
       final latest = _programmaticTurns.last;
       if (latest.direction == direction) return latest.completer.future;
@@ -710,10 +689,7 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
   }
 
   Future<void> _runForwardAnimation(_QueuedProgrammaticTurn request) =>
-      _runDirectionalProgrammaticTurn(
-        request,
-        ReaderPageTurnDirection.forward,
-      );
+      _runDirectionalProgrammaticTurn(request, ReaderPageTurnDirection.forward);
 
   Future<void> _runBackwardAnimation(_QueuedProgrammaticTurn request) =>
       _runDirectionalProgrammaticTurn(
@@ -773,8 +749,8 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
 
   bool _hasPage(ReaderPageTurnDirection direction) =>
       direction == ReaderPageTurnDirection.forward
-          ? widget.forwardPage != null
-          : widget.backwardPage != null;
+      ? widget.forwardPage != null
+      : widget.backwardPage != null;
 
   _ReaderTurnLayers? _turnLayers(ReaderPageTurnDirection direction) {
     final adjacent = direction == ReaderPageTurnDirection.forward
@@ -819,8 +795,9 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
       pixelRatio: ratio,
     );
     if (cached != null) return;
-    final boundary = boundaryKey.currentContext?.findRenderObject()
-        as RenderRepaintBoundary?;
+    final boundary =
+        boundaryKey.currentContext?.findRenderObject()
+            as RenderRepaintBoundary?;
     if (boundary == null || !boundary.hasSize) return;
     var needsPaint = false;
     assert(() {
@@ -860,41 +837,37 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
     required ReaderPageTurnDirection direction,
     required Offset pointer,
     required Offset origin,
-  }) =>
-      ReaderPageTurnGeometry.fromPointer(
-        size: _viewportSize,
-        direction: direction,
-        motion: _motionFor(direction),
-        pointer: pointer,
-        dragOrigin: origin,
-        anchorMode: ReaderPageTurnAnchorMode.followEdge,
-        bindingOnRight: _bindingOnRight,
-      );
+  }) => ReaderPageTurnGeometry.fromPointer(
+    size: _viewportSize,
+    direction: direction,
+    motion: _motionFor(direction),
+    pointer: pointer,
+    dragOrigin: origin,
+    anchorMode: ReaderPageTurnAnchorMode.followEdge,
+    bindingOnRight: _bindingOnRight,
+  );
 
   _ReaderSpringChannel _springFor(ReaderPageTurnDirection direction) =>
       direction == ReaderPageTurnDirection.forward
-          ? _forwardSpring
-          : _backwardSpring;
+      ? _forwardSpring
+      : _backwardSpring;
 
   Ticker _springTickerFor(ReaderPageTurnDirection direction) =>
       direction == ReaderPageTurnDirection.forward
-          ? _forwardSpringTicker
-          : _backwardSpringTicker;
+      ? _forwardSpringTicker
+      : _backwardSpringTicker;
 
   ReaderPageTurnDirection _opposite(ReaderPageTurnDirection direction) =>
       direction == ReaderPageTurnDirection.forward
-          ? ReaderPageTurnDirection.backward
-          : ReaderPageTurnDirection.forward;
+      ? ReaderPageTurnDirection.backward
+      : ReaderPageTurnDirection.forward;
 
   void _stopSpringTicker(ReaderPageTurnDirection direction) {
     final ticker = _springTickerFor(direction);
     if (ticker.isActive) ticker.stop();
   }
 
-  void _startSpring({
-    required bool commit,
-    required Offset canonicalVelocity,
-  }) {
+  void _startSpring({required bool commit, required Offset canonicalVelocity}) {
     final geometry = _geometry;
     final direction = _direction;
     if (geometry == null || direction == null) return;
@@ -904,12 +877,16 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
         : canonicalVelocity;
     final anchor = geometry.canonicalAnchor;
     final target = switch ((geometry.motion, commit)) {
-      (ReaderPageTurnMotion.outgoing, true) =>
-        Offset(-_viewportSize.width, anchor.dy),
+      (ReaderPageTurnMotion.outgoing, true) => Offset(
+        -_viewportSize.width,
+        anchor.dy,
+      ),
       (ReaderPageTurnMotion.outgoing, false) => anchor,
       (ReaderPageTurnMotion.incoming, true) => anchor,
-      (ReaderPageTurnMotion.incoming, false) =>
-        Offset(-_viewportSize.width, anchor.dy),
+      (ReaderPageTurnMotion.incoming, false) => Offset(
+        -_viewportSize.width,
+        anchor.dy,
+      ),
     };
     final spring = SpringDescription.withDampingRatio(
       mass: 1,
@@ -938,8 +915,9 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
       ..target = target
       ..startedAt = Duration.zero;
     setState(() {
-      _phase =
-          commit ? _PageTurnPhase.settlingCommit : _PageTurnPhase.settlingBack;
+      _phase = commit
+          ? _PageTurnPhase.settlingCommit
+          : _PageTurnPhase.settlingBack;
     });
     _stopSpringTicker(_opposite(direction));
     final ticker = _springTickerFor(direction);
@@ -981,11 +959,12 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
       2.0,
       math.min(8.0, _viewportSize.width * 0.012),
     );
-    final snapsToExactTerminal = target != null &&
+    final snapsToExactTerminal =
+        target != null &&
         (isIncoming
             ? (touch.dx - target.dx).abs() <= terminalSnapDistance
             : channel.commits &&
-                (touch - target).distance <= terminalSnapDistance);
+                  (touch - target).distance <= terminalSnapDistance);
     if (snapsToExactTerminal) renderedTouch = target;
     if (mounted) {
       setState(() {
@@ -1000,7 +979,8 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
         );
       });
     }
-    final visuallySettled = snapsToExactTerminal ||
+    final visuallySettled =
+        snapsToExactTerminal ||
         (isIncoming
             ? simulationX.isDone(seconds)
             : simulationX.isDone(seconds) && simulationY.isDone(seconds));
@@ -1179,8 +1159,9 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
             onPanCancel: _onPanCancel,
             child: Stack(
               fit: StackFit.expand,
-              clipBehavior:
-                  widget.coordinator == null ? Clip.hardEdge : Clip.none,
+              clipBehavior: widget.coordinator == null
+                  ? Clip.hardEdge
+                  : Clip.none,
               children: [
                 for (final entry in boundaryPages.entries)
                   if (!identical(entry.key, visibleKey))
@@ -1196,7 +1177,7 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
                         bindingOverflow: widget.coordinator == null
                             ? 0
                             : geometry.size.width +
-                                widget.coordinator!.gutterWidth,
+                                  widget.coordinator!.gutterWidth,
                       ),
                     ),
                   ),

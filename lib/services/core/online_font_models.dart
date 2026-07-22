@@ -42,10 +42,10 @@ class OnlineFontFileRecord {
   final int size;
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'fileName': fileName,
-        'sha256': sha256,
-        'size': size,
-      };
+    'fileName': fileName,
+    'sha256': sha256,
+    'size': size,
+  };
 
   factory OnlineFontFileRecord.fromJson(Map<String, Object?> json) {
     return OnlineFontFileRecord(
@@ -69,10 +69,10 @@ class OnlineFontRecord {
   final DateTime downloadedAt;
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'id': id,
-        'files': files.map((file) => file.toJson()).toList(),
-        'downloadedAt': downloadedAt.toIso8601String(),
-      };
+    'id': id,
+    'files': files.map((file) => file.toJson()).toList(),
+    'downloadedAt': downloadedAt.toIso8601String(),
+  };
 
   factory OnlineFontRecord.fromJson(Map<String, Object?> json) {
     final rawFiles = json['files'];
@@ -80,9 +80,9 @@ class OnlineFontRecord {
       id: json['id']! as String,
       files: rawFiles is List<Object?>
           ? rawFiles
-              .whereType<Map<String, Object?>>()
-              .map(OnlineFontFileRecord.fromJson)
-              .toList(growable: false)
+                .whereType<Map<String, Object?>>()
+                .map(OnlineFontFileRecord.fromJson)
+                .toList(growable: false)
           : const <OnlineFontFileRecord>[],
       downloadedAt: DateTime.parse(json['downloadedAt']! as String),
     );

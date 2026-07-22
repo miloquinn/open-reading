@@ -4,34 +4,35 @@ import 'package:xxread/core/reader/native_text_paginator.dart';
 import 'package:xxread/core/reader/reader_text_layout.dart';
 
 void main() {
-  test('normalizes existing indentation without changing canonical boundaries',
-      () {
-    const source = '\u3000\u3000第一段\n第二段';
-    final layout = ReaderTextLayout.build(source, firstLineIndent: 2);
+  test(
+    'normalizes existing indentation without changing canonical boundaries',
+    () {
+      const source = '\u3000\u3000第一段\n第二段';
+      final layout = ReaderTextLayout.build(source, firstLineIndent: 2);
 
-    expect(
-      layout.text,
-      '\u3164\u3164第一段\n\u3164\u3164第二段',
-    );
-    expect(layout.sourceOffsetForDisplayOffset(0), 0);
-    expect(
-      layout.sourceOffsetForDisplayOffset(layout.text.length),
-      source.length,
-    );
-  });
+      expect(layout.text, '\u3164\u3164第一段\n\u3164\u3164第二段');
+      expect(layout.sourceOffsetForDisplayOffset(0), 0);
+      expect(
+        layout.sourceOffsetForDisplayOffset(layout.text.length),
+        source.length,
+      );
+    },
+  );
 
-  test('zero indent can hide canonical leading spaces without offset drift',
-      () {
-    const source = '\u3000\u3000正文\n\u3000下一段';
-    final layout = ReaderTextLayout.build(source, firstLineIndent: 0);
+  test(
+    'zero indent can hide canonical leading spaces without offset drift',
+    () {
+      const source = '\u3000\u3000正文\n\u3000下一段';
+      final layout = ReaderTextLayout.build(source, firstLineIndent: 0);
 
-    expect(layout.text, '正文\n下一段');
-    expect(layout.sourceOffsetForDisplayOffset(0), 0);
-    expect(
-      layout.sourceOffsetForDisplayOffset(layout.text.length),
-      source.length,
-    );
-  });
+      expect(layout.text, '正文\n下一段');
+      expect(layout.sourceOffsetForDisplayOffset(0), 0);
+      expect(
+        layout.sourceOffsetForDisplayOffset(layout.text.length),
+        source.length,
+      );
+    },
+  );
 
   test('recognizes Unicode hard breaks and display whitespace in TXT', () {
     const source = '\u00a0第一段\u2028\u2003第二段\u2029\u202f第三段\u0085第四段\u000b第五段';
@@ -46,7 +47,9 @@ void main() {
       '\u3164\u3164第五段',
     );
     expect(
-        layout.sourceOffsetForDisplayOffset(layout.text.length), source.length);
+      layout.sourceOffsetForDisplayOffset(layout.text.length),
+      source.length,
+    );
   });
 
   test('indents quoted paragraphs and replaces a single leading space', () {
@@ -65,8 +68,9 @@ void main() {
     );
   });
 
-  testWidgets('justified wrapped paragraphs retain their first-line indent',
-      (tester) async {
+  testWidgets('justified wrapped paragraphs retain their first-line indent', (
+    tester,
+  ) async {
     const source = '“这是一个需要自动换行的长段落，用于确认两端对齐时首行缩进不会被排版引擎裁掉。”';
     const style = TextStyle(fontSize: 20);
     final layout = ReaderTextLayout.build(source, firstLineIndent: 2);
@@ -154,34 +158,41 @@ void main() {
   });
 
   test(
-      'maps CRLF, blank paragraphs, and a non-zero source offset monotonically',
-      () {
-    const source = '第一段\r\n   \r\n\t第二段\n\n\u3000第三段';
-    const sourceOffset = 37;
-    final layout = ReaderTextLayout.build(
-      source,
-      sourceOffset: sourceOffset,
-      firstLineIndent: 2,
-      paragraphSpacing: 2,
-    );
+    'maps CRLF, blank paragraphs, and a non-zero source offset monotonically',
+    () {
+      const source = '第一段\r\n   \r\n\t第二段\n\n\u3000第三段';
+      const sourceOffset = 37;
+      final layout = ReaderTextLayout.build(
+        source,
+        sourceOffset: sourceOffset,
+        firstLineIndent: 2,
+        paragraphSpacing: 2,
+      );
 
-    expect(layout.sourceOffsetForDisplayOffset(0), sourceOffset);
-    expect(
-      layout.sourceOffsetForDisplayOffset(layout.text.length),
-      sourceOffset + source.length,
-    );
-    var previous = sourceOffset;
-    for (var displayOffset = 0;
+      expect(layout.sourceOffsetForDisplayOffset(0), sourceOffset);
+      expect(
+        layout.sourceOffsetForDisplayOffset(layout.text.length),
+        sourceOffset + source.length,
+      );
+      var previous = sourceOffset;
+      for (
+        var displayOffset = 0;
         displayOffset <= layout.text.length;
-        displayOffset++) {
-      final mapped = layout.sourceOffsetForDisplayOffset(displayOffset);
-      expect(mapped, inInclusiveRange(previous, sourceOffset + source.length));
-      previous = mapped;
-    }
-  });
+        displayOffset++
+      ) {
+        final mapped = layout.sourceOffsetForDisplayOffset(displayOffset);
+        expect(
+          mapped,
+          inInclusiveRange(previous, sourceOffset + source.length),
+        );
+        previous = mapped;
+      }
+    },
+  );
 
-  testWidgets('pagination keeps source ranges contiguous with paragraph gaps',
-      (tester) async {
+  testWidgets('pagination keeps source ranges contiguous with paragraph gaps', (
+    tester,
+  ) async {
     const source = '第一段有足够多的文字用于分页测试。第一段继续。\n第二段也有足够多的文字。\n第三段结束。';
     const style = TextStyle(fontSize: 18, height: 1.6);
     final layout = ReaderTextLayout.build(
@@ -196,22 +207,23 @@ void main() {
       strutStyle: readerStrutStyle(style),
       textHeightBehavior: readerTextHeightBehavior,
     );
-    final ranges = NativeTextPaginator(
-      maxWidth: 160,
-      maxHeight: 96,
-      flowStyle: flow,
-    ).paginate(
-      text: layout.text,
-      spanBuilder: (start, end) => layout.buildSpan(
-        start,
-        end,
-        sourceSpanBuilder: (sourceStart, sourceEnd) => TextSpan(
-          text: source.substring(sourceStart, sourceEnd),
-          style: style,
-        ),
-        generatedStyle: style,
-      ),
-    );
+    final ranges =
+        NativeTextPaginator(
+          maxWidth: 160,
+          maxHeight: 96,
+          flowStyle: flow,
+        ).paginate(
+          text: layout.text,
+          spanBuilder: (start, end) => layout.buildSpan(
+            start,
+            end,
+            sourceSpanBuilder: (sourceStart, sourceEnd) => TextSpan(
+              text: source.substring(sourceStart, sourceEnd),
+              style: style,
+            ),
+            generatedStyle: style,
+          ),
+        );
     final sourceRanges = [
       for (final range in ranges)
         (
@@ -231,8 +243,9 @@ void main() {
     }
   });
 
-  testWidgets('normalized EPUB paragraphs keep visible text dense',
-      (tester) async {
+  testWidgets('normalized EPUB paragraphs keep visible text dense', (
+    tester,
+  ) async {
     const style = TextStyle(fontSize: 19, height: 1.75);
     final source = List.generate(
       48,
@@ -253,22 +266,19 @@ void main() {
     const width = 320.0;
     const height = 520.0;
     TextSpan buildSpan(int start, int end) => layout.buildSpan(
-          start,
-          end,
-          sourceSpanBuilder: (sourceStart, sourceEnd) => TextSpan(
-            text: source.substring(sourceStart, sourceEnd),
-            style: style,
-          ),
-          generatedStyle: style,
-        );
+      start,
+      end,
+      sourceSpanBuilder: (sourceStart, sourceEnd) => TextSpan(
+        text: source.substring(sourceStart, sourceEnd),
+        style: style,
+      ),
+      generatedStyle: style,
+    );
     final pages = NativeTextPaginator(
       maxWidth: width,
       maxHeight: height,
       flowStyle: flow,
-    ).paginate(
-      text: layout.text,
-      spanBuilder: buildSpan,
-    );
+    ).paginate(text: layout.text, spanBuilder: buildSpan);
 
     expect(pages.length, greaterThan(1));
     for (final page in pages.take(pages.length - 1)) {

@@ -115,9 +115,7 @@ class _FirstHomeSupportOverlayState extends State<FirstHomeSupportOverlay>
               ),
               SafeArea(
                 minimum: const EdgeInsets.fromLTRB(20, 20, 20, 18),
-                child: Center(
-                  child: _buildAnimatedContents(context),
-                ),
+                child: Center(child: _buildAnimatedContents(context)),
               ),
             ],
           ),
@@ -218,16 +216,14 @@ class _FirstHomeSupportOverlayState extends State<FirstHomeSupportOverlay>
                                 onPressed: () => _close(widget.onLater),
                                 style: OutlinedButton.styleFrom(
                                   minimumSize: const Size.fromHeight(50),
-                                  foregroundColor:
-                                      Theme.of(context).colorScheme.onSurface,
-                                  backgroundColor: Theme.of(context)
-                                      .colorScheme
-                                      .surface
-                                      .withValues(alpha: 0.82),
+                                  foregroundColor: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
+                                  backgroundColor: Theme.of(
+                                    context,
+                                  ).colorScheme.surface.withValues(alpha: 0.82),
                                   side: BorderSide(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .outline
+                                    color: Theme.of(context).colorScheme.outline
                                         .withValues(alpha: 0.42),
                                   ),
                                   shape: RoundedRectangleBorder(

@@ -17,10 +17,7 @@ void main() {
             key: coverKey,
             width: 120,
             height: 180,
-            child: const ColoredBox(
-              color: Colors.brown,
-              child: Text('cover'),
-            ),
+            child: const ColoredBox(color: Colors.brown, child: Text('cover')),
           ),
         ),
       ),
@@ -35,10 +32,8 @@ void main() {
     final animation = BookOpenAnimation.fromCoverKey(
       coverKey,
       radius: BorderRadius.circular(12),
-      coverBuilder: (_) => const ColoredBox(
-        color: Colors.brown,
-        child: Text('flight-cover'),
-      ),
+      coverBuilder: (_) =>
+          const ColoredBox(color: Colors.brown, child: Text('flight-cover')),
     );
     expect(animation, isNotNull);
     expect(animation!.sourceRect.size, const Size(120, 180));
@@ -142,10 +137,12 @@ void main() {
 
   testWidgets('无动画上下文时退化为平滑淡入路由', (tester) async {
     final navKey = GlobalKey<NavigatorState>();
-    await tester.pumpWidget(MaterialApp(
-      navigatorKey: navKey,
-      home: const Scaffold(body: Text('shelf')),
-    ));
+    await tester.pumpWidget(
+      MaterialApp(
+        navigatorKey: navKey,
+        home: const Scaffold(body: Text('shelf')),
+      ),
+    );
 
     navKey.currentState!.push(
       BookOpenTransition.createRoute<void>(

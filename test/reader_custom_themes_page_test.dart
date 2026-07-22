@@ -7,8 +7,9 @@ import 'package:xxread/l10n/app_localizations.dart';
 import 'package:xxread/pages/reader/themes/reader_custom_themes_page.dart';
 
 void main() {
-  testWidgets('theme library reorders built-in and custom themes together',
-      (tester) async {
+  testWidgets('theme library reorders built-in and custom themes together', (
+    tester,
+  ) async {
     SharedPreferences.setMockInitialValues({});
     const themes = [
       ReaderCustomTheme(
@@ -47,8 +48,10 @@ void main() {
     expect(find.text('Rain'), findsOne);
     expect(find.text('Paper'), findsOne);
     expect(find.byKey(const ValueKey('add-custom-reader-theme')), findsOne);
-    expect(find.byKey(const ValueKey('use-selected-custom-reader-theme')),
-        findsOne);
+    expect(
+      find.byKey(const ValueKey('use-selected-custom-reader-theme')),
+      findsOne,
+    );
 
     final list = tester.widget<ReorderableListView>(
       find.byType(ReorderableListView),

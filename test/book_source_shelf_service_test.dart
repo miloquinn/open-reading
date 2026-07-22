@@ -14,64 +14,67 @@ import 'package:xxread/models/book.dart';
 import 'package:xxread/services/books/book_dao.dart';
 
 void main() {
-  test('adds a source book as an online shelf record without a local file',
-      () async {
-    final directory = await Directory.systemTemp.createTemp('source-shelf-');
-    addTearDown(() => directory.delete(recursive: true));
-    final dao = _MemoryBookDao();
-    final service = BookSourceShelfService(
-      bookDao: dao,
-      downloadDirectory: directory,
-    );
-    final added = await service.addOnline(
-      source: _source,
-      book: _sourceBook,
-    );
-    final duplicate = await service.addOnline(
-      source: _source,
-      book: _sourceBook,
-    );
+  test(
+    'adds a source book as an online shelf record without a local file',
+    () async {
+      final directory = await Directory.systemTemp.createTemp('source-shelf-');
+      addTearDown(() => directory.delete(recursive: true));
+      final dao = _MemoryBookDao();
+      final service = BookSourceShelfService(
+        bookDao: dao,
+        downloadDirectory: directory,
+      );
+      final added = await service.addOnline(source: _source, book: _sourceBook);
+      final duplicate = await service.addOnline(
+        source: _source,
+        book: _sourceBook,
+      );
 
-    expect(added.isOnline, isTrue);
-    expect(added.filePath, isEmpty);
-    expect(added.coverImagePath, isNotNull);
-    expect(await File(added.coverImagePath!).exists(), isTrue);
-    expect(added.sourceId, _source.id);
-    expect(service.sourceFrom(added).apiBaseUrl, _source.apiBaseUrl);
-    expect(service.sourceBookFrom(added).title, _sourceBook.title);
-    expect(duplicate.id, added.id);
-    expect(dao.insertCount, 1);
-  });
+      expect(added.isOnline, isTrue);
+      expect(added.filePath, isEmpty);
+      expect(added.coverImagePath, isNotNull);
+      expect(await File(added.coverImagePath!).exists(), isTrue);
+      expect(added.sourceId, _source.id);
+      expect(service.sourceFrom(added).apiBaseUrl, _source.apiBaseUrl);
+      expect(service.sourceBookFrom(added).title, _sourceBook.title);
+      expect(duplicate.id, added.id);
+      expect(dao.insertCount, 1);
+    },
+  );
 
-  test('large downloads use bounded workers and report every chapter',
-      () async {
-    final directory = await Directory.systemTemp.createTemp('source-download-');
-    addTearDown(() => directory.delete(recursive: true));
-    final dao = _MemoryBookDao();
-    final client = _DownloadClient();
-    final service = BookSourceShelfService(
-      bookDao: dao,
-      client: client,
-      downloadDirectory: directory,
-    );
-    final progress = <(int, int)>[];
+  test(
+    'large downloads use bounded workers and report every chapter',
+    () async {
+      final directory = await Directory.systemTemp.createTemp(
+        'source-download-',
+      );
+      addTearDown(() => directory.delete(recursive: true));
+      final dao = _MemoryBookDao();
+      final client = _DownloadClient();
+      final service = BookSourceShelfService(
+        bookDao: dao,
+        client: client,
+        downloadDirectory: directory,
+      );
+      final progress = <(int, int)>[];
 
-    final downloaded = await service.downloadToLocal(
-      source: _source,
-      book: _sourceBook,
-      onProgress: (completed, total) => progress.add((completed, total)),
-    );
+      final downloaded = await service.downloadToLocal(
+        source: _source,
+        book: _sourceBook,
+        onProgress: (completed, total) => progress.add((completed, total)),
+      );
 
-    expect(client.maxActive, lessThanOrEqualTo(3));
-    expect(progress.first, (0, 7));
-    expect(progress.last, (7, 7));
-    expect(downloaded.isOnline, isFalse);
-    expect(await File(downloaded.filePath).exists(), isTrue);
-    expect(downloaded.coverImagePath, isNotNull);
-    expect(await File(downloaded.coverImagePath!).exists(), isTrue);
-    final text = await File(downloaded.filePath).readAsString();
-    expect(text.indexOf('正文0'), lessThan(text.indexOf('正文6')));
-  });
+      expect(client.maxActive, lessThanOrEqualTo(3));
+      expect(progress.first, (0, 7));
+      expect(progress.last, (7, 7));
+      expect(downloaded.isOnline, isFalse);
+      expect(await File(downloaded.filePath).exists(), isTrue);
+      expect(downloaded.coverImagePath, isNotNull);
+      expect(await File(downloaded.coverImagePath!).exists(), isTrue);
+      final text = await File(downloaded.filePath).readAsString();
+      expect(text.indexOf('正文0'), lessThan(text.indexOf('正文6')));
+    },
+  );
 
   test('streams completed batches before the whole book finishes', () async {
     final directory = await Directory.systemTemp.createTemp('source-stream-');
@@ -120,41 +123,45 @@ void main() {
     );
   });
 
-  test('removes the partial file when a streaming download is cancelled',
-      () async {
-    final directory = await Directory.systemTemp.createTemp('source-cancel-');
-    addTearDown(() => directory.delete(recursive: true));
-    final client = _StreamingDownloadClient();
-    final cancellation = BookDownloadCancellation();
-    final service = BookSourceShelfService(
-      bookDao: _MemoryBookDao(),
-      client: client,
-      downloadDirectory: directory,
-    );
+  test(
+    'removes the partial file when a streaming download is cancelled',
+    () async {
+      final directory = await Directory.systemTemp.createTemp('source-cancel-');
+      addTearDown(() => directory.delete(recursive: true));
+      final client = _StreamingDownloadClient();
+      final cancellation = BookDownloadCancellation();
+      final service = BookSourceShelfService(
+        bookDao: _MemoryBookDao(),
+        client: client,
+        downloadDirectory: directory,
+      );
 
-    final download = service.downloadToLocal(
-      source: _source,
-      book: _sourceBook,
-      cancellation: cancellation,
-    );
-    await client.secondBatchStarted.future;
-    cancellation.cancel();
-    client.releaseSecondBatch.complete();
+      final download = service.downloadToLocal(
+        source: _source,
+        book: _sourceBook,
+        cancellation: cancellation,
+      );
+      await client.secondBatchStarted.future;
+      cancellation.cancel();
+      client.releaseSecondBatch.complete();
 
-    await expectLater(
-      download,
-      throwsA(isA<BookDownloadCancelledException>()),
-    );
-    final booksDirectory = Directory('${directory.path}/books');
-    expect(
-      await booksDirectory
-          .list()
-          .where((entry) =>
-              entry.path.endsWith('.part') || entry.path.endsWith('.txt'))
-          .isEmpty,
-      isTrue,
-    );
-  });
+      await expectLater(
+        download,
+        throwsA(isA<BookDownloadCancelledException>()),
+      );
+      final booksDirectory = Directory('${directory.path}/books');
+      expect(
+        await booksDirectory
+            .list()
+            .where(
+              (entry) =>
+                  entry.path.endsWith('.part') || entry.path.endsWith('.txt'),
+            )
+            .isEmpty,
+        isTrue,
+      );
+    },
+  );
 
   test('persists a source-provided cover for offline shelf display', () async {
     final directory = await Directory.systemTemp.createTemp('source-cover-');
@@ -222,8 +229,7 @@ class _MemoryBookDao extends BookDao {
   Future<Book?> getBookBySource({
     required String sourceId,
     required String sourceBookId,
-  }) async =>
-      stored;
+  }) async => stored;
 
   @override
   Future<int> insertBook(Book book) async {
@@ -242,15 +248,14 @@ class _DownloadClient extends BookSourceClient {
     RegisteredBookSource source,
     String bookId, {
     BookDownloadCancellation? cancellation,
-  }) async =>
-      List.generate(
-        7,
-        (index) => BookSourceChapter(
-          id: 'chapter-$index',
-          title: '第${index + 1}章',
-          order: index,
-        ),
-      );
+  }) async => List.generate(
+    7,
+    (index) => BookSourceChapter(
+      id: 'chapter-$index',
+      title: '第${index + 1}章',
+      order: index,
+    ),
+  );
 
   @override
   Future<BookSourceChapterContent> getChapterContentForDownload(
@@ -285,15 +290,14 @@ class _StreamingDownloadClient extends BookSourceClient {
     RegisteredBookSource source,
     String bookId, {
     BookDownloadCancellation? cancellation,
-  }) async =>
-      List.generate(
-        6,
-        (index) => BookSourceChapter(
-          id: 'chapter-$index',
-          title: '第${index + 1}章',
-          order: index,
-        ),
-      );
+  }) async => List.generate(
+    6,
+    (index) => BookSourceChapter(
+      id: 'chapter-$index',
+      title: '第${index + 1}章',
+      order: index,
+    ),
+  );
 
   @override
   Future<BookSourceChapterContent> getChapterContentForDownload(

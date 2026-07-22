@@ -105,42 +105,44 @@ void main() {
     expect(calls, 2);
   });
 
-  test('evict starts a fresh load without old cleanup removing its dedupe',
-      () async {
-    final directory = await Directory.systemTemp.createTemp('source-race-');
-    addTearDown(() => directory.delete(recursive: true));
-    final first = Completer<Uint8List>();
-    final second = Completer<Uint8List>();
-    var calls = 0;
-    final cache = SourceCoverCache(
-      cacheDirectory: directory,
-      loader: (_) {
-        calls++;
-        return calls == 1 ? first.future : second.future;
-      },
-    );
-    final uri = Uri.parse('https://example.org/racing-cover.jpg');
+  test(
+    'evict starts a fresh load without old cleanup removing its dedupe',
+    () async {
+      final directory = await Directory.systemTemp.createTemp('source-race-');
+      addTearDown(() => directory.delete(recursive: true));
+      final first = Completer<Uint8List>();
+      final second = Completer<Uint8List>();
+      var calls = 0;
+      final cache = SourceCoverCache(
+        cacheDirectory: directory,
+        loader: (_) {
+          calls++;
+          return calls == 1 ? first.future : second.future;
+        },
+      );
+      final uri = Uri.parse('https://example.org/racing-cover.jpg');
 
-    final oldLoad = cache.load(uri);
-    for (var index = 0; index < 20 && calls < 1; index++) {
-      await Future<void>.delayed(const Duration(milliseconds: 1));
-    }
-    expect(calls, 1);
-    await cache.evict(uri);
-    final freshLoad = cache.load(uri);
-    for (var index = 0; index < 20 && calls < 2; index++) {
-      await Future<void>.delayed(const Duration(milliseconds: 1));
-    }
-    expect(calls, 2);
+      final oldLoad = cache.load(uri);
+      for (var index = 0; index < 20 && calls < 1; index++) {
+        await Future<void>.delayed(const Duration(milliseconds: 1));
+      }
+      expect(calls, 1);
+      await cache.evict(uri);
+      final freshLoad = cache.load(uri);
+      for (var index = 0; index < 20 && calls < 2; index++) {
+        await Future<void>.delayed(const Duration(milliseconds: 1));
+      }
+      expect(calls, 2);
 
-    first.complete(Uint8List.fromList([1]));
-    expect(await oldLoad, [1]);
-    final deduplicatedFreshLoad = cache.load(uri);
-    expect(calls, 2);
+      first.complete(Uint8List.fromList([1]));
+      expect(await oldLoad, [1]);
+      final deduplicatedFreshLoad = cache.load(uri);
+      expect(calls, 2);
 
-    second.complete(Uint8List.fromList([2]));
-    expect(await freshLoad, [2]);
-    expect(await deduplicatedFreshLoad, [2]);
-    expect(calls, 2);
-  });
+      second.complete(Uint8List.fromList([2]));
+      expect(await freshLoad, [2]);
+      expect(await deduplicatedFreshLoad, [2]);
+      expect(calls, 2);
+    },
+  );
 }

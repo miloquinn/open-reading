@@ -85,9 +85,9 @@ class GeneratedBookCoverPainter extends CustomPainter {
     required String title,
     required String author,
     this.fallbackTitle = '',
-  })  : title = _normalizeTitle(title, fallbackTitle),
-        author = _normalizeAuthor(author),
-        palette = GeneratedBookCoverPalette.resolve(title, author);
+  }) : title = _normalizeTitle(title, fallbackTitle),
+       author = _normalizeAuthor(author),
+       palette = GeneratedBookCoverPalette.resolve(title, author);
 
   final String title;
   final String author;

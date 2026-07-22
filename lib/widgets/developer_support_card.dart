@@ -125,9 +125,7 @@ class _DonationMethodButton extends StatelessWidget {
         side: BorderSide(color: color.withValues(alpha: 0.24)),
         minimumSize: const Size.fromHeight(42),
         padding: const EdgeInsets.symmetric(horizontal: 10),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(11),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
       ),
       icon: const Icon(Icons.qr_code_2_rounded, size: 18),
       label: Text(
@@ -143,10 +141,7 @@ class _DonationMethodButton extends StatelessWidget {
 enum DeveloperDonationMethod { wechat, alipay }
 
 class DeveloperDonationDialog extends StatelessWidget {
-  const DeveloperDonationDialog({
-    super.key,
-    required this.method,
-  });
+  const DeveloperDonationDialog({super.key, required this.method});
 
   final DeveloperDonationMethod method;
 
@@ -182,11 +177,7 @@ class DeveloperDonationDialog extends StatelessWidget {
               borderRadius: BorderRadius.circular(11),
             ),
             alignment: Alignment.center,
-            child: Icon(
-              Icons.qr_code_2_rounded,
-              color: accent,
-              size: 22,
-            ),
+            child: Icon(Icons.qr_code_2_rounded, color: accent, size: 22),
           ),
           const SizedBox(width: 11),
           Expanded(

@@ -7,11 +7,8 @@ import '../utils/glass_config.dart';
 import '../utils/reader_themes.dart';
 import 'reader_top_information_bar.dart';
 
-typedef ReaderStatusBuilder = Widget Function(
-  BuildContext context,
-  TextStyle? style,
-  Key? key,
-);
+typedef ReaderStatusBuilder =
+    Widget Function(BuildContext context, TextStyle? style, Key? key);
 
 class ReaderChromeOverlay extends StatelessWidget {
   const ReaderChromeOverlay({
@@ -151,8 +148,10 @@ class ReaderChromeOverlay extends StatelessWidget {
               child: SizedBox(
                 height: 58,
                 child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 7, vertical: 7),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 7,
+                  ),
                   child: Row(
                     children: [
                       ReaderControlIconButton(
@@ -205,8 +204,10 @@ class ReaderChromeOverlay extends StatelessWidget {
               child: SizedBox(
                 height: 64,
                 child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 9, vertical: 9),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 9,
+                  ),
                   child: Row(
                     children: [
                       ReaderControlIconButton(
@@ -286,28 +287,32 @@ class ReaderControlBar extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [
             highlight.withValues(
-              alpha:
-                  (surfaceOpacity + (blurEnabled ? 0.08 : 0.0)).clamp(0.0, 1.0),
+              alpha: (surfaceOpacity + (blurEnabled ? 0.08 : 0.0)).clamp(
+                0.0,
+                1.0,
+              ),
             ),
             cleanSurface.withValues(
-              alpha:
-                  (surfaceOpacity - (blurEnabled ? 0.02 : 0.0)).clamp(0.0, 1.0),
+              alpha: (surfaceOpacity - (blurEnabled ? 0.02 : 0.0)).clamp(
+                0.0,
+                1.0,
+              ),
             ),
           ],
         ),
         border: Border.all(
-          color: Color.lerp(
-            palette.border,
-            Colors.white,
-            palette.brightness == Brightness.dark
-                ? 0.16
-                : (blurEnabled ? 0.14 : 0.38),
-          )!
-              .withValues(
-            alpha: blurEnabled
-                ? (palette.brightness == Brightness.light ? 0.28 : 0.54)
-                : 0.68,
-          ),
+          color:
+              Color.lerp(
+                palette.border,
+                Colors.white,
+                palette.brightness == Brightness.dark
+                    ? 0.16
+                    : (blurEnabled ? 0.14 : 0.38),
+              )!.withValues(
+                alpha: blurEnabled
+                    ? (palette.brightness == Brightness.light ? 0.28 : 0.54)
+                    : 0.68,
+              ),
           width: 1,
         ),
       ),
@@ -328,8 +333,9 @@ class ReaderControlBar extends StatelessWidget {
                 : palette.shadow.withValues(
                     alpha: palette.brightness == Brightness.dark ? 0.46 : 0.22,
                   ),
-            blurRadius:
-                blurEnabled && palette.brightness == Brightness.light ? 24 : 32,
+            blurRadius: blurEnabled && palette.brightness == Brightness.light
+                ? 24
+                : 32,
             spreadRadius: -5,
             offset: Offset(
               0,
@@ -399,18 +405,18 @@ class ReaderControlIconButton extends StatelessWidget {
         maximumSize: const Size.square(44),
         padding: EdgeInsets.zero,
         side: BorderSide(
-          color: Color.lerp(
-            palette.border,
-            Colors.white,
-            palette.brightness == Brightness.dark
-                ? 0.12
-                : (glassEnabled ? 0.12 : 0.32),
-          )!
-              .withValues(
-            alpha: glassEnabled
-                ? (palette.brightness == Brightness.light ? 0.28 : 0.48)
-                : 0.42,
-          ),
+          color:
+              Color.lerp(
+                palette.border,
+                Colors.white,
+                palette.brightness == Brightness.dark
+                    ? 0.12
+                    : (glassEnabled ? 0.12 : 0.32),
+              )!.withValues(
+                alpha: glassEnabled
+                    ? (palette.brightness == Brightness.light ? 0.28 : 0.48)
+                    : 0.42,
+              ),
           width: 0.8,
         ),
         shape: const CircleBorder(),

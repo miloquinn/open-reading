@@ -29,7 +29,8 @@ void main() {
     const style = TextStyle(fontSize: 32, height: 1.75, letterSpacing: 0.2);
     final text = List.generate(
       18,
-      (index) => '第$index段用于验证大字体分页不会把下一行的字头切在页面底部。'
+      (index) =>
+          '第$index段用于验证大字体分页不会把下一行的字头切在页面底部。'
           '排版必须根据真实行边界动态变化，而不是依赖固定像素。\n\n',
     ).join();
     const width = 326.0;
@@ -43,15 +44,15 @@ void main() {
 
     final pages = paginator.paginate(
       text: text,
-      spanBuilder: (start, end) => TextSpan(
-        text: text.substring(start, end),
-        style: style,
-      ),
+      spanBuilder: (start, end) =>
+          TextSpan(text: text.substring(start, end), style: style),
     );
 
     expect(pages, isNotEmpty);
     expect(
-        pages.map((page) => text.substring(page.start, page.end)).join(), text);
+      pages.map((page) => text.substring(page.start, page.end)).join(),
+      text,
+    );
     for (final page in pages) {
       final pageText = text.substring(page.start, page.end);
       final painter = flow.createPainter(TextSpan(text: pageText, style: style))
@@ -69,24 +70,24 @@ void main() {
   });
 
   test('pagination remains exact across sizes and nonlinear inputs', () {
-    const text = '混合文字 English 12345 😀👨‍👩‍👧‍👦，用于验证缩放与窄屏。\n'
+    const text =
+        '混合文字 English 12345 😀👨‍👩‍👧‍👦，用于验证缩放与窄屏。\n'
         '第二段继续包含标点、括号（内容）以及很长的一串文本。';
     for (final fontSize in <double>[18, 24, 32]) {
       for (final width in <double>[210, 320, 480]) {
         for (final scale in <double>[1, 1.25, 1.6]) {
           final style = TextStyle(fontSize: fontSize, height: 1.75);
           final flow = _flowStyle(style, scaler: TextScaler.linear(scale));
-          final pages = NativeTextPaginator(
-            maxWidth: width,
-            maxHeight: 360,
-            flowStyle: flow,
-          ).paginate(
-            text: text,
-            spanBuilder: (start, end) => TextSpan(
-              text: text.substring(start, end),
-              style: style,
-            ),
-          );
+          final pages =
+              NativeTextPaginator(
+                maxWidth: width,
+                maxHeight: 360,
+                flowStyle: flow,
+              ).paginate(
+                text: text,
+                spanBuilder: (start, end) =>
+                    TextSpan(text: text.substring(start, end), style: style),
+              );
           expect(
             pages.map((page) => text.substring(page.start, page.end)).join(),
             text,
@@ -94,8 +95,10 @@ void main() {
           for (final page in pages) {
             expect(page.start, lessThan(page.end));
             if (page.end < text.length) {
-              expect(text.codeUnitAt(page.end),
-                  isNot(inInclusiveRange(0xDC00, 0xDFFF)));
+              expect(
+                text.codeUnitAt(page.end),
+                isNot(inInclusiveRange(0xDC00, 0xDFFF)),
+              );
             }
           }
         }
@@ -105,7 +108,8 @@ void main() {
 
   test('rich text uses the same line layout as the final page slice', () {
     const base = TextStyle(fontSize: 25, height: 1.75);
-    const text = '普通正文第一段。\n\n大标题会使用更大的字号，然后继续普通正文，'
+    const text =
+        '普通正文第一段。\n\n大标题会使用更大的字号，然后继续普通正文，'
         '用于验证 EPUB 富文本分页。后续内容继续填充页面，不能丢字也不能重字。';
     final headingStart = text.indexOf('大标题');
     final headingEnd = headingStart + '大标题会使用更大的字号'.length;
@@ -118,10 +122,12 @@ void main() {
         if (cursor < overlapStart) {
           children.add(TextSpan(text: text.substring(cursor, overlapStart)));
         }
-        children.add(TextSpan(
-          text: text.substring(overlapStart, overlapEnd),
-          style: base.copyWith(fontSize: 40, fontWeight: FontWeight.bold),
-        ));
+        children.add(
+          TextSpan(
+            text: text.substring(overlapStart, overlapEnd),
+            style: base.copyWith(fontSize: 40, fontWeight: FontWeight.bold),
+          ),
+        );
         cursor = overlapEnd;
       }
       if (cursor < end) {
@@ -140,7 +146,9 @@ void main() {
     ).paginate(text: text, spanBuilder: buildSpan);
 
     expect(
-        pages.map((page) => text.substring(page.start, page.end)).join(), text);
+      pages.map((page) => text.substring(page.start, page.end)).join(),
+      text,
+    );
     for (final page in pages) {
       final painter = flow.createPainter(buildSpan(page.start, page.end))
         ..layout(maxWidth: width);
@@ -168,22 +176,22 @@ void main() {
     );
     final text = List.generate(
       40,
-      (i) => '实际上尽管解题思路结构化看起来依然是一种初级学习策略，'
+      (i) =>
+          '实际上尽管解题思路结构化看起来依然是一种初级学习策略，'
           '但它对于大部分中学生来说作用是巨大的。段落$i。\n\n',
     ).join();
     const width = 360.0;
     const height = 640.0;
-    final pages = NativeTextPaginator(
-      maxWidth: width,
-      maxHeight: height,
-      flowStyle: flow,
-    ).paginate(
-      text: text,
-      spanBuilder: (start, end) => TextSpan(
-        text: text.substring(start, end),
-        style: style,
-      ),
-    );
+    final pages =
+        NativeTextPaginator(
+          maxWidth: width,
+          maxHeight: height,
+          flowStyle: flow,
+        ).paginate(
+          text: text,
+          spanBuilder: (start, end) =>
+              TextSpan(text: text.substring(start, end), style: style),
+        );
 
     expect(pages.length, greaterThan(1));
     // Non-final pages should use most of the content box (not half-empty).
@@ -217,24 +225,25 @@ void main() {
     const width = 320.0;
     const firstPageHeight = 260.0;
     const pageHeight = 620.0;
-    TextSpan buildSpan(int start, int end) => TextSpan(
-          text: text.substring(start, end),
-          style: style,
-        );
+    TextSpan buildSpan(int start, int end) =>
+        TextSpan(text: text.substring(start, end), style: style);
 
-    final pages = NativeTextPaginator(
-      maxWidth: width,
-      maxHeight: pageHeight,
-      flowStyle: flow,
-    ).paginate(
-      text: text,
-      spanBuilder: buildSpan,
-      firstPageHeight: firstPageHeight,
-    );
+    final pages =
+        NativeTextPaginator(
+          maxWidth: width,
+          maxHeight: pageHeight,
+          flowStyle: flow,
+        ).paginate(
+          text: text,
+          spanBuilder: buildSpan,
+          firstPageHeight: firstPageHeight,
+        );
 
     expect(pages.length, greaterThan(2));
     expect(
-        pages.map((page) => text.substring(page.start, page.end)).join(), text);
+      pages.map((page) => text.substring(page.start, page.end)).join(),
+      text,
+    );
     for (var index = 0; index < pages.length; index++) {
       final page = pages[index];
       final painter = flow.createPainter(buildSpan(page.start, page.end))
@@ -252,25 +261,26 @@ void main() {
     }
   });
 
-  testWidgets('measured page and RenderParagraph share identical constraints',
-      (tester) async {
+  testWidgets('measured page and RenderParagraph share identical constraints', (
+    tester,
+  ) async {
     const style = TextStyle(fontSize: 32, height: 1.75, letterSpacing: 0.2);
-    const text = '这是最终页面实际渲染校验。每一页都只能包含完整的视觉行，'
+    const text =
+        '这是最终页面实际渲染校验。每一页都只能包含完整的视觉行，'
         '最后一行不能只露出字形顶部。继续填充足够多的内容以产生多个页面。';
     const width = 300.0;
     const height = 330.0;
     final flow = _flowStyle(style, scaler: const TextScaler.linear(1.2));
-    final pages = NativeTextPaginator(
-      maxWidth: width,
-      maxHeight: height,
-      flowStyle: flow,
-    ).paginate(
-      text: text,
-      spanBuilder: (start, end) => TextSpan(
-        text: text.substring(start, end),
-        style: style,
-      ),
-    );
+    final pages =
+        NativeTextPaginator(
+          maxWidth: width,
+          maxHeight: height,
+          flowStyle: flow,
+        ).paginate(
+          text: text,
+          spanBuilder: (start, end) =>
+              TextSpan(text: text.substring(start, end), style: style),
+        );
     final first = pages.first;
     final pageText = text.substring(first.start, first.end);
     final key = GlobalKey();
@@ -305,11 +315,15 @@ void main() {
     expect(painter.height, lessThanOrEqualTo(paragraph.size.height));
     final finalGlyphBoxes = paragraph.getBoxesForSelection(
       TextSelection(
-          baseOffset: pageText.length - 1, extentOffset: pageText.length),
+        baseOffset: pageText.length - 1,
+        extentOffset: pageText.length,
+      ),
     );
     expect(finalGlyphBoxes, isNotEmpty);
     expect(
-        finalGlyphBoxes.last.bottom, lessThanOrEqualTo(paragraph.size.height));
+      finalGlyphBoxes.last.bottom,
+      lessThanOrEqualTo(paragraph.size.height),
+    );
     expect(tester.takeException(), isNull);
     painter.dispose();
   });

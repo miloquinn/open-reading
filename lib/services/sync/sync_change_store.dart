@@ -26,34 +26,34 @@ class SyncRecord {
   final bool dirty;
 
   SyncOperation toOperation() => SyncOperation(
-        dataset: dataset,
-        recordId: recordId,
-        entityKey: entityKey,
-        hlc: hlc,
-        deleted: deleted,
-        payload: payload,
-      );
+    dataset: dataset,
+    recordId: recordId,
+    entityKey: entityKey,
+    hlc: hlc,
+    deleted: deleted,
+    payload: payload,
+  );
 
   factory SyncRecord.fromMap(Map<String, Object?> map) => SyncRecord(
-        dataset: map['dataset']! as String,
-        recordId: map['record_id']! as String,
-        entityKey: map['entity_key']! as String,
-        payload: map['payload_json'] == null
-            ? null
-            : (jsonDecode(map['payload_json']! as String) as Map)
-                .cast<String, dynamic>(),
-        hlc: map['hlc']! as String,
-        deleted: map['deleted'] == 1,
-        dirty: map['dirty'] == 1,
-      );
+    dataset: map['dataset']! as String,
+    recordId: map['record_id']! as String,
+    entityKey: map['entity_key']! as String,
+    payload: map['payload_json'] == null
+        ? null
+        : (jsonDecode(map['payload_json']! as String) as Map)
+              .cast<String, dynamic>(),
+    hlc: map['hlc']! as String,
+    deleted: map['deleted'] == 1,
+    dirty: map['dirty'] == 1,
+  );
 }
 
 class SyncChangeStore {
   SyncChangeStore({
     DatabaseService? databaseService,
     Future<Database> Function()? database,
-  })  : _databaseService = databaseService ?? DatabaseService(),
-        _databaseProvider = database;
+  }) : _databaseService = databaseService ?? DatabaseService(),
+       _databaseProvider = database;
 
   final DatabaseService _databaseService;
   final Future<Database> Function()? _databaseProvider;
@@ -75,11 +75,10 @@ class SyncChangeStore {
 
   Future<void> setState(String key, String value) async {
     final db = await _db;
-    await db.insert(
-      'sync_local_state',
-      {'key': key, 'value': value},
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('sync_local_state', {
+      'key': key,
+      'value': value,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<int> cursorFor(String deviceId) async {
@@ -166,26 +165,22 @@ class SyncChangeStore {
         return;
       }
     }
-    await db.insert(
-      'sync_records',
-      {
-        'dataset': dataset,
-        'record_id': recordId,
-        'entity_key': entityKey,
-        'payload_json': payloadJson,
-        'hlc': clock.tick().toString(),
-        'deleted': deleted ? 1 : 0,
-        'dirty': 1,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('sync_records', {
+      'dataset': dataset,
+      'record_id': recordId,
+      'entity_key': entityKey,
+      'payload_json': payloadJson,
+      'hlc': clock.tick().toString(),
+      'deleted': deleted ? 1 : 0,
+      'dirty': 1,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
     await setState('locally_observed:$dataset:$recordId', '1');
   }
 
   Future<int> applyRemoteBatch(
     SyncBatch batch, {
     required Future<void> Function(Transaction txn, SyncOperation operation)
-        applyWinner,
+    applyWinner,
   }) async {
     final db = await _db;
     var applied = 0;
@@ -199,39 +194,32 @@ class SyncChangeStore {
         );
         if (rows.isNotEmpty) {
           final local = SyncRecord.fromMap(rows.first);
-          if (HybridLogicalTimestamp.parse(local.hlc)
-                  .compareTo(HybridLogicalTimestamp.parse(operation.hlc)) >=
+          if (HybridLogicalTimestamp.parse(
+                local.hlc,
+              ).compareTo(HybridLogicalTimestamp.parse(operation.hlc)) >=
               0) {
             continue;
           }
         }
-        await txn.insert(
-          'sync_records',
-          {
-            'dataset': operation.dataset,
-            'record_id': operation.recordId,
-            'entity_key': operation.entityKey,
-            'payload_json': operation.payload == null
-                ? null
-                : jsonEncode(operation.payload),
-            'hlc': operation.hlc,
-            'deleted': operation.deleted ? 1 : 0,
-            'dirty': 0,
-          },
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
+        await txn.insert('sync_records', {
+          'dataset': operation.dataset,
+          'record_id': operation.recordId,
+          'entity_key': operation.entityKey,
+          'payload_json': operation.payload == null
+              ? null
+              : jsonEncode(operation.payload),
+          'hlc': operation.hlc,
+          'deleted': operation.deleted ? 1 : 0,
+          'dirty': 0,
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
         await applyWinner(txn, operation);
         applied++;
       }
-      await txn.insert(
-        'sync_device_cursors',
-        {
-          'remote_device_id': batch.deviceId,
-          'applied_sequence': batch.sequence,
-          'updated_at': DateTime.now().toUtc().toIso8601String(),
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      await txn.insert('sync_device_cursors', {
+        'remote_device_id': batch.deviceId,
+        'applied_sequence': batch.sequence,
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
     });
     return applied;
   }

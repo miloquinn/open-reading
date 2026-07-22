@@ -4,18 +4,20 @@ import 'package:xxread/core/reader/reader_safe_area.dart';
 
 void main() {
   group('ReaderSafeAreaMetrics', () {
-    test('keeps iPhone text below Dynamic Island without excessive bottom gap',
-        () {
-      const metrics = ReaderSafeAreaMetrics(
-        viewPadding: EdgeInsets.only(top: 59, bottom: 34),
-        topMargin: 4,
-        bottomMargin: 0,
-      );
+    test(
+      'keeps iPhone text below Dynamic Island without excessive bottom gap',
+      () {
+        const metrics = ReaderSafeAreaMetrics(
+          viewPadding: EdgeInsets.only(top: 59, bottom: 34),
+          topMargin: 4,
+          bottomMargin: 0,
+        );
 
-      expect(metrics.contentTop, 63);
-      expect(metrics.pageNumberBottom, 14);
-      expect(metrics.contentBottom, 34);
-    });
+        expect(metrics.contentTop, 63);
+        expect(metrics.pageNumberBottom, 14);
+        expect(metrics.contentBottom, 34);
+      },
+    );
 
     test('uses Android insets through the same calculation', () {
       const metrics = ReaderSafeAreaMetrics(

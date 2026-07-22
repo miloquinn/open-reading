@@ -4,10 +4,7 @@ import 'dart:ui';
 import 'package:flutter/services.dart';
 
 class ChangelogEntry {
-  const ChangelogEntry({
-    required this.version,
-    required this.items,
-  });
+  const ChangelogEntry({required this.version, required this.items});
 
   final String version;
   final List<String> items;
@@ -51,7 +48,8 @@ class ChangelogService {
         final normalizedVersion = version.trim();
         if (!versions.add(normalizedVersion)) {
           throw FormatException(
-              'Duplicate changelog version: $normalizedVersion.');
+            'Duplicate changelog version: $normalizedVersion.',
+          );
         }
 
         final notes = rawEntry['notes'];
@@ -96,9 +94,10 @@ class ChangelogService {
   static List<String> _stringItems(Object? value) {
     if (value is! List) return const [];
     return List<String>.unmodifiable(
-      value.whereType<String>().map((item) => item.trim()).where(
-            (item) => item.isNotEmpty,
-          ),
+      value
+          .whereType<String>()
+          .map((item) => item.trim())
+          .where((item) => item.isNotEmpty),
     );
   }
 }

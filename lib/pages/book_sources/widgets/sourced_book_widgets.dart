@@ -39,7 +39,7 @@ BoxDecoration bookSourcePanelDecoration(
   final palette = PageStyleHelper.palette(context);
   final isMaterial3Style =
       Theme.of(context).extension<UiStyleThemeExtension>()?.isMaterial3Style ??
-          false;
+      false;
   return BoxDecoration(
     color: isMaterial3Style
         ? (stronger ? scheme.surfaceContainer : scheme.surfaceContainerLow)
@@ -165,9 +165,10 @@ class SourcedBookListTile extends StatelessWidget {
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    [book.author, result.source.name]
-                        .where((item) => item.isNotEmpty)
-                        .join(' · '),
+                    [
+                      book.author,
+                      result.source.name,
+                    ].where((item) => item.isNotEmpty).join(' · '),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -211,10 +212,7 @@ class _BookCoverThumb extends StatelessWidget {
     final fallback = SizedBox(
       width: 58,
       height: 78,
-      child: GeneratedBookCover(
-        title: book.title,
-        author: book.author,
-      ),
+      child: GeneratedBookCover(title: book.title, author: book.author),
     );
     if (book.coverUrl == null) return fallback;
     return ClipRRect(
@@ -271,16 +269,15 @@ class SourcedBookActions {
                       children: [
                         Text(
                           book.title,
-                          style: Theme.of(sheetContext)
-                              .textTheme
-                              .headlineSmall
+                          style: Theme.of(sheetContext).textTheme.headlineSmall
                               ?.copyWith(fontWeight: FontWeight.w700),
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          [book.author, result.source.name]
-                              .where((item) => item.isNotEmpty)
-                              .join(' · '),
+                          [
+                            book.author,
+                            result.source.name,
+                          ].where((item) => item.isNotEmpty).join(' · '),
                           style: TextStyle(
                             color: Theme.of(sheetContext).colorScheme.primary,
                           ),
@@ -382,10 +379,7 @@ class SourcedBookActions {
         sourceBookId: result.book.id,
       );
       if (existing == null) {
-        await shelfService.addOnline(
-          source: result.source,
-          book: result.book,
-        );
+        await shelfService.addOnline(source: result.source, book: result.book);
       }
       if (!context.mounted) return;
       showSideToast(
@@ -413,9 +407,6 @@ class SourcedBookActions {
       builder: (_) => BookDownloadTaskDialog(taskId: taskId),
     );
     if (!context.mounted) return;
-    showSideToast(
-      context,
-      context.l10n.downloadRunningInBackground,
-    );
+    showSideToast(context, context.l10n.downloadRunningInBackground);
   }
 }

@@ -33,9 +33,10 @@ class HomeMobileTopBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final metrics = HomeMobileChromeScope.of(context);
-    final isMaterial3Style = Theme.of(context)
-            .extension<UiStyleThemeExtension>()
-            ?.isMaterial3Style ??
+    final isMaterial3Style =
+        Theme.of(
+          context,
+        ).extension<UiStyleThemeExtension>()?.isMaterial3Style ??
         false;
     final useBlur = !isMaterial3Style && !GlassEffectConfig.shouldDisableBlur;
     final content = Container(
@@ -46,12 +47,12 @@ class HomeMobileTopBar extends StatelessWidget {
             : GlassEffectConfig.chromeSurfaceColor(context),
         border: Border(
           bottom: BorderSide(
-            color:
-                (isMaterial3Style ? scheme.outline : scheme.primary).withValues(
-              alpha: isMaterial3Style
-                  ? 0.24
-                  : (scheme.brightness == Brightness.light ? 0.08 : 0.12),
-            ),
+            color: (isMaterial3Style ? scheme.outline : scheme.primary)
+                .withValues(
+                  alpha: isMaterial3Style
+                      ? 0.24
+                      : (scheme.brightness == Brightness.light ? 0.08 : 0.12),
+                ),
             width: isMaterial3Style ? 0.7 : 0.5,
           ),
         ),

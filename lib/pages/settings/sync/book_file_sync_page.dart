@@ -86,10 +86,12 @@ class _BookFileSyncPageState extends State<BookFileSyncPage>
       final localUids = local.map((item) => item.bookUid).toSet();
       if (!mounted) return;
       setState(() {
-        _pendingUpload =
-            local.where((item) => !item.isFullySynced).toList(growable: false);
-        _synced =
-            local.where((item) => item.isFullySynced).toList(growable: false);
+        _pendingUpload = local
+            .where((item) => !item.isFullySynced)
+            .toList(growable: false);
+        _synced = local
+            .where((item) => item.isFullySynced)
+            .toList(growable: false);
         _availableDownload = remoteByUid.values
             .where(
               (item) => item.fileAvailable && !localUids.contains(item.bookUid),
@@ -115,24 +117,25 @@ class _BookFileSyncPageState extends State<BookFileSyncPage>
   }
 
   List<String> get _visibleIds => switch (_tabController.index) {
-        0 => _pendingUpload
-            .where(
-              (item) =>
-                  item.sizeBytes <=
-                  WebDavBookFileService.maxRecoverableFileBytes,
-            )
-            .map((item) => item.bookUid)
-            .toList(),
-        1 => _availableDownload
-            .where(
-              (item) =>
-                  (item.sizeBytes ?? 0) <=
-                  WebDavBookFileService.maxRecoverableFileBytes,
-            )
-            .map((item) => item.bookUid)
-            .toList(),
-        _ => const <String>[],
-      };
+    0 =>
+      _pendingUpload
+          .where(
+            (item) =>
+                item.sizeBytes <= WebDavBookFileService.maxRecoverableFileBytes,
+          )
+          .map((item) => item.bookUid)
+          .toList(),
+    1 =>
+      _availableDownload
+          .where(
+            (item) =>
+                (item.sizeBytes ?? 0) <=
+                WebDavBookFileService.maxRecoverableFileBytes,
+          )
+          .map((item) => item.bookUid)
+          .toList(),
+    _ => const <String>[],
+  };
 
   int get _selectedBytes {
     if (_tabController.index == 0) {
@@ -254,9 +257,9 @@ class _BookFileSyncPageState extends State<BookFileSyncPage>
               padding: const EdgeInsets.fromLTRB(8, 4, 8, 12),
               child: Text(
                 context.l10n.webDavNewBookPolicyTitle,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
               ),
             ),
             for (final policy in WebDavNewBookUploadPolicy.values)
@@ -288,8 +291,9 @@ class _BookFileSyncPageState extends State<BookFileSyncPage>
         title: Text(l10n.webDavBookFilesTitle),
         actions: [
           IconButton(
-            tooltip:
-                MaterialLocalizations.of(context).refreshIndicatorSemanticLabel,
+            tooltip: MaterialLocalizations.of(
+              context,
+            ).refreshIndicatorSemanticLabel,
             onPressed: _loading || _transferring
                 ? null
                 : () => _load(synchronize: true),
@@ -317,57 +321,57 @@ class _BookFileSyncPageState extends State<BookFileSyncPage>
         child: _loading
             ? const Center(child: CircularProgressIndicator())
             : _loadError != null
-                ? _LoadFailure(
-                    message: webDavSyncErrorText(context, _loadError!),
-                    onRetry: () => _load(synchronize: true),
-                  )
-                : Column(
-                    children: [
-                      if (_tabController.index == 0)
-                        _UploadPermissionCard(
-                          enabled: sync.scope.bookFiles,
-                          policy: sync.newBookUploadPolicy,
-                          onChanged: _transferring
-                              ? null
-                              : (enabled) async {
-                                  if (!enabled) setState(_selected.clear);
-                                  await sync.setScope(
-                                    sync.scope.copyWith(bookFiles: enabled),
-                                  );
-                                },
-                          onPolicyTap: _transferring || !sync.scope.bookFiles
-                              ? null
-                              : () => _pickNewBookPolicy(sync),
+            ? _LoadFailure(
+                message: webDavSyncErrorText(context, _loadError!),
+                onRetry: () => _load(synchronize: true),
+              )
+            : Column(
+                children: [
+                  if (_tabController.index == 0)
+                    _UploadPermissionCard(
+                      enabled: sync.scope.bookFiles,
+                      policy: sync.newBookUploadPolicy,
+                      onChanged: _transferring
+                          ? null
+                          : (enabled) async {
+                              if (!enabled) setState(_selected.clear);
+                              await sync.setScope(
+                                sync.scope.copyWith(bookFiles: enabled),
+                              );
+                            },
+                      onPolicyTap: _transferring || !sync.scope.bookFiles
+                          ? null
+                          : () => _pickNewBookPolicy(sync),
+                    ),
+                  Expanded(
+                    child: TabBarView(
+                      controller: _tabController,
+                      children: [
+                        _LocalFilesList(
+                          items: _pendingUpload,
+                          selected: _selected,
+                          onToggle: _toggle,
+                          emptyText: l10n.webDavFilesEmpty,
+                          selectable: sync.scope.bookFiles,
                         ),
-                      Expanded(
-                        child: TabBarView(
-                          controller: _tabController,
-                          children: [
-                            _LocalFilesList(
-                              items: _pendingUpload,
-                              selected: _selected,
-                              onToggle: _toggle,
-                              emptyText: l10n.webDavFilesEmpty,
-                              selectable: sync.scope.bookFiles,
-                            ),
-                            _RemoteFilesList(
-                              items: _availableDownload,
-                              selected: _selected,
-                              onToggle: _toggle,
-                              emptyText: l10n.webDavFilesEmpty,
-                            ),
-                            _LocalFilesList(
-                              items: _synced,
-                              selected: const {},
-                              onToggle: (_, __) {},
-                              emptyText: l10n.webDavFilesEmpty,
-                              selectable: false,
-                            ),
-                          ],
+                        _RemoteFilesList(
+                          items: _availableDownload,
+                          selected: _selected,
+                          onToggle: _toggle,
+                          emptyText: l10n.webDavFilesEmpty,
                         ),
-                      ),
-                    ],
+                        _LocalFilesList(
+                          items: _synced,
+                          selected: const {},
+                          onToggle: (_, __) {},
+                          emptyText: l10n.webDavFilesEmpty,
+                          selectable: false,
+                        ),
+                      ],
+                    ),
                   ),
+                ],
+              ),
       ),
       bottomNavigationBar: _selected.isEmpty && !_transferring
           ? null
@@ -427,8 +431,9 @@ class _LoadFailure extends StatelessWidget {
             FilledButton.tonalIcon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh_rounded),
-              label: Text(MaterialLocalizations.of(context)
-                  .refreshIndicatorSemanticLabel),
+              label: Text(
+                MaterialLocalizations.of(context).refreshIndicatorSemanticLabel,
+              ),
             ),
           ],
         ),
@@ -497,28 +502,24 @@ IconData _newBookPolicyIcon(WebDavNewBookUploadPolicy policy) =>
 String _newBookPolicyTitle(
   BuildContext context,
   WebDavNewBookUploadPolicy policy,
-) =>
-    switch (policy) {
-      WebDavNewBookUploadPolicy.askEveryTime =>
-        context.l10n.webDavNewBookPolicyAsk,
-      WebDavNewBookUploadPolicy.automatic =>
-        context.l10n.webDavNewBookPolicyAutomatic,
-      WebDavNewBookUploadPolicy.manual =>
-        context.l10n.webDavNewBookPolicyManual,
-    };
+) => switch (policy) {
+  WebDavNewBookUploadPolicy.askEveryTime => context.l10n.webDavNewBookPolicyAsk,
+  WebDavNewBookUploadPolicy.automatic =>
+    context.l10n.webDavNewBookPolicyAutomatic,
+  WebDavNewBookUploadPolicy.manual => context.l10n.webDavNewBookPolicyManual,
+};
 
 String _newBookPolicyHint(
   BuildContext context,
   WebDavNewBookUploadPolicy policy,
-) =>
-    switch (policy) {
-      WebDavNewBookUploadPolicy.askEveryTime =>
-        context.l10n.webDavNewBookPolicyAskHint,
-      WebDavNewBookUploadPolicy.automatic =>
-        context.l10n.webDavNewBookPolicyAutomaticHint,
-      WebDavNewBookUploadPolicy.manual =>
-        context.l10n.webDavNewBookPolicyManualHint,
-    };
+) => switch (policy) {
+  WebDavNewBookUploadPolicy.askEveryTime =>
+    context.l10n.webDavNewBookPolicyAskHint,
+  WebDavNewBookUploadPolicy.automatic =>
+    context.l10n.webDavNewBookPolicyAutomaticHint,
+  WebDavNewBookUploadPolicy.manual =>
+    context.l10n.webDavNewBookPolicyManualHint,
+};
 
 class _LocalFilesList extends StatelessWidget {
   const _LocalFilesList({
@@ -626,11 +627,7 @@ class _FileTile extends StatelessWidget {
       child: CheckboxListTile(
         value: selected,
         onChanged: selectable ? (value) => onChanged(value ?? false) : null,
-        title: Text(
-          title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
+        title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
         subtitle: Text(subtitle),
         secondary: const Icon(Icons.menu_book_rounded),
         controlAffinity: ListTileControlAffinity.trailing,

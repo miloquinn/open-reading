@@ -15,8 +15,8 @@ class BookExportService {
   BookExportService({
     BookExportBackend? backend,
     BookExportSourceExists? sourceExists,
-  })  : _backend = backend ?? createDefaultBookExportBackend(),
-        _sourceExists = sourceExists ?? bookExportSourceExists;
+  }) : _backend = backend ?? createDefaultBookExportBackend(),
+       _sourceExists = sourceExists ?? bookExportSourceExists;
 
   final BookExportBackend _backend;
   final BookExportSourceExists _sourceExists;
@@ -43,12 +43,12 @@ class BookExportService {
       final result = await _backend.export(request);
       return switch (result.status) {
         BookExportStatus.success => BookExportResult.success(
-            displayName: result.displayName?.isNotEmpty == true
-                ? result.displayName!
-                : suggestedName,
-            location: result.location,
-            uri: result.uri,
-          ),
+          displayName: result.displayName?.isNotEmpty == true
+              ? result.displayName!
+              : suggestedName,
+          location: result.location,
+          uri: result.uri,
+        ),
         BookExportStatus.cancelled => const BookExportResult.cancelled(),
         BookExportStatus.unsupported => const BookExportResult.unsupported(),
         _ => BookExportResult.failure(result.error),

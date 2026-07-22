@@ -73,10 +73,7 @@ class BookNoteDao {
   }
 
   /// 根据书籍ID和类型获取注释
-  Future<List<BookNote>> selectBookNotesByType(
-    int bookId,
-    String type,
-  ) async {
+  Future<List<BookNote>> selectBookNotesByType(int bookId, String type) async {
     final db = await _dbService.database;
     final List<Map<String, dynamic>> maps = await db.query(
       'book_notes',
@@ -145,28 +142,17 @@ class BookNoteDao {
   /// 删除注释
   Future<void> deleteBookNoteById(int id) async {
     final db = await _dbService.database;
-    await db.delete(
-      'book_notes',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    await db.delete('book_notes', where: 'id = ?', whereArgs: [id]);
   }
 
   /// 删除书籍的所有注释
   Future<void> deleteBookNotesByBookId(int bookId) async {
     final db = await _dbService.database;
-    await db.delete(
-      'book_notes',
-      where: 'book_id = ?',
-      whereArgs: [bookId],
-    );
+    await db.delete('book_notes', where: 'book_id = ?', whereArgs: [bookId]);
   }
 
   /// 搜索注释内容
-  Future<List<BookNote>> searchBookNotes(
-    int bookId,
-    String query,
-  ) async {
+  Future<List<BookNote>> searchBookNotes(int bookId, String query) async {
     final db = await _dbService.database;
     final List<Map<String, dynamic>> maps = await db.query(
       'book_notes',
@@ -187,11 +173,12 @@ class BookNoteDao {
       ORDER BY number_of_notes DESC
     ''');
     return List.generate(
-        maps.length,
-        (i) => <String, int>{
-              'bookId': maps[i]['book_id'] ?? 0,
-              'numberOfNotes': maps[i]['number_of_notes'] ?? 0,
-            }).where((element) => element['bookId'] != 0).toList();
+      maps.length,
+      (i) => <String, int>{
+        'bookId': maps[i]['book_id'] ?? 0,
+        'numberOfNotes': maps[i]['number_of_notes'] ?? 0,
+      },
+    ).where((element) => element['bookId'] != 0).toList();
   }
 
   /// 获取注释和书籍总数统计
@@ -211,12 +198,15 @@ class BookNoteDao {
   /// 获取按类型分组的统计
   Future<Map<String, int>> selectNoteStatsByType(int bookId) async {
     final db = await _dbService.database;
-    final List<Map<String, dynamic>> maps = await db.rawQuery('''
+    final List<Map<String, dynamic>> maps = await db.rawQuery(
+      '''
       SELECT type, COUNT(id) AS count 
       FROM book_notes 
       WHERE book_id = ? 
       GROUP BY type
-    ''', [bookId]);
+    ''',
+      [bookId],
+    );
 
     final stats = <String, int>{};
     for (final map in maps) {

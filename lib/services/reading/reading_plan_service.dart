@@ -96,24 +96,27 @@ class ReadingPlanService {
       0,
       dailyGoalMinutes,
     );
-    final completionRate =
-        (todayReadMinutes / dailyGoalMinutes).clamp(0.0, 1.0);
+    final completionRate = (todayReadMinutes / dailyGoalMinutes).clamp(
+      0.0,
+      1.0,
+    );
     final isGoalCompleted = todayReadMinutes >= dailyGoalMinutes;
 
     final focusSessionsToday = await _statsDao.getSessionCountForDay(
       current,
       minDurationSeconds: _focusSessionMinutes * 60,
     );
-    final avgSessionMinutes =
-        await _statsDao.getAverageSessionMinutes(days: 21);
+    final avgSessionMinutes = await _statsDao.getAverageSessionMinutes(
+      days: 21,
+    );
     final suggestedSessionsToFinish = remainingMinutes <= 0
         ? 0
         : ((remainingMinutes /
-                    (avgSessionMinutes <= 0
-                        ? _focusSessionMinutes
-                        : avgSessionMinutes))
-                .ceil())
-            .clamp(1, 8);
+                      (avgSessionMinutes <= 0
+                          ? _focusSessionMinutes
+                          : avgSessionMinutes))
+                  .ceil())
+              .clamp(1, 8);
 
     final streakDays = await _calculateStreakDays(
       now: current,
@@ -198,8 +201,9 @@ class ReadingPlanService {
     required int goalMinutes,
   }) async {
     final normalizedToday = DateTime(now.year, now.month, now.day);
-    final weekStart =
-        normalizedToday.subtract(Duration(days: normalizedToday.weekday - 1));
+    final weekStart = normalizedToday.subtract(
+      Duration(days: normalizedToday.weekday - 1),
+    );
     final rows = await _statsDao.getDailyStatsRange(weekStart, normalizedToday);
 
     var achievedDays = 0;
@@ -230,7 +234,8 @@ class ReadingPlanService {
     // 优先推荐仍在读的书籍；若没有则使用最近导入的一本。
     final inProgress = books
         .where(
-            (book) => book.totalPages > 0 && book.currentPage < book.totalPages)
+          (book) => book.totalPages > 0 && book.currentPage < book.totalPages,
+        )
         .toList();
     if (inProgress.isNotEmpty) {
       inProgress.sort((a, b) => b.importDate.compareTo(a.importDate));

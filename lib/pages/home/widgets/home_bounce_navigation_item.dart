@@ -121,9 +121,10 @@ class _HomeBounceNavigationItemState extends State<HomeBounceNavigationItem>
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final isMaterial3Style = Theme.of(context)
-            .extension<UiStyleThemeExtension>()
-            ?.isMaterial3Style ??
+    final isMaterial3Style =
+        Theme.of(
+          context,
+        ).extension<UiStyleThemeExtension>()?.isMaterial3Style ??
         false;
     final isLightTheme = scheme.brightness == Brightness.light;
     final selectedSurface = Color.lerp(
@@ -194,10 +195,12 @@ class _HomeBounceNavigationItemState extends State<HomeBounceNavigationItem>
                         0,
                         constraints.maxWidth - (labeledIndicatorInset * 2),
                       );
-                      final indicatorWidth = hiddenIndicatorWidth +
+                      final indicatorWidth =
+                          hiddenIndicatorWidth +
                           ((labeledIndicatorWidth - hiddenIndicatorWidth) *
                               labelProgress);
-                      final indicatorHeight = hiddenIndicatorHeight +
+                      final indicatorHeight =
+                          hiddenIndicatorHeight +
                           ((labeledIndicatorHeight - hiddenIndicatorHeight) *
                               labelProgress);
                       final indicatorRadius = indicatorHeight / 2;
@@ -288,10 +291,7 @@ class _HomeBounceNavigationItemState extends State<HomeBounceNavigationItem>
                                 ),
                                 opacity: labelProgress,
                                 child: Transform.translate(
-                                  offset: Offset(
-                                    0,
-                                    2 * (1 - labelProgress),
-                                  ),
+                                  offset: Offset(0, 2 * (1 - labelProgress)),
                                   child: ExcludeSemantics(
                                     child: Text(
                                       widget.item.label,

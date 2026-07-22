@@ -27,17 +27,15 @@ class ReaderViewportChromeMetrics {
 
   double get titleTop => safeArea.viewPadding.top + titleTopGap;
 
-  double get contentTop => math.max(
-        safeArea.contentTop,
-        titleTop + titleHeight + titleContentGap,
-      );
+  double get contentTop =>
+      math.max(safeArea.contentTop, titleTop + titleHeight + titleContentGap);
 
   double get contentBottom => math.max(
-        safeArea.contentBottom,
-        safeArea.pageNumberBottom +
-            ReaderSafeAreaMetrics.pageNumberReserve +
-            statusContentGap,
-      );
+    safeArea.contentBottom,
+    safeArea.pageNumberBottom +
+        ReaderSafeAreaMetrics.pageNumberReserve +
+        statusContentGap,
+  );
 
   double contentHeight(double viewportHeight) =>
       (viewportHeight - contentTop - contentBottom).clamp(1, viewportHeight);
@@ -101,7 +99,8 @@ int readerPageIndexWithinItem(
   final itemExtent = position.trailingEdge - position.leadingEdge;
   if (itemExtent <= 0) return 0;
   final pageExtent = itemExtent / pageCount;
-  return ((0.5 - position.leadingEdge) / pageExtent)
-      .floor()
-      .clamp(0, pageCount - 1);
+  return ((0.5 - position.leadingEdge) / pageExtent).floor().clamp(
+    0,
+    pageCount - 1,
+  );
 }

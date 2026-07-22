@@ -40,7 +40,8 @@ class ReaderThemePalette {
   bool get hasBackgroundImage =>
       backgroundImagePath != null && backgroundImagePath!.isNotEmpty;
 
-  String get cacheKey => '$id:'
+  String get cacheKey =>
+      '$id:'
       '${background.toARGB32()}:'
       '${text.toARGB32()}:'
       '${controlBar.toARGB32()}:'
@@ -339,10 +340,7 @@ class ReaderThemes {
     if (id == ReaderCustomTheme.legacyThemeId && _customThemes.isNotEmpty) {
       return fromCustomTheme(_customThemes.first);
     }
-    return all.firstWhere(
-      (theme) => theme.id == id,
-      orElse: () => day,
-    );
+    return all.firstWhere((theme) => theme.id == id, orElse: () => day);
   }
 
   static ReaderThemePalette fromCustomTheme(ReaderCustomTheme custom) {

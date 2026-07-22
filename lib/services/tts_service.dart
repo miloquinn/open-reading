@@ -83,8 +83,9 @@ class TtsVoiceOption {
       return trimmedIdentifier;
     }
     final normalizedName = name.trim().isNotEmpty ? name.trim() : 'default';
-    final normalizedVoiceLocale =
-        normalizedLocale.isNotEmpty ? normalizedLocale : 'und';
+    final normalizedVoiceLocale = normalizedLocale.isNotEmpty
+        ? normalizedLocale
+        : 'und';
     return '$normalizedVoiceLocale::$normalizedName';
   }
 
@@ -697,8 +698,9 @@ class TtsService extends ChangeNotifier {
 
     final text = _currentText;
     final startIndex = _currentPosition.clamp(0, text.length);
-    final remainingText =
-        startIndex < text.length ? text.substring(startIndex).trimLeft() : '';
+    final remainingText = startIndex < text.length
+        ? text.substring(startIndex).trimLeft()
+        : '';
     final content = remainingText.isNotEmpty ? remainingText : text;
     try {
       await tts.stop();
@@ -769,18 +771,21 @@ class TtsService extends ChangeNotifier {
   Future<void> _loadSettings() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      _speechRate = (prefs.getDouble('tts_speech_rate') ??
-              prefs.getDouble('ttsSpeed') ??
-              0.5)
-          .clamp(0.1, 1.0);
-      _speechVolume = (prefs.getDouble('tts_speech_volume') ??
-              prefs.getDouble('ttsVolume') ??
-              1.0)
-          .clamp(0.0, 1.0);
-      _speechPitch = (prefs.getDouble('tts_speech_pitch') ??
-              prefs.getDouble('ttsPitch') ??
-              1.0)
-          .clamp(0.5, 2.0);
+      _speechRate =
+          (prefs.getDouble('tts_speech_rate') ??
+                  prefs.getDouble('ttsSpeed') ??
+                  0.5)
+              .clamp(0.1, 1.0);
+      _speechVolume =
+          (prefs.getDouble('tts_speech_volume') ??
+                  prefs.getDouble('ttsVolume') ??
+                  1.0)
+              .clamp(0.0, 1.0);
+      _speechPitch =
+          (prefs.getDouble('tts_speech_pitch') ??
+                  prefs.getDouble('ttsPitch') ??
+                  1.0)
+              .clamp(0.5, 2.0);
       _currentLanguage = prefs.getString('tts_language') ?? 'zh-CN';
       final savedIdentifier = prefs.getString(_voiceIdentifierPrefKey)?.trim();
       final savedName = prefs.getString(_voiceNamePrefKey)?.trim() ?? '';
@@ -883,9 +888,7 @@ class TtsService extends ChangeNotifier {
         defaultTargetPlatform == TargetPlatform.iOS &&
         identifier != null &&
         identifier.isNotEmpty) {
-      await tts.setVoice(<String, String>{
-        'identifier': identifier,
-      });
+      await tts.setVoice(<String, String>{'identifier': identifier});
       return;
     }
 
@@ -954,21 +957,23 @@ class TtsService extends ChangeNotifier {
   }
 
   int _compareVoicePriority(TtsVoiceOption left, TtsVoiceOption right) {
-    final languageScoreDiff =
-        _languageMatchScore(left).compareTo(_languageMatchScore(right));
+    final languageScoreDiff = _languageMatchScore(
+      left,
+    ).compareTo(_languageMatchScore(right));
     if (languageScoreDiff != 0) {
       return languageScoreDiff;
     }
 
-    final qualityDiff = _voiceQualityRank(left.quality)
-        .compareTo(_voiceQualityRank(right.quality));
+    final qualityDiff = _voiceQualityRank(
+      left.quality,
+    ).compareTo(_voiceQualityRank(right.quality));
     if (qualityDiff != 0) {
       return qualityDiff;
     }
 
-    final localeDiff = left.normalizedLocale
-        .toLowerCase()
-        .compareTo(right.normalizedLocale.toLowerCase());
+    final localeDiff = left.normalizedLocale.toLowerCase().compareTo(
+      right.normalizedLocale.toLowerCase(),
+    );
     if (localeDiff != 0) {
       return localeDiff;
     }

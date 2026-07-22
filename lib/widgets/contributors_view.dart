@@ -124,15 +124,15 @@ class _ContributorsViewState extends State<ContributorsView> {
                     Text(
                       context.l10n.contributorsTitle,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w800,
-                          ),
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       context.l10n.contributorsSubtitle,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                          ),
+                        color: scheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
@@ -227,9 +227,9 @@ class _ContributorsViewState extends State<ContributorsView> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600),
               ),
             ],
           ),
@@ -256,10 +256,7 @@ class _ContributorsViewState extends State<ContributorsView> {
               style: TextStyle(color: scheme.onErrorContainer),
             ),
           ),
-          TextButton(
-            onPressed: _retry,
-            child: Text(context.l10n.retry),
-          ),
+          TextButton(onPressed: _retry, child: Text(context.l10n.retry)),
         ],
       ),
     );

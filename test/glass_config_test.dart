@@ -64,10 +64,7 @@ void main() {
     expect(surfaceColor.b, closeTo(expected.b, 0.001));
     expect(
       surfaceColor.a,
-      closeTo(
-        GlassEffectConfig.chromeOpacityFor(Brightness.dark),
-        0.01,
-      ),
+      closeTo(GlassEffectConfig.chromeOpacityFor(Brightness.dark), 0.01),
     );
   });
 

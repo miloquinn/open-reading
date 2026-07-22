@@ -10,10 +10,7 @@ class TxtDecodeResult {
   final String content;
   final String encoding;
 
-  const TxtDecodeResult({
-    required this.content,
-    required this.encoding,
-  });
+  const TxtDecodeResult({required this.content, required this.encoding});
 }
 
 /// 增强的TXT文件导入服务
@@ -45,10 +42,7 @@ class EnhancedTxtImportService {
     return 'auto';
   }
 
-  String detectEncoding(
-    Uint8List bytes, {
-    String? encodingOverride,
-  }) {
+  String detectEncoding(Uint8List bytes, {String? encodingOverride}) {
     final normalized = normalizeEncoding(encodingOverride);
     if (normalized != 'auto') {
       return normalized;
@@ -424,7 +418,8 @@ class EnhancedTxtImportService {
     final punctRatio = punctuation / total;
     final mojibakeRatio = mojibake / total;
 
-    var score = cjkRatio * 1.4 +
+    var score =
+        cjkRatio * 1.4 +
         asciiRatio * 0.45 -
         replacementRatio * 6.0 -
         controlRatio * 2.2 -
@@ -468,10 +463,7 @@ class EnhancedTxtImportService {
   String _decodeGbkBestEffort(Uint8List bytes) {
     // 新实现：不再依赖 gbk_codec 的 O(n^2) 字符串拼接解码。
     // 明确 GB 选择时优先速度和稳定性，容错由 lenient 模式承担。
-    return decodeGbkFast(
-      bytes,
-      lenient: !isLikelyValidGbkByteStream(bytes),
-    );
+    return decodeGbkFast(bytes, lenient: !isLikelyValidGbkByteStream(bytes));
   }
 
   /// 增强的TXT元数据提取
@@ -502,8 +494,10 @@ class EnhancedTxtImportService {
       );
     }
 
-    final lines =
-        processedContent.split('\n').map((line) => line.trim()).toList();
+    final lines = processedContent
+        .split('\n')
+        .map((line) => line.trim())
+        .toList();
 
     // 1. 智能标题提取
     String title = _extractTitle(lines, fileName);
@@ -730,11 +724,12 @@ class EnhancedTxtImportService {
     }
 
     // 平均行长度
-    final nonEmptyLines =
-        lines.where((line) => line.trim().isNotEmpty).toList();
+    final nonEmptyLines = lines
+        .where((line) => line.trim().isNotEmpty)
+        .toList();
     final averageLineLength = nonEmptyLines.isNotEmpty
         ? nonEmptyLines.map((line) => line.length).reduce((a, b) => a + b) /
-            nonEmptyLines.length
+              nonEmptyLines.length
         : 0.0;
 
     // 检查是否有章节结构

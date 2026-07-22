@@ -107,27 +107,24 @@ class _WebDavSyncContentPageState extends State<WebDavSyncContentPage> {
                             icon: Icons.library_books_outlined,
                             value: _scope.books,
                             enabled: !_saving,
-                            onChanged: (value) => _updateScope(
-                              _scope.copyWith(books: value),
-                            ),
+                            onChanged: (value) =>
+                                _updateScope(_scope.copyWith(books: value)),
                           ),
                           _ScopeSwitch(
                             title: l10n.webDavScopeProgress,
                             icon: Icons.auto_stories_outlined,
                             value: _scope.progress,
                             enabled: !_saving,
-                            onChanged: (value) => _updateScope(
-                              _scope.copyWith(progress: value),
-                            ),
+                            onChanged: (value) =>
+                                _updateScope(_scope.copyWith(progress: value)),
                           ),
                           _ScopeSwitch(
                             title: l10n.webDavScopeBookmarks,
                             icon: Icons.bookmark_border_rounded,
                             value: _scope.bookmarks,
                             enabled: !_saving,
-                            onChanged: (value) => _updateScope(
-                              _scope.copyWith(bookmarks: value),
-                            ),
+                            onChanged: (value) =>
+                                _updateScope(_scope.copyWith(bookmarks: value)),
                           ),
                           _ScopeSwitch(
                             title: l10n.webDavScopeReadingSessions,
@@ -144,13 +141,14 @@ class _WebDavSyncContentPageState extends State<WebDavSyncContentPage> {
                                 ? l10n.webDavBookFilesHint
                                 : l10n.webDavBookFilesUnavailable,
                             icon: Icons.cloud_upload_outlined,
-                            value: _scope.bookFiles &&
+                            value:
+                                _scope.bookFiles &&
                                 sync.fileCapabilities.uploadSupported,
-                            enabled: !_saving &&
+                            enabled:
+                                !_saving &&
                                 sync.fileCapabilities.uploadSupported,
-                            onChanged: (value) => _updateScope(
-                              _scope.copyWith(bookFiles: value),
-                            ),
+                            onChanged: (value) =>
+                                _updateScope(_scope.copyWith(bookFiles: value)),
                           ),
                         ],
                       ),

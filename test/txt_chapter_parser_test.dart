@@ -3,7 +3,8 @@ import 'package:xxread/core/reader/txt_chapter_parser.dart';
 
 void main() {
   test('recognized chapter headings are stored separately from body text', () {
-    const source = '书籍说明\r\n\r\n'
+    const source =
+        '书籍说明\r\n\r\n'
         '第十二章  风暴将至\r\n\r\n'
         '天边压着墨色的云。\r\n第二段。\r\n\r\n'
         '第十三章 雨夜\r\n雨落了下来。\r\n';
@@ -46,20 +47,22 @@ void main() {
     expect(chapters[1].bodyIn(source), 'Body two.');
   });
 
-  test('unstructured TXT remains one body without an artificial title page',
-      () {
-    const source = '第一段正文。\n\n第二段正文。';
-    final chapters = parseTxtChapterSections(
-      source,
-      fallbackTitle: '文件名书名',
-      prefaceTitle: '前言',
-    );
+  test(
+    'unstructured TXT remains one body without an artificial title page',
+    () {
+      const source = '第一段正文。\n\n第二段正文。';
+      final chapters = parseTxtChapterSections(
+        source,
+        fallbackTitle: '文件名书名',
+        prefaceTitle: '前言',
+      );
 
-    expect(chapters, hasLength(1));
-    expect(chapters.single.title, '文件名书名');
-    expect(chapters.single.isNeedSplitTitle, isFalse);
-    expect(chapters.single.bodyIn(source), source);
-  });
+      expect(chapters, hasLength(1));
+      expect(chapters.single.title, '文件名书名');
+      expect(chapters.single.isNeedSplitTitle, isFalse);
+      expect(chapters.single.bodyIn(source), source);
+    },
+  );
 
   test('chapter splitting recognizes Unicode hard line breaks', () {
     const source = '书籍说明\u2028前言正文\u2029第1章 开始\u2028第一段正文';

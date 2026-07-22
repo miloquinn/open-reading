@@ -9,8 +9,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// the user has enabled the corresponding preference.
 abstract final class ReaderKeepScreenOnController {
   static const String preferenceKey = 'keepScreenOn';
-  static const MethodChannel _channel =
-      MethodChannel('com.niki.xxread/fullscreen');
+  static const MethodChannel _channel = MethodChannel(
+    'com.niki.xxread/fullscreen',
+  );
 
   static final Set<Object> _activeReaders = LinkedHashSet<Object>.identity();
   static Future<void> _pendingSync = Future<void>.value();
@@ -61,10 +62,9 @@ abstract final class ReaderKeepScreenOnController {
 
       if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
         try {
-          await _channel.invokeMethod<void>(
-            'setKeepScreenOn',
-            <String, bool>{'enabled': shouldKeepScreenOn},
-          );
+          await _channel.invokeMethod<void>('setKeepScreenOn', <String, bool>{
+            'enabled': shouldKeepScreenOn,
+          });
         } on MissingPluginException catch (error) {
           debugPrint('Keep-screen-on bridge unavailable: $error');
           return;

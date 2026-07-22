@@ -145,7 +145,8 @@ class GlobalAIReadingService {
   /// 当前阅读页按需解析内容，因此保留空实现兼容旧调用点。
   Future<void> scheduleImportedBookAnalysis({required legacy.Book book}) async {
     debugPrint(
-        '[GlobalAI] scheduleImportedBookAnalysis skipped: parsers removed');
+      '[GlobalAI] scheduleImportedBookAnalysis skipped: parsers removed',
+    );
   }
 
   /// 旧版：为已解析书籍生成知识库。因 ParsedBook 依赖已移除的 parser 模块，
@@ -155,7 +156,8 @@ class GlobalAIReadingService {
     int? legacyBookId,
   }) async {
     debugPrint(
-        '[GlobalAI] ensureKnowledgeForParsedBook skipped: parsers removed');
+      '[GlobalAI] ensureKnowledgeForParsedBook skipped: parsers removed',
+    );
   }
 
   Future<List<TermAnnotation>> loadTermAnnotations({
@@ -225,8 +227,10 @@ class GlobalAIReadingService {
     }
 
     if (scored.isEmpty && chapterId != null) {
-      final chapterFallback =
-          chunks.where((e) => e.chapterId == chapterId).take(limit).toList();
+      final chapterFallback = chunks
+          .where((e) => e.chapterId == chapterId)
+          .take(limit)
+          .toList();
       if (chapterFallback.isNotEmpty) {
         return chapterFallback;
       }
@@ -424,16 +428,18 @@ class GlobalAIReadingService {
       return tokens;
     }
 
-    for (final match
-        in RegExp(r'[\u4e00-\u9fa5]{2,8}').allMatches(normalized)) {
+    for (final match in RegExp(
+      r'[\u4e00-\u9fa5]{2,8}',
+    ).allMatches(normalized)) {
       final token = match.group(0) ?? '';
       if (!_skipChineseToken(token)) {
         tokens.add(token);
       }
     }
 
-    for (final match
-        in RegExp(r'\b[A-Za-z][A-Za-z0-9\-]{2,}\b').allMatches(normalized)) {
+    for (final match in RegExp(
+      r'\b[A-Za-z][A-Za-z0-9\-]{2,}\b',
+    ).allMatches(normalized)) {
       final token = match.group(0) ?? '';
       if (!_skipEnglishToken(token)) {
         tokens.add(token);

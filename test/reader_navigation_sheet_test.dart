@@ -8,8 +8,9 @@ import 'package:xxread/widgets/open_reading_icons.dart';
 import 'package:xxread/widgets/reader_navigation_sheet.dart';
 
 void main() {
-  testWidgets('Open Reading current-position icon assets are bundled',
-      (tester) async {
+  testWidgets('Open Reading current-position icon assets are bundled', (
+    tester,
+  ) async {
     final svg = await rootBundle.load(OpenReadingIconAssets.currentReadingSvg);
     final png = await rootBundle.load(OpenReadingIconAssets.currentReadingPng);
 
@@ -17,8 +18,9 @@ void main() {
     expect(png.lengthInBytes, greaterThan(0));
   });
 
-  testWidgets('navigation sheet follows the supplied reader palette',
-      (tester) async {
+  testWidgets('navigation sheet follows the supplied reader palette', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('zh'),
@@ -30,9 +32,7 @@ void main() {
             height: 720,
             child: ReaderNavigationSheet(
               palette: ReaderThemes.green,
-              chapters: const [
-                ReaderNavigationChapter(title: '第一章', index: 0),
-              ],
+              chapters: const [ReaderNavigationChapter(title: '第一章', index: 0)],
               currentChapterIndex: 0,
               bookmarks: const [],
               onChapterSelected: (_) {},
@@ -45,7 +45,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final themed = tester.widgetList<Theme>(find.byType(Theme)).any(
+    final themed = tester
+        .widgetList<Theme>(find.byType(Theme))
+        .any(
           (theme) =>
               theme.data.colorScheme.primary == ReaderThemes.green.accent &&
               theme.data.colorScheme.surface == ReaderThemes.green.surface,
@@ -69,8 +71,9 @@ void main() {
     expect(emptyBookmarksTitle.style?.color, ReaderThemes.green.text);
   });
 
-  testWidgets('navigation sheet catalog marks the current chapter',
-      (tester) async {
+  testWidgets('navigation sheet catalog marks the current chapter', (
+    tester,
+  ) async {
     // Pixel goldens differ across OS font rasterizers; assert structure instead.
     await tester.binding.setSurfaceSize(const Size(430, 760));
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -127,8 +130,9 @@ void main() {
     expect(find.text('序章 远方的灯火'), findsWidgets);
   });
 
-  testWidgets('navigation sheet collapses nested chapter branches',
-      (tester) async {
+  testWidgets('navigation sheet collapses nested chapter branches', (
+    tester,
+  ) async {
     await tester.binding.setSurfaceSize(const Size(430, 760));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -142,21 +146,9 @@ void main() {
             palette: ReaderThemes.day,
             chapters: const [
               ReaderNavigationChapter(title: '第一部', index: 0),
-              ReaderNavigationChapter(
-                title: '第一章',
-                index: 1,
-                depth: 1,
-              ),
-              ReaderNavigationChapter(
-                title: '深层小节',
-                index: 2,
-                depth: 2,
-              ),
-              ReaderNavigationChapter(
-                title: '同级章节',
-                index: 3,
-                depth: 1,
-              ),
+              ReaderNavigationChapter(title: '第一章', index: 1, depth: 1),
+              ReaderNavigationChapter(title: '深层小节', index: 2, depth: 2),
+              ReaderNavigationChapter(title: '同级章节', index: 3, depth: 1),
               ReaderNavigationChapter(title: '第二部', index: 4),
             ],
             currentChapterIndex: 2,
@@ -174,9 +166,7 @@ void main() {
     expect(find.text('同级章节'), findsOneWidget);
     expect(find.text('01'), findsNothing);
 
-    await tester.tap(
-      find.byKey(const ValueKey('reader-navigation-toggle-0')),
-    );
+    await tester.tap(find.byKey(const ValueKey('reader-navigation-toggle-0')));
     await tester.pumpAndSettle();
 
     expect(find.text('第一部'), findsOneWidget);
@@ -185,18 +175,14 @@ void main() {
     expect(find.text('第二部'), findsOneWidget);
 
     await tester.tap(
-      find.byKey(
-        const ValueKey('reader-navigation-current-chapter-button'),
-      ),
+      find.byKey(const ValueKey('reader-navigation-current-chapter-button')),
     );
     await tester.pumpAndSettle();
 
     expect(find.text('深层小节'), findsOneWidget);
     expect(find.text('同级章节'), findsOneWidget);
 
-    await tester.tap(
-      find.byKey(const ValueKey('reader-navigation-toggle-0')),
-    );
+    await tester.tap(find.byKey(const ValueKey('reader-navigation-toggle-0')));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), '深层');
     await tester.pumpAndSettle();
@@ -208,8 +194,9 @@ void main() {
     expect(find.text('第二部'), findsNothing);
   });
 
-  testWidgets('navigation sheet exposes catalog search and bookmarks',
-      (tester) async {
+  testWidgets('navigation sheet exposes catalog search and bookmarks', (
+    tester,
+  ) async {
     int? selectedChapter;
     Bookmark? selectedBookmark;
 

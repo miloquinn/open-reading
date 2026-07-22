@@ -10,19 +10,17 @@ import 'reader_text_layout.dart';
 /// this same rule so an identical chapter produces identical line breaks.
 const double readerMaxTextContentWidth = 760;
 
-double readerTextContentWidth(
-  double viewportWidth,
-  double horizontalMargin,
-) =>
-    (viewportWidth - horizontalMargin * 2)
-        .clamp(0.0, readerMaxTextContentWidth);
+double readerTextContentWidth(double viewportWidth, double horizontalMargin) =>
+    (viewportWidth - horizontalMargin * 2).clamp(
+      0.0,
+      readerMaxTextContentWidth,
+    );
 
 double readerTextContentHeight(
   double viewportHeight,
   double topInset,
   double bottomInset,
-) =>
-    (viewportHeight - topInset - bottomInset).clamp(0.0, double.infinity);
+) => (viewportHeight - topInset - bottomInset).clamp(0.0, double.infinity);
 
 @immutable
 class ReaderTextPage {
@@ -34,17 +32,17 @@ class ReaderTextPage {
     this.displayStart = 0,
     int? displayEnd,
     this.isChapterTitle = false,
-  })  : endOffset = endOffset ?? startOffset + text.length,
-        displayEnd = displayEnd ?? displayStart + text.length;
+  }) : endOffset = endOffset ?? startOffset + text.length,
+       displayEnd = displayEnd ?? displayStart + text.length;
 
   const ReaderTextPage.chapterTitle({int sourceOffset = 0})
-      : text = '',
-        startOffset = sourceOffset,
-        endOffset = sourceOffset,
-        layout = null,
-        displayStart = 0,
-        displayEnd = 0,
-        isChapterTitle = true;
+    : text = '',
+      startOffset = sourceOffset,
+      endOffset = sourceOffset,
+      layout = null,
+      displayStart = 0,
+      displayEnd = 0,
+      isChapterTitle = true;
 
   final String text;
   final int startOffset;
@@ -66,7 +64,8 @@ class ReaderTextPage {
     return textLayout.buildSpan(
       displayStart,
       displayEnd,
-      sourceSpanBuilder: sourceSpanBuilder ??
+      sourceSpanBuilder:
+          sourceSpanBuilder ??
           (sourceStart, sourceEnd) {
             final localStart = sourceStart - textLayout.sourceOffset;
             final localEnd = sourceEnd - textLayout.sourceOffset;
@@ -142,29 +141,31 @@ List<ReaderTextPage> paginateReaderText({
   }
 
   TextSpan buildSpan(int start, int end) => layout.buildSpan(
-        start,
-        end,
-        sourceSpanBuilder: sourceSpanBuilder ??
-            (sourceStart, sourceEnd) {
-              final localStart = sourceStart - layout.sourceOffset;
-              final localEnd = sourceEnd - layout.sourceOffset;
-              return TextSpan(
-                text: layout.sourceText.substring(localStart, localEnd),
-                style: style,
-              );
-            },
-        generatedStyle: style,
-      );
-
-  final ranges = NativeTextPaginator(
-    maxWidth: maxWidth,
-    maxHeight: maxHeight,
-    flowStyle: flowStyle,
-  ).paginate(
-    text: layout.text,
-    spanBuilder: buildSpan,
-    firstPageHeight: firstPageHeight,
+    start,
+    end,
+    sourceSpanBuilder:
+        sourceSpanBuilder ??
+        (sourceStart, sourceEnd) {
+          final localStart = sourceStart - layout.sourceOffset;
+          final localEnd = sourceEnd - layout.sourceOffset;
+          return TextSpan(
+            text: layout.sourceText.substring(localStart, localEnd),
+            style: style,
+          );
+        },
+    generatedStyle: style,
   );
+
+  final ranges =
+      NativeTextPaginator(
+        maxWidth: maxWidth,
+        maxHeight: maxHeight,
+        flowStyle: flowStyle,
+      ).paginate(
+        text: layout.text,
+        spanBuilder: buildSpan,
+        firstPageHeight: firstPageHeight,
+      );
   pages.addAll(
     ranges.map(
       (range) => ReaderTextPage(
@@ -187,10 +188,7 @@ List<ReaderTextPage> paginateReaderText({
   return pages;
 }
 
-int readerTextPageIndexForOffset(
-  List<ReaderTextPage> pages,
-  int offset,
-) {
+int readerTextPageIndexForOffset(List<ReaderTextPage> pages, int offset) {
   if (pages.isEmpty) return 0;
   final minOffset = pages.first.startOffset;
   final maxOffset = pages.last.endOffset;

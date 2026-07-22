@@ -99,7 +99,7 @@ class ReaderPageCurlController {
 /// chance to rebuild both leaves with the newly committed spread first.
 class ReaderPageCurlCoordinator extends ChangeNotifier {
   ReaderPageCurlCoordinator({this.gutterWidth = 0})
-      : assert(gutterWidth >= 0 && gutterWidth.isFinite);
+    : assert(gutterWidth >= 0 && gutterWidth.isFinite);
 
   /// The fixed visual gap between the two leaves in a tablet spread.
   ///

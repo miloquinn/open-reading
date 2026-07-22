@@ -89,8 +89,8 @@ class _ReaderPullBookmarkState extends State<ReaderPullBookmark> {
     final label = armed
         ? widget.releaseHint
         : widget.bookmarked
-            ? widget.removeHint
-            : widget.addHint;
+        ? widget.removeHint
+        : widget.addHint;
     return Listener(
       behavior: HitTestBehavior.translucent,
       onPointerDown: _onPointerDown,
@@ -164,13 +164,13 @@ class _ReaderPullBookmarkState extends State<ReaderPullBookmark> {
                         const SizedBox(width: 8),
                         Text(
                           label,
-                          style:
-                              Theme.of(context).textTheme.labelLarge?.copyWith(
-                                    color: armed
-                                        ? widget.palette.onAccent
-                                        : widget.palette.text,
-                                    fontWeight: FontWeight.w700,
-                                  ),
+                          style: Theme.of(context).textTheme.labelLarge
+                              ?.copyWith(
+                                color: armed
+                                    ? widget.palette.onAccent
+                                    : widget.palette.text,
+                                fontWeight: FontWeight.w700,
+                              ),
                         ),
                       ],
                     ),

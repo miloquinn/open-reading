@@ -39,19 +39,20 @@ class BookSourceClient {
   static const Duration _maxRetryAfter = Duration(seconds: 60);
 
   BookSourceClient({Dio? dio, BookSourceChapterCache? chapterCache})
-      : _chapterCache = chapterCache ?? const BookSourceChapterCache(),
-        _dio = dio ??
-            Dio(
-              BaseOptions(
-                connectTimeout: const Duration(seconds: 8),
-                receiveTimeout: const Duration(seconds: 12),
-                sendTimeout: const Duration(seconds: 8),
-                headers: const {
-                  'Accept': 'application/json',
-                  'X-Open-Reading-Protocol': openReadingSourceProtocolVersion,
-                },
-              ),
-            );
+    : _chapterCache = chapterCache ?? const BookSourceChapterCache(),
+      _dio =
+          dio ??
+          Dio(
+            BaseOptions(
+              connectTimeout: const Duration(seconds: 8),
+              receiveTimeout: const Duration(seconds: 12),
+              sendTimeout: const Duration(seconds: 8),
+              headers: const {
+                'Accept': 'application/json',
+                'X-Open-Reading-Protocol': openReadingSourceProtocolVersion,
+              },
+            ),
+          );
 
   /// 拒绝明显不该被书源指向的地址：链路本地（含云平台元数据端点
   /// 169.254.169.254）、0.0.0.0、组播。环回与私网地址保持合法，
@@ -59,7 +60,8 @@ class BookSourceClient {
   static void ensureSafeTarget(Uri uri) {
     final address = InternetAddress.tryParse(uri.host);
     if (address == null) return; // 域名交由 DNS 解析，不在此处拦截
-    final isBlocked = address.isLinkLocal ||
+    final isBlocked =
+        address.isLinkLocal ||
         address.isMulticast ||
         address.address == '0.0.0.0' ||
         address.address == '::';
@@ -127,10 +129,7 @@ class BookSourceClient {
       final manifest = BookSourceManifest.fromJson(
         decodeBookSourceJson(await _getBounded(manifestUrl)),
       );
-      return DiscoveredBookSource(
-        manifestUrl: manifestUrl,
-        manifest: manifest,
-      );
+      return DiscoveredBookSource(manifestUrl: manifestUrl, manifest: manifest);
     } on DioException catch (error) {
       throw BookSourceProtocolException(
         _dioErrorMessage(error),
@@ -208,9 +207,9 @@ class BookSourceClient {
         );
       }
       return items
-          .map((item) => BookSourceCategory.fromJson(
-                decodeBookSourceJson(item),
-              ))
+          .map(
+            (item) => BookSourceCategory.fromJson(decodeBookSourceJson(item)),
+          )
           .toList(growable: false);
     } on DioException catch (error) {
       throw BookSourceProtocolException(
@@ -313,8 +312,10 @@ class BookSourceClient {
   /// have it honored exactly, since the 100-1000 range is a requirement on
   /// what sources are supposed to declare, not on what the client must send.
   int _chapterPageSizeFor(RegisteredBookSource source) {
-    return (source.maxCatalogPageSize ?? _defaultChapterPageSize)
-        .clamp(1, 1000);
+    return (source.maxCatalogPageSize ?? _defaultChapterPageSize).clamp(
+      1,
+      1000,
+    );
   }
 
   /// Fetches the full chapter catalog, following pagination when the source
@@ -433,11 +434,7 @@ class BookSourceClient {
     required String chapterId,
   }) async {
     try {
-      await getChapterContent(
-        source,
-        bookId: bookId,
-        chapterId: chapterId,
-      );
+      await getChapterContent(source, bookId: bookId, chapterId: chapterId);
     } catch (_) {
       // Prefetching is opportunistic and must not surface reader errors.
     }
@@ -481,8 +478,7 @@ class BookSourceClient {
         DioExceptionType.connectionTimeout ||
         DioExceptionType.sendTimeout ||
         DioExceptionType.receiveTimeout ||
-        DioExceptionType.connectionError =>
-          true,
+        DioExceptionType.connectionError => true,
         _ => false,
       };
     }
@@ -511,8 +507,9 @@ class BookSourceClient {
   }
 
   static Uri _apiUri(Uri baseUrl, String relativePath) {
-    final normalizedPath =
-        baseUrl.path.endsWith('/') ? baseUrl.path : '${baseUrl.path}/';
+    final normalizedPath = baseUrl.path.endsWith('/')
+        ? baseUrl.path
+        : '${baseUrl.path}/';
     return baseUrl.replace(path: normalizedPath).resolve(relativePath);
   }
 
@@ -531,8 +528,7 @@ class BookSourceClient {
     return switch (error.type) {
       DioExceptionType.connectionTimeout ||
       DioExceptionType.sendTimeout ||
-      DioExceptionType.receiveTimeout =>
-        'Source request timed out.',
+      DioExceptionType.receiveTimeout => 'Source request timed out.',
       DioExceptionType.connectionError => 'Could not connect to the source.',
       _ => error.message ?? 'Source request failed.',
     };

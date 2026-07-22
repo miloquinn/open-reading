@@ -1,12 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
 
-enum ReaderPageMode {
-  verticalScroll,
-  instantPage,
-  horizontalSlide,
-  pageCurl,
-}
+enum ReaderPageMode { verticalScroll, instantPage, horizontalSlide, pageCurl }
 
 abstract final class ReaderLayoutBreakpoints {
   static const double tabletShortestSide = 600;
@@ -64,9 +59,11 @@ class ReaderLayoutFingerprint {
   final String extra;
 
   String cacheKey(String version) {
-    final scalerKey = <double>[12, 24, 48]
-        .map((size) => textScaler.scale(size).toStringAsFixed(3))
-        .join(',');
+    final scalerKey = <double>[
+      12,
+      24,
+      48,
+    ].map((size) => textScaler.scale(size).toStringAsFixed(3)).join(',');
     return '$version:$contentKey:${viewport.width.toStringAsFixed(2)}:'
         '${viewport.height.toStringAsFixed(2)}:'
         '${fontSize.toStringAsFixed(2)}:${lineHeight.toStringAsFixed(3)}:'

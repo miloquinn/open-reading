@@ -10,8 +10,9 @@ void main() {
     GlassEffectConfig.setDisableAllGlassEffects(false);
   });
 
-  testWidgets('reader chrome follows the global glass effect switch',
-      (tester) async {
+  testWidgets('reader chrome follows the global glass effect switch', (
+    tester,
+  ) async {
     GlassEffectConfig.setDisableAllGlassEffects(false);
     await tester.pumpWidget(_testApp(glassEnabled: true));
 
@@ -24,12 +25,15 @@ void main() {
 
     expect(find.byType(BackdropFilter), findsNothing);
     expect(
-        _panelGradient(tester).colors.every((color) => color.a == 1), isTrue);
+      _panelGradient(tester).colors.every((color) => color.a == 1),
+      isTrue,
+    );
     expect(_iconBackground(tester).a, 1);
   });
 
-  testWidgets('reader-owned top information shows time title and battery',
-      (tester) async {
+  testWidgets('reader-owned top information shows time title and battery', (
+    tester,
+  ) async {
     final status = ReaderLeafStatusData(
       time: DateTime(2026, 7, 18, 9, 5),
       battery: const ReaderBatteryStatus(level: 73, charging: false),
@@ -46,11 +50,8 @@ void main() {
               visible: false,
               title: 'Chapter 4',
               statusBottom: 8,
-              statusBuilder: (context, style, key) => Text(
-                '4 / 12',
-                key: key,
-                style: style,
-              ),
+              statusBuilder: (context, style, key) =>
+                  Text('4 / 12', key: key, style: style),
               onBack: () {},
               onBookmark: () {},
               onTableOfContents: () {},
@@ -84,13 +85,11 @@ void main() {
     );
   });
 
-  testWidgets('reader chrome preserves the selected reading theme color',
-      (tester) async {
+  testWidgets('reader chrome preserves the selected reading theme color', (
+    tester,
+  ) async {
     await tester.pumpWidget(
-      _testApp(
-        glassEnabled: true,
-        palette: ReaderThemes.green,
-      ),
+      _testApp(glassEnabled: true, palette: ReaderThemes.green),
     );
 
     final greenSurface = _panelGradient(tester).colors.last;
@@ -104,10 +103,7 @@ void main() {
     expect(greenSurface.b, closeTo(expectedGreen.b, 0.001));
 
     await tester.pumpWidget(
-      _testApp(
-        glassEnabled: true,
-        palette: ReaderThemes.rose,
-      ),
+      _testApp(glassEnabled: true, palette: ReaderThemes.rose),
     );
 
     final roseSurface = _panelGradient(tester).colors.last;

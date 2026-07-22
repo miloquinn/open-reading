@@ -17,9 +17,10 @@ class GeneratedBookCover extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final fallbackTitle = context.l10n.bookUntitled;
-    final semanticsLabel = [title.trim(), author.trim()]
-        .where((value) => value.isNotEmpty)
-        .join('，');
+    final semanticsLabel = [
+      title.trim(),
+      author.trim(),
+    ].where((value) => value.isNotEmpty).join('，');
     return Semantics(
       image: true,
       label: semanticsLabel,

@@ -47,11 +47,7 @@ void main() {
       ),
     );
 
-    showSideToast(
-      context,
-      'First',
-      duration: const Duration(seconds: 5),
-    );
+    showSideToast(context, 'First', duration: const Duration(seconds: 5));
     await tester.pump();
     showSideToast(
       context,
@@ -67,8 +63,9 @@ void main() {
     await tester.pump();
   });
 
-  testWidgets('side toast does not block the interface underneath',
-      (tester) async {
+  testWidgets('side toast does not block the interface underneath', (
+    tester,
+  ) async {
     late BuildContext context;
     var taps = 0;
     const buttonKey = Key('underlying-button');

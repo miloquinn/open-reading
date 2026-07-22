@@ -59,20 +59,22 @@ class ReaderCustomTheme {
           ? this.backgroundImagePath
           : backgroundImagePath as String?,
       backgroundImageOpacity:
-          (backgroundImageOpacity ?? this.backgroundImageOpacity)
-              .clamp(0.0, 0.75),
+          (backgroundImageOpacity ?? this.backgroundImageOpacity).clamp(
+            0.0,
+            0.75,
+          ),
     );
   }
 
   Map<String, Object?> toMap() => <String, Object?>{
-        'id': id,
-        'name': name,
-        'background': background.toARGB32(),
-        'text': text.toARGB32(),
-        'controlBar': controlBar.toARGB32(),
-        'backgroundImagePath': backgroundImagePath,
-        'backgroundImageOpacity': backgroundImageOpacity,
-      };
+    'id': id,
+    'name': name,
+    'background': background.toARGB32(),
+    'text': text.toARGB32(),
+    'controlBar': controlBar.toARGB32(),
+    'backgroundImagePath': backgroundImagePath,
+    'backgroundImageOpacity': backgroundImageOpacity,
+  };
 
   factory ReaderCustomTheme.fromMap(Map<String, Object?> map) {
     int colorValue(String key, Color fallback) {

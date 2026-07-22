@@ -24,10 +24,10 @@ class BookSourceShelfService {
     BookSourceClient? client,
     SourceCoverCache? sourceCoverCache,
     Directory? downloadDirectory,
-  })  : _downloadDirectory = downloadDirectory,
-        _bookDao = bookDao ?? BookDao(),
-        _client = client ?? BookSourceClient(),
-        _sourceCoverCache = sourceCoverCache ?? SourceCoverCache.instance;
+  }) : _downloadDirectory = downloadDirectory,
+       _bookDao = bookDao ?? BookDao(),
+       _client = client ?? BookSourceClient(),
+       _sourceCoverCache = sourceCoverCache ?? SourceCoverCache.instance;
 
   final BookDao _bookDao;
   final BookSourceClient _client;
@@ -38,10 +38,7 @@ class BookSourceShelfService {
     required String sourceId,
     required String sourceBookId,
   }) =>
-      _bookDao.getBookBySource(
-        sourceId: sourceId,
-        sourceBookId: sourceBookId,
-      );
+      _bookDao.getBookBySource(sourceId: sourceId, sourceBookId: sourceBookId);
 
   Future<Book> addOnline({
     required RegisteredBookSource source,
@@ -77,7 +74,8 @@ class BookSourceShelfService {
     required double chapterProgress,
   }) async {
     const unitsPerChapter = 1000;
-    final currentUnits = chapterIndex * unitsPerChapter +
+    final currentUnits =
+        chapterIndex * unitsPerChapter +
         (chapterProgress.clamp(0, 1) * unitsPerChapter).round();
     await _bookDao.updateBookProgress(shelfBookId, currentUnits);
     await _bookDao.updateBookTotalPages(
@@ -98,7 +96,7 @@ class BookSourceShelfService {
         source,
         book.id,
         cancellation: cancellation,
-      )
+      ),
     ]..sort((a, b) => a.order.compareTo(b.order));
     cancellation?.throwIfCancelled();
     if (chapters.isEmpty) {
@@ -126,9 +124,11 @@ class BookSourceShelfService {
 
     try {
       sink = temporaryFile.openWrite(mode: FileMode.write, encoding: utf8);
-      for (var offset = 0;
-          offset < chapters.length;
-          offset += _downloadBatchSize) {
+      for (
+        var offset = 0;
+        offset < chapters.length;
+        offset += _downloadBatchSize
+      ) {
         cancellation?.throwIfCancelled();
         final end = (offset + _downloadBatchSize).clamp(0, chapters.length);
         final batch = chapters.sublist(offset, end);

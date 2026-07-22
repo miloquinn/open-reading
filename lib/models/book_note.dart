@@ -179,18 +179,9 @@ class BookNote {
 
   /// 注释类型定义
   static const List<Map<String, dynamic>> noteTypes = [
-    {
-      'type': 'highlight',
-      'icon': Icons.highlight_alt,
-    },
-    {
-      'type': 'underline',
-      'icon': Icons.format_underlined,
-    },
-    {
-      'type': 'note',
-      'icon': Icons.note_alt,
-    },
+    {'type': 'highlight', 'icon': Icons.highlight_alt},
+    {'type': 'underline', 'icon': Icons.format_underlined},
+    {'type': 'note', 'icon': Icons.note_alt},
   ];
 
   /// 获取颜色 code（稳定标识，UI 层通过 `bookNoteColorName` 翻译为显示文案）

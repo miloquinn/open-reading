@@ -103,23 +103,22 @@ class BookSourceManifest {
   }
 
   Map<String, dynamic> toJson() => {
-        'protocol': protocol,
-        'protocolVersion': protocolVersion,
-        'id': id,
-        'name': name,
-        'description': description,
-        'apiBaseUrl': apiBaseUrl.toString(),
-        if (iconUrl != null) 'iconUrl': iconUrl.toString(),
-        if (websiteUrl != null) 'websiteUrl': websiteUrl.toString(),
-        if (operatorName.isNotEmpty) 'operatorName': operatorName,
-        if (contactUrl != null) 'contactUrl': contactUrl.toString(),
-        if (contentLicense.isNotEmpty) 'contentLicense': contentLicense,
-        if (rightsStatement.isNotEmpty) 'rightsStatement': rightsStatement,
-        'languages': languages,
-        'capabilities': capabilities.toList()..sort(),
-        if (maxCatalogPageSize != null)
-          'maxCatalogPageSize': maxCatalogPageSize,
-      };
+    'protocol': protocol,
+    'protocolVersion': protocolVersion,
+    'id': id,
+    'name': name,
+    'description': description,
+    'apiBaseUrl': apiBaseUrl.toString(),
+    if (iconUrl != null) 'iconUrl': iconUrl.toString(),
+    if (websiteUrl != null) 'websiteUrl': websiteUrl.toString(),
+    if (operatorName.isNotEmpty) 'operatorName': operatorName,
+    if (contactUrl != null) 'contactUrl': contactUrl.toString(),
+    if (contentLicense.isNotEmpty) 'contentLicense': contentLicense,
+    if (rightsStatement.isNotEmpty) 'rightsStatement': rightsStatement,
+    'languages': languages,
+    'capabilities': capabilities.toList()..sort(),
+    if (maxCatalogPageSize != null) 'maxCatalogPageSize': maxCatalogPageSize,
+  };
 }
 
 class BookSourceSearchPage {
@@ -199,8 +198,9 @@ class BookSourceDiscoveryPage {
     }
     return BookSourceDiscoveryPage(
       sections: rawSections
-          .map((section) =>
-              BookSourceDiscoverySection.fromJson(_jsonMap(section)))
+          .map(
+            (section) => BookSourceDiscoverySection.fromJson(_jsonMap(section)),
+          )
           .toList(growable: false),
     );
   }
@@ -254,22 +254,23 @@ class BookSourceBook {
       categories: _stringList(json['categories']),
       status: (json['status'] as String?)?.trim(),
       latestChapter: (json['latestChapter'] as String?)?.trim(),
-      updatedAt:
-          updatedAtValue == null ? null : DateTime.tryParse(updatedAtValue),
+      updatedAt: updatedAtValue == null
+          ? null
+          : DateTime.tryParse(updatedAtValue),
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'title': title,
-        'author': author,
-        'description': description,
-        if (coverUrl != null) 'coverUrl': coverUrl.toString(),
-        'categories': categories,
-        if (status != null) 'status': status,
-        if (latestChapter != null) 'latestChapter': latestChapter,
-        if (updatedAt != null) 'updatedAt': updatedAt!.toIso8601String(),
-      };
+    'id': id,
+    'title': title,
+    'author': author,
+    'description': description,
+    if (coverUrl != null) 'coverUrl': coverUrl.toString(),
+    'categories': categories,
+    if (status != null) 'status': status,
+    if (latestChapter != null) 'latestChapter': latestChapter,
+    if (updatedAt != null) 'updatedAt': updatedAt!.toIso8601String(),
+  };
 }
 
 class BookSourceChapter {
@@ -291,8 +292,9 @@ class BookSourceChapter {
       id: _requiredString(json, 'id'),
       title: _requiredString(json, 'title'),
       order: (json['order'] as num?)?.toInt() ?? 0,
-      updatedAt:
-          updatedAtValue == null ? null : DateTime.tryParse(updatedAtValue),
+      updatedAt: updatedAtValue == null
+          ? null
+          : DateTime.tryParse(updatedAtValue),
     );
   }
 }
@@ -354,11 +356,7 @@ class BookSourceChapterContent {
   factory BookSourceChapterContent.fromJson(Map<String, dynamic> json) {
     final contentType =
         (json['contentType'] as String?)?.trim() ?? 'text/plain';
-    const allowedContentTypes = {
-      'text/plain',
-      'text/markdown',
-      'text/html',
-    };
+    const allowedContentTypes = {'text/plain', 'text/markdown', 'text/html'};
     if (!allowedContentTypes.contains(contentType)) {
       throw BookSourceProtocolException(
         'Unsupported chapter content type: $contentType',

@@ -82,10 +82,7 @@ void main() {
     expect(importer.called, isFalse);
     expect(progress.single.transferredBytes, remoteBytes.length);
     expect(progress.single.fraction, 1);
-    expect(
-      temporaryDirectory.listSync().whereType<File>(),
-      isEmpty,
-    );
+    expect(temporaryDirectory.listSync().whereType<File>(), isEmpty);
   });
 
   test('upload rejects files beyond the recoverable import limit', () async {
@@ -110,136 +107,136 @@ void main() {
     );
   });
 
-  test('download restores remote title, author, and cover after import',
-      () async {
-    final bookBytes = [10, 20, 30, 40];
-    final coverBytes = [137, 80, 78, 71, 1, 2, 3];
-    final wrongCover = File('${temporaryDirectory.path}/wrong-cover.jpg');
-    await wrongCover.writeAsBytes([0, 0, 0]);
-    final importer = _DatabaseImporter(database, wrongCover.path);
-    final client = _MemoryWebDavClient(
-      bookBytes: bookBytes,
-      coverBytes: coverBytes,
-    );
-    final service = WebDavBookFileService(
-      configStore: _CredentialsStore(),
-      clientFactory: (_) => client,
-      importer: importer,
-      temporaryDirectory: () async => temporaryDirectory,
-      documentsDirectory: () async => temporaryDirectory,
-      database: () async => database,
-    );
-    final bookHash = sha256.convert(bookBytes).toString();
-    final coverHash = sha256.convert(coverBytes).toString();
-
-    final restored = await service.download(
-      RemoteBookDescriptor(
-        bookUid: 'source:source-a:book-a',
-        title: '远端正确书名',
-        author: '远端正确作者',
-        format: 'txt',
-        fileAvailable: true,
-        sizeBytes: bookBytes.length,
-        blobSha256: bookHash,
-        remotePath: 'blobs/books/sha256/${bookHash.substring(0, 2)}/$bookHash',
-        fileName: 'book-a.txt',
-        sourceId: 'source-a',
-        sourceBookId: 'book-a',
-        coverAvailable: true,
-        coverSizeBytes: coverBytes.length,
-        coverBlobSha256: coverHash,
-        coverRemotePath:
-            'blobs/covers/sha256/${coverHash.substring(0, 2)}/$coverHash',
-        coverFileName: 'source-cover.img',
-      ),
-    );
-
-    expect(restored.title, '远端正确书名');
-    expect(restored.author, '远端正确作者');
-    expect(restored.sourceId, 'source-a');
-    expect(restored.sourceBookId, 'book-a');
-    expect(restored.coverImagePath, wrongCover.path);
-    expect(await wrongCover.readAsBytes(), coverBytes);
-
-    final bookRow = (await database.query(
-      'books',
-      where: 'id = ?',
-      whereArgs: [restored.id],
-    ))
-        .single;
-    expect(bookRow['title'], '远端正确书名');
-    expect(bookRow['author'], '远端正确作者');
-    expect(bookRow['cover_image_path'], wrongCover.path);
-    expect(bookRow['source_id'], 'source-a');
-    expect(bookRow['source_book_id'], 'book-a');
-
-    final fileRow = (await database.query('sync_book_files')).single;
-    expect(fileRow['cover_blob_sha256'], coverHash);
-    expect(fileRow['cover_file_size'], coverBytes.length);
-    expect(fileRow['cover_remote_path'], contains('blobs/covers/sha256/'));
-    expect(
-      temporaryDirectory
-          .listSync()
-          .whereType<File>()
-          .where((file) => file.path.endsWith('.part')),
-      isEmpty,
-    );
-  });
-
-  test('download rejects a corrupted cover before importing and cleans parts',
-      () async {
-    final bookBytes = [1, 3, 5, 7];
-    final coverBytes = [2, 4, 6, 8];
-    final importer = _RejectingImporter();
-    final service = WebDavBookFileService(
-      configStore: _CredentialsStore(),
-      clientFactory: (_) => _MemoryWebDavClient(
+  test(
+    'download restores remote title, author, and cover after import',
+    () async {
+      final bookBytes = [10, 20, 30, 40];
+      final coverBytes = [137, 80, 78, 71, 1, 2, 3];
+      final wrongCover = File('${temporaryDirectory.path}/wrong-cover.jpg');
+      await wrongCover.writeAsBytes([0, 0, 0]);
+      final importer = _DatabaseImporter(database, wrongCover.path);
+      final client = _MemoryWebDavClient(
         bookBytes: bookBytes,
         coverBytes: coverBytes,
-      ),
-      importer: importer,
-      temporaryDirectory: () async => temporaryDirectory,
-      database: () async => database,
-    );
-    final bookHash = sha256.convert(bookBytes).toString();
+      );
+      final service = WebDavBookFileService(
+        configStore: _CredentialsStore(),
+        clientFactory: (_) => client,
+        importer: importer,
+        temporaryDirectory: () async => temporaryDirectory,
+        documentsDirectory: () async => temporaryDirectory,
+        database: () async => database,
+      );
+      final bookHash = sha256.convert(bookBytes).toString();
+      final coverHash = sha256.convert(coverBytes).toString();
 
-    await expectLater(
-      service.download(
+      final restored = await service.download(
         RemoteBookDescriptor(
-          bookUid: 'book-with-bad-cover',
-          title: 'Remote book',
-          author: 'Author',
+          bookUid: 'source:source-a:book-a',
+          title: '远端正确书名',
+          author: '远端正确作者',
           format: 'txt',
           fileAvailable: true,
           sizeBytes: bookBytes.length,
           blobSha256: bookHash,
-          remotePath: 'blobs/books/sha256/00/book',
-          fileName: 'book.txt',
+          remotePath:
+              'blobs/books/sha256/${bookHash.substring(0, 2)}/$bookHash',
+          fileName: 'book-a.txt',
+          sourceId: 'source-a',
+          sourceBookId: 'book-a',
           coverAvailable: true,
           coverSizeBytes: coverBytes.length,
-          coverBlobSha256: List.filled(64, '0').join(),
-          coverRemotePath: 'blobs/covers/sha256/00/cover',
-          coverFileName: 'cover.img',
+          coverBlobSha256: coverHash,
+          coverRemotePath:
+              'blobs/covers/sha256/${coverHash.substring(0, 2)}/$coverHash',
+          coverFileName: 'source-cover.img',
         ),
-      ),
-      throwsA(
-        isA<WebDavSyncFailure>().having(
-          (failure) => failure.code,
-          'code',
-          WebDavSyncErrorCode.corruptRemoteData,
-        ),
-      ),
-    );
+      );
 
-    expect(importer.called, isFalse);
-    expect(
-      temporaryDirectory
-          .listSync()
-          .whereType<File>()
-          .where((file) => file.path.endsWith('.part')),
-      isEmpty,
-    );
-  });
+      expect(restored.title, '远端正确书名');
+      expect(restored.author, '远端正确作者');
+      expect(restored.sourceId, 'source-a');
+      expect(restored.sourceBookId, 'book-a');
+      expect(restored.coverImagePath, wrongCover.path);
+      expect(await wrongCover.readAsBytes(), coverBytes);
+
+      final bookRow = (await database.query(
+        'books',
+        where: 'id = ?',
+        whereArgs: [restored.id],
+      )).single;
+      expect(bookRow['title'], '远端正确书名');
+      expect(bookRow['author'], '远端正确作者');
+      expect(bookRow['cover_image_path'], wrongCover.path);
+      expect(bookRow['source_id'], 'source-a');
+      expect(bookRow['source_book_id'], 'book-a');
+
+      final fileRow = (await database.query('sync_book_files')).single;
+      expect(fileRow['cover_blob_sha256'], coverHash);
+      expect(fileRow['cover_file_size'], coverBytes.length);
+      expect(fileRow['cover_remote_path'], contains('blobs/covers/sha256/'));
+      expect(
+        temporaryDirectory.listSync().whereType<File>().where(
+          (file) => file.path.endsWith('.part'),
+        ),
+        isEmpty,
+      );
+    },
+  );
+
+  test(
+    'download rejects a corrupted cover before importing and cleans parts',
+    () async {
+      final bookBytes = [1, 3, 5, 7];
+      final coverBytes = [2, 4, 6, 8];
+      final importer = _RejectingImporter();
+      final service = WebDavBookFileService(
+        configStore: _CredentialsStore(),
+        clientFactory: (_) =>
+            _MemoryWebDavClient(bookBytes: bookBytes, coverBytes: coverBytes),
+        importer: importer,
+        temporaryDirectory: () async => temporaryDirectory,
+        database: () async => database,
+      );
+      final bookHash = sha256.convert(bookBytes).toString();
+
+      await expectLater(
+        service.download(
+          RemoteBookDescriptor(
+            bookUid: 'book-with-bad-cover',
+            title: 'Remote book',
+            author: 'Author',
+            format: 'txt',
+            fileAvailable: true,
+            sizeBytes: bookBytes.length,
+            blobSha256: bookHash,
+            remotePath: 'blobs/books/sha256/00/book',
+            fileName: 'book.txt',
+            coverAvailable: true,
+            coverSizeBytes: coverBytes.length,
+            coverBlobSha256: List.filled(64, '0').join(),
+            coverRemotePath: 'blobs/covers/sha256/00/cover',
+            coverFileName: 'cover.img',
+          ),
+        ),
+        throwsA(
+          isA<WebDavSyncFailure>().having(
+            (failure) => failure.code,
+            'code',
+            WebDavSyncErrorCode.corruptRemoteData,
+          ),
+        ),
+      );
+
+      expect(importer.called, isFalse);
+      expect(
+        temporaryDirectory.listSync().whereType<File>().where(
+          (file) => file.path.endsWith('.part'),
+        ),
+        isEmpty,
+      );
+    },
+  );
 
   test('upload stores a content-addressed cover reference', () async {
     final bookFile = File('${temporaryDirectory.path}/source-book.txt');
@@ -332,11 +329,7 @@ class _CredentialsStore extends SecureSyncConfigStore {
 }
 
 class _DownloadClient extends WebDavClient {
-  _DownloadClient(this.bytes)
-      : super(
-          dio: Dio(),
-          credentials: _credentials,
-        );
+  _DownloadClient(this.bytes) : super(dio: Dio(), credentials: _credentials);
 
   final List<int> bytes;
 

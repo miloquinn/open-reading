@@ -10,9 +10,8 @@ import 'sync_models.dart';
 import 'sync_protocol.dart';
 import 'webdav_client.dart';
 
-typedef WebDavClientFactory = WebDavClient Function(
-  StoredSyncCredentials credentials,
-);
+typedef WebDavClientFactory =
+    WebDavClient Function(StoredSyncCredentials credentials);
 
 class SyncEngine {
   SyncEngine({
@@ -20,10 +19,10 @@ class SyncEngine {
     required SyncChangeStore changeStore,
     MetadataSyncAdapters? adapters,
     WebDavClientFactory? clientFactory,
-  })  : _configStore = configStore,
-        _changeStore = changeStore,
-        _adapters = adapters ?? MetadataSyncAdapters(store: changeStore),
-        _clientFactory = clientFactory ?? WebDavClient.standard;
+  }) : _configStore = configStore,
+       _changeStore = changeStore,
+       _adapters = adapters ?? MetadataSyncAdapters(store: changeStore),
+       _clientFactory = clientFactory ?? WebDavClient.standard;
 
   final SecureSyncConfigStore _configStore;
   final SyncChangeStore _changeStore;
@@ -61,8 +60,9 @@ class SyncEngine {
     final deviceUris = await client.list(client.path(const ['devices']));
     final remoteDeviceIds = <String>{};
     for (final uri in deviceUris) {
-      final segments =
-          uri.pathSegments.where((part) => part.isNotEmpty).toList();
+      final segments = uri.pathSegments
+          .where((part) => part.isNotEmpty)
+          .toList();
       final devicesIndex = segments.lastIndexOf('devices');
       if (devicesIndex < 0 || devicesIndex + 1 >= segments.length) continue;
       final remoteDeviceId = Uri.decodeComponent(segments[devicesIndex + 1]);
@@ -207,19 +207,23 @@ class SyncEngine {
       batch = SyncBatch.decode(pendingRaw);
       final dirty = await _changeStore.dirtyRecords();
       final ids = batch.operations
-          .map((operation) =>
-              '${operation.dataset}\u0000${operation.recordId}\u0000${operation.hlc}')
+          .map(
+            (operation) =>
+                '${operation.dataset}\u0000${operation.recordId}\u0000${operation.hlc}',
+          )
           .toSet();
       records = dirty
-          .where((record) => ids.contains(
-              '${record.dataset}\u0000${record.recordId}\u0000${record.hlc}'))
+          .where(
+            (record) => ids.contains(
+              '${record.dataset}\u0000${record.recordId}\u0000${record.hlc}',
+            ),
+          )
           .toList(growable: false);
     } else {
       final dirty = await _changeStore.dirtyRecords();
       if (dirty.isEmpty) return 0;
-      final sequence = int.tryParse(
-            await _changeStore.getState('local_sequence') ?? '',
-          ) ??
+      final sequence =
+          int.tryParse(await _changeStore.getState('local_sequence') ?? '') ??
           0;
       final selected = <SyncRecord>[];
       for (final record in dirty) {

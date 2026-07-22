@@ -55,12 +55,14 @@ class _UserAgreementPageState extends State<UserAgreementPage>
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor:
-          isDark ? const Color(0xFF11110F) : const Color(0xFFF4F1EA),
+      backgroundColor: isDark
+          ? const Color(0xFF11110F)
+          : const Color(0xFFF4F1EA),
       body: Stack(
         children: [
           Positioned.fill(
-              child: CustomPaint(painter: _PaperGrainPainter(isDark))),
+            child: CustomPaint(painter: _PaperGrainPainter(isDark)),
+          ),
           SafeArea(
             child: FadeTransition(
               opacity: _fade,
@@ -85,12 +87,14 @@ class _UserAgreementPageState extends State<UserAgreementPage>
                                       CrossAxisAlignment.stretch,
                                   children: [
                                     Expanded(
-                                        flex: 4,
-                                        child: _buildIntroduction(scheme)),
+                                      flex: 4,
+                                      child: _buildIntroduction(scheme),
+                                    ),
                                     const SizedBox(width: 52),
                                     Expanded(
-                                        flex: 6,
-                                        child: _buildAgreementPanel(scheme)),
+                                      flex: 6,
+                                      child: _buildAgreementPanel(scheme),
+                                    ),
                                   ],
                                 )
                               : Column(
@@ -98,7 +102,8 @@ class _UserAgreementPageState extends State<UserAgreementPage>
                                     _buildCompactHeader(scheme),
                                     const SizedBox(height: 18),
                                     Expanded(
-                                        child: _buildAgreementPanel(scheme)),
+                                      child: _buildAgreementPanel(scheme),
+                                    ),
                                   ],
                                 ),
                         ),
@@ -125,19 +130,19 @@ class _UserAgreementPageState extends State<UserAgreementPage>
           Text(
             context.l10n.agreementV2HeroTitle,
             style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                  height: 1.08,
-                  letterSpacing: -1.4,
-                  fontWeight: FontWeight.w700,
-                  color: scheme.onSurface,
-                ),
+              height: 1.08,
+              letterSpacing: -1.4,
+              fontWeight: FontWeight.w700,
+              color: scheme.onSurface,
+            ),
           ),
           const SizedBox(height: 18),
           Text(
             context.l10n.agreementV2HeroBody,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  height: 1.75,
-                  color: scheme.onSurface.withValues(alpha: 0.68),
-                ),
+              height: 1.75,
+              color: scheme.onSurface.withValues(alpha: 0.68),
+            ),
           ),
           const SizedBox(height: 30),
           _buildPrinciple(
@@ -156,11 +161,12 @@ class _UserAgreementPageState extends State<UserAgreementPage>
           const Spacer(flex: 2),
           Text(
             context.l10n.agreementV2VersionLabel(
-                UserAgreementService.currentAgreementVersion),
+              UserAgreementService.currentAgreementVersion,
+            ),
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: scheme.onSurface.withValues(alpha: 0.42),
-                  letterSpacing: 0.4,
-                ),
+              color: scheme.onSurface.withValues(alpha: 0.42),
+              letterSpacing: 0.4,
+            ),
           ),
         ],
       ),
@@ -190,18 +196,18 @@ class _UserAgreementPageState extends State<UserAgreementPage>
             Text(
               context.l10n.appTitle,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.4,
-                  ),
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.4,
+              ),
             ),
             if (!compact)
               Text(
                 'OPEN READING',
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: scheme.onSurface.withValues(alpha: 0.46),
-                      letterSpacing: 2.2,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  color: scheme.onSurface.withValues(alpha: 0.46),
+                  letterSpacing: 2.2,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
           ],
         ),
@@ -225,8 +231,11 @@ class _UserAgreementPageState extends State<UserAgreementPage>
             color: scheme.onSurface.withValues(alpha: 0.06),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon,
-              size: 18, color: scheme.onSurface.withValues(alpha: 0.74)),
+          child: Icon(
+            icon,
+            size: 18,
+            color: scheme.onSurface.withValues(alpha: 0.74),
+          ),
         ),
         const SizedBox(width: 13),
         Expanded(
@@ -238,9 +247,9 @@ class _UserAgreementPageState extends State<UserAgreementPage>
               Text(
                 body,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      height: 1.55,
-                      color: scheme.onSurface.withValues(alpha: 0.58),
-                    ),
+                  height: 1.55,
+                  color: scheme.onSurface.withValues(alpha: 0.58),
+                ),
               ),
             ],
           ),
@@ -254,47 +263,47 @@ class _UserAgreementPageState extends State<UserAgreementPage>
     final sections = <(String, String)>[
       (
         context.l10n.agreementV2Section1Title,
-        context.l10n.agreementV2Section1Body
+        context.l10n.agreementV2Section1Body,
       ),
       (
         context.l10n.agreementV2Section2Title,
-        context.l10n.agreementV2Section2Body
+        context.l10n.agreementV2Section2Body,
       ),
       (
         context.l10n.agreementV2Section3Title,
-        context.l10n.agreementV2Section3Body
+        context.l10n.agreementV2Section3Body,
       ),
       (
         context.l10n.agreementV2Section4Title,
-        context.l10n.agreementV2Section4Body
+        context.l10n.agreementV2Section4Body,
       ),
       (
         context.l10n.agreementV2Section5Title,
-        context.l10n.agreementV2Section5Body
+        context.l10n.agreementV2Section5Body,
       ),
       (
         context.l10n.agreementV2Section6Title,
-        context.l10n.agreementV2Section6Body
+        context.l10n.agreementV2Section6Body,
       ),
       (
         context.l10n.agreementV2Section7Title,
-        context.l10n.agreementV2Section7Body
+        context.l10n.agreementV2Section7Body,
       ),
       (
         context.l10n.agreementV2Section8Title,
-        context.l10n.agreementV2Section8Body
+        context.l10n.agreementV2Section8Body,
       ),
       (
         context.l10n.agreementV2Section9Title,
-        context.l10n.agreementV2Section9Body
+        context.l10n.agreementV2Section9Body,
       ),
       (
         context.l10n.agreementV2Section10Title,
-        context.l10n.agreementV2Section10Body
+        context.l10n.agreementV2Section10Body,
       ),
       (
         context.l10n.agreementV2Section11Title,
-        context.l10n.agreementV2Section11Body
+        context.l10n.agreementV2Section11Body,
       ),
     ];
     return Container(
@@ -324,25 +333,27 @@ class _UserAgreementPageState extends State<UserAgreementPage>
                     children: [
                       Text(
                         context.l10n.agreementV2Title,
-                        style:
-                            Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: -0.6,
-                                ),
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.6,
+                            ),
                       ),
                       const SizedBox(height: 5),
                       Text(
                         context.l10n.agreementV2Subtitle,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: scheme.onSurface.withValues(alpha: 0.52),
-                            ),
+                          color: scheme.onSurface.withValues(alpha: 0.52),
+                        ),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(width: 12),
-                Icon(Icons.article_outlined,
-                    color: scheme.onSurface.withValues(alpha: 0.34)),
+                Icon(
+                  Icons.article_outlined,
+                  color: scheme.onSurface.withValues(alpha: 0.34),
+                ),
               ],
             ),
           ),
@@ -390,17 +401,20 @@ class _UserAgreementPageState extends State<UserAgreementPage>
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.info_outline_rounded,
-              size: 20, color: scheme.onSurface.withValues(alpha: 0.7)),
+          Icon(
+            Icons.info_outline_rounded,
+            size: 20,
+            color: scheme.onSurface.withValues(alpha: 0.7),
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               context.l10n.agreementV2ImportantNotice,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    height: 1.65,
-                    fontWeight: FontWeight.w600,
-                    color: scheme.onSurface.withValues(alpha: 0.78),
-                  ),
+                height: 1.65,
+                fontWeight: FontWeight.w600,
+                color: scheme.onSurface.withValues(alpha: 0.78),
+              ),
             ),
           ),
         ],
@@ -427,19 +441,15 @@ class _UserAgreementPageState extends State<UserAgreementPage>
         children: [
           Row(
             children: [
-              Icon(
-                Icons.shield_outlined,
-                size: 20,
-                color: scheme.primary,
-              ),
+              Icon(Icons.shield_outlined, size: 20, color: scheme.primary),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   context.l10n.agreementV2SourceBoundaryTitle,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: scheme.onPrimaryContainer,
-                      ),
+                    fontWeight: FontWeight.w800,
+                    color: scheme.onPrimaryContainer,
+                  ),
                 ),
               ),
             ],
@@ -465,10 +475,9 @@ class _UserAgreementPageState extends State<UserAgreementPage>
                   child: Text(
                     point,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          height: 1.55,
-                          color:
-                              scheme.onPrimaryContainer.withValues(alpha: 0.84),
-                        ),
+                      height: 1.55,
+                      color: scheme.onPrimaryContainer.withValues(alpha: 0.84),
+                    ),
                   ),
                 ),
               ],
@@ -497,18 +506,18 @@ class _UserAgreementPageState extends State<UserAgreementPage>
               child: Text(
                 index.toString().padLeft(2, '0'),
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: scheme.onSurface.withValues(alpha: 0.34),
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.5,
-                    ),
+                  color: scheme.onSurface.withValues(alpha: 0.34),
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.5,
+                ),
               ),
             ),
             Expanded(
               child: Text(
                 title,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
             ),
           ],
@@ -519,9 +528,9 @@ class _UserAgreementPageState extends State<UserAgreementPage>
           child: Text(
             body,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  height: 1.72,
-                  color: scheme.onSurface.withValues(alpha: 0.68),
-                ),
+              height: 1.72,
+              color: scheme.onSurface.withValues(alpha: 0.68),
+            ),
           ),
         ),
       ],
@@ -617,11 +626,12 @@ class _UserAgreementPageState extends State<UserAgreementPage>
                 child: Text(
                   label,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        height: 1.45,
-                        fontWeight:
-                            emphasized ? FontWeight.w600 : FontWeight.normal,
-                        color: scheme.onSurface.withValues(alpha: 0.76),
-                      ),
+                    height: 1.45,
+                    fontWeight: emphasized
+                        ? FontWeight.w600
+                        : FontWeight.normal,
+                    color: scheme.onSurface.withValues(alpha: 0.76),
+                  ),
                 ),
               ),
             ],
@@ -728,7 +738,9 @@ class UserAgreementService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_keyAgreementAccepted, true);
     await prefs.setString(
-        _keyAcceptedDate, DateTime.now().toUtc().toIso8601String());
+      _keyAcceptedDate,
+      DateTime.now().toUtc().toIso8601String(),
+    );
     await prefs.setString(_keyAcceptedVersion, currentAgreementVersion);
     await prefs.setString(_keyAcceptedLocale, locale);
     await prefs.setBool(_keySourceBoundaryAccepted, true);

@@ -14,19 +14,17 @@ import 'custom_font_models.dart';
 
 typedef CustomFontDirectoryProvider = Future<Directory> Function();
 typedef CustomFontPicker = Future<FilePickerResult?> Function();
-typedef CustomFontRegistrar = Future<void> Function(
-  String family,
-  Uint8List bytes,
-);
+typedef CustomFontRegistrar =
+    Future<void> Function(String family, Uint8List bytes);
 
 class CustomFontService {
   CustomFontService({
     CustomFontDirectoryProvider? supportDirectory,
     CustomFontPicker? filePicker,
     CustomFontRegistrar? registrar,
-  })  : _supportDirectory = supportDirectory ?? getApplicationSupportDirectory,
-        _filePicker = filePicker ?? _pickFontFile,
-        _registrar = registrar ?? _registerFont;
+  }) : _supportDirectory = supportDirectory ?? getApplicationSupportDirectory,
+       _filePicker = filePicker ?? _pickFontFile,
+       _registrar = registrar ?? _registerFont;
 
   static const int maxFontBytes = 50 * 1024 * 1024;
   static const String _directoryName = 'custom_fonts';
@@ -83,11 +81,13 @@ class CustomFontService {
       if (decoded is! List<Object?>) return;
       _fonts
         ..clear()
-        ..addAll(decoded.whereType<Map<String, Object?>>().map((json) {
-          final record = CustomFontRecord.fromJson(json);
-          final file = File(path.join(directory.path, record.relativePath));
-          return record.copyWith(available: file.existsSync());
-        }));
+        ..addAll(
+          decoded.whereType<Map<String, Object?>>().map((json) {
+            final record = CustomFontRecord.fromJson(json);
+            final file = File(path.join(directory.path, record.relativePath));
+            return record.copyWith(available: file.existsSync());
+          }),
+        );
     } catch (_) {
       _fonts.clear();
     }
@@ -102,8 +102,9 @@ class CustomFontService {
     final temporary = File('${manifest.path}.tmp');
     try {
       await temporary.writeAsString(
-        const JsonEncoder.withIndent('  ')
-            .convert(_fonts.map((font) => font.toJson()).toList()),
+        const JsonEncoder.withIndent(
+          '  ',
+        ).convert(_fonts.map((font) => font.toJson()).toList()),
         flush: true,
       );
       if (await manifest.exists()) await manifest.delete();
@@ -124,7 +125,8 @@ class CustomFontService {
     }
     final selected = result.files.single;
     try {
-      final bytes = selected.bytes ??
+      final bytes =
+          selected.bytes ??
           (selected.path == null
               ? null
               : await File(selected.path!).readAsBytes());

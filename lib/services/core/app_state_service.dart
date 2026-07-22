@@ -529,7 +529,8 @@ class ReadingState {
       lastReadTime: json['lastReadTime'] != null
           ? DateTime.parse(json['lastReadTime'] as String)
           : null,
-      recentBooks: (json['recentBooks'] as List<dynamic>?)
+      recentBooks:
+          (json['recentBooks'] as List<dynamic>?)
               ?.map((item) => RecentBook.fromJson(item as Map<String, dynamic>))
               .toList() ??
           [],

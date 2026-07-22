@@ -77,8 +77,9 @@ void main() {
             filePath: bookFile.path,
             format: 'txt',
             textEncoding: 'utf8',
-            fileModifiedTime:
-                bookFile.lastModifiedSync().millisecondsSinceEpoch,
+            fileModifiedTime: bookFile
+                .lastModifiedSync()
+                .millisecondsSinceEpoch,
           ),
         ),
       ),
@@ -111,61 +112,65 @@ void main() {
     expect(find.text('1 / 2'), findsOneWidget);
     expect(_richTextContaining('天边压着墨色的云。'), findsNothing);
   });
-  testWidgets('vertical paging preserves the dedicated TXT chapter title page',
-      (tester) async {
-    SharedPreferences.setMockInitialValues({
-      ReaderSettingsStore.pageModeKey: ReaderPageMode.verticalScroll.name,
-    });
-    await tester.binding.setSurfaceSize(const Size(400, 800));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
+  testWidgets(
+    'vertical paging preserves the dedicated TXT chapter title page',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({
+        ReaderSettingsStore.pageModeKey: ReaderPageMode.verticalScroll.name,
+      });
+      await tester.binding.setSurfaceSize(const Size(400, 800));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: NativeReaderPage(
-          book: Book(
-            title: 'Vertical title test',
-            filePath: bookFile.path,
-            format: 'txt',
-            textEncoding: 'utf8',
-            fileModifiedTime:
-                bookFile.lastModifiedSync().millisecondsSinceEpoch,
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: NativeReaderPage(
+            book: Book(
+              title: 'Vertical title test',
+              filePath: bookFile.path,
+              format: 'txt',
+              textEncoding: 'utf8',
+              fileModifiedTime: bookFile
+                  .lastModifiedSync()
+                  .millisecondsSinceEpoch,
+            ),
           ),
         ),
-      ),
-    );
+      );
 
-    await tester.runAsync(() async {
-      for (var attempt = 0; attempt < 30; attempt++) {
-        await Future<void>.delayed(const Duration(milliseconds: 50));
-        await tester.pump();
-        if (find
-            .byKey(const ValueKey('native-chapter-title-page'))
-            .evaluate()
-            .isNotEmpty) {
-          return;
+      await tester.runAsync(() async {
+        for (var attempt = 0; attempt < 30; attempt++) {
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+          await tester.pump();
+          if (find
+              .byKey(const ValueKey('native-chapter-title-page'))
+              .evaluate()
+              .isNotEmpty) {
+            return;
+          }
         }
-      }
-    });
+      });
 
-    await _pumpUntilFound(
-      tester,
-      find.byKey(const ValueKey('native-chapter-title-page')),
-    );
+      await _pumpUntilFound(
+        tester,
+        find.byKey(const ValueKey('native-chapter-title-page')),
+      );
 
-    expect(
-      find.byKey(const ValueKey('native-chapter-title-page')),
-      findsOneWidget,
-    );
-    expect(
-      find.byKey(const ValueKey('native-vertical-reading-window')),
-      findsOneWidget,
-    );
-  });
+      expect(
+        find.byKey(const ValueKey('native-chapter-title-page')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('native-vertical-reading-window')),
+        findsOneWidget,
+      );
+    },
+  );
 
-  testWidgets('TXT initialization waits until the cover route settles',
-      (tester) async {
+  testWidgets('TXT initialization waits until the cover route settles', (
+    tester,
+  ) async {
     await tester.binding.setSurfaceSize(const Size(400, 800));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     final navigatorKey = GlobalKey<NavigatorState>();
@@ -201,8 +206,9 @@ void main() {
             filePath: bookFile.path,
             format: 'txt',
             textEncoding: 'utf8',
-            fileModifiedTime:
-                bookFile.lastModifiedSync().millisecondsSinceEpoch,
+            fileModifiedTime: bookFile
+                .lastModifiedSync()
+                .millisecondsSinceEpoch,
           ),
         ),
         animation: animation,
@@ -242,9 +248,8 @@ void main() {
 }
 
 Finder _richTextContaining(String text) => find.byWidgetPredicate(
-      (widget) =>
-          widget is RichText && widget.text.toPlainText().contains(text),
-    );
+  (widget) => widget is RichText && widget.text.toPlainText().contains(text),
+);
 
 Future<void> _pumpUntilFound(WidgetTester tester, Finder finder) async {
   for (var attempt = 0; attempt < 60; attempt++) {

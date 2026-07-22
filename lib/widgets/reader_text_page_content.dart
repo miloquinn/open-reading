@@ -28,10 +28,7 @@ class ReaderTextPageContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (page.isChapterTitle) {
-      return ReaderChapterTitlePage(
-        title: chapterTitle,
-        bodyStyle: bodyStyle,
-      );
+      return ReaderChapterTitlePage(title: chapterTitle, bodyStyle: bodyStyle);
     }
     return RichText(
       text: page.buildSpan(

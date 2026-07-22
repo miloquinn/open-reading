@@ -11,8 +11,11 @@ import '../utils/localization_extension.dart';
 /// [language] is the optional language string stored in
 /// `TtsService.lastErrorLanguage` (used by the
 /// `tts_unsupported_language` code).
-String translateTtsError(BuildContext context, String? errorCode,
-    [String? language]) {
+String translateTtsError(
+  BuildContext context,
+  String? errorCode, [
+  String? language,
+]) {
   if (errorCode == null) return '';
   final l10n = context.l10n;
   switch (errorCode) {

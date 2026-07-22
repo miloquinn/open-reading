@@ -148,10 +148,7 @@ class CustomPageTransitions {
           begin: const Offset(0.018, 0.012),
           end: Offset.zero,
         ).animate(motion);
-        final scale = Tween<double>(
-          begin: 0.985,
-          end: 1,
-        ).animate(motion);
+        final scale = Tween<double>(begin: 0.985, end: 1).animate(motion);
         final opacity = Tween<double>(begin: 0, end: 1).animate(
           CurvedAnimation(
             parent: animation,

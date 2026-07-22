@@ -36,8 +36,9 @@ void main() {
     expect(find.text('还没有选择书籍'), findsOneWidget);
   });
 
-  testWidgets('does not resize for stale file-picker keyboard insets',
-      (tester) async {
+  testWidgets('does not resize for stale file-picker keyboard insets', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(430, 900);
     tester.view.devicePixelRatio = 1;
     tester.view.viewInsets = const FakeViewPadding(bottom: 760);

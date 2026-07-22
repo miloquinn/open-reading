@@ -261,17 +261,16 @@ class TextAnchor {
       suffix: _normalizedSnippet(suffix),
       chapterId: _normalizedSnippet(chapterId),
       resourceHref: _normalizedSnippet(resourceHref),
-      startOffsetUtf16:
-          startOffsetUtf16 != null ? math.max(startOffsetUtf16, 0) : null,
+      startOffsetUtf16: startOffsetUtf16 != null
+          ? math.max(startOffsetUtf16, 0)
+          : null,
       lengthUtf16: lengthUtf16 != null ? math.max(lengthUtf16, 0) : null,
       offsetHint: offsetHint != null ? math.max(offsetHint, 0) : null,
     );
   }
 
   Map<String, dynamic> toJson() {
-    final map = <String, dynamic>{
-      'quote': quote,
-    };
+    final map = <String, dynamic>{'quote': quote};
     if (prefix != null) map['prefix'] = prefix;
     if (suffix != null) map['suffix'] = suffix;
     if (chapterId != null) map['chapterId'] = chapterId;
@@ -297,15 +296,15 @@ class TextAnchor {
 
   @override
   int get hashCode => Object.hash(
-        quote,
-        prefix,
-        suffix,
-        chapterId,
-        resourceHref,
-        startOffsetUtf16,
-        lengthUtf16,
-        offsetHint,
-      );
+    quote,
+    prefix,
+    suffix,
+    chapterId,
+    resourceHref,
+    startOffsetUtf16,
+    lengthUtf16,
+    offsetHint,
+  );
 
   @override
   bool operator ==(Object other) =>
@@ -321,7 +320,8 @@ class TextAnchor {
           offsetHint == other.offsetHint;
 
   @override
-  String toString() => 'TextAnchor(quote: "${_truncate(quote, 40)}", '
+  String toString() =>
+      'TextAnchor(quote: "${_truncate(quote, 40)}", '
       'chapterId: $chapterId, startOffsetUtf16: $startOffsetUtf16)';
 }
 
@@ -409,7 +409,8 @@ class CanonicalLocator {
             quote: excerpt,
             chapterId: chapterId,
             startOffsetUtf16: offset,
-            offsetHint: offset ??
+            offsetHint:
+                offset ??
                 (positionHint != null ? math.max(positionHint - 1, 0) : null),
           )
         : null;
@@ -446,7 +447,8 @@ class CanonicalLocator {
             quote: excerpt ?? '',
             chapterId: chapterId,
             startOffsetUtf16: offset,
-            offsetHint: offset ??
+            offsetHint:
+                offset ??
                 (positionHint != null ? math.max(positionHint - 1, 0) : null),
           )
         : null;
@@ -574,10 +576,7 @@ class CanonicalLocator {
   // -- Serialization --------------------------------------------------------
 
   Map<String, dynamic> toJson() {
-    final map = <String, dynamic>{
-      'version': version,
-      'format': format.name,
-    };
+    final map = <String, dynamic>{'version': version, 'format': format.name};
     if (href != null) map['href'] = href;
     if (chapterId != null) map['chapterId'] = chapterId;
     if (resourceHref != null) map['resourceHref'] = resourceHref;
@@ -612,27 +611,28 @@ class CanonicalLocator {
       totalPositionsHint: json['totalPositionsHint'] as int?,
       fragments:
           (json['fragments'] as List<dynamic>?)?.cast<String>().toList() ??
-              const [],
-      textAnchor:
-          textAnchorJson != null ? TextAnchor.fromJson(textAnchorJson) : null,
+          const [],
+      textAnchor: textAnchorJson != null
+          ? TextAnchor.fromJson(textAnchorJson)
+          : null,
       contentSignature: json['contentSignature'] as String?,
     );
   }
 
   @override
   int get hashCode => Object.hash(
-        version,
-        format,
-        href,
-        chapterId,
-        resourceHref,
-        progression,
-        positionHint,
-        totalPositionsHint,
-        Object.hashAll(fragments),
-        textAnchor,
-        contentSignature,
-      );
+    version,
+    format,
+    href,
+    chapterId,
+    resourceHref,
+    progression,
+    positionHint,
+    totalPositionsHint,
+    Object.hashAll(fragments),
+    textAnchor,
+    contentSignature,
+  );
 
   @override
   bool operator ==(Object other) =>
@@ -651,7 +651,8 @@ class CanonicalLocator {
           contentSignature == other.contentSignature;
 
   @override
-  String toString() => 'CanonicalLocator(format: ${format.name}, '
+  String toString() =>
+      'CanonicalLocator(format: ${format.name}, '
       'href: $href, chapterId: $chapterId, progression: $progression)';
 }
 
@@ -793,21 +794,21 @@ class RenderedLocator {
 
   @override
   int get hashCode => Object.hash(
-        version,
-        format,
-        renderer,
-        href,
-        progression,
-        position,
-        totalPositions,
-        mediaType,
-        title,
-        resourceProgression,
-        totalProgression,
-        fragments != null ? Object.hashAll(fragments!) : 0,
-        textBefore,
-        textAfter,
-      );
+    version,
+    format,
+    renderer,
+    href,
+    progression,
+    position,
+    totalPositions,
+    mediaType,
+    title,
+    resourceProgression,
+    totalProgression,
+    fragments != null ? Object.hashAll(fragments!) : 0,
+    textBefore,
+    textAfter,
+  );
 
   @override
   bool operator ==(Object other) =>
@@ -829,7 +830,8 @@ class RenderedLocator {
           textAfter == other.textAfter;
 
   @override
-  String toString() => 'RenderedLocator(format: ${format.name}, '
+  String toString() =>
+      'RenderedLocator(format: ${format.name}, '
       'renderer: ${renderer.name}, position: $position/$totalPositions)';
 }
 
@@ -909,15 +911,15 @@ class AnnotationAnchor {
 
   @override
   int get hashCode => Object.hash(
-        version,
-        kind,
-        locator,
-        textAnchor,
-        selectedText,
-        styleRaw,
-        note,
-        resolutionStatus,
-      );
+    version,
+    kind,
+    locator,
+    textAnchor,
+    selectedText,
+    styleRaw,
+    note,
+    resolutionStatus,
+  );
 
   @override
   bool operator ==(Object other) =>
@@ -933,7 +935,8 @@ class AnnotationAnchor {
           resolutionStatus == other.resolutionStatus;
 
   @override
-  String toString() => 'AnnotationAnchor(kind: ${kind.name}, '
+  String toString() =>
+      'AnnotationAnchor(kind: ${kind.name}, '
       'selectedText: "${_truncate(selectedText, 40)}", '
       'resolution: ${resolutionStatus?.name})';
 }
@@ -1001,8 +1004,9 @@ class ReaderSelection {
       selectedText: _normalizedSnippet(selectedText) ?? '',
       chapterId: _normalizedSnippet(chapterId),
       resourceHref: _normalizedSnippet(resourceHref),
-      startOffsetUtf16:
-          startOffsetUtf16 != null ? math.max(startOffsetUtf16, 0) : null,
+      startOffsetUtf16: startOffsetUtf16 != null
+          ? math.max(startOffsetUtf16, 0)
+          : null,
       lengthUtf16: lengthUtf16 != null ? math.max(lengthUtf16, 0) : null,
       prefix: _normalizedSnippet(prefix),
       suffix: _normalizedSnippet(suffix),
@@ -1010,8 +1014,9 @@ class ReaderSelection {
           ? math.min(math.max(progression, 0.0), 1.0)
           : null,
       positionHint: positionHint != null ? math.max(positionHint, 1) : null,
-      totalPositionsHint:
-          totalPositionsHint != null ? math.max(totalPositionsHint, 1) : null,
+      totalPositionsHint: totalPositionsHint != null
+          ? math.max(totalPositionsHint, 1)
+          : null,
       rendererLocatorJson: _normalizedSnippet(rendererLocatorJson),
     );
   }
@@ -1025,27 +1030,33 @@ class ReaderSelection {
     String? selectedText,
   }) {
     final anchor = canonicalLocator.textAnchor;
-    final normalizedSelected = _normalizedSnippet(selectedText) ??
+    final normalizedSelected =
+        _normalizedSnippet(selectedText) ??
         _normalizedSnippet(anchor?.quote) ??
         _normalizedSnippet(
-            CanonicalLocator.excerptFromHref(canonicalLocator.href ?? '')) ??
+          CanonicalLocator.excerptFromHref(canonicalLocator.href ?? ''),
+        ) ??
         _normalizedSnippet(renderedLocator?.textAfter) ??
         _normalizedSnippet(renderedLocator?.textBefore) ??
         '';
     final resolvedFormat = canonicalLocator.format;
     final resolvedRenderer =
         renderedLocator?.renderer ?? _defaultRenderer(resolvedFormat);
-    final resourceHref = canonicalLocator.resourceHref ??
+    final resourceHref =
+        canonicalLocator.resourceHref ??
         canonicalLocator.href ??
         renderedLocator?.href;
-    final startOffset = anchor?.startOffsetUtf16 ??
+    final startOffset =
+        anchor?.startOffsetUtf16 ??
         anchor?.offsetHint ??
         (resourceHref != null
             ? CanonicalLocator.offsetFromHref(resourceHref)
             : null);
-    final startOffsetUtf16Val =
-        startOffset != null ? math.max(startOffset, 0) : null;
-    final lengthUtf16Val = anchor?.lengthUtf16 ??
+    final startOffsetUtf16Val = startOffset != null
+        ? math.max(startOffset, 0)
+        : null;
+    final lengthUtf16Val =
+        anchor?.lengthUtf16 ??
         (normalizedSelected.isEmpty ? 0 : normalizedSelected.length);
 
     return ReaderSelection.create(
@@ -1053,7 +1064,8 @@ class ReaderSelection {
       format: resolvedFormat,
       renderer: resolvedRenderer,
       selectedText: normalizedSelected,
-      chapterId: canonicalLocator.chapterId ??
+      chapterId:
+          canonicalLocator.chapterId ??
           anchor?.chapterId ??
           (resourceHref != null
               ? CanonicalLocator.chapterIdFromHref(resourceHref)
@@ -1063,11 +1075,13 @@ class ReaderSelection {
       lengthUtf16: lengthUtf16Val,
       prefix: anchor?.prefix ?? renderedLocator?.textBefore,
       suffix: anchor?.suffix ?? renderedLocator?.textAfter,
-      progression: canonicalLocator.progression ??
+      progression:
+          canonicalLocator.progression ??
           renderedLocator?.totalProgression ??
           renderedLocator?.progression,
       positionHint: canonicalLocator.positionHint ?? renderedLocator?.position,
-      totalPositionsHint: canonicalLocator.totalPositionsHint ??
+      totalPositionsHint:
+          canonicalLocator.totalPositionsHint ??
           renderedLocator?.totalPositions,
       rendererLocatorJson: renderedLocator != null
           ? LocatorCodec.encodeRenderedLocator(renderedLocator)
@@ -1134,21 +1148,21 @@ class ReaderSelection {
 
   @override
   int get hashCode => Object.hash(
-        bookId,
-        format,
-        renderer,
-        selectedText,
-        chapterId,
-        resourceHref,
-        startOffsetUtf16,
-        lengthUtf16,
-        prefix,
-        suffix,
-        progression,
-        positionHint,
-        totalPositionsHint,
-        rendererLocatorJson,
-      );
+    bookId,
+    format,
+    renderer,
+    selectedText,
+    chapterId,
+    resourceHref,
+    startOffsetUtf16,
+    lengthUtf16,
+    prefix,
+    suffix,
+    progression,
+    positionHint,
+    totalPositionsHint,
+    rendererLocatorJson,
+  );
 
   @override
   bool operator ==(Object other) =>
@@ -1170,7 +1184,8 @@ class ReaderSelection {
           rendererLocatorJson == other.rendererLocatorJson;
 
   @override
-  String toString() => 'ReaderSelection(bookId: $bookId, '
+  String toString() =>
+      'ReaderSelection(bookId: $bookId, '
       'format: ${format.name}, selectedText: "${_truncate(selectedText, 40)}")';
 }
 
@@ -1266,8 +1281,9 @@ String? _buildTextAnchorHref({
   String? excerpt,
 }) {
   final normalizedExcerpt = _textAnchorExcerpt(excerpt ?? '');
-  final encodedExcerpt =
-      normalizedExcerpt.isEmpty ? null : Uri.encodeComponent(normalizedExcerpt);
+  final encodedExcerpt = normalizedExcerpt.isEmpty
+      ? null
+      : Uri.encodeComponent(normalizedExcerpt);
 
   if (chapterId != null && chapterId.isNotEmpty) {
     final encodedChapterId = Uri.encodeComponent(chapterId);

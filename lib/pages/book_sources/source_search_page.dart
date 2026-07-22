@@ -234,15 +234,11 @@ class _SourceSearchPageState extends State<SourceSearchPage> {
 
   @override
   Widget build(BuildContext context) {
-    final enabledSources =
-        widget.sources.where((source) => source.enabled).toList(
-              growable: false,
-            );
+    final enabledSources = widget.sources
+        .where((source) => source.enabled)
+        .toList(growable: false);
     return Scaffold(
-      appBar: AppBar(
-        titleSpacing: 0,
-        title: _buildQueryField(enabledSources),
-      ),
+      appBar: AppBar(titleSpacing: 0, title: _buildQueryField(enabledSources)),
       body: Container(
         decoration: BoxDecoration(
           gradient: PageStyleHelper.backgroundGradient(context),
@@ -279,8 +275,9 @@ class _SourceSearchPageState extends State<SourceSearchPage> {
               ? null
               : IconButton(
                   key: const Key('bookSourceSearchClearButton'),
-                  tooltip:
-                      MaterialLocalizations.of(context).deleteButtonTooltip,
+                  tooltip: MaterialLocalizations.of(
+                    context,
+                  ).deleteButtonTooltip,
                   icon: const Icon(Icons.close_rounded),
                   onPressed: _clearSearch,
                 ),
@@ -367,8 +364,8 @@ class _SourceSearchPageState extends State<SourceSearchPage> {
                     '${context.l10n.bookSourcesSearch}'
                     ' · ${_scopeLabel()} · ${_results.length}',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ],
@@ -464,9 +461,9 @@ class _SourceSearchPageState extends State<SourceSearchPage> {
             Text(
               title,
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
             ),
             if (message.isNotEmpty) ...[
               const SizedBox(height: 6),

@@ -39,10 +39,7 @@ class BookDownloadCancellation {
 
   Future<void> delay(Duration duration) async {
     throwIfCancelled();
-    await Future.any<void>([
-      Future<void>.delayed(duration),
-      whenCancelled,
-    ]);
+    await Future.any<void>([Future<void>.delayed(duration), whenCancelled]);
     throwIfCancelled();
   }
 }

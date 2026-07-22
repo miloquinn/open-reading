@@ -196,14 +196,17 @@ class Book {
       layoutSignature: layoutSignature ?? this.layoutSignature,
       storageType: storageType ?? this.storageType,
       sourceId: clearSourceMetadata ? null : sourceId ?? this.sourceId,
-      sourceBookId:
-          clearSourceMetadata ? null : sourceBookId ?? this.sourceBookId,
+      sourceBookId: clearSourceMetadata
+          ? null
+          : sourceBookId ?? this.sourceBookId,
       sourceJson: clearSourceMetadata ? null : sourceJson ?? this.sourceJson,
-      sourceBookJson:
-          clearSourceMetadata ? null : sourceBookJson ?? this.sourceBookJson,
+      sourceBookJson: clearSourceMetadata
+          ? null
+          : sourceBookJson ?? this.sourceBookJson,
       sourceKind: clearSourceMetadata ? null : sourceKind ?? this.sourceKind,
-      sourceLocator:
-          clearSourceMetadata ? null : sourceLocator ?? this.sourceLocator,
+      sourceLocator: clearSourceMetadata
+          ? null
+          : sourceLocator ?? this.sourceLocator,
       sourceModifiedTime: clearSourceMetadata
           ? null
           : sourceModifiedTime ?? this.sourceModifiedTime,

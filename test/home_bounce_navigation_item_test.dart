@@ -36,8 +36,9 @@ void main() {
     }
   });
 
-  testWidgets('animates selected and unselected states in both directions',
-      (tester) async {
+  testWidgets('animates selected and unselected states in both directions', (
+    tester,
+  ) async {
     await tester.pumpWidget(_testApp(item: item, isSelected: false));
     expect(_selectedIconOpacity(tester, label), 0);
     expect(_unselectedIconOpacity(tester, label), 1);
@@ -92,8 +93,9 @@ void main() {
     expect(_indicatorColor(tester, label).a, 0);
   });
 
-  testWidgets('animates between icon-only and labeled navigation modes',
-      (tester) async {
+  testWidgets('animates between icon-only and labeled navigation modes', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _testApp(
         item: item,
@@ -119,10 +121,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.text(label), findsOneWidget);
     expect(_labelOpacity(tester, label), inExclusiveRange(0, 1));
-    expect(
-      _indicatorSize(tester, label).width,
-      inExclusiveRange(92.25, 94.25),
-    );
+    expect(_indicatorSize(tester, label).width, inExclusiveRange(92.25, 94.25));
     expect(_selectedIconSize(tester), inExclusiveRange(27, 28));
 
     await tester.pumpAndSettle();
@@ -151,15 +150,12 @@ void main() {
     expect(_selectedIconSize(tester), 28);
   });
 
-  testWidgets('keeps press feedback inside the full tap target',
-      (tester) async {
+  testWidgets('keeps press feedback inside the full tap target', (
+    tester,
+  ) async {
     var tapCount = 0;
     await tester.pumpWidget(
-      _testApp(
-        item: item,
-        isSelected: false,
-        onTap: () => tapCount++,
-      ),
+      _testApp(item: item, isSelected: false, onTap: () => tapCount++),
     );
 
     expect(_pressScale(tester, label), 1);
@@ -176,8 +172,9 @@ void main() {
     expect(tapCount, 1);
   });
 
-  testWidgets('keeps visible unselected labels bold and high contrast',
-      (tester) async {
+  testWidgets('keeps visible unselected labels bold and high contrast', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _testApp(
         item: item,
@@ -194,8 +191,9 @@ void main() {
     expect(style.color!.a, closeTo(0.9, 0.001));
   });
 
-  testWidgets('keeps long labels inside a narrow production-sized slot',
-      (tester) async {
+  testWidgets('keeps long labels inside a narrow production-sized slot', (
+    tester,
+  ) async {
     const narrowItem = HomeNavigationItem(
       icon: Icons.library_books_outlined,
       selectedIcon: Icons.library_books,
@@ -227,15 +225,11 @@ void main() {
     expect(labelRect.right, lessThanOrEqualTo(itemRect.right));
   });
 
-  testWidgets('uses matching capsule radii at production item width',
-      (tester) async {
+  testWidgets('uses matching capsule radii at production item width', (
+    tester,
+  ) async {
     await tester.pumpWidget(
-      _testApp(
-        item: item,
-        isSelected: true,
-        itemWidth: 83,
-        itemHeight: 56,
-      ),
+      _testApp(item: item, isSelected: true, itemWidth: 83, itemHeight: 56),
     );
 
     var indicatorRect = tester.getRect(
@@ -264,19 +258,14 @@ void main() {
     indicatorRect = tester.getRect(
       find.byKey(const ValueKey('home-nav-indicator-Library')),
     );
-    final labeledItemRect =
-        tester.getRect(find.byType(HomeBounceNavigationItem));
-    expect(indicatorRect.size, const Size(83, 56));
-    expect(
-      indicatorRect.center.dx,
-      closeTo(labeledItemRect.center.dx, 0.001),
+    final labeledItemRect = tester.getRect(
+      find.byType(HomeBounceNavigationItem),
     );
+    expect(indicatorRect.size, const Size(83, 56));
+    expect(indicatorRect.center.dx, closeTo(labeledItemRect.center.dx, 0.001));
     expect(
       (labeledItemRect.width - indicatorRect.width) / 2,
-      closeTo(
-        (labeledItemRect.height - indicatorRect.height) / 2,
-        0.001,
-      ),
+      closeTo((labeledItemRect.height - indicatorRect.height) / 2, 0.001),
     );
     expect(_indicatorCornerRadius(tester, label), 28);
   });

@@ -63,9 +63,6 @@ List<BookSourceTextPage> paginateBookSourceText(
   );
 }
 
-int bookSourcePageIndexForOffset(
-  List<BookSourceTextPage> pages,
-  int offset,
-) {
+int bookSourcePageIndexForOffset(List<BookSourceTextPage> pages, int offset) {
   return readerTextPageIndexForOffset(pages, offset);
 }

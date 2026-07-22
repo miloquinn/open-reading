@@ -27,10 +27,7 @@ class _ReaderClassicFoldPainter extends CustomPainter {
       ..setFloat(index++, geometry.canonicalLineA.dy)
       ..setFloat(index++, geometry.canonicalLineB.dx)
       ..setFloat(index++, geometry.canonicalLineB.dy)
-      ..setFloat(
-        index++,
-        bindingEdge == ReaderPageBindingEdge.right ? 1 : 0,
-      )
+      ..setFloat(index++, bindingEdge == ReaderPageBindingEdge.right ? 1 : 0)
       ..setFloat(index++, backPage == null ? 0 : 1)
       ..setImageSampler(0, sourcePage)
       ..setImageSampler(1, backPage ?? sourcePage);
@@ -72,8 +69,9 @@ class _ReaderFallbackTurnPainter extends CustomPainter {
     };
     final offset = geometry.bindingOnRight ? -canonicalOffset : canonicalOffset;
     canvas.translate(offset, 0);
-    final visiblePage =
-        backPage != null && geometry.progress >= 0.5 ? backPage! : sourcePage;
+    final visiblePage = backPage != null && geometry.progress >= 0.5
+        ? backPage!
+        : sourcePage;
     _drawPageImage(canvas, visiblePage, size);
     canvas.restore();
   }

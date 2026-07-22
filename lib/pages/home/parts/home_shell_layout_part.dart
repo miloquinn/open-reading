@@ -15,9 +15,9 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
   }
 
   bool get _isMaterial3Style {
-    return Theme.of(context)
-            .extension<UiStyleThemeExtension>()
-            ?.isMaterial3Style ??
+    return Theme.of(
+          context,
+        ).extension<UiStyleThemeExtension>()?.isMaterial3Style ??
         false;
   }
 
@@ -76,14 +76,12 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
       decoration: BoxDecoration(
         color: _isMaterial3Style
             ? scheme.surfaceContainerLow
-            : GlassEffectConfig.surfaceColor(
-                context,
-                opacity: 0.8,
-              ),
+            : GlassEffectConfig.surfaceColor(context, opacity: 0.8),
         border: Border(
           right: BorderSide(
-            color: scheme.outline
-                .withValues(alpha: _isMaterial3Style ? 0.24 : 0.2),
+            color: scheme.outline.withValues(
+              alpha: _isMaterial3Style ? 0.24 : 0.2,
+            ),
             width: 1,
           ),
         ),
@@ -114,11 +112,10 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
           desktop: 250,
         ),
         backgroundColor: Colors.transparent,
-        indicatorColor:
-            scheme.primary.withValues(alpha: _isMaterial3Style ? 0.18 : 0.2),
-        selectedIconTheme: IconThemeData(
-          color: scheme.primary,
+        indicatorColor: scheme.primary.withValues(
+          alpha: _isMaterial3Style ? 0.18 : 0.2,
         ),
+        selectedIconTheme: IconThemeData(color: scheme.primary),
         unselectedIconTheme: IconThemeData(
           color: scheme.onSurface.withValues(alpha: 0.6),
         ),
@@ -170,42 +167,44 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
       ),
       floatingActionButton: showImportAction
           ? (_isMaterial3Style
-              ? FloatingActionButton.extended(
-                  onPressed: () => _navigateToImport(),
-                  backgroundColor: scheme.primaryContainer,
-                  foregroundColor: scheme.onPrimaryContainer,
-                  elevation: 2,
-                  icon: const Icon(Icons.add),
-                  label: Text(context.l10n.importBooks),
-                )
-              : Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: palette.backgroundStart.withValues(alpha: 0.28),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: BackdropFilter(
-                      enabled: !_disableShellBlur,
-                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                      child: FloatingActionButton.extended(
-                        onPressed: () => _navigateToImport(),
-                        backgroundColor: scheme.primary.withValues(
-                          alpha: GlassEffectConfig.effectiveOpacity(0.9),
+                ? FloatingActionButton.extended(
+                    onPressed: () => _navigateToImport(),
+                    backgroundColor: scheme.primaryContainer,
+                    foregroundColor: scheme.onPrimaryContainer,
+                    elevation: 2,
+                    icon: const Icon(Icons.add),
+                    label: Text(context.l10n.importBooks),
+                  )
+                : Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: palette.backgroundStart.withValues(
+                            alpha: 0.28,
+                          ),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
                         ),
-                        foregroundColor: scheme.onPrimary,
-                        icon: const Icon(Icons.add),
-                        label: Text(context.l10n.importBooks),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: BackdropFilter(
+                        enabled: !_disableShellBlur,
+                        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                        child: FloatingActionButton.extended(
+                          onPressed: () => _navigateToImport(),
+                          backgroundColor: scheme.primary.withValues(
+                            alpha: GlassEffectConfig.effectiveOpacity(0.9),
+                          ),
+                          foregroundColor: scheme.onPrimary,
+                          icon: const Icon(Icons.add),
+                          label: Text(context.l10n.importBooks),
+                        ),
                       ),
                     ),
-                  ),
-                ))
+                  ))
           : null,
     );
   }
@@ -236,12 +235,14 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         // 使用与书库页面完全相同的设置 - 完全透明且高度为0
-        backgroundColor:
-            _isMaterial3Style ? scheme.surface : Colors.transparent,
+        backgroundColor: _isMaterial3Style
+            ? scheme.surface
+            : Colors.transparent,
         elevation: 0,
         toolbarHeight: 0, // 设置高度为0，让毛玻璃标题栏在body中实现
-        surfaceTintColor:
-            _isMaterial3Style ? scheme.surface : Colors.transparent,
+        surfaceTintColor: _isMaterial3Style
+            ? scheme.surface
+            : Colors.transparent,
         systemOverlayStyle: SystemUiHelper.overlayStyleForBrightness(
           Theme.of(context).brightness,
         ),
@@ -272,9 +273,7 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
               },
               // PageScrollPhysics 保留整页吸附，同时减少 Bouncing 在页面落位时
               // 额外的回弹帧，让三页之间的切换更干净。
-              physics: const PageScrollPhysics(
-                parent: ClampingScrollPhysics(),
-              ),
+              physics: const PageScrollPhysics(parent: ClampingScrollPhysics()),
               // 禁用页面捕捉以减少卡顿
               pageSnapping: true,
               children: _mobilePages,
@@ -332,7 +331,8 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
                                 color: _isMaterial3Style
                                     ? scheme.surfaceContainerHigh
                                     : GlassEffectConfig.chromeSurfaceColor(
-                                        context),
+                                        context,
+                                      ),
                                 borderRadius: navBorderRadius,
                                 border: Border.all(
                                   color: scheme.outline.withValues(
@@ -346,23 +346,23 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
                               child: Row(
                                 mainAxisSize: MainAxisSize.max,
                                 mainAxisAlignment: MainAxisAlignment.center,
-                                children: _navigationItems.asMap().entries.map(
-                                  (entry) {
-                                    final index = entry.key;
-                                    final item = entry.value;
-                                    final isSelected =
-                                        visualSelectedIndex == index;
+                                children: _navigationItems.asMap().entries.map((
+                                  entry,
+                                ) {
+                                  final index = entry.key;
+                                  final item = entry.value;
+                                  final isSelected =
+                                      visualSelectedIndex == index;
 
-                                    return Expanded(
-                                      child: HomeBounceNavigationItem(
-                                        item: item,
-                                        isSelected: isSelected,
-                                        showLabel: showNavigationLabels,
-                                        onTap: () => _switchToTab(index),
-                                      ),
-                                    );
-                                  },
-                                ).toList(),
+                                  return Expanded(
+                                    child: HomeBounceNavigationItem(
+                                      item: item,
+                                      isSelected: isSelected,
+                                      showLabel: showNavigationLabels,
+                                      onTap: () => _switchToTab(index),
+                                    ),
+                                  );
+                                }).toList(),
                               ),
                             );
 
@@ -426,7 +426,7 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
             tooltip: context.l10n.downloadTasksTitle,
             highlighted:
                 context.watch<DownloadTaskController?>()?.hasActiveTasks ??
-                    false,
+                false,
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute<void>(
                 builder: (_) => const DownloadTasksPage(),
@@ -438,18 +438,18 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
             valueListenable: _libraryController.filterActive,
             builder: (context, active, _) => _LibraryTopBarFilterButton(
               active: active,
-              buildButton: ({
-                required IconData icon,
-                required VoidCallback onTap,
-                String? tooltip,
-                bool highlighted = false,
-              }) =>
-                  _buildTopBarActionButton(
-                icon: icon,
-                onTap: onTap,
-                tooltip: tooltip,
-                highlighted: highlighted,
-              ),
+              buildButton:
+                  ({
+                    required IconData icon,
+                    required VoidCallback onTap,
+                    String? tooltip,
+                    bool highlighted = false,
+                  }) => _buildTopBarActionButton(
+                    icon: icon,
+                    onTap: onTap,
+                    tooltip: tooltip,
+                    highlighted: highlighted,
+                  ),
               onTapWithRect: _libraryController.showFilterMenu,
             ),
           ),
@@ -489,19 +489,14 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
       left: 0,
       right: 0,
       child: RepaintBoundary(
-        child: HomeMobileTopBar(
-          title: title,
-          trailing: trailing,
-        ),
+        child: HomeMobileTopBar(title: title, trailing: trailing),
       ),
     );
   }
 
   Future<void> _navigateToBookSourceManagement() async {
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => const BookSourceManagementPage(),
-      ),
+      MaterialPageRoute<void>(builder: (_) => const BookSourceManagementPage()),
     );
   }
 
@@ -538,14 +533,15 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
           color: highlighted
               ? scheme.primaryContainer
               : (_isMaterial3Style
-                  ? scheme.surfaceContainer
-                  : palette.cardStrong),
+                    ? scheme.surfaceContainer
+                    : palette.cardStrong),
           borderRadius: BorderRadius.circular(22),
           border: Border.all(
             color: highlighted
                 ? scheme.primary.withValues(alpha: 0.35)
-                : scheme.outline
-                    .withValues(alpha: _isMaterial3Style ? 0.22 : 0.12),
+                : scheme.outline.withValues(
+                    alpha: _isMaterial3Style ? 0.22 : 0.12,
+                  ),
             width: 0.6,
           ),
         ),
@@ -574,8 +570,8 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
       return;
     }
 
-    final currentPage =
-        (_pageController.page ?? _selectedIndex.toDouble()).round();
+    final currentPage = (_pageController.page ?? _selectedIndex.toDouble())
+        .round();
     final pageDistance = (index - currentPage).abs();
     final transitionToken = ++_tabTransitionToken;
 
@@ -632,9 +628,9 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
 
   void _navigateToImport() {
     // 导入页使用标准 Material 路由，避免透明叠加时出现黑底观感。
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const ImportBookPage()),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const ImportBookPage()));
   }
 
   // 导航头部组件 - 专为平板和桌面优化
@@ -659,17 +655,15 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: scheme.primary
-                      .withValues(alpha: _isMaterial3Style ? 0.16 : 0.3),
+                  color: scheme.primary.withValues(
+                    alpha: _isMaterial3Style ? 0.16 : 0.3,
+                  ),
                   blurRadius: _isMaterial3Style ? 5 : 8,
                   offset: const Offset(0, 2),
                 ),
               ],
             ),
-            child: const AppBrandIcon(
-              size: 40,
-              borderRadius: 12,
-            ),
+            child: const AppBrandIcon(size: 40, borderRadius: 12),
           ),
           if (LayoutHelper.getValue(
             context,
@@ -717,7 +711,8 @@ class _LibraryTopBarFilterButton extends StatelessWidget {
     required VoidCallback onTap,
     String? tooltip,
     bool highlighted,
-  }) buildButton;
+  })
+  buildButton;
   final Future<void> Function(Rect anchor) onTapWithRect;
 
   const _LibraryTopBarFilterButton({

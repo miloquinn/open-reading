@@ -113,24 +113,24 @@ Future<File> _fixtureFile(
 }
 
 BookImportSource _externalSource(File file) => BookImportSource(
-      id: file.path,
-      kind: BookImportSourceKind.filePicker,
-      ownership: BookImportOwnership.externalCopy,
-      displayName: file.uri.pathSegments.last,
-      extension: 'txt',
-      locator: file.path,
-      localPath: file.path,
-    );
+  id: file.path,
+  kind: BookImportSourceKind.filePicker,
+  ownership: BookImportOwnership.externalCopy,
+  displayName: file.uri.pathSegments.last,
+  extension: 'txt',
+  locator: file.path,
+  localPath: file.path,
+);
 
 BookImportSource _managedSource(File file) => BookImportSource(
-      id: file.path,
-      kind: BookImportSourceKind.iosSharedDocuments,
-      ownership: BookImportOwnership.managedInPlace,
-      displayName: file.uri.pathSegments.last,
-      extension: 'txt',
-      locator: file.path,
-      localPath: file.path,
-    );
+  id: file.path,
+  kind: BookImportSourceKind.iosSharedDocuments,
+  ownership: BookImportOwnership.managedInPlace,
+  displayName: file.uri.pathSegments.last,
+  extension: 'txt',
+  locator: file.path,
+  localPath: file.path,
+);
 
 Future<List<File>> _filesUnder(Directory directory) async {
   if (!await directory.exists()) return const [];

@@ -4,9 +4,8 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:xxread/services/core/custom_font_service.dart';
 
-Uint8List _validTtfBytes([int marker = 1]) => Uint8List.fromList(
-      <int>[0, 1, 0, 0, marker, 2, 3, 4],
-    );
+Uint8List _validTtfBytes([int marker = 1]) =>
+    Uint8List.fromList(<int>[0, 1, 0, 0, marker, 2, 3, 4]);
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -65,10 +64,7 @@ void main() {
     await service.initialize();
 
     await expectLater(
-      service.importFontBytes(
-        fileName: 'font.woff',
-        bytes: _validTtfBytes(),
-      ),
+      service.importFontBytes(fileName: 'font.woff', bytes: _validTtfBytes()),
       throwsA(
         isA<CustomFontException>().having(
           (error) => error.code,

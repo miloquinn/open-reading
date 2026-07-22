@@ -24,10 +24,7 @@ class HashCalculationResult {
   final String hash;
   final int fileSize;
 
-  HashCalculationResult({
-    required this.hash,
-    required this.fileSize,
-  });
+  HashCalculationResult({required this.hash, required this.fileSize});
 }
 
 /// 元数据提取参数
@@ -87,10 +84,7 @@ Future<HashCalculationResult> calculateFileHashInIsolate(
   // 使用流式计算hash以支持大文件
   final hash = await md5.bind(file.openRead()).first;
 
-  return HashCalculationResult(
-    hash: hash.toString(),
-    fileSize: fileSize,
-  );
+  return HashCalculationResult(hash: hash.toString(), fileSize: fileSize);
 }
 
 /// 在isolate中提取TXT元数据
@@ -121,8 +115,10 @@ Future<SimpleMetadata> extractTxtMetadataInIsolate(
         .take(20)
         .toList();
 
-    String title = params.fileName
-        .replaceAll(RegExp(r'\.(txt)$', caseSensitive: false), '');
+    String title = params.fileName.replaceAll(
+      RegExp(r'\.(txt)$', caseSensitive: false),
+      '',
+    );
     if (lines.isNotEmpty) {
       // 查找合适的标题行
       for (var line in lines) {
@@ -133,13 +129,17 @@ Future<SimpleMetadata> extractTxtMetadataInIsolate(
       }
     }
     if (_looksGarbled(title) && params.encodingOverride != null) {
-      title = params.fileName
-          .replaceAll(RegExp(r'\.(txt)$', caseSensitive: false), '');
+      title = params.fileName.replaceAll(
+        RegExp(r'\.(txt)$', caseSensitive: false),
+        '',
+      );
     }
 
     // 估算页数（基于文件大小，避免完全解析）
-    final estimatedPages =
-        (params.effectiveTotalLength / 1500).ceil().clamp(1, 9999);
+    final estimatedPages = (params.effectiveTotalLength / 1500).ceil().clamp(
+      1,
+      9999,
+    );
 
     // 提取描述（前200字符）
     String? description;
@@ -158,11 +158,15 @@ Future<SimpleMetadata> extractTxtMetadataInIsolate(
     debugPrint('TXT元数据提取失败: $e');
     // 返回基础元数据
     return SimpleMetadata(
-      title: params.fileName
-          .replaceAll(RegExp(r'\.(txt)$', caseSensitive: false), ''),
+      title: params.fileName.replaceAll(
+        RegExp(r'\.(txt)$', caseSensitive: false),
+        '',
+      ),
       author: 'Unknown',
-      estimatedPages:
-          (params.effectiveTotalLength / 10000).ceil().clamp(1, 9999),
+      estimatedPages: (params.effectiveTotalLength / 10000).ceil().clamp(
+        1,
+        9999,
+      ),
     );
   }
 }
@@ -280,8 +284,10 @@ Future<SimpleMetadata> extractMobiMetadataInIsolate(
     }
 
     // 基于文件大小估算页数
-    estimatedPages =
-        (params.effectiveTotalLength / 3000).ceil().clamp(50, 1000);
+    estimatedPages = (params.effectiveTotalLength / 3000).ceil().clamp(
+      50,
+      1000,
+    );
 
     return SimpleMetadata(
       title: title,
@@ -296,8 +302,10 @@ Future<SimpleMetadata> extractMobiMetadataInIsolate(
         '',
       ),
       author: 'Unknown',
-      estimatedPages:
-          (params.effectiveTotalLength / 3000).ceil().clamp(50, 1000),
+      estimatedPages: (params.effectiveTotalLength / 3000).ceil().clamp(
+        50,
+        1000,
+      ),
     );
   }
 }
@@ -332,8 +340,9 @@ String _detectAndDecodeText(Uint8List bytes, {String? encodingOverride}) {
   }
 
   const sampleSize = 256 * 1024;
-  final sample =
-      bytes.length > sampleSize ? bytes.sublist(0, sampleSize) : bytes;
+  final sample = bytes.length > sampleSize
+      ? bytes.sublist(0, sampleSize)
+      : bytes;
   const candidates = <String>['utf8', 'gbk', 'utf16le', 'utf16be'];
 
   String bestEncoding = 'utf8';
@@ -387,7 +396,8 @@ double _quickContentScore(String text, String encoding) {
   final asciiRatio = ascii / total;
   final zeroRatio = zero / total;
 
-  var score = cjkRatio * 1.4 +
+  var score =
+      cjkRatio * 1.4 +
       asciiRatio * 0.45 -
       replacementRatio * 6.0 -
       controlRatio * 2.2 -
@@ -452,8 +462,5 @@ String? _decodeWithEncodingOverride(Uint8List bytes, String encoding) {
 }
 
 String _decodeGbkBestEffort(Uint8List bytes) {
-  return decodeGbkFast(
-    bytes,
-    lenient: !isLikelyValidGbkByteStream(bytes),
-  );
+  return decodeGbkFast(bytes, lenient: !isLikelyValidGbkByteStream(bytes));
 }

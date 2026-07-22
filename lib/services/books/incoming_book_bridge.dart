@@ -11,18 +11,15 @@ abstract interface class IncomingBookRequestSource {
 
   Future<List<IncomingBookRequest>> getInitialRequests();
 
-  Future<void> completeRequest(
-    String requestId, {
-    required bool deleteFiles,
-  });
+  Future<void> completeRequest(String requestId, {required bool deleteFiles});
 
   Future<void> dispose();
 }
 
 class IncomingBookPlatformBridge implements IncomingBookRequestSource {
   IncomingBookPlatformBridge({MethodChannel? channel})
-      : _channel =
-            channel ?? const MethodChannel('com.niki.xxread/incoming_books') {
+    : _channel =
+          channel ?? const MethodChannel('com.niki.xxread/incoming_books') {
     _generation = ++_latestGeneration;
     _channel.setMethodCallHandler(_handleNativeCall);
   }
@@ -39,8 +36,9 @@ class IncomingBookPlatformBridge implements IncomingBookRequestSource {
   @override
   Future<List<IncomingBookRequest>> getInitialRequests() async {
     try {
-      final raw =
-          await _channel.invokeMethod<Object?>('getInitialIncomingBooks');
+      final raw = await _channel.invokeMethod<Object?>(
+        'getInitialIncomingBooks',
+      );
       return _parseRequests(raw);
     } on MissingPluginException {
       return const [];

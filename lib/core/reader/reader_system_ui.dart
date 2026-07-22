@@ -2,11 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-enum ReaderTopBarStyle {
-  system,
-  reader,
-  hidden,
-}
+enum ReaderTopBarStyle { system, reader, hidden }
 
 ReaderTopBarStyle readerTopBarStyleFromName(
   String? name, {
@@ -24,10 +20,12 @@ class ReaderSystemUiController {
 
   static const preferenceKey = 'readerTopBarStyle';
   static const legacyPreferenceKey = 'readerShowSystemStatusBar';
-  static const MethodChannel _androidChannel =
-      MethodChannel('com.niki.xxread/fullscreen');
-  static const MethodChannel _iosReaderUiChannel =
-      MethodChannel('com.niki.xxread/reader_ui');
+  static const MethodChannel _androidChannel = MethodChannel(
+    'com.niki.xxread/fullscreen',
+  );
+  static const MethodChannel _iosReaderUiChannel = MethodChannel(
+    'com.niki.xxread/reader_ui',
+  );
 
   static Future<ReaderTopBarStyle> loadPreference() async {
     final prefs = await SharedPreferences.getInstance();
@@ -72,10 +70,9 @@ class ReaderSystemUiController {
 
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
       try {
-        await _iosReaderUiChannel.invokeMethod<void>(
-          'setReaderImmersive',
-          {'enabled': !showStatusBar},
-        );
+        await _iosReaderUiChannel.invokeMethod<void>('setReaderImmersive', {
+          'enabled': !showStatusBar,
+        });
       } on MissingPluginException {
         // Widget tests and non-standard hosts may not install the bridge.
       } on PlatformException {
@@ -106,10 +103,9 @@ class ReaderSystemUiController {
     }
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
       try {
-        await _iosReaderUiChannel.invokeMethod<void>(
-          'setReaderImmersive',
-          {'enabled': false},
-        );
+        await _iosReaderUiChannel.invokeMethod<void>('setReaderImmersive', {
+          'enabled': false,
+        });
       } on MissingPluginException {
         // Fall through to Flutter's cross-platform implementation.
       } on PlatformException {

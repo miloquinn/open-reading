@@ -56,8 +56,8 @@ class ImportBookController extends ChangeNotifier {
   ImportBookController({
     required BookFileImporter importer,
     required BookImportSourcePreparer sourcePreparer,
-  })  : _importer = importer,
-        _sourcePreparer = sourcePreparer;
+  }) : _importer = importer,
+       _sourcePreparer = sourcePreparer;
 
   final BookFileImporter _importer;
   final BookImportSourcePreparer _sourcePreparer;
@@ -218,10 +218,7 @@ class ImportBookController extends ChangeNotifier {
     } catch (error) {
       _markFailed(
         index,
-        BookImportFailure(
-          code: 'source_prepare_failed',
-          cause: error,
-        ),
+        BookImportFailure(code: 'source_prepare_failed', cause: error),
       );
     } finally {
       if (prepared != null) {
@@ -231,10 +228,7 @@ class ImportBookController extends ChangeNotifier {
           debugPrint('清理导入临时文件失败: $error');
         }
         if (prepared.localPath != originalSource.localPath) {
-          _replace(
-            index,
-            _items[index].copyWith(source: originalSource),
-          );
+          _replace(index, _items[index].copyWith(source: originalSource));
         }
       }
     }

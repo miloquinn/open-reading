@@ -10,23 +10,25 @@ import 'package:xxread/pages/reader/themes/reader_custom_theme_page.dart';
 import 'package:xxread/utils/reader_themes.dart';
 
 void main() {
-  test('custom reader theme persists its three user-controlled colors',
-      () async {
-    SharedPreferences.setMockInitialValues({});
-    const theme = ReaderCustomTheme(
-      background: Color(0xFF102030),
-      text: Color(0xFFF0E0D0),
-      controlBar: Color(0xFF203040),
-    );
-    const store = ReaderCustomThemeStore();
+  test(
+    'custom reader theme persists its three user-controlled colors',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      const theme = ReaderCustomTheme(
+        background: Color(0xFF102030),
+        text: Color(0xFFF0E0D0),
+        controlBar: Color(0xFF203040),
+      );
+      const store = ReaderCustomThemeStore();
 
-    await store.save(theme);
-    final restored = await store.load();
+      await store.save(theme);
+      final restored = await store.load();
 
-    expect(restored?.background, theme.background);
-    expect(restored?.text, theme.text);
-    expect(restored?.controlBar, theme.controlBar);
-  });
+      expect(restored?.background, theme.background);
+      expect(restored?.text, theme.text);
+      expect(restored?.controlBar, theme.controlBar);
+    },
+  );
 
   test('invalid stored custom theme is ignored', () async {
     SharedPreferences.setMockInitialValues({
@@ -36,57 +38,63 @@ void main() {
     expect(await const ReaderCustomThemeStore().load(), isNull);
   });
 
-  test('custom reader themes persist order, names, and image metadata',
-      () async {
-    SharedPreferences.setMockInitialValues({});
-    const themes = [
-      ReaderCustomTheme(
-        id: 'custom:first',
-        name: 'Rain',
-        background: Color(0xFF102030),
-        text: Color(0xFFF0E0D0),
-        controlBar: Color(0xFF203040),
-        backgroundImagePath: r'C:\themes\rain.webp',
-        backgroundImageOpacity: 0.42,
-      ),
-      ReaderCustomTheme(
-        id: 'custom:second',
-        name: 'Paper',
-        background: Color(0xFFF4EBD8),
-        text: Color(0xFF30271F),
-        controlBar: Color(0xFFE1D0B4),
-      ),
-    ];
-    const store = ReaderCustomThemeStore();
+  test(
+    'custom reader themes persist order, names, and image metadata',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      const themes = [
+        ReaderCustomTheme(
+          id: 'custom:first',
+          name: 'Rain',
+          background: Color(0xFF102030),
+          text: Color(0xFFF0E0D0),
+          controlBar: Color(0xFF203040),
+          backgroundImagePath: r'C:\themes\rain.webp',
+          backgroundImageOpacity: 0.42,
+        ),
+        ReaderCustomTheme(
+          id: 'custom:second',
+          name: 'Paper',
+          background: Color(0xFFF4EBD8),
+          text: Color(0xFF30271F),
+          controlBar: Color(0xFFE1D0B4),
+        ),
+      ];
+      const store = ReaderCustomThemeStore();
 
-    await store.saveAll(themes);
-    final restored = await store.loadAll();
+      await store.saveAll(themes);
+      final restored = await store.loadAll();
 
-    expect(
-        restored.map((theme) => theme.id), ['custom:first', 'custom:second']);
-    expect(restored.first.name, 'Rain');
-    expect(restored.first.backgroundImagePath, r'C:\themes\rain.webp');
-    expect(restored.first.backgroundImageOpacity, 0.42);
-  });
+      expect(restored.map((theme) => theme.id), [
+        'custom:first',
+        'custom:second',
+      ]);
+      expect(restored.first.name, 'Rain');
+      expect(restored.first.backgroundImagePath, r'C:\themes\rain.webp');
+      expect(restored.first.backgroundImageOpacity, 0.42);
+    },
+  );
 
-  test('legacy single custom theme migrates into the ordered library',
-      () async {
-    SharedPreferences.setMockInitialValues({
-      ReaderCustomThemeStore.legacyStorageKey: jsonEncode({
-        'background': const Color(0xFF102030).toARGB32(),
-        'text': const Color(0xFFF0E0D0).toARGB32(),
-        'controlBar': const Color(0xFF203040).toARGB32(),
-      }),
-    });
-    const store = ReaderCustomThemeStore();
+  test(
+    'legacy single custom theme migrates into the ordered library',
+    () async {
+      SharedPreferences.setMockInitialValues({
+        ReaderCustomThemeStore.legacyStorageKey: jsonEncode({
+          'background': const Color(0xFF102030).toARGB32(),
+          'text': const Color(0xFFF0E0D0).toARGB32(),
+          'controlBar': const Color(0xFF203040).toARGB32(),
+        }),
+      });
+      const store = ReaderCustomThemeStore();
 
-    final restored = await store.loadAll();
-    final prefs = await SharedPreferences.getInstance();
+      final restored = await store.loadAll();
+      final prefs = await SharedPreferences.getInstance();
 
-    expect(restored, hasLength(1));
-    expect(restored.single.id, ReaderCustomTheme.legacyThemeId);
-    expect(prefs.getString(ReaderCustomThemeStore.storageKey), isNotNull);
-  });
+      expect(restored, hasLength(1));
+      expect(restored.single.id, ReaderCustomTheme.legacyThemeId);
+      expect(prefs.getString(ReaderCustomThemeStore.storageKey), isNotNull);
+    },
+  );
 
   test('reader theme order store removes blanks and duplicate ids', () async {
     SharedPreferences.setMockInitialValues({});
@@ -97,8 +105,9 @@ void main() {
     expect(await store.load(), ['mist', 'day', 'custom:first']);
   });
 
-  testWidgets('editing a preview does not mutate the active saved palette',
-      (tester) async {
+  testWidgets('editing a preview does not mutate the active saved palette', (
+    tester,
+  ) async {
     const active = ReaderCustomTheme(
       background: Color(0xFFFFFFFF),
       text: Color(0xFF111111),

@@ -50,8 +50,9 @@ class Bookmark {
     if (createDateRaw is int) {
       parsedCreateDate = DateTime.fromMillisecondsSinceEpoch(createDateRaw);
     } else if (createDateRaw is num) {
-      parsedCreateDate =
-          DateTime.fromMillisecondsSinceEpoch(createDateRaw.toInt());
+      parsedCreateDate = DateTime.fromMillisecondsSinceEpoch(
+        createDateRaw.toInt(),
+      );
     } else if (createDateRaw is String) {
       final asInt = int.tryParse(createDateRaw);
       if (asInt != null) {
@@ -79,8 +80,9 @@ class Bookmark {
       cfi: map['cfi'],
       canonicalLocator: map['canonical_locator'],
       anchorKey: map['anchor_key'],
-      chapterIndex:
-          map['chapter_index'] == null ? null : toInt(map['chapter_index']),
+      chapterIndex: map['chapter_index'] == null
+          ? null
+          : toInt(map['chapter_index']),
       chapterTitle: map['chapter_title'],
       excerpt: map['excerpt'],
     );

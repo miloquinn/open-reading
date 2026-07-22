@@ -155,28 +155,31 @@ void main() {
       targetArchitecture: 'arm64-v8a',
     );
     AppRelease github(String version) => AppRelease(
-          version: version,
-          name: 'Open Reading v$version',
-          notes: 'GitHub notes',
-          releaseUrl: Uri.parse(
-            'https://github.com/miloquinn/open-reading/releases/tag/v$version',
-          ),
-          publishedAt: null,
-        );
+      version: version,
+      name: 'Open Reading v$version',
+      notes: 'GitHub notes',
+      releaseUrl: Uri.parse(
+        'https://github.com/miloquinn/open-reading/releases/tag/v$version',
+      ),
+      publishedAt: null,
+    );
 
     expect(
       selectLatestRelease(website: website, github: github('2.1.0')),
       same(website),
     );
     expect(
-      selectLatestRelease(website: website, github: github('2.3.0'))
-          .websiteAsset,
+      selectLatestRelease(
+        website: website,
+        github: github('2.3.0'),
+      ).websiteAsset,
       isNull,
     );
     expect(
-      selectLatestRelease(website: website, github: github('2.2.0'))
-          .websiteAsset
-          ?.architecture,
+      selectLatestRelease(
+        website: website,
+        github: github('2.2.0'),
+      ).websiteAsset?.architecture,
       'arm64-v8a',
     );
   });
@@ -184,10 +187,7 @@ void main() {
   test('rejects official APK metadata above the hard size limit', () {
     expect(
       () => AppRelease.fromWebsiteJson(
-        {
-          ..._websitePayload(),
-          'file_size': maxOfficialApkSizeBytes + 1,
-        },
+        {..._websitePayload(), 'file_size': maxOfficialApkSizeBytes + 1},
         targetPlatform: 'android',
         targetArchitecture: 'arm64-v8a',
       ),
@@ -195,50 +195,52 @@ void main() {
     );
   });
 
-  test('detects received bytes or content length above metadata immediately',
-      () {
-    expect(
-      isUpdateDownloadProgressOverLimit(
-        received: 101,
-        total: -1,
-        expectedFileSize: 100,
-      ),
-      isTrue,
-    );
-    expect(
-      isUpdateDownloadProgressOverLimit(
-        received: 1,
-        total: 101,
-        expectedFileSize: 100,
-      ),
-      isTrue,
-    );
-    expect(
-      isUpdateDownloadProgressOverLimit(
-        received: 100,
-        total: 100,
-        expectedFileSize: 100,
-      ),
-      isFalse,
-    );
-  });
+  test(
+    'detects received bytes or content length above metadata immediately',
+    () {
+      expect(
+        isUpdateDownloadProgressOverLimit(
+          received: 101,
+          total: -1,
+          expectedFileSize: 100,
+        ),
+        isTrue,
+      );
+      expect(
+        isUpdateDownloadProgressOverLimit(
+          received: 1,
+          total: 101,
+          expectedFileSize: 100,
+        ),
+        isTrue,
+      );
+      expect(
+        isUpdateDownloadProgressOverLimit(
+          received: 100,
+          total: 100,
+          expectedFileSize: 100,
+        ),
+        isFalse,
+      );
+    },
+  );
 }
 
 Map<String, dynamic> _websitePayload() => {
-      'schema_version': 1,
-      'version': '2.2.0',
-      'build_number': '14119',
-      'platform': 'android',
-      'architecture': 'arm64-v8a',
-      'package_type': 'apk',
-      'release_notes': 'Official website updates.',
-      'download_url':
-          'https://open.xxread.top/download/file/open-reading-arm64.apk',
-      'github_release_url':
-          'https://github.com/miloquinn/open-reading/releases/tag/v2.2.0',
-      'website_url': 'https://open.xxread.top/download',
-      'sha256': 'a' * 64,
-      'file_size': 63400000,
-      'published_at': '2026-07-19T00:00:00Z',
-      'mandatory': false,
-    };
+  'schema_version': 1,
+  'version': '2.2.0',
+  'build_number': '14119',
+  'platform': 'android',
+  'architecture': 'arm64-v8a',
+  'package_type': 'apk',
+  'release_notes': 'Official website updates.',
+  'download_url':
+      'https://open.xxread.top/download/file/open-reading-arm64.apk',
+  'github_release_url':
+      'https://github.com/miloquinn/open-reading/releases/tag/v2.2.0',
+  'website_url': 'https://open.xxread.top/download',
+  'sha256': 'a' * 64,
+  'file_size': 63400000,
+  'published_at': '2026-07-19T00:00:00Z',
+  'mandatory': false,
+};

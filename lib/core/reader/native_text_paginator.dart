@@ -23,12 +23,12 @@ const TextHeightBehavior readerTextHeightBehavior = TextHeightBehavior(
 /// 行高一致性，不携带 height——strut 不受 TextHeightBehavior 裁剪，
 /// 带上 height 会把首行行距原样加回来。
 StrutStyle readerStrutStyle(TextStyle style) => StrutStyle(
-      fontFamily: style.fontFamily,
-      fontFamilyFallback: style.fontFamilyFallback,
-      fontSize: style.fontSize,
-      fontWeight: style.fontWeight,
-      fontStyle: style.fontStyle,
-    );
+  fontFamily: style.fontFamily,
+  fontFamilyFallback: style.fontFamilyFallback,
+  fontSize: style.fontSize,
+  fontWeight: style.fontWeight,
+  fontStyle: style.fontStyle,
+);
 
 @immutable
 class NativeTextFlowStyle {
@@ -50,10 +50,7 @@ class NativeTextFlowStyle {
   final TextAlign textAlign;
   final TextWidthBasis textWidthBasis;
 
-  TextPainter createPainter(
-    InlineSpan text, {
-    int? maxLines,
-  }) {
+  TextPainter createPainter(InlineSpan text, {int? maxLines}) {
     return TextPainter(
       text: text,
       textAlign: textAlign,
@@ -136,12 +133,14 @@ class NativeTextPaginator {
           selected.end < text.length &&
           !_endsParagraph(text, selected.end)) {
         final selectedIndex = candidates.indexOf(selected.end);
-        final previousEnd =
-            selectedIndex > 0 ? candidates[selectedIndex - 1] : -1;
+        final previousEnd = selectedIndex > 0
+            ? candidates[selectedIndex - 1]
+            : -1;
         if (previousEnd >= pageStart) {
           final finalLine = text.substring(previousEnd, selected.end).trim();
           if (finalLine.isNotEmpty && finalLine.runes.length <= 2) {
-            selected = _verifiedRange(
+            selected =
+                _verifiedRange(
                   pageStart: pageStart,
                   pageEnd: previousEnd,
                   sourceOffset: sourceOffset,

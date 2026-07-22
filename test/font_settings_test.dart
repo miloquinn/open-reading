@@ -41,8 +41,9 @@ Future<AppSettingsNotifier> _loadNotifier({
 Future<OnlineFontService> _seededOnlineFontService(
   List<FontOption> alreadyDownloaded,
 ) async {
-  final sandbox =
-      await Directory.systemTemp.createTemp('online-font-settings-test-');
+  final sandbox = await Directory.systemTemp.createTemp(
+    'online-font-settings-test-',
+  );
   addTearDown(() => sandbox.delete(recursive: true));
 
   final fontsRoot = Directory(path.join(sandbox.path, 'online_fonts'));
@@ -54,8 +55,9 @@ Future<OnlineFontService> _seededOnlineFontService(
     await fontDir.create(recursive: true);
     final fileRecords = <Map<String, Object?>>[];
     for (final file in option.downloadFiles) {
-      await File(path.join(fontDir.path, file.fileName))
-          .writeAsBytes(const <int>[0, 1, 0, 0]);
+      await File(
+        path.join(fontDir.path, file.fileName),
+      ).writeAsBytes(const <int>[0, 1, 0, 0]);
       fileRecords.add(<String, Object?>{
         'fileName': file.fileName,
         'sha256': 'test',
@@ -68,8 +70,9 @@ Future<OnlineFontService> _seededOnlineFontService(
       'downloadedAt': DateTime.now().toUtc().toIso8601String(),
     });
   }
-  await File(path.join(fontsRoot.path, 'manifest.json'))
-      .writeAsString(jsonEncode(records));
+  await File(
+    path.join(fontsRoot.path, 'manifest.json'),
+  ).writeAsString(jsonEncode(records));
 
   return OnlineFontService(
     supportDirectory: () async => sandbox,
@@ -121,33 +124,40 @@ void main() {
     expect(notifier.appFontId, FontCatalog.systemId);
   });
 
-  test('legacy app font family migrates to the matching id when downloaded',
-      () async {
-    SharedPreferences.setMockInitialValues({
-      'app_font_family': 'SourceHanSansCN',
-    });
-    final onlineFontService =
-        await _seededOnlineFontService([FontCatalog.sourceHanSans]);
+  test(
+    'legacy app font family migrates to the matching id when downloaded',
+    () async {
+      SharedPreferences.setMockInitialValues({
+        'app_font_family': 'SourceHanSansCN',
+      });
+      final onlineFontService = await _seededOnlineFontService([
+        FontCatalog.sourceHanSans,
+      ]);
 
-    final notifier = await _loadNotifier(onlineFontService: onlineFontService);
-    addTearDown(notifier.dispose);
+      final notifier = await _loadNotifier(
+        onlineFontService: onlineFontService,
+      );
+      addTearDown(notifier.dispose);
 
-    expect(notifier.appFontId, FontCatalog.sourceHanSansId);
-    final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getString('app_font_id_v2'), FontCatalog.sourceHanSansId);
-  });
+      expect(notifier.appFontId, FontCatalog.sourceHanSansId);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('app_font_id_v2'), FontCatalog.sourceHanSansId);
+    },
+  );
 
-  test('legacy app font family falls back to system when not yet downloaded',
-      () async {
-    SharedPreferences.setMockInitialValues({
-      'app_font_family': 'SourceHanSansCN',
-    });
+  test(
+    'legacy app font family falls back to system when not yet downloaded',
+    () async {
+      SharedPreferences.setMockInitialValues({
+        'app_font_family': 'SourceHanSansCN',
+      });
 
-    final notifier = await _loadNotifier();
-    addTearDown(notifier.dispose);
+      final notifier = await _loadNotifier();
+      addTearDown(notifier.dispose);
 
-    expect(notifier.appFontId, FontCatalog.systemId);
-  });
+      expect(notifier.appFontId, FontCatalog.systemId);
+    },
+  );
 
   test('invalid stored ids fall back within their own domain', () async {
     SharedPreferences.setMockInitialValues({
@@ -175,41 +185,47 @@ void main() {
     );
   });
 
-  test('an imported font is shared by both domains but applied independently',
-      () async {
-    final sandbox =
-        await Directory.systemTemp.createTemp('font-settings-test-');
-    addTearDown(() => sandbox.delete(recursive: true));
-    final bytes = Uint8List.fromList(<int>[0, 1, 0, 0, 1, 2, 3, 4]);
-    final service = CustomFontService(
-      supportDirectory: () async => sandbox,
-      filePicker: () async => FilePickerResult(<PlatformFile>[
-        PlatformFile(
-          name: 'Reader Custom.ttf',
-          size: bytes.length,
-          bytes: bytes,
-        ),
-      ]),
-      registrar: (family, bytes) async {},
-    );
-    final notifier = await _loadNotifier(customFontService: service);
-    addTearDown(notifier.dispose);
+  test(
+    'an imported font is shared by both domains but applied independently',
+    () async {
+      final sandbox = await Directory.systemTemp.createTemp(
+        'font-settings-test-',
+      );
+      addTearDown(() => sandbox.delete(recursive: true));
+      final bytes = Uint8List.fromList(<int>[0, 1, 0, 0, 1, 2, 3, 4]);
+      final service = CustomFontService(
+        supportDirectory: () async => sandbox,
+        filePicker: () async => FilePickerResult(<PlatformFile>[
+          PlatformFile(
+            name: 'Reader Custom.ttf',
+            size: bytes.length,
+            bytes: bytes,
+          ),
+        ]),
+        registrar: (family, bytes) async {},
+      );
+      final notifier = await _loadNotifier(customFontService: service);
+      addTearDown(notifier.dispose);
 
-    final result = await notifier.importCustomFont(FontDomain.reader);
-    final customId = result.font!.id;
+      final result = await notifier.importCustomFont(FontDomain.reader);
+      final customId = result.font!.id;
 
-    expect(notifier.readerFontId, customId);
-    expect(notifier.appFontId, FontCatalog.defaultAppFont.id);
-    expect(notifier.appFontOptions.map((font) => font.id), contains(customId));
-    expect(
-      notifier.readerFontOptions.map((font) => font.id),
-      contains(customId),
-    );
+      expect(notifier.readerFontId, customId);
+      expect(notifier.appFontId, FontCatalog.defaultAppFont.id);
+      expect(
+        notifier.appFontOptions.map((font) => font.id),
+        contains(customId),
+      );
+      expect(
+        notifier.readerFontOptions.map((font) => font.id),
+        contains(customId),
+      );
 
-    await notifier.setAppFontId(customId);
-    expect(notifier.appFontId, customId);
-    await notifier.deleteCustomFont(customId);
-    expect(notifier.appFontId, FontCatalog.defaultAppFont.id);
-    expect(notifier.readerFontId, FontCatalog.defaultReaderFont.id);
-  });
+      await notifier.setAppFontId(customId);
+      expect(notifier.appFontId, customId);
+      await notifier.deleteCustomFont(customId);
+      expect(notifier.appFontId, FontCatalog.defaultAppFont.id);
+      expect(notifier.readerFontId, FontCatalog.defaultReaderFont.id);
+    },
+  );
 }

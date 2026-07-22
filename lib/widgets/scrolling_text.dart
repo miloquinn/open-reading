@@ -103,11 +103,7 @@ class _ScrollingTextState extends State<ScrollingText>
         scrollDirection: Axis.horizontal,
         controller: _scrollController,
         physics: const NeverScrollableScrollPhysics(),
-        child: Text(
-          widget.text,
-          style: widget.style,
-          maxLines: 1,
-        ),
+        child: Text(widget.text, style: widget.style, maxLines: 1),
       ),
     );
   }

@@ -82,10 +82,7 @@ class NavigationContext extends InheritedWidget {
 }
 
 class HomeShellPage extends StatefulWidget {
-  const HomeShellPage({
-    super.key,
-    this.showFirstHomeSupport = false,
-  });
+  const HomeShellPage({super.key, this.showFirstHomeSupport = false});
 
   final bool showFirstHomeSupport;
 
@@ -133,8 +130,8 @@ class _HomeShellPageState extends State<HomeShellPage> {
   Future<void> _maybeShowFirstHomeSupport() async {
     if (_supportIntroCheckStarted || !widget.showFirstHomeSupport) return;
     _supportIntroCheckStarted = true;
-    final shouldShow =
-        await const FirstHomeSupportIntroService().claimIfUnseen();
+    final shouldShow = await const FirstHomeSupportIntroService()
+        .claimIfUnseen();
     if (!shouldShow) return;
     await Future<void>.delayed(const Duration(milliseconds: 420));
     if (!mounted) return;

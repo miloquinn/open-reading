@@ -104,34 +104,36 @@ class _StatusCard extends StatelessWidget {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     final configured = sync.isConfigured;
-    final syncing = sync.status == WebDavSyncStatus.syncing ||
+    final syncing =
+        sync.status == WebDavSyncStatus.syncing ||
         sync.status == WebDavSyncStatus.testing;
-    final failed = sync.status == WebDavSyncStatus.failed ||
+    final failed =
+        sync.status == WebDavSyncStatus.failed ||
         sync.status == WebDavSyncStatus.partialFailure;
 
     final title = !configured
         ? l10n.webDavNotConfigured
         : failed
-            ? (sync.status == WebDavSyncStatus.partialFailure
-                ? l10n.webDavPartialFailure
-                : l10n.webDavSyncFailed)
-            : syncing
-                ? l10n.webDavSyncing
-                : l10n.webDavConnected;
+        ? (sync.status == WebDavSyncStatus.partialFailure
+              ? l10n.webDavPartialFailure
+              : l10n.webDavSyncFailed)
+        : syncing
+        ? l10n.webDavSyncing
+        : l10n.webDavConnected;
     final subtitle = !configured
         ? l10n.webDavConfigureSubtitle
         : failed
-            ? '${webDavSyncErrorText(context, sync.lastError)}\n'
-                '${webDavSyncFailurePhaseText(context, sync.lastFailedPhase)}'
-            : sync.pendingChanges > 0
-                ? l10n.webDavPendingChanges(sync.pendingChanges)
-                : sync.lastSuccessfulSync == null
-                    ? l10n.webDavNeverSynced
-                    : l10n.webDavLastSync(
-                        DateFormat.yMd(
-                          Localizations.localeOf(context).toLanguageTag(),
-                        ).add_Hm().format(sync.lastSuccessfulSync!.toLocal()),
-                      );
+        ? '${webDavSyncErrorText(context, sync.lastError)}\n'
+              '${webDavSyncFailurePhaseText(context, sync.lastFailedPhase)}'
+        : sync.pendingChanges > 0
+        ? l10n.webDavPendingChanges(sync.pendingChanges)
+        : sync.lastSuccessfulSync == null
+        ? l10n.webDavNeverSynced
+        : l10n.webDavLastSync(
+            DateFormat.yMd(
+              Localizations.localeOf(context).toLanguageTag(),
+            ).add_Hm().format(sync.lastSuccessfulSync!.toLocal()),
+          );
 
     return _Card(
       child: Column(
@@ -143,8 +145,9 @@ class _StatusCard extends StatelessWidget {
                 width: 46,
                 height: 46,
                 decoration: BoxDecoration(
-                  color: (failed ? scheme.error : scheme.primary)
-                      .withValues(alpha: 0.12),
+                  color: (failed ? scheme.error : scheme.primary).withValues(
+                    alpha: 0.12,
+                  ),
                   borderRadius: BorderRadius.circular(15),
                 ),
                 child: syncing
@@ -156,8 +159,8 @@ class _StatusCard extends StatelessWidget {
                         failed
                             ? Icons.cloud_off_outlined
                             : configured
-                                ? Icons.cloud_done_outlined
-                                : Icons.cloud_outlined,
+                            ? Icons.cloud_done_outlined
+                            : Icons.cloud_outlined,
                         color: failed ? scheme.error : scheme.primary,
                       ),
               ),
@@ -169,15 +172,15 @@ class _StatusCard extends StatelessWidget {
                     Text(
                       title,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w800,
-                          ),
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                     const SizedBox(height: 3),
                     Text(
                       subtitle,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                          ),
+                        color: scheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
@@ -190,9 +193,9 @@ class _StatusCard extends StatelessWidget {
               '${sync.serverUrl ?? ''} / ${sync.rootPath ?? ''}',
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
             ),
           ],
           const SizedBox(height: 20),
@@ -202,12 +205,10 @@ class _StatusCard extends StatelessWidget {
               onPressed: syncing
                   ? null
                   : configured
-                      ? () => sync.syncNow()
-                      : () => _openSetup(context),
+                  ? () => sync.syncNow()
+                  : () => _openSetup(context),
               icon: Icon(configured ? Icons.sync_rounded : Icons.settings),
-              label: Text(
-                configured ? l10n.webDavSyncNow : l10n.webDavSetUp,
-              ),
+              label: Text(configured ? l10n.webDavSyncNow : l10n.webDavSetUp),
             ),
           ),
         ],
@@ -261,10 +262,10 @@ class _ScopeCard extends StatelessWidget {
         enabled: sync.isConfigured,
         onTap: sync.isConfigured
             ? () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const WebDavSyncContentPage(),
-                  ),
-                )
+                MaterialPageRoute<void>(
+                  builder: (_) => const WebDavSyncContentPage(),
+                ),
+              )
             : null,
       ),
     );
@@ -339,8 +340,9 @@ class _BookFilesCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final available =
-        sync.remoteBooks.where((book) => book.fileAvailable).length;
+    final available = sync.remoteBooks
+        .where((book) => book.fileAvailable)
+        .length;
     return _Card(
       child: ListTile(
         contentPadding: EdgeInsets.zero,
@@ -355,10 +357,10 @@ class _BookFilesCard extends StatelessWidget {
         enabled: sync.isConfigured,
         onTap: sync.isConfigured
             ? () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const BookFileSyncPage(),
-                  ),
-                )
+                MaterialPageRoute<void>(
+                  builder: (_) => const BookFileSyncPage(),
+                ),
+              )
             : null,
       ),
     );
@@ -399,14 +401,11 @@ class _Card extends StatelessWidget {
         side: BorderSide(color: palette.border),
       ),
       clipBehavior: Clip.antiAlias,
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: child,
-      ),
+      child: Padding(padding: const EdgeInsets.all(18), child: child),
     );
   }
 }
 
-Future<void> _openSetup(BuildContext context) => Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const WebDavSetupPage()),
-    );
+Future<void> _openSetup(BuildContext context) => Navigator.of(
+  context,
+).push(MaterialPageRoute<void>(builder: (_) => const WebDavSetupPage()));

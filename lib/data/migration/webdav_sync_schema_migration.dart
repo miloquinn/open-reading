@@ -59,9 +59,7 @@ class WebDavSyncSchemaMigration {
     ''');
     final bookFileColumns = (await db.rawQuery(
       'PRAGMA table_info(sync_book_files)',
-    ))
-        .map((column) => column['name'] as String)
-        .toSet();
+    )).map((column) => column['name'] as String).toSet();
     const coverColumns = <String, String>{
       'cover_blob_sha256': 'TEXT',
       'cover_file_name': 'TEXT',

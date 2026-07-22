@@ -11,9 +11,8 @@ import 'package:xxread/services/books/incoming_book_materializer.dart';
 import 'package:xxread/services/books/incoming_book_models.dart';
 
 typedef IncomingBookOpenBook = Future<void> Function(Book book);
-typedef IncomingBookOpenImportQueue = Future<void> Function(
-  List<BookImportSource> sources,
-);
+typedef IncomingBookOpenImportQueue =
+    Future<void> Function(List<BookImportSource> sources);
 typedef IncomingBookFailureHandler = void Function(IncomingBookFailure failure);
 typedef IncomingBookProcessingHandler = void Function(bool processing);
 
@@ -26,13 +25,13 @@ class IncomingBookService {
     required IncomingBookOpenImportQueue openImportQueue,
     IncomingBookFailureHandler? onFailure,
     IncomingBookProcessingHandler? onProcessing,
-  })  : _bridge = bridge,
-        _materializer = materializer,
-        _importer = importer,
-        _openBook = openBook,
-        _openImportQueue = openImportQueue,
-        _onFailure = onFailure,
-        _onProcessing = onProcessing;
+  }) : _bridge = bridge,
+       _materializer = materializer,
+       _importer = importer,
+       _openBook = openBook,
+       _openImportQueue = openImportQueue,
+       _onFailure = onFailure,
+       _onProcessing = onProcessing;
 
   final IncomingBookRequestSource _bridge;
   final IncomingBookMaterializer _materializer;

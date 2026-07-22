@@ -64,10 +64,14 @@ class ReaderSettings {
         ReaderMarginSettings.horizontalMin,
         ReaderMarginSettings.horizontalMax,
       ),
-      topMargin: (topMargin ?? this.topMargin)
-          .clamp(ReaderMarginSettings.min, ReaderMarginSettings.max),
-      bottomMargin: (bottomMargin ?? this.bottomMargin)
-          .clamp(ReaderMarginSettings.min, ReaderMarginSettings.max),
+      topMargin: (topMargin ?? this.topMargin).clamp(
+        ReaderMarginSettings.min,
+        ReaderMarginSettings.max,
+      ),
+      bottomMargin: (bottomMargin ?? this.bottomMargin).clamp(
+        ReaderMarginSettings.min,
+        ReaderMarginSettings.max,
+      ),
       themeId: themeId ?? this.themeId,
       pageMode: pageMode ?? this.pageMode,
       firstLineIndent: (firstLineIndent ?? this.firstLineIndent).clamp(0, 4),
@@ -124,16 +128,18 @@ class ReaderSettingsStore {
     return ReaderSettings(
       fontSize: (prefs.getDouble(fontSizeKey) ?? ReaderSettings.defaultFontSize)
           .clamp(14, 32),
-      lineHeight: (prefs.getDouble(lineHeightKey) ??
-              prefs.getDouble(legacyBookSourceLineHeightKey) ??
-              ReaderSettings.defaultLineHeight)
-          .clamp(1.4, 2.1),
-      horizontalMargin: (prefs.getDouble(horizontalMarginKey) ??
-              ReaderSettings.defaultHorizontalMargin)
-          .clamp(
-        ReaderMarginSettings.horizontalMin,
-        ReaderMarginSettings.horizontalMax,
-      ),
+      lineHeight:
+          (prefs.getDouble(lineHeightKey) ??
+                  prefs.getDouble(legacyBookSourceLineHeightKey) ??
+                  ReaderSettings.defaultLineHeight)
+              .clamp(1.4, 2.1),
+      horizontalMargin:
+          (prefs.getDouble(horizontalMarginKey) ??
+                  ReaderSettings.defaultHorizontalMargin)
+              .clamp(
+                ReaderMarginSettings.horizontalMin,
+                ReaderMarginSettings.horizontalMax,
+              ),
       topMargin: margins.top,
       bottomMargin: margins.bottom,
       themeId: prefs.getString(themeKey) ?? ReaderSettings.defaultThemeId,
@@ -141,15 +147,18 @@ class ReaderSettingsStore {
         prefs.getString(pageModeKey),
         fallback: fallbackPageMode,
       ),
-      firstLineIndent: (prefs.getInt(firstLineIndentKey) ??
-              ReaderSettings.defaultFirstLineIndent)
-          .clamp(0, 4),
-      paragraphSpacing: (prefs.getInt(paragraphSpacingKey) ??
-              ReaderSettings.defaultParagraphSpacing)
-          .clamp(0, 2),
+      firstLineIndent:
+          (prefs.getInt(firstLineIndentKey) ??
+                  ReaderSettings.defaultFirstLineIndent)
+              .clamp(0, 4),
+      paragraphSpacing:
+          (prefs.getInt(paragraphSpacingKey) ??
+                  ReaderSettings.defaultParagraphSpacing)
+              .clamp(0, 2),
       pullBookmarkEnabled: prefs.getBool(pullBookmarkKey) ?? false,
       tapPageAnimationEnabled: prefs.getBool(tapPageAnimationKey) ?? true,
-      tabletTwoPageEnabled: prefs.getBool(tabletTwoPageKey) ??
+      tabletTwoPageEnabled:
+          prefs.getBool(tabletTwoPageKey) ??
           ReaderSettings.defaultTabletTwoPageEnabled,
     );
   }
@@ -167,10 +176,7 @@ class ReaderSettingsStore {
       prefs.setInt(firstLineIndentKey, settings.firstLineIndent),
       prefs.setInt(paragraphSpacingKey, settings.paragraphSpacing),
       prefs.setBool(pullBookmarkKey, settings.pullBookmarkEnabled),
-      prefs.setBool(
-        tapPageAnimationKey,
-        settings.tapPageAnimationEnabled,
-      ),
+      prefs.setBool(tapPageAnimationKey, settings.tapPageAnimationEnabled),
       prefs.setBool(tabletTwoPageKey, settings.tabletTwoPageEnabled),
     ]);
   }

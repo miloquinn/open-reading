@@ -8,8 +8,9 @@ import 'package:xxread/core/reader/reader_text_pagination.dart';
 void main() {
   const style = TextStyle(fontSize: 18, height: 1.7);
 
-  testWidgets('splits long text into non-empty pages without losing content',
-      (tester) async {
+  testWidgets('splits long text into non-empty pages without losing content', (
+    tester,
+  ) async {
     final text = List.generate(
       80,
       (index) => '\u3000\u3000第$index段正文用于测试分页是否完整。',
@@ -32,8 +33,9 @@ void main() {
     expect(pages.skip(1).every((page) => !page.showsChapterTitle), isTrue);
   });
 
-  testWidgets('book-source pagination is exactly the shared reader pipeline',
-      (tester) async {
+  testWidgets('book-source pagination is exactly the shared reader pipeline', (
+    tester,
+  ) async {
     final text = List.generate(
       42,
       (index) => '第$index段用于验证在线与本地文字阅读不会再走两套分页算法。',
@@ -72,20 +74,24 @@ void main() {
 
     expect(
       sourcePages
-          .map((page) => (
-                page.text,
-                page.startOffset,
-                page.endOffset,
-                page.isChapterTitle,
-              ))
+          .map(
+            (page) => (
+              page.text,
+              page.startOffset,
+              page.endOffset,
+              page.isChapterTitle,
+            ),
+          )
           .toList(),
       sharedPages
-          .map((page) => (
-                page.text,
-                page.startOffset,
-                page.endOffset,
-                page.isChapterTitle,
-              ))
+          .map(
+            (page) => (
+              page.text,
+              page.startOffset,
+              page.endOffset,
+              page.isChapterTitle,
+            ),
+          )
           .toList(),
     );
     expect(readerTextContentWidth(1200, 18), readerMaxTextContentWidth);
@@ -106,12 +112,15 @@ void main() {
     for (final page in pages.where((page) => !page.isChapterTitle)) {
       expect(page.text.codeUnits.last, isNot(inInclusiveRange(0xD800, 0xDBFF)));
       expect(
-          page.text.codeUnits.first, isNot(inInclusiveRange(0xDC00, 0xDFFF)));
+        page.text.codeUnits.first,
+        isNot(inInclusiveRange(0xDC00, 0xDFFF)),
+      );
     }
   });
 
-  testWidgets('paginates a phone reader chapter at wide test viewport',
-      (tester) async {
+  testWidgets('paginates a phone reader chapter at wide test viewport', (
+    tester,
+  ) async {
     final text = List.generate(
       80,
       (index) => '测试正文第$index段，用于验证书源阅读分页模式。',
@@ -128,8 +137,9 @@ void main() {
     expect(pages.length, greaterThan(1));
   });
 
-  testWidgets('preserves content when layout dimensions are not ready',
-      (tester) async {
+  testWidgets('preserves content when layout dimensions are not ready', (
+    tester,
+  ) async {
     const text = 'Chapter content should stay available.';
 
     final pages = paginateBookSourceText(
@@ -149,8 +159,9 @@ void main() {
     expect(pages.last.endOffset, text.length);
   });
 
-  testWidgets('preserves long content when continuing page height is invalid',
-      (tester) async {
+  testWidgets('preserves long content when continuing page height is invalid', (
+    tester,
+  ) async {
     final text = List.filled(60, 'Long chapter content.').join('\n');
 
     final pages = paginateBookSourceText(
@@ -169,8 +180,9 @@ void main() {
     expect(pages.last.endOffset, text.length);
   });
 
-  testWidgets('does not strand Chinese closing punctuation at a page start',
-      (tester) async {
+  testWidgets('does not strand Chinese closing punctuation at a page start', (
+    tester,
+  ) async {
     const sentence =
         '\u3000\u3000\u67ef\u7136\u95ee\uff0c\u201c\u8fd8\u80fd\u7ad9\u7a33\u5417\uff1f'
         '\u5b9d\u5b9d\u3002\u201d\u6c88\u96fe\u7720\u8f7b\u8f7b\u5e94\u4e86\u4e00\u58f0\u3002';
@@ -203,33 +215,33 @@ void main() {
     }
   });
 
-  test('removes repeated source page markers but preserves ordinary fractions',
-      () {
-    final cleaned = removeRepeatedSourcePageMarkers(const <String>[
-      '正文第一页',
-      '6/29',
-      '正文第二页',
-      '7 / 29',
-      '正文第三页',
-      '8/29',
-      '完成比例为 7/29',
-      '1/2',
-    ]);
+  test(
+    'removes repeated source page markers but preserves ordinary fractions',
+    () {
+      final cleaned = removeRepeatedSourcePageMarkers(const <String>[
+        '正文第一页',
+        '6/29',
+        '正文第二页',
+        '7 / 29',
+        '正文第三页',
+        '8/29',
+        '完成比例为 7/29',
+        '1/2',
+      ]);
 
-    expect(
-      cleaned,
-      const <String>[
+      expect(cleaned, const <String>[
         '正文第一页',
         '正文第二页',
         '正文第三页',
         '完成比例为 7/29',
         '1/2',
-      ],
-    );
-  });
+      ]);
+    },
+  );
 
-  testWidgets('restores the same text anchor after line-height repagination',
-      (tester) async {
+  testWidgets('restores the same text anchor after line-height repagination', (
+    tester,
+  ) async {
     final text = List.generate(
       60,
       (index) => '\u3000\u3000第$index段正文用于验证行距变化后的字符锚点恢复。',
@@ -258,45 +270,47 @@ void main() {
   });
 
   testWidgets(
-      'keeps canonical offsets contiguous while indent and spacing alter display text',
-      (tester) async {
-    final text = List.generate(
-      36,
-      (index) => index.isEven
-          ? '  第$index段包含原有半角缩进和足够长的分页正文。'
-          : '\t第$index段包含原有制表符缩进和足够长的分页正文。',
-    ).join('\r\n');
-    final pages = paginateBookSourceText(
-      text,
-      width: 190,
-      firstPageHeight: 130,
-      pageHeight: 150,
-      style: style,
-      textDirection: TextDirection.ltr,
-      locale: const Locale('zh', 'CN'),
-      firstLineIndent: 2,
-      paragraphSpacing: 1,
-    );
-    final displayLayout = ReaderTextLayout.build(
-      text,
-      firstLineIndent: 2,
-      paragraphSpacing: 1,
-    );
+    'keeps canonical offsets contiguous while indent and spacing alter display text',
+    (tester) async {
+      final text = List.generate(
+        36,
+        (index) => index.isEven
+            ? '  第$index段包含原有半角缩进和足够长的分页正文。'
+            : '\t第$index段包含原有制表符缩进和足够长的分页正文。',
+      ).join('\r\n');
+      final pages = paginateBookSourceText(
+        text,
+        width: 190,
+        firstPageHeight: 130,
+        pageHeight: 150,
+        style: style,
+        textDirection: TextDirection.ltr,
+        locale: const Locale('zh', 'CN'),
+        firstLineIndent: 2,
+        paragraphSpacing: 1,
+      );
+      final displayLayout = ReaderTextLayout.build(
+        text,
+        firstLineIndent: 2,
+        paragraphSpacing: 1,
+      );
 
-    expect(pages.length, greaterThan(1));
-    expect(pages.map((page) => page.text).join(), displayLayout.text);
-    expect(pages.map((page) => page.text).join(), isNot(text));
-    expectCanonicalCoverage(pages, text);
+      expect(pages.length, greaterThan(1));
+      expect(pages.map((page) => page.text).join(), displayLayout.text);
+      expect(pages.map((page) => page.text).join(), isNot(text));
+      expectCanonicalCoverage(pages, text);
 
-    for (final offset in <int>[0, 1, text.length ~/ 2, text.length - 1]) {
-      final page = pages[bookSourcePageIndexForOffset(pages, offset)];
-      expect(page.startOffset, lessThanOrEqualTo(offset));
-      expect(page.endOffset, greaterThan(offset));
-    }
-  });
+      for (final offset in <int>[0, 1, text.length ~/ 2, text.length - 1]) {
+        final page = pages[bookSourcePageIndexForOffset(pages, offset)];
+        expect(page.startOffset, lessThanOrEqualTo(offset));
+        expect(page.endOffset, greaterThan(offset));
+      }
+    },
+  );
 
-  testWidgets('keeps an all-indent chapter addressable with zero indentation',
-      (tester) async {
+  testWidgets('keeps an all-indent chapter addressable with zero indentation', (
+    tester,
+  ) async {
     const text = ' \t\u3000  ';
     final pages = paginateBookSourceText(
       text,

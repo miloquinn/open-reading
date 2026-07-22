@@ -3,10 +3,7 @@
 
 import 'package:flutter/material.dart';
 
-enum AppUiStyle {
-  glass,
-  material3,
-}
+enum AppUiStyle { glass, material3 }
 
 extension AppUiStyleX on AppUiStyle {
   String get storageValue {

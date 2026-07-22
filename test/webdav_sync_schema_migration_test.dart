@@ -12,50 +12,58 @@ void main() {
 
   tearDown(() => database.close());
 
-  test('migration creates records, cursor, and local state tables idempotently',
-      () async {
-    await WebDavSyncSchemaMigration.migrate(database);
-    await WebDavSyncSchemaMigration.migrate(database);
+  test(
+    'migration creates records, cursor, and local state tables idempotently',
+    () async {
+      await WebDavSyncSchemaMigration.migrate(database);
+      await WebDavSyncSchemaMigration.migrate(database);
 
-    final tables = await database.rawQuery(
-      "SELECT name FROM sqlite_master WHERE type = 'table'",
-    );
-    final names = tables.map((row) => row['name']).toSet();
-    expect(
+      final tables = await database.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type = 'table'",
+      );
+      final names = tables.map((row) => row['name']).toSet();
+      expect(
         names,
         containsAll([
           'sync_records',
           'sync_device_cursors',
           'sync_local_state',
           'sync_book_files',
-        ]));
+        ]),
+      );
 
-    final indexes = await database.rawQuery('PRAGMA index_list(sync_records)');
-    final indexNames = indexes.map((row) => row['name']).toSet();
-    expect(indexNames, contains('idx_sync_records_dirty'));
-    expect(indexNames, contains('idx_sync_records_entity'));
+      final indexes = await database.rawQuery(
+        'PRAGMA index_list(sync_records)',
+      );
+      final indexNames = indexes.map((row) => row['name']).toSet();
+      expect(indexNames, contains('idx_sync_records_dirty'));
+      expect(indexNames, contains('idx_sync_records_entity'));
 
-    final bookFileIndexes =
-        await database.rawQuery('PRAGMA index_list(sync_book_files)');
-    final bookFileIndexNames =
-        bookFileIndexes.map((row) => row['name']).toSet();
-    expect(bookFileIndexNames, contains('idx_sync_book_files_local_book'));
+      final bookFileIndexes = await database.rawQuery(
+        'PRAGMA index_list(sync_book_files)',
+      );
+      final bookFileIndexNames = bookFileIndexes
+          .map((row) => row['name'])
+          .toSet();
+      expect(bookFileIndexNames, contains('idx_sync_book_files_local_book'));
 
-    final bookFileColumns = await database.rawQuery(
-      'PRAGMA table_info(sync_book_files)',
-    );
-    final bookFileColumnNames =
-        bookFileColumns.map((row) => row['name']).toSet();
-    expect(
-      bookFileColumnNames,
-      containsAll([
-        'cover_blob_sha256',
-        'cover_file_name',
-        'cover_file_size',
-        'cover_remote_path',
-      ]),
-    );
-  });
+      final bookFileColumns = await database.rawQuery(
+        'PRAGMA table_info(sync_book_files)',
+      );
+      final bookFileColumnNames = bookFileColumns
+          .map((row) => row['name'])
+          .toSet();
+      expect(
+        bookFileColumnNames,
+        containsAll([
+          'cover_blob_sha256',
+          'cover_file_name',
+          'cover_file_size',
+          'cover_remote_path',
+        ]),
+      );
+    },
+  );
 
   test('migration adds cover columns to an existing book-file table', () async {
     await database.execute('''

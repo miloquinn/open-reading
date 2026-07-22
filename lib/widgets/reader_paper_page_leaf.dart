@@ -6,10 +6,7 @@ import '../utils/reader_themes.dart';
 import 'reader_theme_background.dart';
 import 'reader_top_information_bar.dart';
 
-enum ReaderPageNumberPlacement {
-  bottomLeft,
-  bottomRight,
-}
+enum ReaderPageNumberPlacement { bottomLeft, bottomRight }
 
 @immutable
 class ReaderPageSnapshotKey {
@@ -56,10 +53,10 @@ class ReaderPaperPageMetadata {
   final int pageCount;
 
   ReaderPageSnapshotKey get snapshotKey => ReaderPageSnapshotKey(
-        pageIdentity: pageIdentity,
-        layoutFingerprint: layoutFingerprint,
-        themeId: themeId,
-      );
+    pageIdentity: pageIdentity,
+    layoutFingerprint: layoutFingerprint,
+    themeId: themeId,
+  );
 
   String get pageLabel => '$pageNumber / $pageCount';
 }
@@ -99,7 +96,8 @@ class ReaderPaperPageLeaf extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final footerStyle = Theme.of(context).textTheme.labelSmall?.copyWith(
+    final footerStyle =
+        Theme.of(context).textTheme.labelSmall?.copyWith(
           color: palette.secondaryText.withValues(alpha: 0.66),
           fontSize: 10,
           height: 1,
@@ -114,8 +112,8 @@ class ReaderPaperPageLeaf extends StatelessWidget {
         );
     final semanticsLabel = showPageNumber
         ? metadata.chapterTitle.isEmpty
-            ? metadata.pageLabel
-            : '${metadata.chapterTitle}, ${metadata.pageLabel}'
+              ? metadata.pageLabel
+              : '${metadata.chapterTitle}, ${metadata.pageLabel}'
         : metadata.chapterTitle;
 
     return Semantics(
@@ -150,18 +148,15 @@ class ReaderPaperPageLeaf extends StatelessWidget {
                 bottom: safeArea.pageNumberBottom,
                 height: ReaderSafeAreaMetrics.pageNumberReserve,
                 child: Align(
-                  key: ValueKey(
-                    'reader-leaf-footer:${metadata.pageIdentity}',
-                  ),
-                  alignment: pageNumberPlacement ==
+                  key: ValueKey('reader-leaf-footer:${metadata.pageIdentity}'),
+                  alignment:
+                      pageNumberPlacement ==
                           ReaderPageNumberPlacement.bottomLeft
                       ? Alignment.centerLeft
                       : Alignment.centerRight,
                   child: Text(
                     metadata.pageLabel,
-                    key: ValueKey(
-                      'reader-leaf-page:${metadata.pageIdentity}',
-                    ),
+                    key: ValueKey('reader-leaf-page:${metadata.pageIdentity}'),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: footerStyle,

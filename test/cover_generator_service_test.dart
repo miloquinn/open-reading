@@ -8,8 +8,9 @@ import 'package:xxread/widgets/generated_book_cover.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('same title and author produce the same cover across formats',
-      (tester) async {
+  testWidgets('same title and author produce the same cover across formats', (
+    tester,
+  ) async {
     await tester.runAsync(() async {
       final txt = await CoverGenerator.generateTextCover(
         title: '远方的灯',
@@ -39,8 +40,9 @@ void main() {
     expect(identical(first, repeated), isTrue);
   });
 
-  testWidgets('generated cover exposes book metadata and uses shared painter',
-      (tester) async {
+  testWidgets('generated cover exposes book metadata and uses shared painter', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('zh'),

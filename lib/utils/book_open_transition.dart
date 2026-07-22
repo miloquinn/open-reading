@@ -244,7 +244,8 @@ class _BookOpenFlight extends StatelessWidget {
         final isExiting = animation.status == AnimationStatus.reverse;
         Rect? source = data.sourceRect;
         if (isExiting) {
-          source = data.rectResolver?.call() ??
+          source =
+              data.rectResolver?.call() ??
               (screenSize == data.sourceScreenSize ? data.sourceRect : null);
         }
         if (source == null) {
@@ -272,8 +273,11 @@ class _BookOpenFlight extends StatelessWidget {
           final exitT = 1.0 - t;
           final motionT = Curves.easeInCubic.transform(exitT);
           final rect = Rect.lerp(screenRect, source, motionT)!;
-          final radius =
-              BorderRadius.lerp(BorderRadius.zero, data.sourceRadius, motionT)!;
+          final radius = BorderRadius.lerp(
+            BorderRadius.zero,
+            data.sourceRadius,
+            motionT,
+          )!;
           return _buildFlightStack(
             screenSize: screenSize,
             page: page,
@@ -295,8 +299,11 @@ class _BookOpenFlight extends StatelessWidget {
         final contentT = _content.transform(t);
         final flightOpacity = 1.0 - _flightFade.transform(t);
         final rect = Rect.lerp(source, screenRect, expandT)!;
-        final radius =
-            BorderRadius.lerp(data.sourceRadius, BorderRadius.zero, expandT)!;
+        final radius = BorderRadius.lerp(
+          data.sourceRadius,
+          BorderRadius.zero,
+          expandT,
+        )!;
 
         return _buildFlightStack(
           screenSize: screenSize,

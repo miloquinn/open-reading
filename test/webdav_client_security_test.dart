@@ -55,26 +55,28 @@ void main() {
     expect(client.lastServerDate, DateTime.utc(2015, 10, 21, 7, 28));
   });
 
-  test('immutable writes accept a server 409 when stored content matches',
-      () async {
-    final dio = Dio()..httpClientAdapter = _ImmutableConflictAdapter();
-    final client = WebDavClient(
-      dio: dio,
-      credentials: const StoredSyncCredentials(
-        WebDavSyncConfiguration(
-          serverUrl: 'https://dav.example.com',
-          username: 'reader',
+  test(
+    'immutable writes accept a server 409 when stored content matches',
+    () async {
+      final dio = Dio()..httpClientAdapter = _ImmutableConflictAdapter();
+      final client = WebDavClient(
+        dio: dio,
+        credentials: const StoredSyncCredentials(
+          WebDavSyncConfiguration(
+            serverUrl: 'https://dav.example.com',
+            username: 'reader',
+          ),
+          'secret',
         ),
-        'secret',
-      ),
-    );
+      );
 
-    await client.putText(
-      Uri.parse('https://dav.example.com/existing.json'),
-      '{"same":true}',
-      immutable: true,
-    );
-  });
+      await client.putText(
+        Uri.parse('https://dav.example.com/existing.json'),
+        '{"same":true}',
+        immutable: true,
+      );
+    },
+  );
 }
 
 class _RedirectAdapter implements HttpClientAdapter {

@@ -11,8 +11,9 @@ import 'package:xxread/widgets/reader_shader_page_curl.dart';
 import 'package:xxread/widgets/reader_paper_page_leaf.dart';
 
 void main() {
-  testWidgets('programmatic forward turn reports the reader page change',
-      (tester) async {
+  testWidgets('programmatic forward turn reports the reader page change', (
+    tester,
+  ) async {
     final controller = ReaderPageCurlController();
     var forwardTurns = 0;
 
@@ -41,8 +42,9 @@ void main() {
     expect(forwardTurns, 1);
   });
 
-  testWidgets('programmatic backward uses the independent incoming channel',
-      (tester) async {
+  testWidgets('programmatic backward uses the independent incoming channel', (
+    tester,
+  ) async {
     final controller = ReaderPageCurlController();
     var backwardTurns = 0;
 
@@ -74,8 +76,9 @@ void main() {
     expect(backwardTurns, 1);
   });
 
-  testWidgets('rapid programmatic turns are queued instead of dropped',
-      (tester) async {
+  testWidgets('rapid programmatic turns are queued instead of dropped', (
+    tester,
+  ) async {
     final controller = ReaderPageCurlController();
     final pages = List.generate(4, (index) => _snapshot('page-$index'));
     var pageIndex = 0;
@@ -90,8 +93,9 @@ void main() {
               controller: controller,
               currentPage: pages[pageIndex],
               backwardPage: pageIndex > 0 ? pages[pageIndex - 1] : null,
-              forwardPage:
-                  pageIndex + 1 < pages.length ? pages[pageIndex + 1] : null,
+              forwardPage: pageIndex + 1 < pages.length
+                  ? pages[pageIndex + 1]
+                  : null,
               onTurnForward: () => setHostState(() => pageIndex++),
               onTurnBackward: () => setHostState(() => pageIndex--),
               paperColor: Colors.white,
@@ -138,8 +142,9 @@ void main() {
     );
   });
 
-  testWidgets('defers snapshot preparation until the opening route settles',
-      (tester) async {
+  testWidgets('defers snapshot preparation until the opening route settles', (
+    tester,
+  ) async {
     final navigatorKey = GlobalKey<NavigatorState>();
     var preparationCalls = 0;
     await tester.pumpWidget(
@@ -182,8 +187,9 @@ void main() {
     expect(preparationCalls, 1);
   });
 
-  testWidgets('phone leaf keeps the physical binding on the left',
-      (tester) async {
+  testWidgets('phone leaf keeps the physical binding on the left', (
+    tester,
+  ) async {
     late ReaderShaderPageCurl curl;
     await tester.pumpWidget(
       MaterialApp(
@@ -200,8 +206,9 @@ void main() {
     expect(curl.bindingEdge, ReaderPageBindingEdge.left);
   });
 
-  testWidgets('forward curl can start from the middle of the page',
-      (tester) async {
+  testWidgets('forward curl can start from the middle of the page', (
+    tester,
+  ) async {
     var forwardTurns = 0;
 
     await tester.pumpWidget(
@@ -231,8 +238,9 @@ void main() {
     expect(forwardTurns, 1);
   });
 
-  testWidgets('middle forward drag catches up from the right edge',
-      (tester) async {
+  testWidgets('middle forward drag catches up from the right edge', (
+    tester,
+  ) async {
     final controller = ReaderPageCurlController();
     await tester.pumpWidget(
       MaterialApp(
@@ -259,10 +267,7 @@ void main() {
 
     expect(controller.debugIsCatchingUp, isTrue);
     expect(controller.debugActiveBackPageIdentity, isNull);
-    expect(
-      controller.debugTouchPosition!.dx,
-      closeTo(rect.width, 0.001),
-    );
+    expect(controller.debugTouchPosition!.dx, closeTo(rect.width, 0.001));
     expect(
       controller.debugTouchPosition!.dy,
       closeTo(rect.height / 2 - 45, 0.001),
@@ -282,28 +287,20 @@ void main() {
     await gesture.moveBy(const Offset(-35, 0));
     await tester.pump(const Duration(milliseconds: 50));
     expect(controller.debugIsCatchingUp, isTrue);
-    expect(
-      controller.debugTouchPosition!.dx,
-      greaterThan(rect.width / 2 - 95),
-    );
+    expect(controller.debugTouchPosition!.dx, greaterThan(rect.width / 2 - 95));
 
     await tester.pump(const Duration(milliseconds: 40));
     expect(controller.debugIsCatchingUp, isFalse);
-    expect(
-      controller.debugTouchPosition!.dx,
-      closeTo(rect.width / 2 - 95, 1),
-    );
-    expect(
-      controller.debugTouchPosition!.dy,
-      closeTo(rect.height / 2 - 45, 1),
-    );
+    expect(controller.debugTouchPosition!.dx, closeTo(rect.width / 2 - 95, 1));
+    expect(controller.debugTouchPosition!.dy, closeTo(rect.height / 2 - 45, 1));
 
     await gesture.cancel();
     await tester.pumpAndSettle();
   });
 
-  testWidgets('edge forward drag follows immediately without catch-up',
-      (tester) async {
+  testWidgets('edge forward drag follows immediately without catch-up', (
+    tester,
+  ) async {
     final controller = ReaderPageCurlController();
     await tester.pumpWidget(
       MaterialApp(
@@ -331,10 +328,7 @@ void main() {
     await tester.pump();
 
     expect(controller.debugIsCatchingUp, isFalse);
-    expect(
-      controller.debugTouchPosition!.dx,
-      closeTo(rect.width - 42, 1),
-    );
+    expect(controller.debugTouchPosition!.dx, closeTo(rect.width - 42, 1));
 
     await gesture.moveBy(const Offset(-60, 55));
     await tester.pump();
@@ -351,71 +345,70 @@ void main() {
   });
 
   testWidgets(
-      'middle backward drag drives an incoming crease from displacement',
-      (tester) async {
-    final controller = ReaderPageCurlController();
-    await tester.pumpWidget(
-      MaterialApp(
-        home: SizedBox(
-          width: 400,
-          height: 700,
-          child: ReaderShaderPageCurl(
-            controller: controller,
-            currentPage: _snapshot('current'),
-            backwardPage: _snapshot('previous'),
-            onTurnForward: () {},
-            onTurnBackward: () {},
-            paperColor: Colors.white,
+    'middle backward drag drives an incoming crease from displacement',
+    (tester) async {
+      final controller = ReaderPageCurlController();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SizedBox(
+            width: 400,
+            height: 700,
+            child: ReaderShaderPageCurl(
+              controller: controller,
+              currentPage: _snapshot('current'),
+              backwardPage: _snapshot('previous'),
+              onTurnForward: () {},
+              onTurnBackward: () {},
+              paperColor: Colors.white,
+            ),
           ),
         ),
-      ),
-    );
-    await tester.pump();
+      );
+      await tester.pump();
 
-    final rect = tester.getRect(find.byType(ReaderShaderPageCurl));
-    final gesture = await tester.startGesture(rect.center);
-    await gesture.moveBy(const Offset(30, 0));
-    await tester.pump();
+      final rect = tester.getRect(find.byType(ReaderShaderPageCurl));
+      final gesture = await tester.startGesture(rect.center);
+      await gesture.moveBy(const Offset(30, 0));
+      await tester.pump();
 
-    expect(controller.debugIsCatchingUp, isFalse);
-    expect(controller.debugMotion, ReaderPageTurnMotion.incoming);
-    expect(controller.debugActiveSourceIsCurrent, isFalse);
-    expect(controller.debugAnimationReady, isTrue);
-    expect(
-      controller.debugTouchPosition!.dx,
-      closeTo(0, 1),
-    );
+      expect(controller.debugIsCatchingUp, isFalse);
+      expect(controller.debugMotion, ReaderPageTurnMotion.incoming);
+      expect(controller.debugActiveSourceIsCurrent, isFalse);
+      expect(controller.debugAnimationReady, isTrue);
+      expect(controller.debugTouchPosition!.dx, closeTo(0, 1));
 
-    await gesture.moveBy(const Offset(40, 45));
-    await tester.pump();
-    expect(
-      (controller.debugTouchPosition! - Offset(40, rect.height / 2 + 45))
-          .distance,
-      lessThan(1),
-    );
+      await gesture.moveBy(const Offset(40, 45));
+      await tester.pump();
+      expect(
+        (controller.debugTouchPosition! - Offset(40, rect.height / 2 + 45))
+            .distance,
+        lessThan(1),
+      );
 
-    await gesture.moveBy(const Offset(55, -90));
-    await tester.pump();
-    expect(
-      (controller.debugTouchPosition! - Offset(95, rect.height / 2 - 45))
-          .distance,
-      lessThan(1),
-    );
+      await gesture.moveBy(const Offset(55, -90));
+      await tester.pump();
+      expect(
+        (controller.debugTouchPosition! - Offset(95, rect.height / 2 - 45))
+            .distance,
+        lessThan(1),
+      );
 
-    await gesture.moveBy(const Offset(-22, 60));
-    await tester.pump();
-    expect(
-      (controller.debugTouchPosition! - Offset(73, rect.height / 2 + 15))
-          .distance,
-      lessThan(1),
-    );
+      await gesture.moveBy(const Offset(-22, 60));
+      await tester.pump();
+      expect(
+        (controller.debugTouchPosition! - Offset(73, rect.height / 2 + 15))
+            .distance,
+        lessThan(1),
+      );
 
-    await gesture.cancel();
-    await tester.pumpAndSettle();
-  });
+      await gesture.cancel();
+      await tester.pumpAndSettle();
+    },
+  );
 
-  testWidgets('horizontal backward drag stays flat through drag and settle',
-      (tester) async {
+  testWidgets('horizontal backward drag stays flat through drag and settle', (
+    tester,
+  ) async {
     final controller = ReaderPageCurlController();
     final callbackGate = Completer<void>();
     await tester.pumpWidget(
@@ -445,10 +438,7 @@ void main() {
 
     expect(controller.debugMotion, ReaderPageTurnMotion.incoming);
     expect(controller.debugTouchPosition!.dx, closeTo(0, 0.001));
-    expect(
-      controller.debugTouchPosition!.dy,
-      closeTo(rect.height / 2, 0.001),
-    );
+    expect(controller.debugTouchPosition!.dy, closeTo(rect.height / 2, 0.001));
     expect(
       controller.debugFoldStart!.dx,
       closeTo(controller.debugFoldEnd!.dx, 0.001),
@@ -456,10 +446,7 @@ void main() {
 
     await gesture.moveBy(Offset(rect.width * 0.55, 0));
     await tester.pump();
-    expect(
-      controller.debugTouchPosition!.dy,
-      closeTo(rect.height / 2, 0.001),
-    );
+    expect(controller.debugTouchPosition!.dy, closeTo(rect.height / 2, 0.001));
     expect(
       controller.debugFoldStart!.dx,
       closeTo(controller.debugFoldEnd!.dx, 0.001),
@@ -467,10 +454,7 @@ void main() {
 
     await gesture.moveBy(const Offset(70, 0));
     await tester.pump();
-    expect(
-      controller.debugTouchPosition!.dy,
-      closeTo(rect.height / 2, 0.001),
-    );
+    expect(controller.debugTouchPosition!.dy, closeTo(rect.height / 2, 0.001));
     expect(
       controller.debugFoldStart!.dx,
       closeTo(controller.debugFoldEnd!.dx, 0.001),
@@ -497,8 +481,9 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets('horizontal backward start follows a later vertical pull',
-      (tester) async {
+  testWidgets('horizontal backward start follows a later vertical pull', (
+    tester,
+  ) async {
     final controller = ReaderPageCurlController();
     await tester.pumpWidget(
       MaterialApp(
@@ -525,10 +510,7 @@ void main() {
     await gesture.moveBy(const Offset(40, 0));
     await tester.pump();
     expect(controller.debugTouchPosition!.dx, closeTo(0, 0.001));
-    expect(
-      controller.debugTouchPosition!.dy,
-      closeTo(rect.height / 2, 0.001),
-    );
+    expect(controller.debugTouchPosition!.dy, closeTo(rect.height / 2, 0.001));
     expect(
       controller.debugFoldStart!.dx,
       closeTo(controller.debugFoldEnd!.dx, 0.001),
@@ -536,24 +518,15 @@ void main() {
 
     await gesture.moveBy(Offset(rect.width * 0.42, 0));
     await tester.pump();
-    expect(
-      controller.debugTouchPosition!.dy,
-      closeTo(rect.height / 2, 0.001),
-    );
+    expect(controller.debugTouchPosition!.dy, closeTo(rect.height / 2, 0.001));
 
     await gesture.moveBy(const Offset(0, 20));
     await tester.pump();
-    expect(
-      controller.debugTouchPosition!.dy,
-      closeTo(rect.height / 2 + 20, 1),
-    );
+    expect(controller.debugTouchPosition!.dy, closeTo(rect.height / 2 + 20, 1));
 
     await gesture.moveBy(const Offset(0, 40));
     await tester.pump();
-    expect(
-      controller.debugTouchPosition!.dy,
-      closeTo(rect.height / 2 + 60, 1),
-    );
+    expect(controller.debugTouchPosition!.dy, closeTo(rect.height / 2 + 60, 1));
     expect(
       (controller.debugFoldStart!.dx - controller.debugFoldEnd!.dx).abs(),
       greaterThan(1),
@@ -561,10 +534,7 @@ void main() {
 
     await gesture.moveBy(const Offset(0, -140));
     await tester.pump();
-    expect(
-      controller.debugTouchPosition!.dy,
-      closeTo(rect.height / 2 - 80, 1),
-    );
+    expect(controller.debugTouchPosition!.dy, closeTo(rect.height / 2 - 80, 1));
     expect(
       (controller.debugFoldStart!.dx - controller.debugFoldEnd!.dx).abs(),
       greaterThan(1),
@@ -574,8 +544,9 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets('diagonal backward settle stays flat after reaching the edge',
-      (tester) async {
+  testWidgets('diagonal backward settle stays flat after reaching the edge', (
+    tester,
+  ) async {
     final controller = ReaderPageCurlController();
     final callbackGate = Completer<void>();
     var callbackStarted = false;
@@ -629,95 +600,101 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets('cold backward capture paints before async preparation finishes',
-      (tester) async {
-    final controller = ReaderPageCurlController();
-    final preparation = Completer<void>();
-    await tester.pumpWidget(
-      MaterialApp(
-        home: SizedBox(
-          width: 400,
-          height: 700,
-          child: ReaderShaderPageCurl(
-            controller: controller,
-            currentPage: _snapshot('current'),
-            backwardPage: _snapshot('previous'),
-            preparePages: () => preparation.future,
-            onTurnForward: () {},
-            onTurnBackward: () {},
-            paperColor: Colors.white,
+  testWidgets(
+    'cold backward capture paints before async preparation finishes',
+    (tester) async {
+      final controller = ReaderPageCurlController();
+      final preparation = Completer<void>();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SizedBox(
+            width: 400,
+            height: 700,
+            child: ReaderShaderPageCurl(
+              controller: controller,
+              currentPage: _snapshot('current'),
+              backwardPage: _snapshot('previous'),
+              preparePages: () => preparation.future,
+              onTurnForward: () {},
+              onTurnBackward: () {},
+              paperColor: Colors.white,
+            ),
           ),
         ),
-      ),
-    );
-    await tester.pump();
+      );
+      await tester.pump();
 
-    final rect = tester.getRect(find.byType(ReaderShaderPageCurl));
-    final gesture = await tester.startGesture(
-      Offset(rect.left + 2, rect.center.dy),
-    );
-    await gesture.moveBy(const Offset(80, -45));
-    await tester.pump();
+      final rect = tester.getRect(find.byType(ReaderShaderPageCurl));
+      final gesture = await tester.startGesture(
+        Offset(rect.left + 2, rect.center.dy),
+      );
+      await gesture.moveBy(const Offset(80, -45));
+      await tester.pump();
 
-    expect(controller.debugAnimationReady, isTrue);
-    expect(controller.debugUsesProvisionalSnapshot, isTrue);
-    expect(controller.debugFoldStart, isNotNull);
-    expect(controller.debugFoldEnd, isNotNull);
+      expect(controller.debugAnimationReady, isTrue);
+      expect(controller.debugUsesProvisionalSnapshot, isTrue);
+      expect(controller.debugFoldStart, isNotNull);
+      expect(controller.debugFoldEnd, isNotNull);
 
-    preparation.complete();
-    for (var frame = 0;
+      preparation.complete();
+      for (
+        var frame = 0;
         frame < 20 && controller.debugUsesProvisionalSnapshot;
-        frame++) {
-      await tester.pump(const Duration(milliseconds: 50));
-    }
-    expect(controller.debugUsesProvisionalSnapshot, isFalse);
+        frame++
+      ) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+      expect(controller.debugUsesProvisionalSnapshot, isFalse);
 
-    await gesture.cancel();
-    await tester.pumpAndSettle();
-  });
+      await gesture.cancel();
+      await tester.pumpAndSettle();
+    },
+  );
 
   testWidgets(
-      'visible forward source stays stable while adjacent preparation finishes',
-      (tester) async {
-    final controller = ReaderPageCurlController();
-    final preparation = Completer<void>();
-    await tester.pumpWidget(
-      MaterialApp(
-        home: SizedBox(
-          width: 400,
-          height: 700,
-          child: ReaderShaderPageCurl(
-            controller: controller,
-            currentPage: _snapshot('current'),
-            forwardPage: _snapshot('next'),
-            preparePages: () => preparation.future,
-            onTurnForward: () {},
-            onTurnBackward: () {},
-            paperColor: Colors.white,
+    'visible forward source stays stable while adjacent preparation finishes',
+    (tester) async {
+      final controller = ReaderPageCurlController();
+      final preparation = Completer<void>();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SizedBox(
+            width: 400,
+            height: 700,
+            child: ReaderShaderPageCurl(
+              controller: controller,
+              currentPage: _snapshot('current'),
+              forwardPage: _snapshot('next'),
+              preparePages: () => preparation.future,
+              onTurnForward: () {},
+              onTurnBackward: () {},
+              paperColor: Colors.white,
+            ),
           ),
         ),
-      ),
-    );
-    await tester.pump();
+      );
+      await tester.pump();
 
-    final rect = tester.getRect(find.byType(ReaderShaderPageCurl));
-    final gesture = await tester.startGesture(rect.center);
-    await gesture.moveBy(const Offset(-30, 0));
-    await tester.pump();
+      final rect = tester.getRect(find.byType(ReaderShaderPageCurl));
+      final gesture = await tester.startGesture(rect.center);
+      await gesture.moveBy(const Offset(-30, 0));
+      await tester.pump();
 
-    expect(controller.debugAnimationReady, isTrue);
-    expect(controller.debugUsesProvisionalSnapshot, isFalse);
+      expect(controller.debugAnimationReady, isTrue);
+      expect(controller.debugUsesProvisionalSnapshot, isFalse);
 
-    preparation.complete();
-    await tester.pump(const Duration(milliseconds: 160));
-    expect(controller.debugUsesProvisionalSnapshot, isFalse);
+      preparation.complete();
+      await tester.pump(const Duration(milliseconds: 160));
+      expect(controller.debugUsesProvisionalSnapshot, isFalse);
 
-    await gesture.cancel();
-    await tester.pumpAndSettle();
-  });
+      await gesture.cancel();
+      await tester.pumpAndSettle();
+    },
+  );
 
-  testWidgets('active turn keeps stable repaint keys across status revisions',
-      (tester) async {
+  testWidgets('active turn keeps stable repaint keys across status revisions', (
+    tester,
+  ) async {
     final controller = ReaderPageCurlController();
     late StateSetter updateHost;
     var revision = 0;
@@ -761,8 +738,9 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets('classic fold accepts a horizontal drag below page center',
-      (tester) async {
+  testWidgets('classic fold accepts a horizontal drag below page center', (
+    tester,
+  ) async {
     var forwardTurns = 0;
 
     await tester.pumpWidget(
@@ -792,44 +770,47 @@ void main() {
     expect(forwardTurns, 1);
   });
 
-  testWidgets('classic fold turns backward with the phone binding on the left',
-      (tester) async {
-    var backwardTurns = 0;
+  testWidgets(
+    'classic fold turns backward with the phone binding on the left',
+    (tester) async {
+      var backwardTurns = 0;
 
-    await tester.pumpWidget(
-      MaterialApp(
-        home: SizedBox(
-          width: 400,
-          height: 700,
-          child: ReaderShaderPageCurl(
-            currentPage: _snapshot('current'),
-            backwardPage: _snapshot('previous'),
-            onTurnForward: () {},
-            onTurnBackward: () => backwardTurns++,
-            paperColor: Colors.white,
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SizedBox(
+            width: 400,
+            height: 700,
+            child: ReaderShaderPageCurl(
+              currentPage: _snapshot('current'),
+              backwardPage: _snapshot('previous'),
+              onTurnForward: () {},
+              onTurnBackward: () => backwardTurns++,
+              paperColor: Colors.white,
+            ),
           ),
         ),
-      ),
-    );
-    await tester.pump();
+      );
+      await tester.pump();
 
-    final curl = tester.widget<ReaderShaderPageCurl>(
-      find.byType(ReaderShaderPageCurl),
-    );
-    expect(curl.bindingEdge, ReaderPageBindingEdge.left);
+      final curl = tester.widget<ReaderShaderPageCurl>(
+        find.byType(ReaderShaderPageCurl),
+      );
+      expect(curl.bindingEdge, ReaderPageBindingEdge.left);
 
-    final rect = tester.getRect(find.byType(ReaderShaderPageCurl));
-    await tester.dragFrom(
-      Offset(rect.left + 2, rect.top + rect.height * 0.68),
-      Offset(rect.width * 0.42, 0),
-    );
-    await tester.pumpAndSettle();
+      final rect = tester.getRect(find.byType(ReaderShaderPageCurl));
+      await tester.dragFrom(
+        Offset(rect.left + 2, rect.top + rect.height * 0.68),
+        Offset(rect.width * 0.42, 0),
+      );
+      await tester.pumpAndSettle();
 
-    expect(backwardTurns, 1);
-  });
+      expect(backwardTurns, 1);
+    },
+  );
 
-  testWidgets('edge-only forward turn cannot start from its binding edge',
-      (tester) async {
+  testWidgets('edge-only forward turn cannot start from its binding edge', (
+    tester,
+  ) async {
     var forwardTurns = 0;
 
     await tester.pumpWidget(
@@ -861,58 +842,60 @@ void main() {
   });
 
   testWidgets(
-      'tablet left leaf turns from the outer edge, not the center spine',
-      (tester) async {
-    var backwardTurns = 0;
-    final controller = ReaderPageCurlController();
+    'tablet left leaf turns from the outer edge, not the center spine',
+    (tester) async {
+      var backwardTurns = 0;
+      final controller = ReaderPageCurlController();
 
-    await tester.pumpWidget(
-      MaterialApp(
-        home: SizedBox(
-          width: 400,
-          height: 700,
-          child: ReaderShaderPageCurl(
-            controller: controller,
-            edgeDragOnly: true,
-            bindingEdge: ReaderPageBindingEdge.right,
-            currentPage: _snapshot('current'),
-            backwardPage: _snapshot('previous'),
-            onTurnForward: () {},
-            onTurnBackward: () => backwardTurns++,
-            paperColor: Colors.white,
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SizedBox(
+            width: 400,
+            height: 700,
+            child: ReaderShaderPageCurl(
+              controller: controller,
+              edgeDragOnly: true,
+              bindingEdge: ReaderPageBindingEdge.right,
+              currentPage: _snapshot('current'),
+              backwardPage: _snapshot('previous'),
+              onTurnForward: () {},
+              onTurnBackward: () => backwardTurns++,
+              paperColor: Colors.white,
+            ),
           ),
         ),
-      ),
-    );
-    await tester.pump();
+      );
+      await tester.pump();
 
-    final rect = tester.getRect(find.byType(ReaderShaderPageCurl));
-    await tester.dragFrom(
-      Offset(rect.right - 2, rect.center.dy),
-      Offset(rect.width * 0.5, 0),
-    );
-    await tester.pumpAndSettle();
-    expect(backwardTurns, 0);
+      final rect = tester.getRect(find.byType(ReaderShaderPageCurl));
+      await tester.dragFrom(
+        Offset(rect.right - 2, rect.center.dy),
+        Offset(rect.width * 0.5, 0),
+      );
+      await tester.pumpAndSettle();
+      expect(backwardTurns, 0);
 
-    await tester.dragFrom(
-      Offset(rect.left + 2, rect.center.dy),
-      Offset(rect.width * 0.2, 0),
-    );
-    expect(controller.debugMotion, ReaderPageTurnMotion.outgoing);
-    expect(controller.debugActiveSourceIsCurrent, isTrue);
-    await tester.pumpAndSettle();
-    expect(backwardTurns, 1);
+      await tester.dragFrom(
+        Offset(rect.left + 2, rect.center.dy),
+        Offset(rect.width * 0.2, 0),
+      );
+      expect(controller.debugMotion, ReaderPageTurnMotion.outgoing);
+      expect(controller.debugActiveSourceIsCurrent, isTrue);
+      await tester.pumpAndSettle();
+      expect(backwardTurns, 1);
 
-    await tester.dragFrom(
-      Offset(rect.left + 2, rect.center.dy),
-      Offset(rect.width * 0.5, 0),
-    );
-    await tester.pumpAndSettle();
-    expect(backwardTurns, 2);
-  });
+      await tester.dragFrom(
+        Offset(rect.left + 2, rect.center.dy),
+        Offset(rect.width * 0.5, 0),
+      );
+      await tester.pumpAndSettle();
+      expect(backwardTurns, 2);
+    },
+  );
 
-  testWidgets('committed diagonal turn snaps to the exact shader endpoint',
-      (tester) async {
+  testWidgets('committed diagonal turn snaps to the exact shader endpoint', (
+    tester,
+  ) async {
     final controller = ReaderPageCurlController();
     final callbackGate = Completer<void>();
     var callbackStarted = false;
@@ -956,8 +939,9 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets('tablet spread paints the active leaf above its sibling',
-      (tester) async {
+  testWidgets('tablet spread paints the active leaf above its sibling', (
+    tester,
+  ) async {
     await tester.binding.setSurfaceSize(const Size(900, 800));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     final coordinator = ReaderPageCurlCoordinator(gutterWidth: 24);
@@ -1007,9 +991,7 @@ void main() {
 
     Key? topLayerKey() => tester
         .widget<Stack>(
-          find.byKey(
-            const ValueKey('reader-page-curl-spread-layer-stack'),
-          ),
+          find.byKey(const ValueKey('reader-page-curl-spread-layer-stack')),
         )
         .children
         .last
@@ -1028,10 +1010,7 @@ void main() {
     );
     await forwardGesture.moveBy(const Offset(-90, -30));
     await tester.pump();
-    expect(
-      coordinator.activeBindingEdge,
-      ReaderPageBindingEdge.left,
-    );
+    expect(coordinator.activeBindingEdge, ReaderPageBindingEdge.left);
     expect(forwardController.debugActiveBackPageIdentity, 'right-back');
     expect(
       topLayerKey(),
@@ -1052,15 +1031,9 @@ void main() {
     );
     await backwardGesture.moveBy(const Offset(90, -30));
     await tester.pump();
-    expect(
-      coordinator.activeBindingEdge,
-      ReaderPageBindingEdge.right,
-    );
+    expect(coordinator.activeBindingEdge, ReaderPageBindingEdge.right);
     expect(backwardController.debugActiveBackPageIdentity, 'left-back');
-    expect(
-      topLayerKey(),
-      const ValueKey('reader-page-curl-spread-left-layer'),
-    );
+    expect(topLayerKey(), const ValueKey('reader-page-curl-spread-left-layer'));
     final firstBackwardTouch = backwardController.debugTouchPosition;
     await backwardGesture.moveBy(const Offset(40, 20));
     await tester.pump();
@@ -1069,8 +1042,9 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets('tablet folded back texture stays readable on both bindings',
-      (tester) async {
+  testWidgets('tablet folded back texture stays readable on both bindings', (
+    tester,
+  ) async {
     await _expectReadableFoldedBack(
       tester,
       bindingEdge: ReaderPageBindingEdge.left,
@@ -1081,8 +1055,9 @@ void main() {
     );
   });
 
-  testWidgets('tablet spread coordinator serializes opposite leaf turns',
-      (tester) async {
+  testWidgets('tablet spread coordinator serializes opposite leaf turns', (
+    tester,
+  ) async {
     final coordinator = ReaderPageCurlCoordinator();
     final forwardController = ReaderPageCurlController();
     final backwardController = ReaderPageCurlController();
@@ -1186,14 +1161,14 @@ void main() {
 }
 
 ReaderPageSnapshot _snapshot(String id) => ReaderPageSnapshot(
-      key: ReaderPageSnapshotKey(
-        pageIdentity: id,
-        layoutFingerprint: 'layout',
-        themeId: 'day',
-      ),
-      contentRevision: 0,
-      child: Text(id),
-    );
+  key: ReaderPageSnapshotKey(
+    pageIdentity: id,
+    layoutFingerprint: 'layout',
+    themeId: 'day',
+  ),
+  contentRevision: 0,
+  child: Text(id),
+);
 
 ReaderPageSnapshot _revisionSnapshot(String id, int revision) =>
     ReaderPageSnapshot(
@@ -1276,9 +1251,11 @@ Future<void> _expectReadableFoldedBack(
       ),
     ),
   );
-  for (var frame = 0;
-      frame < 20 && !controller.debugUsesClassicFoldShader;
-      frame++) {
+  for (
+    var frame = 0;
+    frame < 20 && !controller.debugUsesClassicFoldShader;
+    frame++
+  ) {
     await tester.pump(const Duration(milliseconds: 16));
   }
   expect(controller.debugUsesClassicFoldShader, isTrue);

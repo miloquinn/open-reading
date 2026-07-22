@@ -121,9 +121,11 @@ class _ReaderNavigationSheetState extends State<ReaderNavigationSheet>
           entries[ancestorPositions.last].depth >= depth) {
         ancestorPositions.removeLast();
       }
-      final parentPosition =
-          ancestorPositions.isEmpty ? null : ancestorPositions.last;
-      final hasChildren = position + 1 < widget.chapters.length &&
+      final parentPosition = ancestorPositions.isEmpty
+          ? null
+          : ancestorPositions.last;
+      final hasChildren =
+          position + 1 < widget.chapters.length &&
           widget.chapters[position + 1].depth > depth;
       entries.add(
         _ReaderNavigationTreeEntry(
@@ -206,7 +208,8 @@ class _ReaderNavigationSheetState extends State<ReaderNavigationSheet>
     var expandedAncestor = false;
     var ancestorPosition = entries[currentPosition].parentPosition;
     while (ancestorPosition != null) {
-      expandedAncestor = _collapsedChapterPositions.remove(ancestorPosition) ||
+      expandedAncestor =
+          _collapsedChapterPositions.remove(ancestorPosition) ||
           expandedAncestor;
       ancestorPosition = entries[ancestorPosition].parentPosition;
     }
@@ -297,9 +300,9 @@ class _ReaderNavigationSheetState extends State<ReaderNavigationSheet>
               children: [
                 Text(
                   context.l10n.readerNavigationTitle,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -308,17 +311,15 @@ class _ReaderNavigationSheetState extends State<ReaderNavigationSheet>
                     widget.chapters.length,
                   ),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: widget.palette.secondaryText,
-                      ),
+                    color: widget.palette.secondaryText,
+                  ),
                 ),
               ],
             ),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              MaterialLocalizations.of(context).closeButtonTooltip,
-            ),
+            child: Text(MaterialLocalizations.of(context).closeButtonTooltip),
           ),
         ],
       ),
@@ -355,25 +356,16 @@ class _ReaderNavigationSheetState extends State<ReaderNavigationSheet>
           tabs: [
             Tab(
               height: 42,
-              child: _tabLabel(
-                label: context.l10n.readerToolbarTOC,
-              ),
+              child: _tabLabel(label: context.l10n.readerToolbarTOC),
             ),
-            Tab(
-              height: 42,
-              child: _tabLabel(
-                label: context.l10n.bookmarks,
-              ),
-            ),
+            Tab(height: 42, child: _tabLabel(label: context.l10n.bookmarks)),
           ],
         ),
       ),
     );
   }
 
-  Widget _tabLabel({
-    required String label,
-  }) {
+  Widget _tabLabel({required String label}) {
     return Text(
       label,
       maxLines: 1,
@@ -482,10 +474,7 @@ class _ReaderNavigationSheetState extends State<ReaderNavigationSheet>
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),
             curve: Curves.easeOutCubic,
-            padding: const EdgeInsets.only(
-              left: 8,
-              right: 12,
-            ),
+            padding: const EdgeInsets.only(left: 8, right: 12),
             decoration: BoxDecoration(
               color: selected
                   ? widget.palette.accent.withValues(alpha: 0.08)
@@ -527,12 +516,11 @@ class _ReaderNavigationSheetState extends State<ReaderNavigationSheet>
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          fontWeight:
-                              selected ? FontWeight.w700 : FontWeight.w500,
-                          color: selected
-                              ? widget.palette.accent
-                              : widget.palette.text,
-                        ),
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                      color: selected
+                          ? widget.palette.accent
+                          : widget.palette.text,
+                    ),
                   ),
                 ),
                 if (selected) ...[
@@ -540,9 +528,9 @@ class _ReaderNavigationSheetState extends State<ReaderNavigationSheet>
                   Text(
                     context.l10n.readerCurrentChapter,
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: widget.palette.accent,
-                          fontWeight: FontWeight.w700,
-                        ),
+                      color: widget.palette.accent,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ],
               ],
@@ -645,7 +633,8 @@ class _ReaderNavigationSheetState extends State<ReaderNavigationSheet>
       separatorBuilder: (_, __) => const SizedBox(height: 9),
       itemBuilder: (context, index) {
         final bookmark = widget.bookmarks[index];
-        final current = bookmark.anchorKey != null &&
+        final current =
+            bookmark.anchorKey != null &&
             bookmark.anchorKey == widget.currentAnchorKey;
         return _buildBookmarkTile(context, bookmark, current);
       },
@@ -664,7 +653,8 @@ class _ReaderNavigationSheetState extends State<ReaderNavigationSheet>
         : context.l10n.readerChapterFallback(chapterNumber);
     final excerpt = bookmark.excerpt?.trim() ?? '';
     final date = bookmark.createDate;
-    final dateText = '${date.year}-${date.month.toString().padLeft(2, '0')}-'
+    final dateText =
+        '${date.year}-${date.month.toString().padLeft(2, '0')}-'
         '${date.day.toString().padLeft(2, '0')}';
     return Semantics(
       button: true,
@@ -694,9 +684,7 @@ class _ReaderNavigationSheetState extends State<ReaderNavigationSheet>
                               chapterTitle,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleSmall
+                              style: Theme.of(context).textTheme.titleSmall
                                   ?.copyWith(fontWeight: FontWeight.w700),
                             ),
                           ),
@@ -728,19 +716,19 @@ class _ReaderNavigationSheetState extends State<ReaderNavigationSheet>
                           excerpt,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: widget.palette.secondaryText,
-                                    height: 1.45,
-                                  ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: widget.palette.secondaryText,
+                                height: 1.45,
+                              ),
                         ),
                       ],
                       const SizedBox(height: 7),
                       Text(
                         dateText,
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              color: widget.palette.secondaryText,
-                            ),
+                          color: widget.palette.secondaryText,
+                        ),
                       ),
                     ],
                   ),
@@ -797,18 +785,18 @@ class _ReaderNavigationSheetState extends State<ReaderNavigationSheet>
               Text(
                 title,
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 8),
               Text(
                 message,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: widget.palette.secondaryText,
-                      height: 1.5,
-                    ),
+                  color: widget.palette.secondaryText,
+                  height: 1.5,
+                ),
               ),
             ],
           ),

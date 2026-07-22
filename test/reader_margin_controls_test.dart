@@ -3,8 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:xxread/widgets/reader_settings_controls.dart';
 
 void main() {
-  testWidgets('top and bottom margins expose independent controls',
-      (tester) async {
+  testWidgets('top and bottom margins expose independent controls', (
+    tester,
+  ) async {
     double? changedTop;
     double? changedBottom;
 

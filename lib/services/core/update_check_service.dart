@@ -76,9 +76,9 @@ class AppRelease {
     final assets = releasePayload['assets'];
     final assetMaps = assets is List
         ? assets
-            .whereType<Map>()
-            .map(Map<String, dynamic>.from)
-            .toList(growable: false)
+              .whereType<Map>()
+              .map(Map<String, dynamic>.from)
+              .toList(growable: false)
         : const <Map<String, dynamic>>[];
     Map<String, dynamic>? firstAsset;
     for (final asset in assetMaps) {
@@ -94,16 +94,20 @@ class AppRelease {
     if (assetMaps.isNotEmpty && firstAsset == null) {
       throw const FormatException('Website release has no matching asset');
     }
-    final payload = <String, dynamic>{
-      ...releasePayload,
-      ...?firstAsset,
-    };
-    final version =
-        normalizeVersion(_firstString(payload, ['version', 'tag_name']));
-    final githubUrl =
-        _firstString(payload, ['github_release_url', 'github_url', 'html_url']);
-    final downloadUrl =
-        _firstString(payload, ['download_url', 'file_url', 'url']);
+    final payload = <String, dynamic>{...releasePayload, ...?firstAsset};
+    final version = normalizeVersion(
+      _firstString(payload, ['version', 'tag_name']),
+    );
+    final githubUrl = _firstString(payload, [
+      'github_release_url',
+      'github_url',
+      'html_url',
+    ]);
+    final downloadUrl = _firstString(payload, [
+      'download_url',
+      'file_url',
+      'url',
+    ]);
     final websiteUrl = _firstString(payload, ['website_url']).isEmpty
         ? 'https://open.xxread.top/download'
         : _firstString(payload, ['website_url']);
@@ -152,13 +156,13 @@ class AppRelease {
   }
 
   AppRelease withWebsiteAsset(WebsiteReleaseAsset asset) => AppRelease(
-        version: version,
-        name: name,
-        notes: notes,
-        releaseUrl: releaseUrl,
-        publishedAt: publishedAt,
-        websiteAsset: asset,
-      );
+    version: version,
+    name: name,
+    notes: notes,
+    releaseUrl: releaseUrl,
+    publishedAt: publishedAt,
+    websiteAsset: asset,
+  );
 }
 
 class UpdateCheckResult {
@@ -196,7 +200,8 @@ class UpdateTarget {
     if (platform != 'android' || kIsWeb) {
       return UpdateTarget(platform: platform);
     }
-    final abis = await _channel
+    final abis =
+        await _channel
             .invokeListMethod<String>('getSupportedAbis')
             .catchError((_) => null) ??
         const <String>[];
@@ -209,17 +214,16 @@ class UpdateTarget {
 
 class UpdateCheckService {
   UpdateCheckService({Dio? dio, UpdateTargetResolver? targetResolver})
-      : _dio = dio ??
-            Dio(
-              BaseOptions(
-                connectTimeout: const Duration(seconds: 8),
-                receiveTimeout: const Duration(seconds: 8),
-                headers: {
-                  if (!kIsWeb) 'User-Agent': 'OpenReading-UpdateCheck',
-                },
-              ),
+    : _dio =
+          dio ??
+          Dio(
+            BaseOptions(
+              connectTimeout: const Duration(seconds: 8),
+              receiveTimeout: const Duration(seconds: 8),
+              headers: {if (!kIsWeb) 'User-Agent': 'OpenReading-UpdateCheck'},
             ),
-        _targetResolver = targetResolver ?? UpdateTarget.current;
+          ),
+      _targetResolver = targetResolver ?? UpdateTarget.current;
 
   static const githubLatestReleaseUrl =
       'https://api.github.com/repos/miloquinn/open-reading/releases/latest';
@@ -348,10 +352,10 @@ String _firstString(Map<String, dynamic> json, List<String> keys) {
 }
 
 int _integer(Object? value) => switch (value) {
-      int number => number,
-      num number => number.toInt(),
-      _ => int.tryParse(value?.toString() ?? '') ?? 0,
-    };
+  int number => number,
+  num number => number.toInt(),
+  _ => int.tryParse(value?.toString() ?? '') ?? 0,
+};
 
 bool _isAllowedGithubReleaseUrl(String value) {
   final uri = Uri.tryParse(value);
@@ -371,8 +375,8 @@ bool _isAllowedOfficialUrl(String value) {
 }
 
 bool _isValidVersion(String value) => RegExp(
-      r'^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$',
-    ).hasMatch(value);
+  r'^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$',
+).hasMatch(value);
 
 String normalizeVersion(String value) {
   final trimmed = value.trim();
@@ -397,10 +401,7 @@ int compareVersions(String left, String right) {
   if (leftVersion.preRelease != null && rightVersion.preRelease == null) {
     return -1;
   }
-  return _comparePreRelease(
-    leftVersion.preRelease,
-    rightVersion.preRelease,
-  );
+  return _comparePreRelease(leftVersion.preRelease, rightVersion.preRelease);
 }
 
 int _comparePreRelease(String? left, String? right) {
@@ -437,10 +438,12 @@ class _ParsedVersion {
   factory _ParsedVersion.parse(String value) {
     final normalized = normalizeVersion(value).split('+').first;
     final separator = normalized.indexOf('-');
-    final numericPart =
-        separator == -1 ? normalized : normalized.substring(0, separator);
-    final preRelease =
-        separator == -1 ? null : normalized.substring(separator + 1).trim();
+    final numericPart = separator == -1
+        ? normalized
+        : normalized.substring(0, separator);
+    final preRelease = separator == -1
+        ? null
+        : normalized.substring(separator + 1).trim();
     final rawNumbers = numericPart.split('.');
     final numbers = List<int>.generate(
       3,

@@ -54,9 +54,9 @@ class CustomFontsPage extends StatelessWidget {
                 Text(
                   l10n.customFontsLocalOnly,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        height: 1.4,
-                      ),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    height: 1.4,
+                  ),
                 ),
                 const SizedBox(height: 14),
                 for (final font in fonts)
@@ -99,11 +99,7 @@ class CustomFontsPage extends StatelessWidget {
       final message = result.status == CustomFontImportStatus.duplicate
           ? l10n.customFontAlreadyImported
           : l10n.customFontImported;
-      showSideToast(
-        context,
-        message,
-        kind: SideToastKind.success,
-      );
+      showSideToast(context, message, kind: SideToastKind.success);
     } on CustomFontException catch (error) {
       if (!context.mounted) return;
       showSideToast(
@@ -273,8 +269,8 @@ class _EmptyFontLibrary extends StatelessWidget {
                   : l10n.customFontImportUnsupported,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 20),
             FilledButton.icon(
@@ -343,16 +339,16 @@ class _CustomFontCard extends StatelessWidget {
                   Text(
                     '${font.sourceFileName} · ${_size(font.fileSize ?? 0)}',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
+                      color: colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   if (!font.isAvailable) ...[
                     const SizedBox(height: 8),
                     Text(
                       l10n.customFontUnavailable,
                       style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                            color: colorScheme.error,
-                          ),
+                        color: colorScheme.error,
+                      ),
                     ),
                   ],
                   if (appInUse || readerInUse) ...[

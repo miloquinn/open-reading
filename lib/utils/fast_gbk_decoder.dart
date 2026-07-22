@@ -35,10 +35,7 @@ bool isLikelyValidGbkByteStream(Uint8List bytes) {
   return true;
 }
 
-String decodeGbkFast(
-  Uint8List bytes, {
-  bool lenient = true,
-}) {
+String decodeGbkFast(Uint8List bytes, {bool lenient = true}) {
   if (bytes.isEmpty) return '';
   final output = StringBuffer();
 

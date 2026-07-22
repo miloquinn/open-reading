@@ -7,8 +7,9 @@ import 'package:xxread/widgets/reader_paper_page_leaf.dart';
 import 'package:xxread/widgets/reader_top_information_bar.dart';
 
 void main() {
-  testWidgets('page leaf paints only the page number in its footer',
-      (tester) async {
+  testWidgets('page leaf paints only the page number in its footer', (
+    tester,
+  ) async {
     final captureKey = GlobalKey();
     const metadata = ReaderPaperPageMetadata(
       pageIdentity: 'chapter-1:3',
@@ -31,10 +32,7 @@ void main() {
               bottomMargin: 0,
             ),
             metadata: metadata,
-            child: Padding(
-              padding: EdgeInsets.all(24),
-              child: Text('Body'),
-            ),
+            child: Padding(padding: EdgeInsets.all(24), child: Text('Body')),
           ),
         ),
       ),
@@ -43,10 +41,7 @@ void main() {
     expect(find.text('Chapter 3'), findsNothing);
     expect(find.text('4 / 12'), findsOneWidget);
     expect(
-      find.ancestor(
-        of: find.text('4 / 12'),
-        matching: find.byKey(captureKey),
-      ),
+      find.ancestor(of: find.text('4 / 12'), matching: find.byKey(captureKey)),
       findsOneWidget,
     );
     expect(
@@ -58,8 +53,9 @@ void main() {
     expect(leafRect.right - pageNumberRect.right, greaterThanOrEqualTo(23));
   });
 
-  testWidgets('reader information is painted inside the paper leaf',
-      (tester) async {
+  testWidgets('reader information is painted inside the paper leaf', (
+    tester,
+  ) async {
     final captureKey = GlobalKey();
     const metadata = ReaderPaperPageMetadata(
       pageIdentity: 'chapter-1:5',
@@ -102,17 +98,15 @@ void main() {
     for (final text in ['09:05', 'Chapter 3', '73%']) {
       expect(find.text(text), findsOneWidget);
       expect(
-        find.ancestor(
-          of: find.text(text),
-          matching: find.byKey(captureKey),
-        ),
+        find.ancestor(of: find.text(text), matching: find.byKey(captureKey)),
         findsOneWidget,
       );
     }
   });
 
-  testWidgets('left page places its page number in the outer bottom corner',
-      (tester) async {
+  testWidgets('left page places its page number in the outer bottom corner', (
+    tester,
+  ) async {
     const metadata = ReaderPaperPageMetadata(
       pageIdentity: 'chapter-1:4',
       layoutFingerprint: 'layout-v4',
@@ -146,8 +140,9 @@ void main() {
     );
   });
 
-  testWidgets('tablet spread splits chapter and device status across leaves',
-      (tester) async {
+  testWidgets('tablet spread splits chapter and device status across leaves', (
+    tester,
+  ) async {
     await tester.binding.setSurfaceSize(const Size(1200, 800));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     final status = ReaderLeafStatusData(
@@ -160,29 +155,28 @@ void main() {
       String id,
       ReaderTopInformationLayout layout,
       ReaderPageNumberPlacement pageNumberPlacement,
-    ) =>
-        ReaderPaperPageLeaf(
-          palette: ReaderThemes.day,
-          safeArea: const ReaderSafeAreaMetrics(
-            viewPadding: EdgeInsets.only(top: 24, bottom: 24),
-            topMargin: 4,
-            bottomMargin: 0,
-            topChromeReserve: ReaderSafeAreaMetrics.readerTopBarReserve,
-          ),
-          metadata: ReaderPaperPageMetadata(
-            pageIdentity: id,
-            layoutFingerprint: 'layout-v4',
-            themeId: 'day',
-            chapterTitle: 'Chapter 3',
-            pageNumber: id == 'left' ? 5 : 6,
-            pageCount: 12,
-          ),
-          pageNumberPlacement: pageNumberPlacement,
-          showTopInformation: true,
-          topInformationLayout: layout,
-          status: status,
-          child: const SizedBox.expand(),
-        );
+    ) => ReaderPaperPageLeaf(
+      palette: ReaderThemes.day,
+      safeArea: const ReaderSafeAreaMetrics(
+        viewPadding: EdgeInsets.only(top: 24, bottom: 24),
+        topMargin: 4,
+        bottomMargin: 0,
+        topChromeReserve: ReaderSafeAreaMetrics.readerTopBarReserve,
+      ),
+      metadata: ReaderPaperPageMetadata(
+        pageIdentity: id,
+        layoutFingerprint: 'layout-v4',
+        themeId: 'day',
+        chapterTitle: 'Chapter 3',
+        pageNumber: id == 'left' ? 5 : 6,
+        pageCount: 12,
+      ),
+      pageNumberPlacement: pageNumberPlacement,
+      showTopInformation: true,
+      topInformationLayout: layout,
+      status: status,
+      child: const SizedBox.expand(),
+    );
 
     await tester.pumpWidget(
       MaterialApp(

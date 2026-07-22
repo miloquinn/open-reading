@@ -16,8 +16,9 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  testWidgets('discover scope defaults to all and filters every section',
-      (tester) async {
+  testWidgets('discover scope defaults to all and filters every section', (
+    tester,
+  ) async {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = const Size(430, 1100);
     addTearDown(tester.view.reset);
@@ -40,8 +41,10 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('bookSourceDiscoverScopeControl')),
-        findsOneWidget);
+    expect(
+      find.byKey(const Key('bookSourceDiscoverScopeControl')),
+      findsOneWidget,
+    );
     expect(find.text('Source A picks'), findsOneWidget);
     expect(find.text('Source B picks'), findsOneWidget);
 
@@ -90,8 +93,9 @@ void main() {
     expect(merged.map((result) => result.book.title), ['B1', 'A1', 'B2', 'A2']);
   });
 
-  testWidgets('large category sets use a searchable lazy picker',
-      (tester) async {
+  testWidgets('large category sets use a searchable lazy picker', (
+    tester,
+  ) async {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = const Size(430, 1100);
     addTearDown(tester.view.reset);
@@ -113,8 +117,10 @@ void main() {
     await tester.tap(find.text('Categories'));
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('bookSourceCategoryPickerButton')),
-        findsOneWidget);
+    expect(
+      find.byKey(const Key('bookSourceCategoryPickerButton')),
+      findsOneWidget,
+    );
     expect(find.text('Category 000'), findsOneWidget);
     expect(find.text('Category 499'), findsNothing);
 
@@ -137,35 +143,37 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('discovery shelves are built lazily along the vertical viewport',
-      (tester) async {
-    tester.view.devicePixelRatio = 1;
-    tester.view.physicalSize = const Size(430, 700);
-    addTearDown(tester.view.reset);
+  testWidgets(
+    'discovery shelves are built lazily along the vertical viewport',
+    (tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(430, 700);
+      addTearDown(tester.view.reset);
 
-    final source = _source('source-a', 'Source A');
-    SharedPreferences.setMockInitialValues({
-      'open_reading_book_sources_v1': jsonEncode([source.toJson()]),
-    });
+      final source = _source('source-a', 'Source A');
+      SharedPreferences.setMockInitialValues({
+        'open_reading_book_sources_v1': jsonEncode([source.toJson()]),
+      });
 
-    await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(
-          body: BookSourcesPage(client: _ManyShelfDiscoveryClient()),
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: BookSourcesPage(client: _ManyShelfDiscoveryClient()),
+          ),
         ),
-      ),
-    );
-    await tester.pumpAndSettle();
+      );
+      await tester.pumpAndSettle();
 
-    expect(find.text('Shelf 0'), findsOneWidget);
-    expect(find.text('Shelf 11'), findsNothing);
+      expect(find.text('Shelf 0'), findsOneWidget);
+      expect(find.text('Shelf 11'), findsNothing);
 
-    await tester.drag(find.byType(CustomScrollView), const Offset(0, -5000));
-    await tester.pumpAndSettle();
-    expect(find.text('Shelf 11'), findsOneWidget);
-  });
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -5000));
+      await tester.pumpAndSettle();
+      expect(find.text('Shelf 11'), findsOneWidget);
+    },
+  );
 }
 
 class _DiscoveryClient extends BookSourceClient {
@@ -190,9 +198,7 @@ class _DiscoveryClient extends BookSourceClient {
   Future<List<BookSourceCategory>> getCategories(
     RegisteredBookSource source,
   ) async {
-    return [
-      BookSourceCategory(id: '${source.id}-fiction', name: 'Fiction'),
-    ];
+    return [BookSourceCategory(id: '${source.id}-fiction', name: 'Fiction')];
   }
 
   @override
@@ -206,10 +212,7 @@ class _DiscoveryClient extends BookSourceClient {
     if (category != null) {
       categoryBrowseSourceIds.add(source.id);
       return _page([
-        _book(
-          '${source.id}-category-book',
-          '${source.name} category book',
-        ),
+        _book('${source.id}-category-book', '${source.name} category book'),
       ]);
     }
     return _page([
@@ -255,9 +258,7 @@ class _LargeCategoryDiscoveryClient extends _DiscoveryClient {
     int pageSize = 20,
   }) async {
     lastCategoryId = category;
-    return _page([
-      _book('selected-book', 'Selected category book'),
-    ]);
+    return _page([_book('selected-book', 'Selected category book')]);
   }
 }
 
@@ -288,12 +289,7 @@ RegisteredBookSource _source(String id, String name) {
     apiBaseUrl: Uri.parse('https://example.org/$id/api/'),
     protocolVersion: '1.1',
     languages: const ['en'],
-    capabilities: const {
-      'search',
-      'discover',
-      'categories',
-      'browse',
-    },
+    capabilities: const {'search', 'discover', 'categories', 'browse'},
     enabled: true,
     addedAt: DateTime.utc(2026, 7, 19),
   );
@@ -310,11 +306,7 @@ SourcedBook _sourcedBook(
   );
 }
 
-BookSourceBook _book(
-  String id,
-  String title, {
-  DateTime? updatedAt,
-}) {
+BookSourceBook _book(String id, String title, {DateTime? updatedAt}) {
   return BookSourceBook(
     id: id,
     title: title,

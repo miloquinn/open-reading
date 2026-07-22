@@ -109,17 +109,16 @@ class ReadingSchemaMigration {
     required String definition,
   }) async {
     final tableInfo = await db.rawQuery('PRAGMA table_info($table)');
-    final existingColumns =
-        tableInfo.map((row) => row['name'] as String).toSet();
+    final existingColumns = tableInfo
+        .map((row) => row['name'] as String)
+        .toSet();
 
     if (existingColumns.contains(column)) {
       // 列已存在，跳过（幂等保证）
       return;
     }
 
-    await db.execute(
-      'ALTER TABLE $table ADD COLUMN $column $definition',
-    );
+    await db.execute('ALTER TABLE $table ADD COLUMN $column $definition');
   }
 
   /// 检查索引是否已存在，不存在时才执行 CREATE INDEX。

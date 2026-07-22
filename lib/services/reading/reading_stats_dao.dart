@@ -92,8 +92,10 @@ class ReadingStatsDao {
     final todayKey = _dateKey(today);
     final durationByDate = await _loadMergedDurationByDate();
 
-    final totalDuration =
-        durationByDate.values.fold<int>(0, (sum, value) => sum + value);
+    final totalDuration = durationByDate.values.fold<int>(
+      0,
+      (sum, value) => sum + value,
+    );
     final todayDuration = durationByDate[todayKey] ?? 0;
     final weekDuration = durationByDate.entries.fold<int>(0, (sum, entry) {
       if (entry.key.compareTo(weekStartKey) >= 0 &&
@@ -122,10 +124,7 @@ class ReadingStatsDao {
       final date = DateTime.now().subtract(Duration(days: i));
       final dateString = _dateKey(date);
       final duration = durationByDate[dateString] ?? 0;
-      chartData.add({
-        'day': date.weekday,
-        'duration': duration,
-      });
+      chartData.add({'day': date.weekday, 'duration': duration});
     }
     return chartData;
   }
@@ -163,16 +162,14 @@ class ReadingStatsDao {
   Future<List<int>> getRecentBookIds({int limit = 5}) async {
     final db = await dbService.database;
     final safeLimit = limit.clamp(1, 50);
-    final rows = await db.rawQuery(
-      '''
+    final rows = await db.rawQuery('''
       SELECT bookId, MAX(endTimeMs) AS lastEnd
       FROM reading_sessions
       WHERE bookId IS NOT NULL AND bookId > 0
       GROUP BY bookId
       ORDER BY lastEnd DESC
       LIMIT $safeLimit
-      ''',
-    );
+      ''');
 
     final ids = <int>[];
     for (final row in rows) {
@@ -226,9 +223,11 @@ class ReadingStatsDao {
     };
 
     final rows = <Map<String, dynamic>>[];
-    final totalDays = endDate
+    final totalDays =
+        endDate
             .difference(
-                DateTime(startDate.year, startDate.month, startDate.day))
+              DateTime(startDate.year, startDate.month, startDate.day),
+            )
             .inDays +
         1;
     for (var i = 0; i < totalDays; i++) {
@@ -261,9 +260,7 @@ class ReadingStatsDao {
       [startMs, endMs],
     );
 
-    final hourlyMinutes = <int, double>{
-      for (var h = 0; h < 24; h++) h: 0,
-    };
+    final hourlyMinutes = <int, double>{for (var h = 0; h < 24; h++) h: 0};
 
     for (final row in rows) {
       final rawStart = row['startTimeMs'] as int? ?? 0;
@@ -291,8 +288,9 @@ class ReadingStatsDao {
           current.day,
           current.hour + 1,
         );
-        final segmentEnd =
-            hourBoundary.isBefore(actualEnd) ? hourBoundary : actualEnd;
+        final segmentEnd = hourBoundary.isBefore(actualEnd)
+            ? hourBoundary
+            : actualEnd;
         final segmentMinutes =
             segmentEnd.difference(current).inSeconds.toDouble() / 60.0;
         hourlyMinutes[current.hour] =
@@ -301,9 +299,7 @@ class ReadingStatsDao {
       }
     }
 
-    return {
-      for (var h = 0; h < 24; h++) h: (hourlyMinutes[h] ?? 0).round(),
-    };
+    return {for (var h = 0; h < 24; h++) h: (hourlyMinutes[h] ?? 0).round()};
   }
 
   /// 阅读强度热力图（最近91天）- 基于真实 daily duration。
@@ -336,8 +332,7 @@ class ReadingStatsDao {
   /// 每本书的真实阅读统计（来自 reading_sessions）。
   Future<Map<int, Map<String, dynamic>>> getBookReadingStats() async {
     final db = await dbService.database;
-    final rows = await db.rawQuery(
-      '''
+    final rows = await db.rawQuery('''
       SELECT
         bookId,
         SUM(durationInSeconds) as totalDurationSeconds,
@@ -347,8 +342,7 @@ class ReadingStatsDao {
       FROM reading_sessions
       WHERE bookId IS NOT NULL AND bookId > 0
       GROUP BY bookId
-      ''',
-    );
+      ''');
 
     final result = <int, Map<String, dynamic>>{};
     for (final row in rows) {
@@ -369,8 +363,9 @@ class ReadingStatsDao {
   /// 阅读会话概览（真实）。
   Future<Map<String, int>> getSessionSummary({int recentDays = 90}) async {
     final db = await dbService.database;
-    final startDate =
-        _dateKey(DateTime.now().subtract(Duration(days: recentDays)));
+    final startDate = _dateKey(
+      DateTime.now().subtract(Duration(days: recentDays)),
+    );
     final rows = await db.rawQuery(
       '''
       SELECT
@@ -459,15 +454,12 @@ class ReadingStatsDao {
       args: args,
     );
 
-    final statsRows = await db.rawQuery(
-      '''
+    final statsRows = await db.rawQuery('''
       SELECT date, SUM(durationInSeconds) as totalDuration
       FROM reading_stats
       $whereClause
       GROUP BY date
-      ''',
-      args,
-    );
+      ''', args);
     final statsByDate = <String, int>{};
     for (final row in statsRows) {
       final date = (row['date'] ?? '').toString();
@@ -477,15 +469,12 @@ class ReadingStatsDao {
       statsByDate[date] = duration;
     }
 
-    final sessionRows = await db.rawQuery(
-      '''
+    final sessionRows = await db.rawQuery('''
       SELECT date, SUM(durationInSeconds) as totalDuration
       FROM reading_sessions
       $whereClause
       GROUP BY date
-      ''',
-      args,
-    );
+      ''', args);
     for (final row in sessionRows) {
       final date = (row['date'] ?? '').toString();
       if (date.isEmpty) continue;

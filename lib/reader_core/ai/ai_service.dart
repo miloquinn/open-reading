@@ -19,13 +19,7 @@ class AIRequestMeta {
   });
 }
 
-enum AIProviderType {
-  minimax,
-  glm,
-  openai,
-  claude,
-  gemini,
-}
+enum AIProviderType { minimax, glm, openai, claude, gemini }
 
 extension AIProviderTypeX on AIProviderType {
   String get value {
@@ -100,10 +94,7 @@ String normalizeAIBaseUrl(AIProviderType provider, String baseUrl) {
         RegExp(r'/v1/messages$', caseSensitive: false),
         '/v1',
       );
-      path = path.replaceFirst(
-        RegExp(r'/messages$', caseSensitive: false),
-        '',
-      );
+      path = path.replaceFirst(RegExp(r'/messages$', caseSensitive: false), '');
       break;
     case AIProviderType.gemini:
       path = path.replaceFirst(
@@ -398,8 +389,10 @@ class AIModelPresets {
   }
 
   static AIModelPreset? match(AIProviderSettings settings) {
-    final normalizedBase =
-        settings.baseUrl.trim().replaceAll(RegExp(r'/+$'), '');
+    final normalizedBase = settings.baseUrl.trim().replaceAll(
+      RegExp(r'/+$'),
+      '',
+    );
     final normalizedModel = settings.model.trim();
     for (final preset in all) {
       final presetBase = preset.baseUrl.trim().replaceAll(RegExp(r'/+$'), '');
@@ -461,8 +454,9 @@ class AIProviderSettings {
       baseUrl: normalizedBaseUrl.isEmpty
           ? _defaultBaseUrl(provider)
           : normalizedBaseUrl,
-      model:
-          normalizedModel.isEmpty ? _defaultModel(provider) : normalizedModel,
+      model: normalizedModel.isEmpty
+          ? _defaultModel(provider)
+          : normalizedModel,
       temperature: normalizedTemperature.clamp(0.0, 2.0),
     );
   }
@@ -479,15 +473,9 @@ class AIChatMessage {
   final String role;
   final String content;
 
-  const AIChatMessage({
-    required this.role,
-    required this.content,
-  });
+  const AIChatMessage({required this.role, required this.content});
 
-  Map<String, dynamic> toJson() => {
-        'role': role,
-        'content': content,
-      };
+  Map<String, dynamic> toJson() => {'role': role, 'content': content};
 }
 
 abstract class AIService {
@@ -617,7 +605,8 @@ class ReaderHttpAIService implements ConfigurableAIService {
   @override
   Future<AIProviderSettings> loadSettings([AIProviderType? provider]) async {
     final prefs = await SharedPreferences.getInstance();
-    final activeProvider = provider ??
+    final activeProvider =
+        provider ??
         AIProviderTypeX.fromValue(prefs.getString(_activeProviderKey));
     final defaults = AIProviderSettings.defaults(activeProvider);
 
@@ -625,7 +614,8 @@ class ReaderHttpAIService implements ConfigurableAIService {
     final baseUrl =
         prefs.getString(_baseUrlKey(activeProvider)) ?? defaults.baseUrl;
     final model = prefs.getString(_modelKey(activeProvider)) ?? defaults.model;
-    final temperature = prefs.getDouble(_temperatureKey(activeProvider)) ??
+    final temperature =
+        prefs.getDouble(_temperatureKey(activeProvider)) ??
         defaults.temperature;
 
     final settings = AIProviderSettings(
@@ -661,9 +651,7 @@ class ReaderHttpAIService implements ConfigurableAIService {
     _cachedActive = normalized;
   }
 
-  Future<List<String>> fetchAvailableModels(
-    AIProviderSettings settings,
-  ) async {
+  Future<List<String>> fetchAvailableModels(AIProviderSettings settings) async {
     final normalized = settings.normalized();
     if (normalized.apiKey.isEmpty) {
       throw const AIServiceException(code: 'api_key_required');
@@ -695,21 +683,24 @@ class ReaderHttpAIService implements ConfigurableAIService {
         throw const AIServiceException(code: 'no_models_returned');
       }
 
-      final models = rawModels
-          .map((item) {
-            if (item is String) return item;
-            if (item is Map) {
-              final value = item['id'] ?? item['name'] ?? item['model'];
-              return value?.toString();
-            }
-            return null;
-          })
-          .whereType<String>()
-          .map((model) => model.replaceFirst(RegExp(r'^models/'), '').trim())
-          .where((model) => model.isNotEmpty)
-          .toSet()
-          .toList()
-        ..sort();
+      final models =
+          rawModels
+              .map((item) {
+                if (item is String) return item;
+                if (item is Map) {
+                  final value = item['id'] ?? item['name'] ?? item['model'];
+                  return value?.toString();
+                }
+                return null;
+              })
+              .whereType<String>()
+              .map(
+                (model) => model.replaceFirst(RegExp(r'^models/'), '').trim(),
+              )
+              .where((model) => model.isNotEmpty)
+              .toSet()
+              .toList()
+            ..sort();
 
       if (models.isEmpty) {
         throw const AIServiceException(code: 'no_models_available');
@@ -747,9 +738,7 @@ class ReaderHttpAIService implements ConfigurableAIService {
       ..writeln(contextAfter.trim().isEmpty ? '(无)' : contextAfter.trim());
 
     return chat(
-      history: [
-        AIChatMessage(role: 'user', content: prompt.toString()),
-      ],
+      history: [AIChatMessage(role: 'user', content: prompt.toString())],
       pageText: '$contextBefore\n$selectedText\n$contextAfter',
       meta: meta,
     );
@@ -762,10 +751,7 @@ class ReaderHttpAIService implements ConfigurableAIService {
   }) {
     return chat(
       history: const [
-        AIChatMessage(
-          role: 'user',
-          content: '请总结当前页的核心观点，并给出 3 条可执行的阅读建议。',
-        ),
+        AIChatMessage(role: 'user', content: '请总结当前页的核心观点，并给出 3 条可执行的阅读建议。'),
       ],
       pageText: pageText,
       meta: meta,
@@ -790,10 +776,7 @@ class ReaderHttpAIService implements ConfigurableAIService {
       meta: meta,
     );
     final messages = <Map<String, dynamic>>[
-      {
-        'role': 'system',
-        'content': singleSystemPrompt,
-      },
+      {'role': 'system', 'content': singleSystemPrompt},
       ...history
           .where(
             (m) =>
@@ -834,10 +817,7 @@ class ReaderHttpAIService implements ConfigurableAIService {
     } on DioException catch (e) {
       throw _extractDioException(e);
     } catch (e) {
-      throw AIServiceException(
-        code: 'request_failed',
-        error: e.toString(),
-      );
+      throw AIServiceException(code: 'request_failed', error: e.toString());
     }
   }
 
@@ -898,9 +878,7 @@ class ReaderHttpAIService implements ConfigurableAIService {
   }
 
   Options _buildRequestOptions(AIProviderSettings settings) {
-    final headers = <String, dynamic>{
-      'Content-Type': 'application/json',
-    };
+    final headers = <String, dynamic>{'Content-Type': 'application/json'};
 
     switch (settings.provider) {
       case AIProviderType.minimax:
@@ -973,22 +951,22 @@ class ReaderHttpAIService implements ConfigurableAIService {
           'stream': false,
         };
       case AIProviderType.claude:
-        final systemPrompt = messages.isNotEmpty &&
+        final systemPrompt =
+            messages.isNotEmpty &&
                 messages.first['role'] == 'system' &&
                 messages.first['content'] is String
             ? messages.first['content'] as String
             : '';
         final chatMessages = messages
             .where((m) => m['role'] == 'user' || m['role'] == 'assistant')
-            .map((m) => <String, dynamic>{
-                  'role': m['role'],
-                  'content': [
-                    {
-                      'type': 'text',
-                      'text': (m['content'] as String?) ?? '',
-                    },
-                  ],
-                })
+            .map(
+              (m) => <String, dynamic>{
+                'role': m['role'],
+                'content': [
+                  {'type': 'text', 'text': (m['content'] as String?) ?? ''},
+                ],
+              },
+            )
             .toList();
         return <String, dynamic>{
           'model': settings.model,
@@ -998,21 +976,22 @@ class ReaderHttpAIService implements ConfigurableAIService {
           'temperature': settings.temperature.clamp(0.0, 1.0),
         };
       case AIProviderType.gemini:
-        final systemPrompt = messages.isNotEmpty &&
+        final systemPrompt =
+            messages.isNotEmpty &&
                 messages.first['role'] == 'system' &&
                 messages.first['content'] is String
             ? messages.first['content'] as String
             : '';
         final chatContents = messages
             .where((m) => m['role'] == 'user' || m['role'] == 'assistant')
-            .map((m) => <String, dynamic>{
-                  'role': m['role'] == 'assistant' ? 'model' : 'user',
-                  'parts': [
-                    {
-                      'text': (m['content'] as String?) ?? '',
-                    },
-                  ],
-                })
+            .map(
+              (m) => <String, dynamic>{
+                'role': m['role'] == 'assistant' ? 'model' : 'user',
+                'parts': [
+                  {'text': (m['content'] as String?) ?? ''},
+                ],
+              },
+            )
             .toList();
         return <String, dynamic>{
           if (systemPrompt.isNotEmpty)
@@ -1309,8 +1288,9 @@ class ReaderHttpAIService implements ConfigurableAIService {
 }
 
 class MockAIService implements ConfigurableAIService {
-  AIProviderSettings _settings =
-      AIProviderSettings.defaults(AIProviderType.minimax);
+  AIProviderSettings _settings = AIProviderSettings.defaults(
+    AIProviderType.minimax,
+  );
 
   @override
   Future<AIProviderSettings> loadSettings([AIProviderType? provider]) async {
@@ -1346,9 +1326,7 @@ class MockAIService implements ConfigurableAIService {
     required AIRequestMeta meta,
   }) async {
     await Future<void>.delayed(const Duration(milliseconds: 450));
-    return _mockToken('mock_page_analysis', {
-      'chars': pageText.length,
-    });
+    return _mockToken('mock_page_analysis', {'chars': pageText.length});
   }
 
   @override

@@ -8,10 +8,7 @@ import '../../utils/font_catalog_helper.dart';
 import 'custom_font_service.dart';
 import 'online_font_service.dart';
 
-enum LibraryLayoutMode {
-  card,
-  grid,
-}
+enum LibraryLayoutMode { card, grid }
 
 class AppSettingsNotifier extends ChangeNotifier {
   static const String _keyAppLocale = 'app_locale';
@@ -38,8 +35,8 @@ class AppSettingsNotifier extends ChangeNotifier {
   AppSettingsNotifier({
     CustomFontService? customFontService,
     OnlineFontService? onlineFontService,
-  })  : _customFontService = customFontService ?? CustomFontService(),
-        _onlineFontService = onlineFontService ?? OnlineFontService() {
+  }) : _customFontService = customFontService ?? CustomFontService(),
+       _onlineFontService = onlineFontService ?? OnlineFontService() {
     _loadSettings();
   }
 
@@ -72,22 +69,20 @@ class AppSettingsNotifier extends ChangeNotifier {
 
   /// 当前可用的 App 字体选项：系统字体 + 在线字体（区分已下载/未下载）+ 已加载的自定义字体。
   List<FontOption> get appFontOptions => <FontOption>[
-        ...FontCatalog.appFonts,
-        ...availableCustomFonts,
-      ];
+    ...FontCatalog.appFonts,
+    ...availableCustomFonts,
+  ];
   List<FontOption> get readerFontOptions => <FontOption>[
-        ...FontCatalog.readerFonts,
-        ...availableCustomFonts,
-      ];
+    ...FontCatalog.readerFonts,
+    ...availableCustomFonts,
+  ];
 
-  FontOption get appFont => FontCatalog.appFontForId(
-        _appFontId,
-        customFonts: availableCustomFonts,
-      );
+  FontOption get appFont =>
+      FontCatalog.appFontForId(_appFontId, customFonts: availableCustomFonts);
   FontOption get readerFont => FontCatalog.readerFontForId(
-        _readerFontId,
-        customFonts: availableCustomFonts,
-      );
+    _readerFontId,
+    customFonts: availableCustomFonts,
+  );
   String? get appFontFamily => appFont.family;
   bool get customFontImportSupported => _customFontService.isSupported;
   bool get onlineFontDownloadSupported => _onlineFontService.isSupported;

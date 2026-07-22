@@ -18,8 +18,9 @@ extension _DetailedStatsAchievementsView on _DetailedStatsPageState {
     final palette = _palette;
     final achievements = _achievementItems();
     final achieved = achievements.where((item) => item.achieved).length;
-    final progress =
-        achievements.isEmpty ? 0.0 : achieved / achievements.length;
+    final progress = achievements.isEmpty
+        ? 0.0
+        : achieved / achievements.length;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -272,7 +273,8 @@ extension _DetailedStatsAchievementsView on _DetailedStatsPageState {
                       const SizedBox(width: 10),
                       Text(
                         context.l10n.statsProgressPercent(
-                            (item.progress * 100).round()),
+                          (item.progress * 100).round(),
+                        ),
                         style: TextStyle(
                           color: item.color,
                           fontSize: 11,
