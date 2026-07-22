@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:xxread/data/migration/webdav_sync_schema_migration.dart';
+import 'package:xxread/services/sync/adapters/metadata_sync_adapters.dart';
 import 'package:xxread/services/sync/sync_change_store.dart';
 import 'package:xxread/services/sync/sync_clock.dart';
 import 'package:xxread/services/sync/sync_protocol.dart';
@@ -94,4 +95,55 @@ void main() {
     expect(await store.pendingCount(), 0);
     expect((await store.latestTimestamp()).toString(), '1000-0000-local');
   });
+
+  test('unsupported remote dataset is retained without materialization',
+      () async {
+    final notesAdapter = _RecordingAdapter('notes');
+    final adapters = MetadataSyncAdapters(
+      store: store,
+      registeredAdapters: [notesAdapter],
+    );
+    final batch = SyncBatch.create(
+      deviceId: 'future-device',
+      sequence: 1,
+      createdHlc: '2000-0000-future-device',
+      operations: const [
+        SyncOperation(
+          dataset: 'notes',
+          recordId: 'note-1',
+          entityKey: 'book-1',
+          hlc: '2000-0000-future-device',
+          deleted: false,
+          payload: {'content': 'reserved future payload'},
+        ),
+      ],
+    );
+
+    expect(
+      await store.applyRemoteBatch(batch, applyWinner: adapters.apply),
+      1,
+    );
+    final retained = (await store.recordsForDataset('notes')).single;
+    expect(retained.recordId, 'note-1');
+    expect(retained.dirty, isFalse);
+    expect(notesAdapter.applyCount, 0);
+    expect(await store.cursorFor('future-device'), 1);
+  });
+}
+
+class _RecordingAdapter implements MetadataSyncAdapter {
+  _RecordingAdapter(this.dataset);
+
+  @override
+  final String dataset;
+
+  int applyCount = 0;
+
+  @override
+  Future<void> apply(Transaction txn, SyncOperation operation) async {
+    applyCount++;
+  }
+
+  @override
+  Future<void> scan(HybridLogicalClock clock) async {}
 }

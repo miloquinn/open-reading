@@ -54,6 +54,27 @@ void main() {
 
     expect(client.lastServerDate, DateTime.utc(2015, 10, 21, 7, 28));
   });
+
+  test('immutable writes accept a server 409 when stored content matches',
+      () async {
+    final dio = Dio()..httpClientAdapter = _ImmutableConflictAdapter();
+    final client = WebDavClient(
+      dio: dio,
+      credentials: const StoredSyncCredentials(
+        WebDavSyncConfiguration(
+          serverUrl: 'https://dav.example.com',
+          username: 'reader',
+        ),
+        'secret',
+      ),
+    );
+
+    await client.putText(
+      Uri.parse('https://dav.example.com/existing.json'),
+      '{"same":true}',
+      immutable: true,
+    );
+  });
 }
 
 class _RedirectAdapter implements HttpClientAdapter {
@@ -96,5 +117,22 @@ class _DateAdapter implements HttpClientAdapter {
         'date': ['Wed, 21 Oct 2015 07:28:00 GMT'],
       },
     );
+  }
+}
+
+class _ImmutableConflictAdapter implements HttpClientAdapter {
+  @override
+  void close({bool force = false}) {}
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    if (options.method == 'PUT') {
+      return ResponseBody.fromString('', 409);
+    }
+    return ResponseBody.fromString('{"same":true}', 200);
   }
 }

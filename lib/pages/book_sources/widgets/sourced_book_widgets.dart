@@ -18,6 +18,7 @@ import 'package:xxread/utils/page_style_helper.dart';
 import 'package:xxread/utils/ui_style.dart';
 import 'package:xxread/widgets/generated_book_cover.dart';
 import 'package:xxread/widgets/side_toast.dart';
+import 'package:xxread/widgets/source_cover_image.dart';
 
 /// 一本来自具体书源的书。
 class SourcedBook {
@@ -82,10 +83,13 @@ class SourcedBookCard extends StatelessWidget {
                             title: result.book.title,
                             author: result.book.author,
                           )
-                        : Image.network(
-                            result.book.coverUrl.toString(),
+                        : SourceCoverImage(
+                            url: result.book.coverUrl!,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => GeneratedBookCover(
+                            cacheWidth:
+                                (132 * MediaQuery.devicePixelRatioOf(context))
+                                    .round(),
+                            fallback: GeneratedBookCover(
                               title: result.book.title,
                               author: result.book.author,
                             ),
@@ -215,12 +219,13 @@ class _BookCoverThumb extends StatelessWidget {
     if (book.coverUrl == null) return fallback;
     return ClipRRect(
       borderRadius: BorderRadius.circular(10),
-      child: Image.network(
-        book.coverUrl.toString(),
+      child: SourceCoverImage(
+        url: book.coverUrl!,
         width: 58,
         height: 78,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => fallback,
+        cacheWidth: (58 * MediaQuery.devicePixelRatioOf(context)).round(),
+        fallback: fallback,
       ),
     );
   }

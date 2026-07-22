@@ -294,7 +294,9 @@ class WebDavClient {
         data: content,
       );
     } on WebDavSyncFailure catch (error) {
-      if (!immutable || error.statusCode != 412) rethrow;
+      if (!immutable || (error.statusCode != 409 && error.statusCode != 412)) {
+        rethrow;
+      }
     }
     if (immutable) {
       final stored = await getText(uri);

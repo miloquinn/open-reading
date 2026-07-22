@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 
@@ -6,6 +7,7 @@ import 'package:xxread/book_sources/models/registered_book_source.dart';
 import 'package:xxread/book_sources/protocol/book_source_protocol.dart';
 import 'package:xxread/book_sources/services/book_source_client.dart';
 import 'package:xxread/book_sources/services/book_source_shelf_service.dart';
+import 'package:xxread/book_sources/services/source_cover_cache.dart';
 import 'package:xxread/models/book.dart';
 import 'package:xxread/services/books/book_dao.dart';
 
@@ -69,14 +71,18 @@ void main() {
     expect(text.indexOf('正文0'), lessThan(text.indexOf('正文6')));
   });
 
-  test('keeps a source-provided cover instead of generating a replacement',
-      () async {
+  test('persists a source-provided cover for offline shelf display', () async {
     final directory = await Directory.systemTemp.createTemp('source-cover-');
     addTearDown(() => directory.delete(recursive: true));
     final dao = _MemoryBookDao();
+    final sourceCoverCache = SourceCoverCache(
+      cacheDirectory: Directory('${directory.path}/cache'),
+      loader: (_) async => Uint8List.fromList([1, 2, 3, 4]),
+    );
     final service = BookSourceShelfService(
       bookDao: dao,
       downloadDirectory: directory,
+      sourceCoverCache: sourceCoverCache,
     );
 
     final added = await service.addOnline(
@@ -84,7 +90,8 @@ void main() {
       book: _sourceBookWithCover,
     );
 
-    expect(added.coverImagePath, isNull);
+    expect(added.coverImagePath, isNotNull);
+    expect(await File(added.coverImagePath!).readAsBytes(), [1, 2, 3, 4]);
     expect(
       service.sourceBookFrom(added).coverUrl,
       _sourceBookWithCover.coverUrl,

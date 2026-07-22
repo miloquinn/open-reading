@@ -240,6 +240,44 @@ class _BookFileSyncPageState extends State<BookFileSyncPage>
     }
   }
 
+  Future<void> _pickNewBookPolicy(WebDavSyncController sync) async {
+    final selected = await showModalBottomSheet<WebDavNewBookUploadPolicy>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 4, 8, 12),
+              child: Text(
+                context.l10n.webDavNewBookPolicyTitle,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+            ),
+            for (final policy in WebDavNewBookUploadPolicy.values)
+              ListTile(
+                leading: Icon(_newBookPolicyIcon(policy)),
+                title: Text(_newBookPolicyTitle(context, policy)),
+                subtitle: Text(_newBookPolicyHint(context, policy)),
+                trailing: sync.newBookUploadPolicy == policy
+                    ? Icon(
+                        Icons.check_rounded,
+                        color: Theme.of(context).colorScheme.primary,
+                      )
+                    : null,
+                onTap: () => Navigator.of(context).pop(policy),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (selected != null) await sync.setNewBookUploadPolicy(selected);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -287,6 +325,7 @@ class _BookFileSyncPageState extends State<BookFileSyncPage>
                       if (_tabController.index == 0)
                         _UploadPermissionCard(
                           enabled: sync.scope.bookFiles,
+                          policy: sync.newBookUploadPolicy,
                           onChanged: _transferring
                               ? null
                               : (enabled) async {
@@ -295,6 +334,9 @@ class _BookFileSyncPageState extends State<BookFileSyncPage>
                                     sync.scope.copyWith(bookFiles: enabled),
                                   );
                                 },
+                          onPolicyTap: _transferring || !sync.scope.bookFiles
+                              ? null
+                              : () => _pickNewBookPolicy(sync),
                         ),
                       Expanded(
                         child: TabBarView(
@@ -397,11 +439,15 @@ class _LoadFailure extends StatelessWidget {
 class _UploadPermissionCard extends StatelessWidget {
   const _UploadPermissionCard({
     required this.enabled,
+    required this.policy,
     required this.onChanged,
+    required this.onPolicyTap,
   });
 
   final bool enabled;
+  final WebDavNewBookUploadPolicy policy;
   final ValueChanged<bool>? onChanged;
+  final VoidCallback? onPolicyTap;
 
   @override
   Widget build(BuildContext context) {
@@ -415,17 +461,63 @@ class _UploadPermissionCard extends StatelessWidget {
           side: BorderSide(color: palette.border),
         ),
         clipBehavior: Clip.antiAlias,
-        child: SwitchListTile(
-          value: enabled,
-          onChanged: onChanged,
-          secondary: const Icon(Icons.cloud_upload_outlined),
-          title: Text(context.l10n.webDavFilesUploadPermission),
-          subtitle: Text(context.l10n.webDavFilesUploadPermissionHint),
+        child: Column(
+          children: [
+            SwitchListTile(
+              value: enabled,
+              onChanged: onChanged,
+              secondary: const Icon(Icons.cloud_upload_outlined),
+              title: Text(context.l10n.webDavFilesUploadPermission),
+              subtitle: Text(context.l10n.webDavFilesUploadPermissionHint),
+            ),
+            const Divider(height: 1),
+            ListTile(
+              enabled: enabled,
+              onTap: onPolicyTap,
+              leading: Icon(_newBookPolicyIcon(policy)),
+              title: Text(context.l10n.webDavNewBookPolicyTitle),
+              subtitle: Text(_newBookPolicyTitle(context, policy)),
+              trailing: const Icon(Icons.chevron_right_rounded),
+            ),
+          ],
         ),
       ),
     );
   }
 }
+
+IconData _newBookPolicyIcon(WebDavNewBookUploadPolicy policy) =>
+    switch (policy) {
+      WebDavNewBookUploadPolicy.askEveryTime => Icons.help_outline_rounded,
+      WebDavNewBookUploadPolicy.automatic => Icons.cloud_upload_outlined,
+      WebDavNewBookUploadPolicy.manual => Icons.touch_app_outlined,
+    };
+
+String _newBookPolicyTitle(
+  BuildContext context,
+  WebDavNewBookUploadPolicy policy,
+) =>
+    switch (policy) {
+      WebDavNewBookUploadPolicy.askEveryTime =>
+        context.l10n.webDavNewBookPolicyAsk,
+      WebDavNewBookUploadPolicy.automatic =>
+        context.l10n.webDavNewBookPolicyAutomatic,
+      WebDavNewBookUploadPolicy.manual =>
+        context.l10n.webDavNewBookPolicyManual,
+    };
+
+String _newBookPolicyHint(
+  BuildContext context,
+  WebDavNewBookUploadPolicy policy,
+) =>
+    switch (policy) {
+      WebDavNewBookUploadPolicy.askEveryTime =>
+        context.l10n.webDavNewBookPolicyAskHint,
+      WebDavNewBookUploadPolicy.automatic =>
+        context.l10n.webDavNewBookPolicyAutomaticHint,
+      WebDavNewBookUploadPolicy.manual =>
+        context.l10n.webDavNewBookPolicyManualHint,
+    };
 
 class _LocalFilesList extends StatelessWidget {
   const _LocalFilesList({

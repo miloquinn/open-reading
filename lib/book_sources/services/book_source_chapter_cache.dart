@@ -8,12 +8,17 @@ import 'package:path_provider/path_provider.dart';
 import '../protocol/book_source_protocol.dart';
 
 class BookSourceChapterCache {
+  static const String directoryName = 'book_source_chapters';
   static const _memoryLimit = 24;
   static const _diskLifetime = Duration(hours: 12);
   static final Map<String, BookSourceChapterContent> _memory = {};
   static final Map<String, Future<BookSourceChapterContent>> _inFlight = {};
 
   const BookSourceChapterCache();
+
+  static void clearMemory() {
+    _memory.clear();
+  }
 
   Future<BookSourceChapterContent> getOrLoad({
     required String sourceId,
@@ -105,7 +110,7 @@ class BookSourceChapterCache {
   Future<File> _fileFor(String key) async {
     final temp = await getTemporaryDirectory();
     return File(
-      path.join(temp.path, 'book_source_chapters', '${_hash(key)}.json'),
+      path.join(temp.path, directoryName, '${_hash(key)}.json'),
     );
   }
 

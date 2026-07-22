@@ -120,7 +120,8 @@ class _StatusCard extends StatelessWidget {
     final subtitle = !configured
         ? l10n.webDavConfigureSubtitle
         : failed
-            ? webDavSyncErrorText(context, sync.lastError)
+            ? '${webDavSyncErrorText(context, sync.lastError)}\n'
+                '${webDavSyncFailurePhaseText(context, sync.lastFailedPhase)}'
             : sync.pendingChanges > 0
                 ? l10n.webDavPendingChanges(sync.pendingChanges)
                 : sync.lastSuccessfulSync == null
@@ -245,7 +246,7 @@ class _ScopeCard extends StatelessWidget {
     final enabled = <String>[
       if (sync.scope.books) l10n.webDavScopeBooks,
       if (sync.scope.progress) l10n.webDavScopeProgress,
-      if (sync.scope.bookmarks || sync.scope.notes) l10n.webDavScopeAnnotations,
+      if (sync.scope.bookmarks) l10n.webDavScopeBookmarks,
       if (sync.scope.readingSessions) l10n.webDavScopeReadingSessions,
     ];
     return _Card(

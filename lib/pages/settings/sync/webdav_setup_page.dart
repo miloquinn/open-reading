@@ -287,14 +287,12 @@ class _WebDavSetupPageState extends State<WebDavSetupPage> {
                                 ),
                               ),
                               _ScopeSwitch(
-                                title: l10n.webDavScopeAnnotations,
+                                title: l10n.webDavScopeBookmarks,
                                 icon: Icons.bookmark_border_rounded,
-                                value: _scope.bookmarks || _scope.notes,
+                                value: _scope.bookmarks,
                                 onChanged: (value) => setState(
-                                  () => _scope = _scope.copyWith(
-                                    bookmarks: value,
-                                    notes: value,
-                                  ),
+                                  () => _scope =
+                                      _scope.copyWith(bookmarks: value),
                                 ),
                               ),
                               _ScopeSwitch(

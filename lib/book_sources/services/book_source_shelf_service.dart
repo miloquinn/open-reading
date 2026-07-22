@@ -13,18 +13,22 @@ import '../../services/library/library_event_bus_service.dart';
 import '../models/registered_book_source.dart';
 import '../protocol/book_source_protocol.dart';
 import 'book_source_client.dart';
+import 'source_cover_cache.dart';
 
 class BookSourceShelfService {
   BookSourceShelfService({
     BookDao? bookDao,
     BookSourceClient? client,
+    SourceCoverCache? sourceCoverCache,
     Directory? downloadDirectory,
   })  : _downloadDirectory = downloadDirectory,
         _bookDao = bookDao ?? BookDao(),
-        _client = client ?? BookSourceClient();
+        _client = client ?? BookSourceClient(),
+        _sourceCoverCache = sourceCoverCache ?? SourceCoverCache.instance;
 
   final BookDao _bookDao;
   final BookSourceClient _client;
+  final SourceCoverCache _sourceCoverCache;
   final Directory? _downloadDirectory;
 
   Future<Book?> findShelfBook({
@@ -45,7 +49,7 @@ class BookSourceShelfService {
       sourceBookId: book.id,
     );
     if (existing != null) return existing;
-    final generatedCoverPath = await _generatedCoverPath(source, book);
+    final generatedCoverPath = await _storedCoverPath(source, book);
     final shelfBook = Book(
       title: book.title,
       author: book.author,
@@ -146,7 +150,7 @@ class BookSourceShelfService {
       sourceBookId: book.id,
     );
     final generatedCoverPath =
-        existing?.coverImagePath ?? await _generatedCoverPath(source, book);
+        existing?.coverImagePath ?? await _storedCoverPath(source, book);
     if (existing != null) {
       final downloaded = existing.copyWith(
         title: book.title,
@@ -229,14 +233,23 @@ class BookSourceShelfService {
         : paragraphs.join('\n');
   }
 
-  Future<String?> _generatedCoverPath(
+  Future<String?> _storedCoverPath(
     RegisteredBookSource source,
     BookSourceBook book,
   ) async {
-    if (book.coverUrl != null) return null;
     try {
       final documents =
           _downloadDirectory ?? await getApplicationDocumentsDirectory();
+      if (book.coverUrl != null) {
+        final bytes = await _sourceCoverCache.load(book.coverUrl!);
+        return CoverGenerator.saveCover(
+          bytes,
+          '${source.id}_${book.id}',
+          documentsDirectory: documents,
+          fileTag: 'source',
+          fileExtension: 'img',
+        );
+      }
       final bytes = await CoverGenerator.generateTextCover(
         title: book.title,
         author: book.author,

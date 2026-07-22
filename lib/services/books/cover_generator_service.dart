@@ -50,6 +50,8 @@ class CoverGenerator {
     Uint8List imageBytes,
     String bookFileName, {
     Directory? documentsDirectory,
+    String fileTag = 'generated',
+    String fileExtension = 'png',
   }) async {
     final documentsDir =
         documentsDirectory ?? await getApplicationDocumentsDirectory();
@@ -58,9 +60,11 @@ class CoverGenerator {
 
     final safeBaseName = _safeFileName(basenameWithoutExtension(bookFileName));
     final fingerprint = _stableHash(bookFileName).toRadixString(16);
+    final safeTag = _safeFileName(fileTag);
+    final safeExtension = fileExtension.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '');
     final coverPath = join(
       coversDir.path,
-      '${safeBaseName}_${fingerprint}_generated.png',
+      '${safeBaseName}_${fingerprint}_$safeTag.${safeExtension.isEmpty ? 'img' : safeExtension}',
     );
     await File(coverPath).writeAsBytes(imageBytes, flush: true);
     return coverPath;

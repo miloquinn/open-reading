@@ -422,17 +422,7 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
                   ),
                 ),
               ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(16, 8, 16, bottomPadding),
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 1048),
-                      child: _buildSectionBody(),
-                    ),
-                  ),
-                ),
-              ),
+              ..._buildSectionSlivers(bottomPadding),
             ],
           ),
         ),
@@ -536,47 +526,78 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
     );
   }
 
-  Widget _buildSectionBody() {
+  List<Widget> _buildSectionSlivers(double bottomPadding) {
     if (_loadingSources) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 44),
-        child: Center(child: CircularProgressIndicator()),
-      );
+      return [
+        _paddedSectionSliver(
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 44),
+            child: Center(child: CircularProgressIndicator()),
+          ),
+          bottomPadding: bottomPadding,
+        ),
+      ];
     }
     final cache = _cache[_section];
     if (cache == null || cache.loading) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 44),
-        child: Center(child: CircularProgressIndicator()),
-      );
+      return [
+        _paddedSectionSliver(
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 44),
+            child: Center(child: CircularProgressIndicator()),
+          ),
+          bottomPadding: bottomPadding,
+        ),
+      ];
     }
     if (cache.error != null) {
-      return _buildMessageCard(
-        icon: Icons.cloud_off_outlined,
-        title: context.l10n.discoverLoadFailed,
-        message: cache.error!,
-        actionLabel: context.l10n.discoverRetry,
-        onAction: () => _loadSection(_section, force: true),
-      );
+      return [
+        _paddedSectionSliver(
+          _buildMessageCard(
+            icon: Icons.cloud_off_outlined,
+            title: context.l10n.discoverLoadFailed,
+            message: cache.error!,
+            actionLabel: context.l10n.discoverRetry,
+            onAction: () => _loadSection(_section, force: true),
+          ),
+          bottomPadding: bottomPadding,
+        ),
+      ];
     }
     return switch (_section) {
-      _DiscoverSection.recommended => _buildShelvesBody(cache),
-      _DiscoverSection.categories => _buildCategoriesBody(cache),
-      _DiscoverSection.latest => _buildLatestBody(cache),
+      _DiscoverSection.recommended =>
+        _buildShelvesSlivers(cache, bottomPadding),
+      _DiscoverSection.categories =>
+        _buildCategoriesSlivers(cache, bottomPadding),
+      _DiscoverSection.latest => _buildLatestSlivers(cache, bottomPadding),
     };
   }
 
-  Widget _buildShelvesBody(_SectionCache cache) {
+  List<Widget> _buildShelvesSlivers(
+    _SectionCache cache,
+    double bottomPadding,
+  ) {
     final shelves = (cache.shelves ?? const <_DiscoveryShelf>[])
         .where((shelf) => _matchesSelectedSource(shelf.source))
         .toList(growable: false);
     if (shelves.isEmpty) {
-      return _buildUnsupportedMessage('discover');
+      return [
+        _paddedSectionSliver(
+          _buildUnsupportedMessage('discover'),
+          bottomPadding: bottomPadding,
+        ),
+      ];
     }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: shelves.map(_buildShelf).toList(growable: false),
-    );
+    return [
+      SliverPadding(
+        padding: EdgeInsets.fromLTRB(16, 8, 16, bottomPadding),
+        sliver: SliverList.builder(
+          itemCount: shelves.length,
+          itemBuilder: (context, index) =>
+              _centerSectionChild(_buildShelf(shelves[index])),
+        ),
+      ),
+    ];
   }
 
   Widget _buildShelf(_DiscoveryShelf shelf) {
@@ -622,68 +643,119 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
     );
   }
 
-  Widget _buildCategoriesBody(_SectionCache cache) {
+  List<Widget> _buildCategoriesSlivers(
+    _SectionCache cache,
+    double bottomPadding,
+  ) {
     final categories = (cache.categories ?? const <_SourcedCategory>[])
         .where((category) => _matchesSelectedSource(category.source))
         .toList(growable: false);
     if (categories.isEmpty) {
-      return _buildUnsupportedMessage('categories');
+      return [
+        _paddedSectionSliver(
+          _buildUnsupportedMessage('categories'),
+          bottomPadding: bottomPadding,
+        ),
+      ];
     }
     final selectedCategory = _selectedCategory ?? categories.first;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
+    final slivers = <Widget>[
+      _paddedSectionSliver(
         _CategoryPickerButton(
           category: selectedCategory,
           onTap: () => _openCategoryPicker(categories),
         ),
-        const SizedBox(height: 18),
-        if (_loadingCategoryBooks)
+        bottomPadding: 18,
+      ),
+    ];
+    if (_loadingCategoryBooks) {
+      slivers.add(
+        _paddedSectionSliver(
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 36),
             child: Center(child: CircularProgressIndicator()),
-          )
-        else if (_categoryBooks.isEmpty)
+          ),
+          topPadding: 0,
+          bottomPadding: bottomPadding,
+        ),
+      );
+    } else if (_categoryBooks.isEmpty) {
+      slivers.add(
+        _paddedSectionSliver(
           _buildMessageCard(
             icon: Icons.menu_book_outlined,
             title: context.l10n.bookSourcesNoResults,
             message: context.l10n.discoverCategoryEmpty,
-          )
-        else
-          ..._categoryBooks.map(
-            (result) => Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: SourcedBookListTile(
-                result: result,
-                onTap: () => _actions.showBookDetails(result),
-              ),
-            ),
           ),
-      ],
-    );
+          topPadding: 0,
+          bottomPadding: bottomPadding,
+        ),
+      );
+    } else {
+      slivers.add(
+        _bookListSliver(_categoryBooks, bottomPadding: bottomPadding),
+      );
+    }
+    return slivers;
   }
 
-  Widget _buildLatestBody(_SectionCache cache) {
+  List<Widget> _buildLatestSlivers(
+    _SectionCache cache,
+    double bottomPadding,
+  ) {
     final books = (cache.books ?? const <SourcedBook>[])
         .where((result) => _matchesSelectedSource(result.source))
         .toList(growable: false);
     if (books.isEmpty) {
-      return _buildUnsupportedMessage('browse');
+      return [
+        _paddedSectionSliver(
+          _buildUnsupportedMessage('browse'),
+          bottomPadding: bottomPadding,
+        ),
+      ];
     }
-    return Column(
-      children: books
-          .map(
-            (result) => Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: SourcedBookListTile(
-                result: result,
-                onTap: () => _actions.showBookDetails(result),
-              ),
+    return [_bookListSliver(books, bottomPadding: bottomPadding)];
+  }
+
+  Widget _bookListSliver(
+    List<SourcedBook> books, {
+    required double bottomPadding,
+  }) {
+    return SliverPadding(
+      padding: EdgeInsets.fromLTRB(16, 0, 16, bottomPadding),
+      sliver: SliverList.separated(
+        itemCount: books.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 10),
+        itemBuilder: (context, index) {
+          final result = books[index];
+          return _centerSectionChild(
+            SourcedBookListTile(
+              result: result,
+              onTap: () => _actions.showBookDetails(result),
             ),
-          )
-          .toList(growable: false),
+          );
+        },
+      ),
     );
   }
+
+  Widget _paddedSectionSliver(
+    Widget child, {
+    double topPadding = 8,
+    required double bottomPadding,
+  }) {
+    return SliverPadding(
+      padding: EdgeInsets.fromLTRB(16, topPadding, 16, bottomPadding),
+      sliver: SliverToBoxAdapter(child: _centerSectionChild(child)),
+    );
+  }
+
+  Widget _centerSectionChild(Widget child) => Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1048),
+          child: child,
+        ),
+      );
 
   Widget _buildUnsupportedMessage(String capability) {
     final hasEnabledSources = _sources.any((source) => source.enabled);

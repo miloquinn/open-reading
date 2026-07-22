@@ -145,9 +145,11 @@ class SettingsPage extends StatefulWidget {
   const SettingsPage({
     super.key,
     this.controller,
+    this.cacheManager,
   });
 
   final SettingsPageController? controller;
+  final AppCacheManager? cacheManager;
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();
@@ -160,6 +162,7 @@ class _SettingsPageState extends State<SettingsPage> {
   final ReaderHttpAIService _aiService = ReaderHttpAIService();
   final ScrollController _scrollController = ScrollController();
   final GlobalKey _supportSectionKey = GlobalKey();
+  late final AppCacheManager _cacheManager;
   late final TextEditingController _aiApiKeyController;
   late final TextEditingController _aiModelController;
   late final TextEditingController _aiBaseUrlController;
@@ -197,6 +200,10 @@ class _SettingsPageState extends State<SettingsPage> {
   List<_AiQuickModel> _aiQuickModels = const [];
   String? _activeAiQuickModelId;
   int _lastSupportRevealRequest = 0;
+  AppCacheUsage? _cacheUsage;
+  bool _loadingCacheUsage = true;
+  final Set<AppCacheCategory> _clearingCacheCategories = {};
+  bool _clearingAllCaches = false;
 
   @override
   void initState() {
@@ -205,7 +212,9 @@ class _SettingsPageState extends State<SettingsPage> {
     _aiModelController = TextEditingController();
     _aiBaseUrlController = TextEditingController();
     _aiTempController = TextEditingController();
+    _cacheManager = widget.cacheManager ?? AppCacheManager();
     unawaited(_loadAppVersion());
+    unawaited(_refreshCacheUsage());
     _loadSettings();
     _attachSettingsController(widget.controller);
     // 状态栏设置现在由_SettingsPageWrapper处理
@@ -445,6 +454,137 @@ class _SettingsPageState extends State<SettingsPage> {
     } catch (_) {
       // Keep default version fallback.
     }
+  }
+
+  Future<void> _refreshCacheUsage() async {
+    try {
+      final usage = await _cacheManager.usage();
+      if (!mounted) return;
+      setState(() {
+        _cacheUsage = usage;
+        _loadingCacheUsage = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loadingCacheUsage = false);
+    }
+  }
+
+  Future<void> _clearCacheCategory(AppCacheCategory category) async {
+    if (_clearingCacheCategories.contains(category) || _clearingAllCaches) {
+      return;
+    }
+    final confirmed = await _confirmCacheClear(
+      title: _cacheCategoryTitle(category),
+    );
+    if (!confirmed || !mounted) return;
+    setState(() => _clearingCacheCategories.add(category));
+    try {
+      await _cacheManager.clear(category);
+      await _refreshCacheUsage();
+      if (mounted) {
+        showSideToast(
+          context,
+          context.l10n.settingsCacheCleared,
+          kind: SideToastKind.success,
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        showSideToast(
+          context,
+          context.l10n.settingsCacheClearFailed,
+          kind: SideToastKind.error,
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _clearingCacheCategories.remove(category));
+      }
+    }
+  }
+
+  Future<void> _clearAllCaches() async {
+    if (_clearingAllCaches || _clearingCacheCategories.isNotEmpty) return;
+    final confirmed = await _confirmCacheClear(
+      title: context.l10n.settingsCacheClearAll,
+    );
+    if (!confirmed || !mounted) return;
+    setState(() => _clearingAllCaches = true);
+    try {
+      await _cacheManager.clearAll();
+      await _refreshCacheUsage();
+      if (mounted) {
+        showSideToast(
+          context,
+          context.l10n.settingsCacheCleared,
+          kind: SideToastKind.success,
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        showSideToast(
+          context,
+          context.l10n.settingsCacheClearFailed,
+          kind: SideToastKind.error,
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _clearingAllCaches = false);
+    }
+  }
+
+  Future<bool> _confirmCacheClear({required String title}) async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: Text(title),
+            content: Text(context.l10n.settingsCacheClearConfirm),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child:
+                    Text(MaterialLocalizations.of(context).cancelButtonLabel),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(dialogContext, true),
+                child: Text(context.l10n.settingsCacheClearAction),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  String _cacheCategoryTitle(AppCacheCategory category) => switch (category) {
+        AppCacheCategory.sourceCovers => context.l10n.settingsCacheSourceCovers,
+        AppCacheCategory.sourceData => context.l10n.settingsCacheSourceData,
+        AppCacheCategory.temporaryFiles =>
+          context.l10n.settingsCacheTemporaryFiles,
+      };
+
+  String _cacheCategorySubtitle(AppCacheCategory category) {
+    if (_loadingCacheUsage) return context.l10n.settingsCacheCalculating;
+    final bytes = _cacheUsage?.bytesFor(category) ?? 0;
+    final size = AppCacheManager.formatBytes(bytes);
+    return switch (category) {
+      AppCacheCategory.sourceCovers =>
+        context.l10n.settingsCacheSourceCoversSubtitle(size),
+      AppCacheCategory.sourceData =>
+        context.l10n.settingsCacheSourceDataSubtitle(size),
+      AppCacheCategory.temporaryFiles =>
+        context.l10n.settingsCacheTemporaryFilesSubtitle(size),
+    };
+  }
+
+  Widget _cacheTrailing(AppCacheCategory category) {
+    if (_clearingCacheCategories.contains(category)) {
+      return const SizedBox.square(
+        dimension: 20,
+        child: CircularProgressIndicator(strokeWidth: 2),
+      );
+    }
+    return const Icon(Icons.delete_outline_rounded);
   }
 
   Future<void> _saveSettings() async {
@@ -1001,6 +1141,45 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 icon: Icons.cloud_outlined,
                 trailing: _webDavSyncTrailing(webDavSync),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          _buildSectionCard(
+            title: l10n.settingsCacheManagementTitle,
+            icon: Icons.cleaning_services_outlined,
+            children: [
+              for (final category in AppCacheCategory.values)
+                _buildActionSetting(
+                  title: _cacheCategoryTitle(category),
+                  subtitle: _cacheCategorySubtitle(category),
+                  onTap: () => unawaited(_clearCacheCategory(category)),
+                  icon: switch (category) {
+                    AppCacheCategory.sourceCovers => Icons.image_outlined,
+                    AppCacheCategory.sourceData =>
+                      Icons.travel_explore_outlined,
+                    AppCacheCategory.temporaryFiles =>
+                      Icons.folder_delete_outlined,
+                  },
+                  trailing: _cacheTrailing(category),
+                ),
+              _buildActionSetting(
+                title: l10n.settingsCacheClearAll,
+                subtitle: l10n.settingsCacheClearAllSubtitle(
+                  _loadingCacheUsage
+                      ? l10n.settingsCacheCalculating
+                      : AppCacheManager.formatBytes(
+                          _cacheUsage?.totalBytes ?? 0,
+                        ),
+                ),
+                onTap: () => unawaited(_clearAllCaches()),
+                icon: Icons.delete_sweep_outlined,
+                trailing: _clearingAllCaches
+                    ? const SizedBox.square(
+                        dimension: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.delete_forever_outlined),
               ),
             ],
           ),

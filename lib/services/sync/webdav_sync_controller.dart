@@ -4,6 +4,7 @@ import '../../models/book.dart';
 
 import 'secure_sync_config.dart';
 import 'sync_change_store.dart';
+import 'sync_dataset_catalog.dart';
 import 'sync_engine.dart';
 import 'sync_models.dart';
 import 'webdav_book_file_service.dart';
@@ -34,16 +35,20 @@ class WebDavSyncController extends ChangeNotifier {
   WebDavSyncScope _scope = const WebDavSyncScope();
   WebDavSyncStatus _status = WebDavSyncStatus.unconfigured;
   WebDavSyncPhase _phase = WebDavSyncPhase.none;
+  WebDavSyncPhase _lastFailedPhase = WebDavSyncPhase.none;
   DateTime? _lastSuccessfulSync;
   int _pendingChanges = 0;
   WebDavSyncErrorCode? _lastError;
   String? _lastErrorMessage;
   WebDavSyncRunResult? _lastResult;
   List<RemoteBookDescriptor> _remoteBooks = const [];
+  WebDavNewBookUploadPolicy _newBookUploadPolicy =
+      WebDavNewBookUploadPolicy.askEveryTime;
 
   bool get isConfigured => _configuration != null;
   WebDavSyncStatus get status => _status;
   WebDavSyncPhase get phase => _phase;
+  WebDavSyncPhase get lastFailedPhase => _lastFailedPhase;
   DateTime? get lastSuccessfulSync => _lastSuccessfulSync;
   int get pendingChanges => _pendingChanges;
   WebDavSyncErrorCode? get lastError => _lastError;
@@ -55,11 +60,15 @@ class WebDavSyncController extends ChangeNotifier {
   String? get rootPath => _configuration?.rootPath;
   WebDavSyncRunResult? get lastResult => _lastResult;
   List<RemoteBookDescriptor> get remoteBooks => _remoteBooks;
+  WebDavNewBookUploadPolicy get newBookUploadPolicy => _newBookUploadPolicy;
   SyncFileCapabilities get fileCapabilities => const SyncFileCapabilities();
 
   Future<void> initialize() async {
     _configuration = await _configStore.readConfiguration();
-    _scope = await _configStore.readScope();
+    _scope = SyncDatasetCatalog.normalizeScope(
+      await _configStore.readScope(),
+    );
+    _newBookUploadPolicy = await _configStore.readNewBookUploadPolicy();
     _pendingChanges = await _changeStore.pendingCount();
     final lastSuccess = await _changeStore.getState('last_successful_sync');
     _lastSuccessfulSync =
@@ -157,6 +166,7 @@ class WebDavSyncController extends ChangeNotifier {
         notifyListeners();
       });
       _lastResult = result;
+      _lastFailedPhase = WebDavSyncPhase.none;
       _lastSuccessfulSync = result.completedAt;
       await _changeStore.setState(
         'last_successful_sync',
@@ -169,12 +179,22 @@ class WebDavSyncController extends ChangeNotifier {
       notifyListeners();
       return result;
     } on WebDavSyncFailure catch (error) {
+      _lastFailedPhase = _phase;
+      debugPrint(
+        'WebDAV sync failed at ${_phase.name}: ${error.code.name}'
+        '${error.statusCode == null ? '' : ' (HTTP ${error.statusCode})'}',
+      );
       _setFailure(error);
       _pendingChanges = await _changeStore.pendingCount();
       _phase = WebDavSyncPhase.none;
       notifyListeners();
       rethrow;
-    } catch (_) {
+    } catch (error, stackTrace) {
+      _lastFailedPhase = _phase;
+      debugPrint(
+        'WebDAV sync failed at ${_phase.name}: ${error.runtimeType}',
+      );
+      debugPrintStack(stackTrace: stackTrace);
       const failure = WebDavSyncFailure(
         WebDavSyncErrorCode.unknown,
         'Metadata sync could not be completed.',
@@ -203,8 +223,17 @@ class WebDavSyncController extends ChangeNotifier {
   }
 
   Future<void> setScope(WebDavSyncScope scope) async {
-    await _configStore.saveScope(scope);
-    _scope = scope;
+    final normalized = SyncDatasetCatalog.normalizeScope(scope);
+    await _configStore.saveScope(normalized);
+    _scope = normalized;
+    notifyListeners();
+  }
+
+  Future<void> setNewBookUploadPolicy(
+    WebDavNewBookUploadPolicy policy,
+  ) async {
+    await _configStore.saveNewBookUploadPolicy(policy);
+    _newBookUploadPolicy = policy;
     notifyListeners();
   }
 
@@ -214,6 +243,8 @@ class WebDavSyncController extends ChangeNotifier {
     _scope = const WebDavSyncScope();
     _status = WebDavSyncStatus.unconfigured;
     _phase = WebDavSyncPhase.none;
+    _lastFailedPhase = WebDavSyncPhase.none;
+    _newBookUploadPolicy = WebDavNewBookUploadPolicy.askEveryTime;
     _clearError();
     notifyListeners();
   }

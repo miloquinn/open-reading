@@ -3,6 +3,7 @@
 
 export 'package:xxread/services/core/app_settings_service.dart';
 export 'package:xxread/services/core/app_state_service.dart';
+export 'package:xxread/services/core/cache_management_service.dart';
 export 'package:xxread/services/core/custom_font_service.dart';
 export 'package:xxread/services/core/data_cache_service.dart';
 export 'package:xxread/services/core/database_service.dart';

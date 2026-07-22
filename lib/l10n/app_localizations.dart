@@ -6044,6 +6044,90 @@ abstract class AppLocalizations {
   /// **'Data & sync'**
   String get settingsDataSyncTitle;
 
+  /// No description provided for @settingsCacheManagementTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cache management'**
+  String get settingsCacheManagementTitle;
+
+  /// No description provided for @settingsCacheSourceCovers.
+  ///
+  /// In en, this message translates to:
+  /// **'Source cover cache'**
+  String get settingsCacheSourceCovers;
+
+  /// No description provided for @settingsCacheSourceCoversSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded source covers · {size}'**
+  String settingsCacheSourceCoversSubtitle(String size);
+
+  /// No description provided for @settingsCacheSourceData.
+  ///
+  /// In en, this message translates to:
+  /// **'Source chapter cache'**
+  String get settingsCacheSourceData;
+
+  /// No description provided for @settingsCacheSourceDataSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Safely removable online chapter cache · {size}'**
+  String settingsCacheSourceDataSubtitle(String size);
+
+  /// No description provided for @settingsCacheTemporaryFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Temporary files'**
+  String get settingsCacheTemporaryFiles;
+
+  /// No description provided for @settingsCacheTemporaryFilesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Disposable update and temporary files · {size}'**
+  String settingsCacheTemporaryFilesSubtitle(String size);
+
+  /// No description provided for @settingsCacheClearAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all safe caches'**
+  String get settingsCacheClearAll;
+
+  /// No description provided for @settingsCacheClearAllSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clears only the categories above · {size}'**
+  String settingsCacheClearAllSubtitle(String size);
+
+  /// No description provided for @settingsCacheCalculating.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculating…'**
+  String get settingsCacheCalculating;
+
+  /// No description provided for @settingsCacheClearConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'This removes only temporary cache data. Books, saved covers, reading progress, databases, settings, and credentials are preserved.'**
+  String get settingsCacheClearConfirm;
+
+  /// No description provided for @settingsCacheClearAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get settingsCacheClearAction;
+
+  /// No description provided for @settingsCacheCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Cache cleared'**
+  String get settingsCacheCleared;
+
+  /// No description provided for @settingsCacheClearFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not clear the cache'**
+  String get settingsCacheClearFailed;
+
   /// WebDAV sync settings entry title
   ///
   /// In en, this message translates to:
@@ -6224,11 +6308,11 @@ abstract class AppLocalizations {
   /// **'Reading progress'**
   String get webDavScopeProgress;
 
-  /// Sync scope for annotations
+  /// Sync scope for bookmarks
   ///
   /// In en, this message translates to:
-  /// **'Bookmarks, notes & highlights'**
-  String get webDavScopeAnnotations;
+  /// **'Bookmarks'**
+  String get webDavScopeBookmarks;
 
   /// Sync scope for reading sessions
   ///
@@ -6314,6 +6398,18 @@ abstract class AppLocalizations {
   /// **'The username, password, or folder permission is incorrect.'**
   String get webDavErrorAuthentication;
 
+  /// Invalid WebDAV configuration error
+  ///
+  /// In en, this message translates to:
+  /// **'The WebDAV configuration is incomplete or invalid.'**
+  String get webDavErrorInvalidConfiguration;
+
+  /// Insecure WebDAV connection error
+  ///
+  /// In en, this message translates to:
+  /// **'The connection does not meet the security requirements.'**
+  String get webDavErrorInsecureConnection;
+
   /// WebDAV certificate error
   ///
   /// In en, this message translates to:
@@ -6325,6 +6421,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The remote folder is not writable.'**
   String get webDavErrorPermission;
+
+  /// WebDAV remote path not found error
+  ///
+  /// In en, this message translates to:
+  /// **'The remote sync folder or a required file was not found.'**
+  String get webDavErrorNotFound;
+
+  /// WebDAV conflict error
+  ///
+  /// In en, this message translates to:
+  /// **'Remote data is in conflict. Try syncing again.'**
+  String get webDavErrorConflict;
+
+  /// WebDAV storage full error
+  ///
+  /// In en, this message translates to:
+  /// **'The WebDAV storage is full.'**
+  String get webDavErrorStorageFull;
+
+  /// WebDAV rate limit error
+  ///
+  /// In en, this message translates to:
+  /// **'Too many WebDAV requests were made. Try again later.'**
+  String get webDavErrorRateLimited;
 
   /// WebDAV timeout error
   ///
@@ -6350,11 +6470,71 @@ abstract class AppLocalizations {
   /// **'Some remote sync data is damaged and was not applied.'**
   String get webDavErrorCorruptData;
 
+  /// WebDAV clock skew error
+  ///
+  /// In en, this message translates to:
+  /// **'This device\'s clock differs too much from the WebDAV server.'**
+  String get webDavErrorClockSkew;
+
+  /// WebDAV secure storage error
+  ///
+  /// In en, this message translates to:
+  /// **'The WebDAV password could not be read from secure storage.'**
+  String get webDavErrorSecureStorage;
+
   /// Unknown WebDAV error
   ///
   /// In en, this message translates to:
   /// **'WebDAV could not complete the operation.'**
   String get webDavErrorUnknown;
+
+  /// WebDAV failure phase
+  ///
+  /// In en, this message translates to:
+  /// **'Failed while: {phase}'**
+  String webDavErrorPhase(String phase);
+
+  /// WebDAV connecting phase
+  ///
+  /// In en, this message translates to:
+  /// **'connecting to the remote server'**
+  String get webDavPhaseConnecting;
+
+  /// WebDAV local scan phase
+  ///
+  /// In en, this message translates to:
+  /// **'scanning this device'**
+  String get webDavPhaseScanningLocal;
+
+  /// WebDAV remote read phase
+  ///
+  /// In en, this message translates to:
+  /// **'reading remote data'**
+  String get webDavPhaseReadingRemote;
+
+  /// WebDAV remote apply phase
+  ///
+  /// In en, this message translates to:
+  /// **'merging remote data'**
+  String get webDavPhaseApplyingRemote;
+
+  /// WebDAV local upload phase
+  ///
+  /// In en, this message translates to:
+  /// **'uploading local changes'**
+  String get webDavPhaseUploadingLocal;
+
+  /// WebDAV finishing phase
+  ///
+  /// In en, this message translates to:
+  /// **'finishing synchronization'**
+  String get webDavPhaseFinishing;
+
+  /// Unknown WebDAV phase
+  ///
+  /// In en, this message translates to:
+  /// **'an unknown step'**
+  String get webDavPhaseUnknown;
 
   /// WebDAV book-file manager title
   ///
@@ -6421,6 +6601,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Only books you explicitly select here will be uploaded'**
   String get webDavFilesUploadPermissionHint;
+
+  /// Newly imported book file upload policy title
+  ///
+  /// In en, this message translates to:
+  /// **'New book files'**
+  String get webDavNewBookPolicyTitle;
+
+  /// Ask after each import policy
+  ///
+  /// In en, this message translates to:
+  /// **'Ask every time (recommended)'**
+  String get webDavNewBookPolicyAsk;
+
+  /// Ask policy explanation
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which books to upload after an import finishes'**
+  String get webDavNewBookPolicyAskHint;
+
+  /// Automatic new-book upload policy
+  ///
+  /// In en, this message translates to:
+  /// **'Automatically upload new books'**
+  String get webDavNewBookPolicyAutomatic;
+
+  /// Automatic policy explanation
+  ///
+  /// In en, this message translates to:
+  /// **'Upload immediately after import and potentially use mobile data'**
+  String get webDavNewBookPolicyAutomaticHint;
+
+  /// Manual new-book upload policy
+  ///
+  /// In en, this message translates to:
+  /// **'Always choose manually'**
+  String get webDavNewBookPolicyManual;
+
+  /// Manual policy explanation
+  ///
+  /// In en, this message translates to:
+  /// **'Start uploads only from the Book files page'**
+  String get webDavNewBookPolicyManualHint;
+
+  /// Prompt title after importing books
+  ///
+  /// In en, this message translates to:
+  /// **'Sync the {count} books just imported?'**
+  String webDavNewBooksPromptTitle(int count);
+
+  /// Prompt explanation after importing books
+  ///
+  /// In en, this message translates to:
+  /// **'Reading data syncs automatically. Choose the original book files to upload to WebDAV.'**
+  String get webDavNewBooksPromptBody;
+
+  /// Skip new-book upload action
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get webDavNewBooksSkip;
+
+  /// New-book upload progress
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading {count} new books…'**
+  String webDavNewBooksUploading(int count);
+
+  /// New-book upload result
+  ///
+  /// In en, this message translates to:
+  /// **'New-book upload complete: {success} succeeded, {failed} failed'**
+  String webDavNewBooksUploadResult(int success, int failed);
 
   /// Book file transfer size limit
   ///

@@ -20,6 +20,7 @@
 - Flutter / Dart 多平台应用。
 - 支持 Android、iOS、Windows、macOS、Linux、Web 和 OpenHarmony 工程。
 - 应用图标以 `ios/Runner/AppIcon.icon` 的 Icon Composer 分层工程为 iOS 原生源；`assets/images/app_icon*.png` 提供 Flutter、Android 与桌面回退，Windows runner 使用多尺寸 ICO，Linux runner 从打包后的 Flutter assets 加载窗口图标。
+- iOS App 级隐私清单位于 `ios/Runner/PrivacyInfo.xcprivacy`，声明 Runner 原生文件导入、iCloud Documents 与用户授权文件所使用的 required reason API；第三方 Flutter 插件继续各自在 bundle 内携带其隐私清单。
 - 本地结构化数据使用 SQLite，移动端通过 `sqflite`，桌面端通过 `sqflite_common_ffi`。
 - 轻量设置使用 `SharedPreferences`。
 - 在线书源使用 Open Reading Source Protocol，不包含 Legado 兼容层。
@@ -115,8 +116,8 @@ lib/
 - `pages/book_sources/source_search_page.dart`：在线书源搜索与发现。
 - `pages/book_sources/book_source_management_page.dart`：原生协议书源管理。
 - `pages/settings/settings_page.dart`：应用设置、版本与维护入口；`SettingsPageController` 可从首页导航后定位到“支持开发”区域。
-- `pages/settings/sync/`：WebDAV 概览、安全配置和书籍文件管理页；元数据自动同步，原文件需先开启上传权限，再按书选择上传或下载。
-- `services/sync/`：本地优先的 WebDAV v1 同步实现。每台设备写入独立的不可变变更批次，使用 HLC、tombstone 和记录级 LWW 合并；书籍文件按 SHA-256 内容寻址去重。
+- `pages/settings/sync/`：WebDAV 概览、安全配置和书籍文件管理页；元数据自动同步，原文件需先开启上传权限，再按书选择上传或下载。新导入书籍提供“每次询问（默认）/ 自动上传 / 始终手动”三种策略；自动上传只处理符合安全限制的真正新增本地文件。
+- `services/sync/`：本地优先的 WebDAV v1 同步实现。每台设备写入独立的不可变变更批次，使用 HLC、tombstone 和记录级 LWW 合并；书籍文件按 SHA-256 内容寻址去重。`sync_dataset_catalog.dart` 分离稳定协议数据集与当前版本能力，暂未开放的笔记/高亮记录可保留在同步镜像中，但不会扫描或写入业务表。
 - `pages/settings/custom_fonts_page.dart`：用户字体库的导入、应用、重命名和删除入口。
 - `widgets/side_toast.dart`：应用内短反馈的统一浮层。手机在顶部居中、宽屏在右上展示，连续提示直接替换；普通/成功提示短暂停留，警告/错误略延长，并通过 `IgnorePointer` 保证通知出现时底层操作仍可点击。页面内不再直接使用底部 `SnackBar`。
 - `pages/settings/about/changelog_page.dart` 与 `services/core/changelog_service.dart`：应用内版本历史异步加载与展示；版本、顺序和四语文案统一来自 `assets/changelog/changelog.json`，首项自动标记为当前版本，语言按完整 locale、语言代码、英文和任意可用语言逐级回退。新增版本只更新数据资产，不再修改页面代码或增加版本专属 ARB getter。
@@ -220,6 +221,7 @@ lib/
 - `widgets/reader_control_chrome.dart`：统一顶部、底部控制栏，并仅为上下翻页承载固定视口阅读信息栏；信息栏在系统安全区下方显示时间、章节标题和电量，并在控制栏展开时淡出。上下翻页的章内页码固定在右下，其余分页模式的信息栏与页码均由纸页 leaf 绘制。
 - `widgets/reader_navigation_sheet.dart`：目录、书签和定位面板；整个面板使用当前阅读主题配色，目录按 EPUB 等来源提供的 `depth` 还原为可展开/收起的层级树，搜索结果保留祖先路径，“当前”定位会自动展开被折叠的父链。
 - `widgets/generated_book_cover.dart`：无真实封面时的统一实时封面组件，与持久化 PNG 共用同一绘制器。
+- `widgets/source_cover_image.dart`：ORSP 远程封面的统一展示入口；复用受控加载器，在解码失败时驱逐损坏缓存并最多重新获取一次。
 
 支持的翻页模式：
 
@@ -255,7 +257,8 @@ EPUB 图片块与其后的正文共用同一个显示投影：携带图片的第
 - `BookSourceClient`：协议请求。
 - `BookSourceChapterText`：仅把 HTML/纯文本响应转换为 canonical chapter text，并清理重复远端页码；若正文最前面的首行/首段与接口标题或目录标题规范化后完全相同，则像本地 TXT 章节解析一样剥离该重复标题。不注入首行缩进、段间距或章节标题，这些展示语义全部交给共享文字阅读内核。
 - `BookSourceChapterCache`：章节正文的内存/磁盘缓存和并发去重；在线阅读器优先预取下一章并生成分页布局，再机会式准备上一章与更远的后一章，缓存始终限制在相邻范围。水平滑动到相邻章节时，真实预览页先在当前 `PageView` 内完成整段动画，只有 `ScrollEnd` 确认停在边界页后才提交章节状态；提交后复用已预热布局，并让新控制器直接挂接目标页，避免停稳后的可见重置。中途回滑会取消待提交切章，进度持久化不阻塞跨章提交。
-- `BookSourceShelfService`：在线书籍加入本地书架；书源未提供封面时生成并持久化统一封面。
+- `SourceCoverCache`：书源封面 URL 级请求去重、最多 4 路并发、瞬态失败单次退避重试、压缩字节内存 LRU 和应用缓存目录磁盘缓存；单 URL 驱逐使用独立 epoch，旧请求完成时不能覆盖或移除新请求。
+- `BookSourceShelfService`：在线书籍加入本地书架；书源提供远程封面时下载到文档目录的 `covers/` 作为书架持久封面，缺失时生成统一封面。
 - `BookSourceReadingProgressStore`：在线章节阅读进度。
 
 发现页默认聚合当前栏目下所有已启用且声明对应能力的书源，并允许按单一书源筛选。
@@ -263,6 +266,9 @@ EPUB 图片块与其后的正文共用同一个显示投影：携带图片的第
 始终由 `sourceId + bookId` 共同确定。
 分类栏目只在主页面展示当前分类；完整分类集合在移动端底部面板或桌面对话框中按书源
 分组，并通过可搜索的惰性列表选择，避免分类数量随书源增长时同步构建全部标签。
+
+发现、分类与最新书籍列表使用纵向 Sliver 惰性构建；横向书架只为当前视口附近的 section
+创建封面组件，避免多书源聚合时一次性发出数十到数百个封面请求。
 
 官方发行版不包含默认或预装书源，也不订阅官方书源目录；`BookSourceRegistry` 首次安装
 为空，只保存用户在本机主动添加的 URL。首次启动条款与每次新增书源分别要求确认第三方
@@ -333,7 +339,8 @@ rights-report Issue 表单，第三方书源内容投诉优先指向其运营者
 - SQLite：书籍、书签、笔记、阅读会话、WebDAV 变更镜像和书籍 blob 索引。
 - SharedPreferences：阅读 UI 设置、App/阅读字体选择、书库布局与网格密度、手机底部导航文字显隐、WebDAV 地址/用户名/根目录/同步范围、应用偏好和轻量状态；自定义阅读主题以 JSON 列表保存，预设与自定义主题的统一顺序以稳定 ID 列表单独保存，两个阅读器共享，旧单主题记录首次读取时自动迁移。
 - 安全存储：WebDAV 密码只保存在 `flutter_secure_storage`，不写入 SharedPreferences、SQLite、远端批次或日志。
-- 应用私有目录：数据库、缓存、封面、应用管理的书籍文件，`custom_fonts/` 下的用户字体与清单，以及 `reader_theme_backgrounds/` 下由应用托管的阅读主题背景图片。
+- 应用私有目录：数据库、缓存、封面、应用管理的书籍文件，`custom_fonts/` 下的用户字体与清单，以及 `reader_theme_backgrounds/` 下由应用托管的阅读主题背景图片。书源临时封面位于平台 cache 的 `source_covers/`，加入书架后保存的封面位于 documents 的 `covers/`，两者清理边界分离。
+- 设置页缓存管理只允许清理 `source_covers/`、`book_source_chapters/` 和 `updates/` 三类已知缓存，同时清理 SourceCoverCache 压缩内存与 Flutter 解码图片缓存；不枚举或删除数据库、书籍、documents 封面、进度、偏好或安全凭据。
 - 用户授权目录：通过平台存储桥接原地管理或导入书籍。
 - 网络：仅在用户使用在线书源、封面、AI、同步或更新检查等功能时访问。WebDAV 默认要求 HTTPS，只有用户显式允许时才可对私网/localhost 使用 HTTP；书籍恢复当前以 100 MiB 为安全上限。
 

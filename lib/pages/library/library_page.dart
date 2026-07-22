@@ -34,6 +34,7 @@ import 'package:xxread/widgets/app_brand_icon.dart';
 import 'package:xxread/widgets/generated_book_cover.dart';
 import 'package:xxread/widgets/scrolling_text.dart';
 import 'package:xxread/widgets/side_toast.dart';
+import 'package:xxread/widgets/source_cover_image.dart';
 
 import 'import_book/import_book_page.dart';
 import 'download_tasks_page.dart';
@@ -1120,12 +1121,11 @@ class _LibraryPageState extends State<LibraryPage> {
     }
     final sourceCover = _sourceCoverUrl(book);
     if (sourceCover != null) {
-      return Image.network(
-        sourceCover.toString(),
+      return SourceCoverImage(
+        url: sourceCover,
         fit: BoxFit.cover,
         cacheWidth: (64 * MediaQuery.of(context).devicePixelRatio).round(),
-        errorBuilder: (context, error, stackTrace) =>
-            _buildListDefaultCover(context, book),
+        fallback: _buildListDefaultCover(context, book),
       );
     }
     return _buildListDefaultCover(context, book);
@@ -2075,14 +2075,13 @@ Widget _gridCoverArt(BuildContext context, Book book) {
   }
   final sourceCover = _sourceCoverUrl(book);
   if (sourceCover != null) {
-    return Image.network(
-      sourceCover.toString(),
+    return SourceCoverImage(
+      url: sourceCover,
       width: double.infinity,
       height: double.infinity,
       fit: BoxFit.cover,
       cacheWidth: (240 * MediaQuery.of(context).devicePixelRatio).round(),
-      errorBuilder: (context, error, stackTrace) =>
-          _gridDefaultCover(context, book),
+      fallback: _gridDefaultCover(context, book),
     );
   }
   // 没有封面图片时，显示默认封面设计

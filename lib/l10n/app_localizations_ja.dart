@@ -3276,6 +3276,57 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsDataSyncTitle => 'データと同期';
 
   @override
+  String get settingsCacheManagementTitle => 'キャッシュ管理';
+
+  @override
+  String get settingsCacheSourceCovers => 'ソース表紙キャッシュ';
+
+  @override
+  String settingsCacheSourceCoversSubtitle(String size) {
+    return 'ダウンロード済みの表紙 · $size';
+  }
+
+  @override
+  String get settingsCacheSourceData => 'ソース章キャッシュ';
+
+  @override
+  String settingsCacheSourceDataSubtitle(String size) {
+    return '安全に削除できるオンライン章キャッシュ · $size';
+  }
+
+  @override
+  String get settingsCacheTemporaryFiles => '一時ファイル';
+
+  @override
+  String settingsCacheTemporaryFilesSubtitle(String size) {
+    return '破棄可能な更新・一時ファイル · $size';
+  }
+
+  @override
+  String get settingsCacheClearAll => '安全なキャッシュをすべて消去';
+
+  @override
+  String settingsCacheClearAllSubtitle(String size) {
+    return '上記の項目だけを消去します · $size';
+  }
+
+  @override
+  String get settingsCacheCalculating => '計算中…';
+
+  @override
+  String get settingsCacheClearConfirm =>
+      '一時キャッシュだけを削除します。本、保存済み表紙、読書進捗、データベース、設定、認証情報は保持されます。';
+
+  @override
+  String get settingsCacheClearAction => '消去';
+
+  @override
+  String get settingsCacheCleared => 'キャッシュを消去しました';
+
+  @override
+  String get settingsCacheClearFailed => 'キャッシュを消去できませんでした';
+
+  @override
   String get settingsWebDavSyncTitle => 'WebDAV 同期';
 
   @override
@@ -3372,7 +3423,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get webDavScopeProgress => '読書進捗';
 
   @override
-  String get webDavScopeAnnotations => 'しおり・メモ・ハイライト';
+  String get webDavScopeBookmarks => 'しおり';
 
   @override
   String get webDavScopeReadingSessions => '読書統計';
@@ -3421,10 +3472,28 @@ class AppLocalizationsJa extends AppLocalizations {
   String get webDavErrorAuthentication => 'ユーザー名、パスワード、またはフォルダー権限が正しくありません。';
 
   @override
+  String get webDavErrorInvalidConfiguration => 'WebDAV 設定が不完全か無効です。';
+
+  @override
+  String get webDavErrorInsecureConnection => '現在の接続はセキュリティ要件を満たしていません。';
+
+  @override
   String get webDavErrorCertificate => 'サーバー証明書を検証できませんでした。';
 
   @override
   String get webDavErrorPermission => 'リモートフォルダーに書き込めません。';
+
+  @override
+  String get webDavErrorNotFound => 'リモート同期フォルダーまたは必要なファイルがありません。';
+
+  @override
+  String get webDavErrorConflict => 'リモートデータが競合しました。同期を再試行してください。';
+
+  @override
+  String get webDavErrorStorageFull => 'WebDAV ストレージの空き容量がありません。';
+
+  @override
+  String get webDavErrorRateLimited => 'WebDAV リクエストが多すぎます。後で再試行してください。';
 
   @override
   String get webDavErrorTimeout => 'サーバーが時間内に応答しませんでした。';
@@ -3439,7 +3508,40 @@ class AppLocalizationsJa extends AppLocalizations {
   String get webDavErrorCorruptData => '一部のリモート同期データが破損しているため適用しませんでした。';
 
   @override
+  String get webDavErrorClockSkew => '端末と WebDAV サーバーの時刻差が大きすぎます。';
+
+  @override
+  String get webDavErrorSecureStorage =>
+      'システムの安全なストレージから WebDAV パスワードを読み込めません。';
+
+  @override
   String get webDavErrorUnknown => 'WebDAV の処理を完了できませんでした。';
+
+  @override
+  String webDavErrorPhase(String phase) {
+    return '失敗した段階: $phase';
+  }
+
+  @override
+  String get webDavPhaseConnecting => 'リモートへの接続';
+
+  @override
+  String get webDavPhaseScanningLocal => '端末データのスキャン';
+
+  @override
+  String get webDavPhaseReadingRemote => 'リモートデータの読み込み';
+
+  @override
+  String get webDavPhaseApplyingRemote => 'リモートデータの統合';
+
+  @override
+  String get webDavPhaseUploadingLocal => '端末の変更をアップロード';
+
+  @override
+  String get webDavPhaseFinishing => '同期の完了';
+
+  @override
+  String get webDavPhaseUnknown => '不明';
 
   @override
   String get webDavBookFilesTitle => '書籍ファイル';
@@ -3475,6 +3577,50 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get webDavFilesUploadPermissionHint => 'このページで明示的に選択した書籍だけをアップロードします';
+
+  @override
+  String get webDavNewBookPolicyTitle => '新しい書籍ファイル';
+
+  @override
+  String get webDavNewBookPolicyAsk => '毎回確認（推奨）';
+
+  @override
+  String get webDavNewBookPolicyAskHint => 'インポート後にアップロードする書籍を選択します';
+
+  @override
+  String get webDavNewBookPolicyAutomatic => '新しい書籍を自動アップロード';
+
+  @override
+  String get webDavNewBookPolicyAutomaticHint =>
+      'インポート後すぐにアップロードし、モバイル回線を使う場合があります';
+
+  @override
+  String get webDavNewBookPolicyManual => '常に手動で選択';
+
+  @override
+  String get webDavNewBookPolicyManualHint => '書籍ファイルページからのみアップロードします';
+
+  @override
+  String webDavNewBooksPromptTitle(int count) {
+    return '今回追加した $count 冊を同期しますか？';
+  }
+
+  @override
+  String get webDavNewBooksPromptBody =>
+      '読書データは自動的に同期されます。WebDAV にアップロードする書籍ファイルを選択してください。';
+
+  @override
+  String get webDavNewBooksSkip => '後でアップロード';
+
+  @override
+  String webDavNewBooksUploading(int count) {
+    return '$count 冊の新しい書籍をアップロード中…';
+  }
+
+  @override
+  String webDavNewBooksUploadResult(int success, int failed) {
+    return '新しい書籍のアップロード完了: 成功 $success 冊、失敗 $failed 冊';
+  }
 
   @override
   String get webDavFilesTooLarge => 'このバージョンでは 100 MiB を超える書籍ファイルに対応していません';

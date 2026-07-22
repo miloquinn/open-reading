@@ -7,6 +7,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import '../../core/database_service.dart';
 import '../sync_change_store.dart';
 import '../sync_clock.dart';
+import '../sync_dataset_catalog.dart';
 import '../sync_models.dart';
 import '../sync_protocol.dart';
 
@@ -20,16 +21,21 @@ class MetadataSyncAdapters {
   MetadataSyncAdapters({
     required SyncChangeStore store,
     DatabaseService? databaseService,
+    Iterable<MetadataSyncAdapter>? registeredAdapters,
   })  : _databaseService = databaseService ?? DatabaseService(),
         _store = store,
-        adapters = [] {
-    adapters.addAll([
-      BooksSyncAdapter(store, _databaseService),
-      ProgressSyncAdapter(store, _databaseService),
-      BookmarksSyncAdapter(store, _databaseService),
-      NotesSyncAdapter(store, _databaseService),
-      ReadingSessionsSyncAdapter(store, _databaseService),
-    ]);
+        adapters = registeredAdapters == null
+            ? []
+            : List<MetadataSyncAdapter>.of(registeredAdapters) {
+    if (registeredAdapters == null) {
+      adapters.addAll([
+        BooksSyncAdapter(store, _databaseService),
+        ProgressSyncAdapter(store, _databaseService),
+        BookmarksSyncAdapter(store, _databaseService),
+        NotesSyncAdapter(store, _databaseService),
+        ReadingSessionsSyncAdapter(store, _databaseService),
+      ]);
+    }
   }
 
   final DatabaseService _databaseService;
@@ -37,15 +43,11 @@ class MetadataSyncAdapters {
   final List<MetadataSyncAdapter> adapters;
 
   Future<void> scan(WebDavSyncScope scope, HybridLogicalClock clock) async {
-    final enabled = <String>{
-      if (scope.books) 'books',
-      if (scope.progress) 'progress',
-      if (scope.bookmarks) 'bookmarks',
-      if (scope.notes) 'notes',
-      if (scope.readingSessions) 'reading_sessions',
-    };
     for (final adapter in adapters) {
-      if (!enabled.contains(adapter.dataset)) continue;
+      final dataset = SyncDataset.fromRemoteName(adapter.dataset);
+      if (dataset == null || !SyncDatasetCatalog.isEnabled(dataset, scope)) {
+        continue;
+      }
       await _materializePreviouslyRemoteRecords(adapter);
       await adapter.scan(clock);
     }
@@ -75,6 +77,8 @@ class MetadataSyncAdapters {
   }
 
   Future<void> apply(Transaction txn, SyncOperation operation) async {
+    final dataset = SyncDataset.fromRemoteName(operation.dataset);
+    if (dataset == null || !SyncDatasetCatalog.isSupported(dataset)) return;
     final adapter = adapters.where((item) => item.dataset == operation.dataset);
     if (adapter.isNotEmpty) await adapter.first.apply(txn, operation);
   }
@@ -528,16 +532,22 @@ Future<String> bookUidForMap(Map<String, Object?> row) async {
   final path = row['filePath'] as String?;
   if (path != null && path.isNotEmpty) {
     final file = File(path);
-    if (await file.exists()) {
-      final stat = await file.stat();
-      final cacheKey =
-          '$path|${stat.modified.millisecondsSinceEpoch}|${stat.size}';
-      final cached = _bookUidCache[cacheKey];
-      if (cached != null) return cached;
-      final digest = await sha256.bind(file.openRead()).first;
-      final uid = 'sha256:$digest';
-      _bookUidCache[cacheKey] = uid;
-      return uid;
+    try {
+      if (await file.exists()) {
+        final stat = await file.stat();
+        final cacheKey =
+            '$path|${stat.modified.millisecondsSinceEpoch}|${stat.size}';
+        final cached = _bookUidCache[cacheKey];
+        if (cached != null) return cached;
+        final digest = await sha256.bind(file.openRead()).first;
+        final uid = 'sha256:$digest';
+        _bookUidCache[cacheKey] = uid;
+        return uid;
+      }
+    } on FileSystemException {
+      // Android document providers and files removed between exists/stat/read
+      // can become temporarily inaccessible. Fall back to the persisted hash
+      // or metadata identity instead of failing the entire metadata sync.
     }
   }
   final legacy = row['content_hash'] as String?;

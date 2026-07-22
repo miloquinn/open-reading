@@ -39,6 +39,23 @@ enum WebDavSyncErrorCode {
   unknown,
 }
 
+enum WebDavNewBookUploadPolicy {
+  askEveryTime('ask'),
+  automatic('automatic'),
+  manual('manual');
+
+  const WebDavNewBookUploadPolicy(this.storageValue);
+
+  final String storageValue;
+
+  static WebDavNewBookUploadPolicy fromStorage(String? value) {
+    for (final policy in values) {
+      if (policy.storageValue == value) return policy;
+    }
+    return askEveryTime;
+  }
+}
+
 class WebDavSyncFailure implements Exception {
   const WebDavSyncFailure(this.code, this.message, {this.statusCode});
 
@@ -130,7 +147,7 @@ class WebDavSyncScope {
     this.books = true,
     this.progress = true,
     this.bookmarks = true,
-    this.notes = true,
+    this.notes = false,
     this.readingSessions = true,
     this.bookFiles = false,
   });
@@ -156,7 +173,7 @@ class WebDavSyncScope {
         books: json['books'] as bool? ?? true,
         progress: json['progress'] as bool? ?? true,
         bookmarks: json['bookmarks'] as bool? ?? true,
-        notes: json['notes'] as bool? ?? true,
+        notes: json['notes'] as bool? ?? false,
         readingSessions: json['reading_sessions'] as bool? ?? true,
         bookFiles: json['book_files'] as bool? ?? false,
       );

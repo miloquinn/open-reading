@@ -3404,6 +3404,57 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsDataSyncTitle => 'Data & sync';
 
   @override
+  String get settingsCacheManagementTitle => 'Cache management';
+
+  @override
+  String get settingsCacheSourceCovers => 'Source cover cache';
+
+  @override
+  String settingsCacheSourceCoversSubtitle(String size) {
+    return 'Downloaded source covers · $size';
+  }
+
+  @override
+  String get settingsCacheSourceData => 'Source chapter cache';
+
+  @override
+  String settingsCacheSourceDataSubtitle(String size) {
+    return 'Safely removable online chapter cache · $size';
+  }
+
+  @override
+  String get settingsCacheTemporaryFiles => 'Temporary files';
+
+  @override
+  String settingsCacheTemporaryFilesSubtitle(String size) {
+    return 'Disposable update and temporary files · $size';
+  }
+
+  @override
+  String get settingsCacheClearAll => 'Clear all safe caches';
+
+  @override
+  String settingsCacheClearAllSubtitle(String size) {
+    return 'Clears only the categories above · $size';
+  }
+
+  @override
+  String get settingsCacheCalculating => 'Calculating…';
+
+  @override
+  String get settingsCacheClearConfirm =>
+      'This removes only temporary cache data. Books, saved covers, reading progress, databases, settings, and credentials are preserved.';
+
+  @override
+  String get settingsCacheClearAction => 'Clear';
+
+  @override
+  String get settingsCacheCleared => 'Cache cleared';
+
+  @override
+  String get settingsCacheClearFailed => 'Could not clear the cache';
+
+  @override
   String get settingsWebDavSyncTitle => 'WebDAV sync';
 
   @override
@@ -3502,7 +3553,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get webDavScopeProgress => 'Reading progress';
 
   @override
-  String get webDavScopeAnnotations => 'Bookmarks, notes & highlights';
+  String get webDavScopeBookmarks => 'Bookmarks';
 
   @override
   String get webDavScopeReadingSessions => 'Reading statistics';
@@ -3553,11 +3604,34 @@ class AppLocalizationsEn extends AppLocalizations {
       'The username, password, or folder permission is incorrect.';
 
   @override
+  String get webDavErrorInvalidConfiguration =>
+      'The WebDAV configuration is incomplete or invalid.';
+
+  @override
+  String get webDavErrorInsecureConnection =>
+      'The connection does not meet the security requirements.';
+
+  @override
   String get webDavErrorCertificate =>
       'The server certificate could not be verified.';
 
   @override
   String get webDavErrorPermission => 'The remote folder is not writable.';
+
+  @override
+  String get webDavErrorNotFound =>
+      'The remote sync folder or a required file was not found.';
+
+  @override
+  String get webDavErrorConflict =>
+      'Remote data is in conflict. Try syncing again.';
+
+  @override
+  String get webDavErrorStorageFull => 'The WebDAV storage is full.';
+
+  @override
+  String get webDavErrorRateLimited =>
+      'Too many WebDAV requests were made. Try again later.';
 
   @override
   String get webDavErrorTimeout => 'The server did not respond in time.';
@@ -3575,7 +3649,41 @@ class AppLocalizationsEn extends AppLocalizations {
       'Some remote sync data is damaged and was not applied.';
 
   @override
+  String get webDavErrorClockSkew =>
+      'This device\'s clock differs too much from the WebDAV server.';
+
+  @override
+  String get webDavErrorSecureStorage =>
+      'The WebDAV password could not be read from secure storage.';
+
+  @override
   String get webDavErrorUnknown => 'WebDAV could not complete the operation.';
+
+  @override
+  String webDavErrorPhase(String phase) {
+    return 'Failed while: $phase';
+  }
+
+  @override
+  String get webDavPhaseConnecting => 'connecting to the remote server';
+
+  @override
+  String get webDavPhaseScanningLocal => 'scanning this device';
+
+  @override
+  String get webDavPhaseReadingRemote => 'reading remote data';
+
+  @override
+  String get webDavPhaseApplyingRemote => 'merging remote data';
+
+  @override
+  String get webDavPhaseUploadingLocal => 'uploading local changes';
+
+  @override
+  String get webDavPhaseFinishing => 'finishing synchronization';
+
+  @override
+  String get webDavPhaseUnknown => 'an unknown step';
 
   @override
   String get webDavBookFilesTitle => 'Book files';
@@ -3612,6 +3720,52 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get webDavFilesUploadPermissionHint =>
       'Only books you explicitly select here will be uploaded';
+
+  @override
+  String get webDavNewBookPolicyTitle => 'New book files';
+
+  @override
+  String get webDavNewBookPolicyAsk => 'Ask every time (recommended)';
+
+  @override
+  String get webDavNewBookPolicyAskHint =>
+      'Choose which books to upload after an import finishes';
+
+  @override
+  String get webDavNewBookPolicyAutomatic => 'Automatically upload new books';
+
+  @override
+  String get webDavNewBookPolicyAutomaticHint =>
+      'Upload immediately after import and potentially use mobile data';
+
+  @override
+  String get webDavNewBookPolicyManual => 'Always choose manually';
+
+  @override
+  String get webDavNewBookPolicyManualHint =>
+      'Start uploads only from the Book files page';
+
+  @override
+  String webDavNewBooksPromptTitle(int count) {
+    return 'Sync the $count books just imported?';
+  }
+
+  @override
+  String get webDavNewBooksPromptBody =>
+      'Reading data syncs automatically. Choose the original book files to upload to WebDAV.';
+
+  @override
+  String get webDavNewBooksSkip => 'Not now';
+
+  @override
+  String webDavNewBooksUploading(int count) {
+    return 'Uploading $count new books…';
+  }
+
+  @override
+  String webDavNewBooksUploadResult(int success, int failed) {
+    return 'New-book upload complete: $success succeeded, $failed failed';
+  }
 
   @override
   String get webDavFilesTooLarge =>

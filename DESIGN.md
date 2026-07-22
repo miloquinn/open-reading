@@ -2,10 +2,10 @@
 
 ## Source of truth
 
-- Status: Implemented baseline
+- Status: Active
 - Last refreshed: 2026-07-22
 - Primary product surfaces: 首页、书库、阅读器、阅读统计、设置，以及“数据与同步 / WebDAV”页面。
-- Evidence reviewed: `README.md`、`structure.md`、`lib/pages/settings/settings_page.dart`、`lib/services/core/database_service.dart`、`lib/services/core/app_settings_service.dart`、`lib/services/books/`、`lib/book_sources/`、现有导入与存储实现，以及 Git 历史中 2026-07-11 移除的旧 WebDAV 同步实现。
+- Evidence reviewed: `README.md`、`structure.md`、`docs/webdav-sync-design.md`、`docs/webdav-sync-ux-design.md`、`lib/pages/settings/sync/`、`lib/pages/library/import_book/import_book_page.dart`、`lib/services/sync/`、现有导入与存储实现，以及 Git 历史中 2026-07-11 移除的旧 WebDAV 同步实现。
 - Feature specifications: `docs/webdav-sync-design.md`（同步协议与数据架构）、`docs/webdav-sync-ux-design.md`（页面、交互、文案与状态流）。
 
 ## Brand
@@ -16,14 +16,14 @@
 
 ## Product goals
 
-- Goals: 通过用户自己的 WebDAV 在多设备间同步阅读进度、书架元数据、书签、笔记和阅读统计；可选同步本地书籍原文件；断网时继续本地使用。
+- Goals: 通过用户自己的 WebDAV 在多设备间同步阅读进度、书架元数据、书签和阅读统计；可选同步本地书籍原文件；断网时继续本地使用。笔记/高亮保留稳定协议数据集，待完整产品功能上线后再启用。
 - Non-goals: 自建 Open Reading 云账号、多人协作、实时共同编辑、把缓存和设备路径复制到其他设备、首版提供端到端加密或后台常驻同步。
 - Success signals: 两台设备离线修改后可无损合并；重复同步幂等；新设备可完整恢复已选择的数据域；同步失败不阻断阅读；用户能判断最后一次成功时间和待上传状态。
 
 ## Personas and jobs
 
 - Primary personas: 同时使用手机与电脑阅读的用户；使用 NAS、Nextcloud 或自建 WebDAV 的隐私敏感用户；需要迁移设备的长期用户。
-- User jobs: 在另一台设备继续阅读；保留书签和笔记；恢复书架；选择是否上传版权或隐私敏感的书籍文件；诊断为什么没有同步成功。
+- User jobs: 在另一台设备继续阅读；保留书签；恢复书架；选择新书每次询问、自动上传或始终手动；诊断为什么没有同步成功。
 - Key contexts of use: 网络不稳定、设备时钟不完全一致、服务端实现差异、应用被系统挂起、远端已有其他设备数据。
 
 ## Information architecture
@@ -94,7 +94,7 @@
 
 ## Open questions
 
-- [ ] 首版是否把“书源注册列表”纳入默认同步范围；建议纳入，但不包含任何密钥或令牌。
-- [ ] 本地书籍原文件同步是首版一起交付，还是在元数据同步稳定后作为第二阶段；建议第二阶段。
-- [ ] 是否在首版引入客户端端到端加密；建议先明确披露“WebDAV 服务端可读取内容”，后续独立设计加密与恢复密钥流程。
+- [ ] 笔记/高亮产品能力完整后何时开启 `notes` 数据集；启用必须通过业务 schema、保留记录回放、范围偏好迁移和降级兼容验收，不能只打开 UI 开关。
+- [ ] Android 不同系统文件提供器与坚果云 WebDAV 的兼容矩阵是否完整；需要至少一次 Android 真机端到端复测。
+- [ ] 后续是否引入客户端端到端加密；当前应明确披露“WebDAV 服务端可读取已同步内容”，加密需独立设计恢复密钥与旧数据迁移。
 - [ ] OpenHarmony 的安全存储与后台能力是否满足同一实现；需要平台专项验证。

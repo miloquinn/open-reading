@@ -136,6 +136,36 @@ void main() {
     expect(find.text('Category 499'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('discovery shelves are built lazily along the vertical viewport',
+      (tester) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(430, 700);
+    addTearDown(tester.view.reset);
+
+    final source = _source('source-a', 'Source A');
+    SharedPreferences.setMockInitialValues({
+      'open_reading_book_sources_v1': jsonEncode([source.toJson()]),
+    });
+
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: BookSourcesPage(client: _ManyShelfDiscoveryClient()),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Shelf 0'), findsOneWidget);
+    expect(find.text('Shelf 11'), findsNothing);
+
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -5000));
+    await tester.pumpAndSettle();
+    expect(find.text('Shelf 11'), findsOneWidget);
+  });
 }
 
 class _DiscoveryClient extends BookSourceClient {
@@ -228,6 +258,24 @@ class _LargeCategoryDiscoveryClient extends _DiscoveryClient {
     return _page([
       _book('selected-book', 'Selected category book'),
     ]);
+  }
+}
+
+class _ManyShelfDiscoveryClient extends _DiscoveryClient {
+  @override
+  Future<BookSourceDiscoveryPage> getDiscovery(
+    RegisteredBookSource source,
+  ) async {
+    return BookSourceDiscoveryPage(
+      sections: List.generate(
+        12,
+        (index) => BookSourceDiscoverySection(
+          id: 'shelf-$index',
+          title: 'Shelf $index',
+          items: [_book('book-$index', 'Book $index')],
+        ),
+      ),
+    );
   }
 }
 

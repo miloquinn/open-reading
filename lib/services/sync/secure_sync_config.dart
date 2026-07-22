@@ -66,6 +66,8 @@ class SecureSyncConfigStore {
 
   static const _configurationKey = 'webdav_sync_configuration_v1';
   static const _scopeKey = 'webdav_sync_scope_v1';
+  static const _newBookUploadPolicyKey =
+      'webdav_sync_new_book_upload_policy_v1';
   static const _passwordKey = 'open_reading.webdav.password';
 
   final SyncSecretStorage _secretStorage;
@@ -123,6 +125,14 @@ class SecureSyncConfigStore {
   Future<void> saveScope(WebDavSyncScope scope) =>
       _preferences.write(_scopeKey, jsonEncode(scope));
 
+  Future<WebDavNewBookUploadPolicy> readNewBookUploadPolicy() async =>
+      WebDavNewBookUploadPolicy.fromStorage(
+        await _preferences.read(_newBookUploadPolicyKey),
+      );
+
+  Future<void> saveNewBookUploadPolicy(WebDavNewBookUploadPolicy policy) =>
+      _preferences.write(_newBookUploadPolicyKey, policy.storageValue);
+
   Future<void> clear() async {
     try {
       await _secretStorage.delete(_passwordKey);
@@ -134,6 +144,7 @@ class SecureSyncConfigStore {
     }
     await _preferences.delete(_configurationKey);
     await _preferences.delete(_scopeKey);
+    await _preferences.delete(_newBookUploadPolicyKey);
   }
 }
 
