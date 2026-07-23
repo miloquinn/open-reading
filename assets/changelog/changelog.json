@@ -16,6 +16,7 @@
                                                  "Removed stalls when opening and jumping through very large tables of contents by prebuilding display data and loading indexed TXT chapter ranges asynchronously",
                                                  "Moved online chapter conversion, adjacent pagination, and cache persistence out of the horizontal swipe path to smooth chapter title pages",
                                                  "Split every oversized chapter in very large TXT files into lazy 32K-character sections, read only the current and required adjacent sections asynchronously, and delayed first-time indexing until after the cover-to-loader handoff",
+                                                 "Fixed large TXT books incorrectly showing no readable body when an active opening route was mistaken for cancellation, and made Android SAF imports materialize off the main thread with file-size verification",
                                                  "Merged app themes and accent colors into one Material 3 color source with automatic migration of earlier theme choices",
                                                  "Reorganized Settings by merging related options and moving floating navigation and library layout controls into focused detail pages"
                                              ],
@@ -31,6 +32,7 @@
                                                  "修复超长目录打开和目录跳转卡顿：提前生成展示数据，并异步读取大型 TXT 的目标章节区间",
                                                  "将在线章节正文转换、相邻章节分页和缓存写入移出水平滑动关键路径，修复章节标题页滑动卡顿",
                                                  "超大 TXT 的每个巨型章节都按约 32K 字符分片懒加载，只异步读取当前与必要相邻片段；首次索引延后到封面转入加载动画之后执行",
+                                                 "修复大型 TXT 开书动画仍在进行时被误判为取消并提示没有正文的问题；Android SAF 导入改为后台物化并校验文件大小",
                                                  "应用主题与强调色合并为统一的 Material 3 配色来源，并自动迁移旧主题配置",
                                                  "重大优化设置页，合并相关设置选项，并将悬浮导航栏与书库布局收纳到独立详情页"
                                              ],
@@ -46,6 +48,7 @@
                                                     "修復超長目錄開啟與目錄跳轉卡頓：預先產生顯示資料，並非同步讀取大型 TXT 的目標章節區間",
                                                     "將線上章節正文轉換、相鄰章節分頁與快取寫入移出水平滑動關鍵路徑，修復章節標題頁滑動卡頓",
                                                     "超大 TXT 的每個巨型章節都以約 32K 字元分片延遲載入，只非同步讀取目前與必要相鄰片段；首次索引延後到封面轉入載入動畫後執行",
+                                                    "修復大型 TXT 開書動畫仍在進行時被誤判為取消並提示沒有正文的問題；Android SAF 匯入改為背景實體化並驗證檔案大小",
                                                     "應用程式主題與強調色合併為統一的 Material 3 配色來源，並自動遷移舊主題設定",
                                                     "大幅最佳化設定頁，合併相關設定選項，並將懸浮導覽列與書庫版面收納至獨立詳情頁"
                                                 ],
@@ -61,6 +64,7 @@
                                                  "非常に長い目次の表示と目次ジャンプの停止を、表示データの事前生成と大容量 TXT の対象章範囲の非同期読み込みで改善しました",
                                                  "オンライン章の本文変換、隣接章のページ分割、キャッシュ保存を横スワイプの重要経路から外し、章タイトルページの引っかかりを改善しました",
                                                  "巨大 TXT のすべての大きすぎる章を約 32K 文字単位へ分割し、現在と必要な隣接部分だけを非同期で読み込みます。初回索引作成は表紙から読み込み表示への移行後まで延期します",
+                                                 "大容量 TXT の開くアニメーション中にキャンセルと誤判定され本文なしになる問題を修正し、Android SAF の取り込みをバックグラウンド化してファイルサイズを検証します",
                                                  "アプリテーマとアクセントカラーを一つの Material 3 配色元へ統合し、以前のテーマ設定を自動移行します",
                                                  "設定画面を大幅に整理し、関連項目を統合してフローティングナビゲーションとライブラリ表示を専用詳細画面へまとめました"
                                              ]

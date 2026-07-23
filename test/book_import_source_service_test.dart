@@ -83,6 +83,88 @@ void main() {
     );
   });
 
+  test('Android 文档物化后校验 SAF 声明大小', () async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    final temporary = await Directory.systemTemp.createTemp(
+      'android-materialize-size-',
+    );
+    addTearDown(() => temporary.delete(recursive: true));
+    const channel = MethodChannel('test.storage.materialize.size');
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+          final arguments = call.arguments as Map<Object?, Object?>;
+          final destinationPath = arguments['destinationPath']! as String;
+          await File(destinationPath).writeAsBytes(<int>[1, 2, 3]);
+          return destinationPath;
+        });
+    addTearDown(
+      () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, null),
+    );
+    final service = BookImportSourceService(
+      platformBridge: PlatformStorageBridge(channel: channel),
+      temporaryDirectory: () async => temporary,
+    );
+    final source = BookImportSource(
+      id: 'android-tree:book-size-ok',
+      kind: BookImportSourceKind.androidTree,
+      ownership: BookImportOwnership.externalCopy,
+      displayName: 'book.txt',
+      extension: 'txt',
+      locator: 'content://provider/document/book-size-ok',
+      sizeBytes: 3,
+    );
+
+    final prepared = await service.prepare(source);
+
+    expect(await File(prepared.localPath!).length(), 3);
+    await service.release(prepared);
+  });
+
+  test('Android 文档物化大小不一致时拒绝导入', () async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    final temporary = await Directory.systemTemp.createTemp(
+      'android-materialize-mismatch-',
+    );
+    addTearDown(() => temporary.delete(recursive: true));
+    const channel = MethodChannel('test.storage.materialize.mismatch');
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+          final arguments = call.arguments as Map<Object?, Object?>;
+          final destinationPath = arguments['destinationPath']! as String;
+          await File(destinationPath).writeAsBytes(<int>[1, 2, 3]);
+          return destinationPath;
+        });
+    addTearDown(
+      () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, null),
+    );
+    final service = BookImportSourceService(
+      platformBridge: PlatformStorageBridge(channel: channel),
+      temporaryDirectory: () async => temporary,
+    );
+    final source = BookImportSource(
+      id: 'android-tree:book-size-bad',
+      kind: BookImportSourceKind.androidTree,
+      ownership: BookImportOwnership.externalCopy,
+      displayName: 'book.txt',
+      extension: 'txt',
+      locator: 'content://provider/document/book-size-bad',
+      sizeBytes: 4,
+    );
+
+    await expectLater(
+      service.prepare(source),
+      throwsA(
+        isA<BookImportFailure>().having(
+          (failure) => failure.code,
+          'code',
+          'copy_verification_failed',
+        ),
+      ),
+    );
+  });
+
   test('Android 扫描在原生扩展名为空时回退到显示名称', () async {
     TestWidgetsFlutterBinding.ensureInitialized();
     const channel = MethodChannel('test.storage.scan.name');

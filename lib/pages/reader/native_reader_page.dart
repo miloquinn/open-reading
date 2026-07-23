@@ -76,10 +76,11 @@ Future<bool> waitForReaderOpeningRouteToSettle({
   required bool routeEntranceCompleted,
   required bool Function() isMounted,
 }) async {
-  if (routeEntranceCompleted || routeAnimation == null) {
-    return isMounted() &&
-        (routeAnimation == null ||
-            routeAnimation.status == AnimationStatus.completed);
+  // The live animation status is authoritative. A completed flag captured
+  // before the route's first forward tick must not cancel active opening.
+  if (routeAnimation == null ||
+      routeAnimation.status == AnimationStatus.completed) {
+    return isMounted();
   }
 
   final completed = Completer<bool>();

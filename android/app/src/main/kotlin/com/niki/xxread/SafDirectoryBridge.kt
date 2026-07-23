@@ -86,10 +86,17 @@ class SafDirectoryBridge(
                     )
                     return
                 }
-                runCatching {
-                    materializeDocument(Uri.parse(documentUri), File(destinationPath))
-                }.onSuccess(result::success)
-                    .onFailure { result.error("materialize_failed", it.message, null) }
+                ioExecutor.execute {
+                    runCatching {
+                        materializeDocument(Uri.parse(documentUri), File(destinationPath))
+                    }.onSuccess { localPath ->
+                        activity.runOnUiThread { result.success(localPath) }
+                    }.onFailure { error ->
+                        activity.runOnUiThread {
+                            result.error("materialize_failed", error.message, null)
+                        }
+                    }
+                }
             }
             "exportBookToDownloads" -> exportBookToDownloads(call, result)
             else -> result.notImplemented()

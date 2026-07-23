@@ -134,7 +134,7 @@ lib/
 - `widgets/update_check_gate.dart` 与 `widgets/release_notes_markdown.dart`：更新提示以响应式版本卡片展示 GitHub/官网返回的常用 Markdown 更新说明，提供“稍后 / 跳过此版本 / GitHub / 官网”四个选择。“稍后”不再抑制后续提醒，只有显式跳过才把目标版本写入 SharedPreferences；手动检查忽略跳过状态，新版本也不会被旧记录拦截。Android 官网路径在应用内后台下载、校验后直接进入系统安装器，完成通知可再次发起安装；iOS 当前打开官网下载页，后续上架后再切换 App Store。
 - `android/app/src/main/kotlin/com/niki/xxread/AppUpdateBridge.kt`：提供 ABI 查询、未知来源安装授权和 FileProvider 安装桥；打开安装器前复核 APK 包名、实际 versionCode 和当前已安装应用的签名身份，普通应用不能静默安装。
 - `android/app/src/main/kotlin/com/niki/xxread/DownloadForegroundService.kt` 与 `BackgroundDownloadBridge.kt`：Android 13+ 请求通知权限，使用前台 `dataSync` 服务更新书籍/APK 进度通知；Android 16+ 采用系统 `Notification.ProgressStyle` 并请求 promoted ongoing 展示，不满足系统或 OEM 条件时自动保留为普通进度通知。取消书籍任务会移除对应活跃项和通知；完成通知把书籍 ID 或已验证 APK 路径送回 Flutter，由应用打开阅读器或系统安装器。
-- `android/app/src/main/kotlin/com/niki/xxread/IncomingBookIntentBridge.kt`：接收 TXT/EPUB 的 `ACTION_VIEW`、`ACTION_SEND` 与 `ACTION_SEND_MULTIPLE`，在临时授权失效前流式物化、校验并持久化请求清单；Dart 完成导入后确认清理。`SafDirectoryBridge.kt` 同时负责通过 MediaStore 向公共下载目录导出书籍。
+- `android/app/src/main/kotlin/com/niki/xxread/IncomingBookIntentBridge.kt`：接收 TXT/EPUB 的 `ACTION_VIEW`、`ACTION_SEND` 与 `ACTION_SEND_MULTIPLE`，在临时授权失效前流式物化、校验并持久化请求清单；Dart 完成导入后确认清理。`SafDirectoryBridge.kt` 使用标准 `DocumentsContract` 递归扫描已授权目录，在后台线程物化文件，并通过 MediaStore 向公共下载目录导出书籍；目录扫描不使用 direct-child、MediaStore 或文件描述符旁路。`BookImportSourceService` 会复核物化文件大小后再交给哈希与托管副本流程。
 - `ios/Runner/IncomingBookBridge.swift`、自定义 SceneDelegate 与 Share Extension：Document Types 负责“在开元阅读中打开”，Share Extension 通过 App Group inbox 把分享文件交给主应用；security-scoped URL 只在协调复制期间持有。`StorageBridge.swift` 负责系统文档导出面板。
 - macOS 注册书籍 Document Types 并把 open-files 事件物化到缓存；Windows/Linux 从启动参数接收文件，Linux bundle 附带 MIME `.desktop` 声明。系统关联是否自动注册仍取决于正式安装/打包方式。
 - 独立仓库 `miloquinn/open-reading-web` 负责 `open.xxread.top` 的页面、版本化 latest API、镜像导入、下载统计、后台、生产部署与运行数据安全；其发布和数据结构文档不再由客户端仓库重复维护。
@@ -237,7 +237,7 @@ lib/
 
 本地 TXT/EPUB 的 `horizontalSlide` 章节窗口会在当前帧绘制完成后预热窗口外紧邻章节的分页结果；若 `PageView` 正在拖动或回弹，预热逐帧延后到滚动停止，避免 `onPageChanged` 扩大章节窗口时把 EPUB 分页工作放进活动翻页帧。分页指纹继续覆盖视口、字体、边距、段落和阅读模式，布局变化不会复用过期预热结果。目录远跳会为目标章节窗口创建初始页正确的新 `PageController`，并在首帧定位期间使用当前阅读主题背景遮盖旧页；反向进入上一章后，向列表头部扩展更早章节只在 `ScrollEnd` 后执行，并通过补偿新增页数的控制器初始索引保持当前纸页身份不变。
 
-大型 TXT 的索引文件通过 `core/reader/indexed_text_reader.dart` 按字节范围异步读取。阅读器在首次显示和目录远跳提交状态前准备“前一章、当前章、后一章”窗口，更远预热同样先等待异步读取；跨章节纵向列表对尚未加载的片段挂载占位。随机文件读取和 UTF-8 解码因此不再从 `build`/分页预热路径同步触发，同步范围读取仅作为惰性 getter 的兼容回退。
+大型 TXT 的索引文件通过 `core/reader/indexed_text_reader.dart` 按字节范围异步读取。阅读器在首次显示和目录远跳提交状态前准备“前一章、当前章、后一章”窗口，更远预热同样先等待异步读取；跨章节纵向列表对尚未加载的片段挂载占位。随机文件读取和 UTF-8 解码因此不再从 `build`/分页预热路径同步触发，同步范围读取仅作为惰性 getter 的兼容回退。入口重活只按实时路由动画状态判断落定或取消，过期的完成标志不能取消仍处于 forward/reverse 的开书动画。
 
 平板仿真翻页按两张独立 leaf 组成 spread，本地文件与在线书源阅读器共用相同约束：只有横屏平板满足断点且 `tabletTwoPageEnabled` 开启时才进入双页，关闭后回退单页；设置变化时本地阅读器按文本锚点恢复，书源阅读器会失效分页缓存并按文本 offset 恢复。左页从屏幕最左自由边向后翻并使用右装订，右页从屏幕最右自由边向前翻并使用左装订，翻页步长为两页；正中的 24px `_spreadGutter` 是固定书脊，不进入任一 leaf 的抓图变换或手势命中区。`ReaderPageCurlSpread` 以固定位置的 `Stack` 保持左右页布局不变，并把 coordinator 当前持有的活动 leaf 放到最后绘制；活动经典折页的 shader 绘制边界会沿装订侧扩展到整张 spread，因此下一页由右页跨书脊覆盖左页，上一页则由左页覆盖右页，静止 leaf 与手势命中区仍限制在各自半屏。纸张内容按“正面 / 背面 / 底页”三层分离：例如 8/9 向前翻时右 leaf 的 source 为 9、独立纸背为 10、实时底页为 11；向后翻时左 leaf 的 source 为当前左页、纸背为上一 spread 右页、底页为上一 spread 左页。native 双页会给奇数页章节补右侧空白 slot，使每章稳定从左页开始，动态扩展章节窗口不会改变既有 spread 奇偶；两个阅读器在视口重排时都按文本 offset 恢复，而在线书源跨章优先使用已预取章节的真实目标 leaf，并为左右 boundary/blank slot 使用不同快照身份，按最后可见页保存双页进度。手机单页使用整屏 leaf，前后翻页的物理装订边都位于左缘；backward 是独立 incoming 通道，不再通过方向镜像书脊或整套 forward 几何。
 

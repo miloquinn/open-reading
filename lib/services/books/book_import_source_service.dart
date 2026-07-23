@@ -211,6 +211,21 @@ class BookImportSourceService implements BookImportSourcePreparer {
         '${source.kind.name} 来源缺少本地路径',
       ),
     };
+    final materializedFile = File(localPath);
+    final actualBytes = await materializedFile.length();
+    final expectedBytes = source.sizeBytes;
+    if (expectedBytes != null &&
+        expectedBytes >= 0 &&
+        actualBytes != expectedBytes) {
+      if (await materializedFile.exists()) {
+        await materializedFile.delete();
+      }
+      throw BookImportFailure(
+        code: 'copy_verification_failed',
+        message:
+            'Materialized size mismatch: expected=$expectedBytes actual=$actualBytes',
+      );
+    }
     return source.copyWithLocalPath(localPath);
   }
 
