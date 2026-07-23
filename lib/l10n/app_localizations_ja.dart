@@ -1899,7 +1899,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get settingsLibraryLayoutSubtitle =>
-      'カードは読書情報を表示し、グリッドは選んだ大きさで表紙だけを表示します';
+      'カードまたはコンパクトなグリッドを選び、グリッド情報を調整できます';
 
   @override
   String get settingsLibraryLayoutCard => 'カード';
@@ -1915,6 +1915,13 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get settingsLibraryGridThreeColumns => '3列';
+
+  @override
+  String get settingsLibraryGridShowDetailsTitle => 'タイトルと進捗を表示';
+
+  @override
+  String get settingsLibraryGridShowDetailsSubtitle =>
+      '各表紙の下に1行のタイトルとコンパクトな進捗バーを表示します';
 
   @override
   String get settingsAccentFollowTheme => 'アクセントカラー：テーマに従う';

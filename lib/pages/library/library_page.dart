@@ -39,6 +39,7 @@ import 'package:xxread/widgets/source_cover_image.dart';
 
 import 'import_book/import_book_page.dart';
 import 'download_tasks_page.dart';
+import 'library_grid_book_details.dart';
 
 enum _LibraryFilter { all, reading, finished }
 
@@ -365,6 +366,9 @@ class _LibraryPageState extends State<LibraryPage> {
     final libraryGridColumns = context.select<AppSettingsNotifier, int>(
       (settings) => settings.libraryGridColumns,
     );
+    final libraryGridShowDetails = context.select<AppSettingsNotifier, bool>(
+      (settings) => settings.libraryGridShowDetails,
+    );
     final palette = PageStyleHelper.palette(context);
     final mobileChrome = HomeMobileChromeScope.of(context);
     // 手机模式：内容从屏幕顶端开始、滚动时穿过毛玻璃顶栏，
@@ -404,6 +408,7 @@ class _LibraryPageState extends State<LibraryPage> {
                           books,
                           topPadding: listTopPadding,
                           mobileColumns: libraryGridColumns,
+                          showDetails: libraryGridShowDetails,
                         )
                       : _buildBooksGrid(books, topPadding: listTopPadding),
                 ),
@@ -768,6 +773,7 @@ class _LibraryPageState extends State<LibraryPage> {
     List<Book> books, {
     required double topPadding,
     required int mobileColumns,
+    required bool showDetails,
   }) {
     final useRail =
         LayoutHelper.getNavigationType(context) == NavigationType.rail;
@@ -783,6 +789,14 @@ class _LibraryPageState extends State<LibraryPage> {
           constraints.maxWidth,
           mobileColumns: mobileColumns,
         );
+        final itemWidth =
+            (constraints.maxWidth -
+                horizontalPadding * 2 -
+                spacing * (crossAxisCount - 1)) /
+            crossAxisCount;
+        final itemHeight =
+            itemWidth * 3 / 2 +
+            (showDetails ? LibraryGridBookDetails.height : 0);
         return GridView.builder(
           key: const ValueKey('library-cover-grid'),
           scrollCacheExtent: const ScrollCacheExtent.pixels(720),
@@ -799,7 +813,7 @@ class _LibraryPageState extends State<LibraryPage> {
             crossAxisCount: crossAxisCount,
             crossAxisSpacing: spacing,
             mainAxisSpacing: spacing + 2,
-            childAspectRatio: 2 / 3,
+            childAspectRatio: itemWidth / itemHeight,
           ),
           itemCount: books.length,
           itemBuilder: (context, index) {
@@ -808,7 +822,9 @@ class _LibraryPageState extends State<LibraryPage> {
             return RepaintBoundary(
               child: Semantics(
                 button: true,
-                label: book.title,
+                label: showDetails
+                    ? '${book.title}，${context.l10n.libraryProgressContinue(_bookProgressPercent(book))}'
+                    : book.title,
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
@@ -822,26 +838,33 @@ class _LibraryPageState extends State<LibraryPage> {
                       await _openBook(book, animation: animation);
                     },
                     onLongPress: () => _showBookOptions(book),
-                    child: SizedBox.expand(
-                      key: coverKey,
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.shadow.withValues(alpha: 0.14),
-                              blurRadius: 7,
-                              offset: const Offset(0, 3),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: SizedBox.expand(
+                            key: coverKey,
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Theme.of(context).colorScheme.shadow
+                                        .withValues(alpha: 0.14),
+                                    blurRadius: 7,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: _gridCoverArt(context, book),
+                              ),
                             ),
-                          ],
+                          ),
                         ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: _gridCoverArt(context, book),
-                        ),
-                      ),
+                        if (showDetails) LibraryGridBookDetails(book: book),
+                      ],
                     ),
                   ),
                 ),
@@ -851,6 +874,11 @@ class _LibraryPageState extends State<LibraryPage> {
         );
       },
     );
+  }
+
+  int _bookProgressPercent(Book book) {
+    if (book.totalPages <= 0) return 0;
+    return ((book.currentPage / book.totalPages).clamp(0.0, 1.0) * 100).round();
   }
 
   Widget _buildBooksGrid(List<Book> books, {required double topPadding}) {

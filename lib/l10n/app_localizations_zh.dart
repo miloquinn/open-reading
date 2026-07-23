@@ -1881,7 +1881,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsLibraryLayoutTitle => '书库布局';
 
   @override
-  String get settingsLibraryLayoutSubtitle => '卡片展示阅读信息；网格仅显示封面，并可选择封面大小';
+  String get settingsLibraryLayoutSubtitle => '选择卡片或紧凑网格，并按需调整网格信息';
 
   @override
   String get settingsLibraryLayoutCard => '卡片';
@@ -1897,6 +1897,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsLibraryGridThreeColumns => '3 列';
+
+  @override
+  String get settingsLibraryGridShowDetailsTitle => '显示书名和进度';
+
+  @override
+  String get settingsLibraryGridShowDetailsSubtitle => '在每本封面下显示单行书名和精简进度条';
 
   @override
   String get settingsAccentFollowTheme => '强调色：跟随主题';
@@ -5448,7 +5454,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get settingsLibraryLayoutTitle => '書庫版面';
 
   @override
-  String get settingsLibraryLayoutSubtitle => '卡片顯示閱讀資訊；網格只顯示封面，並可選擇封面大小';
+  String get settingsLibraryLayoutSubtitle => '選擇卡片或緊湊網格，並按需調整網格資訊';
 
   @override
   String get settingsLibraryLayoutCard => '卡片';
@@ -5464,6 +5470,12 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get settingsLibraryGridThreeColumns => '3 列';
+
+  @override
+  String get settingsLibraryGridShowDetailsTitle => '顯示書名和進度';
+
+  @override
+  String get settingsLibraryGridShowDetailsSubtitle => '在每本封面下顯示單行書名和精簡進度列';
 
   @override
   String get settingsAccentFollowTheme => '強調色：跟隨主題';

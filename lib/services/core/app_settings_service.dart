@@ -20,6 +20,8 @@ class AppSettingsNotifier extends ChangeNotifier {
       'hide_home_navigation_labels_v1';
   static const String _keyLibraryLayoutMode = 'library_layout_mode_v1';
   static const String _keyLibraryGridColumns = 'library_grid_columns_v1';
+  static const String _keyLibraryGridShowDetails =
+      'library_grid_show_details_v1';
 
   Locale? _locale;
   String _localeCode = 'system';
@@ -28,6 +30,7 @@ class AppSettingsNotifier extends ChangeNotifier {
   bool _hideNavigationLabels = true;
   LibraryLayoutMode _libraryLayoutMode = LibraryLayoutMode.card;
   int _libraryGridColumns = 3;
+  bool _libraryGridShowDetails = false;
   bool _isInitialized = false;
   final CustomFontService _customFontService;
   final OnlineFontService _onlineFontService;
@@ -47,6 +50,7 @@ class AppSettingsNotifier extends ChangeNotifier {
   bool get hideNavigationLabels => _hideNavigationLabels;
   LibraryLayoutMode get libraryLayoutMode => _libraryLayoutMode;
   int get libraryGridColumns => _libraryGridColumns;
+  bool get libraryGridShowDetails => _libraryGridShowDetails;
 
   /// 用户自定义导入的字体列表（在线字体不在此列）。
   List<FontOption> get customFonts => _customFontService.fonts
@@ -206,6 +210,8 @@ class AppSettingsNotifier extends ChangeNotifier {
       _ => LibraryLayoutMode.card,
     };
     _libraryGridColumns = prefs.getInt(_keyLibraryGridColumns) == 2 ? 2 : 3;
+    _libraryGridShowDetails =
+        prefs.getBool(_keyLibraryGridShowDetails) ?? false;
     await _restoreSelectedFonts(prefs);
     _isInitialized = true;
     notifyListeners();
@@ -358,6 +364,14 @@ class AppSettingsNotifier extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_keyLibraryGridColumns, normalized);
+  }
+
+  Future<void> setLibraryGridShowDetails(bool value) async {
+    if (_libraryGridShowDetails == value) return;
+    _libraryGridShowDetails = value;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyLibraryGridShowDetails, value);
   }
 
   Future<void> prepareCustomFontPreviews() async {

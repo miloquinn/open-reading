@@ -35,25 +35,30 @@ void main() {
 
     expect(notifier.libraryLayoutMode, LibraryLayoutMode.card);
     expect(notifier.libraryGridColumns, 3);
+    expect(notifier.libraryGridShowDetails, isFalse);
   });
 
   test('library layout and cover columns restore and persist', () async {
     SharedPreferences.setMockInitialValues({
       'library_layout_mode_v1': 'grid',
       'library_grid_columns_v1': 2,
+      'library_grid_show_details_v1': true,
     });
     final notifier = await _loadNotifier();
     addTearDown(notifier.dispose);
 
     expect(notifier.libraryLayoutMode, LibraryLayoutMode.grid);
     expect(notifier.libraryGridColumns, 2);
+    expect(notifier.libraryGridShowDetails, isTrue);
 
     await notifier.setLibraryLayoutMode(LibraryLayoutMode.card);
     await notifier.setLibraryGridColumns(3);
+    await notifier.setLibraryGridShowDetails(false);
 
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getString('library_layout_mode_v1'), 'card');
     expect(prefs.getInt('library_grid_columns_v1'), 3);
+    expect(prefs.getBool('library_grid_show_details_v1'), isFalse);
   });
 
   test('unsupported saved column counts fall back to three', () async {

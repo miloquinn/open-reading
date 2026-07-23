@@ -2131,7 +2131,7 @@
   "@settingsLibraryLayoutTitle": {
     "description": "Title of the library layout selector"
   },
-  "settingsLibraryLayoutSubtitle": "Cards show reading details; Grid shows covers only at your chosen size",
+  "settingsLibraryLayoutSubtitle": "Choose cards or a compact grid, then adjust the grid details",
   "@settingsLibraryLayoutSubtitle": {
     "description": "Description of the card and cover-only grid library layouts"
   },
@@ -2154,6 +2154,14 @@
   "settingsLibraryGridThreeColumns": "3 columns",
   "@settingsLibraryGridThreeColumns": {
     "description": "Three-column mobile library grid option"
+  },
+  "settingsLibraryGridShowDetailsTitle": "Show title and progress",
+  "@settingsLibraryGridShowDetailsTitle": {
+    "description": "Toggle for showing book titles and reading progress below grid covers"
+  },
+  "settingsLibraryGridShowDetailsSubtitle": "Add one title line and a compact progress bar below each cover",
+  "@settingsLibraryGridShowDetailsSubtitle": {
+    "description": "Description of the grid title and progress toggle"
   },
   "settingsAccentFollowTheme": "Accent color: follow theme",
   "@settingsAccentFollowTheme": {

@@ -1976,7 +1976,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsLibraryLayoutSubtitle =>
-      'Cards show reading details; Grid shows covers only at your chosen size';
+      'Choose cards or a compact grid, then adjust the grid details';
 
   @override
   String get settingsLibraryLayoutCard => 'Cards';
@@ -1992,6 +1992,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsLibraryGridThreeColumns => '3 columns';
+
+  @override
+  String get settingsLibraryGridShowDetailsTitle => 'Show title and progress';
+
+  @override
+  String get settingsLibraryGridShowDetailsSubtitle =>
+      'Add one title line and a compact progress bar below each cover';
 
   @override
   String get settingsAccentFollowTheme => 'Accent color: follow theme';

@@ -3595,7 +3595,7 @@ abstract class AppLocalizations {
   /// Description of the card and cover-only grid library layouts
   ///
   /// In en, this message translates to:
-  /// **'Cards show reading details; Grid shows covers only at your chosen size'**
+  /// **'Choose cards or a compact grid, then adjust the grid details'**
   String get settingsLibraryLayoutSubtitle;
 
   /// Card layout option for the library
@@ -3627,6 +3627,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'3 columns'**
   String get settingsLibraryGridThreeColumns;
+
+  /// Toggle for showing book titles and reading progress below grid covers
+  ///
+  /// In en, this message translates to:
+  /// **'Show title and progress'**
+  String get settingsLibraryGridShowDetailsTitle;
+
+  /// Description of the grid title and progress toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Add one title line and a compact progress bar below each cover'**
+  String get settingsLibraryGridShowDetailsSubtitle;
 
   /// Accent summary when following the app theme
   ///

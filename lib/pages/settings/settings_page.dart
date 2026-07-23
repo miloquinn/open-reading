@@ -1403,7 +1403,7 @@ class _SettingsPageState extends State<SettingsPage> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               physics: const BouncingScrollPhysics(),
               itemCount: _aiQuickModels.length + 1,
-              separatorBuilder: (_, __) => const SizedBox(width: 10),
+              separatorBuilder: (_, _) => const SizedBox(width: 10),
               itemBuilder: (context, index) {
                 if (index == _aiQuickModels.length) {
                   return _buildAddAiModelCard();
@@ -2443,6 +2443,26 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ),
               ),
+            ),
+            const SizedBox(height: 8),
+            SwitchListTile.adaptive(
+              key: const ValueKey('settings-library-grid-show-details'),
+              contentPadding: EdgeInsets.zero,
+              title: Text(
+                l10n.settingsLibraryGridShowDetailsTitle,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+              ),
+              subtitle: Text(
+                l10n.settingsLibraryGridShowDetailsSubtitle,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+              ),
+              value: appSettings.libraryGridShowDetails,
+              onChanged: (value) =>
+                  unawaited(appSettings.setLibraryGridShowDetails(value)),
             ),
           ],
         ],
