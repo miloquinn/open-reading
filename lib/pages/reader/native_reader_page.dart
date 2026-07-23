@@ -67,9 +67,10 @@ const int _imagePageImageFlex = 5;
 const int _imagePageTextFlex = 6;
 
 class NativeReaderPage extends StatefulWidget {
-  const NativeReaderPage({super.key, required this.book});
+  const NativeReaderPage({super.key, required this.book, this.initialTheme});
 
   final Book book;
+  final ReaderThemePalette? initialTheme;
 
   @override
   State<NativeReaderPage> createState() => _NativeReaderPageState();
@@ -461,7 +462,10 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     }
   }
 
-  ReaderThemePalette get _readerTheme => ReaderThemes.byId(_readerThemeId);
+  ReaderThemePalette get _readerTheme =>
+      !_readerSettingsLoaded && widget.initialTheme != null
+      ? widget.initialTheme!
+      : ReaderThemes.byId(_readerThemeId);
 
   ThemeData get _readerThemeData =>
       _readerTheme.toThemeData(typography: Theme.of(context).textTheme);
@@ -2375,10 +2379,10 @@ class _NativeReaderPageState extends State<NativeReaderPage>
       return AnnotatedRegion<SystemUiOverlayStyle>(
         key: const ValueKey('reader-system-ui-region'),
         value: systemUiOverlayStyle,
-        child: const ColoredBox(
-          key: ValueKey('native-reader-opening-placeholder'),
-          color: Color(0xFFFAF8F3),
-          child: SizedBox.expand(),
+        child: ColoredBox(
+          key: const ValueKey('native-reader-opening-placeholder'),
+          color: _readerTheme.background,
+          child: const SizedBox.expand(),
         ),
       );
     }

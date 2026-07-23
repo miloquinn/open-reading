@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as path;
@@ -11,6 +12,87 @@ import 'package:xxread/services/core/app_settings_service.dart';
 import 'package:xxread/services/core/custom_font_service.dart';
 import 'package:xxread/services/core/online_font_service.dart';
 import 'package:xxread/utils/font_catalog_helper.dart';
+
+class _BurstOnlineFontService extends OnlineFontService {
+  OnlineFontDownloadProgress? _currentProgress;
+  bool _downloaded = false;
+
+  @override
+  Future<void> initialize() async {}
+
+  @override
+  bool get isSupported => true;
+
+  @override
+  bool isDownloaded(String fontId) => _downloaded;
+
+  @override
+  OnlineFontDownloadProgress? progressFor(String fontId) => _currentProgress;
+
+  @override
+  Future<OnlineFontRecord> download({
+    required String fontId,
+    required String family,
+    required List<OnlineFontFile> files,
+    OnlineFontProgressCallback? onProgress,
+    CancelToken? cancelToken,
+  }) async {
+    final totalBytes = files.fold<int>(0, (sum, file) => sum + file.size);
+    for (var index = 1; index <= 100; index++) {
+      _emit(
+        OnlineFontDownloadProgress(
+          fontId: fontId,
+          status: OnlineFontDownloadStatus.downloading,
+          downloadedBytes: totalBytes * index ~/ 100,
+          totalBytes: totalBytes,
+          totalFiles: files.length,
+        ),
+        onProgress,
+      );
+    }
+    for (final status in <OnlineFontDownloadStatus>[
+      OnlineFontDownloadStatus.verifying,
+      OnlineFontDownloadStatus.registering,
+    ]) {
+      _emit(
+        OnlineFontDownloadProgress(
+          fontId: fontId,
+          status: status,
+          downloadedFiles: files.length,
+          totalFiles: files.length,
+          downloadedBytes: totalBytes,
+          totalBytes: totalBytes,
+        ),
+        onProgress,
+      );
+    }
+    _downloaded = true;
+    _emit(
+      OnlineFontDownloadProgress(
+        fontId: fontId,
+        status: OnlineFontDownloadStatus.completed,
+        downloadedFiles: files.length,
+        totalFiles: files.length,
+        downloadedBytes: totalBytes,
+        totalBytes: totalBytes,
+      ),
+      onProgress,
+    );
+    return OnlineFontRecord(
+      id: fontId,
+      files: const <OnlineFontFileRecord>[],
+      downloadedAt: DateTime.now().toUtc(),
+    );
+  }
+
+  void _emit(
+    OnlineFontDownloadProgress progress,
+    OnlineFontProgressCallback? onProgress,
+  ) {
+    _currentProgress = progress;
+    onProgress?.call(progress);
+  }
+}
 
 Future<AppSettingsNotifier> _loadNotifier({
   CustomFontService? customFontService,
@@ -123,6 +205,40 @@ void main() {
 
     expect(notifier.appFontId, FontCatalog.systemId);
   });
+
+  test(
+    'online font progress stays local and is throttled before app-wide changes',
+    () async {
+      final notifier = await _loadNotifier(
+        onlineFontService: _BurstOnlineFontService(),
+      );
+      addTearDown(notifier.dispose);
+      var globalNotifications = 0;
+      var progressNotifications = 0;
+      notifier.addListener(() => globalNotifications++);
+      notifier.onlineFontProgressListenable.addListener(
+        () => progressNotifications++,
+      );
+
+      await notifier.downloadOnlineFont(FontCatalog.instrumentSansId);
+
+      expect(
+        notifier.isOnlineFontDownloaded(FontCatalog.instrumentSansId),
+        isTrue,
+      );
+      expect(globalNotifications, 0);
+      expect(progressNotifications, greaterThan(0));
+      expect(progressNotifications, lessThan(10));
+
+      await notifier.downloadOnlineFont(
+        FontCatalog.instrumentSansId,
+        domain: FontDomain.app,
+      );
+
+      expect(notifier.appFontId, FontCatalog.instrumentSansId);
+      expect(globalNotifications, 1);
+    },
+  );
 
   test(
     'legacy app font family migrates to the matching id when downloaded',

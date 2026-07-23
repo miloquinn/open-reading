@@ -47,6 +47,7 @@ class _ReaderNavigationSheetState extends State<ReaderNavigationSheet>
     with SingleTickerProviderStateMixin {
   static const _chapterExtent = 64.0;
   static const _treeIndent = 16.0;
+  static final _chapterTitleWhitespace = RegExp(r'\s+');
 
   late final TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
@@ -433,17 +434,34 @@ class _ReaderNavigationSheetState extends State<ReaderNavigationSheet>
                   title: context.l10n.readerNoChapterResults,
                   message: context.l10n.readerNoChapterResultsHint,
                 )
-              : ListView.builder(
+              : RawScrollbar(
+                  key: const ValueKey('reader-navigation-catalog-scrollbar'),
                   controller: _chapterScrollController,
-                  padding: const EdgeInsets.fromLTRB(12, 2, 12, 20),
-                  itemExtent: _chapterExtent,
-                  itemCount: chapters.length,
-                  itemBuilder: (context, visibleIndex) {
-                    final entry = chapters[visibleIndex];
-                    final selected =
-                        entry.chapter.index == widget.currentChapterIndex;
-                    return _buildChapterTile(context, entry, selected);
-                  },
+                  thumbVisibility: true,
+                  trackVisibility: true,
+                  interactive: true,
+                  thickness: 5,
+                  radius: const Radius.circular(99),
+                  mainAxisMargin: 6,
+                  crossAxisMargin: 3,
+                  minThumbLength: 44,
+                  thumbColor: widget.palette.secondaryText.withValues(
+                    alpha: 0.52,
+                  ),
+                  trackColor: widget.palette.controlBar.withValues(alpha: 0.56),
+                  trackBorderColor: Colors.transparent,
+                  child: ListView.builder(
+                    controller: _chapterScrollController,
+                    padding: const EdgeInsets.fromLTRB(8, 2, 20, 20),
+                    itemExtent: _chapterExtent,
+                    itemCount: chapters.length,
+                    itemBuilder: (context, visibleIndex) {
+                      final entry = chapters[visibleIndex];
+                      final selected =
+                          entry.chapter.index == widget.currentChapterIndex;
+                      return _buildChapterTile(context, entry, selected);
+                    },
+                  ),
                 ),
         ),
       ],
@@ -456,9 +474,12 @@ class _ReaderNavigationSheetState extends State<ReaderNavigationSheet>
     bool selected,
   ) {
     final chapter = entry.chapter;
-    final title = chapter.title.isEmpty
+    final normalizedTitle = chapter.title
+        .replaceAll(_chapterTitleWhitespace, ' ')
+        .trim();
+    final title = normalizedTitle.isEmpty
         ? context.l10n.readerChapterFallback(chapter.index + 1)
-        : chapter.title;
+        : normalizedTitle;
     final displayDepth = entry.depth.clamp(0, 8);
     final isSearching = _query.trim().isNotEmpty;
     return Semantics(
@@ -474,7 +495,7 @@ class _ReaderNavigationSheetState extends State<ReaderNavigationSheet>
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),
             curve: Curves.easeOutCubic,
-            padding: const EdgeInsets.only(left: 8, right: 12),
+            padding: const EdgeInsets.only(left: 4, right: 8),
             decoration: BoxDecoration(
               color: selected
                   ? widget.palette.accent.withValues(alpha: 0.08)
@@ -492,24 +513,8 @@ class _ReaderNavigationSheetState extends State<ReaderNavigationSheet>
                     borderRadius: BorderRadius.circular(99),
                   ),
                 ),
-                const SizedBox(width: 6),
-                _buildDepthGuides(displayDepth),
-                _buildTreeControl(
-                  context,
-                  entry: entry,
-                  selected: selected,
-                  enabled: !isSearching,
-                ),
-                SizedBox(
-                  width: 24,
-                  child: selected
-                      ? OpenReadingCurrentIcon(
-                          size: 20,
-                          color: widget.palette.accent,
-                        )
-                      : null,
-                ),
                 const SizedBox(width: 8),
+                _buildDepthGuides(displayDepth),
                 Expanded(
                   child: Text(
                     title,
@@ -525,12 +530,26 @@ class _ReaderNavigationSheetState extends State<ReaderNavigationSheet>
                 ),
                 if (selected) ...[
                   const SizedBox(width: 8),
+                  OpenReadingCurrentIcon(
+                    size: 20,
+                    color: widget.palette.accent,
+                  ),
+                  const SizedBox(width: 4),
                   Text(
                     context.l10n.readerCurrentChapter,
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                       color: widget.palette.accent,
                       fontWeight: FontWeight.w700,
                     ),
+                  ),
+                ],
+                if (entry.hasChildren) ...[
+                  const SizedBox(width: 4),
+                  _buildTreeControl(
+                    context,
+                    entry: entry,
+                    selected: selected,
+                    enabled: !isSearching,
                   ),
                 ],
               ],
@@ -572,23 +591,7 @@ class _ReaderNavigationSheetState extends State<ReaderNavigationSheet>
     final color = selected
         ? widget.palette.accent
         : widget.palette.secondaryText.withValues(alpha: 0.88);
-    if (!entry.hasChildren) {
-      return SizedBox(
-        width: 34,
-        child: Center(
-          child: Container(
-            width: 6,
-            height: 6,
-            decoration: BoxDecoration(
-              color: selected
-                  ? widget.palette.accent
-                  : widget.palette.border.withValues(alpha: 0.92),
-              shape: BoxShape.circle,
-            ),
-          ),
-        ),
-      );
-    }
+    assert(entry.hasChildren);
     final expanded = !_collapsedChapterPositions.contains(entry.position);
     final localizations = MaterialLocalizations.of(context);
     return SizedBox(
@@ -630,7 +633,7 @@ class _ReaderNavigationSheetState extends State<ReaderNavigationSheet>
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 24),
       itemCount: widget.bookmarks.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 9),
+      separatorBuilder: (_, _) => const SizedBox(height: 9),
       itemBuilder: (context, index) {
         final bookmark = widget.bookmarks[index];
         final current =

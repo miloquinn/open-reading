@@ -57,6 +57,7 @@ class BookSourceReaderPage extends StatefulWidget {
   final BookSourceClient? client;
   final BookSourceReadingProgressStore progressStore;
   final BookSourceShelfService? shelfService;
+  final ReaderThemePalette? initialTheme;
 
   const BookSourceReaderPage({
     super.key,
@@ -65,6 +66,7 @@ class BookSourceReaderPage extends StatefulWidget {
     this.client,
     this.progressStore = const BookSourceReadingProgressStore(),
     this.shelfService,
+    this.initialTheme,
   });
 
   @override
@@ -131,6 +133,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   int? _pendingSlideChapterIndex;
   int? _pendingSlideBoundaryViewIndex;
   double _pendingSlideRestoreProgress = 0;
+  bool _slideChapterCommitCheckScheduled = false;
   double _restorePageProgress = 0;
   bool _restorePagedPosition = false;
   int? _restoreTextOffset;
@@ -165,7 +168,10 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   bool _readerSystemUiApplied = false;
   ReaderTopBarStyle _topBarStyle = ReaderTopBarStyle.reader;
 
-  ReaderThemePalette get _readerTheme => ReaderThemes.byId(_readerThemeId);
+  ReaderThemePalette get _readerTheme =>
+      _loadingCatalog && widget.initialTheme != null
+      ? widget.initialTheme!
+      : ReaderThemes.byId(_readerThemeId);
 
   ThemeData get _readerThemeData =>
       _readerTheme.toThemeData(typography: Theme.of(context).textTheme);
@@ -577,6 +583,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
                     )
                   : ((preparedPageCount - 1) * normalizedProgress).round())
               .clamp(0, preparedPageCount - 1);
+    final slideLeading = _slideLeadingPageCount(index);
     _pagedLayouts.removeWhere(
       (chapterIndex, _) => chapterIndex < index - 1 || chapterIndex > index + 2,
     );
@@ -590,6 +597,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       _loadingContent = false;
       _pageIndex = preparedPageIndex;
       _pageCount = preparedPageCount;
+      _pageViewLeading = slideLeading;
       _paginatedPages = preparedPages ?? const [];
       _paginationKey = preparedLayout?.fingerprint;
       _restorePageProgress = normalizedProgress;
@@ -600,7 +608,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     });
     if (_pageMode == BookSourcePageMode.horizontalSlide) {
       _replaceSlidePageController(
-        initialPage: preparedPageIndex + (index > 0 ? 1 : 0),
+        initialPage: preparedPageIndex + slideLeading,
       );
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _ignoreSlidePageChanges = false;
@@ -619,6 +627,18 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       return null;
     }
     return _pagedLayoutFor(index, content, _pagedViewportSize);
+  }
+
+  int _slideLeadingPageCount(int chapterIndex) {
+    if (chapterIndex <= 0) return 0;
+    final previousContent = _prefetchedContent[chapterIndex - 1];
+    if (previousContent == null || _pagedViewportSize.isEmpty) return 1;
+    final previousLayout = _pagedLayoutFor(
+      chapterIndex - 1,
+      previousContent,
+      _pagedViewportSize,
+    );
+    return previousLayout.pages.length;
   }
 
   void _replaceSlidePageController({required int initialPage}) {
@@ -641,6 +661,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     if (index < 0 || index >= _chapters.length) return;
     try {
       await _continuousContentFor(index);
+      _schedulePagedLayoutWarm(index);
     } catch (_) {
       // Adjacent content is opportunistic and can be retried on demand.
     }
@@ -882,6 +903,9 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     if (jumpPageView && _pageController.hasClients) {
       _pageController.jumpToPage(_pageIndex + _pageViewLeading);
     }
+    if (_pageCount - _pageIndex <= 3) {
+      unawaited(_preloadChapter(_chapterIndex + 1));
+    }
     _scheduleProgressSave();
   }
 
@@ -907,12 +931,15 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     final chapterIndex = _pendingSlideChapterIndex;
     final boundaryViewIndex = _pendingSlideBoundaryViewIndex;
     if (chapterIndex == null || boundaryViewIndex == null) return;
-    final settledViewIndex = _pageController.hasClients
-        ? _pageController.page?.round()
+    final settledPage = _pageController.hasClients
+        ? _pageController.page
         : null;
+    if (settledPage == null ||
+        (settledPage - boundaryViewIndex).abs() > 0.001) {
+      return;
+    }
     _pendingSlideChapterIndex = null;
     _pendingSlideBoundaryViewIndex = null;
-    if (settledViewIndex != boundaryViewIndex) return;
     final restoreProgress = _pendingSlideRestoreProgress;
     // Let PageController.nextPage/previousPage finish their own ScrollEnd
     // future before replacing the PageView with the target chapter.
@@ -920,6 +947,23 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       if (!mounted) return;
       unawaited(_loadChapter(chapterIndex, restoreProgress: restoreProgress));
     });
+  }
+
+  void _schedulePendingSlideChapterCommit() {
+    if (_slideChapterCommitCheckScheduled) return;
+    _slideChapterCommitCheckScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _slideChapterCommitCheckScheduled = false;
+      if (mounted) _commitPendingSlideChapter();
+    });
+  }
+
+  void _handleSlidePageTap(TapUpDetails details, double width) {
+    if (_pageController.hasClients) {
+      final page = _pageController.page;
+      if (page != null && (page - page.round()).abs() > 0.001) return;
+    }
+    _handlePageTap(details, width);
   }
 
   Future<void> _turnForward() async {
@@ -2124,7 +2168,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       }
       setState(() {});
       if (_pageMode != BookSourcePageMode.horizontalSlide) return;
-      _pageViewLeading = _chapterIndex > 0 ? 1 : 0;
+      _pageViewLeading = _slideLeadingPageCount(_chapterIndex);
       if (_pageController.hasClients) {
         _pageController.jumpToPage(_pageIndex + _pageViewLeading);
       }
@@ -2267,14 +2311,22 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     );
   }
 
-  Widget? _buildAdjacentPreview(int chapterIndex, {required bool lastPage}) {
+  Widget? _buildAdjacentPreview(
+    int chapterIndex, {
+    bool lastPage = false,
+    int? pageIndex,
+  }) {
     if (_prefetchedContent[chapterIndex] == null) return null;
     return LayoutBuilder(
       builder: (context, constraints) {
         final data = _adjacentPageData(
           chapterIndex,
           constraints.biggest,
-          selectPageIndex: lastPage ? (pageCount) => pageCount - 1 : (_) => 0,
+          selectPageIndex: pageIndex != null
+              ? (_) => pageIndex
+              : lastPage
+              ? (pageCount) => pageCount - 1
+              : (_) => 0,
         );
         if (data == null) return const SizedBox.shrink();
         return _buildPageLeaf(
@@ -2428,11 +2480,31 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   );
 
   Widget _buildSlideReader() {
-    _pageViewLeading = _chapterIndex > 0 ? 1 : 0;
-    final trailing = _chapterIndex + 1 < _chapters.length ? 1 : 0;
+    final previousChapterIndex = _chapterIndex - 1;
+    final previousContent = previousChapterIndex >= 0
+        ? _prefetchedContent[previousChapterIndex]
+        : null;
+    final previousLayout = previousContent == null || _pagedViewportSize.isEmpty
+        ? null
+        : _pagedLayoutFor(
+            previousChapterIndex,
+            previousContent,
+            _pagedViewportSize,
+          );
+    final previousPageCount = previousLayout?.pages.length ?? 1;
+    final nextChapterIndex = _chapterIndex + 1;
+    final hasNextChapter = nextChapterIndex < _chapters.length;
+    final nextContent = hasNextChapter
+        ? _prefetchedContent[nextChapterIndex]
+        : null;
+    final nextLayout = nextContent == null || _pagedViewportSize.isEmpty
+        ? null
+        : _pagedLayoutFor(nextChapterIndex, nextContent, _pagedViewportSize);
+    final nextPageCount = nextLayout?.pages.length ?? 1;
+    final trailing = hasNextChapter ? nextPageCount : 0;
     return NotificationListener<ScrollEndNotification>(
       onNotification: (notification) {
-        _commitPendingSlideChapter();
+        _schedulePendingSlideChapterCommit();
         return false;
       },
       child: PageView.builder(
@@ -2441,20 +2513,26 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         itemCount: _pageViewLeading + _pageCount + trailing,
         onPageChanged: (viewIndex) {
           if (_ignoreSlidePageChanges) return;
-          if (_pageViewLeading == 1 && viewIndex == 0) {
+          final page = viewIndex - _pageViewLeading;
+          if (page < 0) {
+            final previousPageIndex = previousPageCount + page;
             _queueSlideChapterCommit(
-              chapterIndex: _chapterIndex - 1,
+              chapterIndex: previousChapterIndex,
               boundaryViewIndex: viewIndex,
-              restoreProgress: 1,
+              restoreProgress: previousLayout == null || previousPageCount <= 1
+                  ? 1
+                  : previousPageIndex / (previousPageCount - 1),
             );
             return;
           }
-          final page = viewIndex - _pageViewLeading;
           if (page >= _pageCount) {
+            final nextPageIndex = page - _pageCount;
             _queueSlideChapterCommit(
-              chapterIndex: _chapterIndex + 1,
+              chapterIndex: nextChapterIndex,
               boundaryViewIndex: viewIndex,
-              restoreProgress: 0,
+              restoreProgress: nextPageCount <= 1
+                  ? 0
+                  : nextPageIndex / (nextPageCount - 1),
             );
             return;
           }
@@ -2464,24 +2542,37 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         },
         itemBuilder: (context, viewIndex) {
           final page = viewIndex - _pageViewLeading;
+          final Widget child;
           if (page < 0) {
-            return _buildAdjacentPreview(_chapterIndex - 1, lastPage: true) ??
+            final previousPageIndex = previousPageCount + page;
+            child =
+                _buildAdjacentPreview(
+                  previousChapterIndex,
+                  pageIndex: previousLayout == null ? null : previousPageIndex,
+                  lastPage: previousLayout == null,
+                ) ??
                 _buildBoundaryLeaf(forward: false);
-          }
-          if (page >= _pageCount) {
-            return _buildAdjacentPreview(_chapterIndex + 1, lastPage: false) ??
+          } else if (page >= _pageCount) {
+            final nextPageIndex = page - _pageCount;
+            child =
+                _buildAdjacentPreview(
+                  nextChapterIndex,
+                  pageIndex: nextPageIndex,
+                ) ??
                 _buildBoundaryLeaf(forward: true);
-          }
-          return GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            onTapUp: (details) =>
-                _handlePageTap(details, MediaQuery.sizeOf(context).width),
-            child: _buildPageLeaf(
+          } else {
+            child = _buildPageLeaf(
               _paginatedPages[page],
               pageIndex: page,
               pageCount: _pageCount,
               layoutFingerprint: _paginationKey!,
-            ),
+            );
+          }
+          return GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onTapUp: (details) =>
+                _handleSlidePageTap(details, MediaQuery.sizeOf(context).width),
+            child: child,
           );
         },
       ),

@@ -2,7 +2,9 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:xxread/core/reader/reader_custom_theme.dart';
+import 'package:xxread/core/reader/reader_settings.dart';
 import 'package:xxread/utils/reader_themes.dart';
 
 double _relativeLuminance(Color color) {
@@ -23,6 +25,8 @@ double _contrast(Color foreground, Color background) {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   tearDown(() {
     ReaderThemes.setCustomThemes(const []);
     ReaderThemes.setThemeOrder(const []);
@@ -53,6 +57,16 @@ void main() {
 
   test('unknown saved theme falls back to day', () {
     expect(ReaderThemes.byId('missing'), ReaderThemes.day);
+  });
+
+  test('saved palette is available before the reader mounts', () async {
+    SharedPreferences.setMockInitialValues({
+      ReaderSettingsStore.themeKey: ReaderThemes.pureBlack.id,
+    });
+
+    final palette = await ReaderThemes.loadSavedPalette();
+
+    expect(palette, ReaderThemes.pureBlack);
   });
 
   test('custom theme derives the full reader palette and cache identity', () {

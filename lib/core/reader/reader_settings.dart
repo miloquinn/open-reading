@@ -104,6 +104,11 @@ class ReaderSettingsStore {
 
   const ReaderSettingsStore();
 
+  Future<String> loadThemeId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(themeKey) ?? ReaderSettings.defaultThemeId;
+  }
+
   Future<ReaderSettings> load({
     ReaderPageMode fallbackPageMode = ReaderSettings.defaultPageMode,
   }) async {

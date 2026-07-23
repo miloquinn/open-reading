@@ -1,6 +1,8 @@
 // 文件说明：应用设置服务，负责全局偏好项的读取与变更通知。
 // 技术要点：服务层、SharedPreferences、Flutter、OnlineFontService 进度回调驱动 UI 刷新。
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -11,6 +13,9 @@ import 'online_font_service.dart';
 enum LibraryLayoutMode { card, grid }
 
 class AppSettingsNotifier extends ChangeNotifier {
+  static const Duration _onlineFontProgressInterval = Duration(
+    milliseconds: 100,
+  );
   static const String _keyAppLocale = 'app_locale';
   static const String _keyLegacyLocale = 'language';
   static const String _keyAppFontId = 'app_font_id_v2';
@@ -34,6 +39,9 @@ class AppSettingsNotifier extends ChangeNotifier {
   bool _isInitialized = false;
   final CustomFontService _customFontService;
   final OnlineFontService _onlineFontService;
+  final ChangeNotifier _onlineFontProgressNotifier = ChangeNotifier();
+  Timer? _onlineFontProgressTimer;
+  bool _isDisposed = false;
 
   AppSettingsNotifier({
     CustomFontService? customFontService,
@@ -92,6 +100,12 @@ class AppSettingsNotifier extends ChangeNotifier {
   bool get onlineFontDownloadSupported => _onlineFontService.isSupported;
   bool get isInitialized => _isInitialized;
 
+  /// 独立的在线字体下载进度监听器。
+  ///
+  /// 下载进度不再通过 AppSettingsNotifier 的全局通知广播，避免 MaterialApp、
+  /// 当前页面和字体弹窗在每个网络数据块到达时同时重建。
+  Listenable get onlineFontProgressListenable => _onlineFontProgressNotifier;
+
   /// 在线字体是否已下载完成（可用于选择）。
   bool isOnlineFontDownloaded(String fontId) =>
       _onlineFontService.isSupported && _onlineFontService.isDownloaded(fontId);
@@ -115,8 +129,8 @@ class AppSettingsNotifier extends ChangeNotifier {
       );
       if (domain != null) {
         await _applyDownloadedFont(domain, fontId);
+        notifyListeners();
       }
-      notifyListeners();
       return;
     }
     try {
@@ -124,16 +138,36 @@ class AppSettingsNotifier extends ChangeNotifier {
         fontId: fontId,
         family: option.family!,
         files: option.downloadFiles,
-        onProgress: (_) => notifyListeners(),
+        onProgress: _handleOnlineFontProgress,
       );
       if (domain != null) {
         await _applyDownloadedFont(domain, fontId);
+        notifyListeners();
       }
-      notifyListeners();
     } on OnlineFontException {
       // 失败状态已通过 progressFor() 暴露给 UI，无需额外处理。
-      notifyListeners();
+      _flushOnlineFontProgress();
     }
+  }
+
+  void _handleOnlineFontProgress(OnlineFontDownloadProgress progress) {
+    if (_isDisposed) return;
+    if (progress.status != OnlineFontDownloadStatus.downloading) {
+      _flushOnlineFontProgress();
+      return;
+    }
+    if (_onlineFontProgressTimer != null) return;
+    _onlineFontProgressTimer = Timer(_onlineFontProgressInterval, () {
+      _onlineFontProgressTimer = null;
+      if (!_isDisposed) _onlineFontProgressNotifier.notifyListeners();
+    });
+  }
+
+  void _flushOnlineFontProgress() {
+    if (_isDisposed) return;
+    _onlineFontProgressTimer?.cancel();
+    _onlineFontProgressTimer = null;
+    _onlineFontProgressNotifier.notifyListeners();
   }
 
   Future<void> deleteOnlineFont(String fontId) async {
@@ -421,4 +455,12 @@ class AppSettingsNotifier extends ChangeNotifier {
 
   bool isAppFont(String id) => _appFontId == id;
   bool isReaderFont(String id) => _readerFontId == id;
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    _onlineFontProgressTimer?.cancel();
+    _onlineFontProgressNotifier.dispose();
+    super.dispose();
+  }
 }

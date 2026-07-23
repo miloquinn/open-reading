@@ -7,16 +7,21 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show ScrollCacheExtent;
+import 'package:xxread/book_sources/services/book_source_client.dart';
+import 'package:xxread/book_sources/services/book_source_shelf_service.dart';
 import 'package:xxread/core/reader/native_reader_service.dart';
 import 'package:xxread/models/book.dart';
+import 'package:xxread/pages/reader/book_source_reader_page.dart';
 import 'package:xxread/pages/reading_stats/detailed_stats_page.dart';
 import 'package:xxread/services/books/book_services.dart';
 import 'package:xxread/services/library/library_event_bus_service.dart';
 import 'package:xxread/services/reading/reading_stats_dao.dart';
+import 'package:xxread/utils/book_open_transition.dart';
 import 'package:xxread/utils/layout_helper.dart';
 import 'package:xxread/utils/localization_extension.dart';
 import 'package:xxread/utils/page_transitions.dart';
 import 'package:xxread/widgets/generated_book_cover.dart';
+import 'package:xxread/widgets/side_toast.dart';
 
 import 'home_mobile_chrome.dart';
 
@@ -88,6 +93,21 @@ class _HomePalette {
 class HomeMobileDashboardPage extends StatefulWidget {
   const HomeMobileDashboardPage({super.key});
 
+  @visibleForTesting
+  static Widget? buildOnlineReader({
+    required Book book,
+    required BookSourceClient client,
+    required BookSourceShelfService shelfService,
+  }) {
+    if (!book.isOnline) return null;
+    return BookSourceReaderPage(
+      source: shelfService.sourceFrom(book),
+      book: shelfService.sourceBookFrom(book),
+      client: client,
+      shelfService: shelfService,
+    );
+  }
+
   @override
   State<HomeMobileDashboardPage> createState() =>
       _HomeMobileDashboardPageState();
@@ -96,6 +116,8 @@ class HomeMobileDashboardPage extends StatefulWidget {
 class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
   final _statsDao = ReadingStatsDao();
   final _bookDao = BookDao();
+  late final BookSourceClient _sourceClient;
+  late final BookSourceShelfService _sourceShelfService;
   StreamSubscription<void>? _libraryChangedSubscription;
 
   Map<String, int> _summaryStats = {};
@@ -108,6 +130,8 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
   @override
   void initState() {
     super.initState();
+    _sourceClient = BookSourceClient();
+    _sourceShelfService = BookSourceShelfService(client: _sourceClient);
     _loadAllStats();
     _libraryChangedSubscription = LibraryEventBus().stream.listen((_) {
       if (mounted) _loadAllStats();
@@ -251,7 +275,33 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
   }
 
   Future<void> _openBook(Book book) async {
-    await NativeReaderService.openBook(context, book);
+    final fullBook = book.id == null
+        ? book
+        : await _bookDao.getBookById(book.id!);
+    if (fullBook == null || !mounted) return;
+
+    if (fullBook.isOnline) {
+      try {
+        final reader = HomeMobileDashboardPage.buildOnlineReader(
+          book: fullBook,
+          client: _sourceClient,
+          shelfService: _sourceShelfService,
+        )!;
+        await Navigator.of(
+          context,
+        ).push<void>(BookOpenTransition.createRoute<void>(reader));
+      } catch (error) {
+        if (mounted) {
+          showSideToast(
+            context,
+            context.l10n.bookSourceOnlineDataBroken('$error'),
+            kind: SideToastKind.error,
+          );
+        }
+      }
+    } else {
+      await NativeReaderService.openBook(context, fullBook);
+    }
     if (mounted) await _loadAllStats();
   }
 

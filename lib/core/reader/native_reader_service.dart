@@ -10,6 +10,7 @@ import 'package:xxread/services/books/book_storage_repair_service.dart';
 import 'package:xxread/services/books/web_book_file_store.dart';
 import 'package:xxread/utils/book_open_transition.dart';
 import 'package:xxread/utils/localization_extension.dart';
+import 'package:xxread/utils/reader_themes.dart';
 import 'package:xxread/widgets/side_toast.dart';
 
 class NativeReaderService {
@@ -62,10 +63,15 @@ class NativeReaderService {
       return;
     }
     if (!context.mounted) return;
+    final initialTheme = animation == null
+        ? null
+        : await ReaderThemes.loadSavedPalette();
+    if (!context.mounted) return;
     final navigation = Navigator.of(context).push<void>(
       BookOpenTransition.createRoute<void>(
-        NativeReaderPage(book: repaired),
+        NativeReaderPage(book: repaired, initialTheme: initialTheme),
         animation: animation,
+        readerBackgroundColor: initialTheme?.background,
       ),
     );
     if (waitForReaderClose) {

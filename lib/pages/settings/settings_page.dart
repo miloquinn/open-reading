@@ -3058,15 +3058,32 @@ class _SettingsPageState extends State<SettingsPage> {
                                   onTap: () => selectFont(option.id),
                                 ),
                               ),
-                              _fontSectionLabel(context, l10n.onlineFonts),
-                              ...onlineOptions.map(
-                                (option) => _fontOptionCard(
-                                  context: context,
-                                  appSettings: appSettings,
-                                  domain: domain,
-                                  option: option,
-                                  selected: option.id == selectedId,
-                                  onTap: () => selectFont(option.id),
+                              ListenableBuilder(
+                                listenable:
+                                    appSettings.onlineFontProgressListenable,
+                                builder: (context, _) => Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    _fontSectionLabel(
+                                      context,
+                                      l10n.onlineFonts,
+                                    ),
+                                    ...onlineOptions.map(
+                                      (option) => _fontOptionCard(
+                                        context: context,
+                                        appSettings: appSettings,
+                                        domain: domain,
+                                        option: option,
+                                        selected:
+                                            option.id ==
+                                            (domain == FontDomain.app
+                                                ? appSettings.appFontId
+                                                : appSettings.readerFontId),
+                                        onTap: () => selectFont(option.id),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                               if (customOptions.isNotEmpty) ...[

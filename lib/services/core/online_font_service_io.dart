@@ -6,6 +6,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 import 'dart:ui';
 
 import 'package:crypto/crypto.dart';
@@ -225,27 +226,31 @@ class OnlineFontService {
           throw OnlineFontException(OnlineFontErrorCode.networkFailed, error);
         }
 
-        final bytes = await tempFile.readAsBytes();
-
-        // 字节签名校验（TTF/OTF 魔数）。
-        if (!_matchesFontSignature(bytes, path.extension(fileSpec.fileName))) {
-          throw const OnlineFontException(
-            OnlineFontErrorCode.fileSignatureInvalid,
-          );
-        }
-
         _emitProgress(
           fontId: fontId,
           status: OnlineFontDownloadStatus.verifying,
           downloadedFiles: downloadedFiles + 1,
           totalFiles: files.length,
-          downloadedBytes: fileStartBytes + bytes.length,
+          downloadedBytes: fileStartBytes + await tempFile.length(),
           totalBytes: totalBytes,
           onProgress: onProgress,
         );
 
-        // 计算 SHA-256（用于后续清单校验与重复检测）。
-        final hash = sha256.convert(bytes).toString();
+        // 文件签名检查与 SHA-256 流式计算放到后台 isolate，避免大字体
+        // （中文字体可达 18–25MB）在 UI isolate 上产生明显停顿。
+        final verification = await _verifyDownloadedFont(
+          tempFile.path,
+          path.extension(fileSpec.fileName),
+        );
+        if (!verification.signatureValid) {
+          throw const OnlineFontException(
+            OnlineFontErrorCode.fileSignatureInvalid,
+          );
+        }
+
+        // FontLoader 需要完整字节；磁盘读取是异步的，CPU 密集的哈希已在
+        // 后台 isolate 完成。
+        final bytes = await tempFile.readAsBytes();
 
         _emitProgress(
           fontId: fontId,
@@ -267,11 +272,11 @@ class OnlineFontService {
         fileRecords.add(
           OnlineFontFileRecord(
             fileName: fileSpec.fileName,
-            sha256: hash,
-            size: bytes.length,
+            sha256: verification.sha256,
+            size: verification.size,
           ),
         );
-        downloadedBytes = fileStartBytes + bytes.length;
+        downloadedBytes = fileStartBytes + verification.size;
         downloadedFiles++;
       }
 
@@ -441,6 +446,26 @@ class OnlineFontService {
     return (bytes[0] == 0 && bytes[1] == 1 && bytes[2] == 0 && bytes[3] == 0) ||
         tag == 'true' ||
         tag == 'typ1';
+  }
+
+  static Future<({bool signatureValid, String sha256, int size})>
+  _verifyDownloadedFont(String filePath, String extension) {
+    return Isolate.run(() async {
+      final file = File(filePath);
+      final handle = await file.open();
+      late final Uint8List header;
+      try {
+        header = await handle.read(4);
+      } finally {
+        await handle.close();
+      }
+      final size = await file.length();
+      if (!_matchesFontSignature(header, extension)) {
+        return (signatureValid: false, sha256: '', size: size);
+      }
+      final digest = await sha256.bind(file.openRead()).first;
+      return (signatureValid: true, sha256: digest.toString(), size: size);
+    });
   }
 
   static Future<void> _registerFont(

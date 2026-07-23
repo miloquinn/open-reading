@@ -10,6 +10,7 @@ import 'package:xxread/l10n/app_localizations.dart';
 import 'package:xxread/models/book.dart';
 import 'package:xxread/pages/reader/native_reader_page.dart';
 import 'package:xxread/utils/book_open_transition.dart';
+import 'package:xxread/utils/reader_themes.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -111,6 +112,34 @@ void main() {
     expect(title.style?.fontSize, 34);
     expect(find.text('1 / 2'), findsOneWidget);
     expect(_richTextContaining('天边压着墨色的云。'), findsNothing);
+  });
+
+  testWidgets('opening placeholder uses the seeded reader theme', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: NativeReaderPage(
+          initialTheme: ReaderThemes.pureBlack,
+          book: Book(
+            title: 'Dark opening',
+            filePath: bookFile.path,
+            format: 'txt',
+            textEncoding: 'utf8',
+            fileModifiedTime: bookFile
+                .lastModifiedSync()
+                .millisecondsSinceEpoch,
+          ),
+        ),
+      ),
+    );
+
+    final placeholder = tester.widget<ColoredBox>(
+      find.byKey(const ValueKey('native-reader-opening-placeholder')),
+    );
+    expect(placeholder.color, ReaderThemes.pureBlack.background);
   });
   testWidgets(
     'vertical paging preserves the dedicated TXT chapter title page',

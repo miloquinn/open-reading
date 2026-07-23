@@ -89,12 +89,10 @@ void main() {
             chapters: List.generate(
               12,
               (index) => ReaderNavigationChapter(
-                title: [
-                  '序章 远方的灯火',
-                  '第一章 清晨的来信',
-                  '第二章 穿过旧城区',
-                  '第三章 雨夜重逢',
-                ][index % 4],
+                title: index == 0
+                    ? '序章 远方的灯火\n       '
+                    : ['序章 远方的灯火', '第一章 清晨的来信', '第二章 穿过旧城区', '第三章 雨夜重逢'][index %
+                          4],
                 index: index,
                 depth: index == 5 ? 1 : 0,
               ),
@@ -124,10 +122,32 @@ void main() {
     expect(find.byType(OpenReadingCurrentIcon), findsOneWidget);
     expect(find.byIcon(Icons.chevron_right_rounded), findsOneWidget);
     expect(find.byType(IconButton), findsOneWidget);
+    expect(
+      tester
+          .widgetList<Container>(find.byType(Container))
+          .where(
+            (container) =>
+                container.decoration is BoxDecoration &&
+                (container.decoration! as BoxDecoration).shape ==
+                    BoxShape.circle,
+          ),
+      isEmpty,
+    );
+    final scrollbar = tester.widget<RawScrollbar>(
+      find.byKey(const ValueKey('reader-navigation-catalog-scrollbar')),
+    );
+    final chapterList = tester.widget<ListView>(find.byType(ListView).first);
+    expect(scrollbar.thumbVisibility, isTrue);
+    expect(scrollbar.trackVisibility, isTrue);
+    expect(scrollbar.interactive, isTrue);
+    expect(scrollbar.controller, same(chapterList.controller));
+    final rootTitleLeft = tester.getTopLeft(find.text('序章 远方的灯火').first).dx;
+    expect(rootTitleLeft, lessThan(28));
     expect(find.text('01'), findsNothing);
     expect(find.text('04'), findsNothing);
     expect(find.text('第三章 雨夜重逢'), findsWidgets);
     expect(find.text('序章 远方的灯火'), findsWidgets);
+    expect(find.text('序章 远方的灯火\n       '), findsNothing);
   });
 
   testWidgets('navigation sheet collapses nested chapter branches', (

@@ -671,8 +671,134 @@ void main() {
         );
         pageView = tester.widget<PageView>(find.byType(PageView));
         expect(pageView.key, const ValueKey('source-slide:chapter-2'));
+        final chapterTwoController = pageView.controller!;
+        expect(chapterTwoController.page, 2);
+
+        final forward = chapterTwoController.nextPage(
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeOutCubic,
+        );
+        await tester.pumpAndSettle();
+        await forward;
+        expect(chapterTwoController.page, 3);
+
+        final backward = chapterTwoController.previousPage(
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeOutCubic,
+        );
+        await tester.pumpAndSettle();
+        await backward;
+        expect(chapterTwoController.page, 2);
+
+        final previousChapter = chapterTwoController.previousPage(
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeOutCubic,
+        );
+        await tester.pumpAndSettle();
+        await previousChapter;
+        await _pumpUntilFound(
+          tester,
+          find.byKey(const ValueKey('source-slide:chapter-1')),
+        );
+
+        final chapterOneController = tester
+            .widget<PageView>(find.byType(PageView))
+            .controller!;
+        expect(chapterOneController.page, 1);
+        final earlierPage = chapterOneController.previousPage(
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeOutCubic,
+        );
+        await tester.pumpAndSettle();
+        await earlierPage;
+        expect(chapterOneController.page, 0);
       } finally {
         store.completeSave();
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pump();
+        await tester.binding.setSurfaceSize(null);
+      }
+    },
+  );
+
+  testWidgets(
+    'horizontal slide lets a new drag take over a cross-chapter settle',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(800, 700));
+      SharedPreferences.setMockInitialValues({
+        ReaderSettingsStore.pageModeKey:
+            BookSourcePageMode.horizontalSlide.name,
+      });
+      final client = _ConfigurableBookSourceClient(const {
+        'chapter-1': 'Short first chapter.',
+        'chapter-2': 'Short second chapter.',
+      });
+      try {
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: BookSourceReaderPage(
+              source: _testSource(),
+              book: const BookSourceBook(
+                id: 'book-1',
+                title: 'Interrupted horizontal source book',
+                author: 'Author',
+                description: '',
+                categories: [],
+              ),
+              client: client,
+            ),
+          ),
+        );
+        await _pumpUntilFound(
+          tester,
+          find.byKey(const ValueKey('source-slide:chapter-1')),
+        );
+        for (
+          var attempt = 0;
+          attempt < 30 && !client.requestedChapterIds.contains('chapter-2');
+          attempt++
+        ) {
+          await tester.pump(const Duration(milliseconds: 100));
+        }
+
+        final controller = tester
+            .widget<PageView>(find.byType(PageView))
+            .controller!;
+        controller.jumpToPage(1);
+        await tester.pump();
+        unawaited(
+          controller.nextPage(
+            duration: const Duration(milliseconds: 280),
+            curve: Curves.easeOutCubic,
+          ),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 120));
+        expect(controller.page, greaterThan(1.5));
+        final interruptedPage = controller.page!;
+
+        final drag = await tester.startGesture(
+          tester.getRect(find.byType(PageView)).center,
+        );
+        await drag.moveBy(const Offset(360, 0));
+        await tester.pump();
+
+        expect(controller.page, lessThan(interruptedPage));
+        expect(
+          find.byKey(const ValueKey('source-slide:chapter-1')),
+          findsOneWidget,
+        );
+
+        await drag.up();
+        await tester.pumpAndSettle();
+        expect(
+          find.byKey(const ValueKey('source-slide:chapter-1')),
+          findsOneWidget,
+        );
+        expect(tester.takeException(), isNull);
+      } finally {
         await tester.pumpWidget(const SizedBox.shrink());
         await tester.pump();
         await tester.binding.setSurfaceSize(null);

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/reader/reader_custom_theme.dart';
+import '../core/reader/reader_settings.dart';
 
 /// A reader-only color system. It is intentionally separate from AppThemes so
 /// changing the reading canvas never changes the rest of the application.
@@ -159,6 +160,34 @@ class ReaderThemes {
 
   static List<ReaderThemePalette> get orderedPalettes =>
       themeOrder.map(byId).toList(growable: false);
+
+  /// Loads the palette that should be visible from the first reader frame.
+  ///
+  /// Reader pages finish loading the rest of their settings after navigation,
+  /// while the book-opening transition needs the saved canvas color before it
+  /// starts. Resolve custom themes here as well so the transition never falls
+  /// back to the day palette on a cold open.
+  static Future<ReaderThemePalette> loadSavedPalette() async {
+    try {
+      final results = await Future.wait<Object>([
+        const ReaderSettingsStore().loadThemeId(),
+        const ReaderCustomThemeStore().loadAll(),
+      ]);
+      final themeId = results[0] as String;
+      final customThemes = results[1] as List<ReaderCustomTheme>;
+
+      for (final theme in customThemes) {
+        if (theme.id == themeId) return fromCustomTheme(theme);
+      }
+      if (themeId == ReaderCustomTheme.legacyThemeId &&
+          customThemes.isNotEmpty) {
+        return fromCustomTheme(customThemes.first);
+      }
+      return all.firstWhere((theme) => theme.id == themeId, orElse: () => day);
+    } catch (_) {
+      return day;
+    }
+  }
 
   static void setCustomThemes(List<ReaderCustomTheme> themes) {
     _customThemes = List<ReaderCustomTheme>.unmodifiable(themes);

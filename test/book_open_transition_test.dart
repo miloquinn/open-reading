@@ -61,6 +61,32 @@ void main() {
     expect(find.text('reader'), findsOneWidget);
   });
 
+  testWidgets('打开：延迟页跟随阅读主题背景色', (tester) async {
+    final coverKey = GlobalKey();
+    final navKey = GlobalKey<NavigatorState>();
+    await tester.pumpWidget(buildShelf(coverKey, navKey));
+
+    final animation = BookOpenAnimation.fromCoverKey(
+      coverKey,
+      radius: BorderRadius.circular(12),
+      coverBuilder: (_) => const ColoredBox(color: Colors.brown),
+    );
+    navKey.currentState!.push(
+      BookOpenTransition.createRoute<void>(
+        const Scaffold(body: Text('reader')),
+        animation: animation,
+        readerBackgroundColor: Colors.black,
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    final deferredPage = tester.widget<ColoredBox>(
+      find.byKey(const ValueKey('book-open-transition-deferred-page')),
+    );
+    expect(deferredPage.color, Colors.black);
+  });
+
   testWidgets('退出：反向飞回书架格子并恢复书架', (tester) async {
     final coverKey = GlobalKey();
     final navKey = GlobalKey<NavigatorState>();

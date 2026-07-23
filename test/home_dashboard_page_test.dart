@@ -1,12 +1,18 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:xxread/book_sources/models/registered_book_source.dart';
+import 'package:xxread/book_sources/protocol/book_source_protocol.dart';
+import 'package:xxread/book_sources/services/book_source_client.dart';
+import 'package:xxread/book_sources/services/book_source_shelf_service.dart';
 import 'package:xxread/l10n/app_localizations.dart';
 import 'package:xxread/models/book.dart';
 import 'package:xxread/pages/home/home_mobile_dashboard_page.dart';
+import 'package:xxread/pages/reader/book_source_reader_page.dart';
 import 'package:xxread/services/books/book_services.dart';
 import 'package:xxread/services/reading/reading_stats_dao.dart';
 
@@ -118,5 +124,52 @@ void main() {
     expect(find.text('今日阅读计划'), findsNothing);
     expect(find.textContaining('AI'), findsNothing);
     expect(tester.takeException(), isNull);
+  });
+
+  test('首页继续阅读会把在线书籍交给书源阅读器', () {
+    const sourceBook = BookSourceBook(
+      id: 'online-book',
+      title: '在线测试书',
+      author: '测试作者',
+      description: '',
+      categories: [],
+    );
+    final source = RegisteredBookSource(
+      id: 'test.source',
+      name: '测试书源',
+      description: '',
+      manifestUrl: Uri.parse('https://example.org/source.json'),
+      apiBaseUrl: Uri.parse('https://example.org/api/'),
+      protocolVersion: '1.0',
+      languages: const ['zh-CN'],
+      capabilities: const {'search', 'catalog', 'content'},
+      enabled: true,
+      addedAt: DateTime.utc(2026, 7, 23),
+    );
+    final book = Book(
+      title: sourceBook.title,
+      author: sourceBook.author,
+      filePath: '',
+      format: 'source',
+      storageType: 'online',
+      sourceId: source.id,
+      sourceBookId: sourceBook.id,
+      sourceJson: jsonEncode(source.toJson()),
+      sourceBookJson: jsonEncode(sourceBook.toJson()),
+    );
+    final client = BookSourceClient();
+    final shelfService = BookSourceShelfService(client: client);
+
+    final reader = HomeMobileDashboardPage.buildOnlineReader(
+      book: book,
+      client: client,
+      shelfService: shelfService,
+    );
+
+    expect(reader, isA<BookSourceReaderPage>());
+    final sourceReader = reader! as BookSourceReaderPage;
+    expect(sourceReader.source.id, source.id);
+    expect(sourceReader.book.id, sourceBook.id);
+    expect(sourceReader.client, same(client));
   });
 }

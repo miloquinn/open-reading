@@ -720,43 +720,48 @@ class _XxReadAppState extends State<XxReadApp> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return provider.Consumer2<ThemeNotifier, AppSettingsNotifier>(
-      builder: (context, themeNotifier, appSettings, child) {
-        // 不在这里更新系统UI，让各页面自行控制
-        // 避免与阅读页面的全屏模式冲突
-
-        return MaterialApp(
-          navigatorKey: _navigatorKey,
-          onGenerateTitle: (context) => context.l10n.appTitle,
-          debugShowCheckedModeBanner: false,
-          // 🚀 启用高性能渲染，支持120Hz高刷新率
-          scrollBehavior: const MaterialScrollBehavior().copyWith(
-            physics: const BouncingScrollPhysics(),
+    return provider.Consumer<ThemeNotifier>(
+      builder: (context, themeNotifier, child) =>
+          provider.Selector<AppSettingsNotifier, (String?, Locale?)>(
+            selector: (_, appSettings) =>
+                (appSettings.appFontFamily, appSettings.locale),
+            builder: (context, appAppearance, child) {
+              final (appFontFamily, locale) = appAppearance;
+              // 不在这里更新系统UI，让各页面自行控制
+              // 避免与阅读页面的全屏模式冲突
+              return MaterialApp(
+                navigatorKey: _navigatorKey,
+                onGenerateTitle: (context) => context.l10n.appTitle,
+                debugShowCheckedModeBanner: false,
+                // 🚀 启用高性能渲染，支持120Hz高刷新率
+                scrollBehavior: const MaterialScrollBehavior().copyWith(
+                  physics: const BouncingScrollPhysics(),
+                ),
+                theme: _buildLightTheme(
+                  themeNotifier.currentAppTheme,
+                  appFontFamily,
+                  themeNotifier.uiStyle,
+                ),
+                darkTheme: _buildDarkTheme(
+                  themeNotifier.currentAppTheme,
+                  appFontFamily,
+                  themeNotifier.uiStyle,
+                ),
+                themeMode: themeNotifier.themeMode,
+                locale: locale,
+                localizationsDelegates: const [
+                  AppLocalizations.delegate,
+                  GlobalMaterialLocalizations.delegate,
+                  GlobalWidgetsLocalizations.delegate,
+                  GlobalCupertinoLocalizations.delegate,
+                ],
+                supportedLocales: AppLocalizations.supportedLocales,
+                home: Builder(builder: (context) => _buildHome(context)),
+                // 移除 builder 中的系统UI更新，让各页面自行控制
+                // 避免与阅读页面的全屏模式冲突
+              );
+            },
           ),
-          theme: _buildLightTheme(
-            themeNotifier.currentAppTheme,
-            appSettings.appFontFamily,
-            themeNotifier.uiStyle,
-          ),
-          darkTheme: _buildDarkTheme(
-            themeNotifier.currentAppTheme,
-            appSettings.appFontFamily,
-            themeNotifier.uiStyle,
-          ),
-          themeMode: themeNotifier.themeMode,
-          locale: appSettings.locale,
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: Builder(builder: (context) => _buildHome(context)),
-          // 移除 builder 中的系统UI更新，让各页面自行控制
-          // 避免与阅读页面的全屏模式冲突
-        );
-      },
     );
   }
 

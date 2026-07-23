@@ -5,18 +5,46 @@
                         "version":  "2.3.6",
                         "notes":  {
                                       "en":  [
+                                                 "Made online source reading cache-first: recently opened catalogs and chapters reopen immediately and remain available offline for up to 30 days while stale data refreshes in the background",
+                                                 "Opening an online book from Home now goes straight to the source reader instead of treating it as a local file",
+                                                 "Preloaded and pre-paginated adjacent online chapters now form one continuous horizontal page sequence, so chapter titles and body pages turn normally without boundary bounce-back",
+                                                 "Removed the light flash when opening a book with a night, pure-black, or custom dark reading theme",
+                                                 "Made large online-font downloads smoother by moving file verification off the UI thread and limiting progress redraws to the font list",
+                                                 "Added an optional grid setting that shows each book title, a compact progress bar, and its reading percentage below the cover",
+                                                 "Kept grid titles to one ellipsized line so long names do not change row heights; the existing cover-only grid remains the default",
                                                  "Stored newly uploaded WebDAV books as unencrypted original files under readable Book title - Author/original file name folders, while keeping SHA-256 only for integrity checks",
                                                  "Kept legacy content-addressed WebDAV books downloadable without resync and added an in-app compatibility notice for existing users"
                                              ],
                                       "zh":  [
+                                                 "在线书源阅读改为缓存优先：已读目录和正文可立即恢复，陈旧缓存后台刷新，30 天内内容在离线时仍可阅读",
+                                                 "首页打开在线书籍会直接进入书源阅读器，不再按本地文件处理",
+                                                 "在线书源会预加载并预先分页相邻章节，将前后章节接入同一条水平翻页序列，章节标题与正文可连续翻动且不会在边界回弹",
+                                                 "修复夜间、纯黑和自定义深色阅读主题打开书籍时短暂闪白的问题",
+                                                 "大型在线字体的校验改在后台执行，下载进度只刷新字体列表，界面更流畅",
+                                                 "书库网格新增可选的“显示书名和进度”，在封面下展示书名、精简进度条和阅读百分比",
+                                                 "书名固定单行并在过长时显示省略号，网格行高保持一致；默认仍为纯封面布局",
                                                  "WebDAV 新上传书籍以未加密原文件保存到“书名 - 作者/原文件名”可读目录，SHA-256 仅用于完整性校验",
                                                  "旧版内容寻址书籍继续兼容下载，无需重新同步；检测到旧记录时会显示兼容提示"
                                              ],
                                       "zh-TW":  [
+                                                    "線上書源閱讀改為快取優先：已讀目錄與正文可立即恢復，過期快取於背景更新，30 天內內容離線時仍可閱讀",
+                                                    "首頁開啟線上書籍會直接進入書源閱讀器，不再當成本機檔案處理",
+                                                    "線上書源會預先載入並分頁相鄰章節，將前後章節接入同一條水平翻頁序列，章節標題與正文可連續翻動且不會在邊界回彈",
+                                                    "修正夜間、純黑與自訂深色閱讀主題開啟書籍時短暫閃白的問題",
+                                                    "大型線上字型的校驗改在背景執行，下載進度只更新字型清單，介面更流暢",
+                                                    "書庫網格新增可選的「顯示書名和進度」，在封面下顯示書名、精簡進度列與閱讀百分比",
+                                                    "書名固定單行並在過長時顯示省略號，網格列高保持一致；預設仍為純封面版面",
                                                     "WebDAV 新上傳書籍以未加密原始檔保存到「書名 - 作者/原始檔名」可讀目錄，SHA-256 僅用於完整性校驗",
                                                     "舊版內容定址書籍繼續相容下載，無需重新同步；偵測到舊記錄時會顯示相容提示"
                                                 ],
                                       "ja":  [
+                                                 "オンライン書源の読書をキャッシュ優先にし、既読の目次と本文をすぐ復元。古いキャッシュはバックグラウンドで更新され、30日間はオフラインでも読めます",
+                                                 "ホームからオンライン書籍をローカルファイルとして扱わず、直接書源リーダーで開けるようにしました",
+                                                 "隣接するオンライン章を事前取得・ページ分割して一続きの横送りに組み込み、章タイトルと本文を境界で跳ね返らず通常のページと同様に移動できるようにしました",
+                                                 "夜間・純黒・カスタムのダーク読書テーマで書籍を開く際に一瞬白くなる問題を修正しました",
+                                                 "大きなオンラインフォントの検証をバックグラウンドへ移し、進捗更新をフォント一覧だけに限定して操作を滑らかにしました",
+                                                 "ライブラリのグリッドに、表紙の下へ書名、コンパクトな進捗バー、読書率を表示するオプションを追加しました",
+                                                 "長い書名は1行で省略し、行の高さを揃えます。従来の表紙のみのグリッドが引き続き既定です",
                                                  "WebDAV へ新しくアップロードする書籍を暗号化せず元のファイルのまま「書名 - 著者/元のファイル名」に保存し、SHA-256 は整合性確認だけに使用します",
                                                  "旧形式のコンテンツアドレス書籍も再同期なしで引き続きダウンロードでき、該当する場合は互換性案内を表示します"
                                              ]

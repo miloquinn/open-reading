@@ -29,6 +29,7 @@ import 'package:xxread/utils/glass_config.dart';
 import 'package:xxread/utils/layout_helper.dart';
 import 'package:xxread/utils/localization_extension.dart';
 import 'package:xxread/utils/page_style_helper.dart';
+import 'package:xxread/utils/reader_themes.dart';
 import 'package:xxread/utils/system_ui_helper.dart';
 import 'package:xxread/utils/ui_style.dart';
 import 'package:xxread/widgets/app_brand_icon.dart';
@@ -100,6 +101,10 @@ class _LibraryPageState extends State<LibraryPage> {
     if (fullBook == null || !mounted) return;
     if (fullBook.isOnline) {
       try {
+        final initialTheme = animation == null
+            ? null
+            : await ReaderThemes.loadSavedPalette();
+        if (!mounted) return;
         final source = _sourceShelfService.sourceFrom(fullBook);
         final sourceBook = _sourceShelfService.sourceBookFrom(fullBook);
         await Navigator.of(context).push<void>(
@@ -108,8 +113,10 @@ class _LibraryPageState extends State<LibraryPage> {
               source: source,
               book: sourceBook,
               shelfService: _sourceShelfService,
+              initialTheme: initialTheme,
             ),
             animation: animation,
+            readerBackgroundColor: initialTheme?.background,
           ),
         );
       } catch (error) {

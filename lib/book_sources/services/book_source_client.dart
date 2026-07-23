@@ -276,14 +276,19 @@ class BookSourceClient {
     RegisteredBookSource source,
     String bookId,
   ) {
-    return _fetchAllChapters(
-      _apiUri(
-        source.apiBaseUrl,
-        'v1/books/${Uri.encodeComponent(bookId)}/chapters',
+    return _chapterCache.getChapterCatalogOrLoad(
+      sourceId: source.id,
+      sourceRevision: source.apiBaseUrl.toString(),
+      bookId: bookId,
+      loader: () => _fetchAllChapters(
+        _apiUri(
+          source.apiBaseUrl,
+          'v1/books/${Uri.encodeComponent(bookId)}/chapters',
+        ),
+        pageSize: _chapterPageSizeFor(source),
+        maxBytes: maxResponseBytes,
+        receiveTimeout: null,
       ),
-      pageSize: _chapterPageSizeFor(source),
-      maxBytes: maxResponseBytes,
-      receiveTimeout: null,
     );
   }
 
@@ -370,6 +375,7 @@ class BookSourceClient {
   }) async {
     return _chapterCache.getOrLoad(
       sourceId: source.id,
+      sourceRevision: source.apiBaseUrl.toString(),
       bookId: bookId,
       chapterId: chapterId,
       loader: () async {
@@ -401,8 +407,10 @@ class BookSourceClient {
     cancellation?.throwIfCancelled();
     final content = await _chapterCache.getOrLoad(
       sourceId: source.id,
+      sourceRevision: source.apiBaseUrl.toString(),
       bookId: bookId,
       chapterId: chapterId,
+      staleWhileRevalidate: false,
       loader: () {
         final uri = _apiUri(
           source.apiBaseUrl,

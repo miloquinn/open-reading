@@ -11,7 +11,7 @@ import 'package:xxread/pages/reader/book_source_reader_page.dart';
 import 'package:xxread/widgets/reader_paper_page_leaf.dart';
 
 void main() {
-  testWidgets('previous-chapter slide preview renders the previous last page', (
+  testWidgets('previous-chapter slide preview exposes the whole chapter', (
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({
@@ -22,35 +22,7 @@ void main() {
     });
 
     final client = _AdjacentPreviewClient();
-    await tester.pumpWidget(
-      MaterialApp(
-        locale: const Locale('zh'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: BookSourceReaderPage(
-          source: RegisteredBookSource(
-            id: 'preview-source',
-            name: 'Preview source',
-            description: '',
-            manifestUrl: Uri.parse('https://example.org/source.json'),
-            apiBaseUrl: Uri.parse('https://example.org/api/'),
-            protocolVersion: '1.0',
-            languages: const ['zh-CN'],
-            capabilities: const {'catalog', 'content'},
-            enabled: true,
-            addedAt: DateTime.utc(2026, 7, 18),
-          ),
-          book: const BookSourceBook(
-            id: 'preview-book',
-            title: 'Preview book',
-            author: 'Author',
-            description: '',
-            categories: [],
-          ),
-          client: client,
-        ),
-      ),
-    );
+    await tester.pumpWidget(_buildReader(client));
 
     await _pumpUntil(
       tester,
@@ -68,20 +40,107 @@ void main() {
     final pageViewWidget = tester.widget<PageView>(pageView);
     final delegate =
         pageViewWidget.childrenDelegate as SliverChildBuilderDelegate;
-    final previewShell = delegate.builder(tester.element(pageView), 0)!;
-    expect(previewShell, isA<LayoutBuilder>());
-    final preview = (previewShell as LayoutBuilder).builder(
-      tester.element(pageView),
-      const BoxConstraints.tightFor(width: 800, height: 600),
+    final leadingPageCount = pageViewWidget.controller!.page!.round();
+    expect(leadingPageCount, greaterThan(2));
+    ReaderPaperPageLeaf previewAt(int index) {
+      final previewShell = delegate.builder(tester.element(pageView), index)!;
+      expect(previewShell, isA<GestureDetector>());
+      final previewBuilder = (previewShell as GestureDetector).child!;
+      expect(previewBuilder, isA<LayoutBuilder>());
+      final preview = (previewBuilder as LayoutBuilder).builder(
+        tester.element(pageView),
+        const BoxConstraints.tightFor(width: 800, height: 600),
+      );
+      expect(preview, isA<ReaderPaperPageLeaf>());
+      return preview as ReaderPaperPageLeaf;
+    }
+
+    final firstLeaf = previewAt(0);
+    final lastLeaf = previewAt(leadingPageCount - 1);
+    expect(lastLeaf.metadata.chapterTitle, '上一章');
+    expect(lastLeaf.metadata.pageCount, greaterThan(1));
+    expect(lastLeaf.metadata.pageNumber, lastLeaf.metadata.pageCount);
+    expect(firstLeaf.metadata.pageNumber, 1);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('next-chapter slide preview exposes the whole chapter', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({
+      ReaderSettingsStore.pageModeKey: 'horizontalSlide',
+    });
+    final client = _AdjacentPreviewClient();
+    await tester.pumpWidget(_buildReader(client));
+    await _pumpUntil(
+      tester,
+      () => client.requestedChapterIds.contains('chapter-2'),
+      'next chapter preload',
     );
-    expect(preview, isA<ReaderPaperPageLeaf>());
-    final leaf = preview as ReaderPaperPageLeaf;
-    expect(leaf.metadata.chapterTitle, '上一章');
-    expect(leaf.metadata.pageCount, greaterThan(1));
-    expect(leaf.metadata.pageNumber, leaf.metadata.pageCount);
+
+    final pageView = find.byType(PageView);
+    final pageViewWidget = tester.widget<PageView>(pageView);
+    final delegate =
+        pageViewWidget.childrenDelegate as SliverChildBuilderDelegate;
+    final itemCount = delegate.estimatedChildCount!;
+    ReaderPaperPageLeaf leafAt(int index) {
+      final shell = delegate.builder(tester.element(pageView), index)!;
+      final child = (shell as GestureDetector).child!;
+      if (child is ReaderPaperPageLeaf) return child;
+      final preview = (child as LayoutBuilder).builder(
+        tester.element(pageView),
+        const BoxConstraints.tightFor(width: 800, height: 600),
+      );
+      return preview as ReaderPaperPageLeaf;
+    }
+
+    final nextChapterStart = List<int>.generate(
+      itemCount,
+      (index) => index,
+    ).firstWhere((index) => leafAt(index).metadata.chapterTitle == '当前章');
+    final nextChapterLeaves = [
+      for (var index = nextChapterStart; index < itemCount; index++)
+        leafAt(index),
+    ];
+    expect(
+      nextChapterLeaves.length,
+      nextChapterLeaves.first.metadata.pageCount,
+    );
+    expect(
+      nextChapterLeaves.map((leaf) => leaf.metadata.pageNumber),
+      List<int>.generate(nextChapterLeaves.length, (index) => index + 1),
+    );
     expect(tester.takeException(), isNull);
   });
 }
+
+Widget _buildReader(_AdjacentPreviewClient client) => MaterialApp(
+  locale: const Locale('zh'),
+  localizationsDelegates: AppLocalizations.localizationsDelegates,
+  supportedLocales: AppLocalizations.supportedLocales,
+  home: BookSourceReaderPage(
+    source: RegisteredBookSource(
+      id: 'preview-source',
+      name: 'Preview source',
+      description: '',
+      manifestUrl: Uri.parse('https://example.org/source.json'),
+      apiBaseUrl: Uri.parse('https://example.org/api/'),
+      protocolVersion: '1.0',
+      languages: const ['zh-CN'],
+      capabilities: const {'catalog', 'content'},
+      enabled: true,
+      addedAt: DateTime.utc(2026, 7, 18),
+    ),
+    book: const BookSourceBook(
+      id: 'preview-book',
+      title: 'Preview book',
+      author: 'Author',
+      description: '',
+      categories: [],
+    ),
+    client: client,
+  ),
+);
 
 String _allText(WidgetTester tester) => <String>[
   ...tester
@@ -130,7 +189,7 @@ class _AdjacentPreviewClient extends BookSourceClient {
     final isPrevious = chapterId == 'chapter-1';
     final content = isPrevious
         ? '${List.generate(120, (index) => '上一章正文第$index段，用于确保章节被分成多页。').join('\n')}\n$tailMarker'
-        : List.generate(24, (index) => '当前章节正文第$index段。').join('\n');
+        : List.generate(120, (index) => '当前章节正文第$index段。').join('\n');
     return BookSourceChapterContent(
       bookId: bookId,
       chapterId: chapterId,

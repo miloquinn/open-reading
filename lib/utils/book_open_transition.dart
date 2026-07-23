@@ -70,6 +70,7 @@ class BookOpenTransition {
   static Route<T> createRoute<T extends Object?>(
     Widget page, {
     BookOpenAnimation? animation,
+    Color? readerBackgroundColor,
   }) {
     if (animation == null) {
       return CustomPageTransitions.createSmoothReaderPageRoute<T>(page);
@@ -78,6 +79,7 @@ class BookOpenTransition {
     return PageRouteBuilder<T>(
       pageBuilder: (context, _, __) => _DeferredBookOpenPage(
         entranceCompleted: entranceCompleted,
+        backgroundColor: readerBackgroundColor,
         child: page,
       ),
       transitionDuration: const Duration(milliseconds: 460),
@@ -95,6 +97,7 @@ class BookOpenTransition {
           child: _BookOpenFlight(
             animation: routeAnimation,
             data: animation,
+            readerBackgroundColor: readerBackgroundColor,
             child: child,
           ),
         );
@@ -106,10 +109,12 @@ class BookOpenTransition {
 class _DeferredBookOpenPage extends StatelessWidget {
   const _DeferredBookOpenPage({
     required this.entranceCompleted,
+    required this.backgroundColor,
     required this.child,
   });
 
   final ValueNotifier<bool> entranceCompleted;
+  final Color? backgroundColor;
   final Widget child;
 
   @override
@@ -120,7 +125,7 @@ class _DeferredBookOpenPage extends StatelessWidget {
         if (revealed) return child;
         return ColoredBox(
           key: const ValueKey('book-open-transition-deferred-page'),
-          color: Theme.of(context).colorScheme.surface,
+          color: backgroundColor ?? Theme.of(context).colorScheme.surface,
           child: const SizedBox.expand(),
         );
       },
@@ -199,11 +204,13 @@ class _BookOpenFlight extends StatelessWidget {
   const _BookOpenFlight({
     required this.animation,
     required this.data,
+    required this.readerBackgroundColor,
     required this.child,
   });
 
   final Animation<double> animation;
   final BookOpenAnimation data;
+  final Color? readerBackgroundColor;
   final Widget child;
 
   // 打开：封面先飞、纸色中途化开、正文最后浮现。
@@ -232,7 +239,7 @@ class _BookOpenFlight extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final surface = Theme.of(context).colorScheme.surface;
+    final appSurface = Theme.of(context).colorScheme.surface;
     final page = RepaintBoundary(child: child);
     final cover = data.coverBuilder(context);
     return AnimatedBuilder(
@@ -242,6 +249,9 @@ class _BookOpenFlight extends StatelessWidget {
         final screenSize = MediaQuery.sizeOf(context);
         final screenRect = Offset.zero & screenSize;
         final isExiting = animation.status == AnimationStatus.reverse;
+        final surface = isExiting
+            ? appSurface
+            : readerBackgroundColor ?? appSurface;
         Rect? source = data.sourceRect;
         if (isExiting) {
           source =
