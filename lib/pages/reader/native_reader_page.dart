@@ -202,6 +202,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
   bool _tapPageAnimationEnabled = true;
   bool _tabletTwoPageEnabled = ReaderSettings.defaultTabletTwoPageEnabled;
   bool _readerSettingsLoaded = false;
+  bool _readerFontReady = true;
   bool _readerSystemUiApplied = false;
   bool _readerSystemUiApplyScheduled = false;
   bool _routeEntranceCompleted = false;
@@ -336,11 +337,15 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     super.didChangeDependencies();
     _bindRouteAnimation();
     var nextReaderFont = FontCatalog.defaultReaderFont;
+    var nextReaderFontReady = true;
     try {
-      nextReaderFont = context.watch<AppSettingsNotifier>().readerFont;
+      final appSettings = context.watch<AppSettingsNotifier>();
+      nextReaderFontReady = appSettings.isInitialized;
+      if (nextReaderFontReady) nextReaderFont = appSettings.readerFont;
     } on ProviderNotFoundException {
       // Reader widgets remain embeddable in tests and isolated previews.
     }
+    _readerFontReady = nextReaderFontReady;
     if (_readerFont.id != nextReaderFont.id) {
       _readerFont = nextReaderFont;
       if (_readerDependenciesInitialized) {
@@ -648,7 +653,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     final style = _readerTextStyle;
     return NativeTextFlowStyle(
       textDirection: direction ?? Directionality.of(context),
-      textScaler: textScaler ?? MediaQuery.textScalerOf(context),
+      textScaler: textScaler ?? readerBodyTextScaler,
       locale: Localizations.maybeLocaleOf(context),
       strutStyle: readerStrutStyle(style),
       textHeightBehavior: readerTextHeightBehavior,
@@ -2338,7 +2343,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
       _visibleChapters = chapters;
       _verticalViewportSize = viewport;
       _verticalTextDirection = Directionality.of(context);
-      _verticalTextScaler = MediaQuery.textScalerOf(context);
+      _verticalTextScaler = readerBodyTextScaler;
       if (!_scrollByChapter) {
         return _buildVerticalReadingWindow(
           _buildVerticalBook(chapters, viewport),
@@ -2355,7 +2360,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
             chapters,
             _paginationSize(viewport, usesTwoPageLayout),
             Directionality.of(context),
-            MediaQuery.textScalerOf(context),
+            readerBodyTextScaler,
             usesTwoPageLayout: usesTwoPageLayout,
           );
           return false;
@@ -2957,7 +2962,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
           child: FutureBuilder<List<_NativeChapter>>(
             future: _chaptersFuture,
             builder: (context, snapshot) {
-              if (!_readerSettingsLoaded) {
+              if (!_readerSettingsLoaded || !_readerFontReady) {
                 return _openingCrossfade(
                   _buildOpeningScaffold(
                     key: const ValueKey('native-reader-opening-placeholder'),
@@ -3044,7 +3049,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
                         _lastPaginationSize = paginationSize;
                         _lastUsesTwoPageLayout = usesTwoPageLayout;
                         final textDirection = Directionality.of(context);
-                        final textScaler = MediaQuery.textScalerOf(context);
+                        const textScaler = readerBodyTextScaler;
                         final pages = _pagesFor(
                           chapter,
                           _chapterIndex,

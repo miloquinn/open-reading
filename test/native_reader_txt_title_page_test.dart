@@ -3,13 +3,18 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:xxread/core/reader/reader_layout.dart';
 import 'package:xxread/core/reader/reader_settings.dart';
 import 'package:xxread/l10n/app_localizations.dart';
 import 'package:xxread/models/book.dart';
 import 'package:xxread/pages/reader/native_reader_page.dart';
+import 'package:xxread/services/core/app_settings_service.dart';
+import 'package:xxread/services/core/custom_font_service.dart';
+import 'package:xxread/services/core/online_font_service.dart';
 import 'package:xxread/utils/book_open_transition.dart';
+import 'package:xxread/utils/font_catalog_helper.dart';
 import 'package:xxread/utils/reader_themes.dart';
 import 'package:xxread/widgets/reader_navigation_sheet.dart';
 import 'package:xxread/widgets/reader_paper_page_leaf.dart';
@@ -173,6 +178,66 @@ void main() {
       isTrue,
     );
   });
+
+  testWidgets('waits for reader font restoration before revealing text', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(400, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final appSettings = _ControllableAppSettingsNotifier(temporaryDirectory);
+    addTearDown(appSettings.dispose);
+
+    await tester.pumpWidget(
+      ChangeNotifierProvider<AppSettingsNotifier>.value(
+        value: appSettings,
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: NativeReaderPage(
+            book: Book(
+              title: 'Font restoration',
+              filePath: bookFile.path,
+              format: 'txt',
+              textEncoding: 'utf8',
+              fileModifiedTime: bookFile
+                  .lastModifiedSync()
+                  .millisecondsSinceEpoch,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 120)),
+    );
+    await tester.pump();
+    expect(
+      find.byKey(const ValueKey('native-reader-opening-placeholder')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const ValueKey('native-reader-content')), findsNothing);
+
+    appSettings.markReaderFontReady();
+    await tester.pump();
+    await tester.runAsync(() async {
+      for (var attempt = 0; attempt < 30; attempt++) {
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        await tester.pump();
+        if (find
+            .byKey(const ValueKey('native-reader-content'))
+            .evaluate()
+            .isNotEmpty) {
+          return;
+        }
+      }
+    });
+    await _pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('native-reader-content')),
+    );
+  });
+
   testWidgets(
     'vertical paging preserves the dedicated TXT chapter title page',
     (tester) async {
@@ -430,6 +495,33 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
     await tester.pumpAndSettle();
   });
+}
+
+class _ControllableAppSettingsNotifier extends AppSettingsNotifier {
+  _ControllableAppSettingsNotifier(Directory directory)
+    : super(
+        customFontService: CustomFontService(
+          supportDirectory: () async => directory,
+          registrar: (_, _) async {},
+        ),
+        onlineFontService: OnlineFontService(
+          supportDirectory: () async => directory,
+          registrar: (_, _, _) async {},
+        ),
+      );
+
+  bool _readerFontReady = false;
+
+  @override
+  bool get isInitialized => _readerFontReady;
+
+  @override
+  FontOption get readerFont => FontCatalog.systemFont;
+
+  void markReaderFontReady() {
+    _readerFontReady = true;
+    notifyListeners();
+  }
 }
 
 Finder _richTextContaining(String text) => find.byWidgetPredicate(

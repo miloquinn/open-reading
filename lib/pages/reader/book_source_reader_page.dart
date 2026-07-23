@@ -122,6 +122,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   int _firstLineIndent = ReaderSettings.defaultFirstLineIndent;
   int _paragraphSpacing = ReaderSettings.defaultParagraphSpacing;
   FontOption _readerFont = FontCatalog.defaultReaderFont;
+  bool _readerFontReady = true;
   double _horizontalMargin = ReaderSettings.defaultHorizontalMargin;
   double _topMargin = ReaderMarginSettings.defaultTop;
   double _bottomMargin = ReaderMarginSettings.defaultBottom;
@@ -281,11 +282,15 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   void didChangeDependencies() {
     super.didChangeDependencies();
     var nextReaderFont = FontCatalog.defaultReaderFont;
+    var nextReaderFontReady = true;
     try {
-      nextReaderFont = context.watch<AppSettingsNotifier>().readerFont;
+      final appSettings = context.watch<AppSettingsNotifier>();
+      nextReaderFontReady = appSettings.isInitialized;
+      if (nextReaderFontReady) nextReaderFont = appSettings.readerFont;
     } on ProviderNotFoundException {
       // Reader widgets remain embeddable in tests and isolated previews.
     }
+    _readerFontReady = nextReaderFontReady;
     if (_readerFont.id == nextReaderFont.id) return;
     _readerFont = nextReaderFont;
     _paginationKey = null;
@@ -1705,7 +1710,9 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   }
 
   String get _bodyTransitionKey {
-    if (_loadingCatalog || (_loadingContent && _content == null)) {
+    if (!_readerFontReady ||
+        _loadingCatalog ||
+        (_loadingContent && _content == null)) {
       return _showOpeningLoader ? 'loading' : 'loading-placeholder';
     }
     if (_error != null) return 'error';
@@ -1745,7 +1752,9 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   }
 
   Widget _buildBody() {
-    if (_loadingCatalog || (_loadingContent && _content == null)) {
+    if (!_readerFontReady ||
+        _loadingCatalog ||
+        (_loadingContent && _content == null)) {
       if (!_showOpeningLoader) {
         return GestureDetector(
           key: const ValueKey('book-source-reader-loading-placeholder'),
@@ -1856,7 +1865,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     Locale? locale,
   }) => NativeTextFlowStyle(
     textDirection: direction ?? Directionality.of(context),
-    textScaler: textScaler ?? MediaQuery.textScalerOf(context),
+    textScaler: textScaler ?? readerBodyTextScaler,
     locale: locale ?? Localizations.maybeLocaleOf(context),
     strutStyle: readerStrutStyle(_bodyTextStyle),
     textHeightBehavior: readerTextHeightBehavior,
@@ -1895,7 +1904,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     final chrome = _verticalChrome;
     final width = readerTextContentWidth(viewport.width, _horizontalMargin);
     final height = _verticalPageExtentFor(viewport);
-    final textScaler = MediaQuery.textScalerOf(context);
+    const textScaler = readerBodyTextScaler;
     final locale = Localizations.maybeLocaleOf(context);
     final direction = Directionality.of(context);
     final fingerprint = ReaderLayoutFingerprint(
@@ -2227,7 +2236,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     final bottom = _readerSafeArea.contentBottom;
     final width = readerTextContentWidth(viewport.width, _horizontalMargin);
     final height = readerTextContentHeight(viewport.height, top, bottom);
-    final textScaler = MediaQuery.textScalerOf(context);
+    const textScaler = readerBodyTextScaler;
     final locale = Localizations.maybeLocaleOf(context);
     final key = ReaderLayoutFingerprint(
       contentKey: _chapters[chapterIndex].id,

@@ -11,6 +11,12 @@ typedef NativeTextSpanBuilder = TextSpan Function(int start, int end);
 /// 而不是全部堆在右侧。分页测量和实际绘制必须共用这一规则。
 const TextAlign readerBodyTextAlign = TextAlign.justify;
 
+/// Book text has its own explicit font-size controls, so it must not be scaled
+/// a second time by iOS Dynamic Type or Windows system text scaling. Reader
+/// chrome remains outside this flow and continues to follow platform
+/// accessibility settings.
+const TextScaler readerBodyTextScaler = TextScaler.noScaling;
+
 /// 行高只作用于行与行之间：首行上方、末行下方不再垫行距，
 /// 这样"上/下边距"就是从字形边缘量起，不随行高设置漂移。
 const TextHeightBehavior readerTextHeightBehavior = TextHeightBehavior(

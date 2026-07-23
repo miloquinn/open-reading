@@ -23,6 +23,10 @@ NativeTextFlowStyle _flowStyle(
 }
 
 void main() {
+  test('reader body font size is independent from platform text scaling', () {
+    expect(readerBodyTextScaler.scale(19), 19);
+  });
+
   TestWidgetsFlutterBinding.ensureInitialized();
 
   test('large text pages preserve content and fit complete visual lines', () {
