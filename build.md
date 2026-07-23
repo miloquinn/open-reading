@@ -26,6 +26,7 @@
 
 | 开始时间（Asia/Shanghai） | 版本 | 基础构建号 | 平台/类型 | 状态 | 实际版本码 | 产物与验证 |
 | --- | --- | ---: | --- | --- | --- | --- |
+| 2026-07-23 12:02 | 2.3.6 | 260723001 | GitHub 正式发布：Android split APK、Windows、Linux、macOS universal、公证、Web 部署与官网镜像 | 构建中 | 待确认 | 已占用构建号；正在修复误提前创建的 `v2.3.6` Tag 所暴露的版本不一致，统一版本元数据并执行发布前验证；GitHub Release、签名公证产物和官网验证待回写 |
 | 2026-07-22 16:52 | 2.3.5 | 260722009 | GitHub 正式发布：Android split APK、Windows、Linux、macOS universal、公证、Web 部署与官网镜像 | 成功；Action 的 CDN 公网探测误报 403 | armeabi-v7a `260723009`；arm64-v8a `260724009`；x86_64 `260726009`；桌面/Web `260722009` | GitHub Latest Release `v2.3.5` 已发布 6 个安装包和 `SHA256SUMS.txt`；macOS universal 已通过 Developer ID、Hardened Runtime、Apple 公证、staple 与 Gatekeeper；官网六个平台/架构均为 2.3.5 且 Range 206，`read.xxread.top/version.json` 为 `2.3.5+260722009`。正式 Run `29911228236` 的构建、Release、官网镜像和实际 Web 部署成功，仅 Cloudflare 对 GitHub Runner 的冗余公网探测持续返回 403；后续工作流已将该 CDN 探测降级为告警。 |
 | 2026-07-22 16:08 | 2.3.1 | 260722008 | Flutter Web 首次正式部署 | 构建中 | `260722008` | 为 `read.xxread.top` 构建可分发 Web 产物；包含 IndexedDB SQLite WASM/Worker 适配、GitHub Release 自动 SSH 原子部署与 Caddy 独立路由；产物与公网验证待回写 |
 | 2026-07-22 14:59 | 2.3.1 | 260722007 | iOS App Store / TestFlight 隔离快照重建 | 构建中 | 待确认 | 以稳定提交 `c096c2b` 为基线，仅叠加 v2.3.1 发布元数据与 App Store 90683 权限修复；用于替代归档期间工作区发生并发源码修改的 `260722006`；产物与验证待回写 |
