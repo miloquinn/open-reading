@@ -30,12 +30,15 @@ import 'package:xxread/models/bookmark.dart';
 import 'package:xxread/services/books/bookmark_dao.dart';
 import 'package:xxread/services/core/app_settings_service.dart';
 import 'package:xxread/services/reading/reading_stats_dao.dart';
+import 'package:xxread/utils/book_open_transition.dart';
 import 'package:xxread/utils/font_catalog_helper.dart';
+import 'package:xxread/utils/glass_config.dart';
 import 'package:xxread/utils/localization_extension.dart';
 import 'package:xxread/utils/reader_themes.dart';
 import 'package:xxread/utils/system_ui_helper.dart';
 import 'package:xxread/widgets/reader_control_chrome.dart';
 import 'package:xxread/widgets/reader_navigation_sheet.dart';
+import 'package:xxread/widgets/reader_opening_loader.dart';
 import 'package:xxread/widgets/reader_paper_page_leaf.dart';
 import 'package:xxread/widgets/reader_pull_bookmark.dart';
 import 'package:xxread/widgets/reader_settings_controls.dart';
@@ -76,6 +79,9 @@ class BookSourceReaderPage extends StatefulWidget {
 class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     with WidgetsBindingObserver {
   static const double _spreadGutter = 24;
+  static const int _readableChapterTextLimit = 8;
+  static const _openingLoaderDelay = Duration(milliseconds: 650);
+  static const _openingContentSettleDelay = Duration(milliseconds: 360);
 
   late final BookSourceClient _client = widget.client ?? BookSourceClient();
   late final BookSourceShelfService _shelfService =
@@ -104,6 +110,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       ReaderLeafStatusController();
 
   List<BookSourceChapter> _chapters = const [];
+  List<ReaderNavigationChapter> _navigationChapters = const [];
   BookSourceChapterContent? _content;
   int _chapterIndex = 0;
   bool _loadingCatalog = true;
@@ -141,6 +148,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   List<BookSourceTextPage> _paginatedPages = const [];
   int _chapterLoadSerial = 0;
   final Map<int, BookSourceChapterContent> _prefetchedContent = {};
+  final Map<int, String> _readableChapterText = {};
   final Map<int, Future<BookSourceChapterContent>> _continuousContentLoads = {};
   final Map<int, _BookSourcePagedLayout> _pagedLayouts = {};
   final Set<int> _queuedPagedLayoutWarms = {};
@@ -155,6 +163,8 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   int? _shelfBookId;
   Timer? _progressSaveTimer;
   Timer? _controlsTimer;
+  Timer? _pagedLayoutWarmTimer;
+  int? _pagedLayoutWarmTimerIndex;
   final ReadingStatsDao _readingStatsDao = ReadingStatsDao();
   final BookmarkDao _bookmarkDao = BookmarkDao();
   final ReaderSettingsStore _readerSettingsStore = const ReaderSettingsStore();
@@ -166,12 +176,18 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   DateTime? _readingSessionStartedAt;
   int _sessionPagesRead = 0;
   bool _readerSystemUiApplied = false;
+  bool _showOpeningLoader = false;
+  bool _openingContentReadyScheduled = false;
+  Timer? _openingLoaderTimer;
+  Timer? _openingContentReadyTimer;
   ReaderTopBarStyle _topBarStyle = ReaderTopBarStyle.reader;
 
   ReaderThemePalette get _readerTheme =>
       _loadingCatalog && widget.initialTheme != null
       ? widget.initialTheme!
       : ReaderThemes.byId(_readerThemeId);
+
+  bool get _canPopWithoutPrompt => _allowPop || _shelfBookId != null;
 
   ThemeData get _readerThemeData =>
       _readerTheme.toThemeData(typography: Theme.of(context).textTheme);
@@ -229,6 +245,12 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   @override
   void initState() {
     super.initState();
+    _showOpeningLoader = widget.initialTheme == null;
+    if (!_showOpeningLoader) {
+      _openingLoaderTimer = Timer(_openingLoaderDelay, () {
+        if (mounted) setState(() => _showOpeningLoader = true);
+      });
+    }
     WidgetsBinding.instance.addObserver(this);
     _leafStatusController
       ..addListener(_onLeafStatusChanged)
@@ -243,7 +265,9 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     );
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted || _readerSystemUiApplied) return;
-      final topBarStyle = await ReaderSystemUiController.applySavedPreference();
+      final topBarStyle = await ReaderSystemUiController.applySavedPreference(
+        overlayStyle: _readerSystemUiOverlayStyle,
+      );
       if (!mounted) return;
       setState(() {
         _topBarStyle = topBarStyle;
@@ -291,6 +315,14 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     }
   }
 
+  @override
+  void didChangePlatformBrightness() {
+    if (mounted && _readerThemeId == ReaderThemes.systemId) {
+      setState(() {});
+      if (_readerSystemUiApplied) unawaited(_applyReaderSystemUi());
+    }
+  }
+
   void _startReadingSession() {
     _readingSessionStartedAt ??= DateTime.now();
   }
@@ -319,8 +351,11 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _openingLoaderTimer?.cancel();
+    _openingContentReadyTimer?.cancel();
     _progressSaveTimer?.cancel();
     _controlsTimer?.cancel();
+    _pagedLayoutWarmTimer?.cancel();
     unawaited(_saveProgress());
     unawaited(_flushReadingSession());
     _verticalPagePositionsListener.itemPositions.removeListener(
@@ -341,8 +376,16 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     super.dispose();
   }
 
-  Future<void> _applyReaderSystemUi() =>
-      ReaderSystemUiController.apply(style: _topBarStyle);
+  SystemUiOverlayStyle get _readerSystemUiOverlayStyle =>
+      SystemUiHelper.overlayStyleForBackground(
+        _readerTheme.background,
+        transparentSystemBars: !GlassEffectConfig.shouldDisableBlur,
+      );
+
+  Future<void> _applyReaderSystemUi() => ReaderSystemUiController.apply(
+    style: _topBarStyle,
+    overlayStyle: _readerSystemUiOverlayStyle,
+  );
 
   void _onLeafStatusChanged() {
     if (mounted) setState(() {});
@@ -367,6 +410,12 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       ]);
       final chapters = [...results[0]! as List<BookSourceChapter>]
         ..sort((a, b) => a.order.compareTo(b.order));
+      final navigationChapters = List<ReaderNavigationChapter>.generate(
+        chapters.length,
+        (index) =>
+            ReaderNavigationChapter(title: chapters[index].title, index: index),
+        growable: false,
+      );
       final saved = results[1] as BookSourceReadingProgress?;
       final settings = results[2]! as ReaderSettings;
       final scrollByChapter = results[3]! as bool;
@@ -387,6 +436,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       ReaderThemes.setThemeOrder(themeOrder);
       setState(() {
         _chapters = chapters;
+        _navigationChapters = navigationChapters;
         _chapterIndex = initialIndex;
         _fontSize = settings.fontSize;
         _horizontalMargin = settings.horizontalMargin;
@@ -521,7 +571,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       sourceBookId: widget.book.id,
     );
     if (!mounted) return;
-    _shelfBookId = shelfBook?.id;
+    setState(() => _shelfBookId = shelfBook?.id);
     final shelfBookId = _shelfBookId;
     if (shelfBookId == null) return;
     try {
@@ -543,7 +593,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     if (!mounted) return;
     final loadSerial = ++_chapterLoadSerial;
     final prefetched = _prefetchedContent[index];
-    if (prefetched != null) {
+    if (prefetched != null && _readableChapterText.containsKey(index)) {
       _applyLoadedChapter(index, prefetched, restoreProgress: restoreProgress);
       return;
     }
@@ -669,17 +719,30 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
 
   Future<BookSourceChapterContent> _continuousContentFor(int index) {
     final cached = _prefetchedContent[index];
-    if (cached != null) return Future.value(cached);
+    if (cached != null && _readableChapterText.containsKey(index)) {
+      return Future.value(cached);
+    }
     final inFlight = _continuousContentLoads[index];
     if (inFlight != null) return inFlight;
     late final Future<BookSourceChapterContent> future;
-    future = _client
-        .getChapterContent(
-          widget.source,
-          bookId: widget.book.id,
-          chapterId: _chapters[index].id,
-        )
-        .then((content) {
+    final contentFuture = cached != null
+        ? Future<BookSourceChapterContent>.value(cached)
+        : _client.getChapterContent(
+            widget.source,
+            bookId: widget.book.id,
+            chapterId: _chapters[index].id,
+          );
+    future = contentFuture
+        .then((content) async {
+          _readableChapterText.remove(index);
+          _readableChapterText[index] =
+              await readableBookSourceChapterTextAsync(
+                content,
+                fallbackTitle: _chapters[index].title,
+              );
+          while (_readableChapterText.length > _readableChapterTextLimit) {
+            _readableChapterText.remove(_readableChapterText.keys.first);
+          }
           _prefetchedContent[index] = content;
           if (!mounted) {
             return content;
@@ -724,7 +787,15 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         !_queuedPagedLayoutWarms.add(index)) {
       return;
     }
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    _pagedLayoutWarmTimer?.cancel();
+    final previousWarmIndex = _pagedLayoutWarmTimerIndex;
+    if (previousWarmIndex != null) {
+      _queuedPagedLayoutWarms.remove(previousWarmIndex);
+    }
+    _pagedLayoutWarmTimerIndex = index;
+    _pagedLayoutWarmTimer = Timer(const Duration(milliseconds: 32), () {
+      _pagedLayoutWarmTimer = null;
+      _pagedLayoutWarmTimerIndex = null;
       _queuedPagedLayoutWarms.remove(index);
       if (!mounted ||
           _pageMode == BookSourcePageMode.verticalScroll ||
@@ -807,6 +878,14 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
 
   Future<void> _requestExit() async {
     if (_exitPromptVisible) return;
+    if (_shelfBookId != null) {
+      BookOpenTransition.beginExit();
+      unawaited(_saveProgress());
+      unawaited(_flushReadingSession());
+      setState(() => _allowPop = true);
+      Navigator.of(context).pop();
+      return;
+    }
     _exitPromptVisible = true;
     await _saveProgress();
     // 阅读统计是退出后的派生写入，不应阻塞“加入书架？”确认弹窗。
@@ -817,6 +896,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     );
     if (!mounted) return;
     if (shelfBook != null) {
+      BookOpenTransition.beginExit();
       setState(() => _allowPop = true);
       Navigator.of(context).pop();
       return;
@@ -850,6 +930,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       await _saveProgress();
       if (!mounted) return;
     }
+    BookOpenTransition.beginExit();
     setState(() => _allowPop = true);
     Navigator.of(context).pop();
   }
@@ -1158,14 +1239,9 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   Future<void> _showCatalog() async {
     if (_chapters.isEmpty) return;
     _controlsTimer?.cancel();
-    // Built once outside the StatefulBuilder below: that builder re-runs on
-    // every keyboard show/hide animation frame, and reallocating a
-    // ReaderNavigationChapter per chapter on every frame is severe jank for
-    // books with thousands of chapters.
-    final navigationChapters = [
-      for (var index = 0; index < _chapters.length; index++)
-        ReaderNavigationChapter(title: _chapters[index].title, index: index),
-    ];
+    // Prepared with the catalog so the interaction frame only mounts the
+    // sheet instead of allocating one navigation model per chapter.
+    final navigationChapters = _navigationChapters;
     await showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
@@ -1211,6 +1287,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     final customName = ReaderThemes.customThemeById(themeId)?.name.trim();
     if (customName != null && customName.isNotEmpty) return customName;
     return switch (themeId) {
+      ReaderThemes.systemId => context.l10n.readerThemeFollowSystem,
       'mist' => context.l10n.readerThemeMist,
       'green' => context.l10n.readerThemeGreen,
       'rose' => context.l10n.readerThemeRose,
@@ -1286,6 +1363,9 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     });
     unawaited(_syncVolumeKeyPaging());
     await _readerSettingsStore.save(_readerSettings);
+    if (themeId != null && _readerSystemUiApplied) {
+      await _applyReaderSystemUi();
+    }
     if (repaginate) _restoreScrollProgress(currentProgress);
   }
 
@@ -1526,11 +1606,15 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       key: const ValueKey('reader-system-ui-region'),
-      value: SystemUiHelper.overlayStyleForBackground(_readerTheme.background),
+      value: _readerSystemUiOverlayStyle,
       child: PopScope(
-        canPop: _allowPop,
+        canPop: _canPopWithoutPrompt,
         onPopInvokedWithResult: (didPop, _) {
-          if (!didPop) unawaited(_requestExit());
+          if (didPop) {
+            BookOpenTransition.beginExit();
+          } else {
+            unawaited(_requestExit());
+          }
         },
         child: Theme(
           data: _readerThemeData,
@@ -1559,7 +1643,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
                     Positioned.fill(
                       child: Semantics(
                         label: widget.book.title,
-                        child: _buildBody(),
+                        child: _buildBodyCrossfade(),
                       ),
                     ),
                     ReaderChromeOverlay(
@@ -1620,12 +1704,64 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     );
   }
 
+  String get _bodyTransitionKey {
+    if (_loadingCatalog || (_loadingContent && _content == null)) {
+      return _showOpeningLoader ? 'loading' : 'loading-placeholder';
+    }
+    if (_error != null) return 'error';
+    if (_chapters.isEmpty || _content == null) return 'empty';
+    return 'content';
+  }
+
+  Widget _buildBodyCrossfade() {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 360),
+      reverseDuration: const Duration(milliseconds: 280),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      layoutBuilder: (currentChild, previousChildren) => Stack(
+        fit: StackFit.expand,
+        children: [...previousChildren, ?currentChild],
+      ),
+      transitionBuilder: (child, animation) =>
+          FadeTransition(opacity: animation, child: child),
+      child: KeyedSubtree(
+        key: ValueKey('book-source-reader-$_bodyTransitionKey'),
+        child: _buildBody(),
+      ),
+    );
+  }
+
+  void _scheduleOpeningContentReady() {
+    if (_openingContentReadyScheduled) return;
+    _openingContentReadyScheduled = true;
+    _openingLoaderTimer?.cancel();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _openingContentReadyTimer = Timer(_openingContentSettleDelay, () {
+        if (mounted) BookOpenTransition.markReaderContentReady(context);
+      });
+    });
+  }
+
   Widget _buildBody() {
     if (_loadingCatalog || (_loadingContent && _content == null)) {
-      return Center(
-        child: CircularProgressIndicator(color: _readerTheme.accent),
+      if (!_showOpeningLoader) {
+        return GestureDetector(
+          key: const ValueKey('book-source-reader-loading-placeholder'),
+          behavior: HitTestBehavior.opaque,
+          onTap: _toggleControls,
+          child: const SizedBox.expand(),
+        );
+      }
+      return GestureDetector(
+        key: const ValueKey('book-source-reader-loading-surface'),
+        behavior: HitTestBehavior.opaque,
+        onTap: _toggleControls,
+        child: ReaderOpeningLoader(palette: _readerTheme),
       );
     }
+    _scheduleOpeningContentReady();
     if (_error != null) {
       return Center(
         child: Padding(
@@ -1780,10 +1916,11 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     final cached = _verticalLayouts[chapterIndex];
     if (cached?.fingerprint == fingerprint) return cached!;
     final pages = paginateBookSourceText(
-      readableBookSourceChapterText(
-        content,
-        fallbackTitle: _chapters[chapterIndex].title,
-      ),
+      _readableChapterText[chapterIndex] ??
+          readableBookSourceChapterText(
+            content,
+            fallbackTitle: _chapters[chapterIndex].title,
+          ),
       width: width,
       firstPageHeight: height,
       pageHeight: height,
@@ -1960,7 +2097,9 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       );
     }
 
-    if (cached != null) return buildContent(cached);
+    if (cached != null && _readableChapterText.containsKey(chapterIndex)) {
+      return buildContent(cached);
+    }
     return FutureBuilder<BookSourceChapterContent>(
       future: _continuousContentFor(chapterIndex),
       builder: (context, snapshot) {
@@ -2108,10 +2247,11 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     final cached = _pagedLayouts[chapterIndex];
     if (cached?.fingerprint == key) return cached!;
     final pages = paginateBookSourceText(
-      readableBookSourceChapterText(
-        content,
-        fallbackTitle: _chapters[chapterIndex].title,
-      ),
+      _readableChapterText[chapterIndex] ??
+          readableBookSourceChapterText(
+            content,
+            fallbackTitle: _chapters[chapterIndex].title,
+          ),
       width: width,
       firstPageHeight: height,
       pageHeight: height,

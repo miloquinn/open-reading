@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:crypto/crypto.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 
@@ -22,12 +23,23 @@ class BookSourceChapterCache {
   static final Map<String, Future<BookSourceChapterContent>> _inFlight = {};
   static final Map<String, Future<List<BookSourceChapter>>> _catalogInFlight =
       {};
+  static final Map<String, Future<void>> _diskWriteQueues = {};
+  static int _writeGeneration = 0;
 
-  const BookSourceChapterCache({this.cacheDirectory});
+  const BookSourceChapterCache({
+    this.cacheDirectory,
+    @visibleForTesting this.beforeDiskWrite,
+  });
 
   final Directory? cacheDirectory;
 
+  /// Allows tests to hold or fail persistence without coupling cache reads to
+  /// the filesystem implementation.
+  @visibleForTesting
+  final Future<void> Function()? beforeDiskWrite;
+
   static void clearMemory() {
+    _writeGeneration++;
     _memory.clear();
     _catalogMemory.clear();
   }
@@ -153,8 +165,31 @@ class BookSourceChapterCache {
   ) async {
     final content = await loader();
     _remember(key, _CacheEntry(content, DateTime.now()));
-    await _writeDisk(key, content);
+    _scheduleDiskWrite(
+      'chapter',
+      key,
+      (generation) => _writeDisk(key, content, generation),
+    );
     return content;
+  }
+
+  void _scheduleDiskWrite(
+    String scope,
+    String key,
+    Future<void> Function(int generation) writer,
+  ) {
+    final generation = _writeGeneration;
+    final root = cacheDirectory?.absolute.path ?? '<default-cache-root>';
+    final queueKey = '$root:$scope:$key';
+    final previous = _diskWriteQueues[queueKey] ?? Future<void>.value();
+    late final Future<void> next;
+    next = previous.then((_) => writer(generation)).whenComplete(() {
+      if (identical(_diskWriteQueues[queueKey], next)) {
+        _diskWriteQueues.remove(queueKey);
+      }
+    });
+    _diskWriteQueues[queueKey] = next;
+    unawaited(next);
   }
 
   void _remember(String key, _CacheEntry<BookSourceChapterContent> content) {
@@ -187,11 +222,17 @@ class BookSourceChapterCache {
     }
   }
 
-  Future<void> _writeDisk(String key, BookSourceChapterContent content) async {
+  Future<void> _writeDisk(
+    String key,
+    BookSourceChapterContent content,
+    int generation,
+  ) async {
     try {
+      await beforeDiskWrite?.call();
+      if (generation != _writeGeneration) return;
       final file = await _chapterFileFor(key);
-      await file.parent.create(recursive: true);
-      await file.writeAsString(
+      await _writeJsonAtomically(
+        file,
         jsonEncode({
           'bookId': content.bookId,
           'chapterId': content.chapterId,
@@ -199,7 +240,7 @@ class BookSourceChapterCache {
           'content': content.content,
           'contentType': content.contentType,
         }),
-        flush: true,
+        generation,
       );
     } catch (_) {
       // Cache failures must never interrupt reading.
@@ -249,7 +290,11 @@ class BookSourceChapterCache {
     final chapters = List<BookSourceChapter>.unmodifiable(await loader());
     final entry = _CacheEntry(chapters, DateTime.now());
     _rememberCatalog(key, entry);
-    await _writeCatalogDisk(key, entry);
+    _scheduleDiskWrite(
+      'catalog',
+      key,
+      (generation) => _writeCatalogDisk(key, entry, generation),
+    );
     return chapters;
   }
 
@@ -293,11 +338,14 @@ class BookSourceChapterCache {
   Future<void> _writeCatalogDisk(
     String key,
     _CacheEntry<List<BookSourceChapter>> catalog,
+    int generation,
   ) async {
     try {
+      await beforeDiskWrite?.call();
+      if (generation != _writeGeneration) return;
       final file = await _catalogFileFor(key);
-      await file.parent.create(recursive: true);
-      await file.writeAsString(
+      await _writeJsonAtomically(
+        file,
         jsonEncode({
           'items': [
             for (final chapter in catalog.value)
@@ -310,11 +358,28 @@ class BookSourceChapterCache {
               },
           ],
         }),
-        flush: true,
+        generation,
       );
     } catch (_) {
       // Cache failures must never interrupt reading.
     }
+  }
+
+  Future<void> _writeJsonAtomically(
+    File file,
+    String contents,
+    int generation,
+  ) async {
+    if (generation != _writeGeneration) return;
+    await file.parent.create(recursive: true);
+    final temporary = File('${file.path}.tmp-$generation');
+    await temporary.writeAsString(contents, flush: true);
+    if (generation != _writeGeneration) {
+      if (await temporary.exists()) await temporary.delete();
+      return;
+    }
+    if (await file.exists()) await file.delete();
+    await temporary.rename(file.path);
   }
 
   Future<Directory> _rootDirectory() async {

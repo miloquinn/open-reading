@@ -140,6 +140,8 @@ class ReaderThemePalette {
 class ReaderThemes {
   ReaderThemes._();
 
+  static const String systemId = 'system';
+
   static List<ReaderCustomTheme> _customThemes = const [];
   static List<String> _themeOrder = const [];
 
@@ -160,6 +162,32 @@ class ReaderThemes {
 
   static List<ReaderThemePalette> get orderedPalettes =>
       themeOrder.map(byId).toList(growable: false);
+
+  static ReaderThemePalette systemPalette({Brightness? platformBrightness}) {
+    final source =
+        (platformBrightness ??
+                WidgetsBinding
+                    .instance
+                    .platformDispatcher
+                    .platformBrightness) ==
+            Brightness.dark
+        ? pureBlack
+        : day;
+    return ReaderThemePalette(
+      id: systemId,
+      brightness: source.brightness,
+      background: source.background,
+      text: source.text,
+      secondaryText: source.secondaryText,
+      surface: source.surface,
+      controlBar: source.controlBar,
+      controlFill: source.controlFill,
+      accent: source.accent,
+      onAccent: source.onAccent,
+      border: source.border,
+      shadow: source.shadow,
+    );
+  }
 
   /// Loads the palette that should be visible from the first reader frame.
   ///
@@ -322,7 +350,8 @@ class ReaderThemes {
     shadow: Color(0xFF000000),
   );
 
-  static const all = <ReaderThemePalette>[
+  static List<ReaderThemePalette> get all => <ReaderThemePalette>[
+    systemPalette(),
     day,
     mist,
     green,
@@ -337,6 +366,7 @@ class ReaderThemes {
     Iterable<String> themeIds,
     Iterable<ReaderCustomTheme> customThemes,
   ) {
+    final requestedThemeIds = themeIds.toList(growable: false);
     final customThemeIds = customThemes.map((theme) => theme.id).toList();
     final availableIds = <String>{
       ...all.map((theme) => theme.id),
@@ -345,7 +375,15 @@ class ReaderThemes {
     final result = <String>[];
     final seen = <String>{};
 
-    for (final id in themeIds) {
+    // Existing installations do not have the system theme in their saved
+    // order. Put the new option first on migration, while still respecting a
+    // position explicitly chosen later in the theme manager.
+    if (!requestedThemeIds.contains(systemId)) {
+      result.add(systemId);
+      seen.add(systemId);
+    }
+
+    for (final id in requestedThemeIds) {
       if (availableIds.contains(id) && seen.add(id)) {
         result.add(id);
       }
@@ -362,7 +400,10 @@ class ReaderThemes {
   static List<String> _resolvedThemeOrder() =>
       resolveThemeOrder(_themeOrder, _customThemes);
 
-  static ReaderThemePalette byId(String? id) {
+  static ReaderThemePalette byId(String? id, {Brightness? platformBrightness}) {
+    if (id == systemId) {
+      return systemPalette(platformBrightness: platformBrightness);
+    }
     for (final theme in _customThemes) {
       if (theme.id == id) return fromCustomTheme(theme);
     }

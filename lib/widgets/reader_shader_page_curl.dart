@@ -10,6 +10,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 
 import '../core/reader/reader_page_turn_geometry.dart';
+import '../core/reader/reader_transition_work_scope.dart';
 import 'reader_paper_page_leaf.dart';
 
 part 'src/page_curl/reader_page_curl_api.dart';

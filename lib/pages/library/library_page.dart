@@ -97,18 +97,19 @@ class _LibraryPageState extends State<LibraryPage> {
   }
 
   Future<void> _openBook(Book book, {BookOpenAnimation? animation}) async {
-    final fullBook = await _bookDao.getBookById(book.id!);
-    if (fullBook == null || !mounted) return;
-    if (fullBook.isOnline) {
-      try {
-        final initialTheme = animation == null
-            ? null
-            : await ReaderThemes.loadSavedPalette();
-        if (!mounted) return;
-        final source = _sourceShelfService.sourceFrom(fullBook);
-        final sourceBook = _sourceShelfService.sourceBookFrom(fullBook);
-        await Navigator.of(context).push<void>(
-          BookOpenTransition.createRoute<void>(
+    final openingActivity = BookOpenTransition.beginActivity();
+    try {
+      final fullBook = await _bookDao.getBookById(book.id!);
+      if (fullBook == null || !mounted) return;
+      if (fullBook.isOnline) {
+        try {
+          final initialTheme = animation == null
+              ? null
+              : await ReaderThemes.loadSavedPalette();
+          if (!mounted) return;
+          final source = _sourceShelfService.sourceFrom(fullBook);
+          final sourceBook = _sourceShelfService.sourceBookFrom(fullBook);
+          final route = BookOpenTransition.createRoute<void>(
             BookSourceReaderPage(
               source: source,
               book: sourceBook,
@@ -117,25 +118,29 @@ class _LibraryPageState extends State<LibraryPage> {
             ),
             animation: animation,
             readerBackgroundColor: initialTheme?.background,
-          ),
-        );
-      } catch (error) {
-        if (mounted) {
-          showSideToast(
-            context,
-            context.l10n.bookSourceOnlineDataBroken('$error'),
-            kind: SideToastKind.error,
+            waitForReaderReady: true,
           );
+          await BookOpenTransition.push<void>(context, route);
+        } catch (error) {
+          if (mounted) {
+            showSideToast(
+              context,
+              context.l10n.bookSourceOnlineDataBroken('$error'),
+              kind: SideToastKind.error,
+            );
+          }
         }
+      } else {
+        await NativeReaderService.openBook(
+          context,
+          fullBook,
+          animation: animation,
+        );
       }
-    } else {
-      await NativeReaderService.openBook(
-        context,
-        fullBook,
-        animation: animation,
-      );
+      if (mounted) _loadBooks();
+    } finally {
+      openingActivity.dispose();
     }
-    if (mounted) _loadBooks();
   }
 
   BoxDecoration _panelDecoration({
@@ -1121,11 +1126,10 @@ class _LibraryPageState extends State<LibraryPage> {
     if (!kIsWeb &&
         book.coverImagePath != null &&
         book.coverImagePath!.isNotEmpty) {
-      final fit = Platform.isAndroid ? BoxFit.contain : BoxFit.cover;
       // 列表封面显示宽度固定 64，按屏幕像素密度限制解码尺寸即可
       return Image.file(
         File(book.coverImagePath!),
-        fit: fit,
+        fit: LayoutHelper.bookCoverFit,
         cacheWidth: (64 * MediaQuery.of(context).devicePixelRatio).round(),
         gaplessPlayback: true,
         errorBuilder: (context, error, stackTrace) =>
@@ -1136,7 +1140,7 @@ class _LibraryPageState extends State<LibraryPage> {
     if (sourceCover != null) {
       return SourceCoverImage(
         url: sourceCover,
-        fit: BoxFit.cover,
+        fit: LayoutHelper.bookCoverFit,
         cacheWidth: (64 * MediaQuery.of(context).devicePixelRatio).round(),
         fallback: _buildListDefaultCover(context, book),
       );
@@ -2066,7 +2070,7 @@ Widget _gridCoverArt(BuildContext context, Book book) {
         color: scheme.surface.withValues(alpha: isMaterial3Style ? 0.2 : 0.12),
         child: Image.file(
           File(book.coverImagePath!),
-          fit: LayoutHelper.coverOnlyGridFit,
+          fit: LayoutHelper.bookCoverFit,
           cacheWidth: cacheWidth,
           gaplessPlayback: true,
           errorBuilder: (context, error, stackTrace) {
@@ -2082,7 +2086,7 @@ Widget _gridCoverArt(BuildContext context, Book book) {
       url: sourceCover,
       width: double.infinity,
       height: double.infinity,
-      fit: BoxFit.cover,
+      fit: LayoutHelper.bookCoverFit,
       cacheWidth: (240 * MediaQuery.of(context).devicePixelRatio).round(),
       fallback: _gridDefaultCover(context, book),
     );

@@ -38,6 +38,7 @@ class ReaderChromeOverlay extends StatelessWidget {
     this.readerStatus,
     this.viewportStatusAlignment = Alignment.centerRight,
     this.viewportStatusHorizontalPadding = 14,
+    this.showSettingsAction = true,
   });
 
   final ReaderThemePalette palette;
@@ -65,6 +66,7 @@ class ReaderChromeOverlay extends StatelessWidget {
   final ReaderLeafStatusData? readerStatus;
   final AlignmentGeometry viewportStatusAlignment;
   final double viewportStatusHorizontalPadding;
+  final bool showSettingsAction;
 
   @override
   Widget build(BuildContext context) {
@@ -227,12 +229,15 @@ class ReaderChromeOverlay extends StatelessWidget {
                           null,
                         ),
                       ),
-                      ReaderControlIconButton(
-                        palette: palette,
-                        onPressed: onSettings,
-                        tooltip: settingsTooltip,
-                        icon: Icons.tune_rounded,
-                      ),
+                      if (showSettingsAction)
+                        ReaderControlIconButton(
+                          palette: palette,
+                          onPressed: onSettings,
+                          tooltip: settingsTooltip,
+                          icon: Icons.tune_rounded,
+                        )
+                      else
+                        const SizedBox(width: 48),
                     ],
                   ),
                 ),
@@ -274,11 +279,13 @@ class ReaderControlBar extends StatelessWidget {
             lightBlend: 0.28,
           )
         : palette.controlBar;
-    final highlight = Color.lerp(
-      cleanSurface,
-      Colors.white,
-      palette.brightness == Brightness.dark ? 0.06 : (blurEnabled ? 0.1 : 0.18),
-    )!;
+    final highlight = blurEnabled
+        ? Color.lerp(
+            cleanSurface,
+            Colors.white,
+            palette.brightness == Brightness.dark ? 0.06 : 0.1,
+          )!
+        : cleanSurface;
     final panel = DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: borderRadius,
@@ -301,18 +308,15 @@ class ReaderControlBar extends StatelessWidget {
           ],
         ),
         border: Border.all(
-          color:
-              Color.lerp(
-                palette.border,
-                Colors.white,
-                palette.brightness == Brightness.dark
-                    ? 0.16
-                    : (blurEnabled ? 0.14 : 0.38),
-              )!.withValues(
-                alpha: blurEnabled
-                    ? (palette.brightness == Brightness.light ? 0.28 : 0.54)
-                    : 0.68,
-              ),
+          color: blurEnabled
+              ? Color.lerp(
+                  palette.border,
+                  Colors.white,
+                  palette.brightness == Brightness.dark ? 0.16 : 0.14,
+                )!.withValues(
+                  alpha: palette.brightness == Brightness.light ? 0.28 : 0.54,
+                )
+              : palette.border,
           width: 1,
         ),
       ),
@@ -405,18 +409,11 @@ class ReaderControlIconButton extends StatelessWidget {
         maximumSize: const Size.square(44),
         padding: EdgeInsets.zero,
         side: BorderSide(
-          color:
-              Color.lerp(
-                palette.border,
-                Colors.white,
-                palette.brightness == Brightness.dark
-                    ? 0.12
-                    : (glassEnabled ? 0.12 : 0.32),
-              )!.withValues(
-                alpha: glassEnabled
-                    ? (palette.brightness == Brightness.light ? 0.28 : 0.48)
-                    : 0.42,
-              ),
+          color: glassEnabled
+              ? Color.lerp(palette.border, Colors.white, 0.12)!.withValues(
+                  alpha: palette.brightness == Brightness.light ? 0.28 : 0.48,
+                )
+              : palette.border,
           width: 0.8,
         ),
         shape: const CircleBorder(),

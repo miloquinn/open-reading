@@ -157,6 +157,9 @@ class _RestartableAppState extends State<RestartableApp> {
 class ThemeNotifier extends ChangeNotifier {
   static const String _themeModePrefKey = 'isDarkMode';
   static const String _uiStylePrefKey = 'ui_style_mode';
+  static const String _accentColorPrefKey = 'appAccentColorV2';
+
+  // 仅用于从旧版“双层主题 + 强调色”设置迁移。
   static const String _appThemePrefKey = 'appTheme';
   static const String _customAccentPrefKey = 'customAccentColor';
   static const String _globalAccentPrefKey = 'globalAccentColor';
@@ -164,22 +167,16 @@ class ThemeNotifier extends ChangeNotifier {
 
   ThemeMode _themeMode = ThemeMode.system;
   bool _isInitialized = false;
-  AppTheme _currentAppTheme = AppThemes.blueTheme; // 默认蓝色主题
-  Color? _customAccentColor; // 存储自定义强调色
-  Color? _globalAccentColor; // 全局强调色（与应用主题分离）
-  String _lastPresetThemeName = AppThemes.blueTheme.name;
+  Color _accentColor = AppThemes.defaultAccentColor;
+  AppTheme _currentAppTheme = AppThemes.fromAccentColor(
+    AppThemes.defaultAccentColor,
+  );
   AppUiStyle _uiStyle = AppUiStyle.material3;
 
   ThemeMode get themeMode => _themeMode;
   bool get isInitialized => _isInitialized;
+  Color get accentColor => _accentColor;
   AppTheme get currentAppTheme => _currentAppTheme;
-  Color? get customAccentColor => _customAccentColor;
-  Color? get globalAccentColor => _globalAccentColor;
-  Color? get effectiveAccentColor =>
-      _globalAccentColor ??
-      (_currentAppTheme.name == 'custom' ? _customAccentColor : null);
-  bool get isUsingThemeAccent => effectiveAccentColor == null;
-  String get lastPresetThemeName => _lastPresetThemeName;
   AppUiStyle get uiStyle => _uiStyle;
   bool get isGlassEffectsEnabled => _uiStyle == AppUiStyle.glass;
   bool get shouldDisableGlassEffects => _uiStyle == AppUiStyle.material3;
@@ -193,12 +190,7 @@ class ThemeNotifier extends ChangeNotifier {
     final isDarkMode = prefs.getBool(_themeModePrefKey);
     _uiStyle = appUiStyleFromStorage(prefs.getString(_uiStylePrefKey));
     await prefs.remove('disable_glass_effects');
-    final appThemeName =
-        prefs.getString(_appThemePrefKey) ?? AppThemes.blueTheme.name;
-    final customColorValue = prefs.getInt(_customAccentPrefKey);
-    final globalAccentColorValue = prefs.getInt(_globalAccentPrefKey);
-    _lastPresetThemeName =
-        prefs.getString(_lastPresetThemePrefKey) ?? AppThemes.blueTheme.name;
+    final storedAccentColor = prefs.getInt(_accentColorPrefKey);
 
     _syncGlassEffectState();
     if (prefs.getBool('enableAnimations') != true) {
@@ -212,29 +204,14 @@ class ThemeNotifier extends ChangeNotifier {
       _themeMode = isDarkMode ? ThemeMode.dark : ThemeMode.light;
     }
 
-    if (appThemeName != 'custom') {
-      _lastPresetThemeName = appThemeName;
-    }
-
-    // 加载应用主题（兼容历史 custom 方案）
-    if (appThemeName == 'custom' && customColorValue != null) {
-      _customAccentColor = Color(customColorValue);
-      _currentAppTheme = AppThemes.createCustomTheme(_customAccentColor!);
-      debugPrint('🎨 加载自定义主题: ${_customAccentColor.toString()}');
+    if (storedAccentColor != null) {
+      _accentColor = Color(storedAccentColor);
     } else {
-      _customAccentColor = null;
-      _currentAppTheme = AppThemes.getThemeByName(appThemeName);
-      debugPrint('🎨 加载预设主题: ${_currentAppTheme.displayName}');
+      _accentColor = _migrateLegacyAccentColor(prefs);
+      await prefs.setInt(_accentColorPrefKey, _accentColor.toARGB32());
     }
-
-    // 加载全局强调色（优先于主题内强调色）
-    if (globalAccentColorValue != null) {
-      _globalAccentColor = Color(globalAccentColorValue);
-      AppThemes.setGlobalAccentColor(_globalAccentColor);
-    } else {
-      _globalAccentColor = null;
-      AppThemes.setGlobalAccentColor(null);
-    }
+    await _removeLegacyThemePreferences(prefs);
+    _currentAppTheme = AppThemes.fromAccentColor(_accentColor);
 
     _isInitialized = true;
     notifyListeners();
@@ -260,113 +237,36 @@ class ThemeNotifier extends ChangeNotifier {
     await prefs.setBool(_themeModePrefKey, isDarkMode);
   }
 
-  // 切换应用主题
-  void setAppTheme(AppTheme theme) async {
-    if (_currentAppTheme.name == theme.name) return; // 避免重复设置
+  /// 强调色是应用配色的唯一来源，Material 3 会由它生成完整浅色/深色色板。
+  Future<void> setAccentColor(Color color) async {
+    if (_accentColor.toARGB32() == color.toARGB32()) return;
 
-    debugPrint('🎨 切换应用主题到: ${theme.displayName}');
-    _currentAppTheme = theme;
-    _customAccentColor = null; // 清除自定义强调色
-    if (theme.name != 'custom') {
-      _lastPresetThemeName = theme.name;
-    }
-
-    // 立即通知监听器更新UI
+    _accentColor = color;
+    _currentAppTheme = AppThemes.fromAccentColor(color);
     notifyListeners();
 
-    // 异步保存设置
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_appThemePrefKey, theme.name);
-    await prefs.remove(_customAccentPrefKey); // 移除自定义颜色设置
-    if (theme.name != 'custom') {
-      await prefs.setString(_lastPresetThemePrefKey, _lastPresetThemeName);
-    }
-    debugPrint('🎨 主题已保存: ${theme.name}');
-  }
-
-  // 设置自定义强调色
-  void setCustomAccentColor(Color color) async {
-    debugPrint('🎨 设置自定义强调色: ${color.toString()}');
-
-    if (_currentAppTheme.name != 'custom') {
-      _lastPresetThemeName = _currentAppTheme.name;
-    }
-
-    // 清除可能冲突的全局强调色
-    _globalAccentColor = null;
-    AppThemes.setGlobalAccentColor(null);
-    debugPrint('🎨 已清除全局强调色，避免冲突');
-
-    _customAccentColor = color;
-    final customTheme = AppThemes.createCustomTheme(color);
-
-    _currentAppTheme = customTheme;
-    debugPrint('🎨 当前主题已更新为: ${_currentAppTheme.displayName}');
-    debugPrint(
-      '🎨 自定义主题主色调: ${customTheme.lightColorScheme.primary.toString()}',
-    );
-
-    // 立即通知监听器更新UI
-    notifyListeners();
-
-    // 异步保存设置
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_appThemePrefKey, 'custom');
-    await prefs.setInt(_customAccentPrefKey, color.toARGB32());
-    await prefs.remove(_globalAccentPrefKey); // 清除全局强调色设置
-    await prefs.setString(_lastPresetThemePrefKey, _lastPresetThemeName);
-    debugPrint('🎨 自定义颜色已保存: ${color.toARGB32()}');
-  }
-
-  // 设置全局强调色（与应用主题分离）
-  void setGlobalAccentColor(Color? color) async {
-    if (_globalAccentColor == color) return; // 避免重复设置
-
-    debugPrint('🎨 设置全局强调色: ${color?.toString() ?? "null (跟随主题)"}');
-    _globalAccentColor = color;
-    AppThemes.setGlobalAccentColor(color);
-
-    // 立即通知监听器更新UI
-    notifyListeners();
-
-    // 异步保存设置
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    if (color != null) {
-      await prefs.setInt(_globalAccentPrefKey, color.toARGB32());
-    } else {
-      await prefs.remove(_globalAccentPrefKey);
-    }
-  }
-
-  /// 统一的强调色设置入口：
-  /// - `null` 表示跟随当前应用主题
-  /// - 非空颜色表示覆盖强调色
-  ///
-  /// 如果用户历史上使用的是 `custom` 主题，这里会回退到最近一次预设主题，
-  /// 然后再应用全局强调色，避免“主题+强调色双层状态”让设置变得难理解。
-  Future<void> setAccentColor(Color? color) async {
     final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_accentColorPrefKey, color.toARGB32());
+    await _removeLegacyThemePreferences(prefs);
+  }
 
-    if (_currentAppTheme.name == 'custom') {
-      _currentAppTheme = AppThemes.getThemeByName(_lastPresetThemeName);
-      _customAccentColor = null;
-      await prefs.setString(_appThemePrefKey, _currentAppTheme.name);
-      await prefs.remove(_customAccentPrefKey);
-    }
+  Color _migrateLegacyAccentColor(SharedPreferences prefs) {
+    final globalAccent = prefs.getInt(_globalAccentPrefKey);
+    if (globalAccent != null) return Color(globalAccent);
 
-    if (_globalAccentColor == color) {
-      return;
+    final appThemeName = prefs.getString(_appThemePrefKey);
+    final customAccent = prefs.getInt(_customAccentPrefKey);
+    if (appThemeName == 'custom' && customAccent != null) {
+      return Color(customAccent);
     }
-    _globalAccentColor = color;
-    AppThemes.setGlobalAccentColor(color);
-    notifyListeners();
+    return AppThemes.accentColorForLegacyTheme(appThemeName);
+  }
 
-    if (color != null) {
-      await prefs.setInt(_globalAccentPrefKey, color.toARGB32());
-    } else {
-      await prefs.remove(_globalAccentPrefKey);
-    }
-    await prefs.setString(_lastPresetThemePrefKey, _lastPresetThemeName);
+  Future<void> _removeLegacyThemePreferences(SharedPreferences prefs) async {
+    await prefs.remove(_appThemePrefKey);
+    await prefs.remove(_customAccentPrefKey);
+    await prefs.remove(_globalAccentPrefKey);
+    await prefs.remove(_lastPresetThemePrefKey);
   }
 
   void setThemeMode(ThemeMode mode) {
@@ -902,25 +802,8 @@ class _XxReadAppState extends State<XxReadApp> with WidgetsBindingObserver {
     String? appFontFamily,
     AppUiStyle uiStyle,
   ) {
-    ColorScheme colorScheme = appTheme.lightColorScheme;
-    debugPrint('🎨 构建浅色主题 - 基础主题: ${appTheme.displayName}');
-    debugPrint('🎨 基础主色调: ${colorScheme.primary.toString()}');
-
-    // 如果有全局强调色，应用到color scheme
-    final globalAccent = AppThemes.getGlobalAccentColor();
-    if (globalAccent != null) {
-      debugPrint('🎨 应用全局强调色 (浅色主题): ${globalAccent.toString()}');
-      colorScheme = AppThemes.getColorSchemeWithAccent(
-        colorScheme,
-        globalAccent,
-      );
-      debugPrint('🎨 新的主要颜色: ${colorScheme.primary.toString()}');
-    } else {
-      debugPrint('🎨 没有全局强调色，使用主题默认色');
-    }
-
     return _buildThemeData(
-      colorScheme: colorScheme,
+      colorScheme: appTheme.lightColorScheme,
       brightness: Brightness.light,
       appFontFamily: appFontFamily,
       uiStyle: uiStyle,
@@ -932,21 +815,8 @@ class _XxReadAppState extends State<XxReadApp> with WidgetsBindingObserver {
     String? appFontFamily,
     AppUiStyle uiStyle,
   ) {
-    ColorScheme colorScheme = appTheme.darkColorScheme;
-
-    // 如果有全局强调色，应用到color scheme
-    final globalAccent = AppThemes.getGlobalAccentColor();
-    if (globalAccent != null) {
-      debugPrint('🎨 应用全局强调色 (深色主题): ${globalAccent.toString()}');
-      colorScheme = AppThemes.getColorSchemeWithAccent(
-        colorScheme,
-        globalAccent,
-      );
-      debugPrint('🎨 新的主要颜色: ${colorScheme.primary.toString()}');
-    }
-
     return _buildThemeData(
-      colorScheme: colorScheme,
+      colorScheme: appTheme.darkColorScheme,
       brightness: Brightness.dark,
       appFontFamily: appFontFamily,
       uiStyle: uiStyle,

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:xxread/models/home_navigation_destination.dart';
 import 'package:xxread/pages/home/widgets/home_bounce_navigation_item.dart';
 import 'package:xxread/pages/home/widgets/home_navigation_item.dart';
 
 void main() {
   const label = 'Library';
   const item = HomeNavigationItem(
+    destination: HomeNavigationDestination.library,
     icon: Icons.library_books_outlined,
     selectedIcon: Icons.library_books,
     label: label,
@@ -128,8 +130,8 @@ void main() {
     expect(_labelOpacity(tester, label), 1);
     expect(_indicatorSize(tester, label), const Size(94.25, 56));
     expect(_selectedIconSize(tester), 27);
-    expect(_labelTextStyle(tester, label).fontSize, 12.5);
-    expect(_labelTextStyle(tester, label).fontWeight, FontWeight.w800);
+    expect(_labelTextStyle(tester, label).fontSize, 11.5);
+    expect(_labelTextStyle(tester, label).fontWeight, FontWeight.w700);
 
     await tester.pumpWidget(
       _testApp(
@@ -186,8 +188,8 @@ void main() {
     );
 
     final style = _labelTextStyle(tester, label);
-    expect(style.fontSize, 12.5);
-    expect(style.fontWeight, FontWeight.w700);
+    expect(style.fontSize, 11.5);
+    expect(style.fontWeight, FontWeight.w600);
     expect(style.color!.a, closeTo(0.9, 0.001));
   });
 
@@ -195,6 +197,7 @@ void main() {
     tester,
   ) async {
     const narrowItem = HomeNavigationItem(
+      destination: HomeNavigationDestination.library,
       icon: Icons.library_books_outlined,
       selectedIcon: Icons.library_books,
       label: 'Bookshelf',

@@ -39,6 +39,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get discoverRetry => '再読み込み';
 
   @override
+  String get discoverEmptyTitle => '表示できるコンテンツはまだありません';
+
+  @override
+  String get discoverEmptyMessage => 'この項目には表示できるコンテンツがまだありません。';
+
+  @override
   String get discoverUnsupportedTitle => '現在のソースはこの項目に対応していません';
 
   @override
@@ -1895,6 +1901,39 @@ class AppLocalizationsJa extends AppLocalizations {
       'オンにすると、モバイルの下部ナビゲーションはアイコンのみ表示します';
 
   @override
+  String get settingsFloatingNavigationTitle => 'フローティングナビゲーション';
+
+  @override
+  String get settingsFloatingNavigationSubtitle => '表示方法と項目の順序を調整します';
+
+  @override
+  String get floatingNavigationPreviewTitle => 'プレビュー';
+
+  @override
+  String get floatingNavigationDisplayModeTitle => '表示方法';
+
+  @override
+  String get floatingNavigationIconsOnly => 'アイコンのみ';
+
+  @override
+  String get floatingNavigationIconsAndLabels => 'アイコンとラベル';
+
+  @override
+  String get floatingNavigationOrderTitle => 'ナビゲーションの順序';
+
+  @override
+  String get floatingNavigationOrderHint => '右側のハンドルを長押しして並べ替えます';
+
+  @override
+  String get floatingNavigationSyncHint => '順序は横スワイプのページとワイド画面のサイドナビにも反映されます';
+
+  @override
+  String get floatingNavigationResetOrder => '既定の順序に戻す';
+
+  @override
+  String get floatingNavigationResetDone => '既定の順序に戻しました';
+
+  @override
   String get settingsLibraryLayoutTitle => 'ライブラリの表示';
 
   @override
@@ -1962,7 +2001,22 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get settingsAccentColorAdvice =>
-      'まずアプリテーマを選び、必要に応じてアクセントカラーを上書きするのがおすすめです。';
+      'アクセントカラーからMaterial 3のライト・ダーク配色全体を生成します。';
+
+  @override
+  String get settingsAccentPresetColors => 'クイックカラー';
+
+  @override
+  String get settingsAccentCustomColor => 'カスタムカラー';
+
+  @override
+  String get settingsAccentSaturationBrightness => '彩度と明度のカラーパレット';
+
+  @override
+  String get settingsAccentHue => '色相';
+
+  @override
+  String get settingsAccentPreview => 'テーマ配色プレビュー';
 
   @override
   String get settingsAccentFollowThemeOption => 'テーマに従う';
@@ -2022,6 +2076,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get updateLater => '後で';
 
   @override
+  String get updateSkipVersion => 'このバージョンをスキップ';
+
+  @override
   String get updateGoToDownload => 'ダウンロードへ';
 
   @override
@@ -2064,7 +2121,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get updateCheckFailed => 'アップデートを確認できませんでした。後でもう一度お試しください';
 
   @override
-  String get updateOpenFailed => 'GitHub Release のダウンロードページを開けませんでした';
+  String get updateOpenFailed => 'リンクを開けませんでした';
 
   @override
   String get settingsIosOnlyFeature => 'この機能は iOS のみ対応しています';
@@ -2462,6 +2519,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get readerThemeDay => '昼';
+
+  @override
+  String get readerThemeFollowSystem => 'システムに合わせる';
 
   @override
   String get readerThemeMist => 'ミスト';
@@ -3299,6 +3359,20 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get settingsCacheManagementTitle => 'キャッシュ管理';
+
+  @override
+  String settingsCacheManagementSubtitle(String size) {
+    return '使用量 $size・内訳を確認して消去';
+  }
+
+  @override
+  String get settingsCacheUsageTitle => 'キャッシュ使用量';
+
+  @override
+  String get settingsCacheTotalUsage => '合計使用量';
+
+  @override
+  String get settingsCacheSafeHint => '安全に消去できるキャッシュだけを表示します。本、読書進捗、設定は含まれません。';
 
   @override
   String get settingsCacheSourceCovers => 'ソース表紙キャッシュ';

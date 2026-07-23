@@ -9,6 +9,8 @@ import 'package:url_launcher/url_launcher.dart';
 import '../services/core/app_update_download_service.dart';
 import '../services/core/update_check_service.dart';
 import '../utils/localization_extension.dart';
+import '../utils/page_style_helper.dart';
+import 'release_notes_markdown.dart';
 import 'side_toast.dart';
 
 class UpdateCheckGate extends StatefulWidget {
@@ -36,10 +38,10 @@ class _UpdateCheckGateState extends State<UpdateCheckGate> {
   Widget build(BuildContext context) => widget.child;
 }
 
-enum _UpdateAction { later, github, website }
+enum _UpdateAction { later, skip, github, website }
 
 class UpdatePromptController {
-  static const _lastPromptedVersionKey = 'last_prompted_update_version';
+  static const _skippedVersionKey = 'skipped_update_version';
 
   static Future<bool> check(
     BuildContext context, {
@@ -64,8 +66,7 @@ class UpdatePromptController {
 
       final latestVersion = result.latestRelease.version;
       final prefs = await SharedPreferences.getInstance();
-      if (!manual &&
-          prefs.getString(_lastPromptedVersionKey) == latestVersion) {
+      if (!manual && prefs.getString(_skippedVersionKey) == latestVersion) {
         return true;
       }
       if (!context.mounted) return true;
@@ -78,23 +79,24 @@ class UpdatePromptController {
           _UpdateAction.later;
       if (!context.mounted) return true;
 
-      final handled = switch (action) {
-        _UpdateAction.later => true,
-        _UpdateAction.github => await _openExternal(
-          context,
-          result.latestRelease.releaseUrl,
-        ),
-        _UpdateAction.website =>
-          context.mounted
-              ? await _handleWebsiteUpdate(
-                  context,
-                  result.latestRelease,
-                  downloadService ?? AppUpdateDownloadService(),
-                )
-              : false,
-      };
-      if (!manual && handled) {
-        await prefs.setString(_lastPromptedVersionKey, latestVersion);
+      if (action == _UpdateAction.skip) {
+        await prefs.setString(_skippedVersionKey, latestVersion);
+      }
+      if (!context.mounted) return true;
+
+      switch (action) {
+        case _UpdateAction.later || _UpdateAction.skip:
+          break;
+        case _UpdateAction.github:
+          await _openExternal(context, result.latestRelease.releaseUrl);
+        case _UpdateAction.website:
+          if (context.mounted) {
+            await _handleWebsiteUpdate(
+              context,
+              result.latestRelease,
+              downloadService ?? AppUpdateDownloadService(),
+            );
+          }
       }
       return true;
     } catch (_) {
@@ -182,77 +184,269 @@ class _UpdateDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final palette = PageStyleHelper.palette(context);
     final release = result.latestRelease;
     final notes = release.notes.isEmpty ? l10n.updateNotesEmpty : release.notes;
+    final media = MediaQuery.of(context);
+    final maxHeight = media.size.height * 0.88;
 
-    return AlertDialog(
-      icon: const Icon(Icons.system_update_alt_rounded),
-      title: Text(l10n.updateAvailableTitle),
-      content: SizedBox(
-        width: 520,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l10n.updateVersionSummary(result.currentVersion, release.version),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              l10n.updateNotesTitle,
-              style: Theme.of(
-                context,
-              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 8),
-            Flexible(
-              child: Container(
-                constraints: const BoxConstraints(maxHeight: 300),
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 24),
+      clipBehavior: Clip.antiAlias,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: 620, maxHeight: maxHeight),
+        child: Material(
+          color: palette.cardStrong,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.fromLTRB(22, 20, 22, 18),
                 decoration: BoxDecoration(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
-                  borderRadius: BorderRadius.circular(12),
+                  color: palette.hero,
+                  border: Border(bottom: BorderSide(color: palette.border)),
                 ),
-                child: SingleChildScrollView(child: SelectableText(notes)),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: scheme.primaryContainer,
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          alignment: Alignment.center,
+                          child: Icon(
+                            Icons.auto_stories_rounded,
+                            color: scheme.onPrimaryContainer,
+                            size: 27,
+                          ),
+                        ),
+                        Positioned(
+                          right: -5,
+                          bottom: -5,
+                          child: Container(
+                            width: 22,
+                            height: 22,
+                            decoration: BoxDecoration(
+                              color: scheme.primary,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: palette.hero, width: 2),
+                            ),
+                            alignment: Alignment.center,
+                            child: Icon(
+                              Icons.arrow_upward_rounded,
+                              color: scheme.onPrimary,
+                              size: 14,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.updateAvailableTitle,
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              color: scheme.onSurface,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.4,
+                            ),
+                          ),
+                          const SizedBox(height: 11),
+                          Semantics(
+                            label: l10n.updateVersionSummary(
+                              result.currentVersion,
+                              release.version,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                _VersionBadge(
+                                  version: result.currentVersion,
+                                  foreground: scheme.onSurfaceVariant,
+                                  background: scheme.surface.withValues(
+                                    alpha: 0.62,
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                  ),
+                                  child: Icon(
+                                    Icons.arrow_forward_rounded,
+                                    size: 17,
+                                    color: scheme.primary,
+                                  ),
+                                ),
+                                _VersionBadge(
+                                  version: release.version,
+                                  foreground: scheme.onPrimaryContainer,
+                                  background: scheme.primaryContainer,
+                                  emphasized: true,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+              Flexible(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(22, 18, 22, 8),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.notes_rounded,
+                            size: 19,
+                            color: scheme.primary,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            l10n.updateNotesTitle,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              color: scheme.onSurface,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Flexible(
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.fromLTRB(16, 15, 16, 3),
+                          decoration: BoxDecoration(
+                            color: palette.card,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: palette.border),
+                          ),
+                          child: SingleChildScrollView(
+                            child: ReleaseNotesMarkdown(
+                              data: notes,
+                              onTapLink: (uri) =>
+                                  UpdatePromptController._openExternal(
+                                    context,
+                                    uri,
+                                  ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
+                decoration: BoxDecoration(
+                  color: palette.cardStrong,
+                  border: Border(top: BorderSide(color: palette.border)),
+                ),
+                child: Wrap(
+                  alignment: WrapAlignment.end,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    TextButton.icon(
+                      onPressed: () =>
+                          Navigator.of(context).pop(_UpdateAction.skip),
+                      icon: const Icon(Icons.visibility_off_outlined, size: 18),
+                      label: Text(l10n.updateSkipVersion),
+                    ),
+                    TextButton(
+                      onPressed: () =>
+                          Navigator.of(context).pop(_UpdateAction.later),
+                      child: Text(l10n.updateLater),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: () =>
+                          Navigator.of(context).pop(_UpdateAction.github),
+                      icon: const Icon(Icons.open_in_new_rounded, size: 18),
+                      label: Text(l10n.updateFromGithub),
+                    ),
+                    FilledButton.icon(
+                      onPressed:
+                          defaultTargetPlatform == TargetPlatform.android &&
+                              !kIsWeb &&
+                              release.websiteAsset == null
+                          ? null
+                          : () => Navigator.of(
+                              context,
+                            ).pop(_UpdateAction.website),
+                      icon: Icon(
+                        defaultTargetPlatform == TargetPlatform.android &&
+                                !kIsWeb
+                            ? Icons.download_rounded
+                            : Icons.language_rounded,
+                        size: 18,
+                      ),
+                      label: Text(
+                        defaultTargetPlatform == TargetPlatform.android &&
+                                !kIsWeb
+                            ? l10n.updateFromWebsiteInstall
+                            : l10n.updateFromWebsite,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(_UpdateAction.later),
-          child: Text(l10n.updateLater),
-        ),
-        OutlinedButton.icon(
-          onPressed: () => Navigator.of(context).pop(_UpdateAction.github),
-          icon: const Icon(Icons.open_in_new_rounded),
-          label: Text(l10n.updateFromGithub),
-        ),
-        FilledButton.icon(
-          onPressed:
-              defaultTargetPlatform == TargetPlatform.android &&
-                  !kIsWeb &&
-                  release.websiteAsset == null
-              ? null
-              : () => Navigator.of(context).pop(_UpdateAction.website),
-          icon: Icon(
-            defaultTargetPlatform == TargetPlatform.android && !kIsWeb
-                ? Icons.download_rounded
-                : Icons.language_rounded,
-          ),
-          label: Text(
-            defaultTargetPlatform == TargetPlatform.android && !kIsWeb
-                ? l10n.updateFromWebsiteInstall
-                : l10n.updateFromWebsite,
-          ),
-        ),
-      ],
     );
   }
+}
+
+class _VersionBadge extends StatelessWidget {
+  const _VersionBadge({
+    required this.version,
+    required this.foreground,
+    required this.background,
+    this.emphasized = false,
+  });
+
+  final String version;
+  final Color foreground;
+  final Color background;
+  final bool emphasized;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+    decoration: BoxDecoration(
+      color: background,
+      borderRadius: BorderRadius.circular(99),
+    ),
+    child: Text(
+      'v$version',
+      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+        color: foreground,
+        fontWeight: emphasized ? FontWeight.w800 : FontWeight.w600,
+        fontFeatures: const [FontFeature.tabularFigures()],
+      ),
+    ),
+  );
 }
 
 class _WebsiteUpdateProgressDialog extends StatefulWidget {

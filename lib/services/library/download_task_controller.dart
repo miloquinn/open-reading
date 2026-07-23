@@ -52,14 +52,20 @@ class BookDownloadTask {
   );
 }
 
-/// Owns in-app book download queue state while the application is running.
-/// Android adds a foreground service for the active task so the same work can
+/// Owns the bounded in-app book download queue while the application runs.
+/// Android mirrors active tasks to a foreground service so the same work can
 /// continue after the UI is backgrounded.
 class DownloadTaskController extends ChangeNotifier {
+  DownloadTaskController({this.maxConcurrentDownloads = 2})
+    : assert(maxConcurrentDownloads > 0);
+
+  final int maxConcurrentDownloads;
   final List<BookDownloadTask> _tasks = <BookDownloadTask>[];
   final Map<String, BookDownloadCancellation> _cancellations =
       <String, BookDownloadCancellation>{};
-  bool _workerRunning = false;
+  final Map<String, BookSourceShelfService> _shelfServices =
+      <String, BookSourceShelfService>{};
+  final Set<String> _activeTaskIds = <String>{};
 
   List<BookDownloadTask> get tasks => List.unmodifiable(_tasks);
 
@@ -102,8 +108,9 @@ class DownloadTaskController extends ChangeNotifier {
       ),
     );
     _cancellations[id] = BookDownloadCancellation();
+    _shelfServices[id] = shelfService;
     notifyListeners();
-    unawaited(_runQueue(shelfService));
+    _scheduleQueuedTasks();
     return id;
   }
 
@@ -119,135 +126,148 @@ class DownloadTaskController extends ChangeNotifier {
     _replace(index, task.copyWith(state: DownloadTaskState.cancelled));
     if (task.state == DownloadTaskState.queued) {
       _cancellations.remove(id);
+      _shelfServices.remove(id);
     }
     return true;
   }
 
-  Future<void> _runQueue(BookSourceShelfService shelfService) async {
-    if (_workerRunning) return;
-    _workerRunning = true;
+  void _scheduleQueuedTasks() {
+    while (_activeTaskIds.length < maxConcurrentDownloads) {
+      // Tasks are inserted at the front for newest-first display, so select
+      // from the back to preserve FIFO execution order.
+      final index = _tasks.lastIndexWhere(
+        (task) => task.state == DownloadTaskState.queued,
+      );
+      if (index < 0) return;
+      final task = _tasks[index];
+      final shelfService = _shelfServices[task.id];
+      if (shelfService == null) {
+        _replace(
+          index,
+          task.copyWith(
+            state: DownloadTaskState.failed,
+            error: StateError('Download service is unavailable.'),
+          ),
+        );
+        continue;
+      }
+      _activeTaskIds.add(task.id);
+      _replace(index, task.copyWith(state: DownloadTaskState.downloading));
+      unawaited(_runTask(task.id, shelfService));
+    }
+  }
+
+  Future<void> _runTask(
+    String taskId,
+    BookSourceShelfService shelfService,
+  ) async {
+    final initialIndex = _tasks.indexWhere((task) => task.id == taskId);
+    if (initialIndex < 0) {
+      _activeTaskIds.remove(taskId);
+      _scheduleQueuedTasks();
+      return;
+    }
+    final task = _tasks[initialIndex];
+    final cancellation =
+        _cancellations[task.id] ??
+        (_cancellations[task.id] = BookDownloadCancellation());
+    final notificationTask = BackgroundDownloadTask(
+      id: task.id,
+      kind: BackgroundDownloadKind.book,
+      title: task.book.title,
+    );
     try {
-      while (true) {
-        final index = _tasks.indexWhere(
-          (task) => task.state == DownloadTaskState.queued,
-        );
-        if (index < 0) return;
-        final task = _tasks[index];
-        final cancellation =
-            _cancellations[task.id] ??
-            (_cancellations[task.id] = BookDownloadCancellation());
-        _replace(index, task.copyWith(state: DownloadTaskState.downloading));
-        final notificationTask = BackgroundDownloadTask(
-          id: task.id,
-          kind: BackgroundDownloadKind.book,
-          title: task.book.title,
-        );
-        try {
-          await _notify(
-            () => BackgroundDownloadNotifier.begin(notificationTask),
-          );
-          final downloaded = await shelfService.downloadToLocal(
-            source: task.source,
-            book: task.book,
-            cancellation: cancellation,
-            onProgress: (completed, total) {
-              final currentIndex = _tasks.indexWhere(
-                (candidate) => candidate.id == task.id,
-              );
-              if (currentIndex < 0 ||
-                  _tasks[currentIndex].state != DownloadTaskState.downloading) {
-                return;
-              }
-              _replace(
-                currentIndex,
-                _tasks[currentIndex].copyWith(
-                  completed: completed,
-                  total: total,
-                ),
-              );
-              unawaited(
-                _notify(
-                  () => BackgroundDownloadNotifier.progress(
-                    notificationTask,
-                    completed: completed,
-                    total: total,
-                  ),
-                ),
-              );
-            },
-          );
-          cancellation.throwIfCancelled();
+      await _notify(() => BackgroundDownloadNotifier.begin(notificationTask));
+      final downloaded = await shelfService.downloadToLocal(
+        source: task.source,
+        book: task.book,
+        cancellation: cancellation,
+        onProgress: (completed, total) {
           final currentIndex = _tasks.indexWhere(
             (candidate) => candidate.id == task.id,
           );
-          if (currentIndex >= 0) {
-            _replace(
-              currentIndex,
-              _tasks[currentIndex].copyWith(
-                state: DownloadTaskState.completed,
-                completed: _tasks[currentIndex].total,
-                downloadedBook: downloaded,
-              ),
-            );
+          if (currentIndex < 0 ||
+              _tasks[currentIndex].state != DownloadTaskState.downloading) {
+            return;
           }
-          await _notify(
-            () => BackgroundDownloadNotifier.completeBook(
-              BackgroundDownloadTask(
-                id: task.id,
-                kind: BackgroundDownloadKind.book,
-                title: task.book.title,
-                bookId: downloaded.id,
+          _replace(
+            currentIndex,
+            _tasks[currentIndex].copyWith(completed: completed, total: total),
+          );
+          unawaited(
+            _notify(
+              () => BackgroundDownloadNotifier.progress(
+                notificationTask,
+                completed: completed,
+                total: total,
               ),
             ),
           );
-          _cancellations.remove(task.id);
-        } on BookDownloadCancelledException {
-          final currentIndex = _tasks.indexWhere(
-            (candidate) => candidate.id == task.id,
-          );
-          if (currentIndex >= 0 &&
-              _tasks[currentIndex].state != DownloadTaskState.cancelled) {
-            _replace(
-              currentIndex,
-              _tasks[currentIndex].copyWith(state: DownloadTaskState.cancelled),
-            );
-          }
-          _cancellations.remove(task.id);
-          await _notify(
-            () => BackgroundDownloadNotifier.cancel(notificationTask),
-          );
-        } catch (error) {
-          final currentIndex = _tasks.indexWhere(
-            (candidate) => candidate.id == task.id,
-          );
-          if (currentIndex >= 0 &&
-              _tasks[currentIndex].state != DownloadTaskState.cancelled) {
-            _replace(
-              currentIndex,
-              _tasks[currentIndex].copyWith(
-                state: DownloadTaskState.failed,
-                error: error,
-              ),
-            );
-          }
-          if (currentIndex >= 0 &&
-              _tasks[currentIndex].state == DownloadTaskState.cancelled) {
-            await _notify(
-              () => BackgroundDownloadNotifier.cancel(notificationTask),
-            );
-          } else {
-            await _notify(
-              () => BackgroundDownloadNotifier.fail(notificationTask),
-            );
-          }
-          _cancellations.remove(task.id);
-        }
+        },
+      );
+      cancellation.throwIfCancelled();
+      final currentIndex = _tasks.indexWhere(
+        (candidate) => candidate.id == task.id,
+      );
+      if (currentIndex >= 0) {
+        _replace(
+          currentIndex,
+          _tasks[currentIndex].copyWith(
+            state: DownloadTaskState.completed,
+            completed: _tasks[currentIndex].total,
+            downloadedBook: downloaded,
+          ),
+        );
+      }
+      await _notify(
+        () => BackgroundDownloadNotifier.completeBook(
+          BackgroundDownloadTask(
+            id: task.id,
+            kind: BackgroundDownloadKind.book,
+            title: task.book.title,
+            bookId: downloaded.id,
+          ),
+        ),
+      );
+    } on BookDownloadCancelledException {
+      final currentIndex = _tasks.indexWhere(
+        (candidate) => candidate.id == task.id,
+      );
+      if (currentIndex >= 0 &&
+          _tasks[currentIndex].state != DownloadTaskState.cancelled) {
+        _replace(
+          currentIndex,
+          _tasks[currentIndex].copyWith(state: DownloadTaskState.cancelled),
+        );
+      }
+      await _notify(() => BackgroundDownloadNotifier.cancel(notificationTask));
+    } catch (error) {
+      final currentIndex = _tasks.indexWhere(
+        (candidate) => candidate.id == task.id,
+      );
+      if (currentIndex >= 0 &&
+          _tasks[currentIndex].state != DownloadTaskState.cancelled) {
+        _replace(
+          currentIndex,
+          _tasks[currentIndex].copyWith(
+            state: DownloadTaskState.failed,
+            error: error,
+          ),
+        );
+      }
+      if (currentIndex >= 0 &&
+          _tasks[currentIndex].state == DownloadTaskState.cancelled) {
+        await _notify(
+          () => BackgroundDownloadNotifier.cancel(notificationTask),
+        );
+      } else {
+        await _notify(() => BackgroundDownloadNotifier.fail(notificationTask));
       }
     } finally {
-      _workerRunning = false;
-      if (_tasks.any((task) => task.state == DownloadTaskState.queued)) {
-        unawaited(_runQueue(shelfService));
-      }
+      _activeTaskIds.remove(task.id);
+      _cancellations.remove(task.id);
+      _shelfServices.remove(task.id);
+      _scheduleQueuedTasks();
     }
   }
 

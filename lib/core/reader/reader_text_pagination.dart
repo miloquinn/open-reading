@@ -44,10 +44,14 @@ class ReaderTextPage {
       displayEnd = 0,
       isChapterTitle = true;
 
+  /// The complete display-text range owned by this page. It may include folded
+  /// leading/trailing blank rows that remain addressable for source coverage.
   final String text;
   final int startOffset;
   final int endOffset;
   final ReaderTextLayout? layout;
+
+  /// Absolute boundaries in [layout] that are actually painted.
   final int displayStart;
   final int displayEnd;
   final bool isChapterTitle;
@@ -173,8 +177,8 @@ List<ReaderTextPage> paginateReaderText({
         startOffset: layout.sourceOffsetForDisplayOffset(range.start),
         endOffset: layout.sourceOffsetForDisplayOffset(range.end),
         layout: layout,
-        displayStart: range.start,
-        displayEnd: range.end,
+        displayStart: range.visibleStart,
+        displayEnd: range.visibleEnd,
       ),
     ),
   );

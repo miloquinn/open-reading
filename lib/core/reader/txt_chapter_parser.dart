@@ -16,6 +16,8 @@ class TxtChapterSection {
     required this.bodyStart,
     required this.bodyEnd,
     required this.isNeedSplitTitle,
+    this.sourceChapterId,
+    this.sourceBodyStart = 0,
   });
 
   final String id;
@@ -23,6 +25,8 @@ class TxtChapterSection {
   final int bodyStart;
   final int bodyEnd;
   final bool isNeedSplitTitle;
+  final String? sourceChapterId;
+  final int sourceBodyStart;
 
   String bodyIn(String source) => source.substring(bodyStart, bodyEnd);
 }
@@ -82,6 +86,71 @@ List<TxtChapterSection> parseTxtChapterSections(
     );
   }
   return chapters;
+}
+
+/// Breaks every oversized TXT chapter into bounded lazy-load sections.
+///
+/// Without this guard, either a heading-less 70 MB document or one unusually
+/// large recognized chapter can still be synchronously decoded and paginated
+/// on the UI isolate. The indexer persists these ranges so the reader only
+/// loads the current small part.
+List<TxtChapterSection> splitOversizedTxtSections(
+  String text,
+  List<TxtChapterSection> sections, {
+  int maxCharsPerSection = 32 * 1024,
+}) {
+  assert(maxCharsPerSection > 0);
+  final result = <TxtChapterSection>[];
+  for (final source in sections) {
+    if (source.bodyEnd - source.bodyStart <= maxCharsPerSection) {
+      result.add(source);
+      continue;
+    }
+    final ranges = <(int, int)>[];
+    var start = source.bodyStart;
+    while (start < source.bodyEnd) {
+      final targetEnd = (start + maxCharsPerSection).clamp(
+        start,
+        source.bodyEnd,
+      );
+      final end = targetEnd == source.bodyEnd
+          ? source.bodyEnd
+          : _nearbyLineBoundary(text, start: start, targetEnd: targetEnd);
+      ranges.add((start, end));
+      start = end;
+    }
+    for (var index = 0; index < ranges.length; index++) {
+      final range = ranges[index];
+      result.add(
+        TxtChapterSection(
+          id: index == 0 ? source.id : '${source.id}-part-$index',
+          title: index == 0
+              ? source.title
+              : '${source.title} · ${index + 1}/${ranges.length}',
+          bodyStart: range.$1,
+          bodyEnd: range.$2,
+          isNeedSplitTitle: index == 0 && source.isNeedSplitTitle,
+          sourceChapterId: source.id,
+          sourceBodyStart: range.$1 - source.bodyStart,
+        ),
+      );
+    }
+  }
+  return result;
+}
+
+int _nearbyLineBoundary(
+  String text, {
+  required int start,
+  required int targetEnd,
+}) {
+  final searchStart = (targetEnd - 16 * 1024).clamp(start + 1, targetEnd);
+  for (var cursor = targetEnd; cursor > searchStart; cursor--) {
+    final candidate = cursor - 1;
+    if (!isReaderLineBreakCodeUnit(text.codeUnitAt(candidate))) continue;
+    return candidate + readerLineBreakLengthAt(text, candidate);
+  }
+  return targetEnd;
 }
 
 List<_TxtChapterMatch> _findTxtChapterMatches(String text) {

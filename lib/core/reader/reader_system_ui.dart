@@ -47,20 +47,26 @@ class ReaderSystemUiController {
     await prefs.setString(preferenceKey, style.name);
   }
 
-  static Future<ReaderTopBarStyle> applySavedPreference() async {
+  static Future<ReaderTopBarStyle> applySavedPreference({
+    SystemUiOverlayStyle? overlayStyle,
+  }) async {
     final style = await loadPreference();
-    await apply(style: style);
+    await apply(style: style, overlayStyle: overlayStyle);
     return style;
   }
 
-  static Future<void> apply({required ReaderTopBarStyle style}) async {
+  static Future<void> apply({
+    required ReaderTopBarStyle style,
+    SystemUiOverlayStyle? overlayStyle,
+  }) async {
     final showStatusBar = style == ReaderTopBarStyle.system;
+    var handledByHost = false;
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
       try {
         await _androidChannel.invokeMethod<void>(
           showStatusBar ? 'showReaderStatusBar' : 'hideSystemUI',
         );
-        return;
+        handledByHost = true;
       } on MissingPluginException {
         // Isolated widget tests and add-to-app previews may not have a host.
       } on PlatformException {
@@ -80,14 +86,19 @@ class ReaderSystemUiController {
       }
     }
 
-    if (showStatusBar) {
-      await SystemChrome.setEnabledSystemUIMode(
-        SystemUiMode.manual,
-        overlays: const [SystemUiOverlay.top],
-      );
-      return;
+    if (!handledByHost) {
+      if (showStatusBar) {
+        await SystemChrome.setEnabledSystemUIMode(
+          SystemUiMode.manual,
+          overlays: const [SystemUiOverlay.top],
+        );
+      } else {
+        await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+      }
     }
-    await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    if (overlayStyle != null) {
+      SystemChrome.setSystemUIOverlayStyle(overlayStyle);
+    }
   }
 
   static Future<void> restore() async {

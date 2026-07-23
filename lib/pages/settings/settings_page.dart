@@ -19,6 +19,9 @@ import 'package:xxread/pages/home/home_mobile_chrome.dart';
 import 'package:xxread/pages/home/home_shell_page.dart';
 import 'package:xxread/pages/settings/about/changelog_page.dart';
 import 'package:xxread/pages/settings/about/open_source_licenses_page.dart';
+import 'package:xxread/pages/settings/cache_management_page.dart';
+import 'package:xxread/pages/settings/floating_navigation_settings_page.dart';
+import 'package:xxread/pages/settings/library_layout_settings_page.dart';
 import 'package:xxread/pages/settings/sync/webdav_sync_page.dart';
 import 'package:xxread/reader_core/ai/ai_service.dart';
 import 'package:xxread/services/core/core_services.dart';
@@ -26,6 +29,7 @@ import 'package:xxread/services/core/online_font_models.dart';
 import 'package:xxread/services/sync/sync_models.dart';
 import 'package:xxread/services/sync/webdav_sync_controller.dart';
 import 'package:xxread/utils/app_themes.dart';
+import 'package:xxread/utils/app_themes_translator.dart';
 import 'package:xxread/utils/font_catalog_helper.dart';
 import 'package:xxread/utils/localization_extension.dart';
 import 'package:xxread/utils/page_style_helper.dart';
@@ -33,6 +37,7 @@ import 'package:xxread/utils/reader_themes.dart';
 import 'package:xxread/utils/system_ui_helper.dart';
 import 'package:xxread/utils/ui_style.dart';
 import 'package:xxread/widgets/app_brand_icon.dart';
+import 'package:xxread/widgets/accent_color_picker_sheet.dart';
 import 'package:xxread/widgets/contributors_view.dart';
 import 'package:xxread/widgets/developer_support_card.dart';
 import 'package:xxread/widgets/reader_settings_controls.dart';
@@ -197,8 +202,6 @@ class _SettingsPageState extends State<SettingsPage> {
   int _lastSupportRevealRequest = 0;
   AppCacheUsage? _cacheUsage;
   bool _loadingCacheUsage = true;
-  final Set<AppCacheCategory> _clearingCacheCategories = {};
-  bool _clearingAllCaches = false;
 
   @override
   void initState() {
@@ -462,121 +465,13 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
-  Future<void> _clearCacheCategory(AppCacheCategory category) async {
-    if (_clearingCacheCategories.contains(category) || _clearingAllCaches) {
-      return;
-    }
-    final confirmed = await _confirmCacheClear(
-      title: _cacheCategoryTitle(category),
+  Future<void> _openCacheManagement() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => CacheManagementPage(cacheManager: _cacheManager),
+      ),
     );
-    if (!confirmed || !mounted) return;
-    setState(() => _clearingCacheCategories.add(category));
-    try {
-      await _cacheManager.clear(category);
-      await _refreshCacheUsage();
-      if (mounted) {
-        showSideToast(
-          context,
-          context.l10n.settingsCacheCleared,
-          kind: SideToastKind.success,
-        );
-      }
-    } catch (_) {
-      if (mounted) {
-        showSideToast(
-          context,
-          context.l10n.settingsCacheClearFailed,
-          kind: SideToastKind.error,
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _clearingCacheCategories.remove(category));
-      }
-    }
-  }
-
-  Future<void> _clearAllCaches() async {
-    if (_clearingAllCaches || _clearingCacheCategories.isNotEmpty) return;
-    final confirmed = await _confirmCacheClear(
-      title: context.l10n.settingsCacheClearAll,
-    );
-    if (!confirmed || !mounted) return;
-    setState(() => _clearingAllCaches = true);
-    try {
-      await _cacheManager.clearAll();
-      await _refreshCacheUsage();
-      if (mounted) {
-        showSideToast(
-          context,
-          context.l10n.settingsCacheCleared,
-          kind: SideToastKind.success,
-        );
-      }
-    } catch (_) {
-      if (mounted) {
-        showSideToast(
-          context,
-          context.l10n.settingsCacheClearFailed,
-          kind: SideToastKind.error,
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _clearingAllCaches = false);
-    }
-  }
-
-  Future<bool> _confirmCacheClear({required String title}) async {
-    return await showDialog<bool>(
-          context: context,
-          builder: (dialogContext) => AlertDialog(
-            title: Text(title),
-            content: Text(context.l10n.settingsCacheClearConfirm),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext, false),
-                child: Text(
-                  MaterialLocalizations.of(context).cancelButtonLabel,
-                ),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(dialogContext, true),
-                child: Text(context.l10n.settingsCacheClearAction),
-              ),
-            ],
-          ),
-        ) ??
-        false;
-  }
-
-  String _cacheCategoryTitle(AppCacheCategory category) => switch (category) {
-    AppCacheCategory.sourceCovers => context.l10n.settingsCacheSourceCovers,
-    AppCacheCategory.sourceData => context.l10n.settingsCacheSourceData,
-    AppCacheCategory.temporaryFiles => context.l10n.settingsCacheTemporaryFiles,
-  };
-
-  String _cacheCategorySubtitle(AppCacheCategory category) {
-    if (_loadingCacheUsage) return context.l10n.settingsCacheCalculating;
-    final bytes = _cacheUsage?.bytesFor(category) ?? 0;
-    final size = AppCacheManager.formatBytes(bytes);
-    return switch (category) {
-      AppCacheCategory.sourceCovers =>
-        context.l10n.settingsCacheSourceCoversSubtitle(size),
-      AppCacheCategory.sourceData =>
-        context.l10n.settingsCacheSourceDataSubtitle(size),
-      AppCacheCategory.temporaryFiles =>
-        context.l10n.settingsCacheTemporaryFilesSubtitle(size),
-    };
-  }
-
-  Widget _cacheTrailing(AppCacheCategory category) {
-    if (_clearingCacheCategories.contains(category)) {
-      return const SizedBox.square(
-        dimension: 20,
-        child: CircularProgressIndicator(strokeWidth: 2),
-      );
-    }
-    return const Icon(Icons.delete_outline_rounded);
+    if (mounted) await _refreshCacheUsage();
   }
 
   Future<void> _saveSettings() async {
@@ -1059,17 +954,30 @@ class _SettingsPageState extends State<SettingsPage> {
             children: [
               _buildUiStyleSelector(themeNotifier),
               _buildThemeToggle(themeNotifier),
-              _buildAppThemeSelector(themeNotifier),
               _buildAccentColorSelector(themeNotifier),
-              _buildLibraryLayoutSelector(appSettings),
-              _buildSwitchSetting(
-                title: l10n.settingsHideNavigationLabelsTitle,
-                subtitle: l10n.settingsHideNavigationLabelsSubtitle,
-                value: appSettings.hideNavigationLabels,
-                onChanged: (value) =>
-                    unawaited(appSettings.setHideNavigationLabels(value)),
-                icon: Icons.label_off_outlined,
-                persistPageSettings: false,
+              _buildActionSetting(
+                title: l10n.settingsLibraryLayoutTitle,
+                subtitle: l10n.settingsCurrentValue(
+                  appSettings.libraryLayoutMode == LibraryLayoutMode.card
+                      ? l10n.settingsLibraryLayoutCard
+                      : l10n.settingsLibraryLayoutGrid,
+                ),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const LibraryLayoutSettingsPage(),
+                  ),
+                ),
+                icon: Icons.view_module_outlined,
+              ),
+              _buildActionSetting(
+                title: l10n.settingsFloatingNavigationTitle,
+                subtitle: l10n.settingsFloatingNavigationSubtitle,
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const FloatingNavigationSettingsPage(),
+                  ),
+                ),
+                icon: Icons.dock_outlined,
               ),
             ],
           ),
@@ -1134,44 +1042,17 @@ class _SettingsPageState extends State<SettingsPage> {
                 icon: Icons.cloud_outlined,
                 trailing: _webDavSyncTrailing(webDavSync),
               ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          _buildSectionCard(
-            title: l10n.settingsCacheManagementTitle,
-            icon: Icons.cleaning_services_outlined,
-            children: [
-              for (final category in AppCacheCategory.values)
-                _buildActionSetting(
-                  title: _cacheCategoryTitle(category),
-                  subtitle: _cacheCategorySubtitle(category),
-                  onTap: () => unawaited(_clearCacheCategory(category)),
-                  icon: switch (category) {
-                    AppCacheCategory.sourceCovers => Icons.image_outlined,
-                    AppCacheCategory.sourceData =>
-                      Icons.travel_explore_outlined,
-                    AppCacheCategory.temporaryFiles =>
-                      Icons.folder_delete_outlined,
-                  },
-                  trailing: _cacheTrailing(category),
-                ),
               _buildActionSetting(
-                title: l10n.settingsCacheClearAll,
-                subtitle: l10n.settingsCacheClearAllSubtitle(
+                title: l10n.settingsCacheManagementTitle,
+                subtitle: l10n.settingsCacheManagementSubtitle(
                   _loadingCacheUsage
                       ? l10n.settingsCacheCalculating
                       : AppCacheManager.formatBytes(
                           _cacheUsage?.totalBytes ?? 0,
                         ),
                 ),
-                onTap: () => unawaited(_clearAllCaches()),
-                icon: Icons.delete_sweep_outlined,
-                trailing: _clearingAllCaches
-                    ? const SizedBox.square(
-                        dimension: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.delete_forever_outlined),
+                onTap: () => unawaited(_openCacheManagement()),
+                icon: Icons.cleaning_services_outlined,
               ),
             ],
           ),
@@ -2327,226 +2208,14 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildLibraryLayoutSelector(AppSettingsNotifier appSettings) {
-    final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: scheme.tertiary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Icon(
-                  Icons.view_module_outlined,
-                  size: 16,
-                  color: scheme.tertiary,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.settingsLibraryLayoutTitle,
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    Text(
-                      l10n.settingsLibraryLayoutSubtitle,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurface.withValues(alpha: 0.6),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: SegmentedButton<LibraryLayoutMode>(
-              key: const ValueKey('settings-library-layout-selector'),
-              showSelectedIcon: false,
-              expandedInsets: EdgeInsets.zero,
-              segments: [
-                ButtonSegment(
-                  value: LibraryLayoutMode.card,
-                  icon: const Icon(Icons.view_agenda_outlined),
-                  label: Text(l10n.settingsLibraryLayoutCard),
-                ),
-                ButtonSegment(
-                  value: LibraryLayoutMode.grid,
-                  icon: const Icon(Icons.grid_view_rounded),
-                  label: Text(l10n.settingsLibraryLayoutGrid),
-                ),
-              ],
-              selected: {appSettings.libraryLayoutMode},
-              onSelectionChanged: (selection) {
-                if (selection.isEmpty) return;
-                unawaited(appSettings.setLibraryLayoutMode(selection.first));
-              },
-              style: ButtonStyle(
-                minimumSize: const WidgetStatePropertyAll(Size(44, 44)),
-                side: WidgetStatePropertyAll(
-                  BorderSide(color: scheme.outlineVariant),
-                ),
-              ),
-            ),
-          ),
-          if (appSettings.libraryLayoutMode == LibraryLayoutMode.grid) ...[
-            const SizedBox(height: 14),
-            Text(
-              l10n.settingsLibraryGridColumnsTitle,
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                color: scheme.onSurfaceVariant,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            SizedBox(
-              width: double.infinity,
-              child: SegmentedButton<int>(
-                key: const ValueKey('settings-library-grid-columns'),
-                showSelectedIcon: false,
-                expandedInsets: EdgeInsets.zero,
-                segments: [
-                  ButtonSegment(
-                    value: 2,
-                    icon: const Icon(Icons.view_column_outlined),
-                    label: Text(l10n.settingsLibraryGridTwoColumns),
-                  ),
-                  ButtonSegment(
-                    value: 3,
-                    icon: const Icon(Icons.view_week_outlined),
-                    label: Text(l10n.settingsLibraryGridThreeColumns),
-                  ),
-                ],
-                selected: {appSettings.libraryGridColumns},
-                onSelectionChanged: (selection) {
-                  if (selection.isEmpty) return;
-                  unawaited(appSettings.setLibraryGridColumns(selection.first));
-                },
-                style: ButtonStyle(
-                  minimumSize: const WidgetStatePropertyAll(Size(44, 44)),
-                  side: WidgetStatePropertyAll(
-                    BorderSide(color: scheme.outlineVariant),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            SwitchListTile.adaptive(
-              key: const ValueKey('settings-library-grid-show-details'),
-              contentPadding: EdgeInsets.zero,
-              title: Text(
-                l10n.settingsLibraryGridShowDetailsTitle,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-              ),
-              subtitle: Text(
-                l10n.settingsLibraryGridShowDetailsSubtitle,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
-              ),
-              value: appSettings.libraryGridShowDetails,
-              onChanged: (value) =>
-                  unawaited(appSettings.setLibraryGridShowDetails(value)),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAppThemeSelector(ThemeNotifier themeNotifier) {
-    final l10n = context.l10n;
-    final accentSummary = themeNotifier.isUsingThemeAccent
-        ? l10n.settingsAccentFollowTheme
-        : l10n.settingsAccentValue(
-            AppThemes.getAccentColorName(themeNotifier.effectiveAccentColor!),
-          );
-    return Container(
-      margin: const EdgeInsets.only(bottom: 1),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => _showAppThemeModal(themeNotifier),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Icon(
-                    AppThemes.getThemeIcon(themeNotifier.currentAppTheme.name),
-                    size: 16,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l10n.settingsAppThemeTitle,
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      Text(
-                        l10n.settingsCurrentThemeSummary(
-                          themeNotifier.currentAppTheme.displayName,
-                          accentSummary,
-                        ),
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withValues(alpha: 0.6),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  Icons.arrow_forward_ios,
-                  size: 16,
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onSurface.withValues(alpha: 0.4),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildAccentColorSelector(ThemeNotifier themeNotifier) {
     final l10n = context.l10n;
-    final accentColor = themeNotifier.effectiveAccentColor;
-    final subtitle = accentColor == null
-        ? l10n.settingsFollowAppTheme
-        : AppThemes.getAccentColorName(accentColor);
+    final accentColor = themeNotifier.accentColor;
+    final colorName = accentColorDisplayName(
+      context,
+      AppThemes.getAccentColorName(accentColor),
+    );
+    final subtitle = '$colorName · ${_hexColor(accentColor)}';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 1),
@@ -2594,21 +2263,20 @@ class _SettingsPageState extends State<SettingsPage> {
                     ],
                   ),
                 ),
-                if (accentColor != null)
-                  Container(
-                    width: 24,
-                    height: 24,
-                    margin: const EdgeInsets.only(right: 8),
-                    decoration: BoxDecoration(
-                      color: accentColor,
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.outline.withValues(alpha: 0.3),
-                      ),
+                Container(
+                  width: 24,
+                  height: 24,
+                  margin: const EdgeInsets.only(right: 8),
+                  decoration: BoxDecoration(
+                    color: accentColor,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.outline.withValues(alpha: 0.3),
                     ),
                   ),
+                ),
                 Icon(
                   Icons.arrow_forward_ios,
                   size: 16,
@@ -3516,439 +3184,19 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  void _showAppThemeModal(ThemeNotifier themeNotifier) {
-    final l10n = context.l10n;
-    showModalBottomSheet(
+  Future<void> _showAccentColorModal(ThemeNotifier themeNotifier) async {
+    final selectedColor = await showModalBottomSheet<Color>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
+      enableDrag: true,
+      showDragHandle: false,
       backgroundColor: Colors.transparent,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) {
-          return Container(
-            height: MediaQuery.of(context).size.height * 0.65,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(28),
-              ),
-            ),
-            child: Column(
-              children: [
-                // 拖拽指示条
-                Container(
-                  margin: const EdgeInsets.only(top: 12, bottom: 16),
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                // 标题
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.palette,
-                        color: Theme.of(context).colorScheme.primary,
-                        size: 24,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        l10n.settingsSelectAppTheme,
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
-                // 主题网格
-                Expanded(
-                  child: GridView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          childAspectRatio: 1.3,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                        ),
-                    itemCount: AppThemes.allThemes.length,
-                    itemBuilder: (context, index) {
-                      final theme = AppThemes.allThemes[index];
-                      final isSelected =
-                          theme.name == themeNotifier.currentAppTheme.name;
-
-                      return GestureDetector(
-                        onTap: () {
-                          themeNotifier.setAppTheme(theme);
-                          setModalState(() {});
-                        },
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: isSelected
-                                  ? theme.lightColorScheme.primary
-                                  : Theme.of(context).colorScheme.outline
-                                        .withValues(alpha: 0.2),
-                              width: isSelected ? 3 : 1,
-                            ),
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                theme.lightColorScheme.primaryContainer,
-                                theme.lightColorScheme.secondaryContainer,
-                              ],
-                            ),
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: theme.lightColorScheme.primary
-                                      .withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Icon(
-                                  AppThemes.getThemeIcon(theme.name),
-                                  color: theme.lightColorScheme.primary,
-                                  size: 28,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                theme.displayName,
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                  color: theme.lightColorScheme.onSurface,
-                                ),
-                              ),
-                              if (isSelected) ...[
-                                const SizedBox(height: 6),
-                                Icon(
-                                  Icons.check_circle,
-                                  color: theme.lightColorScheme.primary,
-                                  size: 18,
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                // 底部按钮
-                Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    24,
-                    12,
-                    24,
-                    MediaQuery.of(context).padding.bottom + 12,
-                  ),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: Text(
-                        l10n.settingsDone,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
+      builder: (context) =>
+          AccentColorPickerSheet(initialColor: themeNotifier.accentColor),
     );
-  }
-
-  void _showAccentColorModal(ThemeNotifier themeNotifier) {
-    final l10n = context.l10n;
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) {
-          final selectedColor = themeNotifier.effectiveAccentColor;
-          return Container(
-            height: MediaQuery.of(context).size.height * 0.58,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(28),
-              ),
-            ),
-            child: Column(
-              children: [
-                Container(
-                  margin: const EdgeInsets.only(top: 12, bottom: 20),
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.color_lens_rounded,
-                        color: Theme.of(context).colorScheme.primary,
-                        size: 24,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        l10n.settingsAccentColorTitle,
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w700,
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Text(
-                    l10n.settingsAccentColorAdvice,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withValues(alpha: 0.7),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () async {
-                        await themeNotifier.setAccentColor(null);
-                        setModalState(() {});
-                      },
-                      borderRadius: BorderRadius.circular(12),
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: selectedColor == null
-                                ? Theme.of(context).colorScheme.primary
-                                : Theme.of(
-                                    context,
-                                  ).colorScheme.outline.withValues(alpha: 0.3),
-                            width: 2,
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.auto_awesome,
-                              color: selectedColor == null
-                                  ? Theme.of(context).colorScheme.primary
-                                  : Theme.of(context).colorScheme.onSurface
-                                        .withValues(alpha: 0.6),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    l10n.settingsAccentFollowThemeOption,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      color: selectedColor == null
-                                          ? Theme.of(
-                                              context,
-                                            ).colorScheme.primary
-                                          : Theme.of(
-                                              context,
-                                            ).colorScheme.onSurface,
-                                    ),
-                                  ),
-                                  Text(
-                                    l10n.settingsAccentFollowThemeDesc,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface
-                                          .withValues(alpha: 0.6),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            if (selectedColor == null)
-                              Icon(
-                                Icons.check_circle,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Expanded(
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 24),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .surfaceContainerHighest
-                          .withValues(alpha: 0.3),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.outline.withValues(alpha: 0.2),
-                      ),
-                    ),
-                    child: GridView.builder(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 4,
-                            crossAxisSpacing: 12,
-                            mainAxisSpacing: 12,
-                            childAspectRatio: 1.2,
-                          ),
-                      itemCount: AppThemes.accentColors.length,
-                      itemBuilder: (context, index) {
-                        final color = AppThemes.accentColors[index];
-                        final isSelected =
-                            selectedColor?.toARGB32() == color.toARGB32();
-                        final colorName = AppThemes.getAccentColorName(color);
-
-                        return GestureDetector(
-                          onTap: () async {
-                            await themeNotifier.setAccentColor(color);
-                            setModalState(() {});
-                          },
-                          child: Column(
-                            children: [
-                              Expanded(
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: color,
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(
-                                      color: isSelected
-                                          ? Theme.of(
-                                              context,
-                                            ).colorScheme.onSurface
-                                          : Colors.transparent,
-                                      width: 2,
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: color.withValues(alpha: 0.3),
-                                        blurRadius: 4,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: isSelected
-                                      ? Icon(
-                                          Icons.check,
-                                          color: color.computeLuminance() > 0.5
-                                              ? Colors.black
-                                              : Colors.white,
-                                          size: 20,
-                                        )
-                                      : null,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                colorName,
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: Theme.of(context).colorScheme.onSurface
-                                      .withValues(alpha: 0.8),
-                                ),
-                                textAlign: TextAlign.center,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    24,
-                    16,
-                    24,
-                    MediaQuery.of(context).padding.bottom + 16,
-                  ),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: Text(
-                        l10n.settingsDone,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
+    if (selectedColor == null || !mounted) return;
+    await themeNotifier.setAccentColor(selectedColor);
   }
 
   Widget _buildSwitchSetting({
@@ -4619,3 +3867,6 @@ class _LanguageOption {
 
   const _LanguageOption({required this.code, required this.label});
 }
+
+String _hexColor(Color color) =>
+    '#${color.toARGB32().toRadixString(16).padLeft(8, '0').substring(2).toUpperCase()}';

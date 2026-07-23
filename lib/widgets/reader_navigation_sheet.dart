@@ -162,21 +162,21 @@ class _ReaderNavigationSheetState extends State<ReaderNavigationSheet>
           .where((entry) => includedPositions.contains(entry.position))
           .toList(growable: false);
     }
-    return entries
-        .where((entry) => !_hasCollapsedAncestor(entry, entries))
-        .toList(growable: false);
-  }
+    if (_collapsedChapterPositions.isEmpty) return entries;
 
-  bool _hasCollapsedAncestor(
-    _ReaderNavigationTreeEntry entry,
-    List<_ReaderNavigationTreeEntry> entries,
-  ) {
-    var position = entry.parentPosition;
-    while (position != null) {
-      if (_collapsedChapterPositions.contains(position)) return true;
-      position = entries[position].parentPosition;
+    final visible = <_ReaderNavigationTreeEntry>[];
+    final collapsedAncestorDepths = <int>[];
+    for (final entry in entries) {
+      while (collapsedAncestorDepths.isNotEmpty &&
+          collapsedAncestorDepths.last >= entry.depth) {
+        collapsedAncestorDepths.removeLast();
+      }
+      if (collapsedAncestorDepths.isEmpty) visible.add(entry);
+      if (_collapsedChapterPositions.contains(entry.position)) {
+        collapsedAncestorDepths.add(entry.depth);
+      }
     }
-    return false;
+    return visible;
   }
 
   void _toggleChapter(_ReaderNavigationTreeEntry entry) {
@@ -219,9 +219,11 @@ class _ReaderNavigationSheetState extends State<ReaderNavigationSheet>
       WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToCurrent());
       return;
     }
-    final visiblePosition = _visibleChapters.indexWhere(
-      (entry) => entry.position == currentPosition,
-    );
+    final visiblePosition = _collapsedChapterPositions.isEmpty
+        ? currentPosition
+        : _visibleChapters.indexWhere(
+            (entry) => entry.position == currentPosition,
+          );
     if (visiblePosition < 0) return;
     final position = _chapterScrollController.position;
     final currentTop = visiblePosition * _chapterExtent;

@@ -181,64 +181,81 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
   }
 
   Future<List<_DiscoveryShelf>> _fetchShelves() async {
-    final batches = await Future.wait(
-      _targets('discover').map((source) async {
-        try {
-          final page = await _client.getDiscovery(source);
-          return page.sections
-              .where((section) => section.items.isNotEmpty)
-              .map(
-                (section) => _DiscoveryShelf(
-                  source: source,
-                  title: section.title,
-                  items: section.items,
-                ),
-              )
-              .toList(growable: false);
-        } catch (_) {
-          return const <_DiscoveryShelf>[];
-        }
-      }),
-    );
+    final batches = await _fetchSourceBatches(_targets('discover'), (
+      source,
+    ) async {
+      final page = await _client.getDiscovery(source);
+      return page.sections
+          .where((section) => section.items.isNotEmpty)
+          .map(
+            (section) => _DiscoveryShelf(
+              source: source,
+              title: section.title,
+              items: section.items,
+            ),
+          )
+          .toList(growable: false);
+    });
     return batches.expand((items) => items).toList(growable: false);
   }
 
   Future<List<_SourcedCategory>> _fetchCategories() async {
-    final batches = await Future.wait(
-      _targets('categories').map((source) async {
-        try {
-          final categories = await _client.getCategories(source);
-          return categories
-              .map(
-                (category) => _SourcedCategory(
-                  source: source,
-                  id: category.id,
-                  name: category.name,
-                ),
-              )
-              .toList(growable: false);
-        } catch (_) {
-          return const <_SourcedCategory>[];
-        }
-      }),
-    );
+    final batches = await _fetchSourceBatches(_targets('categories'), (
+      source,
+    ) async {
+      final categories = await _client.getCategories(source);
+      return categories
+          .map(
+            (category) => _SourcedCategory(
+              source: source,
+              id: category.id,
+              name: category.name,
+            ),
+          )
+          .toList(growable: false);
+    });
     return batches.expand((items) => items).toList(growable: false);
   }
 
   Future<List<SourcedBook>> _fetchLatest() async {
-    final batches = await Future.wait(
-      _targets('browse').map((source) async {
+    final batches = await _fetchSourceBatches(_targets('browse'), (
+      source,
+    ) async {
+      final page = await _client.browse(source, sort: 'latest');
+      return page.items
+          .map((book) => SourcedBook(source: source, book: book))
+          .toList(growable: false);
+    });
+    return BookSourcesPage.interleaveLatestBatches(batches);
+  }
+
+  Future<List<List<T>>> _fetchSourceBatches<T>(
+    List<RegisteredBookSource> sources,
+    Future<List<T>> Function(RegisteredBookSource source) fetch,
+  ) async {
+    final results = await Future.wait(
+      sources.map((source) async {
         try {
-          final page = await _client.browse(source, sort: 'latest');
-          return page.items
-              .map((book) => SourcedBook(source: source, book: book))
-              .toList(growable: false);
-        } catch (_) {
-          return const <SourcedBook>[];
+          return _SourceFetchResult<T>.success(source, await fetch(source));
+        } catch (error) {
+          return _SourceFetchResult<T>.failure(source, error);
         }
       }),
     );
-    return BookSourcesPage.interleaveLatestBatches(batches);
+    final batches = results
+        .where((result) => result.error == null)
+        .map((result) => result.items)
+        .toList(growable: false);
+    final hasContent = batches.any((items) => items.isNotEmpty);
+    final failures = results.where((result) => result.error != null).toList();
+    if (!hasContent && failures.isNotEmpty) {
+      throw BookSourceProtocolException(
+        failures
+            .map((failure) => '${failure.source.name}: ${failure.error}')
+            .join('\n'),
+      );
+    }
+    return batches;
   }
 
   void _autoSelectFirstCategory() {
@@ -580,7 +597,9 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
     if (shelves.isEmpty) {
       return [
         _paddedSectionSliver(
-          _buildUnsupportedMessage('discover'),
+          _sourcesFor(_DiscoverSection.recommended).isEmpty
+              ? _buildUnsupportedMessage('discover')
+              : _buildEmptyMessage(),
           bottomPadding: bottomPadding,
         ),
       ];
@@ -622,7 +641,7 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: shelf.items.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              separatorBuilder: (_, _) => const SizedBox(width: 12),
               itemBuilder: (context, index) {
                 final result = SourcedBook(
                   source: shelf.source,
@@ -650,7 +669,9 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
     if (categories.isEmpty) {
       return [
         _paddedSectionSliver(
-          _buildUnsupportedMessage('categories'),
+          _sourcesFor(_DiscoverSection.categories).isEmpty
+              ? _buildUnsupportedMessage('categories')
+              : _buildEmptyMessage(),
           bottomPadding: bottomPadding,
         ),
       ];
@@ -703,7 +724,9 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
     if (books.isEmpty) {
       return [
         _paddedSectionSliver(
-          _buildUnsupportedMessage('browse'),
+          _sourcesFor(_DiscoverSection.latest).isEmpty
+              ? _buildUnsupportedMessage('browse')
+              : _buildEmptyMessage(),
           bottomPadding: bottomPadding,
         ),
       ];
@@ -719,7 +742,7 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
       padding: EdgeInsets.fromLTRB(16, 0, 16, bottomPadding),
       sliver: SliverList.separated(
         itemCount: books.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 10),
+        separatorBuilder: (_, _) => const SizedBox(height: 10),
         itemBuilder: (context, index) {
           final result = books[index];
           return _centerSectionChild(
@@ -765,6 +788,14 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
           : context.l10n.bookSourcesNoSourcesDescription,
       actionLabel: context.l10n.bookSourceManagementTitle,
       onAction: _openSourceManagement,
+    );
+  }
+
+  Widget _buildEmptyMessage() {
+    return _buildMessageCard(
+      icon: Icons.inbox_outlined,
+      title: context.l10n.discoverEmptyTitle,
+      message: context.l10n.discoverEmptyMessage,
     );
   }
 
@@ -878,6 +909,16 @@ class _SectionCache {
       error = null,
       shelves = null,
       categories = null;
+}
+
+class _SourceFetchResult<T> {
+  final List<T> items;
+  final RegisteredBookSource source;
+  final Object? error;
+
+  const _SourceFetchResult.success(this.source, this.items) : error = null;
+
+  const _SourceFetchResult.failure(this.source, this.error) : items = const [];
 }
 
 class _DiscoveryShelf {

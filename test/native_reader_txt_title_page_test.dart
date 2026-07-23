@@ -11,6 +11,8 @@ import 'package:xxread/models/book.dart';
 import 'package:xxread/pages/reader/native_reader_page.dart';
 import 'package:xxread/utils/book_open_transition.dart';
 import 'package:xxread/utils/reader_themes.dart';
+import 'package:xxread/widgets/reader_navigation_sheet.dart';
+import 'package:xxread/widgets/reader_paper_page_leaf.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -136,10 +138,40 @@ void main() {
       ),
     );
 
-    final placeholder = tester.widget<ColoredBox>(
-      find.byKey(const ValueKey('native-reader-opening-placeholder')),
+    final placeholderBackground = tester.widget<ColoredBox>(
+      find
+          .descendant(
+            of: find.byKey(const ValueKey('native-reader-opening-placeholder')),
+            matching: find.byType(ColoredBox),
+          )
+          .first,
     );
-    expect(placeholder.color, ReaderThemes.pureBlack.background);
+    expect(placeholderBackground.color, ReaderThemes.pureBlack.background);
+
+    expect(
+      tester
+          .widget<AnimatedPositioned>(
+            find.byKey(const ValueKey('native-reader-opening-top-controls')),
+          )
+          .top,
+      -130,
+    );
+    await tester.tapAt(
+      tester
+          .getRect(
+            find.byKey(const ValueKey('native-reader-opening-placeholder')),
+          )
+          .center,
+    );
+    await tester.pump();
+    expect(
+      tester
+          .widgetList<AnimatedPositioned>(
+            find.byKey(const ValueKey('native-reader-opening-top-controls')),
+          )
+          .any((bar) => bar.top == 10),
+      isTrue,
+    );
   });
   testWidgets(
     'vertical paging preserves the dedicated TXT chapter title page',
@@ -197,7 +229,125 @@ void main() {
     },
   );
 
-  testWidgets('TXT initialization waits until the cover route settles', (
+  testWidgets(
+    'horizontal TOC jump mounts the target title on the first frame and keeps the previous page ready',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({
+        ReaderSettingsStore.pageModeKey: ReaderPageMode.horizontalSlide.name,
+      });
+      bookFile.writeAsStringSync(
+        List.generate(8, (chapterIndex) {
+          final chapterNumber = chapterIndex + 1;
+          final title = chapterNumber == 8 ? '第8章 远方' : '第$chapterNumber章 测试章节';
+          final body = List.generate(
+            36,
+            (paragraphIndex) =>
+                '第$chapterNumber章第$paragraphIndex段正文，用于确保上一章末页已经完成分页。',
+          ).join('\n\n');
+          return '$title\n\n$body';
+        }).join('\n\n'),
+      );
+      await tester.binding.setSurfaceSize(const Size(400, 800));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: NativeReaderPage(
+            book: Book(
+              title: '目录远跳测试',
+              filePath: bookFile.path,
+              format: 'txt',
+              textEncoding: 'utf8',
+              fileModifiedTime: bookFile
+                  .lastModifiedSync()
+                  .millisecondsSinceEpoch,
+            ),
+          ),
+        ),
+      );
+      final readerPageView = find.descendant(
+        of: find.byType(NativeReaderPage),
+        matching: find.byType(PageView),
+      );
+      await tester.runAsync(() async {
+        for (var attempt = 0; attempt < 40; attempt++) {
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+          await tester.pump();
+          if (readerPageView.evaluate().isNotEmpty) return;
+        }
+      });
+      await _pumpUntilFound(tester, readerPageView);
+      final originalController = tester
+          .widget<PageView>(readerPageView)
+          .controller!;
+
+      await tester.tapAt(tester.getRect(readerPageView).center);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.format_list_bulleted_rounded));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.descendant(
+          of: find.byType(ReaderNavigationSheet),
+          matching: find.byType(TextField),
+        ),
+        '第8章',
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(
+          of: find.byType(ReaderNavigationSheet),
+          matching: find.text('第8章 远方'),
+        ),
+      );
+      await tester.pump();
+
+      final jumpedController = tester
+          .widget<PageView>(readerPageView)
+          .controller!;
+      expect(jumpedController, isNot(same(originalController)));
+      expect(
+        find.byKey(const ValueKey('native-reader-positioning-placeholder')),
+        findsOneWidget,
+      );
+      await tester.pump();
+      expect(
+        tester
+            .widgetList<Text>(
+              find.byKey(const ValueKey('native-chapter-title-page')),
+            )
+            .any((title) => title.data == '第8章 远方'),
+        isTrue,
+      );
+
+      final titlePage = jumpedController.page!;
+      final previous = jumpedController.previousPage(
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+      );
+      await tester.pumpAndSettle();
+      await previous;
+      final previousPageController = tester
+          .widget<PageView>(readerPageView)
+          .controller!;
+      expect(previousPageController, isNot(same(jumpedController)));
+      final pageView = tester.widget<PageView>(readerPageView);
+      final delegate = pageView.childrenDelegate as SliverChildBuilderDelegate;
+      final visibleLeaf = delegate.builder(
+        tester.element(readerPageView),
+        previousPageController.page!.round(),
+      );
+      expect(visibleLeaf, isA<ReaderPaperPageLeaf>());
+      final metadata = (visibleLeaf! as ReaderPaperPageLeaf).metadata;
+      expect(metadata.chapterTitle, '第7章 测试章节');
+      expect(metadata.pageNumber, metadata.pageCount);
+      expect(titlePage, greaterThan(0));
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('TXT initialization preloads behind the cover route', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(400, 800));
@@ -239,8 +389,11 @@ void main() {
                 .lastModifiedSync()
                 .millisecondsSinceEpoch,
           ),
+          initialTheme: ReaderThemes.day,
         ),
         animation: animation,
+        readerBackgroundColor: ReaderThemes.day.background,
+        waitForReaderReady: true,
       ),
     );
     await tester.pump();
@@ -248,15 +401,11 @@ void main() {
 
     expect(
       find.byKey(const ValueKey('book-open-transition-deferred-page')),
-      findsOneWidget,
-    );
-    expect(find.byType(NativeReaderPage), findsNothing);
-    expect(
-      find.byKey(const ValueKey('native-chapter-title-page')),
       findsNothing,
     );
+    expect(find.byType(NativeReaderPage), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
 
-    await tester.pump(const Duration(milliseconds: 300));
     await tester.runAsync(() async {
       for (var attempt = 0; attempt < 30; attempt++) {
         await Future<void>.delayed(const Duration(milliseconds: 50));
@@ -269,10 +418,17 @@ void main() {
         }
       }
     });
-    await _pumpUntilFound(
-      tester,
+    expect(
       find.byKey(const ValueKey('native-chapter-title-page')),
+      findsOneWidget,
     );
+    final readerOpacity = tester.widget<Opacity>(
+      find.byKey(const ValueKey('book-open-transition-reader-opacity')),
+    );
+    expect(readerOpacity.opacity, lessThan(1));
+
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pumpAndSettle();
   });
 }
 

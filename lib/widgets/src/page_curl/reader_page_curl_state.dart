@@ -56,6 +56,7 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
   _PageTurnPhase _phase = _PageTurnPhase.idle;
   bool _warmScheduled = false;
   bool _warmAfterTurn = false;
+  bool _routeWorkEnabled = false;
   int _captureGeneration = 0;
   int _preparedGeneration = -1;
   int _preparingGeneration = -1;
@@ -76,7 +77,18 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
     widget.controller?._attach(this);
     widget.coordinator?.addListener(_onCoordinatorAvailable);
     unawaited(_loadClassicFoldShader());
-    _scheduleWarmSnapshots();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final routeWorkEnabled =
+        ReaderTransitionWorkScope.enabledOf(context) &&
+        TickerMode.valuesOf(context).enabled;
+    if (_routeWorkEnabled == routeWorkEnabled) return;
+    _routeWorkEnabled = routeWorkEnabled;
+    _captureGeneration++;
+    if (_routeWorkEnabled) _scheduleWarmSnapshots();
   }
 
   @override
@@ -157,11 +169,11 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
   }
 
   void _scheduleWarmSnapshots() {
-    if (_warmScheduled) return;
+    if (_warmScheduled || !_routeWorkEnabled) return;
     _warmScheduled = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _warmScheduled = false;
-      if (!mounted || _viewportSize.isEmpty) return;
+      if (!mounted || !_routeWorkEnabled || _viewportSize.isEmpty) return;
       final generation = _captureGeneration;
       unawaited(_warmSnapshots(generation));
     });
@@ -169,7 +181,9 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
 
   Future<void> _warmSnapshots(int generation) async {
     await _ensureSnapshot(widget.currentPage, _currentKey, generation);
-    if (!mounted || generation != _captureGeneration) return;
+    if (!mounted || !_routeWorkEnabled || generation != _captureGeneration) {
+      return;
+    }
     final adjacentCaptures = <Future<ui.Image?>>[];
     final forward = widget.forwardPage;
     if (forward != null) {
@@ -233,7 +247,7 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
     GlobalKey boundaryKey,
     int generation,
   ) async {
-    if (!mounted || _viewportSize.isEmpty) return null;
+    if (!mounted || !_routeWorkEnabled || _viewportSize.isEmpty) return null;
     final ratio = readerPageSnapshotPixelRatio(
       logicalSize: _viewportSize,
       devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
@@ -277,11 +291,19 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
     required double pixelRatio,
   }) async {
     await _preparePages(generation);
-    if (!mounted || generation != _captureGeneration) return null;
+    if (!mounted || !_routeWorkEnabled || generation != _captureGeneration) {
+      return null;
+    }
     final boundary =
         boundaryKey.currentContext?.findRenderObject()
             as RenderRepaintBoundary?;
     if (boundary == null || !boundary.hasSize) return null;
+    var needsPaint = false;
+    assert(() {
+      needsPaint = boundary.debugNeedsPaint;
+      return true;
+    }());
+    if (needsPaint) return null;
     ui.Image? image;
     try {
       image = await boundary.toImage(pixelRatio: pixelRatio);
@@ -782,7 +804,7 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
     GlobalKey boundaryKey, {
     required bool refreshAfterPreparation,
   }) {
-    if (!mounted || _viewportSize.isEmpty) return;
+    if (!mounted || !_routeWorkEnabled || _viewportSize.isEmpty) return;
     final ratio = readerPageSnapshotPixelRatio(
       logicalSize: _viewportSize,
       devicePixelRatio: MediaQuery.devicePixelRatioOf(context),

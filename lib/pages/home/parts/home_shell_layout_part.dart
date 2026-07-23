@@ -219,7 +219,14 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
     final mediaQuery = MediaQuery.of(context);
     final scheme = Theme.of(context).colorScheme;
     final isLightTheme = scheme.brightness == Brightness.light;
-    final metrics = HomeMobileChromeMetrics.fromMediaQuery(mediaQuery);
+    final stableSystemInsets = _mobileSystemInsets.resolve(
+      mediaQuery,
+      lockForReaderTransition: BookOpenTransition.hasActiveReaderActivity,
+    );
+    final metrics = HomeMobileChromeMetrics.fromMediaQuery(
+      mediaQuery,
+      systemInsets: stableSystemInsets,
+    );
     final navigationCount = _navigationItems.length;
     final navWidth = homeMobileFloatingNavWidthFor(
       screenWidth: mediaQuery.size.width,
@@ -232,21 +239,6 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
 
     return Scaffold(
       extendBody: true, // 让body延伸到底部导航栏后面
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        // 使用与书库页面完全相同的设置 - 完全透明且高度为0
-        backgroundColor: _isMaterial3Style
-            ? scheme.surface
-            : Colors.transparent,
-        elevation: 0,
-        toolbarHeight: 0, // 设置高度为0，让毛玻璃标题栏在body中实现
-        surfaceTintColor: _isMaterial3Style
-            ? scheme.surface
-            : Colors.transparent,
-        systemOverlayStyle: SystemUiHelper.overlayStyleForBrightness(
-          Theme.of(context).brightness,
-        ),
-      ),
       body: HomeMobileChromeScope(
         metrics: metrics,
         child: Stack(
@@ -257,6 +249,13 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
               // 预构建相邻页面，避免首次滑动时页面构建/数据加载挤在动画帧里造成掉帧
               allowImplicitScrolling: true,
               onPageChanged: (index) {
+                final pendingPageIndex = _pendingPageControllerIndex;
+                if (pendingPageIndex != null && index != pendingPageIndex) {
+                  return;
+                }
+                if (pendingPageIndex == index) {
+                  _pendingPageControllerIndex = null;
+                }
                 // animateToPage 跨两页时会先经过中间页。程序化切换期间忽略
                 // 这个中间回调，避免底部导航出现“首页 -> 书库 -> 设置”的闪跳。
                 final targetIndex = _targetTabIndex;
@@ -285,99 +284,128 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
               left: 0,
               right: 0,
               bottom: 0,
-              child: RepaintBoundary(
-                child: SizedBox(
-                  height: metrics.navContainerHeight,
-                  child: Center(
-                    child: Padding(
-                      padding: EdgeInsets.only(bottom: metrics.navBottomInset),
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          borderRadius: navBorderRadius,
-                          boxShadow: [
-                            BoxShadow(
-                              color: _isMaterial3Style
-                                  ? scheme.shadow.withValues(alpha: 0.1)
-                                  : GlassEffectConfig.chromeShadowColor(
-                                      source: scheme.shadow,
-                                      brightness: scheme.brightness,
-                                      darkOpacity: 0.16,
-                                    ),
-                              blurRadius: _isMaterial3Style
-                                  ? 18
-                                  : (isLightTheme ? 24 : 32),
-                              offset: const Offset(0, 9),
-                            ),
-                            if (!_isMaterial3Style && !isLightTheme)
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.08),
-                                blurRadius: 48,
-                                offset: const Offset(0, 16),
-                              ),
-                          ],
+              child: ValueListenableBuilder<bool>(
+                valueListenable: BookOpenTransition.navigationHiddenListenable,
+                builder: (context, readingActive, navigationBar) {
+                  final reduceMotion = MediaQuery.of(context).disableAnimations;
+                  return IgnorePointer(
+                    key: const ValueKey('home-floating-navigation-pointer'),
+                    ignoring: readingActive,
+                    child: AnimatedSlide(
+                      key: const ValueKey('home-floating-navigation-motion'),
+                      offset: readingActive
+                          ? const Offset(0, 1.15)
+                          : Offset.zero,
+                      duration: reduceMotion
+                          ? Duration.zero
+                          : readingActive
+                          ? const Duration(milliseconds: 180)
+                          : const Duration(milliseconds: 360),
+                      curve: readingActive
+                          ? Curves.easeOutCubic
+                          : Curves.easeOutBack,
+                      child: navigationBar!,
+                    ),
+                  );
+                },
+                child: RepaintBoundary(
+                  child: SizedBox(
+                    height: metrics.navContainerHeight,
+                    child: Center(
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                          bottom: metrics.navBottomInset,
                         ),
-                        child: ClipRRect(
-                          borderRadius: navBorderRadius,
-                          child: (() {
-                            final navBar = Container(
-                              width: navWidth,
-                              height: metrics.floatingNavHeight,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal:
-                                    kHomeMobileFloatingNavHorizontalPadding,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            borderRadius: navBorderRadius,
+                            boxShadow: [
+                              BoxShadow(
                                 color: _isMaterial3Style
-                                    ? scheme.surfaceContainerHigh
-                                    : GlassEffectConfig.chromeSurfaceColor(
-                                        context,
+                                    ? scheme.shadow.withValues(alpha: 0.1)
+                                    : GlassEffectConfig.chromeShadowColor(
+                                        source: scheme.shadow,
+                                        brightness: scheme.brightness,
+                                        darkOpacity: 0.16,
                                       ),
-                                borderRadius: navBorderRadius,
-                                border: Border.all(
-                                  color: scheme.outline.withValues(
-                                    alpha: _isMaterial3Style
-                                        ? 0.18
-                                        : (isLightTheme ? 0.08 : 0.14),
-                                  ),
-                                  width: 0.6,
+                                blurRadius: _isMaterial3Style
+                                    ? 18
+                                    : (isLightTheme ? 24 : 32),
+                                offset: const Offset(0, 9),
+                              ),
+                              if (!_isMaterial3Style && !isLightTheme)
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.08),
+                                  blurRadius: 48,
+                                  offset: const Offset(0, 16),
                                 ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.max,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: _navigationItems.asMap().entries.map((
-                                  entry,
-                                ) {
-                                  final index = entry.key;
-                                  final item = entry.value;
-                                  final isSelected =
-                                      visualSelectedIndex == index;
-
-                                  return Expanded(
-                                    child: HomeBounceNavigationItem(
-                                      item: item,
-                                      isSelected: isSelected,
-                                      showLabel: showNavigationLabels,
-                                      onTap: () => _switchToTab(index),
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: navBorderRadius,
+                            child: (() {
+                              final navBar = Container(
+                                width: navWidth,
+                                height: metrics.floatingNavHeight,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal:
+                                      kHomeMobileFloatingNavHorizontalPadding,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: _isMaterial3Style
+                                      ? scheme.surfaceContainerHigh
+                                      : GlassEffectConfig.chromeSurfaceColor(
+                                          context,
+                                        ),
+                                  borderRadius: navBorderRadius,
+                                  border: Border.all(
+                                    color: scheme.outline.withValues(
+                                      alpha: _isMaterial3Style
+                                          ? 0.18
+                                          : (isLightTheme ? 0.08 : 0.14),
                                     ),
-                                  );
-                                }).toList(),
-                              ),
-                            );
+                                    width: 0.6,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.max,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: _navigationItems
+                                      .asMap()
+                                      .entries
+                                      .map((entry) {
+                                        final index = entry.key;
+                                        final item = entry.value;
+                                        final isSelected =
+                                            visualSelectedIndex == index;
 
-                            if (_disableShellBlur) {
-                              return navBar;
-                            }
-                            return BackdropFilter(
-                              enabled: !_disableShellBlur,
-                              filter: ImageFilter.blur(
-                                sigmaX: GlassEffectConfig.navigationBarBlur,
-                                sigmaY: GlassEffectConfig.navigationBarBlur,
-                              ),
-                              child: navBar,
-                            );
-                          })(),
+                                        return Expanded(
+                                          child: HomeBounceNavigationItem(
+                                            item: item,
+                                            isSelected: isSelected,
+                                            showLabel: showNavigationLabels,
+                                            onTap: () => _switchToTab(index),
+                                          ),
+                                        );
+                                      })
+                                      .toList(),
+                                ),
+                              );
+
+                              if (_disableShellBlur) {
+                                return navBar;
+                              }
+                              return BackdropFilter(
+                                enabled: !_disableShellBlur,
+                                filter: ImageFilter.blur(
+                                  sigmaX: GlassEffectConfig.navigationBarBlur,
+                                  sigmaY: GlassEffectConfig.navigationBarBlur,
+                                ),
+                                child: navBar,
+                              );
+                            })(),
+                          ),
                         ),
                       ),
                     ),
@@ -565,6 +593,8 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
     if (_targetTabIndex == index) return;
     if (_targetTabIndex == null && _selectedIndex == index) return;
 
+    _pendingPageControllerIndex = null;
+
     if (!_pageController.hasClients) {
       _updateSelectedIndex(index);
       return;
@@ -603,7 +633,7 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
   /// 让首页和手机端保持一致视觉来源，避免“改了首页但宽屏不生效”。
   Widget _resolveRailPage(Widget page) {
     if (page is HomeDashboardPage) {
-      return const HomeMobileDashboardPage();
+      return HomeMobileDashboardPage(controller: page.controller);
     }
     return page;
   }
@@ -616,7 +646,7 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
 
     // 手机端针对不同页面应用不同包装策略。
     if (page is HomeDashboardPage) {
-      wrappedPage = const HomeMobileDashboardPage();
+      wrappedPage = HomeMobileDashboardPage(controller: page.controller);
     } else {
       // 其余页面统一背景包装。
       wrappedPage = HomeGenericPageWrapper(child: page);

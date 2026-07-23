@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -82,6 +81,69 @@ void main() {
       (invocation?.arguments as Map<Object?, Object?>)['documentUri'],
       'content://provider/tree/root/document/book-1',
     );
+  });
+
+  test('Android 扫描在原生扩展名为空时回退到显示名称', () async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    const channel = MethodChannel('test.storage.scan.name');
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+          expect(call.method, 'listDocuments');
+          return <Object?>[
+            <String, Object?>{
+              'locator': 'content://provider/document/book-txt',
+              'displayName': '本地小说.TXT',
+              'extension': '',
+              'mimeType': 'application/octet-stream',
+            },
+          ];
+        });
+    addTearDown(
+      () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, null),
+    );
+    final service = BookImportSourceService(
+      platformBridge: PlatformStorageBridge(channel: channel),
+    );
+
+    final sources = await service.scanAndroidTree(
+      'content://provider/tree/root',
+    );
+
+    expect(sources, hasLength(1));
+    expect(sources.single.displayName, '本地小说.TXT');
+    expect(sources.single.extension, 'txt');
+  });
+
+  test('Android 扫描在文件名没有后缀时使用 MIME 类型识别书籍', () async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    const channel = MethodChannel('test.storage.scan.mime');
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+          expect(call.method, 'listDocuments');
+          return <Object?>[
+            <String, Object?>{
+              'locator': 'content://provider/document/book-epub',
+              'displayName': '没有显示后缀的书',
+              'extension': '',
+              'mimeType': 'application/epub+zip; charset=binary',
+            },
+          ];
+        });
+    addTearDown(
+      () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, null),
+    );
+    final service = BookImportSourceService(
+      platformBridge: PlatformStorageBridge(channel: channel),
+    );
+
+    final sources = await service.scanAndroidTree(
+      'content://provider/tree/root',
+    );
+
+    expect(sources, hasLength(1));
+    expect(sources.single.extension, 'epub');
   });
 
   test('Android 文件夹元数据与系统持久化权限对齐', () async {

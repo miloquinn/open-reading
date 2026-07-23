@@ -9,8 +9,11 @@ class LayoutHelper {
   static const double tabletBreakpoint = 820.0; // 降低断点以支持小尺寸平板(7-8英寸)和折叠屏
   static const double desktopBreakpoint = 1200.0;
 
-  /// 纯封面网格固定裁满统一的 2:3 卡片，不能因平台或封面来源改变比例。
-  static const BoxFit coverOnlyGridFit = BoxFit.cover;
+  /// 固定尺寸的书封框统一裁满，不能因平台或封面来源改变视觉尺寸。
+  static const BoxFit bookCoverFit = BoxFit.cover;
+
+  /// 兼容纯封面网格原有命名。
+  static const BoxFit coverOnlyGridFit = bookCoverFit;
 
   // 判断是否为普通手机
   static bool isSmallMobile(BuildContext context) {

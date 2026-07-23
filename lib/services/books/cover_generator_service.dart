@@ -157,14 +157,6 @@ class GeneratedBookCoverPainter extends CustomPainter {
         verticallyCenter: true,
       );
     }
-
-    canvas.drawRect(
-      bounds.deflate((size.width * 0.018).clamp(1, 5)),
-      Paint()
-        ..color = palette.border
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = (size.width * 0.004).clamp(0.8, 2),
-    );
   }
 
   @override
@@ -180,14 +172,12 @@ class GeneratedBookCoverPalette {
     required this.foreground,
     required this.secondaryForeground,
     required this.accent,
-    required this.border,
   });
 
   final Color background;
   final Color foreground;
   final Color secondaryForeground;
   final Color accent;
-  final Color border;
 
   static const values = <GeneratedBookCoverPalette>[
     GeneratedBookCoverPalette(
@@ -195,42 +185,36 @@ class GeneratedBookCoverPalette {
       foreground: Color(0xFF25231F),
       secondaryForeground: Color(0xFF625C52),
       accent: Color(0xFFB5523C),
-      border: Color(0x3325231F),
     ),
     GeneratedBookCoverPalette(
       background: Color(0xFFE8EEF0),
       foreground: Color(0xFF1E2A30),
       secondaryForeground: Color(0xFF56666D),
       accent: Color(0xFF3F7180),
-      border: Color(0x331E2A30),
     ),
     GeneratedBookCoverPalette(
       background: Color(0xFFEAE9E1),
       foreground: Color(0xFF24271F),
       secondaryForeground: Color(0xFF5E6354),
       accent: Color(0xFF63724B),
-      border: Color(0x3324271F),
     ),
     GeneratedBookCoverPalette(
       background: Color(0xFFF0E8EC),
       foreground: Color(0xFF2C2228),
       secondaryForeground: Color(0xFF695760),
       accent: Color(0xFF8A526B),
-      border: Color(0x332C2228),
     ),
     GeneratedBookCoverPalette(
       background: Color(0xFFE9E7F0),
       foreground: Color(0xFF262331),
       secondaryForeground: Color(0xFF5D586D),
       accent: Color(0xFF66588E),
-      border: Color(0x33262331),
     ),
     GeneratedBookCoverPalette(
       background: Color(0xFFF1E9DF),
       foreground: Color(0xFF2B241E),
       secondaryForeground: Color(0xFF6A5D51),
       accent: Color(0xFF9A673D),
-      border: Color(0x332B241E),
     ),
   ];
 

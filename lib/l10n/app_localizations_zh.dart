@@ -39,6 +39,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get discoverRetry => '重新加载';
 
   @override
+  String get discoverEmptyTitle => '暂无内容';
+
+  @override
+  String get discoverEmptyMessage => '这个栏目暂时没有可展示的内容。';
+
+  @override
   String get discoverUnsupportedTitle => '当前书源暂不支持此栏目';
 
   @override
@@ -1878,6 +1884,39 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsHideNavigationLabelsSubtitle => '开启后，手机底部导航栏仅显示图标';
 
   @override
+  String get settingsFloatingNavigationTitle => '悬浮导航栏';
+
+  @override
+  String get settingsFloatingNavigationSubtitle => '调整显示方式与入口顺序';
+
+  @override
+  String get floatingNavigationPreviewTitle => '预览';
+
+  @override
+  String get floatingNavigationDisplayModeTitle => '显示方式';
+
+  @override
+  String get floatingNavigationIconsOnly => '仅图标';
+
+  @override
+  String get floatingNavigationIconsAndLabels => '图标和文字';
+
+  @override
+  String get floatingNavigationOrderTitle => '导航顺序';
+
+  @override
+  String get floatingNavigationOrderHint => '按住右侧拖动柄调整顺序';
+
+  @override
+  String get floatingNavigationSyncHint => '排序会同步到横滑页面和宽屏侧边导航';
+
+  @override
+  String get floatingNavigationResetOrder => '恢复默认顺序';
+
+  @override
+  String get floatingNavigationResetDone => '已恢复默认顺序';
+
+  @override
   String get settingsLibraryLayoutTitle => '书库布局';
 
   @override
@@ -1942,7 +1981,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsDone => '完成';
 
   @override
-  String get settingsAccentColorAdvice => '推荐优先选择应用主题，再按需覆盖强调色。';
+  String get settingsAccentColorAdvice => '强调色会同时生成整套 Material 3 浅色与深色色板。';
+
+  @override
+  String get settingsAccentPresetColors => '快捷颜色';
+
+  @override
+  String get settingsAccentCustomColor => '自定义颜色';
+
+  @override
+  String get settingsAccentSaturationBrightness => '饱和度与亮度色盘';
+
+  @override
+  String get settingsAccentHue => '色相';
+
+  @override
+  String get settingsAccentPreview => '主题色板预览';
 
   @override
   String get settingsAccentFollowThemeOption => '跟随主题';
@@ -2001,6 +2055,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get updateLater => '稍后';
 
   @override
+  String get updateSkipVersion => '跳过此版本';
+
+  @override
   String get updateGoToDownload => '前往更新';
 
   @override
@@ -2042,7 +2099,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get updateCheckFailed => '检查更新失败，请稍后重试';
 
   @override
-  String get updateOpenFailed => '无法打开 GitHub Release 下载页面';
+  String get updateOpenFailed => '无法打开链接';
 
   @override
   String get settingsIosOnlyFeature => '该功能仅支持 iOS';
@@ -2440,6 +2497,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get readerThemeDay => '白天';
+
+  @override
+  String get readerThemeFollowSystem => '跟随系统';
 
   @override
   String get readerThemeMist => '晨雾';
@@ -3270,6 +3330,20 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsCacheManagementTitle => '缓存管理';
 
   @override
+  String settingsCacheManagementSubtitle(String size) {
+    return '共占用 $size，查看分类并清理';
+  }
+
+  @override
+  String get settingsCacheUsageTitle => '缓存占用';
+
+  @override
+  String get settingsCacheTotalUsage => '总占用';
+
+  @override
+  String get settingsCacheSafeHint => '这里只统计可安全清理的缓存，不包含书籍、阅读进度和设置。';
+
+  @override
   String get settingsCacheSourceCovers => '书源封面缓存';
 
   @override
@@ -3661,6 +3735,12 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get discoverRetry => '重新載入';
+
+  @override
+  String get discoverEmptyTitle => '暫無內容';
+
+  @override
+  String get discoverEmptyMessage => '這個欄目暫時沒有可顯示的內容。';
 
   @override
   String get discoverUnsupportedTitle => '目前書源暫不支援此欄目';
@@ -5459,6 +5539,39 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get settingsHideNavigationLabelsSubtitle => '開啟後，手機底部導覽列僅顯示圖示';
 
   @override
+  String get settingsFloatingNavigationTitle => '懸浮導覽列';
+
+  @override
+  String get settingsFloatingNavigationSubtitle => '調整顯示方式與入口順序';
+
+  @override
+  String get floatingNavigationPreviewTitle => '預覽';
+
+  @override
+  String get floatingNavigationDisplayModeTitle => '顯示方式';
+
+  @override
+  String get floatingNavigationIconsOnly => '僅圖示';
+
+  @override
+  String get floatingNavigationIconsAndLabels => '圖示和文字';
+
+  @override
+  String get floatingNavigationOrderTitle => '導覽順序';
+
+  @override
+  String get floatingNavigationOrderHint => '長按右側拖曳柄調整順序';
+
+  @override
+  String get floatingNavigationSyncHint => '排序會同步到橫向滑動頁面與寬螢幕側邊導覽';
+
+  @override
+  String get floatingNavigationResetOrder => '恢復預設順序';
+
+  @override
+  String get floatingNavigationResetDone => '已恢復預設順序';
+
+  @override
   String get settingsLibraryLayoutTitle => '書庫版面';
 
   @override
@@ -5523,7 +5636,22 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get settingsDone => '完成';
 
   @override
-  String get settingsAccentColorAdvice => '建議優先選擇應用程式主題，再視需要覆寫強調色。';
+  String get settingsAccentColorAdvice => '強調色會同時產生整套 Material 3 淺色與深色色板。';
+
+  @override
+  String get settingsAccentPresetColors => '快速顏色';
+
+  @override
+  String get settingsAccentCustomColor => '自訂顏色';
+
+  @override
+  String get settingsAccentSaturationBrightness => '飽和度與亮度色盤';
+
+  @override
+  String get settingsAccentHue => '色相';
+
+  @override
+  String get settingsAccentPreview => '主題色板預覽';
 
   @override
   String get settingsAccentFollowThemeOption => '跟隨主題';
@@ -5582,6 +5710,9 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get updateLater => '稍後';
 
   @override
+  String get updateSkipVersion => '略過此版本';
+
+  @override
   String get updateGoToDownload => '前往更新';
 
   @override
@@ -5623,7 +5754,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get updateCheckFailed => '檢查更新失敗，請稍後再試';
 
   @override
-  String get updateOpenFailed => '無法開啟 GitHub Release 下載頁面';
+  String get updateOpenFailed => '無法開啟連結';
 
   @override
   String get settingsIosOnlyFeature => '該功能僅支援 iOS';
@@ -6021,6 +6152,9 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get readerThemeDay => '白天';
+
+  @override
+  String get readerThemeFollowSystem => '跟隨系統';
 
   @override
   String get readerThemeMist => '晨霧';
@@ -6849,6 +6983,20 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get settingsCacheManagementTitle => '快取管理';
+
+  @override
+  String settingsCacheManagementSubtitle(String size) {
+    return '共佔用 $size，查看分類並清除';
+  }
+
+  @override
+  String get settingsCacheUsageTitle => '快取佔用';
+
+  @override
+  String get settingsCacheTotalUsage => '總佔用';
+
+  @override
+  String get settingsCacheSafeHint => '這裡只統計可安全清除的快取，不包含書籍、閱讀進度和設定。';
 
   @override
   String get settingsCacheSourceCovers => '書源封面快取';

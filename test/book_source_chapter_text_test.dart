@@ -33,6 +33,21 @@ void main() {
     },
   );
 
+  test('background html extraction matches the synchronous adapter', () async {
+    const content = BookSourceChapterContent(
+      bookId: 'book',
+      chapterId: 'chapter',
+      title: 'Chapter',
+      content: '<article><h1>Chapter</h1><p>第一段</p><p>第二段</p></article>',
+      contentType: 'text/html',
+    );
+
+    expect(
+      await readableBookSourceChapterTextAsync(content),
+      readableBookSourceChapterText(content),
+    );
+  });
+
   test('plain text mislabelled as html keeps paragraph breaks', () {
     // Regression: sources that declare `text/html` but return plain,
     // newline-separated text used to be routed through the HTML extractor,

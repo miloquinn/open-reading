@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as html_parser;
 
@@ -43,6 +44,49 @@ String readableBookSourceChapterText(
   final cleaned = removeRepeatedSourcePageMarkers(paragraphs);
   return _removeRepeatedLeadingChapterTitle(cleaned, chapterTitles).join('\n');
 }
+
+/// Normalizes chapters whose parsing cost is large enough to disturb reader
+/// frames on a background isolate. Short plain-text chapters stay local to
+/// avoid paying isolate startup and message-copy overhead.
+Future<String> readableBookSourceChapterTextAsync(
+  BookSourceChapterContent content, {
+  String fallbackTitle = '',
+}) {
+  final shouldUseWorker =
+      _looksLikeHtml(content.content) || content.content.length >= 64 * 1024;
+  if (!shouldUseWorker) {
+    return Future<String>.value(
+      readableBookSourceChapterText(content, fallbackTitle: fallbackTitle),
+    );
+  }
+  return compute(
+    _readableBookSourceChapterTextInBackground,
+    <String, String>{
+      'bookId': content.bookId,
+      'chapterId': content.chapterId,
+      'title': content.title,
+      'content': content.content,
+      'contentType': content.contentType,
+      'fallbackTitle': fallbackTitle,
+    },
+    debugLabel: 'normalize book-source chapter',
+  ).onError(
+    (_, _) =>
+        readableBookSourceChapterText(content, fallbackTitle: fallbackTitle),
+  );
+}
+
+String _readableBookSourceChapterTextInBackground(Map<String, String> values) =>
+    readableBookSourceChapterText(
+      BookSourceChapterContent(
+        bookId: values['bookId']!,
+        chapterId: values['chapterId']!,
+        title: values['title']!,
+        content: values['content']!,
+        contentType: values['contentType']!,
+      ),
+      fallbackTitle: values['fallbackTitle']!,
+    );
 
 bool _looksLikeHtml(String content) => _htmlTagOpener.hasMatch(content);
 

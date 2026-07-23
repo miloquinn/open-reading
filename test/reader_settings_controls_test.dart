@@ -194,4 +194,31 @@ void main() {
     expect(foreground.border, isNotNull);
     expect(foreground.borderRadius, BorderRadius.circular(18));
   });
+
+  testWidgets('system theme card is the first reading theme option', (
+    tester,
+  ) async {
+    ReaderThemes.setCustomThemes(const []);
+    ReaderThemes.setThemeOrder(const []);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ReaderThemeStrip(
+            selectedThemeId: ReaderThemes.systemId,
+            labelFor: (id) => id,
+            onSelected: (_) {},
+            onCustomThemeTap: () {},
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byKey(const ValueKey('reader-theme-system')), findsOneWidget);
+    expect(
+      tester.getTopLeft(find.byKey(const ValueKey('reader-theme-system'))).dx,
+      lessThan(
+        tester.getTopLeft(find.byKey(const ValueKey('reader-theme-day'))).dx,
+      ),
+    );
+  });
 }

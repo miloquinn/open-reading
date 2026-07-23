@@ -4,6 +4,7 @@
 import 'dart:async';
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -11,6 +12,7 @@ import 'package:xxread/book_sources/services/book_source_client.dart';
 import 'package:xxread/book_sources/services/book_source_registry.dart';
 import 'package:xxread/book_sources/services/book_source_shelf_service.dart';
 import 'package:xxread/l10n/app_localizations.dart';
+import 'package:xxread/models/home_navigation_destination.dart';
 import 'package:xxread/pages/book_sources/book_source_management_page.dart';
 import 'package:xxread/pages/book_sources/book_sources_page.dart';
 import 'package:xxread/pages/book_sources/source_search_page.dart';
@@ -21,6 +23,7 @@ import 'package:xxread/pages/settings/settings_page.dart';
 import 'package:xxread/services/core/app_settings_service.dart';
 import 'package:xxread/services/core/first_home_support_intro_service.dart';
 import 'package:xxread/services/library/download_task_controller.dart';
+import 'package:xxread/utils/book_open_transition.dart';
 import 'package:xxread/utils/glass_config.dart';
 import 'package:xxread/utils/layout_helper.dart';
 import 'package:xxread/utils/localization_extension.dart';
@@ -97,6 +100,8 @@ class _HomeShellPageState extends State<HomeShellPage> {
   int? _targetTabIndex;
   int _tabTransitionToken = 0;
   late PageController _pageController;
+  final HomeDashboardController _homeDashboardController =
+      HomeDashboardController();
   final SettingsPageController _settingsController = SettingsPageController();
   AppLocalizations? _l10n;
   final LibraryPageController _libraryController = LibraryPageController();
@@ -104,9 +109,14 @@ class _HomeShellPageState extends State<HomeShellPage> {
   // 导航项单一数据源：
   // - 底部导航（手机）和侧边栏（平板/桌面）都读这里。
   List<HomeNavigationItem> _navigationItems = [];
+  List<HomeNavigationDestination> _navigationOrder = defaultHomeNavigationOrder;
   List<Widget> _mobilePages = const [];
+  int? _pendingPageControllerIndex;
+  bool _pageControllerSyncScheduled = false;
   bool _supportIntroCheckStarted = false;
   bool _showSupportIntro = false;
+  final HomeMobileSystemInsetsStabilizer _mobileSystemInsets =
+      HomeMobileSystemInsetsStabilizer();
 
   @override
   void initState() {
@@ -141,67 +151,140 @@ class _HomeShellPageState extends State<HomeShellPage> {
   /// 组装导航项列表（可看作“首页路由表”）。
   ///
   /// 规则：
-  /// 1) 首页、书库固定在前。
-  /// 2) 设置固定在最后。
-  void _initializeNavigationItems() {
+  /// 1) 稳定目的地 ID 决定页面身份，本地化标题不参与持久化。
+  /// 2) 用户顺序同时驱动手机 PageView、悬浮栏和宽屏 NavigationRail。
+  /// 3) 重排后按目的地恢复当前页，不能沿用旧索引跳到其他页面。
+  void _initializeNavigationItems(
+    List<HomeNavigationDestination> navigationOrder,
+  ) {
     final l10n = _l10n;
     if (l10n == null) return;
-    final items = <HomeNavigationItem>[
-      HomeNavigationItem(
+    final selectedDestination = _navigationItems.isEmpty
+        ? HomeNavigationDestination.home
+        : _navigationItems[(_targetTabIndex ?? _selectedIndex).clamp(
+                0,
+                _navigationItems.length - 1,
+              )]
+              .destination;
+    final itemsByDestination = <HomeNavigationDestination, HomeNavigationItem>{
+      HomeNavigationDestination.home: HomeNavigationItem(
+        destination: HomeNavigationDestination.home,
         icon: Icons.home_outlined,
         selectedIcon: Icons.home,
         label: l10n.home,
-        page: const HomeDashboardPage(),
+        page: HomeDashboardPage(controller: _homeDashboardController),
       ),
-      HomeNavigationItem(
+      HomeNavigationDestination.library: HomeNavigationItem(
+        destination: HomeNavigationDestination.library,
         icon: Icons.library_books_outlined,
         selectedIcon: Icons.library_books,
         label: l10n.library,
         page: LibraryPage(controller: _libraryController),
       ),
-      HomeNavigationItem(
+      HomeNavigationDestination.discover: HomeNavigationItem(
+        destination: HomeNavigationDestination.discover,
         icon: Icons.explore_outlined,
         selectedIcon: Icons.explore_rounded,
         label: l10n.discover,
         page: const BookSourcesPage(),
       ),
-      HomeNavigationItem(
+      HomeNavigationDestination.settings: HomeNavigationItem(
+        destination: HomeNavigationDestination.settings,
         icon: Icons.settings_outlined,
         selectedIcon: Icons.settings,
         label: l10n.settings,
         page: SettingsPage(controller: _settingsController),
       ),
-    ];
+    };
+    final items = navigationOrder
+        .map((destination) => itemsByDestination[destination]!)
+        .toList(growable: false);
 
     _navigationItems = items;
+    _navigationOrder = List<HomeNavigationDestination>.unmodifiable(
+      navigationOrder,
+    );
     _mobilePages = items
-        .map((item) => RepaintBoundary(child: _buildPageWrapper(item.page)))
+        .map(
+          (item) => RepaintBoundary(
+            key: ValueKey('home-page-${item.destination.storageId}'),
+            child: _buildPageWrapper(item.page),
+          ),
+        )
         .toList(growable: false);
-    // 如果当前选中的索引超出范围，重置为首页
-    if (_selectedIndex >= _navigationItems.length) {
-      _selectedIndex = 0;
-    }
+    _selectedIndex = items.indexWhere(
+      (item) => item.destination == selectedDestination,
+    );
+    if (_selectedIndex < 0) _selectedIndex = 0;
+    _targetTabIndex = null;
+    _tabTransitionToken += 1;
+    _queuePageControllerSync(_selectedIndex);
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     final nextL10n = AppLocalizations.of(context);
+    final nextNavigationOrder = context
+        .watch<AppSettingsNotifier>()
+        .homeNavigationOrder;
     // 每次依赖变化时重新应用沉浸式设置
     _setupPageImmersiveMode();
     // 应用基于主题的设置
     _setupThemeBasedImmersiveMode();
     // 仅在本地化实例变化时重建页面表。普通 tab setState 不再重新创建
     // PageView 的整组子节点，避免切页动画开始前产生额外布局工作。
-    if (_l10n != nextL10n || _navigationItems.isEmpty) {
+    if (_l10n != nextL10n ||
+        _navigationItems.isEmpty ||
+        !listEquals(_navigationOrder, nextNavigationOrder)) {
       _l10n = nextL10n;
-      _initializeNavigationItems();
+      _initializeNavigationItems(nextNavigationOrder);
     }
   }
 
   void _updateSelectedIndex(int index) {
     if (!mounted) return;
-    setState(() => _selectedIndex = index);
+    final destinationChanged = _selectedIndex != index;
+    final pageControllerDetached = !_pageController.hasClients;
+    if (pageControllerDetached) {
+      _pendingPageControllerIndex = index;
+      _tabTransitionToken += 1;
+    }
+    setState(() {
+      _selectedIndex = index;
+      if (pageControllerDetached) _targetTabIndex = null;
+    });
+    if (destinationChanged) _scheduleHomeRefresh(index);
+  }
+
+  void _queuePageControllerSync(int index) {
+    _pendingPageControllerIndex = index;
+    _schedulePageControllerSync();
+  }
+
+  void _schedulePageControllerSync() {
+    if (_pageControllerSyncScheduled || _pendingPageControllerIndex == null) {
+      return;
+    }
+    _pageControllerSyncScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _pageControllerSyncScheduled = false;
+      if (!mounted || !_pageController.hasClients) return;
+      final targetIndex = _pendingPageControllerIndex;
+      if (targetIndex == null ||
+          targetIndex < 0 ||
+          targetIndex >= _navigationItems.length) {
+        _pendingPageControllerIndex = null;
+        return;
+      }
+      final currentPage = _pageController.page;
+      if (currentPage == null || (currentPage - targetIndex).abs() > 0.001) {
+        _pageController.jumpToPage(targetIndex);
+      }
+      if (_pendingPageControllerIndex == targetIndex) {
+        _pendingPageControllerIndex = null;
+      }
+    });
   }
 
   void _beginTabTransition(int index) {
@@ -211,15 +294,37 @@ class _HomeShellPageState extends State<HomeShellPage> {
 
   void _completeTabTransition(int index) {
     if (!mounted) return;
+    final destinationChanged =
+        _selectedIndex != index || _targetTabIndex != null;
     setState(() {
       _selectedIndex = index;
       _targetTabIndex = null;
+    });
+    if (destinationChanged) _scheduleHomeRefresh(index);
+  }
+
+  void _scheduleHomeRefresh(int index) {
+    if (index < 0 || index >= _navigationItems.length) return;
+    if (_navigationItems[index].destination != HomeNavigationDestination.home) {
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _navigationItems.isEmpty) return;
+      final selectedIndex = _selectedIndex.clamp(
+        0,
+        _navigationItems.length - 1,
+      );
+      if (_navigationItems[selectedIndex].destination ==
+          HomeNavigationDestination.home) {
+        _homeDashboardController.refresh();
+      }
     });
   }
 
   @override
   void dispose() {
     _pageController.dispose();
+    _homeDashboardController.dispose();
     _settingsController.dispose();
     _libraryController.dispose();
     super.dispose();
@@ -275,6 +380,7 @@ class _HomeShellPageState extends State<HomeShellPage> {
         content = _buildNavigationRail();
         break;
       case NavigationType.bottom:
+        _schedulePageControllerSync();
         content = _buildBottomNavigation(
           showNavigationLabels: !hideNavigationLabels,
         );

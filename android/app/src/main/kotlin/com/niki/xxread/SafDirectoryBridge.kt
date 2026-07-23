@@ -48,9 +48,17 @@ class SafDirectoryBridge(
                     result.error("invalid_args", "treeUri is required", null)
                     return
                 }
-                runCatching { listDocuments(Uri.parse(treeUri)) }
-                    .onSuccess(result::success)
-                    .onFailure { result.error("list_failed", it.message, null) }
+                ioExecutor.execute {
+                    runCatching { listDocuments(Uri.parse(treeUri)) }
+                        .onSuccess { documents ->
+                            activity.runOnUiThread { result.success(documents) }
+                        }
+                        .onFailure { error ->
+                            activity.runOnUiThread {
+                                result.error("list_failed", error.message, null)
+                            }
+                        }
+                }
             }
             "listPersistedDirectories" -> {
                 runCatching { listPersistedDirectories() }
@@ -192,6 +200,12 @@ class SafDirectoryBridge(
     }
 
     private fun listDocuments(treeUri: Uri): List<Map<String, Any?>> {
+        val hasReadPermission = activity.contentResolver.persistedUriPermissions.any {
+            it.isReadPermission && it.uri == treeUri
+        }
+        check(hasReadPermission) {
+            "Directory access is no longer available. Select the folder again."
+        }
         val rootId = DocumentsContract.getTreeDocumentId(treeUri)
         val results = mutableListOf<Map<String, Any?>>()
         walkDirectory(treeUri, rootId, mutableSetOf(), results)
@@ -217,7 +231,12 @@ class SafDirectoryBridge(
             DocumentsContract.Document.COLUMN_LAST_MODIFIED,
         )
 
-        activity.contentResolver.query(childrenUri, projection, null, null, null)?.use { cursor ->
+        val cursor = requireNotNull(
+            activity.contentResolver.query(childrenUri, projection, null, null, null),
+        ) {
+            "The document provider returned no directory listing for $documentId"
+        }
+        cursor.use {
             while (cursor.moveToNext()) {
                 val childId = cursor.stringValue(DocumentsContract.Document.COLUMN_DOCUMENT_ID)
                     ?: continue
@@ -236,6 +255,7 @@ class SafDirectoryBridge(
                         "documentUri" to documentUri.toString(),
                         "displayName" to displayName,
                         "extension" to displayName.substringAfterLast('.', "").lowercase(),
+                        "mimeType" to mimeType,
                         "sizeBytes" to cursor.longValue(DocumentsContract.Document.COLUMN_SIZE),
                         "modifiedTime" to cursor.longValue(
                             DocumentsContract.Document.COLUMN_LAST_MODIFIED,

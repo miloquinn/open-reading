@@ -33,7 +33,7 @@ void main() {
   });
 
   test('reader themes remain independent and readable', () {
-    expect(ReaderThemes.all, hasLength(8));
+    expect(ReaderThemes.all, hasLength(9));
     expect(
       ReaderThemes.all.map((theme) => theme.id).toSet(),
       hasLength(ReaderThemes.all.length),
@@ -53,6 +53,25 @@ void main() {
         reason: '${theme.id} control text must meet WCAG AA',
       );
     }
+  });
+
+  test('system reader theme switches between day and pure black', () {
+    final light = ReaderThemes.byId(
+      ReaderThemes.systemId,
+      platformBrightness: Brightness.light,
+    );
+    final dark = ReaderThemes.byId(
+      ReaderThemes.systemId,
+      platformBrightness: Brightness.dark,
+    );
+
+    expect(light.id, ReaderThemes.systemId);
+    expect(light.background, ReaderThemes.day.background);
+    expect(light.brightness, Brightness.light);
+    expect(dark.id, ReaderThemes.systemId);
+    expect(dark.background, ReaderThemes.pureBlack.background);
+    expect(dark.brightness, Brightness.dark);
+    expect(light.cacheKey, isNot(dark.cacheKey));
   });
 
   test('unknown saved theme falls back to day', () {
@@ -139,7 +158,8 @@ void main() {
       'missing',
     ]);
 
-    expect(ReaderThemes.orderedPalettes.take(3).map((theme) => theme.id), [
+    expect(ReaderThemes.orderedPalettes.take(4).map((theme) => theme.id), [
+      ReaderThemes.systemId,
       'green',
       'custom:first',
       'day',

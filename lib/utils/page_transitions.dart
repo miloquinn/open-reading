@@ -3,6 +3,8 @@
 
 import 'package:flutter/material.dart';
 
+enum ReaderPageTransitionOrigin { standard, home, discoverSheet }
+
 /// 自定义页面过渡动画
 /// 提供流畅的页面进入和退出动画效果
 class CustomPageTransitions {
@@ -128,52 +130,106 @@ class CustomPageTransitions {
   }
 
   /// A lightweight reader transition that keeps complex page contents smooth.
-  static Route<T> createSmoothReaderPageRoute<T extends Object?>(Widget page) {
-    return PageRouteBuilder<T>(
-      pageBuilder: (context, animation, secondaryAnimation) => page,
-      transitionDuration: const Duration(milliseconds: 420),
-      reverseTransitionDuration: const Duration(milliseconds: 320),
+  static PageRoute<T> createSmoothReaderPageRoute<T extends Object?>(
+    Widget page, {
+    ReaderPageTransitionOrigin origin = ReaderPageTransitionOrigin.standard,
+    Color? backgroundColor,
+    Widget Function(
+      PageRoute<T> route,
+      Animation<double> animation,
+      Widget child,
+    )?
+    routeWrapper,
+  }) {
+    final transitionDuration = switch (origin) {
+      ReaderPageTransitionOrigin.discoverSheet => const Duration(
+        milliseconds: 380,
+      ),
+      ReaderPageTransitionOrigin.home => const Duration(milliseconds: 400),
+      ReaderPageTransitionOrigin.standard => const Duration(milliseconds: 400),
+    };
+    final reverseTransitionDuration = switch (origin) {
+      ReaderPageTransitionOrigin.discoverSheet => const Duration(
+        milliseconds: 300,
+      ),
+      ReaderPageTransitionOrigin.home => const Duration(milliseconds: 320),
+      ReaderPageTransitionOrigin.standard => const Duration(milliseconds: 320),
+    };
+    final beginOffset = switch (origin) {
+      ReaderPageTransitionOrigin.discoverSheet => const Offset(0, 0.04),
+      ReaderPageTransitionOrigin.home => const Offset(0, 0.025),
+      ReaderPageTransitionOrigin.standard => const Offset(0, 0.025),
+    };
+    late final PageRouteBuilder<T> route;
+    route = PageRouteBuilder<T>(
+      pageBuilder: (context, animation, secondaryAnimation) =>
+          routeWrapper?.call(route, animation, page) ?? page,
+      transitionDuration: transitionDuration,
+      reverseTransitionDuration: reverseTransitionDuration,
       opaque: true,
       barrierColor: Colors.transparent,
       // Keep the live route responsive while its book-loading future resolves.
       // The transition itself only animates compositor-friendly properties.
       allowSnapshotting: false,
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        final reduceMotion = MediaQuery.disableAnimationsOf(context);
         final motion = CurvedAnimation(
           parent: animation,
-          curve: const Interval(0.08, 1, curve: Curves.easeOutQuart),
+          curve: const Interval(0.04, 1, curve: Curves.easeOutQuart),
           reverseCurve: Curves.easeInCubic,
         );
         final position = Tween<Offset>(
-          begin: const Offset(0.018, 0.012),
+          begin: reduceMotion ? Offset.zero : beginOffset,
           end: Offset.zero,
         ).animate(motion);
-        final scale = Tween<double>(begin: 0.985, end: 1).animate(motion);
-        final opacity = Tween<double>(begin: 0, end: 1).animate(
+        final surfaceOpacity = Tween<double>(begin: 0, end: 1).animate(
+          CurvedAnimation(
+            parent: animation,
+            curve: Interval(
+              0,
+              reduceMotion ? 0.3 : 0.55,
+              curve: Curves.easeOutCubic,
+            ),
+            reverseCurve: Curves.easeInCubic,
+          ),
+        );
+        final contentOpacity = Tween<double>(begin: 0, end: 1).animate(
           CurvedAnimation(
             parent: animation,
             // The solid route background is visible immediately. Delaying the
             // page by a few frames gives the immersive inset change time to
             // settle before any text or tablet spread becomes visible.
-            curve: const Interval(0.12, 0.78, curve: Curves.easeOutCubic),
+            curve: Interval(
+              reduceMotion ? 0 : 0.12,
+              reduceMotion ? 0.3 : 0.78,
+              curve: Curves.easeOutCubic,
+            ),
             reverseCurve: Curves.easeIn,
           ),
         );
 
-        return ColoredBox(
-          color: Theme.of(context).colorScheme.surface,
-          child: RepaintBoundary(
-            child: SlideTransition(
-              position: position,
-              child: ScaleTransition(
-                scale: scale,
-                child: FadeTransition(opacity: opacity, child: child),
+        return RepaintBoundary(
+          child: SlideTransition(
+            key: const ValueKey('book-paper-transition-position'),
+            position: position,
+            child: FadeTransition(
+              key: const ValueKey('book-paper-transition-surface-opacity'),
+              opacity: surfaceOpacity,
+              child: ColoredBox(
+                key: const ValueKey('book-paper-transition-surface'),
+                color: backgroundColor ?? Theme.of(context).colorScheme.surface,
+                child: FadeTransition(
+                  key: const ValueKey('book-paper-transition-content-opacity'),
+                  opacity: contentOpacity,
+                  child: child,
+                ),
               ),
             ),
           ),
         );
       },
     );
+    return route;
   }
 
   /// 创建优化的阅读页面过渡动画

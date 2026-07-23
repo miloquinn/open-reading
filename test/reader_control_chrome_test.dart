@@ -28,7 +28,12 @@ void main() {
       _panelGradient(tester).colors.every((color) => color.a == 1),
       isTrue,
     );
+    expect(
+      _panelGradient(tester).colors,
+      everyElement(ReaderThemes.day.controlBar),
+    );
     expect(_iconBackground(tester).a, 1);
+    expect(_iconBackground(tester), ReaderThemes.day.controlFill);
   });
 
   testWidgets('reader-owned top information shows time title and battery', (

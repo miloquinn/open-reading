@@ -3,9 +3,11 @@
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../models/home_navigation_destination.dart';
 import '../../utils/font_catalog_helper.dart';
 import 'custom_font_service.dart';
 import 'online_font_service.dart';
@@ -23,6 +25,7 @@ class AppSettingsNotifier extends ChangeNotifier {
   static const String _keyLegacyAppFontFamily = 'app_font_family';
   static const String _keyHideNavigationLabels =
       'hide_home_navigation_labels_v1';
+  static const String _keyHomeNavigationOrder = 'home_navigation_order_v1';
   static const String _keyLibraryLayoutMode = 'library_layout_mode_v1';
   static const String _keyLibraryGridColumns = 'library_grid_columns_v1';
   static const String _keyLibraryGridShowDetails =
@@ -33,9 +36,11 @@ class AppSettingsNotifier extends ChangeNotifier {
   String _appFontId = FontCatalog.defaultAppFont.id;
   String _readerFontId = FontCatalog.defaultReaderFont.id;
   bool _hideNavigationLabels = true;
-  LibraryLayoutMode _libraryLayoutMode = LibraryLayoutMode.card;
-  int _libraryGridColumns = 3;
-  bool _libraryGridShowDetails = false;
+  List<HomeNavigationDestination> _homeNavigationOrder =
+      defaultHomeNavigationOrder;
+  LibraryLayoutMode _libraryLayoutMode = LibraryLayoutMode.grid;
+  int _libraryGridColumns = 2;
+  bool _libraryGridShowDetails = true;
   bool _isInitialized = false;
   final CustomFontService _customFontService;
   final OnlineFontService _onlineFontService;
@@ -56,6 +61,9 @@ class AppSettingsNotifier extends ChangeNotifier {
   String get appFontId => _appFontId;
   String get readerFontId => _readerFontId;
   bool get hideNavigationLabels => _hideNavigationLabels;
+  bool get showNavigationLabels => !_hideNavigationLabels;
+  List<HomeNavigationDestination> get homeNavigationOrder =>
+      _homeNavigationOrder;
   LibraryLayoutMode get libraryLayoutMode => _libraryLayoutMode;
   int get libraryGridColumns => _libraryGridColumns;
   bool get libraryGridShowDetails => _libraryGridShowDetails;
@@ -239,13 +247,27 @@ class AppSettingsNotifier extends ChangeNotifier {
       customFonts: availableCustomFonts,
     ).id;
     _hideNavigationLabels = prefs.getBool(_keyHideNavigationLabels) ?? true;
+    final storedNavigationOrder = prefs.getStringList(_keyHomeNavigationOrder);
+    _homeNavigationOrder = normalizeHomeNavigationOrder(storedNavigationOrder);
+    final normalizedNavigationIds = _homeNavigationOrder
+        .map((destination) => destination.storageId)
+        .toList(growable: false);
+    if (storedNavigationOrder != null &&
+        !listEquals(storedNavigationOrder, normalizedNavigationIds)) {
+      await prefs.setStringList(
+        _keyHomeNavigationOrder,
+        normalizedNavigationIds,
+      );
+    }
     _libraryLayoutMode = switch (prefs.getString(_keyLibraryLayoutMode)) {
-      'grid' => LibraryLayoutMode.grid,
-      _ => LibraryLayoutMode.card,
+      'card' => LibraryLayoutMode.card,
+      _ => LibraryLayoutMode.grid,
     };
-    _libraryGridColumns = prefs.getInt(_keyLibraryGridColumns) == 2 ? 2 : 3;
-    _libraryGridShowDetails =
-        prefs.getBool(_keyLibraryGridShowDetails) ?? false;
+    _libraryGridColumns = switch (prefs.getInt(_keyLibraryGridColumns)) {
+      3 => 3,
+      _ => 2,
+    };
+    _libraryGridShowDetails = prefs.getBool(_keyLibraryGridShowDetails) ?? true;
     await _restoreSelectedFonts(prefs);
     _isInitialized = true;
     notifyListeners();
@@ -382,6 +404,28 @@ class AppSettingsNotifier extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_keyHideNavigationLabels, value);
   }
+
+  Future<void> setShowNavigationLabels(bool value) =>
+      setHideNavigationLabels(!value);
+
+  Future<void> setHomeNavigationOrder(
+    List<HomeNavigationDestination> order,
+  ) async {
+    final normalized = normalizeHomeNavigationOrder(
+      order.map((destination) => destination.storageId),
+    );
+    if (listEquals(_homeNavigationOrder, normalized)) return;
+    _homeNavigationOrder = normalized;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      _keyHomeNavigationOrder,
+      normalized.map((destination) => destination.storageId).toList(),
+    );
+  }
+
+  Future<void> resetHomeNavigationOrder() =>
+      setHomeNavigationOrder(defaultHomeNavigationOrder);
 
   Future<void> setLibraryLayoutMode(LibraryLayoutMode mode) async {
     if (_libraryLayoutMode == mode) return;

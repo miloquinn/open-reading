@@ -39,6 +39,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get discoverRetry => 'Try again';
 
   @override
+  String get discoverEmptyTitle => 'Nothing to show yet';
+
+  @override
+  String get discoverEmptyMessage => 'This section has no content to show yet.';
+
+  @override
   String get discoverUnsupportedTitle =>
       'Current sources do not support this section';
 
@@ -1972,6 +1978,42 @@ class AppLocalizationsEn extends AppLocalizations {
       'Show icons only in the mobile bottom navigation';
 
   @override
+  String get settingsFloatingNavigationTitle => 'Floating navigation bar';
+
+  @override
+  String get settingsFloatingNavigationSubtitle =>
+      'Adjust the display style and destination order';
+
+  @override
+  String get floatingNavigationPreviewTitle => 'Preview';
+
+  @override
+  String get floatingNavigationDisplayModeTitle => 'Display style';
+
+  @override
+  String get floatingNavigationIconsOnly => 'Icons only';
+
+  @override
+  String get floatingNavigationIconsAndLabels => 'Icons and labels';
+
+  @override
+  String get floatingNavigationOrderTitle => 'Navigation order';
+
+  @override
+  String get floatingNavigationOrderHint =>
+      'Hold the handle on the right to reorder';
+
+  @override
+  String get floatingNavigationSyncHint =>
+      'The order also applies to swipe navigation and the wide-screen sidebar';
+
+  @override
+  String get floatingNavigationResetOrder => 'Restore default order';
+
+  @override
+  String get floatingNavigationResetDone => 'Default order restored';
+
+  @override
   String get settingsLibraryLayoutTitle => 'Library layout';
 
   @override
@@ -2040,7 +2082,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsAccentColorAdvice =>
-      'Prefer choosing an app theme first, then override the accent color as needed.';
+      'The accent color generates the complete Material 3 light and dark color schemes.';
+
+  @override
+  String get settingsAccentPresetColors => 'Quick colors';
+
+  @override
+  String get settingsAccentCustomColor => 'Custom color';
+
+  @override
+  String get settingsAccentSaturationBrightness =>
+      'Saturation and brightness color field';
+
+  @override
+  String get settingsAccentHue => 'Hue';
+
+  @override
+  String get settingsAccentPreview => 'Theme palette preview';
 
   @override
   String get settingsAccentFollowThemeOption => 'Follow theme';
@@ -2105,6 +2163,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get updateLater => 'Later';
 
   @override
+  String get updateSkipVersion => 'Skip this version';
+
+  @override
   String get updateGoToDownload => 'Go to update';
 
   @override
@@ -2152,8 +2213,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not check for updates. Please try again later.';
 
   @override
-  String get updateOpenFailed =>
-      'Could not open the GitHub Release download page';
+  String get updateOpenFailed => 'Could not open the link';
 
   @override
   String get settingsIosOnlyFeature => 'This feature is only available on iOS';
@@ -2559,6 +2619,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get readerThemeDay => 'Day';
+
+  @override
+  String get readerThemeFollowSystem => 'Follow system';
 
   @override
   String get readerThemeMist => 'Mist';
@@ -3425,6 +3488,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsCacheManagementTitle => 'Cache management';
+
+  @override
+  String settingsCacheManagementSubtitle(String size) {
+    return 'Using $size · View details and clear caches';
+  }
+
+  @override
+  String get settingsCacheUsageTitle => 'Cache usage';
+
+  @override
+  String get settingsCacheTotalUsage => 'Total used';
+
+  @override
+  String get settingsCacheSafeHint =>
+      'Only safely removable caches are shown. Books, reading progress, and settings are not included.';
 
   @override
   String get settingsCacheSourceCovers => 'Source cover cache';

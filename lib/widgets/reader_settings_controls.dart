@@ -126,7 +126,10 @@ class _ReaderSettingsSheetState extends State<ReaderSettingsSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final palette = ReaderThemes.byId(_themeId);
+    final palette = ReaderThemes.byId(
+      _themeId,
+      platformBrightness: MediaQuery.platformBrightnessOf(context),
+    );
     final theme = palette.toThemeData(typography: Theme.of(context).textTheme);
     return ReaderSettingsSheetFrame(
       palette: palette,
@@ -717,6 +720,7 @@ class ReaderThemeStrip extends StatelessWidget {
   }
 
   IconData _iconFor(String id) => switch (id) {
+    ReaderThemes.systemId => Icons.brightness_auto_rounded,
     'pureBlack' => Icons.brightness_1_rounded,
     'night' => Icons.dark_mode_rounded,
     'navy' => Icons.nights_stay_rounded,

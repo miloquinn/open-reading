@@ -161,6 +161,18 @@ abstract class AppLocalizations {
   /// **'Try again'**
   String get discoverRetry;
 
+  /// No description provided for @discoverEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to show yet'**
+  String get discoverEmptyTitle;
+
+  /// No description provided for @discoverEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This section has no content to show yet.'**
+  String get discoverEmptyMessage;
+
   /// No description provided for @discoverUnsupportedTitle.
   ///
   /// In en, this message translates to:
@@ -3586,6 +3598,72 @@ abstract class AppLocalizations {
   /// **'Show icons only in the mobile bottom navigation'**
   String get settingsHideNavigationLabelsSubtitle;
 
+  /// Title of the floating home navigation settings page
+  ///
+  /// In en, this message translates to:
+  /// **'Floating navigation bar'**
+  String get settingsFloatingNavigationTitle;
+
+  /// Description of the floating home navigation settings entry
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust the display style and destination order'**
+  String get settingsFloatingNavigationSubtitle;
+
+  /// No description provided for @floatingNavigationPreviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get floatingNavigationPreviewTitle;
+
+  /// No description provided for @floatingNavigationDisplayModeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Display style'**
+  String get floatingNavigationDisplayModeTitle;
+
+  /// No description provided for @floatingNavigationIconsOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Icons only'**
+  String get floatingNavigationIconsOnly;
+
+  /// No description provided for @floatingNavigationIconsAndLabels.
+  ///
+  /// In en, this message translates to:
+  /// **'Icons and labels'**
+  String get floatingNavigationIconsAndLabels;
+
+  /// No description provided for @floatingNavigationOrderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Navigation order'**
+  String get floatingNavigationOrderTitle;
+
+  /// No description provided for @floatingNavigationOrderHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold the handle on the right to reorder'**
+  String get floatingNavigationOrderHint;
+
+  /// No description provided for @floatingNavigationSyncHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The order also applies to swipe navigation and the wide-screen sidebar'**
+  String get floatingNavigationSyncHint;
+
+  /// No description provided for @floatingNavigationResetOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore default order'**
+  String get floatingNavigationResetOrder;
+
+  /// No description provided for @floatingNavigationResetDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Default order restored'**
+  String get floatingNavigationResetDone;
+
   /// Title of the library layout selector
   ///
   /// In en, this message translates to:
@@ -3709,8 +3787,38 @@ abstract class AppLocalizations {
   /// Advice text in the accent color modal
   ///
   /// In en, this message translates to:
-  /// **'Prefer choosing an app theme first, then override the accent color as needed.'**
+  /// **'The accent color generates the complete Material 3 light and dark color schemes.'**
   String get settingsAccentColorAdvice;
+
+  /// No description provided for @settingsAccentPresetColors.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick colors'**
+  String get settingsAccentPresetColors;
+
+  /// No description provided for @settingsAccentCustomColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom color'**
+  String get settingsAccentCustomColor;
+
+  /// No description provided for @settingsAccentSaturationBrightness.
+  ///
+  /// In en, this message translates to:
+  /// **'Saturation and brightness color field'**
+  String get settingsAccentSaturationBrightness;
+
+  /// No description provided for @settingsAccentHue.
+  ///
+  /// In en, this message translates to:
+  /// **'Hue'**
+  String get settingsAccentHue;
+
+  /// No description provided for @settingsAccentPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme palette preview'**
+  String get settingsAccentPreview;
 
   /// Option title to follow the theme accent
   ///
@@ -3820,6 +3928,12 @@ abstract class AppLocalizations {
   /// **'Later'**
   String get updateLater;
 
+  /// No description provided for @updateSkipVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip this version'**
+  String get updateSkipVersion;
+
   /// No description provided for @updateGoToDownload.
   ///
   /// In en, this message translates to:
@@ -3901,7 +4015,7 @@ abstract class AppLocalizations {
   /// No description provided for @updateOpenFailed.
   ///
   /// In en, this message translates to:
-  /// **'Could not open the GitHub Release download page'**
+  /// **'Could not open the link'**
   String get updateOpenFailed;
 
   /// Toast when using an iOS-only feature on another platform
@@ -4605,6 +4719,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Day'**
   String get readerThemeDay;
+
+  /// Reading theme that switches between day and pure black with system brightness
+  ///
+  /// In en, this message translates to:
+  /// **'Follow system'**
+  String get readerThemeFollowSystem;
 
   /// No description provided for @readerThemeMist.
   ///
@@ -6065,6 +6185,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cache management'**
   String get settingsCacheManagementTitle;
+
+  /// Cache management entry subtitle with current total usage
+  ///
+  /// In en, this message translates to:
+  /// **'Using {size} · View details and clear caches'**
+  String settingsCacheManagementSubtitle(String size);
+
+  /// Title above the cache usage chart
+  ///
+  /// In en, this message translates to:
+  /// **'Cache usage'**
+  String get settingsCacheUsageTitle;
+
+  /// Label below the total cache size in the usage chart
+  ///
+  /// In en, this message translates to:
+  /// **'Total used'**
+  String get settingsCacheTotalUsage;
+
+  /// Explains the safety boundary of cache management
+  ///
+  /// In en, this message translates to:
+  /// **'Only safely removable caches are shown. Books, reading progress, and settings are not included.'**
+  String get settingsCacheSafeHint;
 
   /// No description provided for @settingsCacheSourceCovers.
   ///

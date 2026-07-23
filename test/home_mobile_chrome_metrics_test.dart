@@ -90,5 +90,41 @@ void main() {
       expect(metrics.navBottomInset, 70);
       expect(metrics.pageBottomPadding, 136);
     });
+
+    test('locks system insets while an immersive reader route is active', () {
+      final stabilizer = HomeMobileSystemInsetsStabilizer();
+      final homeInsets = stabilizer.resolve(
+        const MediaQueryData(
+          size: Size(412, 915),
+          viewPadding: EdgeInsets.only(top: 24, bottom: 24),
+        ),
+        lockForReaderTransition: false,
+      );
+
+      final hiddenBarInsets = stabilizer.resolve(
+        const MediaQueryData(size: Size(412, 915)),
+        lockForReaderTransition: true,
+      );
+      final transientGestureInsets = stabilizer.resolve(
+        const MediaQueryData(
+          size: Size(412, 915),
+          viewPadding: EdgeInsets.only(bottom: 48),
+        ),
+        lockForReaderTransition: true,
+      );
+
+      expect(homeInsets, const EdgeInsets.only(top: 24, bottom: 24));
+      expect(hiddenBarInsets, homeInsets);
+      expect(transientGestureInsets, homeInsets);
+
+      final restoredInsets = stabilizer.resolve(
+        const MediaQueryData(
+          size: Size(412, 915),
+          viewPadding: EdgeInsets.only(top: 24, bottom: 32),
+        ),
+        lockForReaderTransition: false,
+      );
+      expect(restoredInsets, const EdgeInsets.only(top: 24, bottom: 32));
+    });
   });
 }

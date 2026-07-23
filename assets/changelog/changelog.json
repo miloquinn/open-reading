@@ -2,13 +2,77 @@
     "schemaVersion":  1,
     "entries":  [
                     {
+                        "version":  "2.3.7",
+                        "notes":  {
+                                      "en":  [
+                                                 "Rebuilt book opening and closing around a responsive fast-then-slow cover motion, with the cover staying visible until the first reader frame is actually ready",
+                                                 "Made cover-to-content, cover-to-loader, and loader-to-content handoffs longer true crossfades; loading screens now keep the title and reader controls available for exit",
+                                                 "Made the floating bottom navigation slide away immediately when a book opens",
+                                                 "Added a spring-back animation for the floating bottom navigation during book opening and closing, with predictive-back cancellation returning it to the correct state",
+                                                 "Connected Android 14+ predictive back progress directly to the reader-to-cover handoff so the closing animation follows the finger and resumes from the committed position",
+                                                 "Freezes the current reader screen into a texture when exit starts, so the closing motion transforms one snapshot instead of recompositing dense text every frame; cancelled predictive back restores live content only after reaching full screen",
+                                                 "Moved expensive page-curl snapshots and shelf refreshes out of the closing animation, with safe cover-position fallback to prevent brief red error frames",
+                                                 "Redesigned Discover book details and kept add method, progress, success, already-added, and retry states in one animated flow with a bookshelf drop-in confirmation",
+                                                 "Removed stalls when opening and jumping through very large tables of contents by prebuilding display data and loading indexed TXT chapter ranges asynchronously",
+                                                 "Moved online chapter conversion, adjacent pagination, and cache persistence out of the horizontal swipe path to smooth chapter title pages",
+                                                 "Split every oversized chapter in very large TXT files into lazy 32K-character sections, read only the current and required adjacent sections asynchronously, and delayed first-time indexing until after the cover-to-loader handoff",
+                                                 "Merged app themes and accent colors into one Material 3 color source with automatic migration of earlier theme choices",
+                                                 "Reorganized Settings by merging related options and moving floating navigation and library layout controls into focused detail pages"
+                                             ],
+                                      "zh":  [
+                                                 "重做书籍打开与关闭动画：封面采用先快后慢的展开/缩回曲线，并在正文首帧真正就绪前保持可见",
+                                                 "封面到正文、封面到加载动画、加载动画到正文都改为更长的真实渐隐渐现；加载时仍可呼出标题栏和控制栏退出",
+                                                 "打开书籍时底部悬浮导航栏立即向下滑出",
+                                                 "增加底部悬浮导航栏在书籍打开、关闭时的回弹动画；预测性返回取消后会恢复到正确状态",
+                                                 "Android 14+ 预测性返回进度直接驱动正文到封面的交接，缩回动画跟随手指并从提交位置继续",
+                                                 "退出起步时把当前阅读屏冻结为纹理快照，缩回过程只变换快照而不再逐帧合成大量正文；预测性返回取消后回到全屏再恢复实时内容",
+                                                 "退出期间暂停仿真翻页快照和书架刷新，封面位置未布局时安全降级，避免偶发一两帧红色错误页",
+                                                 "优化发现页书籍详情的 UI 与动画，加入方式、进度、成功、已存在和失败重试统一在同一动画流程中，并增加封面落入书架的成功反馈",
+                                                 "修复超长目录打开和目录跳转卡顿：提前生成展示数据，并异步读取大型 TXT 的目标章节区间",
+                                                 "将在线章节正文转换、相邻章节分页和缓存写入移出水平滑动关键路径，修复章节标题页滑动卡顿",
+                                                 "超大 TXT 的每个巨型章节都按约 32K 字符分片懒加载，只异步读取当前与必要相邻片段；首次索引延后到封面转入加载动画之后执行",
+                                                 "应用主题与强调色合并为统一的 Material 3 配色来源，并自动迁移旧主题配置",
+                                                 "重大优化设置页，合并相关设置选项，并将悬浮导航栏与书库布局收纳到独立详情页"
+                                             ],
+                                      "zh-TW":  [
+                                                    "重做書籍開啟與關閉動畫：封面採用先快後慢的展開/縮回曲線，並在正文首幀真正就緒前保持可見",
+                                                    "封面到正文、封面到載入動畫、載入動畫到正文都改為更長的真實淡入淡出；載入時仍可叫出標題列與控制列退出",
+                                                    "開啟書籍時底部懸浮導覽列立即向下滑出",
+                                                    "增加底部懸浮導覽列在書籍開啟、關閉時的回彈動畫；預測性返回取消後會恢復至正確狀態",
+                                                    "Android 14+ 預測性返回進度直接驅動正文到封面的交接，縮回動畫跟隨手指並從提交位置繼續",
+                                                    "退出起步時將目前閱讀畫面凍結為紋理快照，縮回過程只變換快照而不再逐幀合成大量正文；預測性返回取消後回到全螢幕再恢復即時內容",
+                                                    "退出期間暫停仿真翻頁快照與書架更新，封面位置尚未排版時安全降級，避免偶發一兩幀紅色錯誤頁",
+                                                    "最佳化發現頁書籍詳情的 UI 與動畫，加入方式、進度、成功、已存在與失敗重試統一於同一動畫流程，並加入封面落入書架的成功回饋",
+                                                    "修復超長目錄開啟與目錄跳轉卡頓：預先產生顯示資料，並非同步讀取大型 TXT 的目標章節區間",
+                                                    "將線上章節正文轉換、相鄰章節分頁與快取寫入移出水平滑動關鍵路徑，修復章節標題頁滑動卡頓",
+                                                    "超大 TXT 的每個巨型章節都以約 32K 字元分片延遲載入，只非同步讀取目前與必要相鄰片段；首次索引延後到封面轉入載入動畫後執行",
+                                                    "應用程式主題與強調色合併為統一的 Material 3 配色來源，並自動遷移舊主題設定",
+                                                    "大幅最佳化設定頁，合併相關設定選項，並將懸浮導覽列與書庫版面收納至獨立詳情頁"
+                                                ],
+                                      "ja":  [
+                                                 "書籍の開閉アニメーションを再設計し、表紙を素早く反応してゆっくり収束する動きに変更。本文の初回描画が完了するまで表紙を維持します",
+                                                 "表紙から本文、表紙から読み込み、読み込みから本文への切り替えを長めのクロスフェードにし、読み込み中もタイトルと操作バーから終了できます",
+                                                 "書籍を開くと下部のフローティングナビゲーションが即座に下へ退避します",
+                                                 "書籍の開閉時に下部フローティングナビゲーションのバウンド復帰アニメーションを追加し、予測型戻るのキャンセル時も正しい状態へ戻します",
+                                                 "Android 14 以降の予測型戻る進捗を本文から表紙への切り替えへ直接反映し、指に追従して確定位置から続行します",
+                                                 "終了開始時に現在の読書画面をテクスチャへ固定し、縮小中は大量の本文を毎フレーム再合成せず1枚のスナップショットだけを変形します。予測型戻るのキャンセル時は全画面へ戻ってからライブ表示へ復帰します",
+                                                 "終了中はページカールのスナップショットと本棚更新を停止し、表紙位置が未レイアウトでも安全にフォールバックして赤いエラーフレームを防ぎます",
+                                                 "発見画面の書籍詳細 UI とアニメーションを改善し、追加方法、進捗、成功、追加済み、再試行を一つのアニメーションフローに統合して表紙が本棚へ入る成功演出を追加しました",
+                                                 "非常に長い目次の表示と目次ジャンプの停止を、表示データの事前生成と大容量 TXT の対象章範囲の非同期読み込みで改善しました",
+                                                 "オンライン章の本文変換、隣接章のページ分割、キャッシュ保存を横スワイプの重要経路から外し、章タイトルページの引っかかりを改善しました",
+                                                 "巨大 TXT のすべての大きすぎる章を約 32K 文字単位へ分割し、現在と必要な隣接部分だけを非同期で読み込みます。初回索引作成は表紙から読み込み表示への移行後まで延期します",
+                                                 "アプリテーマとアクセントカラーを一つの Material 3 配色元へ統合し、以前のテーマ設定を自動移行します",
+                                                 "設定画面を大幅に整理し、関連項目を統合してフローティングナビゲーションとライブラリ表示を専用詳細画面へまとめました"
+                                             ]
+                                  }
+                    },
+                    {
                         "version":  "2.3.6",
                         "notes":  {
                                       "en":  [
                                                  "Made online source reading cache-first: recently opened catalogs and chapters reopen immediately and remain available offline for up to 30 days while stale data refreshes in the background",
                                                  "Opening an online book from Home now goes straight to the source reader instead of treating it as a local file",
                                                  "Preloaded and pre-paginated adjacent online chapters now form one continuous horizontal page sequence, so chapter titles and body pages turn normally without boundary bounce-back",
-                                                 "Removed the light flash when opening a book with a night, pure-black, or custom dark reading theme",
                                                  "Made large online-font downloads smoother by moving file verification off the UI thread and limiting progress redraws to the font list",
                                                  "Added an optional grid setting that shows each book title, a compact progress bar, and its reading percentage below the cover",
                                                  "Kept grid titles to one ellipsized line so long names do not change row heights; the existing cover-only grid remains the default",
@@ -19,7 +83,6 @@
                                                  "在线书源阅读改为缓存优先：已读目录和正文可立即恢复，陈旧缓存后台刷新，30 天内内容在离线时仍可阅读",
                                                  "首页打开在线书籍会直接进入书源阅读器，不再按本地文件处理",
                                                  "在线书源会预加载并预先分页相邻章节，将前后章节接入同一条水平翻页序列，章节标题与正文可连续翻动且不会在边界回弹",
-                                                 "修复夜间、纯黑和自定义深色阅读主题打开书籍时短暂闪白的问题",
                                                  "大型在线字体的校验改在后台执行，下载进度只刷新字体列表，界面更流畅",
                                                  "书库网格新增可选的“显示书名和进度”，在封面下展示书名、精简进度条和阅读百分比",
                                                  "书名固定单行并在过长时显示省略号，网格行高保持一致；默认仍为纯封面布局",
@@ -30,7 +93,6 @@
                                                     "線上書源閱讀改為快取優先：已讀目錄與正文可立即恢復，過期快取於背景更新，30 天內內容離線時仍可閱讀",
                                                     "首頁開啟線上書籍會直接進入書源閱讀器，不再當成本機檔案處理",
                                                     "線上書源會預先載入並分頁相鄰章節，將前後章節接入同一條水平翻頁序列，章節標題與正文可連續翻動且不會在邊界回彈",
-                                                    "修正夜間、純黑與自訂深色閱讀主題開啟書籍時短暫閃白的問題",
                                                     "大型線上字型的校驗改在背景執行，下載進度只更新字型清單，介面更流暢",
                                                     "書庫網格新增可選的「顯示書名和進度」，在封面下顯示書名、精簡進度列與閱讀百分比",
                                                     "書名固定單行並在過長時顯示省略號，網格列高保持一致；預設仍為純封面版面",
@@ -41,7 +103,6 @@
                                                  "オンライン書源の読書をキャッシュ優先にし、既読の目次と本文をすぐ復元。古いキャッシュはバックグラウンドで更新され、30日間はオフラインでも読めます",
                                                  "ホームからオンライン書籍をローカルファイルとして扱わず、直接書源リーダーで開けるようにしました",
                                                  "隣接するオンライン章を事前取得・ページ分割して一続きの横送りに組み込み、章タイトルと本文を境界で跳ね返らず通常のページと同様に移動できるようにしました",
-                                                 "夜間・純黒・カスタムのダーク読書テーマで書籍を開く際に一瞬白くなる問題を修正しました",
                                                  "大きなオンラインフォントの検証をバックグラウンドへ移し、進捗更新をフォント一覧だけに限定して操作を滑らかにしました",
                                                  "ライブラリのグリッドに、表紙の下へ書名、コンパクトな進捗バー、読書率を表示するオプションを追加しました",
                                                  "長い書名は1行で省略し、行の高さを揃えます。従来の表紙のみのグリッドが引き続き既定です",

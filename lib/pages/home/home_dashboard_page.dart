@@ -5,8 +5,11 @@ import 'package:flutter/material.dart';
 import 'home_mobile_dashboard_page.dart';
 
 class HomeDashboardPage extends StatelessWidget {
-  const HomeDashboardPage({super.key});
+  const HomeDashboardPage({super.key, this.controller});
+
+  final HomeDashboardController? controller;
 
   @override
-  Widget build(BuildContext context) => const HomeMobileDashboardPage();
+  Widget build(BuildContext context) =>
+      HomeMobileDashboardPage(controller: controller);
 }

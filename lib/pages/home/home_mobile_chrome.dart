@@ -67,10 +67,14 @@ class HomeMobileChromeMetrics {
     this.floatingNavHeight = kHomeMobileFloatingNavHeight,
   });
 
-  factory HomeMobileChromeMetrics.fromMediaQuery(MediaQueryData mediaQuery) {
+  factory HomeMobileChromeMetrics.fromMediaQuery(
+    MediaQueryData mediaQuery, {
+    EdgeInsets? systemInsets,
+  }) {
+    final resolvedInsets = systemInsets ?? mediaQuery.viewPadding;
     return HomeMobileChromeMetrics(
-      systemTopInset: mediaQuery.viewPadding.top,
-      systemBottomInset: mediaQuery.viewPadding.bottom,
+      systemTopInset: resolvedInsets.top,
+      systemBottomInset: resolvedInsets.bottom,
     );
   }
 
@@ -88,6 +92,30 @@ class HomeMobileChromeMetrics {
 
   double get floatingActionBottomMargin =>
       navContainerHeight + kHomeMobileFloatingActionExtra;
+}
+
+/// 阅读器沉浸模式会暂时隐藏 Android 系统栏；预测性返回起步后，系统又可能
+/// 把手势提示区域作为新的 viewPadding 突然上报。首页此时正在底层参与转场，
+/// 如果直接采用这次变化，悬浮导航会在回弹途中整体跳高。
+///
+/// 因此阅读活动存活期间沿用进入阅读器前最后一次稳定的系统安全区，等阅读
+/// 活动释放后再接受新的真实值；普通首页状态仍会实时响应系统配置变化。
+class HomeMobileSystemInsetsStabilizer {
+  EdgeInsets? _stableInsets;
+
+  EdgeInsets resolve(
+    MediaQueryData mediaQuery, {
+    required bool lockForReaderTransition,
+  }) {
+    final observedInsets = EdgeInsets.only(
+      top: mediaQuery.viewPadding.top,
+      bottom: mediaQuery.viewPadding.bottom,
+    );
+    if (!lockForReaderTransition || _stableInsets == null) {
+      _stableInsets = observedInsets;
+    }
+    return _stableInsets!;
+  }
 }
 
 /// 将 HomeShell 计算出的同一份安全区指标提供给所有手机 tab 页面。

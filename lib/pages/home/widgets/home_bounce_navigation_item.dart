@@ -301,10 +301,10 @@ class _HomeBounceNavigationItemState extends State<HomeBounceNavigationItem>
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
                                         color: iconColor,
-                                        fontSize: 12.5,
+                                        fontSize: 10.5,
                                         fontWeight: FontWeight.lerp(
+                                          FontWeight.w600,
                                           FontWeight.w700,
-                                          FontWeight.w800,
                                           selection,
                                         ),
                                         height: 1,

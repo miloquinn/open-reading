@@ -15,13 +15,125 @@ import 'package:xxread/core/reader/reader_margin_settings.dart';
 import 'package:xxread/core/reader/reader_settings.dart';
 import 'package:xxread/l10n/app_localizations.dart';
 import 'package:xxread/pages/reader/book_source_reader_page.dart';
+import 'package:xxread/utils/glass_config.dart';
+import 'package:xxread/utils/reader_themes.dart';
 import 'package:xxread/widgets/reader_chapter_title_page.dart';
+import 'package:xxread/widgets/reader_opening_loader.dart';
 import 'package:xxread/widgets/reader_paper_page_leaf.dart';
 import 'package:xxread/widgets/reader_shader_page_curl.dart';
 import 'package:xxread/widgets/reader_top_information_bar.dart';
 
 void main() {
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+    GlassEffectConfig.setDisableAllGlassEffects(false);
+  });
+
+  tearDown(() {
+    GlassEffectConfig.setDisableAllGlassEffects(false);
+  });
+
+  testWidgets(
+    'cover opening skips a brief loader and fades directly to content',
+    (tester) async {
+      final client = _DelayedOpeningBookSourceClient();
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: BookSourceReaderPage(
+            source: _testSource(),
+            book: const BookSourceBook(
+              id: 'book-1',
+              title: 'Opening test',
+              author: 'Author',
+              description: '',
+              categories: [],
+            ),
+            client: client,
+            initialTheme: ReaderThemes.day,
+          ),
+        ),
+      );
+
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(
+        find.byKey(const ValueKey('book-source-reader-loading-placeholder')),
+        findsWidgets,
+      );
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+
+      client.completeCatalog();
+      await tester.pump();
+      await tester.pump();
+      expect(
+        find.byKey(const ValueKey('book-source-reader-content')),
+        findsOneWidget,
+      );
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+    },
+  );
+
+  testWidgets('a genuinely slow cover opening crossfades loader into content', (
+    tester,
+  ) async {
+    final client = _DelayedOpeningBookSourceClient();
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: BookSourceReaderPage(
+          source: _testSource(),
+          book: const BookSourceBook(
+            id: 'book-1',
+            title: 'Opening test',
+            author: 'Author',
+            description: '',
+            categories: [],
+          ),
+          client: client,
+          initialTheme: ReaderThemes.day,
+        ),
+      ),
+    );
+
+    await tester.pump(const Duration(milliseconds: 660));
+    await tester.pump();
+    expect(find.byType(ReaderOpeningLoader), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+    expect(
+      tester
+          .widget<AnimatedPositioned>(
+            find.byKey(const ValueKey('book-source-top-controls')),
+          )
+          .top,
+      -130,
+    );
+    await tester.tapAt(tester.getRect(find.byType(ReaderOpeningLoader)).center);
+    await tester.pump();
+    expect(
+      tester
+          .widget<AnimatedPositioned>(
+            find.byKey(const ValueKey('book-source-top-controls')),
+          )
+          .top,
+      10,
+    );
+    await tester.pump(const Duration(milliseconds: 300));
+
+    client.completeCatalog();
+    await tester.pump();
+    await tester.pump();
+    expect(
+      find.byKey(const ValueKey('book-source-reader-content')),
+      findsOneWidget,
+    );
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+  });
 
   testWidgets('loads source chapters and navigates to the next chapter', (
     tester,
@@ -1070,6 +1182,70 @@ void main() {
     expect(region.value.statusBarIconBrightness, Brightness.light);
     expect(region.value.statusBarBrightness, Brightness.dark);
   });
+
+  testWidgets(
+    'system reader theme uses a solid pure-black status bar without glass',
+    (tester) async {
+      tester.binding.platformDispatcher.platformBrightnessTestValue =
+          Brightness.dark;
+      addTearDown(
+        tester.binding.platformDispatcher.clearPlatformBrightnessTestValue,
+      );
+      GlassEffectConfig.setDisableAllGlassEffects(true);
+      SharedPreferences.setMockInitialValues({
+        ReaderSettingsStore.themeKey: ReaderThemes.systemId,
+      });
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: BookSourceReaderPage(
+            source: _testSource(),
+            book: const BookSourceBook(
+              id: 'book-1',
+              title: 'Test book',
+              author: 'Author',
+              description: '',
+              categories: [],
+            ),
+            client: _FakeBookSourceClient(),
+          ),
+        ),
+      );
+      await _pumpUntilFound(
+        tester,
+        find.byKey(const ValueKey('reader-system-ui-region')),
+      );
+
+      final region = tester.widget<AnnotatedRegion<SystemUiOverlayStyle>>(
+        find.byKey(const ValueKey('reader-system-ui-region')),
+      );
+      expect(region.value.statusBarColor, ReaderThemes.pureBlack.background);
+      expect(
+        region.value.systemNavigationBarColor,
+        ReaderThemes.pureBlack.background,
+      );
+      expect(region.value.statusBarIconBrightness, Brightness.light);
+      expect(region.value.statusBarBrightness, Brightness.dark);
+
+      tester.binding.platformDispatcher.platformBrightnessTestValue =
+          Brightness.light;
+      await tester.pump();
+
+      final lightRegion = tester.widget<AnnotatedRegion<SystemUiOverlayStyle>>(
+        find.byKey(const ValueKey('reader-system-ui-region')),
+      );
+      expect(lightRegion.value.statusBarColor, ReaderThemes.day.background);
+      expect(
+        lightRegion.value.systemNavigationBarColor,
+        ReaderThemes.day.background,
+      );
+      expect(lightRegion.value.statusBarIconBrightness, Brightness.dark);
+      expect(lightRegion.value.statusBarBrightness, Brightness.light);
+    },
+  );
 }
 
 RegisteredBookSource _testSource() => RegisteredBookSource(
@@ -1184,6 +1360,38 @@ class _ConfigurableBookSourceClient extends BookSourceClient {
       chapterId: chapterId,
       title: 'Tablet chapter',
       content: contents[chapterId]!,
+      contentType: 'text/plain',
+    );
+  }
+}
+
+class _DelayedOpeningBookSourceClient extends BookSourceClient {
+  final Completer<List<BookSourceChapter>> _catalog = Completer();
+
+  void completeCatalog() {
+    if (_catalog.isCompleted) return;
+    _catalog.complete(const [
+      BookSourceChapter(id: 'chapter-1', title: 'Opening chapter', order: 1),
+    ]);
+  }
+
+  @override
+  Future<List<BookSourceChapter>> getChapters(
+    RegisteredBookSource source,
+    String bookId,
+  ) => _catalog.future;
+
+  @override
+  Future<BookSourceChapterContent> getChapterContent(
+    RegisteredBookSource source, {
+    required String bookId,
+    required String chapterId,
+  }) async {
+    return BookSourceChapterContent(
+      bookId: bookId,
+      chapterId: chapterId,
+      title: 'Opening chapter',
+      content: 'Opening body',
       contentType: 'text/plain',
     );
   }

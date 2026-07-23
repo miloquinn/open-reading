@@ -71,10 +71,22 @@ class NativeTextPageRange {
     required this.start,
     required this.end,
     required this.lineCount,
-  });
+    int? visibleStart,
+    int? visibleEnd,
+  }) : visibleStart = visibleStart ?? start,
+       visibleEnd = visibleEnd ?? end,
+       assert(start <= (visibleStart ?? start)),
+       assert((visibleStart ?? start) <= (visibleEnd ?? end)),
+       assert((visibleEnd ?? end) <= end);
 
+  /// Contiguous text ownership used for canonical offset coverage.
   final int start;
   final int end;
+
+  /// The slice that is actually measured and painted. Paragraph separators
+  /// owned by this page may be folded at the top without deleting source text.
+  final int visibleStart;
+  final int visibleEnd;
   final int lineCount;
 }
 
@@ -112,17 +124,43 @@ class NativeTextPaginator {
     final pages = <NativeTextPageRange>[];
     var pageStart = 0;
     while (pageStart < text.length) {
+      final visibleStart = _firstVisiblePageOffset(text, pageStart);
+      if (visibleStart >= text.length) {
+        if (pages.isEmpty) {
+          pages.add(
+            NativeTextPageRange(
+              start: pageStart,
+              end: text.length,
+              visibleStart: text.length,
+              visibleEnd: text.length,
+              lineCount: 0,
+            ),
+          );
+        } else {
+          final previous = pages.removeLast();
+          pages.add(
+            NativeTextPageRange(
+              start: previous.start,
+              end: text.length,
+              visibleStart: previous.visibleStart,
+              visibleEnd: previous.visibleEnd,
+              lineCount: previous.lineCount,
+            ),
+          );
+        }
+        break;
+      }
       final pageMaxHeight = pages.isEmpty ? resolvedFirstPageHeight : maxHeight;
       final candidates = _lineEndCandidates(
         text: text,
-        pageStart: pageStart,
+        pageStart: visibleStart,
         sourceOffset: sourceOffset,
         spanBuilder: spanBuilder,
         pageMaxHeight: pageMaxHeight,
       );
       var selected = _selectVerifiedCandidate(
         candidates: candidates,
-        pageStart: pageStart,
+        pageStart: visibleStart,
         sourceOffset: sourceOffset,
         spanBuilder: spanBuilder,
         pageMaxHeight: pageMaxHeight,
@@ -136,12 +174,12 @@ class NativeTextPaginator {
         final previousEnd = selectedIndex > 0
             ? candidates[selectedIndex - 1]
             : -1;
-        if (previousEnd >= pageStart) {
+        if (previousEnd >= visibleStart) {
           final finalLine = text.substring(previousEnd, selected.end).trim();
           if (finalLine.isNotEmpty && finalLine.runes.length <= 2) {
             selected =
                 _verifiedRange(
-                  pageStart: pageStart,
+                  pageStart: visibleStart,
                   pageEnd: previousEnd,
                   sourceOffset: sourceOffset,
                   spanBuilder: spanBuilder,
@@ -152,9 +190,20 @@ class NativeTextPaginator {
         }
       }
 
-      assert(selected.end > pageStart);
-      pages.add(selected);
-      pageStart = selected.end;
+      assert(selected.end > visibleStart);
+      final ownsTrailingWhitespace =
+          _firstVisiblePageOffset(text, selected.end) >= text.length;
+      final pageEnd = ownsTrailingWhitespace ? text.length : selected.end;
+      pages.add(
+        NativeTextPageRange(
+          start: pageStart,
+          end: pageEnd,
+          visibleStart: visibleStart,
+          visibleEnd: selected.end,
+          lineCount: selected.lineCount,
+        ),
+      );
+      pageStart = pageEnd;
     }
 
     assert(pages.first.start == 0);
@@ -300,6 +349,25 @@ int _nextCodePointBoundary(String text, int start) {
 bool _endsParagraph(String text, int end) {
   if (end <= 0) return true;
   return isReaderLineBreakCodeUnit(text.codeUnitAt(end - 1));
+}
+
+/// Folds only complete blank rows at a page boundary. Indentation belonging to
+/// the first non-empty row is preserved, while original/generated paragraph
+/// separators remain owned by the page for canonical offset continuity.
+int _firstVisiblePageOffset(String text, int pageStart) {
+  var rowStart = pageStart;
+  while (rowStart < text.length) {
+    var cursor = rowStart;
+    while (cursor < text.length &&
+        isReaderIndentCodeUnit(text.codeUnitAt(cursor))) {
+      cursor++;
+    }
+    if (cursor >= text.length) return text.length;
+    final breakLength = readerLineBreakLengthAt(text, cursor);
+    if (breakLength == 0) return rowStart;
+    rowStart = cursor + breakLength;
+  }
+  return rowStart;
 }
 
 bool _isHighSurrogate(int codeUnit) => codeUnit >= 0xD800 && codeUnit <= 0xDBFF;

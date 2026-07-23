@@ -34,6 +34,24 @@ class BookImportSourceService implements BookImportSourcePreparer {
   static Set<String> get supportedExtensions =>
       BookFormatRegistry.pickerExtensions;
 
+  static const Map<String, String> _extensionsByMimeType = <String, String>{
+    'text/plain': 'txt',
+    'application/epub+zip': 'epub',
+    'application/pdf': 'pdf',
+    'application/x-mobipocket-ebook': 'mobi',
+    'application/vnd.amazon.ebook': 'azw',
+    'application/x-fictionbook+xml': 'fb2',
+    'application/rtf': 'rtf',
+    'text/rtf': 'rtf',
+    'application/msword': 'doc',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+        'docx',
+    'application/vnd.comicbook+zip': 'cbz',
+    'application/x-cbz': 'cbz',
+    'application/vnd.comicbook-rar': 'cbr',
+    'application/x-cbr': 'cbr',
+  };
+
   final Future<FilePickerResult?> Function() _filePicker;
   final PlatformStorageBridge _platformBridge;
   final Future<Directory> Function() _documentsDirectory;
@@ -233,9 +251,7 @@ class BookImportSourceService implements BookImportSourcePreparer {
           row['locator']?.toString() ?? row['documentUri']?.toString() ?? '';
       final displayName =
           row['displayName']?.toString() ?? row['name']?.toString() ?? '';
-      final fileExtension = _normalizedExtension(
-        row['extension']?.toString() ?? extension(displayName),
-      );
+      final fileExtension = _extensionFromRow(row, displayName);
       if (locator.isEmpty ||
           displayName.isEmpty ||
           !supportedExtensions.contains(fileExtension)) {
@@ -274,6 +290,22 @@ class BookImportSourceService implements BookImportSourcePreparer {
 
   String _normalizedExtension(String value) {
     return value.replaceFirst(RegExp(r'^\.'), '').toLowerCase();
+  }
+
+  String _extensionFromRow(Map<String, Object?> row, String displayName) {
+    final supplied = _normalizedExtension(row['extension']?.toString() ?? '');
+    if (supplied.isNotEmpty) return supplied;
+
+    final fromName = _normalizedExtension(extension(displayName));
+    if (fromName.isNotEmpty) return fromName;
+
+    final mimeType = row['mimeType']
+        ?.toString()
+        .split(';')
+        .first
+        .trim()
+        .toLowerCase();
+    return _extensionsByMimeType[mimeType] ?? '';
   }
 
   int? _asInt(Object? value) {

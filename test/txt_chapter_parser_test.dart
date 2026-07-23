@@ -79,4 +79,33 @@ void main() {
     expect(chapters[0].bodyIn(source), '书籍说明\u2028前言正文');
     expect(chapters[1].bodyIn(source), '第一段正文');
   });
+
+  test('large heading-less TXT is split into bounded lazy sections', () {
+    final source = List.generate(
+      18,
+      (index) => '第 $index 段正文，不是章节标题。\n',
+    ).join();
+    final parsed = parseTxtChapterSections(
+      source,
+      fallbackTitle: '大文件',
+      prefaceTitle: '前言',
+    );
+    final sections = splitOversizedTxtSections(
+      source,
+      parsed,
+      maxCharsPerSection: 48,
+    );
+
+    expect(sections.length, greaterThan(1));
+    expect(sections.every((section) => !section.isNeedSplitTitle), isTrue);
+    expect(sections.first.title, '大文件');
+    expect(sections[1].title, startsWith('大文件 · 2/'));
+    expect(sections.map((section) => section.bodyIn(source)).join(), source);
+    expect(
+      sections
+          .take(sections.length - 1)
+          .every((section) => section.bodyEnd - section.bodyStart <= 48),
+      isTrue,
+    );
+  });
 }

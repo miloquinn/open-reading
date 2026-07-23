@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:xxread/models/home_navigation_destination.dart';
 import 'package:xxread/services/core/app_settings_service.dart';
 
 Future<AppSettingsNotifier> _loadNotifier() async {
@@ -34,6 +35,7 @@ void main() {
     addTearDown(notifier.dispose);
 
     expect(notifier.hideNavigationLabels, isTrue);
+    expect(notifier.homeNavigationOrder, HomeNavigationDestination.values);
   });
 
   test('navigation label visibility restores and persists', () async {
@@ -53,5 +55,43 @@ void main() {
     expect(notifier.hideNavigationLabels, isTrue);
     expect(prefs.getBool('hide_home_navigation_labels_v1'), isTrue);
     expect(notifications, 1);
+  });
+
+  test('navigation order restores, normalizes, and persists', () async {
+    SharedPreferences.setMockInitialValues({
+      'home_navigation_order_v1': ['settings', 'home', 'home', 'unknown'],
+    });
+    final notifier = await _loadNotifier();
+    addTearDown(notifier.dispose);
+
+    expect(notifier.homeNavigationOrder, [
+      HomeNavigationDestination.settings,
+      HomeNavigationDestination.home,
+      HomeNavigationDestination.library,
+      HomeNavigationDestination.discover,
+    ]);
+
+    final repairedPrefs = await SharedPreferences.getInstance();
+    expect(repairedPrefs.getStringList('home_navigation_order_v1'), [
+      'settings',
+      'home',
+      'library',
+      'discover',
+    ]);
+
+    await notifier.setHomeNavigationOrder(const [
+      HomeNavigationDestination.discover,
+      HomeNavigationDestination.settings,
+      HomeNavigationDestination.home,
+      HomeNavigationDestination.library,
+    ]);
+
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getStringList('home_navigation_order_v1'), [
+      'discover',
+      'settings',
+      'home',
+      'library',
+    ]);
   });
 }

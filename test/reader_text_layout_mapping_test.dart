@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:xxread/core/reader/native_text_paginator.dart';
+import 'package:xxread/core/reader/reader_text_characters.dart';
 import 'package:xxread/core/reader/reader_text_layout.dart';
+import 'package:xxread/core/reader/reader_text_pagination.dart';
 
 void main() {
   test(
@@ -282,10 +284,14 @@ void main() {
 
     expect(pages.length, greaterThan(1));
     for (final page in pages.take(pages.length - 1)) {
-      final painter = flow.createPainter(buildSpan(page.start, page.end))
-        ..layout(maxWidth: width);
+      final painter = flow.createPainter(
+        buildSpan(page.visibleStart, page.visibleEnd),
+      )..layout(maxWidth: width);
       final metrics = painter.computeLineMetrics();
-      final pageText = layout.text.substring(page.start, page.end);
+      final pageText = layout.text.substring(
+        page.visibleStart,
+        page.visibleEnd,
+      );
       var lastVisibleInkBottom = 0.0;
       for (final metric in metrics) {
         final position = painter.getPositionForOffset(
@@ -310,4 +316,57 @@ void main() {
       painter.dispose();
     }
   });
+
+  testWidgets(
+    'page rendering folds leading blank rows without losing source coverage',
+    (tester) async {
+      const style = TextStyle(fontSize: 18, height: 1.6);
+      const flow = NativeTextFlowStyle(
+        textDirection: TextDirection.ltr,
+        textScaler: TextScaler.noScaling,
+        locale: Locale('zh', 'CN'),
+        strutStyle: StrutStyle(fontSize: 18),
+        textHeightBehavior: readerTextHeightBehavior,
+      );
+      final source =
+          '\n\n${List.generate(12, (index) => '第$index段正文。').join('\n\n')}\n\n';
+
+      for (final paragraphSpacing in <int>[0, 1, 2]) {
+        final layout = ReaderTextLayout.build(
+          source,
+          paragraphSpacing: paragraphSpacing,
+        );
+        final pages = paginateReaderText(
+          text: source,
+          maxWidth: 320,
+          maxHeight: 34,
+          flowStyle: flow,
+          style: style,
+          paragraphSpacing: paragraphSpacing,
+        );
+
+        expect(pages.length, greaterThan(1));
+        expect(pages.map((page) => page.text).join(), layout.text);
+        for (final page in pages) {
+          final rendered = page.buildSpan(style: style).toPlainText();
+          expect(
+            rendered,
+            isNotEmpty,
+            reason: 'spacing=$paragraphSpacing must not create a blank page',
+          );
+          expect(
+            isReaderLineBreakCodeUnit(rendered.codeUnitAt(0)),
+            isFalse,
+            reason:
+                'spacing=$paragraphSpacing page=${page.text} must start with content',
+          );
+        }
+        expect(pages.first.startOffset, 0);
+        expect(pages.last.endOffset, source.length);
+        for (var index = 1; index < pages.length; index++) {
+          expect(pages[index - 1].endOffset, pages[index].startOffset);
+        }
+      }
+    },
+  );
 }

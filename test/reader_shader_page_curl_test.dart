@@ -180,10 +180,57 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
 
+    final workMode = tester.widget<TickerMode>(
+      find.byKey(const ValueKey('book-open-transition-reader-work-mode')),
+    );
+    expect(workMode.enabled, isFalse);
     expect(preparationCalls, 0);
 
     await tester.pumpAndSettle();
 
+    expect(preparationCalls, 1);
+  });
+
+  testWidgets('pauses snapshot preparation while its route work is disabled', (
+    tester,
+  ) async {
+    var routeWorkEnabled = false;
+    var preparationCalls = 0;
+    late StateSetter updateHost;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: StatefulBuilder(
+          builder: (context, setHostState) {
+            updateHost = setHostState;
+            return TickerMode(
+              enabled: routeWorkEnabled,
+              child: SizedBox(
+                width: 400,
+                height: 700,
+                child: ReaderShaderPageCurl(
+                  currentPage: _snapshot('current'),
+                  forwardPage: _snapshot('next'),
+                  preparePages: () async {
+                    preparationCalls++;
+                  },
+                  onTurnForward: () {},
+                  onTurnBackward: () {},
+                  paperColor: Colors.white,
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(preparationCalls, 0);
+
+    updateHost(() => routeWorkEnabled = true);
+    await tester.pump();
+    await tester.pump();
     expect(preparationCalls, 1);
   });
 

@@ -32,15 +32,7 @@ class MainActivity : FlutterActivity() {
 
         // 启用 edge-to-edge 模式
         WindowCompat.setDecorFitsSystemWindows(window, false)
-
-        // 设置透明的系统栏颜色
-        window.statusBarColor = Color.TRANSPARENT
-        window.navigationBarColor = Color.TRANSPARENT
-
-        // Android 9+ (API 28+): 设置导航栏分割线透明
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
-            window.navigationBarDividerColor = Color.TRANSPARENT
-        }
+        configureTransparentSystemBars()
     }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
@@ -190,6 +182,7 @@ class MainActivity : FlutterActivity() {
     }
 
     private fun hideSystemUI() {
+        configureTransparentSystemBars()
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
             // Android 11+ (API 30+): 使用 WindowInsetsController
             window.insetsController?.let { controller ->
@@ -200,11 +193,6 @@ class MainActivity : FlutterActivity() {
                 controller.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             }
 
-            // 额外设置：确保导航栏手势提示线也被隐藏
-            // 在某些设备上需要额外的配置来完全隐藏手势提示线
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-                window.isNavigationBarContrastEnforced = false
-            }
         } else {
             // Android 10 及以下: 使用废弃的标志（但仍然有效）
             @Suppress("DEPRECATION")
@@ -220,6 +208,7 @@ class MainActivity : FlutterActivity() {
     }
 
     private fun showSystemUI() {
+        configureTransparentSystemBars()
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
             // Android 11+ (API 30+): 使用 WindowInsetsController
             window.insetsController?.show(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
@@ -235,6 +224,7 @@ class MainActivity : FlutterActivity() {
     }
 
     private fun showReaderStatusBar() {
+        configureTransparentSystemBars()
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
             window.insetsController?.let { controller ->
                 controller.show(WindowInsets.Type.statusBars())
@@ -251,6 +241,21 @@ class MainActivity : FlutterActivity() {
                 or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                 or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
             )
+        }
+    }
+
+    private fun configureTransparentSystemBars() {
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        window.statusBarColor = Color.TRANSPARENT
+        window.navigationBarColor = Color.TRANSPARENT
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+            window.navigationBarDividerColor = Color.TRANSPARENT
+        }
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            // 关闭三键/手势导航栏为了保证可读性自动添加的黑色对比度遮罩。
+            // 预测性返回临时显示手势提示线时也继续保持真正的透明 edge-to-edge。
+            window.isNavigationBarContrastEnforced = false
+            window.isStatusBarContrastEnforced = false
         }
     }
 

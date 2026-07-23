@@ -90,8 +90,14 @@ class _HomePalette {
   }
 }
 
+class HomeDashboardController extends ChangeNotifier {
+  void refresh() => notifyListeners();
+}
+
 class HomeMobileDashboardPage extends StatefulWidget {
-  const HomeMobileDashboardPage({super.key});
+  const HomeMobileDashboardPage({super.key, this.controller});
+
+  final HomeDashboardController? controller;
 
   @visibleForTesting
   static Widget? buildOnlineReader({
@@ -113,7 +119,8 @@ class HomeMobileDashboardPage extends StatefulWidget {
       _HomeMobileDashboardPageState();
 }
 
-class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
+class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage>
+    with WidgetsBindingObserver {
   final _statsDao = ReadingStatsDao();
   final _bookDao = BookDao();
   late final BookSourceClient _sourceClient;
@@ -124,14 +131,17 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
   List<Map<String, dynamic>> _weeklyData = [];
   List<Book> _recentBooks = [];
   bool _isInitialLoading = true;
+  int _loadGeneration = 0;
 
   _HomePalette get _palette => _HomePalette.fromTheme(Theme.of(context));
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _sourceClient = BookSourceClient();
     _sourceShelfService = BookSourceShelfService(client: _sourceClient);
+    widget.controller?.addListener(_handleRefreshRequest);
     _loadAllStats();
     _libraryChangedSubscription = LibraryEventBus().stream.listen((_) {
       if (mounted) _loadAllStats();
@@ -139,12 +149,34 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
   }
 
   @override
+  void didUpdateWidget(covariant HomeMobileDashboardPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller == widget.controller) return;
+    oldWidget.controller?.removeListener(_handleRefreshRequest);
+    widget.controller?.addListener(_handleRefreshRequest);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _loadAllStats();
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    widget.controller?.removeListener(_handleRefreshRequest);
     _libraryChangedSubscription?.cancel();
     super.dispose();
   }
 
+  void _handleRefreshRequest() {
+    if (mounted) _loadAllStats();
+  }
+
   Future<void> _loadAllStats() async {
+    final loadGeneration = ++_loadGeneration;
     try {
       final summaryFuture = _statsDao.getSummaryStats();
       final weeklyFuture = _statsDao.getWeeklyChartData();
@@ -154,7 +186,7 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
       final weekly = await weeklyFuture;
       final recentBooks = await recentBooksFuture;
 
-      if (!mounted) return;
+      if (!mounted || loadGeneration != _loadGeneration) return;
       setState(() {
         _summaryStats = summary;
         _weeklyData = weekly;
@@ -162,7 +194,7 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
         _isInitialLoading = false;
       });
     } catch (_) {
-      if (!mounted) return;
+      if (!mounted || loadGeneration != _loadGeneration) return;
       setState(() => _isInitialLoading = false);
     }
   }
@@ -275,34 +307,46 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
   }
 
   Future<void> _openBook(Book book) async {
-    final fullBook = book.id == null
-        ? book
-        : await _bookDao.getBookById(book.id!);
-    if (fullBook == null || !mounted) return;
+    final openingActivity = BookOpenTransition.beginActivity();
+    try {
+      final fullBook = book.id == null
+          ? book
+          : await _bookDao.getBookById(book.id!);
+      if (fullBook == null || !mounted) return;
 
-    if (fullBook.isOnline) {
-      try {
-        final reader = HomeMobileDashboardPage.buildOnlineReader(
-          book: fullBook,
-          client: _sourceClient,
-          shelfService: _sourceShelfService,
-        )!;
-        await Navigator.of(
-          context,
-        ).push<void>(BookOpenTransition.createRoute<void>(reader));
-      } catch (error) {
-        if (mounted) {
-          showSideToast(
-            context,
-            context.l10n.bookSourceOnlineDataBroken('$error'),
-            kind: SideToastKind.error,
+      if (fullBook.isOnline) {
+        try {
+          final reader = HomeMobileDashboardPage.buildOnlineReader(
+            book: fullBook,
+            client: _sourceClient,
+            shelfService: _sourceShelfService,
+          )!;
+          final route = BookOpenTransition.createRoute<void>(
+            reader,
+            origin: ReaderPageTransitionOrigin.home,
+            waitForReaderReady: true,
           );
+          await BookOpenTransition.push<void>(context, route);
+        } catch (error) {
+          if (mounted) {
+            showSideToast(
+              context,
+              context.l10n.bookSourceOnlineDataBroken('$error'),
+              kind: SideToastKind.error,
+            );
+          }
         }
+      } else {
+        await NativeReaderService.openBook(
+          context,
+          fullBook,
+          origin: ReaderPageTransitionOrigin.home,
+        );
       }
-    } else {
-      await NativeReaderService.openBook(context, fullBook);
+      if (mounted) await _loadAllStats();
+    } finally {
+      openingActivity.dispose();
     }
-    if (mounted) await _loadAllStats();
   }
 
   @override
@@ -862,7 +906,7 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage> {
     final cover = !kIsWeb && coverPath.isNotEmpty
         ? Image.file(
             File(coverPath),
-            fit: Platform.isAndroid ? BoxFit.contain : BoxFit.cover,
+            fit: LayoutHelper.bookCoverFit,
             cacheWidth: width.isFinite
                 ? (width * MediaQuery.devicePixelRatioOf(context)).round()
                 : null,

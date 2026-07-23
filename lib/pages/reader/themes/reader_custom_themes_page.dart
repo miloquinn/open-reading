@@ -202,6 +202,7 @@ class _ReaderCustomThemesPageState extends State<ReaderCustomThemesPage> {
       return _displayName(customTheme, _themes.indexOf(customTheme));
     }
     return switch (themeId) {
+      ReaderThemes.systemId => context.l10n.readerThemeFollowSystem,
       'mist' => context.l10n.readerThemeMist,
       'green' => context.l10n.readerThemeGreen,
       'rose' => context.l10n.readerThemeRose,

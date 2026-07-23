@@ -44,6 +44,10 @@ String accentColorDisplayName(BuildContext context, String code) {
       return l10n.accentPink;
     case 'cyan':
       return l10n.accentCyan;
+    case 'teal':
+      return l10n.accentCyan;
+    case 'lightBlue':
+      return l10n.themeBlue;
     case 'brown':
       return l10n.accentBrown;
     case 'grey':
@@ -51,6 +55,8 @@ String accentColorDisplayName(BuildContext context, String code) {
     case 'deepPurple':
       return l10n.accentDeepPurple;
     case 'amber':
+      return l10n.accentAmber;
+    case 'ochre':
       return l10n.accentAmber;
     case 'lightGreen':
       return l10n.accentLightGreen;
@@ -62,6 +68,8 @@ String accentColorDisplayName(BuildContext context, String code) {
       return l10n.accentIndigo;
     case 'deepOrange':
       return l10n.accentDeepOrange;
+    case 'rosewood':
+      return l10n.accentBrown;
     case 'custom':
       return l10n.themeCustom;
     default:

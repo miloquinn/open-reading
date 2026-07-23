@@ -126,6 +126,57 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('首页收到刷新信号后自动显示新阅读内容', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(412, 915));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final controller = HomeDashboardController();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(body: HomeMobileDashboardPage(controller: controller)),
+      ),
+    );
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 500)),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.runAsync(() async {
+      final bookId = await BookDao().insertBook(
+        Book(
+          title: '自动刷新测试书',
+          author: '测试作者',
+          filePath: '${databaseDirectory.path}/auto-refresh.epub',
+          format: 'epub',
+          currentPage: 8,
+          totalPages: 100,
+        ),
+      );
+      final end = DateTime.now();
+      await ReadingStatsDao().recordReadingSession(
+        startTime: end.subtract(const Duration(minutes: 5)),
+        endTime: end,
+        bookId: bookId,
+        pagesRead: 8,
+      );
+    });
+
+    controller.refresh();
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 500)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('自动刷新测试书'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    controller.dispose();
+  });
+
   test('首页继续阅读会把在线书籍交给书源阅读器', () {
     const sourceBook = BookSourceBook(
       id: 'online-book',

@@ -5,23 +5,30 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class SystemUiHelper {
-  static SystemUiOverlayStyle overlayStyleForBackground(Color background) {
+  static SystemUiOverlayStyle overlayStyleForBackground(
+    Color background, {
+    bool transparentSystemBars = true,
+  }) {
     final brightness = ThemeData.estimateBrightnessForColor(background);
-    return overlayStyleForBrightness(brightness);
+    return overlayStyleForBrightness(
+      brightness,
+      systemBarColor: transparentSystemBars ? Colors.transparent : background,
+    );
   }
 
   static SystemUiOverlayStyle overlayStyleForBrightness(
-    Brightness backgroundBrightness,
-  ) {
+    Brightness backgroundBrightness, {
+    Color systemBarColor = Colors.transparent,
+  }) {
     final iconBrightness = backgroundBrightness == Brightness.dark
         ? Brightness.light
         : Brightness.dark;
 
     return SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
+      statusBarColor: systemBarColor,
       statusBarIconBrightness: iconBrightness,
       statusBarBrightness: backgroundBrightness,
-      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarColor: systemBarColor,
       systemNavigationBarIconBrightness: iconBrightness,
       systemNavigationBarDividerColor: Colors.transparent,
       systemStatusBarContrastEnforced: false,

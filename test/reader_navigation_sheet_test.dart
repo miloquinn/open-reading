@@ -214,6 +214,47 @@ void main() {
     expect(find.text('第二部'), findsNothing);
   });
 
+  testWidgets('navigation sheet opens a deeply nested catalog', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(430, 760));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: ReaderNavigationSheet(
+            palette: ReaderThemes.day,
+            chapters: List.generate(
+              6000,
+              (index) => ReaderNavigationChapter(
+                title: '章节 $index',
+                index: index,
+                depth: index,
+              ),
+            ),
+            currentChapterIndex: 0,
+            bookmarks: const [],
+            onChapterSelected: (_) {},
+            onBookmarkSelected: (_) {},
+            onBookmarkDeleted: (_) {},
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('章节 0'), findsOneWidget);
+    expect(
+      tester
+          .widget<ListView>(find.byType(ListView).first)
+          .childrenDelegate
+          .estimatedChildCount,
+      6000,
+    );
+  });
+
   testWidgets('navigation sheet exposes catalog search and bookmarks', (
     tester,
   ) async {

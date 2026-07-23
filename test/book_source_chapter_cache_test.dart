@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -7,6 +8,237 @@ import 'package:xxread/book_sources/services/book_source_chapter_cache.dart';
 
 void main() {
   setUp(BookSourceChapterCache.clearMemory);
+
+  test('returns loaded chapter before its disk write completes', () async {
+    final directory = await Directory.systemTemp.createTemp(
+      'source-chapter-nonblocking-',
+    );
+    addTearDown(() => directory.delete(recursive: true));
+    final writeStarted = Completer<void>();
+    final allowWrite = Completer<void>();
+    addTearDown(() {
+      if (!allowWrite.isCompleted) allowWrite.complete();
+    });
+    final cache = BookSourceChapterCache(
+      cacheDirectory: directory,
+      beforeDiskWrite: () {
+        writeStarted.complete();
+        return allowWrite.future;
+      },
+    );
+
+    final result = cache.getOrLoad(
+      sourceId: 'source',
+      bookId: 'book',
+      chapterId: 'chapter',
+      loader: () async => const BookSourceChapterContent(
+        bookId: 'book',
+        chapterId: 'chapter',
+        title: '第一章',
+        content: '正文',
+        contentType: 'text/plain',
+      ),
+    );
+
+    await writeStarted.future;
+    expect((await result).content, '正文');
+    expect(allowWrite.isCompleted, isFalse);
+    allowWrite.complete();
+    await _waitForJsonFile(directory);
+  });
+
+  test('returns loaded catalog before its disk write completes', () async {
+    final directory = await Directory.systemTemp.createTemp(
+      'source-catalog-nonblocking-',
+    );
+    addTearDown(() => directory.delete(recursive: true));
+    final writeStarted = Completer<void>();
+    final allowWrite = Completer<void>();
+    addTearDown(() {
+      if (!allowWrite.isCompleted) allowWrite.complete();
+    });
+    final cache = BookSourceChapterCache(
+      cacheDirectory: directory,
+      beforeDiskWrite: () {
+        writeStarted.complete();
+        return allowWrite.future;
+      },
+    );
+
+    final result = cache.getChapterCatalogOrLoad(
+      sourceId: 'source',
+      bookId: 'book',
+      loader: () async => const [
+        BookSourceChapter(id: 'chapter', title: '第一章', order: 1),
+      ],
+    );
+
+    await writeStarted.future;
+    expect((await result).single.id, 'chapter');
+    expect(allowWrite.isCompleted, isFalse);
+    allowWrite.complete();
+    await _waitForJsonFile(directory);
+  });
+
+  test('ignores background disk write failures without async errors', () async {
+    final errors = <Object>[];
+
+    await runZonedGuarded(() async {
+      final cache = BookSourceChapterCache(
+        beforeDiskWrite: () async =>
+            throw const FileSystemException('cache unavailable'),
+      );
+
+      final chapter = await cache.getOrLoad(
+        sourceId: 'failure-source',
+        bookId: 'failure-book',
+        chapterId: 'failure-chapter',
+        loader: () async => const BookSourceChapterContent(
+          bookId: 'failure-book',
+          chapterId: 'failure-chapter',
+          title: '失败缓存章节',
+          content: '仍可阅读',
+          contentType: 'text/plain',
+        ),
+      );
+      final catalog = await cache.getChapterCatalogOrLoad(
+        sourceId: 'failure-source',
+        bookId: 'failure-book',
+        loader: () async => const [
+          BookSourceChapter(id: 'failure-chapter', title: '失败缓存章节', order: 1),
+        ],
+      );
+
+      expect(chapter.content, '仍可阅读');
+      expect(catalog.single.id, 'failure-chapter');
+      await Future<void>.delayed(Duration.zero);
+    }, (error, _) => errors.add(error));
+
+    expect(errors, isEmpty);
+  });
+
+  test(
+    'serializes writes for the same chapter and keeps the newest value',
+    () async {
+      final directory = await Directory.systemTemp.createTemp(
+        'source-chapter-write-order-',
+      );
+      addTearDown(() => directory.delete(recursive: true));
+      final firstWriteStarted = Completer<void>();
+      final secondWriteStarted = Completer<void>();
+      final allowFirstWrite = Completer<void>();
+      final allowSecondWrite = Completer<void>();
+      addTearDown(() {
+        if (!allowFirstWrite.isCompleted) allowFirstWrite.complete();
+        if (!allowSecondWrite.isCompleted) allowSecondWrite.complete();
+      });
+      var writeCount = 0;
+      final cache = BookSourceChapterCache(
+        cacheDirectory: directory,
+        beforeDiskWrite: () {
+          writeCount++;
+          if (writeCount == 1) {
+            firstWriteStarted.complete();
+            return allowFirstWrite.future;
+          }
+          secondWriteStarted.complete();
+          return allowSecondWrite.future;
+        },
+      );
+
+      await cache.getOrLoad(
+        sourceId: 'source',
+        bookId: 'book',
+        chapterId: 'chapter',
+        loader: () async => const BookSourceChapterContent(
+          bookId: 'book',
+          chapterId: 'chapter',
+          title: '第一版',
+          content: '旧正文',
+          contentType: 'text/plain',
+        ),
+      );
+      await firstWriteStarted.future;
+      await cache.getOrLoad(
+        sourceId: 'source',
+        bookId: 'book',
+        chapterId: 'chapter',
+        refreshAfter: Duration.zero,
+        staleWhileRevalidate: false,
+        loader: () async => const BookSourceChapterContent(
+          bookId: 'book',
+          chapterId: 'chapter',
+          title: '第二版',
+          content: '新正文',
+          contentType: 'text/plain',
+        ),
+      );
+      await Future<void>.delayed(Duration.zero);
+      expect(secondWriteStarted.isCompleted, isFalse);
+
+      allowFirstWrite.complete();
+      await secondWriteStarted.future;
+      allowSecondWrite.complete();
+      await _waitForJsonContent(directory, '新正文');
+      BookSourceChapterCache.clearMemory();
+
+      final restored = await BookSourceChapterCache(cacheDirectory: directory)
+          .getOrLoad(
+            sourceId: 'source',
+            bookId: 'book',
+            chapterId: 'chapter',
+            loader: () => throw StateError('disk cache should contain newest'),
+          );
+      expect(restored.content, '新正文');
+    },
+  );
+
+  test(
+    'a cache clear prevents an older background write from reviving disk',
+    () async {
+      final directory = await Directory.systemTemp.createTemp(
+        'source-chapter-clear-generation-',
+      );
+      addTearDown(() => directory.delete(recursive: true));
+      final writeStarted = Completer<void>();
+      final allowWrite = Completer<void>();
+      addTearDown(() {
+        if (!allowWrite.isCompleted) allowWrite.complete();
+      });
+      final cache = BookSourceChapterCache(
+        cacheDirectory: directory,
+        beforeDiskWrite: () {
+          writeStarted.complete();
+          return allowWrite.future;
+        },
+      );
+
+      await cache.getOrLoad(
+        sourceId: 'source',
+        bookId: 'book',
+        chapterId: 'chapter',
+        loader: () async => const BookSourceChapterContent(
+          bookId: 'book',
+          chapterId: 'chapter',
+          title: '待清理',
+          content: '不应复活',
+          contentType: 'text/plain',
+        ),
+      );
+      await writeStarted.future;
+      BookSourceChapterCache.clearMemory();
+      allowWrite.complete();
+      await Future<void>.delayed(const Duration(milliseconds: 30));
+
+      expect(
+        await directory
+            .list(recursive: true)
+            .where((entity) => entity is File && entity.path.endsWith('.json'))
+            .isEmpty,
+        isTrue,
+      );
+    },
+  );
 
   test(
     'deduplicates concurrent chapter requests and keeps a memory cache',
@@ -80,6 +312,7 @@ void main() {
         chapterId: 'disk-chapter',
         loader: loader,
       );
+      await _waitForJsonFile(directory);
       BookSourceChapterCache.clearMemory();
       final cached = await BookSourceChapterCache(cacheDirectory: directory)
           .getOrLoad(
@@ -201,4 +434,31 @@ void main() {
       expect(refreshed.single.id, 'chapter-2');
     },
   );
+}
+
+Future<void> _waitForJsonFile(Directory directory) async {
+  for (var attempt = 0; attempt < 100; attempt++) {
+    final files = await directory
+        .list(recursive: true)
+        .where((entity) => entity is File && entity.path.endsWith('.json'))
+        .toList();
+    if (files.isNotEmpty) return;
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+  }
+  fail('Timed out waiting for the cache file to be persisted.');
+}
+
+Future<void> _waitForJsonContent(Directory directory, String content) async {
+  for (var attempt = 0; attempt < 100; attempt++) {
+    final files = await directory
+        .list(recursive: true)
+        .where((entity) => entity is File && entity.path.endsWith('.json'))
+        .cast<File>()
+        .toList();
+    for (final file in files) {
+      if ((await file.readAsString()).contains(content)) return;
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+  }
+  fail('Timed out waiting for the newest cache content to be persisted.');
 }

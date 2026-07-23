@@ -62,7 +62,7 @@ void main() {
     final stored = await const ReaderCustomThemeStore().loadAll();
     final storedOrder = await const ReaderThemeOrderStore().load();
     expect(stored.map((theme) => theme.id), ['custom:first', 'custom:second']);
-    expect(storedOrder.take(2), ['mist', 'day']);
+    expect(storedOrder.take(2), ['day', 'system']);
     expect(storedOrder, containsAll(['custom:first', 'custom:second']));
   });
 }

@@ -22,6 +22,8 @@
   "discoverLatest": "Latest",
   "discoverLoadFailed": "Could not load discovery content",
   "discoverRetry": "Try again",
+  "discoverEmptyTitle": "Nothing to show yet",
+  "discoverEmptyMessage": "This section has no content to show yet.",
   "discoverUnsupportedTitle": "Current sources do not support this section",
   "discoverUnsupportedMessage": "A source with the {capability} capability is required. Existing sources can still be searched.",
   "@discoverUnsupportedMessage": {
@@ -2127,6 +2129,23 @@
   "@settingsHideNavigationLabelsSubtitle": {
     "description": "Description of the mobile bottom navigation label visibility toggle"
   },
+  "settingsFloatingNavigationTitle": "Floating navigation bar",
+  "@settingsFloatingNavigationTitle": {
+    "description": "Title of the floating home navigation settings page"
+  },
+  "settingsFloatingNavigationSubtitle": "Adjust the display style and destination order",
+  "@settingsFloatingNavigationSubtitle": {
+    "description": "Description of the floating home navigation settings entry"
+  },
+  "floatingNavigationPreviewTitle": "Preview",
+  "floatingNavigationDisplayModeTitle": "Display style",
+  "floatingNavigationIconsOnly": "Icons only",
+  "floatingNavigationIconsAndLabels": "Icons and labels",
+  "floatingNavigationOrderTitle": "Navigation order",
+  "floatingNavigationOrderHint": "Hold the handle on the right to reorder",
+  "floatingNavigationSyncHint": "The order also applies to swipe navigation and the wide-screen sidebar",
+  "floatingNavigationResetOrder": "Restore default order",
+  "floatingNavigationResetDone": "Default order restored",
   "settingsLibraryLayoutTitle": "Library layout",
   "@settingsLibraryLayoutTitle": {
     "description": "Title of the library layout selector"
@@ -2220,10 +2239,15 @@
   "@settingsDone": {
     "description": "Done button in theme/accent modals"
   },
-  "settingsAccentColorAdvice": "Prefer choosing an app theme first, then override the accent color as needed.",
+  "settingsAccentColorAdvice": "The accent color generates the complete Material 3 light and dark color schemes.",
   "@settingsAccentColorAdvice": {
     "description": "Advice text in the accent color modal"
   },
+  "settingsAccentPresetColors": "Quick colors",
+  "settingsAccentCustomColor": "Custom color",
+  "settingsAccentSaturationBrightness": "Saturation and brightness color field",
+  "settingsAccentHue": "Hue",
+  "settingsAccentPreview": "Theme palette preview",
   "settingsAccentFollowThemeOption": "Follow theme",
   "@settingsAccentFollowThemeOption": {
     "description": "Option title to follow the theme accent"
@@ -2276,6 +2300,7 @@
   "updateNotesTitle": "What's new",
   "updateNotesEmpty": "No release notes were provided for this version.",
   "updateLater": "Later",
+  "updateSkipVersion": "Skip this version",
   "updateGoToDownload": "Go to update",
   "updateFromGithub": "Update from GitHub",
   "updateFromWebsite": "Open official website",
@@ -2294,7 +2319,7 @@
   "updateInstallFailed": "The update package could not be installed. Check installation permissions and try again.",
   "updateAlreadyLatest": "You're already using the latest version",
   "updateCheckFailed": "Could not check for updates. Please try again later.",
-  "updateOpenFailed": "Could not open the GitHub Release download page",
+  "updateOpenFailed": "Could not open the link",
   "settingsIosOnlyFeature": "This feature is only available on iOS",
   "@settingsIosOnlyFeature": {
     "description": "Toast when using an iOS-only feature on another platform"
@@ -2779,6 +2804,10 @@
   "readerThemeDay": "Day",
   "@readerThemeDay": {
     "description": "Day reading theme name"
+  },
+  "readerThemeFollowSystem": "Follow system",
+  "@readerThemeFollowSystem": {
+    "description": "Reading theme that switches between day and pure black with system brightness"
   },
   "readerThemeMist": "Mist",
   "readerThemeGreen": "Eye care",
@@ -3568,6 +3597,23 @@
   },
   "settingsDataSyncTitle": "Data & sync",
   "settingsCacheManagementTitle": "Cache management",
+  "settingsCacheManagementSubtitle": "Using {size} · View details and clear caches",
+  "@settingsCacheManagementSubtitle": {
+    "description": "Cache management entry subtitle with current total usage",
+    "placeholders": {"size": {"type": "String"}}
+  },
+  "settingsCacheUsageTitle": "Cache usage",
+  "@settingsCacheUsageTitle": {
+    "description": "Title above the cache usage chart"
+  },
+  "settingsCacheTotalUsage": "Total used",
+  "@settingsCacheTotalUsage": {
+    "description": "Label below the total cache size in the usage chart"
+  },
+  "settingsCacheSafeHint": "Only safely removable caches are shown. Books, reading progress, and settings are not included.",
+  "@settingsCacheSafeHint": {
+    "description": "Explains the safety boundary of cache management"
+  },
   "settingsCacheSourceCovers": "Source cover cache",
   "settingsCacheSourceCoversSubtitle": "Downloaded source covers · {size}",
   "@settingsCacheSourceCoversSubtitle": {

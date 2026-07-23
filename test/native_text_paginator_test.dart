@@ -54,7 +54,7 @@ void main() {
       text,
     );
     for (final page in pages) {
-      final pageText = text.substring(page.start, page.end);
+      final pageText = text.substring(page.visibleStart, page.visibleEnd);
       final painter = flow.createPainter(TextSpan(text: pageText, style: style))
         ..layout(maxWidth: width);
       expect(painter.height, lessThanOrEqualTo(height));
@@ -150,8 +150,9 @@ void main() {
       text,
     );
     for (final page in pages) {
-      final painter = flow.createPainter(buildSpan(page.start, page.end))
-        ..layout(maxWidth: width);
+      final painter = flow.createPainter(
+        buildSpan(page.visibleStart, page.visibleEnd),
+      )..layout(maxWidth: width);
       expect(painter.height, lessThanOrEqualTo(height));
       painter.dispose();
     }
@@ -196,7 +197,10 @@ void main() {
     expect(pages.length, greaterThan(1));
     // Non-final pages should use most of the content box (not half-empty).
     for (var i = 0; i < pages.length - 1; i++) {
-      final pageText = text.substring(pages[i].start, pages[i].end);
+      final pageText = text.substring(
+        pages[i].visibleStart,
+        pages[i].visibleEnd,
+      );
       final painter = flow.createPainter(TextSpan(text: pageText, style: style))
         ..layout(maxWidth: width);
       expect(
@@ -246,8 +250,9 @@ void main() {
     );
     for (var index = 0; index < pages.length; index++) {
       final page = pages[index];
-      final painter = flow.createPainter(buildSpan(page.start, page.end))
-        ..layout(maxWidth: width);
+      final painter = flow.createPainter(
+        buildSpan(page.visibleStart, page.visibleEnd),
+      )..layout(maxWidth: width);
       final limit = index == 0 ? firstPageHeight : pageHeight;
       expect(painter.height, lessThanOrEqualTo(limit + 0.5));
       if (index > 0 && index < pages.length - 1) {
@@ -282,7 +287,7 @@ void main() {
               TextSpan(text: text.substring(start, end), style: style),
         );
     final first = pages.first;
-    final pageText = text.substring(first.start, first.end);
+    final pageText = text.substring(first.visibleStart, first.visibleEnd);
     final key = GlobalKey();
 
     await tester.pumpWidget(
