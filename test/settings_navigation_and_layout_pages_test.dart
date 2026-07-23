@@ -119,6 +119,9 @@ void main() {
   ) async {
     final settings = (await tester.runAsync(_loadNotifier))!;
     addTearDown(settings.dispose);
+    await tester.runAsync(
+      () => settings.setLibraryLayoutMode(LibraryLayoutMode.card),
+    );
 
     await tester.pumpWidget(
       _testApp(settings: settings, home: const LibraryLayoutSettingsPage()),

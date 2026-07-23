@@ -130,7 +130,7 @@ void main() {
     expect(_labelOpacity(tester, label), 1);
     expect(_indicatorSize(tester, label), const Size(94.25, 56));
     expect(_selectedIconSize(tester), 27);
-    expect(_labelTextStyle(tester, label).fontSize, 11.5);
+    expect(_labelTextStyle(tester, label).fontSize, 10.5);
     expect(_labelTextStyle(tester, label).fontWeight, FontWeight.w700);
 
     await tester.pumpWidget(
@@ -188,7 +188,7 @@ void main() {
     );
 
     final style = _labelTextStyle(tester, label);
-    expect(style.fontSize, 11.5);
+    expect(style.fontSize, 10.5);
     expect(style.fontWeight, FontWeight.w600);
     expect(style.color!.a, closeTo(0.9, 0.001));
   });
