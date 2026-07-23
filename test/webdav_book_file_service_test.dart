@@ -46,9 +46,10 @@ void main() {
     final remoteBytes = [1, 2, 3, 4];
     final progress = <BookFileTransferProgress>[];
     final importer = _RejectingImporter();
+    final client = _DownloadClient(remoteBytes);
     final service = WebDavBookFileService(
       configStore: _CredentialsStore(),
-      clientFactory: (_) => _DownloadClient(remoteBytes),
+      clientFactory: (_) => client,
       importer: importer,
       temporaryDirectory: () async => temporaryDirectory,
       database: () async => database,
@@ -82,6 +83,7 @@ void main() {
     expect(importer.called, isFalse);
     expect(progress.single.transferredBytes, remoteBytes.length);
     expect(progress.single.fraction, 1);
+    expect(client.downloadedUri?.path, endsWith('/blobs/books/sha256/00/bad'));
     expect(temporaryDirectory.listSync().whereType<File>(), isEmpty);
   });
 
@@ -105,6 +107,91 @@ void main() {
         ),
       ),
     );
+  });
+
+  test(
+    'upload keeps the original book bytes and file name in WebDAV',
+    () async {
+      final bookBytes = [80, 75, 3, 4, 10, 20, 30, 40];
+      final source = File('${temporaryDirectory.path}/我的 书.epub');
+      await source.writeAsBytes(bookBytes);
+      final client = _MemoryWebDavClient();
+      final service = WebDavBookFileService(
+        configStore: _CredentialsStore(),
+        clientFactory: (_) => client,
+        database: () async => database,
+      );
+
+      final descriptor = await service.upload(
+        Book(
+          title: '三体/全集',
+          author: '刘慈欣:著',
+          filePath: source.path,
+          format: 'epub',
+        ),
+      );
+
+      expect(descriptor.remotePath, 'books/三体_全集 - 刘慈欣_著/我的 书.epub');
+      expect(descriptor.fileName, '我的 书.epub');
+      expect(client.movedDestinations.single.pathSegments.last, '我的 书.epub');
+      expect(
+        client.uploadedFiles
+            .singleWhere((upload) => upload.uri.path.contains('/books/'))
+            .bytes,
+        bookBytes,
+      );
+    },
+  );
+
+  test(
+    'upload uses a readable number when the cloud name is occupied',
+    () async {
+      final source = File('${temporaryDirectory.path}/原书.epub');
+      await source.writeAsBytes([9, 8, 7, 6]);
+      final client = _MemoryWebDavClient(
+        existingFiles: {
+          '/OpenReading/v1/books/同名书 - 作者/原书.epub': [1, 2, 3, 4],
+        },
+      );
+      final service = WebDavBookFileService(
+        configStore: _CredentialsStore(),
+        clientFactory: (_) => client,
+        temporaryDirectory: () async => temporaryDirectory,
+        database: () async => database,
+      );
+
+      final descriptor = await service.upload(
+        Book(title: '同名书', author: '作者', filePath: source.path, format: 'epub'),
+      );
+
+      expect(descriptor.remotePath, 'books/同名书 - 作者 (2)/原书.epub');
+      expect(
+        client.movedDestinations.single.pathSegments,
+        containsAllInOrder(['books', '同名书 - 作者 (2)', '原书.epub']),
+      );
+    },
+  );
+
+  test('upload reuses a readable cloud path when content matches', () async {
+    final bytes = [4, 3, 2, 1];
+    final source = File('${temporaryDirectory.path}/原书.epub');
+    await source.writeAsBytes(bytes);
+    final client = _MemoryWebDavClient(
+      existingFiles: {'/OpenReading/v1/books/同名书 - 作者/原书.epub': bytes},
+    );
+    final service = WebDavBookFileService(
+      configStore: _CredentialsStore(),
+      clientFactory: (_) => client,
+      temporaryDirectory: () async => temporaryDirectory,
+      database: () async => database,
+    );
+
+    final descriptor = await service.upload(
+      Book(title: '同名书', author: '作者', filePath: source.path, format: 'epub'),
+    );
+
+    expect(descriptor.remotePath, 'books/同名书 - 作者/原书.epub');
+    expect(client.movedDestinations, isEmpty);
   });
 
   test(
@@ -332,6 +419,7 @@ class _DownloadClient extends WebDavClient {
   _DownloadClient(this.bytes) : super(dio: Dio(), credentials: _credentials);
 
   final List<int> bytes;
+  Uri? downloadedUri;
 
   @override
   Future<void> downloadFile(
@@ -339,6 +427,7 @@ class _DownloadClient extends WebDavClient {
     File target, {
     void Function(int received, int total)? onProgress,
   }) async {
+    downloadedUri = uri;
     await target.writeAsBytes(bytes);
     onProgress?.call(bytes.length, bytes.length);
   }
@@ -349,12 +438,20 @@ class _MemoryWebDavClient extends WebDavClient {
     this.bookBytes = const [],
     this.coverBytes = const [],
     this.coverExists = false,
-  }) : super(dio: Dio(), credentials: _credentials);
+    Map<String, List<int>> existingFiles = const {},
+  }) : remoteFiles = {
+         for (final entry in existingFiles.entries)
+           entry.key: List<int>.from(entry.value),
+       },
+       super(dio: Dio(), credentials: _credentials);
 
   final List<int> bookBytes;
   final List<int> coverBytes;
   final bool coverExists;
+  final Map<String, List<int>> remoteFiles;
+  final Map<String, List<int>> pendingUploads = {};
   final List<Uri> uploadedUris = [];
+  final List<({Uri uri, List<int> bytes})> uploadedFiles = [];
   final List<Uri> movedDestinations = [];
 
   @override
@@ -362,7 +459,8 @@ class _MemoryWebDavClient extends WebDavClient {
 
   @override
   Future<bool> exists(Uri uri) async =>
-      coverExists && uri.path.contains('/blobs/covers/sha256/');
+      remoteFiles.containsKey(_uriKey(uri)) ||
+      (coverExists && uri.path.contains('/blobs/covers/sha256/'));
 
   @override
   Future<void> putFile(
@@ -371,6 +469,9 @@ class _MemoryWebDavClient extends WebDavClient {
     void Function(int sent, int total)? onProgress,
   }) async {
     uploadedUris.add(uri);
+    final bytes = await file.readAsBytes();
+    uploadedFiles.add((uri: uri, bytes: bytes));
+    pendingUploads[_uriKey(uri)] = bytes;
     final size = await file.length();
     onProgress?.call(size, size);
   }
@@ -382,6 +483,10 @@ class _MemoryWebDavClient extends WebDavClient {
     bool overwrite = false,
   }) async {
     movedDestinations.add(destination);
+    final bytes = pendingUploads[_uriKey(source)];
+    if (bytes != null) {
+      remoteFiles[_uriKey(destination)] = List<int>.from(bytes);
+    }
   }
 
   @override
@@ -393,10 +498,14 @@ class _MemoryWebDavClient extends WebDavClient {
     File target, {
     void Function(int received, int total)? onProgress,
   }) async {
-    final bytes = uri.path.contains('/blobs/covers/') ? coverBytes : bookBytes;
+    final bytes =
+        remoteFiles[_uriKey(uri)] ??
+        (uri.path.contains('/blobs/covers/') ? coverBytes : bookBytes);
     await target.writeAsBytes(bytes);
     onProgress?.call(bytes.length, bytes.length);
   }
+
+  String _uriKey(Uri uri) => '/${uri.pathSegments.join('/')}';
 }
 
 class _DatabaseImporter implements BookFileImporter {

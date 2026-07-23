@@ -3739,7 +3739,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get webDavFilesUploadPermissionHint =>
-      'Only books you explicitly select here will be uploaded';
+      'Only selected books are uploaded; WebDAV keeps the original file name and bytes without encryption';
+
+  @override
+  String get webDavLegacyBookDirectoryTitle =>
+      'Existing WebDAV books remain compatible';
+
+  @override
+  String get webDavLegacyBookDirectoryMessage =>
+      'You do not need to sync them again. New uploads use a readable Book title - Author/original file name directory.';
 
   @override
   String get webDavNewBookPolicyTitle => 'New book files';

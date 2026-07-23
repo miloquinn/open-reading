@@ -6615,8 +6615,20 @@ abstract class AppLocalizations {
   /// Explains that enabling uploads does not upload every book
   ///
   /// In en, this message translates to:
-  /// **'Only books you explicitly select here will be uploaded'**
+  /// **'Only selected books are uploaded; WebDAV keeps the original file name and bytes without encryption'**
   String get webDavFilesUploadPermissionHint;
+
+  /// Title for the legacy WebDAV book directory notice
+  ///
+  /// In en, this message translates to:
+  /// **'Existing WebDAV books remain compatible'**
+  String get webDavLegacyBookDirectoryTitle;
+
+  /// Explains legacy WebDAV book files do not require resync
+  ///
+  /// In en, this message translates to:
+  /// **'You do not need to sync them again. New uploads use a readable Book title - Author/original file name directory.'**
+  String get webDavLegacyBookDirectoryMessage;
 
   /// Newly imported book file upload policy title
   ///

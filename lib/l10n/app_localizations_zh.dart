@@ -3566,7 +3566,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get webDavFilesUploadPermission => '允许上传书籍原文件';
 
   @override
-  String get webDavFilesUploadPermissionHint => '只会上传你在此页明确选中的书籍';
+  String get webDavFilesUploadPermissionHint =>
+      '只会上传你明确选中的书籍；WebDAV 保留原文件名和原始内容，不另行加密';
+
+  @override
+  String get webDavLegacyBookDirectoryTitle => '旧版 WebDAV 书籍仍兼容';
+
+  @override
+  String get webDavLegacyBookDirectoryMessage =>
+      '无需重新同步。新上传书籍将使用“书名 - 作者/原文件名”的可读目录。';
 
   @override
   String get webDavNewBookPolicyTitle => '新书文件处理';
@@ -7139,7 +7147,15 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get webDavFilesUploadPermission => '允許上傳書籍原始檔案';
 
   @override
-  String get webDavFilesUploadPermissionHint => '只會上傳你在此頁明確選取的書籍';
+  String get webDavFilesUploadPermissionHint =>
+      '只會上傳你明確選取的書籍；WebDAV 保留原始檔名與內容，不另行加密';
+
+  @override
+  String get webDavLegacyBookDirectoryTitle => '舊版 WebDAV 書籍仍相容';
+
+  @override
+  String get webDavLegacyBookDirectoryMessage =>
+      '無需重新同步。新上傳書籍將使用「書名 - 作者/原始檔名」的可讀目錄。';
 
   @override
   String get webDavNewBookPolicyTitle => '新書檔案處理';

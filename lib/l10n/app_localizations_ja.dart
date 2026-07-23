@@ -3598,7 +3598,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get webDavFilesUploadPermission => '書籍ファイルのアップロードを許可';
 
   @override
-  String get webDavFilesUploadPermissionHint => 'このページで明示的に選択した書籍だけをアップロードします';
+  String get webDavFilesUploadPermissionHint =>
+      '選択した書籍だけをアップロードし、WebDAV には暗号化せず元のファイル名と内容のまま保存します';
+
+  @override
+  String get webDavLegacyBookDirectoryTitle => '旧形式の WebDAV 書籍も引き続き利用できます';
+
+  @override
+  String get webDavLegacyBookDirectoryMessage =>
+      '再同期は不要です。新しいアップロードは「書名 - 著者/元のファイル名」の読みやすいディレクトリを使用します。';
 
   @override
   String get webDavNewBookPolicyTitle => '新しい書籍ファイル';

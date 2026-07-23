@@ -75,45 +75,34 @@ class WebDavBookFileService {
     final client = _clientFactory(credentials);
     final digest = await sha256.bind(source.openRead()).first;
     final hash = '$digest';
-    final prefix = hash.substring(0, 2);
-    final remoteSegments = ['blobs', 'books', 'sha256', prefix, hash];
-    final remoteUri = client.path(remoteSegments);
-    await client.ensureProtocolPath(['blobs', 'books', 'sha256', prefix]);
-    if (!await client.exists(remoteUri)) {
-      final temporary = client.path([
-        'blobs',
-        'books',
-        'sha256',
-        prefix,
-        '.$hash.${DateTime.now().microsecondsSinceEpoch}.part',
-      ]);
-      try {
-        await client.putFile(
-          temporary,
-          source,
-          onProgress: (sent, total) => onProgress?.call(
-            BookFileTransferProgress(transferredBytes: sent, totalBytes: total),
-          ),
+    final fileName = path.basename(book.filePath);
+    final uid = await bookUidForMap(book.toMap());
+    final db = await _database;
+    final existingRemotePath = await _existingReadableRemotePath(
+      db: db,
+      client: client,
+      bookUid: uid,
+      hash: hash,
+      fileName: fileName,
+    );
+    final remotePath =
+        existingRemotePath ??
+        await _uploadOriginalBook(
+          client: client,
+          source: source,
+          book: book,
+          fileName: fileName,
+          hash: hash,
+          size: size,
+          onProgress: onProgress,
         );
-        await client.move(temporary, remoteUri);
-      } finally {
-        try {
-          await client.delete(temporary);
-        } catch (_) {
-          // Cleanup must not hide the original upload or MOVE result.
-        }
-      }
-    } else {
+    if (existingRemotePath != null) {
       onProgress?.call(
         BookFileTransferProgress(transferredBytes: size, totalBytes: size),
       );
     }
 
-    final uid = await bookUidForMap(book.toMap());
-    final fileName = path.basename(book.filePath);
-    final remotePath = remoteSegments.join('/');
     final cover = await _uploadCover(client, book);
-    final db = await _database;
     await db.insert('sync_book_files', {
       'book_uid': uid,
       'local_book_id': book.id,
@@ -146,6 +135,121 @@ class WebDavBookFileService {
       coverRemotePath: cover?.remotePath,
       coverFileName: cover?.fileName,
     );
+  }
+
+  Future<String?> _existingReadableRemotePath({
+    required Database db,
+    required WebDavClient client,
+    required String bookUid,
+    required String hash,
+    required String fileName,
+  }) async {
+    final rows = await db.query(
+      'sync_book_files',
+      columns: ['remote_path'],
+      where: 'book_uid = ? AND blob_sha256 = ? AND file_name = ?',
+      whereArgs: [bookUid, hash, fileName],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    final remotePath = rows.first['remote_path'] as String?;
+    if (remotePath == null) return null;
+    final segments = _remotePathSegments(remotePath);
+    if (segments.length != 3 ||
+        segments.first != 'books' ||
+        segments.last != fileName) {
+      return null;
+    }
+    return await client.exists(client.path(segments)) ? remotePath : null;
+  }
+
+  Future<String> _uploadOriginalBook({
+    required WebDavClient client,
+    required File source,
+    required Book book,
+    required String fileName,
+    required String hash,
+    required int size,
+    void Function(BookFileTransferProgress progress)? onProgress,
+  }) async {
+    final baseFolder = _remoteBookFolderName(book, fileName);
+    for (var copyNumber = 1; copyNumber <= 999; copyNumber++) {
+      final folder = _numberedRemoteFolder(baseFolder, copyNumber);
+      final remoteDirectory = ['books', folder];
+      final remoteSegments = [...remoteDirectory, fileName];
+      final remoteUri = client.path(remoteSegments);
+      if (await client.exists(remoteUri)) {
+        if (await _remoteFileMatches(client, remoteUri, hash, size)) {
+          onProgress?.call(
+            BookFileTransferProgress(transferredBytes: size, totalBytes: size),
+          );
+          return remoteSegments.join('/');
+        }
+        continue;
+      }
+
+      await client.ensureProtocolPath(remoteDirectory);
+      final temporary = client.path([
+        ...remoteDirectory,
+        '.upload.${DateTime.now().microsecondsSinceEpoch}.part',
+      ]);
+      try {
+        await client.putFile(
+          temporary,
+          source,
+          onProgress: (sent, total) => onProgress?.call(
+            BookFileTransferProgress(transferredBytes: sent, totalBytes: total),
+          ),
+        );
+        try {
+          await client.move(temporary, remoteUri);
+          return remoteSegments.join('/');
+        } on WebDavSyncFailure catch (error) {
+          if (error.code != WebDavSyncErrorCode.conflict ||
+              !await client.exists(remoteUri)) {
+            rethrow;
+          }
+          if (await _remoteFileMatches(client, remoteUri, hash, size)) {
+            return remoteSegments.join('/');
+          }
+        }
+      } finally {
+        try {
+          await client.delete(temporary);
+        } catch (_) {
+          // Cleanup must not hide the original upload or MOVE result.
+        }
+      }
+    }
+    throw const WebDavSyncFailure(
+      WebDavSyncErrorCode.conflict,
+      'Too many different book files use the same readable WebDAV name.',
+    );
+  }
+
+  Future<bool> _remoteFileMatches(
+    WebDavClient client,
+    Uri remoteUri,
+    String expectedHash,
+    int expectedSize,
+  ) async {
+    final temporaryRoot = await _temporaryDirectory();
+    final partial = File(
+      path.join(
+        temporaryRoot.path,
+        'open-reading-webdav-compare-${DateTime.now().microsecondsSinceEpoch}.part',
+      ),
+    );
+    try {
+      await client.downloadFile(remoteUri, partial);
+      if (await partial.length() != expectedSize) return false;
+      return '${await sha256.bind(partial.openRead()).first}' == expectedHash;
+    } on WebDavSyncFailure catch (error) {
+      if (error.code == WebDavSyncErrorCode.notFound) return false;
+      rethrow;
+    } finally {
+      if (await partial.exists()) await partial.delete();
+    }
   }
 
   Future<Book> download(
@@ -422,6 +526,68 @@ class WebDavBookFileService {
     }
     return credentials;
   }
+}
+
+List<String> _remotePathSegments(String remotePath) => remotePath
+    .split('/')
+    .where((segment) => segment.isNotEmpty)
+    .toList(growable: false);
+
+String _remoteBookFolderName(Book book, String fileName) {
+  final fallbackTitle = path.basenameWithoutExtension(fileName);
+  final title = _safeRemoteFolderSegment(book.title, fallbackTitle);
+  final author = _meaningfulRemoteAuthor(book.author);
+  final label = author.isEmpty ? title : '$title - $author';
+  return _truncateRemoteFolder(label, 56);
+}
+
+String _meaningfulRemoteAuthor(String value) {
+  final normalized = value.trim().replaceAll(RegExp(r'\s+'), ' ');
+  final lower = normalized.toLowerCase();
+  if (normalized.isEmpty ||
+      lower == 'unknown' ||
+      lower == 'unknown author' ||
+      lower == 'null' ||
+      lower == 'none' ||
+      normalized == '未知' ||
+      normalized == '未知作者') {
+    return '';
+  }
+  return _safeRemoteFolderSegment(normalized, '');
+}
+
+String _safeRemoteFolderSegment(String value, String fallback) {
+  var safe = value
+      .replaceAll(RegExp(r'[\x00-\x1f<>:"/\\|?*]'), '_')
+      .replaceAll(RegExp(r'\s+'), ' ')
+      .replaceAll(RegExp(r'^[. ]+|[. ]+$'), '')
+      .trim();
+  if (safe.isEmpty) {
+    safe = fallback
+        .replaceAll(RegExp(r'[\x00-\x1f<>:"/\\|?*]'), '_')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .replaceAll(RegExp(r'^[. ]+|[. ]+$'), '')
+        .trim();
+  }
+  if (safe.isEmpty) safe = '未命名书籍';
+  if (RegExp(
+    r'^(con|prn|aux|nul|com[1-9]|lpt[1-9])$',
+    caseSensitive: false,
+  ).hasMatch(safe)) {
+    safe = '_$safe';
+  }
+  return safe;
+}
+
+String _numberedRemoteFolder(String base, int copyNumber) {
+  if (copyNumber <= 1) return base;
+  final suffix = ' ($copyNumber)';
+  return '${_truncateRemoteFolder(base, 56 - suffix.runes.length)}$suffix';
+}
+
+String _truncateRemoteFolder(String value, int maxRunes) {
+  if (value.runes.length <= maxRunes) return value;
+  return String.fromCharCodes(value.runes.take(maxRunes));
 }
 
 class _RemoteCover {

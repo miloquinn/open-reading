@@ -114,11 +114,12 @@ lib/
 - `services/books/incoming_book_*`：统一系统“打开方式/分享”入站请求、冷/热启动 FIFO、初始化/协议门禁、格式与文件头校验、单书导入后打开及多书导入队列；原生层必须先把临时 URI/URL 物化成本地暂存文件。
 - `pages/reader/native_reader_page.dart`：本地 TXT、EPUB 等内容适配器。
 - `pages/reader/book_source_reader_page.dart`：在线书源章节内容适配器。
+- `book_sources/services/book_source_chapter_cache.dart`：在线书源目录与正文的共享内存/磁盘缓存。章节目录命中后立即返回，超过 30 分钟在后台刷新；已读正文超过 12 小时同样采用旧内容先读、后台更新，目录和正文最多保留 30 天。缓存键包含书源 API 地址，书源迁移后不会误复用旧数据；设置页“书源章节缓存”可安全清空全部目录与正文缓存。
 - `pages/book_sources/source_search_page.dart`：在线书源搜索与发现。
 - `pages/book_sources/book_source_management_page.dart`：原生协议书源管理。
 - `pages/settings/settings_page.dart`：应用设置、版本与维护入口；`SettingsPageController` 可从首页导航后定位到“支持开发”区域。
 - `pages/settings/sync/`：WebDAV 概览、独立连接配置、即时保存的同步内容开关和书籍文件管理页；元数据自动同步，原文件需先开启上传权限，再按书选择上传或下载。新导入书籍提供“每次询问（默认）/ 自动上传 / 始终手动”三种策略；自动上传只处理符合安全限制的真正新增本地文件。
-- `services/sync/`：本地优先的 WebDAV v1 同步实现。每台设备写入独立的不可变变更批次，使用 HLC、tombstone 和记录级 LWW 合并；书籍原文件与持久封面分别按 SHA-256 内容寻址去重，恢复后由远端元数据校正书名、作者和封面。`sync_dataset_catalog.dart` 分离稳定协议数据集与当前版本能力，暂未开放的笔记/高亮记录可保留在同步镜像中，但不会扫描或写入业务表。
+- `services/sync/`：本地优先的 WebDAV v1 同步实现。每台设备写入独立的不可变变更批次，使用 HLC、tombstone 和记录级 LWW 合并；新上传书籍以未加密的原始字节和原始文件名保存在 `books/<书名 - 作者>/`，同名异内容使用 `(2)`、`(3)` 可读编号避免覆盖。SHA-256 仅保存在同步元数据和本地索引中用于校验，历史无扩展名 blob 仍可下载；持久封面继续独立按 SHA-256 内容寻址。恢复后由远端元数据校正书名、作者和封面。`sync_dataset_catalog.dart` 分离稳定协议数据集与当前版本能力，暂未开放的笔记/高亮记录可保留在同步镜像中，但不会扫描或写入业务表。
 - `pages/settings/custom_fonts_page.dart`：用户字体库的导入、应用、重命名和删除入口。
 - `widgets/side_toast.dart`：应用内短反馈的统一浮层。手机在顶部居中、宽屏在右上展示，连续提示直接替换；普通/成功提示短暂停留，警告/错误略延长，并通过 `IgnorePointer` 保证通知出现时底层操作仍可点击。页面内不再直接使用底部 `SnackBar`。
 - `pages/settings/about/changelog_page.dart` 与 `services/core/changelog_service.dart`：应用内版本历史异步加载与展示；版本、顺序和四语文案统一来自 `assets/changelog/changelog.json`，首项自动标记为当前版本，语言按完整 locale、语言代码、英文和任意可用语言逐级回退。新增版本只更新数据资产，不再修改页面代码或增加版本专属 ARB getter。
@@ -338,7 +339,7 @@ rights-report Issue 表单，第三方书源内容投诉优先指向其运营者
 ## 持久化边界
 
 - SQLite：书籍、书签、笔记、阅读会话、WebDAV 变更镜像和书籍 blob 索引。
-- SharedPreferences：阅读 UI 设置、App/阅读字体选择、书库布局与网格密度、手机底部导航文字显隐、WebDAV 地址/用户名/根目录/同步范围、应用偏好和轻量状态；自定义阅读主题以 JSON 列表保存，预设与自定义主题的统一顺序以稳定 ID 列表单独保存，两个阅读器共享，旧单主题记录首次读取时自动迁移。
+- SharedPreferences：阅读 UI 设置、App/阅读字体选择、书库布局、网格密度与网格书名/进度显隐、手机底部导航文字显隐、WebDAV 地址/用户名/根目录/同步范围、应用偏好和轻量状态；自定义阅读主题以 JSON 列表保存，预设与自定义主题的统一顺序以稳定 ID 列表单独保存，两个阅读器共享，旧单主题记录首次读取时自动迁移。
 - 安全存储：WebDAV 密码只保存在 `flutter_secure_storage`，不写入 SharedPreferences、SQLite、远端批次或日志。
 - 应用私有目录：数据库、缓存、封面、应用管理的书籍文件，`custom_fonts/` 下的用户字体与清单，以及 `reader_theme_backgrounds/` 下由应用托管的阅读主题背景图片。书源临时封面位于平台 cache 的 `source_covers/`，加入书架后保存的封面位于 documents 的 `covers/`，两者清理边界分离。
 - 设置页缓存管理只允许清理 `source_covers/`、`book_source_chapters/` 和 `updates/` 三类已知缓存，同时清理 SourceCoverCache 压缩内存与 Flutter 解码图片缓存；不枚举或删除数据库、书籍、documents 封面、进度、偏好或安全凭据。

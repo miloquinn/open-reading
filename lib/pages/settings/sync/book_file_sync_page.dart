@@ -31,6 +31,7 @@ class _BookFileSyncPageState extends State<BookFileSyncPage>
   List<_LocalFileEntry> _synced = const [];
   bool _loading = true;
   bool _transferring = false;
+  bool _hasLegacyRemoteFiles = false;
   String? _currentTitle;
   double? _currentProgress;
   WebDavSyncErrorCode? _loadError;
@@ -97,6 +98,9 @@ class _BookFileSyncPageState extends State<BookFileSyncPage>
               (item) => item.fileAvailable && !localUids.contains(item.bookUid),
             )
             .toList(growable: false);
+        _hasLegacyRemoteFiles = remoteByUid.values.any(
+          (item) => item.remotePath?.startsWith('blobs/books/sha256/') ?? false,
+        );
         _selected.clear();
         _loadError = null;
         _loading = false;
@@ -327,6 +331,11 @@ class _BookFileSyncPageState extends State<BookFileSyncPage>
               )
             : Column(
                 children: [
+                  if (_hasLegacyRemoteFiles)
+                    _LegacyBookDirectoryNotice(
+                      title: l10n.webDavLegacyBookDirectoryTitle,
+                      message: l10n.webDavLegacyBookDirectoryMessage,
+                    ),
                   if (_tabController.index == 0)
                     _UploadPermissionCard(
                       enabled: sync.scope.bookFiles,
@@ -406,6 +415,30 @@ class _BookFileSyncPageState extends State<BookFileSyncPage>
                 ),
               ),
             ),
+    );
+  }
+}
+
+class _LegacyBookDirectoryNotice extends StatelessWidget {
+  const _LegacyBookDirectoryNotice({
+    required this.title,
+    required this.message,
+  });
+
+  final String title;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: Card(
+        child: ListTile(
+          leading: const Icon(Icons.info_outline_rounded),
+          title: Text(title),
+          subtitle: Text(message),
+        ),
+      ),
     );
   }
 }
