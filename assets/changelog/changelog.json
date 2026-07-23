@@ -2,6 +2,27 @@
     "schemaVersion":  1,
     "entries":  [
                     {
+                        "version":  "2.3.6",
+                        "notes":  {
+                                      "en":  [
+                                                 "Stored newly uploaded WebDAV books as unencrypted original files under readable Book title - Author/original file name folders, while keeping SHA-256 only for integrity checks",
+                                                 "Kept legacy content-addressed WebDAV books downloadable without resync and added an in-app compatibility notice for existing users"
+                                             ],
+                                      "zh":  [
+                                                 "WebDAV 新上传书籍以未加密原文件保存到“书名 - 作者/原文件名”可读目录，SHA-256 仅用于完整性校验",
+                                                 "旧版内容寻址书籍继续兼容下载，无需重新同步；检测到旧记录时会显示兼容提示"
+                                             ],
+                                      "zh-TW":  [
+                                                    "WebDAV 新上傳書籍以未加密原始檔保存到「書名 - 作者/原始檔名」可讀目錄，SHA-256 僅用於完整性校驗",
+                                                    "舊版內容定址書籍繼續相容下載，無需重新同步；偵測到舊記錄時會顯示相容提示"
+                                                ],
+                                      "ja":  [
+                                                 "WebDAV へ新しくアップロードする書籍を暗号化せず元のファイルのまま「書名 - 著者/元のファイル名」に保存し、SHA-256 は整合性確認だけに使用します",
+                                                 "旧形式のコンテンツアドレス書籍も再同期なしで引き続きダウンロードでき、該当する場合は互換性案内を表示します"
+                                             ]
+                                  }
+                    },
+                    {
                         "version":  "2.3.5",
                         "notes":  {
                                       "en":  [
