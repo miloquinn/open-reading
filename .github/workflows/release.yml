@@ -605,14 +605,98 @@ jobs:
             "${MACOS_NOTARY_KEY_PATH:-}" \
             "${RUNNER_TEMP}/open-reading-notarization.zip"
 
+  ios:
+    name: iOS IPA (unsigned)
+    needs: verify-release
+    runs-on: macos-15
+    timeout-minutes: 55
+    steps:
+      - name: Check out release source
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get --enforce-lockfile
+
+      - name: Generate localizations
+        run: flutter gen-l10n
+
+      - name: Build iOS release without code signing
+        run: flutter build ios --release --no-codesign
+
+      - name: Package and validate unsigned IPA
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${RELEASE_TAG#v}"
+          build_number="$(
+            sed -n 's/^version:[[:space:]]*[^+[:space:]]*+\([0-9][0-9]*\).*/\1/p' \
+              pubspec.yaml
+          )"
+          app_path="$(
+            find build/ios/iphoneos -maxdepth 1 -type d -name '*.app' -print -quit
+          )"
+          if [[ -z "$app_path" || ! -f "$app_path/Info.plist" ]]; then
+            echo "::error::The unsigned iOS application was not produced."
+            exit 1
+          fi
+          if [[ -d "$app_path/_CodeSignature" ]] \
+            || [[ -f "$app_path/embedded.mobileprovision" ]]; then
+            echo "::error::The iOS application unexpectedly contains signing material."
+            exit 1
+          fi
+
+          actual_version="$(
+            /usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' \
+              "$app_path/Info.plist"
+          )"
+          actual_build="$(
+            /usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$app_path/Info.plist"
+          )"
+          if [[ "$actual_version" != "$version" || "$actual_build" != "$build_number" ]]; then
+            echo "::error::The unsigned IPA version does not match pubspec.yaml."
+            exit 1
+          fi
+
+          staging_dir="$(mktemp -d "${RUNNER_TEMP}/open-reading-ios-ipa.XXXXXX")"
+          trap 'rm -rf "$staging_dir"' EXIT
+          mkdir -p "$staging_dir/Payload" release-assets
+          cp -R "$app_path" "$staging_dir/Payload/"
+          ipa_path="release-assets/OpenReading-iOS-unsigned-${version}.ipa"
+          (
+            cd "$staging_dir"
+            /usr/bin/zip -qry "$GITHUB_WORKSPACE/$ipa_path" Payload
+          )
+          unzip -tq "$ipa_path"
+          if ! unzip -Z1 "$ipa_path" | grep -Eq '^Payload/[^/]+\.app/Info\.plist$'; then
+            echo "::error::The unsigned IPA does not contain a valid Payload application bundle."
+            exit 1
+          fi
+
+      - name: Upload unsigned iOS artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: ios-release
+          path: release-assets/*
+          if-no-files-found: error
+
   publish:
     name: Publish GitHub Release
-    needs: [android, windows, linux, macos]
+    needs: [android, windows, linux, macos, ios]
     if: >-
       always() &&
       needs.android.result == 'success' &&
       needs.windows.result == 'success' &&
       needs.linux.result == 'success' &&
+      needs.ios.result == 'success' &&
       (needs.macos.result == 'success' || needs.macos.result == 'skipped')
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -649,6 +733,7 @@ jobs:
             "OpenReading-Android-arm64-v8a-${version}.apk"
             "OpenReading-Android-armeabi-v7a-${version}.apk"
             "OpenReading-Android-x86_64-${version}.apk"
+            "OpenReading-iOS-unsigned-${version}.ipa"
             "OpenReading-Windows-x64-${version}.zip"
             "OpenReading-Linux-x64-${version}.tar.gz"
           )
@@ -872,10 +957,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
+          IOS_TESTFLIGHT_URL: ${{ vars.IOS_TESTFLIGHT_URL }}
         shell: bash
         run: |
           set -euo pipefail
           version="${RELEASE_TAG#v}"
+          release_url="https://github.com/${GH_REPO}/releases/download/${RELEASE_TAG}"
           notes_file="${RUNNER_TEMP}/release-notes.md"
           generated_notes_file="${RUNNER_TEMP}/generated-notes.md"
           custom_notes_file=".github/release-notes/${RELEASE_TAG}.md"
@@ -890,18 +977,37 @@ jobs:
           fi
           cat "$generated_notes_file" >> "$notes_file"
           macos_note=""
+          macos_download_row=""
           if [[ "$INCLUDE_MACOS" == "true" ]]; then
             macos_note='- **macOS universal**：支持 Apple Silicon 与 Intel，应用已使用 Developer ID 签名并通过 Apple 公证'
+            macos_download_row="| macOS | [![macOS universal](https://img.shields.io/badge/macOS-universal-555555?logo=apple&logoColor=white)](${release_url}/OpenReading-macOS-universal-${version}.zip) |"
           fi
+
+          ios_download_row="| iOS | [![iOS IPA unsigned](https://img.shields.io/badge/iOS-IPA%20未签名-6B7280?logo=apple&logoColor=white)](${release_url}/OpenReading-iOS-unsigned-${version}.ipa)"
+          if [[ -n "$IOS_TESTFLIGHT_URL" ]]; then
+            if [[ ! "$IOS_TESTFLIGHT_URL" =~ ^https://testflight\.apple\.com/join/[A-Za-z0-9]+$ ]]; then
+              echo "::error::IOS_TESTFLIGHT_URL must be a public https://testflight.apple.com/join/<code> URL."
+              exit 1
+            fi
+            ios_download_row+=" [![iOS TestFlight](https://img.shields.io/badge/iOS-TestFlight-0D96F6?logo=apple&logoColor=white)](${IOS_TESTFLIGHT_URL})"
+          fi
+          ios_download_row+=' |'
           cat >> "$notes_file" <<EOF
 
-          ## 下载说明
+          ## 下载
 
-          - **Android arm64-v8a**：推荐，大多数现代手机和平板使用此版本
-          - **Android armeabi-v7a**：适用于较旧的 32 位 Android 设备
-          - **Android x86_64**：适用于 x86_64 模拟器或设备
-          - **Windows x64**：解压 ZIP 后运行 \`xxread.exe\`
-          - **Linux x64**：解压后运行 \`bundle/open_reading\`，需要 GTK 3 运行环境
+          | 平台 | 下载 |
+          | --- | --- |
+          | Android | [![Android APK ARM64-v8a](https://img.shields.io/badge/Android-APK%20ARM64--v8a-3DDC84?logo=android&logoColor=white)](${release_url}/OpenReading-Android-arm64-v8a-${version}.apk) [![Android APK ARMv7](https://img.shields.io/badge/Android-APK%20ARMv7-69C36D?logo=android&logoColor=white)](${release_url}/OpenReading-Android-armeabi-v7a-${version}.apk) [![Android APK x86_64](https://img.shields.io/badge/Android-APK%20x86__64-8BC34A?logo=android&logoColor=white)](${release_url}/OpenReading-Android-x86_64-${version}.apk) |
+          ${ios_download_row}
+          ${macos_download_row}
+          | Windows | [![Windows x64](https://img.shields.io/badge/Windows-ZIP%20x64-0078D4?logo=windows&logoColor=white)](${release_url}/OpenReading-Windows-x64-${version}.zip) |
+          | Linux | [![Linux x64](https://img.shields.io/badge/Linux-tar.gz%20x64-FCC624?logo=linux&logoColor=black)](${release_url}/OpenReading-Linux-x64-${version}.tar.gz) |
+
+          - Android arm64-v8a 适合绝大多数现代 Android 设备；ARMv7 适合较旧的 32 位设备；x86_64 适合模拟器或少数 x86_64 设备。
+          - iOS 未签名 IPA 仅供开发者自行签名或重新打包，不能直接安装；普通测试请使用 TestFlight。
+          - Windows 解压 ZIP 后运行 \`xxread.exe\`；Linux 解压后运行 \`bundle/open_reading\`，需要 GTK 3 运行环境。
+          - [![SHA-256 checksums](https://img.shields.io/badge/SHA--256-校验清单-4B8BBE)](${release_url}/SHA256SUMS.txt)
           ${macos_note}
 
           此 Release 由 GitHub Actions 从 Tag \`${RELEASE_TAG}\` 自动构建。
@@ -1114,6 +1220,7 @@ jobs:
             "OpenReading-Android-arm64-v8a-${version}.apk"
             "OpenReading-Android-armeabi-v7a-${version}.apk"
             "OpenReading-Android-x86_64-${version}.apk"
+            "OpenReading-iOS-unsigned-${version}.ipa"
             "OpenReading-Linux-x64-${version}.tar.gz"
             "OpenReading-Windows-x64-${version}.zip"
           )
@@ -1216,6 +1323,7 @@ jobs:
                   "apk",
                   "x86_64",
               ),
+              (f"OpenReading-iOS-unsigned-{version}.ipa", "ios", "ipa", "universal"),
               (f"OpenReading-Windows-x64-{version}.zip", "windows", "zip", "x64"),
               (f"OpenReading-Linux-x64-{version}.tar.gz", "linux", "tar.gz", "x64"),
           ]
