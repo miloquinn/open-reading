@@ -628,6 +628,9 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     final loadSerial = ++_chapterLoadSerial;
     final prefetched = _prefetchedContent[index];
     if (prefetched != null && _readableChapterText.containsKey(index)) {
+      if (await _deferChapterApplyForOpeningFlight(index)) {
+        if (!mounted || loadSerial != _chapterLoadSerial) return;
+      }
       _applyLoadedChapter(index, prefetched, restoreProgress: restoreProgress);
       return;
     }
@@ -639,6 +642,9 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       final contentFuture = _continuousContentFor(index);
       final content = await contentFuture;
       if (!mounted || loadSerial != _chapterLoadSerial) return;
+      if (await _deferChapterApplyForOpeningFlight(index)) {
+        if (!mounted || loadSerial != _chapterLoadSerial) return;
+      }
       _applyLoadedChapter(index, content, restoreProgress: restoreProgress);
     } catch (error) {
       if (!mounted || loadSerial != _chapterLoadSerial) return;
@@ -835,6 +841,19 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
           _pageMode == BookSourcePageMode.verticalScroll ||
           index != _chapterIndex + 1 ||
           _pagedViewportSize.isEmpty) {
+        return;
+      }
+      // 打开动画（含正文渐显）没播完前不预热整章排版，落定后再重新排队。
+      final settled = BookOpenTransition.openingFlightSettledListenableOf(
+        context,
+      );
+      if (settled != null && !settled.value) {
+        late final VoidCallback onSettled;
+        onSettled = () {
+          settled.removeListener(onSettled);
+          if (mounted) _schedulePagedLayoutWarm(index);
+        };
+        settled.addListener(onSettled);
         return;
       }
       final content = _prefetchedContent[index];
@@ -1810,6 +1829,25 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         if (mounted) BookOpenTransition.markReaderContentReady(context);
       });
     });
+  }
+
+  /// 打开动画封面仍在飞行时，把整章排版（`_applyLoadedChapter` 内同步执行，
+  /// 数十毫秒）延后到封面到达静止停留画面之后；已有分页缓存或不在打开
+  /// 转场中时立即返回 false，不引入任何延迟。
+  Future<bool> _deferChapterApplyForOpeningFlight(int index) async {
+    if (!mounted || _pagedLayouts[index] != null) return false;
+    final listenable = BookOpenTransition.openingCoverHoldListenableOf(context);
+    if (listenable == null || listenable.value) return false;
+    final completer = Completer<void>();
+    late final VoidCallback onChanged;
+    onChanged = () {
+      if (!listenable.value) return;
+      listenable.removeListener(onChanged);
+      if (!completer.isCompleted) completer.complete();
+    };
+    listenable.addListener(onChanged);
+    await completer.future;
+    return true;
   }
 
   Widget _buildBody() {

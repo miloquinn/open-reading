@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
 
@@ -90,6 +92,42 @@ class ReaderTextPage {
 /// indentation, paragraph spacing, visual-line measurement, offsets and title
 /// page semantics are owned here.
 List<ReaderTextPage> paginateReaderText({
+  required String text,
+  required double maxWidth,
+  required double maxHeight,
+  required NativeTextFlowStyle flowStyle,
+  required TextStyle style,
+  int sourceOffset = 0,
+  double? firstPageHeight,
+  int firstLineIndent = 0,
+  int paragraphSpacing = 0,
+  bool indentFirstParagraph = true,
+  bool normalizeParagraphBreaks = false,
+  bool includeChapterTitlePage = false,
+  ReaderSourceSpanBuilder? sourceSpanBuilder,
+}) {
+  return developer.Timeline.timeSync(
+    'paginateReaderText',
+    arguments: {'chars': text.length},
+    () => _paginateReaderText(
+      text: text,
+      maxWidth: maxWidth,
+      maxHeight: maxHeight,
+      flowStyle: flowStyle,
+      style: style,
+      sourceOffset: sourceOffset,
+      firstPageHeight: firstPageHeight,
+      firstLineIndent: firstLineIndent,
+      paragraphSpacing: paragraphSpacing,
+      indentFirstParagraph: indentFirstParagraph,
+      normalizeParagraphBreaks: normalizeParagraphBreaks,
+      includeChapterTitlePage: includeChapterTitlePage,
+      sourceSpanBuilder: sourceSpanBuilder,
+    ),
+  );
+}
+
+List<ReaderTextPage> _paginateReaderText({
   required String text,
   required double maxWidth,
   required double maxHeight,

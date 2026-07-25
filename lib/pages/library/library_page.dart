@@ -1431,15 +1431,26 @@ class _LibraryPageState extends State<LibraryPage> {
                         icon: Icons.info_outline,
                         iconColor: localScheme.tertiary,
                         title: context.l10n.libraryBookInfo,
-                        subtitle: context.l10n.libraryFormatAndPages(
-                          book.format.toUpperCase(),
-                          book.totalPages,
-                        ),
+                        subtitle: _bookInfoSubtitle(context, book),
                         backgroundColor: localScheme.tertiaryContainer
                             .withValues(alpha: isMaterial3Style ? 0.44 : 0.15),
                         onTap: () {
                           Navigator.pop(context);
                           _showBookInfo(book);
+                        },
+                      ),
+                      const SizedBox(height: 8),
+                      _buildOptionItem(
+                        context: context,
+                        icon: Icons.edit_outlined,
+                        iconColor: localScheme.secondary,
+                        title: context.l10n.libraryRenameBook,
+                        subtitle: context.l10n.libraryRenameBookHint,
+                        backgroundColor: localScheme.secondaryContainer
+                            .withValues(alpha: isMaterial3Style ? 0.44 : 0.15),
+                        onTap: () {
+                          Navigator.pop(context);
+                          _renameBook(book);
                         },
                       ),
                       const SizedBox(height: 8),
@@ -1499,6 +1510,79 @@ class _LibraryPageState extends State<LibraryPage> {
         );
       },
     );
+  }
+
+  /// 书籍格式与页数/章节数摘要。
+  ///
+  /// 在线书源书籍的 totalPages 存储的是章节序号换算出的进度单位（见
+  /// [BookSourceShelfService.unitsPerChapter]），不是真实页码，大部头小说会
+  /// 显示成几十万"页"。因此在线书籍改为展示真实章节数。
+  String _bookInfoSubtitle(BuildContext context, Book book) {
+    final format = book.format.toUpperCase();
+    if (!book.isOnline) {
+      return context.l10n.libraryFormatAndPages(format, book.totalPages);
+    }
+    final unitsPerChapter = BookSourceShelfService.unitsPerChapter;
+    if (book.totalPages < unitsPerChapter) return format;
+    final chapters = (book.totalPages / unitsPerChapter).round();
+    return context.l10n.libraryFormatAndChapters(format, chapters);
+  }
+
+  /// 重命名书籍：更新书名，若存在本地文件则同步重命名磁盘文件。
+  Future<void> _renameBook(Book book) async {
+    final controller = TextEditingController(text: book.title);
+    final isMaterial3Style = _isMaterial3Style;
+    final scheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
+    final newTitle = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: isMaterial3Style
+            ? scheme.surfaceContainerHigh
+            : GlassEffectConfig.surfaceColor(dialogContext, opacity: 0.95),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(l10n.libraryRenameBook),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          maxLength: 120,
+          decoration: InputDecoration(labelText: l10n.libraryBookTitle),
+          onSubmitted: (value) => Navigator.of(dialogContext).pop(value),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(controller.text),
+            child: Text(l10n.save),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    final trimmed = newTitle?.trim();
+    if (trimmed == null || trimmed.isEmpty || trimmed == book.title) return;
+
+    final toastContext = context;
+    try {
+      await BookRenameService().rename(book, trimmed);
+      _loadBooks();
+      if (!toastContext.mounted) return;
+      showSideToast(
+        toastContext,
+        l10n.libraryRenameBookSuccess,
+        kind: SideToastKind.success,
+      );
+    } catch (_) {
+      if (!toastContext.mounted) return;
+      showSideToast(
+        toastContext,
+        l10n.libraryRenameBookFailed,
+        kind: SideToastKind.error,
+      );
+    }
   }
 
   /// 构建操作选项项
@@ -1613,15 +1697,33 @@ class _LibraryPageState extends State<LibraryPage> {
               book.format.toUpperCase(),
             ),
             const SizedBox(height: 12),
-            _buildInfoRow(
-              context.l10n.totalPages,
-              context.l10n.libraryPagesCount(book.totalPages),
-            ),
-            const SizedBox(height: 12),
-            _buildInfoRow(
-              context.l10n.currentPage,
-              context.l10n.libraryPagesCount(book.currentPage),
-            ),
+            if (book.isOnline) ...[
+              _buildInfoRow(
+                context.l10n.totalChapters,
+                context.l10n.libraryChaptersCount(
+                  (book.totalPages / BookSourceShelfService.unitsPerChapter)
+                      .round(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              _buildInfoRow(
+                context.l10n.currentChapter,
+                context.l10n.libraryChaptersCount(
+                  (book.currentPage / BookSourceShelfService.unitsPerChapter)
+                      .round(),
+                ),
+              ),
+            ] else ...[
+              _buildInfoRow(
+                context.l10n.totalPages,
+                context.l10n.libraryPagesCount(book.totalPages),
+              ),
+              const SizedBox(height: 12),
+              _buildInfoRow(
+                context.l10n.currentPage,
+                context.l10n.libraryPagesCount(book.currentPage),
+              ),
+            ],
             const SizedBox(height: 12),
             _buildInfoRow(
               context.l10n.readingProgress,
