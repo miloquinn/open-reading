@@ -173,8 +173,9 @@ flutter build web
 ```
 
 仓库包含 Android、iOS、Windows、macOS、Linux、Web 和 OpenHarmony 工程。版本 Tag 会通过
-GitHub Actions 生成 Android、Windows 和 Linux 产物，发布到 GitHub Releases，并在校验后同步
-到 [官方站点](https://open.xxread.top/download)。Android 可在更新提示中选择 GitHub 或官网，
+GitHub Actions 生成 Android、未签名 iOS IPA、Windows 和 Linux 产物，发布到 GitHub Releases，
+并在校验后同步到 [官方站点](https://open.xxread.top/download)。未签名 IPA 仅供开发者自行签名
+或重新打包，普通 iOS 测试应使用 TestFlight；Android 可在更新提示中选择 GitHub 或官网，
 官网下载会在应用内完成校验并交给系统安装器；iOS 当前打开网页，后续上架后再切换 App Store。
 
 ## 项目结构
