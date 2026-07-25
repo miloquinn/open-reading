@@ -17,6 +17,10 @@ class ReaderSafeAreaMetrics {
   static const double _pageNumberSafeAreaOverlap = 20.0;
   static const double _minimumPageNumberBottom = 8.0;
 
+  /// 状态栏 inset 随隐藏一起归零的设备（无刘海直屏）上，灵动信息栏仍按
+  /// 普通状态栏高度画在页面最顶端。
+  static const double floatingStatusMinHeight = 24.0;
+
   final EdgeInsets viewPadding;
   final double topMargin;
   final double bottomMargin;
@@ -32,6 +36,10 @@ class ReaderSafeAreaMetrics {
   double get contentTop => viewPadding.top + topChromeReserve + topMargin;
 
   double get readerTopBarTop => viewPadding.top + 4;
+
+  /// 灵动信息栏占用的区域高度：即被隐藏的系统状态栏区域。
+  double get floatingStatusHeight =>
+      math.max(viewPadding.top, floatingStatusMinHeight);
 
   double get pageNumberBottom => math.max(
     _minimumPageNumberBottom,

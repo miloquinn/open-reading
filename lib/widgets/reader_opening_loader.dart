@@ -6,6 +6,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../utils/reader_themes.dart';
+import 'app_brand_icon.dart';
 
 class ReaderOpeningLoader extends StatefulWidget {
   const ReaderOpeningLoader({super.key, required this.palette});
@@ -90,14 +91,9 @@ class _ReaderOpeningLoaderState extends State<ReaderOpeningLoader>
                           ),
                         ],
                       ),
-                      child: SizedBox(
-                        width: 58,
-                        height: 58,
-                        child: Icon(
-                          Icons.auto_stories_rounded,
-                          size: 30,
-                          color: palette.accent,
-                        ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(14),
+                        child: AppBrandIcon(size: 30, borderRadius: 8),
                       ),
                     ),
                   ),

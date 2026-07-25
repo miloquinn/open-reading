@@ -134,6 +134,8 @@ void main() {
       expect(changedLetterSpacing, 0.8);
       expect(changedAlignment, ReaderTextAlignment.justified);
 
+      await tester.ensureVisible(find.byType(ReaderThemeStrip));
+      await tester.pumpAndSettle();
       await tester.drag(find.byType(ReaderThemeStrip), const Offset(-900, 0));
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('reader-custom-theme-card')), findsOne);
@@ -155,7 +157,7 @@ void main() {
     },
   );
 
-  testWidgets('top bar style sheet offers all three shared reader styles', (
+  testWidgets('top bar style sheet offers all shared reader styles', (
     tester,
   ) async {
     var selectedStyle = ReaderTopBarStyle.reader;
@@ -185,6 +187,10 @@ void main() {
         findsOneWidget,
       );
     }
+
+    await tester.tap(find.text('floating'));
+    await tester.pump();
+    expect(selectedStyle, ReaderTopBarStyle.floating);
 
     await tester.tap(find.text('hidden'));
     await tester.pump();

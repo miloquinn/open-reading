@@ -77,6 +77,8 @@ class ReaderPaperPageLeaf extends StatelessWidget {
     this.horizontalPadding = 14,
     this.pageNumberHorizontalPadding = 24,
     this.showTopInformation = false,
+    this.showFloatingStatus = false,
+    this.floatingStatusHorizontalPadding = 32,
     this.topInformationLayout = ReaderTopInformationLayout.full,
     this.showPageNumber = true,
     this.status,
@@ -90,6 +92,8 @@ class ReaderPaperPageLeaf extends StatelessWidget {
   final double horizontalPadding;
   final double pageNumberHorizontalPadding;
   final bool showTopInformation;
+  final bool showFloatingStatus;
+  final double floatingStatusHorizontalPadding;
   final ReaderTopInformationLayout topInformationLayout;
   final bool showPageNumber;
   final ReaderLeafStatusData? status;
@@ -137,6 +141,21 @@ class ReaderPaperPageLeaf extends StatelessWidget {
                   ),
                   palette: palette,
                   title: metadata.chapterTitle,
+                  status: status,
+                  layout: topInformationLayout,
+                ),
+              ),
+            if (showFloatingStatus)
+              Positioned(
+                left: floatingStatusHorizontalPadding,
+                right: floatingStatusHorizontalPadding,
+                top: 0,
+                height: safeArea.floatingStatusHeight,
+                child: ReaderFloatingStatusBar(
+                  key: ValueKey(
+                    'reader-leaf-floating-status:${metadata.pageIdentity}',
+                  ),
+                  palette: palette,
                   status: status,
                   layout: topInformationLayout,
                 ),

@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-enum ReaderTopBarStyle { system, reader, hidden }
+enum ReaderTopBarStyle { system, reader, floating, hidden }
 
 ReaderTopBarStyle readerTopBarStyleFromName(
   String? name, {

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer' as developer;
 import 'dart:io';
 import 'dart:math' as math;
 
@@ -202,6 +203,8 @@ class _NativeReaderPageState extends State<NativeReaderPage>
   bool _readerSystemUiApplied = false;
   bool _readerSystemUiApplyScheduled = false;
   bool _routeEntranceCompleted = false;
+  ValueListenable<bool>? _openingFlightSettled;
+  ValueListenable<bool>? _openingCoverHoldReached;
   bool _showOpeningLoader = false;
   bool _openingContentReadyScheduled = false;
   Timer? _openingLoaderTimer;
@@ -332,6 +335,8 @@ class _NativeReaderPageState extends State<NativeReaderPage>
   void didChangeDependencies() {
     super.didChangeDependencies();
     _bindRouteAnimation();
+    _bindOpeningFlightSettled();
+    _bindOpeningCoverHold();
     var nextReaderFont = FontCatalog.defaultReaderFont;
     var nextReaderFontReady = true;
     try {
@@ -351,6 +356,68 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     }
     _initializeReaderDependencies();
     if (_routeEntranceCompleted) _scheduleInitialReaderSystemUi();
+  }
+
+  /// 打开动画（封面飞行 + 正文渐显）是否已完全结束。
+  ///
+  /// 路由动画结束时正文渐显往往仍在播放；相邻章节的整章排版、系统栏切换
+  /// 都等待该信号，避免这些主线程重活掉帧落在动画后半段。
+  bool get _openingFlightSettledNow => _openingFlightSettled?.value ?? true;
+
+  void _bindOpeningFlightSettled() {
+    final next = BookOpenTransition.openingFlightSettledListenableOf(context);
+    if (identical(next, _openingFlightSettled)) return;
+    _openingFlightSettled?.removeListener(_onOpeningFlightSettledChanged);
+    _openingFlightSettled = next;
+    if (next != null && !next.value) {
+      next.addListener(_onOpeningFlightSettledChanged);
+    }
+  }
+
+  void _onOpeningFlightSettledChanged() {
+    _openingFlightSettled?.removeListener(_onOpeningFlightSettledChanged);
+    if (!mounted) return;
+    _scheduleInitialReaderSystemUi();
+    setState(() {});
+  }
+
+  /// 封面飞行是否已到达静止的停留画面（或本就没有封面飞行）。
+  ///
+  /// 停留点之前封面在高速运动，整章排版（一次 50~100ms）会直接冻结飞行帧；
+  /// 停留点到正文渐显之间画面完全静止，是执行这类重活的无感知窗口。
+  bool get _openingCoverHoldReachedNow =>
+      _openingCoverHoldReached?.value ?? true;
+
+  void _bindOpeningCoverHold() {
+    final next = BookOpenTransition.openingCoverHoldListenableOf(context);
+    if (identical(next, _openingCoverHoldReached)) return;
+    _openingCoverHoldReached?.removeListener(_onOpeningCoverHoldChanged);
+    _openingCoverHoldReached = next;
+    if (next != null && !next.value) {
+      next.addListener(_onOpeningCoverHoldChanged);
+    }
+  }
+
+  void _onOpeningCoverHoldChanged() {
+    _openingCoverHoldReached?.removeListener(_onOpeningCoverHoldChanged);
+    if (!mounted) return;
+    setState(() {});
+  }
+
+  Future<void> _waitForOpeningCoverHold() {
+    final listenable = _openingCoverHoldReached;
+    if (listenable == null || listenable.value) {
+      return Future<void>.value();
+    }
+    final completer = Completer<void>();
+    late final VoidCallback onChanged;
+    onChanged = () {
+      if (!listenable.value) return;
+      listenable.removeListener(onChanged);
+      if (!completer.isCompleted) completer.complete();
+    };
+    listenable.addListener(onChanged);
+    return completer.future;
   }
 
   void _bindRouteAnimation() {
@@ -417,6 +484,9 @@ class _NativeReaderPageState extends State<NativeReaderPage>
 
     _loadedChapters = chapters;
     final initialChapterIndex = _chapterIndex.clamp(0, chapters.length - 1);
+    // 冷缓存打开时，章节文本的读取与 UTF-8 解码（UI isolate 上数十毫秒）
+    // 等封面飞到静止的停留画面再执行，避免解码回调冻结飞行帧。
+    if (_pageCache.isEmpty) await _waitForOpeningCoverHold();
     await _loadIndexedChapterWindow(chapters, initialChapterIndex);
     _navigationChapters = List<ReaderNavigationChapter>.generate(
       chapters.length,
@@ -456,14 +526,16 @@ class _NativeReaderPageState extends State<NativeReaderPage>
 
   void _scheduleInitialReaderSystemUi() {
     if (!_routeEntranceCompleted ||
+        !_openingFlightSettledNow ||
         _readerSystemUiApplied ||
         _readerSystemUiApplyScheduled) {
       return;
     }
     _readerSystemUiApplyScheduled = true;
-    // Changing Android window insets while the cover is expanding forces the
-    // live reader route to relayout mid-flight. Wait for the route to settle,
-    // then apply the saved reader chrome on the following frame.
+    // Changing window insets while the cover flight or the reveal crossfade
+    // is still playing forces the live reader route to relayout mid-flight.
+    // Wait for the whole visible opening animation to settle, then apply the
+    // saved reader chrome on the following frame.
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted || _readerSystemUiApplied) return;
       final topBarStyle = await ReaderSystemUiController.applySavedPreference(
@@ -499,6 +571,8 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     _openingLoaderTimer?.cancel();
     _openingContentReadyTimer?.cancel();
     _routeAnimation?.removeStatusListener(_onRouteAnimationStatusChanged);
+    _openingFlightSettled?.removeListener(_onOpeningFlightSettledChanged);
+    _openingCoverHoldReached?.removeListener(_onOpeningCoverHoldChanged);
     unawaited(_flushReadingSession());
     _pageController?.dispose();
     _verticalPagePositionsListener.itemPositions.removeListener(
@@ -690,10 +764,33 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     viewPadding: MediaQuery.viewPaddingOf(context),
     topMargin: _topMargin,
     bottomMargin: _bottomMargin,
-    topChromeReserve: _topBarStyle == ReaderTopBarStyle.reader
-        ? ReaderSafeAreaMetrics.readerTopBarReserve
-        : 0,
+    topChromeReserve: _topChromeReserveFor(_topBarStyle),
   );
+
+  /// 阅读信息栏占一条固定信息条；灵动信息栏借用状态栏区域，仅在设备
+  /// 没有状态栏 inset（隐藏后归零）时补足最小高度，避免正文顶进时间与
+  /// 电量。其余样式顶部只避开状态栏本身。
+  double _topChromeReserveFor(ReaderTopBarStyle style) => switch (style) {
+    ReaderTopBarStyle.reader => ReaderSafeAreaMetrics.readerTopBarReserve,
+    ReaderTopBarStyle.floating => math.max(
+      0,
+      ReaderSafeAreaMetrics.floatingStatusMinHeight -
+          MediaQuery.viewPaddingOf(context).top,
+    ),
+    _ => 0,
+  };
+
+  bool get _showLeafFloatingStatus =>
+      _topBarStyle == ReaderTopBarStyle.floating;
+
+  double get _floatingStatusHorizontalPadding =>
+      math.max(32, _horizontalMargin);
+
+  /// 阅读信息栏与灵动信息栏都画进纸页快照，需要随分钟时钟/电量刷新重绘。
+  int get _leafContentRevision =>
+      _topBarStyle == ReaderTopBarStyle.reader || _showLeafFloatingStatus
+      ? _leafStatusController.value.revision
+      : 0;
 
   double get _effectiveTopMargin => _readerSafeArea.contentTop;
 
@@ -761,9 +858,11 @@ class _NativeReaderPageState extends State<NativeReaderPage>
 
   Future<void> _setTopBarStyle(ReaderTopBarStyle style) async {
     if (_topBarStyle == style) return;
+    // 顶部预留高度随样式变化；完全沉浸在上下滚动时取消整个预留区域。
     final repaginate =
-        (_topBarStyle == ReaderTopBarStyle.reader) !=
-        (style == ReaderTopBarStyle.reader);
+        _topChromeReserveFor(_topBarStyle) != _topChromeReserveFor(style) ||
+        (_topBarStyle == ReaderTopBarStyle.hidden) !=
+            (style == ReaderTopBarStyle.hidden);
     setState(() {
       _topBarStyle = style;
       if (repaginate) {
@@ -1511,12 +1610,14 @@ class _NativeReaderPageState extends State<NativeReaderPage>
   String _topBarStyleTitle(ReaderTopBarStyle style) => switch (style) {
     ReaderTopBarStyle.system => context.l10n.readerTopBarStyleSystem,
     ReaderTopBarStyle.reader => context.l10n.readerTopBarStyleReader,
+    ReaderTopBarStyle.floating => context.l10n.readerTopBarStyleFloating,
     ReaderTopBarStyle.hidden => context.l10n.readerTopBarStyleHidden,
   };
 
   String _topBarStyleHint(ReaderTopBarStyle style) => switch (style) {
     ReaderTopBarStyle.system => context.l10n.readerTopBarStyleSystemHint,
     ReaderTopBarStyle.reader => context.l10n.readerTopBarStyleReaderHint,
+    ReaderTopBarStyle.floating => context.l10n.readerTopBarStyleFloatingHint,
     ReaderTopBarStyle.hidden => context.l10n.readerTopBarStyleHiddenHint,
   };
 
@@ -1773,24 +1874,28 @@ class _NativeReaderPageState extends State<NativeReaderPage>
       final verticalChrome = _pageMode == NativePageMode.verticalScroll
           ? _verticalChrome
           : null;
-      return _paginateChapter(
-        chapter,
-        maxWidth: readerTextContentWidth(size.width, _horizontalMargin),
-        maxHeight:
-            verticalChrome?.contentHeight(size.height) ??
-            readerTextContentHeight(
-              size.height,
-              _effectiveTopMargin,
-              _effectiveBottomMargin,
-            ),
-        flowStyle: _readerTextFlowStyle(
-          direction: direction,
-          textScaler: textScaler,
+      return developer.Timeline.timeSync(
+        'paginateChapter',
+        arguments: {'chapter': chapterIndex, 'chars': chapter.plainText.length},
+        () => _paginateChapter(
+          chapter,
+          maxWidth: readerTextContentWidth(size.width, _horizontalMargin),
+          maxHeight:
+              verticalChrome?.contentHeight(size.height) ??
+              readerTextContentHeight(
+                size.height,
+                _effectiveTopMargin,
+                _effectiveBottomMargin,
+              ),
+          flowStyle: _readerTextFlowStyle(
+            direction: direction,
+            textScaler: textScaler,
+          ),
+          style: _readerTextStyle,
+          firstLineIndent: _firstLineIndent,
+          paragraphSpacing: _paragraphSpacing,
+          normalizeParagraphBreaks: widget.book.format.toLowerCase() == 'epub',
         ),
-        style: _readerTextStyle,
-        firstLineIndent: _firstLineIndent,
-        paragraphSpacing: _paragraphSpacing,
-        normalizeParagraphBreaks: widget.book.format.toLowerCase() == 'epub',
       );
     });
   }
@@ -1829,6 +1934,12 @@ class _NativeReaderPageState extends State<NativeReaderPage>
                 textScaler,
               )) {
         _queuedHorizontalPaginationWarms.remove(key);
+        return;
+      }
+      // 整章排版是主线程重活；打开动画（含正文渐显）没播完前先让帧，
+      // 每帧末尾重试。动画结束时必有 setState 触发新帧，队列不会滞留。
+      if (!_openingFlightSettledNow) {
+        WidgetsBinding.instance.addPostFrameCallback(warmAfterFrame);
         return;
       }
       final pageController = _pageController;
@@ -1941,8 +2052,12 @@ class _NativeReaderPageState extends State<NativeReaderPage>
         textScaler,
       );
       final distanceFromCurrent = (chapterIndex - _chapterIndex).abs();
+      // 打开动画播完前，相邻章节若未命中分页缓存，也转入预热队列，
+      // 避免整章排版挤在飞行帧里同步执行。
       if (chapterIndex != _chapterIndex &&
           (!chapter.hasLoadedText ||
+              (!_openingFlightSettledNow &&
+                  !_pageCache.containsKey(layoutFingerprint)) ||
               (distanceFromCurrent > 1 &&
                   !_pageCache.containsKey(layoutFingerprint)))) {
         _scheduleHorizontalPaginationWarm(
@@ -2147,7 +2262,11 @@ class _NativeReaderPageState extends State<NativeReaderPage>
   }
 
   ReaderViewportChromeMetrics get _verticalChrome =>
-      ReaderViewportChromeMetrics(safeArea: _readerSafeArea);
+      ReaderViewportChromeMetrics(
+        safeArea: _readerSafeArea,
+        immersive: _topBarStyle == ReaderTopBarStyle.hidden,
+        reservesTitle: _topBarStyle == ReaderTopBarStyle.reader,
+      );
 
   double _verticalPageExtentFor(Size viewport) =>
       _verticalChrome.contentHeight(viewport.height);
@@ -2563,9 +2682,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     );
     return ReaderPageSnapshot(
       key: metadata.snapshotKey,
-      contentRevision: _topBarStyle == ReaderTopBarStyle.reader
-          ? _leafStatusController.value.revision
-          : 0,
+      contentRevision: _leafContentRevision,
       child: _buildBookPageLeaf(
         chapters,
         page,
@@ -2710,9 +2827,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
       layoutFingerprint: layoutFingerprint,
       themeId: _readerTheme.cacheKey,
     ),
-    contentRevision: _topBarStyle == ReaderTopBarStyle.reader
-        ? _leafStatusController.value.revision
-        : 0,
+    contentRevision: _leafContentRevision,
     child: _buildBlankPageLeaf(
       pageIdentity: pageIdentity,
       layoutFingerprint: layoutFingerprint,
@@ -2739,6 +2854,8 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     ),
     horizontalPadding: math.max(14, _horizontalMargin),
     showTopInformation: _topBarStyle == ReaderTopBarStyle.reader,
+    showFloatingStatus: _showLeafFloatingStatus,
+    floatingStatusHorizontalPadding: _floatingStatusHorizontalPadding,
     topInformationLayout: topInformationLayout,
     showPageNumber: false,
     status: _leafStatusController.value,
@@ -2796,6 +2913,8 @@ class _NativeReaderPageState extends State<NativeReaderPage>
       horizontalPadding: math.max(14, _horizontalMargin),
       pageNumberHorizontalPadding: math.max(24, _horizontalMargin),
       showTopInformation: _topBarStyle == ReaderTopBarStyle.reader,
+      showFloatingStatus: _showLeafFloatingStatus,
+      floatingStatusHorizontalPadding: _floatingStatusHorizontalPadding,
       topInformationLayout: topInformationLayout,
       status: _leafStatusController.value,
       child: Padding(
@@ -3035,6 +3154,17 @@ class _NativeReaderPageState extends State<NativeReaderPage>
                   Scaffold(
                     key: const ValueKey('native-reader-empty'),
                     body: Center(child: Text(context.l10n.readerNoContent)),
+                  ),
+                );
+              }
+              // 封面还在飞行时不构建正文：首次整章排版（50~100ms）会
+              // 冻结飞行帧。等封面到达静止停留画面后再构建，排版落在
+              // 无感知窗口里；已有分页缓存（重开同一本书）则立即构建。
+              if (!_openingCoverHoldReachedNow && _pageCache.isEmpty) {
+                return _openingCrossfade(
+                  _buildOpeningScaffold(
+                    key: const ValueKey('native-reader-loading-placeholder'),
+                    showLoader: false,
                   ),
                 );
               }
@@ -3278,6 +3408,15 @@ class _NativeReaderPageState extends State<NativeReaderPage>
                                   ),
                                 ),
                               ),
+                              if (_showLeafFloatingStatus &&
+                                  _pageMode == NativePageMode.verticalScroll)
+                                ReaderFloatingStatusOverlay(
+                                  palette: _readerTheme,
+                                  status: _leafStatusController.value,
+                                  safeArea: _readerSafeArea,
+                                  horizontalPadding:
+                                      _floatingStatusHorizontalPadding,
+                                ),
                               ReaderChromeOverlay(
                                 palette: _readerTheme,
                                 visible: _controlsVisible,
@@ -3286,7 +3425,8 @@ class _NativeReaderPageState extends State<NativeReaderPage>
                                     : chapter.title,
                                 statusBottom: _readerSafeArea.pageNumberBottom,
                                 showViewportStatus:
-                                    _pageMode == NativePageMode.verticalScroll,
+                                    _pageMode == NativePageMode.verticalScroll &&
+                                    _topBarStyle != ReaderTopBarStyle.hidden,
                                 showViewportTitle:
                                     _pageMode ==
                                         NativePageMode.verticalScroll &&

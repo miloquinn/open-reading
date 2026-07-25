@@ -1238,6 +1238,9 @@ class _LibraryPageState extends State<LibraryPage> {
       isScrollControlled: true,
       builder: (context) {
         final localScheme = Theme.of(context).colorScheme;
+        final progress = (book.currentPage /
+                (book.totalPages > 0 ? book.totalPages : 1))
+            .clamp(0.0, 1.0);
         final content = Container(
           decoration: BoxDecoration(
             color: isMaterial3Style
@@ -1339,25 +1342,28 @@ class _LibraryPageState extends State<LibraryPage> {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            const SizedBox(height: 4),
+                            const SizedBox(height: 6),
                             Row(
                               children: [
-                                AppBrandIcon(
-                                  size: 14,
-                                  borderRadius: 4,
-                                  border: Border.all(
-                                    color: localScheme.primary.withValues(
-                                      alpha: 0.22,
+                                Expanded(
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(99),
+                                    child: LinearProgressIndicator(
+                                      value: progress,
+                                      minHeight: 5,
+                                      backgroundColor: localScheme.primary
+                                          .withValues(alpha: 0.14),
+                                      color: localScheme.primary,
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 4),
+                                const SizedBox(width: 8),
                                 Text(
-                                  '${((book.currentPage / (book.totalPages > 0 ? book.totalPages : 1)) * 100).toStringAsFixed(1)}%',
+                                  '${(progress * 100).toStringAsFixed(1)}%',
                                   style: Theme.of(context).textTheme.bodySmall
                                       ?.copyWith(
                                         color: localScheme.primary,
-                                        fontWeight: FontWeight.w500,
+                                        fontWeight: FontWeight.w600,
                                       ),
                                 ),
                               ],

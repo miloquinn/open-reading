@@ -10,6 +10,7 @@ import '../services/core/app_update_download_service.dart';
 import '../services/core/update_check_service.dart';
 import '../utils/localization_extension.dart';
 import '../utils/page_style_helper.dart';
+import 'app_brand_icon.dart';
 import 'release_notes_markdown.dart';
 import 'side_toast.dart';
 
@@ -215,19 +216,11 @@ class _UpdateDialog extends StatelessWidget {
                     Stack(
                       clipBehavior: Clip.none,
                       children: [
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: scheme.primaryContainer,
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          alignment: Alignment.center,
-                          child: Icon(
-                            Icons.auto_stories_rounded,
-                            color: scheme.onPrimaryContainer,
-                            size: 27,
-                          ),
+                        AppBrandIcon(
+                          size: 48,
+                          borderRadius: 15,
+                          backgroundColor: scheme.primaryContainer,
+                          padding: const EdgeInsets.all(6),
                         ),
                         Positioned(
                           right: -5,

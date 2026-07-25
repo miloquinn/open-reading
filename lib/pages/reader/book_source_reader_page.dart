@@ -216,10 +216,33 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     viewPadding: MediaQuery.viewPaddingOf(context),
     topMargin: _topMargin,
     bottomMargin: _bottomMargin,
-    topChromeReserve: _topBarStyle == ReaderTopBarStyle.reader
-        ? ReaderSafeAreaMetrics.readerTopBarReserve
-        : 0,
+    topChromeReserve: _topChromeReserveFor(_topBarStyle),
   );
+
+  /// 阅读信息栏占一条固定信息条；灵动信息栏借用状态栏区域，仅在设备
+  /// 没有状态栏 inset（隐藏后归零）时补足最小高度，避免正文顶进时间与
+  /// 电量。其余样式顶部只避开状态栏本身。
+  double _topChromeReserveFor(ReaderTopBarStyle style) => switch (style) {
+    ReaderTopBarStyle.reader => ReaderSafeAreaMetrics.readerTopBarReserve,
+    ReaderTopBarStyle.floating => math.max(
+      0,
+      ReaderSafeAreaMetrics.floatingStatusMinHeight -
+          MediaQuery.viewPaddingOf(context).top,
+    ),
+    _ => 0,
+  };
+
+  bool get _showLeafFloatingStatus =>
+      _topBarStyle == ReaderTopBarStyle.floating;
+
+  double get _floatingStatusHorizontalPadding =>
+      math.max(32, _horizontalMargin);
+
+  /// 阅读信息栏与灵动信息栏都画进纸页快照，需要随分钟时钟/电量刷新重绘。
+  int get _leafContentRevision =>
+      _topBarStyle == ReaderTopBarStyle.reader || _showLeafFloatingStatus
+      ? _leafStatusController.value.revision
+      : 0;
 
   bool _shouldUseTwoPageLayout(Size size) =>
       _tabletTwoPageEnabled &&
@@ -1391,9 +1414,11 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
 
   Future<void> _setTopBarStyle(ReaderTopBarStyle style) async {
     if (_topBarStyle == style) return;
+    // 顶部预留高度随样式变化；完全沉浸在上下滚动时取消整个预留区域。
     final repaginate =
-        (_topBarStyle == ReaderTopBarStyle.reader) !=
-        (style == ReaderTopBarStyle.reader);
+        _topChromeReserveFor(_topBarStyle) != _topChromeReserveFor(style) ||
+        (_topBarStyle == ReaderTopBarStyle.hidden) !=
+            (style == ReaderTopBarStyle.hidden);
     final currentProgress = _currentReadingProgress;
     final currentTextOffset = _currentTextOffset;
     setState(() {
@@ -1454,12 +1479,14 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   String _topBarStyleTitle(ReaderTopBarStyle style) => switch (style) {
     ReaderTopBarStyle.system => context.l10n.readerTopBarStyleSystem,
     ReaderTopBarStyle.reader => context.l10n.readerTopBarStyleReader,
+    ReaderTopBarStyle.floating => context.l10n.readerTopBarStyleFloating,
     ReaderTopBarStyle.hidden => context.l10n.readerTopBarStyleHidden,
   };
 
   String _topBarStyleHint(ReaderTopBarStyle style) => switch (style) {
     ReaderTopBarStyle.system => context.l10n.readerTopBarStyleSystemHint,
     ReaderTopBarStyle.reader => context.l10n.readerTopBarStyleReaderHint,
+    ReaderTopBarStyle.floating => context.l10n.readerTopBarStyleFloatingHint,
     ReaderTopBarStyle.hidden => context.l10n.readerTopBarStyleHiddenHint,
   };
 
@@ -1676,6 +1703,14 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
                         child: _buildBodyCrossfade(),
                       ),
                     ),
+                    if (_showLeafFloatingStatus &&
+                        _pageMode == BookSourcePageMode.verticalScroll)
+                      ReaderFloatingStatusOverlay(
+                        palette: _readerTheme,
+                        status: _leafStatusController.value,
+                        safeArea: _readerSafeArea,
+                        horizontalPadding: _floatingStatusHorizontalPadding,
+                      ),
                     ReaderChromeOverlay(
                       palette: _readerTheme,
                       visible: _controlsVisible,
@@ -1688,7 +1723,8 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
                                 .title,
                       statusBottom: _readerSafeArea.pageNumberBottom,
                       showViewportStatus:
-                          _pageMode == BookSourcePageMode.verticalScroll,
+                          _pageMode == BookSourcePageMode.verticalScroll &&
+                          _topBarStyle != ReaderTopBarStyle.hidden,
                       showViewportTitle:
                           _pageMode == BookSourcePageMode.verticalScroll &&
                           _topBarStyle == ReaderTopBarStyle.reader,
@@ -1903,7 +1939,11 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   );
 
   ReaderViewportChromeMetrics get _verticalChrome =>
-      ReaderViewportChromeMetrics(safeArea: _readerSafeArea);
+      ReaderViewportChromeMetrics(
+        safeArea: _readerSafeArea,
+        immersive: _topBarStyle == ReaderTopBarStyle.hidden,
+        reservesTitle: _topBarStyle == ReaderTopBarStyle.reader,
+      );
 
   double _verticalPageExtentFor(Size viewport) =>
       _verticalChrome.contentHeight(viewport.height);
@@ -2400,6 +2440,8 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       horizontalPadding: math.max(14, _horizontalMargin),
       pageNumberHorizontalPadding: math.max(24, _horizontalMargin),
       showTopInformation: _topBarStyle == ReaderTopBarStyle.reader,
+      showFloatingStatus: _showLeafFloatingStatus,
+      floatingStatusHorizontalPadding: _floatingStatusHorizontalPadding,
       topInformationLayout: topInformationLayout,
       status: _leafStatusController.value,
       child: Padding(
@@ -2455,9 +2497,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     );
     return ReaderPageSnapshot(
       key: metadata.snapshotKey,
-      contentRevision: _topBarStyle == ReaderTopBarStyle.reader
-          ? _leafStatusController.value.revision
-          : 0,
+      contentRevision: _leafContentRevision,
       child: _buildPageLeaf(
         page,
         pageIndex: pageIndex,
@@ -2555,6 +2595,8 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       ),
       horizontalPadding: math.max(14, _horizontalMargin),
       showTopInformation: _topBarStyle == ReaderTopBarStyle.reader,
+      showFloatingStatus: _showLeafFloatingStatus,
+      floatingStatusHorizontalPadding: _floatingStatusHorizontalPadding,
       topInformationLayout: topInformationLayout,
       showPageNumber: false,
       status: _leafStatusController.value,
@@ -2583,9 +2625,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       layoutFingerprint: _paginationKey ?? 'unpaginated',
       themeId: _readerTheme.cacheKey,
     ),
-    contentRevision: _topBarStyle == ReaderTopBarStyle.reader
-        ? _leafStatusController.value.revision
-        : 0,
+    contentRevision: _leafContentRevision,
     child: _buildBoundaryLeaf(
       forward: forward,
       topInformationLayout: topInformationLayout,
@@ -3117,9 +3157,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       layoutFingerprint: _paginationKey ?? 'unpaginated',
       themeId: _readerTheme.cacheKey,
     ),
-    contentRevision: _topBarStyle == ReaderTopBarStyle.reader
-        ? _leafStatusController.value.revision
-        : 0,
+    contentRevision: _leafContentRevision,
     child: ReaderPaperPageLeaf(
       palette: _readerTheme,
       safeArea: _readerSafeArea,
@@ -3135,6 +3173,8 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       ),
       horizontalPadding: math.max(14, _horizontalMargin),
       showTopInformation: _topBarStyle == ReaderTopBarStyle.reader,
+      showFloatingStatus: _showLeafFloatingStatus,
+      floatingStatusHorizontalPadding: _floatingStatusHorizontalPadding,
       topInformationLayout: topInformationLayout,
       showPageNumber: false,
       status: _leafStatusController.value,

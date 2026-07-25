@@ -503,12 +503,14 @@ class _SettingsPageState extends State<SettingsPage> {
   String _readerTopBarStyleTitle(ReaderTopBarStyle style) => switch (style) {
     ReaderTopBarStyle.system => context.l10n.readerTopBarStyleSystem,
     ReaderTopBarStyle.reader => context.l10n.readerTopBarStyleReader,
+    ReaderTopBarStyle.floating => context.l10n.readerTopBarStyleFloating,
     ReaderTopBarStyle.hidden => context.l10n.readerTopBarStyleHidden,
   };
 
   String _readerTopBarStyleHint(ReaderTopBarStyle style) => switch (style) {
     ReaderTopBarStyle.system => context.l10n.readerTopBarStyleSystemHint,
     ReaderTopBarStyle.reader => context.l10n.readerTopBarStyleReaderHint,
+    ReaderTopBarStyle.floating => context.l10n.readerTopBarStyleFloatingHint,
     ReaderTopBarStyle.hidden => context.l10n.readerTopBarStyleHiddenHint,
   };
 

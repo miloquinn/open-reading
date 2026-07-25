@@ -74,6 +74,11 @@ android {
                 signingConfig = signingConfigs.getByName("release")
             }
         }
+        getByName("profile") {
+            if (hasReleaseSigning) {
+                signingConfig = signingConfigs.getByName("release")
+            }
+        }
     }
 }
 

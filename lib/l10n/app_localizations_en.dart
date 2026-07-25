@@ -1398,6 +1398,24 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String libraryFormatAndChapters(String format, int chapters) {
+    return '$format · $chapters chapters';
+  }
+
+  @override
+  String get libraryRenameBook => 'Rename';
+
+  @override
+  String get libraryRenameBookHint =>
+      'Change the title; the file on disk is renamed too';
+
+  @override
+  String get libraryRenameBookSuccess => 'Renamed';
+
+  @override
+  String get libraryRenameBookFailed => 'Could not rename the book';
+
+  @override
   String get libraryExportBook => 'Export book';
 
   @override
@@ -1474,6 +1492,17 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String libraryPagesCount(int pages) {
     return '$pages pages';
+  }
+
+  @override
+  String get totalChapters => 'Total chapters';
+
+  @override
+  String get currentChapter => 'Current chapter';
+
+  @override
+  String libraryChaptersCount(int chapters) {
+    return '$chapters chapters';
   }
 
   @override
@@ -1706,6 +1735,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get readerTopBarStyleReaderHint =>
       'Show time, chapter title, and battery';
+
+  @override
+  String get readerTopBarStyleFloating => 'Floating info bar';
+
+  @override
+  String get readerTopBarStyleFloatingHint =>
+      'Show time and battery in the status bar area without taking reading space';
 
   @override
   String get readerTopBarStyleHidden => 'Fully immersive';

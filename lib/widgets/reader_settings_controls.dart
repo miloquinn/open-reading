@@ -158,80 +158,6 @@ class _ReaderSettingsSheetState extends State<ReaderSettingsSheet> {
         children: [
           Text(widget.title, style: theme.textTheme.titleLarge),
           const SizedBox(height: 12),
-          Text(
-            widget.themeTitle,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(widget.themeDescription, style: theme.textTheme.bodySmall),
-          const SizedBox(height: 12),
-          ReaderThemeStrip(
-            selectedThemeId: _themeId,
-            labelFor: widget.themeLabelFor,
-            onSelected: (themeId) {
-              setState(() => _themeId = themeId);
-              widget.onThemeChanged(themeId);
-            },
-            onCustomThemeTap: widget.onCustomThemeTap,
-          ),
-          const Divider(height: 28),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.swap_calls),
-            title: Text(widget.pageModeTitle),
-            subtitle: Text(widget.pageModeSummary),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: widget.onPageModeTap,
-          ),
-          if (widget.showTabletTwoPageToggle)
-            SwitchListTile(
-              key: const ValueKey('reader-tablet-two-page-switch'),
-              contentPadding: EdgeInsets.zero,
-              secondary: const Icon(Icons.menu_book_rounded),
-              value: _tabletTwoPageEnabled,
-              title: Text(widget.tabletTwoPageTitle),
-              subtitle: Text(widget.tabletTwoPageHint),
-              onChanged: (value) {
-                setState(() => _tabletTwoPageEnabled = value);
-                widget.onTabletTwoPageChanged(value);
-              },
-            ),
-          ListTile(
-            key: const ValueKey('reader-top-bar-style-tile'),
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.vertical_align_top_rounded),
-            title: Text(widget.topBarStyleTitle),
-            subtitle: Text(widget.topBarStyleSummary),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: widget.onTopBarStyleTap,
-          ),
-          SwitchListTile(
-            key: const ValueKey('reader-pull-bookmark-switch'),
-            contentPadding: EdgeInsets.zero,
-            secondary: const Icon(Icons.bookmark_add_outlined),
-            value: _pullBookmarkEnabled,
-            title: Text(widget.pullBookmarkTitle),
-            subtitle: Text(widget.pullBookmarkHint),
-            onChanged: (value) {
-              setState(() => _pullBookmarkEnabled = value);
-              widget.onPullBookmarkChanged(value);
-            },
-          ),
-          SwitchListTile(
-            key: const ValueKey('reader-tap-page-animation-switch'),
-            contentPadding: EdgeInsets.zero,
-            secondary: const Icon(Icons.animation_rounded),
-            value: _tapPageAnimationEnabled,
-            title: Text(widget.tapPageAnimationTitle),
-            subtitle: Text(widget.tapPageAnimationHint),
-            onChanged: (value) {
-              setState(() => _tapPageAnimationEnabled = value);
-              widget.onTapPageAnimationChanged(value);
-            },
-          ),
-          const Divider(height: 28),
           ReaderSettingSlider(
             label: widget.fontSizeLabel,
             value: _fontSize,
@@ -344,6 +270,80 @@ class _ReaderSettingsSheetState extends State<ReaderSettingsSheet> {
             onBottomChanged: (value) => setState(() => _bottomMargin = value),
             onTopChangeEnd: widget.onTopMarginChanged,
             onBottomChangeEnd: widget.onBottomMarginChanged,
+          ),
+          const Divider(height: 28),
+          Text(
+            widget.themeTitle,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(widget.themeDescription, style: theme.textTheme.bodySmall),
+          const SizedBox(height: 12),
+          ReaderThemeStrip(
+            selectedThemeId: _themeId,
+            labelFor: widget.themeLabelFor,
+            onSelected: (themeId) {
+              setState(() => _themeId = themeId);
+              widget.onThemeChanged(themeId);
+            },
+            onCustomThemeTap: widget.onCustomThemeTap,
+          ),
+          const Divider(height: 28),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.swap_calls),
+            title: Text(widget.pageModeTitle),
+            subtitle: Text(widget.pageModeSummary),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: widget.onPageModeTap,
+          ),
+          if (widget.showTabletTwoPageToggle)
+            SwitchListTile(
+              key: const ValueKey('reader-tablet-two-page-switch'),
+              contentPadding: EdgeInsets.zero,
+              secondary: const Icon(Icons.menu_book_rounded),
+              value: _tabletTwoPageEnabled,
+              title: Text(widget.tabletTwoPageTitle),
+              subtitle: Text(widget.tabletTwoPageHint),
+              onChanged: (value) {
+                setState(() => _tabletTwoPageEnabled = value);
+                widget.onTabletTwoPageChanged(value);
+              },
+            ),
+          ListTile(
+            key: const ValueKey('reader-top-bar-style-tile'),
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.vertical_align_top_rounded),
+            title: Text(widget.topBarStyleTitle),
+            subtitle: Text(widget.topBarStyleSummary),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: widget.onTopBarStyleTap,
+          ),
+          SwitchListTile(
+            key: const ValueKey('reader-pull-bookmark-switch'),
+            contentPadding: EdgeInsets.zero,
+            secondary: const Icon(Icons.bookmark_add_outlined),
+            value: _pullBookmarkEnabled,
+            title: Text(widget.pullBookmarkTitle),
+            subtitle: Text(widget.pullBookmarkHint),
+            onChanged: (value) {
+              setState(() => _pullBookmarkEnabled = value);
+              widget.onPullBookmarkChanged(value);
+            },
+          ),
+          SwitchListTile(
+            key: const ValueKey('reader-tap-page-animation-switch'),
+            contentPadding: EdgeInsets.zero,
+            secondary: const Icon(Icons.animation_rounded),
+            value: _tapPageAnimationEnabled,
+            title: Text(widget.tapPageAnimationTitle),
+            subtitle: Text(widget.tapPageAnimationHint),
+            onChanged: (value) {
+              setState(() => _tapPageAnimationEnabled = value);
+              widget.onTapPageAnimationChanged(value);
+            },
           ),
         ],
       ),
@@ -461,6 +461,13 @@ class _ReaderTopBarStylePreview extends StatelessWidget {
                         style: TextStyle(fontSize: 5, color: muted),
                       ),
                     ),
+                    Icon(Icons.battery_full_rounded, size: 7, color: muted),
+                  ],
+                ),
+                ReaderTopBarStyle.floating => Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('9:41', style: TextStyle(fontSize: 5, color: muted)),
                     Icon(Icons.battery_full_rounded, size: 7, color: muted),
                   ],
                 ),
@@ -600,7 +607,7 @@ class ReaderSettingsSheetFrame extends StatelessWidget {
         child: SafeArea(
           child: ConstrainedBox(
             constraints: BoxConstraints(
-              maxHeight: MediaQuery.sizeOf(context).height * 0.85,
+              maxHeight: MediaQuery.sizeOf(context).height * 0.5,
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,

@@ -1358,6 +1358,23 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String libraryFormatAndChapters(String format, int chapters) {
+    return '$format · 全 $chapters 章';
+  }
+
+  @override
+  String get libraryRenameBook => '名前を変更';
+
+  @override
+  String get libraryRenameBookHint => '書名を変更します。ローカルファイルがある場合は同時に名前を変更します';
+
+  @override
+  String get libraryRenameBookSuccess => '名前を変更しました';
+
+  @override
+  String get libraryRenameBookFailed => '名前を変更できませんでした';
+
+  @override
   String get libraryExportBook => '書籍を書き出す';
 
   @override
@@ -1423,6 +1440,17 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String libraryPagesCount(int pages) {
     return '$pages ページ';
+  }
+
+  @override
+  String get totalChapters => '総章数';
+
+  @override
+  String get currentChapter => '現在の章';
+
+  @override
+  String libraryChaptersCount(int chapters) {
+    return '$chapters 章';
   }
 
   @override
@@ -1643,6 +1671,13 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get readerTopBarStyleReaderHint => '時刻、章タイトル、電池残量を表示します';
+
+  @override
+  String get readerTopBarStyleFloating => 'フローティング情報バー';
+
+  @override
+  String get readerTopBarStyleFloatingHint =>
+      'ステータスバーの位置に時刻と電池残量を表示し、本文の領域を占有しません';
 
   @override
   String get readerTopBarStyleHidden => '完全没入';

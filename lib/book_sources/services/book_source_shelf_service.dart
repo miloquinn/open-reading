@@ -19,6 +19,11 @@ import 'source_cover_cache.dart';
 class BookSourceShelfService {
   static const int _downloadBatchSize = 3;
 
+  /// 在线书源书籍的进度编码单位：currentPage/totalPages 存储的是
+  /// "章节序号 * unitsPerChapter + 章内进度"，而不是真实页码。
+  /// UI 展示总量/当前值时需要除以该常量换算回章节数，避免把它当作页数显示。
+  static const int unitsPerChapter = 1000;
+
   BookSourceShelfService({
     BookDao? bookDao,
     BookSourceClient? client,
@@ -73,7 +78,6 @@ class BookSourceShelfService {
     required int chapterCount,
     required double chapterProgress,
   }) async {
-    const unitsPerChapter = 1000;
     final currentUnits =
         chapterIndex * unitsPerChapter +
         (chapterProgress.clamp(0, 1) * unitsPerChapter).round();

@@ -2627,6 +2627,36 @@ abstract class AppLocalizations {
   /// **'{format} · {pages} pages'**
   String libraryFormatAndPages(String format, int pages);
 
+  /// Book format and total chapter count subtitle for online book source books, whose progress is tracked per chapter rather than per page
+  ///
+  /// In en, this message translates to:
+  /// **'{format} · {chapters} chapters'**
+  String libraryFormatAndChapters(String format, int chapters);
+
+  /// Rename book option title and rename dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get libraryRenameBook;
+
+  /// Subtitle of the rename book option
+  ///
+  /// In en, this message translates to:
+  /// **'Change the title; the file on disk is renamed too'**
+  String get libraryRenameBookHint;
+
+  /// Toast shown after successfully renaming a book
+  ///
+  /// In en, this message translates to:
+  /// **'Renamed'**
+  String get libraryRenameBookSuccess;
+
+  /// Toast shown when renaming a book fails
+  ///
+  /// In en, this message translates to:
+  /// **'Could not rename the book'**
+  String get libraryRenameBookFailed;
+
   /// No description provided for @libraryExportBook.
   ///
   /// In en, this message translates to:
@@ -2752,6 +2782,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{pages} pages'**
   String libraryPagesCount(int pages);
+
+  /// Total chapter count label in the book info dialog, shown for online book source books
+  ///
+  /// In en, this message translates to:
+  /// **'Total chapters'**
+  String get totalChapters;
+
+  /// Current chapter label in the book info dialog, shown for online book source books
+  ///
+  /// In en, this message translates to:
+  /// **'Current chapter'**
+  String get currentChapter;
+
+  /// Chapter count value in the book info dialog
+  ///
+  /// In en, this message translates to:
+  /// **'{chapters} chapters'**
+  String libraryChaptersCount(int chapters);
 
   /// Close button in the book info dialog
   ///
@@ -3117,6 +3165,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show time, chapter title, and battery'**
   String get readerTopBarStyleReaderHint;
+
+  /// No description provided for @readerTopBarStyleFloating.
+  ///
+  /// In en, this message translates to:
+  /// **'Floating info bar'**
+  String get readerTopBarStyleFloating;
+
+  /// No description provided for @readerTopBarStyleFloatingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Show time and battery in the status bar area without taking reading space'**
+  String get readerTopBarStyleFloatingHint;
 
   /// No description provided for @readerTopBarStyleHidden.
   ///

@@ -14,6 +14,7 @@ export 'package:xxread/services/books/book_import_models.dart';
 export 'package:xxread/services/books/book_import_source_service.dart';
 export 'package:xxread/services/books/book_import_service.dart';
 export 'package:xxread/services/books/book_note_dao.dart';
+export 'package:xxread/services/books/book_rename_service.dart';
 export 'package:xxread/services/books/book_storage_repair_service.dart';
 export 'package:xxread/services/books/bookmark_dao.dart';
 export 'package:xxread/services/books/cover_generator_service.dart';

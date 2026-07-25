@@ -638,6 +638,21 @@
       }
     }
   },
+  "libraryFormatAndChapters": "{format} · 共 {chapters} 章",
+  "@libraryFormatAndChapters": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      },
+      "chapters": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryRenameBook": "重新命名",
+  "libraryRenameBookHint": "修改書名，本機檔案將同步重新命名",
+  "libraryRenameBookSuccess": "已重新命名",
+  "libraryRenameBookFailed": "重新命名失敗",
   "libraryExportBook": "匯出書籍",
   "libraryExportOriginalHint": "將原始檔案複製到裝置上的其他位置",
   "libraryExportDownloadedTxtHint": "匯出下載後產生的 TXT 檔案",
@@ -663,6 +678,16 @@
   "@libraryPagesCount": {
     "placeholders": {
       "pages": {
+        "type": "int"
+      }
+    }
+  },
+  "totalChapters": "總章節數",
+  "currentChapter": "目前章節",
+  "libraryChaptersCount": "{chapters} 章",
+  "@libraryChaptersCount": {
+    "placeholders": {
+      "chapters": {
         "type": "int"
       }
     }
@@ -844,6 +869,8 @@
   "readerTopBarStyleSystemHint": "顯示系統時間、訊號與電量",
   "readerTopBarStyleReader": "閱讀資訊列",
   "readerTopBarStyleReaderHint": "顯示時間、章節標題與電量",
+  "readerTopBarStyleFloating": "靈動資訊列",
+  "readerTopBarStyleFloatingHint": "在狀態列位置顯示時間與電量，不佔用內文空間",
   "readerTopBarStyleHidden": "完全沉浸",
   "readerTopBarStyleHiddenHint": "頂部不顯示任何資訊",
   "settingsAiAssistantTitle": "AI 閱讀助手",

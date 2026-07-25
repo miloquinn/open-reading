@@ -9,10 +9,18 @@ import 'reader_safe_area.dart';
 /// The chapter label and page status belong to the viewport rather than to an
 /// individual page. Text pagination must therefore use [contentTop] and
 /// [contentBottom], so text never slides underneath either fixed slot.
+///
+/// [reservesTitle]：只有「阅读信息栏」样式在视口顶部固定章节标签，需要
+/// 预留标题条；系统状态栏/灵动信息栏样式顶部只避开状态栏区域本身。
+///
+/// [immersive]（完全沉浸 + 上下滚动）时视口既无章节标签也无页码，所有
+/// 预留区域与边距整体取消，正文铺满整个屏幕。
 @immutable
 class ReaderViewportChromeMetrics {
   const ReaderViewportChromeMetrics({
     required this.safeArea,
+    this.immersive = false,
+    this.reservesTitle = true,
     this.titleTopGap = 7,
     this.titleHeight = 16,
     this.titleContentGap = 9,
@@ -20,6 +28,8 @@ class ReaderViewportChromeMetrics {
   });
 
   final ReaderSafeAreaMetrics safeArea;
+  final bool immersive;
+  final bool reservesTitle;
   final double titleTopGap;
   final double titleHeight;
   final double titleContentGap;
@@ -27,15 +37,23 @@ class ReaderViewportChromeMetrics {
 
   double get titleTop => safeArea.viewPadding.top + titleTopGap;
 
-  double get contentTop =>
-      math.max(safeArea.contentTop, titleTop + titleHeight + titleContentGap);
+  double get contentTop {
+    if (immersive) return 0;
+    if (!reservesTitle) return safeArea.contentTop;
+    return math.max(
+      safeArea.contentTop,
+      titleTop + titleHeight + titleContentGap,
+    );
+  }
 
-  double get contentBottom => math.max(
-    safeArea.contentBottom,
-    safeArea.pageNumberBottom +
-        ReaderSafeAreaMetrics.pageNumberReserve +
-        statusContentGap,
-  );
+  double get contentBottom => immersive
+      ? 0
+      : math.max(
+          safeArea.contentBottom,
+          safeArea.pageNumberBottom +
+              ReaderSafeAreaMetrics.pageNumberReserve +
+              statusContentGap,
+        );
 
   double contentHeight(double viewportHeight) =>
       (viewportHeight - contentTop - contentBottom).clamp(1, viewportHeight);

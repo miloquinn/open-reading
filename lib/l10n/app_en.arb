@@ -1506,6 +1506,34 @@
       }
     }
   },
+  "libraryFormatAndChapters": "{format} · {chapters} chapters",
+  "@libraryFormatAndChapters": {
+    "description": "Book format and total chapter count subtitle for online book source books, whose progress is tracked per chapter rather than per page",
+    "placeholders": {
+      "format": {
+        "type": "String"
+      },
+      "chapters": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryRenameBook": "Rename",
+  "@libraryRenameBook": {
+    "description": "Rename book option title and rename dialog title"
+  },
+  "libraryRenameBookHint": "Change the title; the file on disk is renamed too",
+  "@libraryRenameBookHint": {
+    "description": "Subtitle of the rename book option"
+  },
+  "libraryRenameBookSuccess": "Renamed",
+  "@libraryRenameBookSuccess": {
+    "description": "Toast shown after successfully renaming a book"
+  },
+  "libraryRenameBookFailed": "Could not rename the book",
+  "@libraryRenameBookFailed": {
+    "description": "Toast shown when renaming a book fails"
+  },
   "libraryExportBook": "Export book",
   "libraryExportOriginalHint": "Copy the original file to another location",
   "libraryExportDownloadedTxtHint": "Export the downloaded book as a generated TXT file",
@@ -1541,6 +1569,23 @@
     "description": "Page count value in the book info dialog",
     "placeholders": {
       "pages": {
+        "type": "int"
+      }
+    }
+  },
+  "totalChapters": "Total chapters",
+  "@totalChapters": {
+    "description": "Total chapter count label in the book info dialog, shown for online book source books"
+  },
+  "currentChapter": "Current chapter",
+  "@currentChapter": {
+    "description": "Current chapter label in the book info dialog, shown for online book source books"
+  },
+  "libraryChaptersCount": "{chapters} chapters",
+  "@libraryChaptersCount": {
+    "description": "Chapter count value in the book info dialog",
+    "placeholders": {
+      "chapters": {
         "type": "int"
       }
     }
@@ -1848,6 +1893,8 @@
   "readerTopBarStyleSystemHint": "Show the system time, signal, and battery",
   "readerTopBarStyleReader": "Reader information bar",
   "readerTopBarStyleReaderHint": "Show time, chapter title, and battery",
+  "readerTopBarStyleFloating": "Floating info bar",
+  "readerTopBarStyleFloatingHint": "Show time and battery in the status bar area without taking reading space",
   "readerTopBarStyleHidden": "Fully immersive",
   "readerTopBarStyleHiddenHint": "Show no information at the top",
   "settingsAiAssistantTitle": "AI Reading Assistant",

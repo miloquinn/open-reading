@@ -52,6 +52,9 @@ void main() {
         .onPressed!();
     await tester.pumpAndSettle();
 
+    // 设置面板新增条目后「翻页模式」可能位于可视区外，先滚动到可见。
+    await tester.ensureVisible(find.text('翻页模式'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('翻页模式'));
     await tester.pumpAndSettle();
 

@@ -638,6 +638,21 @@
       }
     }
   },
+  "libraryFormatAndChapters": "{format} · 全 {chapters} 章",
+  "@libraryFormatAndChapters": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      },
+      "chapters": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryRenameBook": "名前を変更",
+  "libraryRenameBookHint": "書名を変更します。ローカルファイルがある場合は同時に名前を変更します",
+  "libraryRenameBookSuccess": "名前を変更しました",
+  "libraryRenameBookFailed": "名前を変更できませんでした",
   "libraryExportBook": "書籍を書き出す",
   "libraryExportOriginalHint": "元のファイルをデバイス上の別の場所へコピーします",
   "libraryExportDownloadedTxtHint": "ダウンロード後に生成された TXT ファイルを書き出します",
@@ -663,6 +678,16 @@
   "@libraryPagesCount": {
     "placeholders": {
       "pages": {
+        "type": "int"
+      }
+    }
+  },
+  "totalChapters": "総章数",
+  "currentChapter": "現在の章",
+  "libraryChaptersCount": "{chapters} 章",
+  "@libraryChaptersCount": {
+    "placeholders": {
+      "chapters": {
         "type": "int"
       }
     }
@@ -844,6 +869,8 @@
   "readerTopBarStyleSystemHint": "システムの時刻、通信状態、電池残量を表示します",
   "readerTopBarStyleReader": "リーダー情報バー",
   "readerTopBarStyleReaderHint": "時刻、章タイトル、電池残量を表示します",
+  "readerTopBarStyleFloating": "フローティング情報バー",
+  "readerTopBarStyleFloatingHint": "ステータスバーの位置に時刻と電池残量を表示し、本文の領域を占有しません",
   "readerTopBarStyleHidden": "完全没入",
   "readerTopBarStyleHiddenHint": "上部には何も表示しません",
   "settingsAiAssistantTitle": "AI 読書アシスタント",

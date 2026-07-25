@@ -1353,6 +1353,23 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String libraryFormatAndChapters(String format, int chapters) {
+    return '$format · 共 $chapters 章';
+  }
+
+  @override
+  String get libraryRenameBook => '重命名';
+
+  @override
+  String get libraryRenameBookHint => '修改书名，本地文件将同步重命名';
+
+  @override
+  String get libraryRenameBookSuccess => '已重命名';
+
+  @override
+  String get libraryRenameBookFailed => '重命名失败';
+
+  @override
   String get libraryExportBook => '导出书籍';
 
   @override
@@ -1417,6 +1434,17 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String libraryPagesCount(int pages) {
     return '$pages 页';
+  }
+
+  @override
+  String get totalChapters => '总章节数';
+
+  @override
+  String get currentChapter => '当前章节';
+
+  @override
+  String libraryChaptersCount(int chapters) {
+    return '$chapters 章';
   }
 
   @override
@@ -1634,6 +1662,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get readerTopBarStyleReaderHint => '显示时间、章节标题与电量';
+
+  @override
+  String get readerTopBarStyleFloating => '灵动信息栏';
+
+  @override
+  String get readerTopBarStyleFloatingHint => '在状态栏位置显示时间与电量，不占用正文空间';
 
   @override
   String get readerTopBarStyleHidden => '完全沉浸';
@@ -5017,6 +5051,23 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   }
 
   @override
+  String libraryFormatAndChapters(String format, int chapters) {
+    return '$format · 共 $chapters 章';
+  }
+
+  @override
+  String get libraryRenameBook => '重新命名';
+
+  @override
+  String get libraryRenameBookHint => '修改書名，本機檔案將同步重新命名';
+
+  @override
+  String get libraryRenameBookSuccess => '已重新命名';
+
+  @override
+  String get libraryRenameBookFailed => '重新命名失敗';
+
+  @override
   String get libraryExportBook => '匯出書籍';
 
   @override
@@ -5081,6 +5132,17 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   @override
   String libraryPagesCount(int pages) {
     return '$pages 頁';
+  }
+
+  @override
+  String get totalChapters => '總章節數';
+
+  @override
+  String get currentChapter => '目前章節';
+
+  @override
+  String libraryChaptersCount(int chapters) {
+    return '$chapters 章';
   }
 
   @override
@@ -5298,6 +5360,12 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get readerTopBarStyleReaderHint => '顯示時間、章節標題與電量';
+
+  @override
+  String get readerTopBarStyleFloating => '靈動資訊列';
+
+  @override
+  String get readerTopBarStyleFloatingHint => '在狀態列位置顯示時間與電量，不佔用內文空間';
 
   @override
   String get readerTopBarStyleHidden => '完全沉浸';

@@ -129,6 +129,34 @@ class BookOpenTransition {
         .markContentReady();
   }
 
+  /// 打开动画的完整可见过程（封面飞行 + 正文渐显）结束后变为 true。
+  ///
+  /// 路由动画 460ms 结束时正文渐显往往仍在播放；相邻章节排版、系统栏切换
+  /// 等高成本工作应等待此信号，避免掉帧落在动画后半段。无封面飞行的平滑
+  /// 转场在入场完成后即视为结束。不在打开转场路由中时返回 null。
+  static ValueListenable<bool>? openingFlightSettledListenableOf(
+    BuildContext context,
+  ) {
+    return context
+        .getInheritedWidgetOfExactType<_BookOpenTransitionScope>()
+        ?.activity
+        ._flightSettled;
+  }
+
+  /// 封面飞行到达停留点（等待正文的静止画面）后变为 true。
+  ///
+  /// 从这一刻到正文渐显开始之间画面完全静止，是执行整章排版这类
+  /// 主线程重活的唯一无感知窗口；封面仍在运动时执行会直接冻结飞行帧。
+  /// 无封面飞行的转场在入场完成后变为 true。不在打开转场路由中返回 null。
+  static ValueListenable<bool>? openingCoverHoldListenableOf(
+    BuildContext context,
+  ) {
+    return context
+        .getInheritedWidgetOfExactType<_BookOpenTransitionScope>()
+        ?.activity
+        ._coverHoldReached;
+  }
+
   /// 退出动作开始时立即让首页悬浮导航从下方回弹。
   static void beginExit() {
     if (_activeRouteCount == 0 || _exitInProgress) return;
@@ -152,6 +180,7 @@ class BookOpenTransition {
   }) {
     final activity = BookOpenTransitionActivity._(
       holdOpeningCover: animation != null && waitForReaderReady,
+      hasCoverFlight: animation != null,
     );
     if (animation == null) {
       return CustomPageTransitions.createSmoothReaderPageRoute<T>(
@@ -216,12 +245,14 @@ class BookOpenTransition {
 }
 
 class BookOpenTransitionActivity {
-  BookOpenTransitionActivity._({bool holdOpeningCover = false})
-    : _openingPhase = ValueNotifier(
-        holdOpeningCover
-            ? _BookOpeningPhase.waiting
-            : _BookOpeningPhase.content,
-      ) {
+  BookOpenTransitionActivity._({
+    bool holdOpeningCover = false,
+    this._hasCoverFlight = false,
+  }) : _openingPhase = ValueNotifier(
+         holdOpeningCover
+             ? _BookOpeningPhase.waiting
+             : _BookOpeningPhase.content,
+       ) {
     BookOpenTransition._registerActiveRoute();
     if (holdOpeningCover) {
       _slowLoadingTimer = Timer(BookOpenTransition._slowLoadingRevealDelay, () {
@@ -232,7 +263,10 @@ class BookOpenTransitionActivity {
     }
   }
 
+  final bool _hasCoverFlight;
   final ValueNotifier<_BookOpeningPhase> _openingPhase;
+  final ValueNotifier<bool> _flightSettled = ValueNotifier(false);
+  final ValueNotifier<bool> _coverHoldReached = ValueNotifier(false);
   Timer? _slowLoadingTimer;
   bool _disposed = false;
 
@@ -240,6 +274,16 @@ class BookOpenTransitionActivity {
     if (_disposed || _openingPhase.value == _BookOpeningPhase.content) return;
     _slowLoadingTimer?.cancel();
     _openingPhase.value = _BookOpeningPhase.content;
+  }
+
+  void _markFlightSettled() {
+    if (_disposed || _flightSettled.value) return;
+    _flightSettled.value = true;
+  }
+
+  void _markCoverHoldReached() {
+    if (_disposed || _coverHoldReached.value) return;
+    _coverHoldReached.value = true;
   }
 
   void dispose() {
@@ -311,6 +355,10 @@ class _BookOpenActivityScopeState extends State<_BookOpenActivityScope> {
     final transitionAnimation = widget.transitionAnimation;
     if (transitionAnimation == null) {
       _entranceCompleted = true;
+      if (!widget.activity._hasCoverFlight) {
+        widget.activity._markFlightSettled();
+        widget.activity._markCoverHoldReached();
+      }
       return;
     }
     _sawEntranceMotion = transitionAnimation.status == AnimationStatus.forward;
@@ -328,6 +376,10 @@ class _BookOpenActivityScopeState extends State<_BookOpenActivityScope> {
       return;
     }
     setState(() => _entranceCompleted = true);
+    if (!widget.activity._hasCoverFlight) {
+      widget.activity._markFlightSettled();
+      widget.activity._markCoverHoldReached();
+    }
   }
 
   @override
@@ -345,7 +397,10 @@ class _BookOpenActivityScopeState extends State<_BookOpenActivityScope> {
     final transitionAnimation = widget.transitionAnimation;
     if (transitionAnimation == null) return widget.child;
     return AnimatedBuilder(
-      animation: transitionAnimation,
+      animation: Listenable.merge([
+        transitionAnimation,
+        widget.activity._flightSettled,
+      ]),
       child: widget.child,
       builder: (context, child) {
         final isExiting =
@@ -364,7 +419,13 @@ class _BookOpenActivityScopeState extends State<_BookOpenActivityScope> {
             child: TickerMode(
               key: const ValueKey('book-open-transition-reader-work-mode'),
               enabled: workEnabled,
-              child: child!,
+              // 渐显期间透明度每帧变化会反复触发整页语义树重建（实测
+              // 单帧最高约 9ms，足以击穿 120Hz 帧预算）；飞行落定前语义
+              // 树对读屏也无意义，排除到动画结束后一次性构建。
+              child: ExcludeSemantics(
+                excluding: !widget.activity._flightSettled.value,
+                child: child!,
+              ),
             ),
           ),
         );
@@ -527,6 +588,7 @@ class _BookOpenFlightState extends State<_BookOpenFlight>
           ? 0
           : 1,
     );
+    _openingRevealController.addStatusListener(_onOpeningRevealStatusChanged);
     widget.activity._openingPhase.addListener(_onOpeningPhaseChanged);
     widget.animation
       ..addListener(_syncExitSnapshotState)
@@ -535,6 +597,7 @@ class _BookOpenFlightState extends State<_BookOpenFlight>
       _syncExitSnapshotState,
     );
     _syncExitSnapshotState();
+    _maybeMarkFlightSettled();
   }
 
   @override
@@ -548,6 +611,7 @@ class _BookOpenFlightState extends State<_BookOpenFlight>
         ..addListener(_syncExitSnapshotState)
         ..addStatusListener(_onRouteAnimationStatusChanged);
       _syncExitSnapshotState();
+      _maybeMarkFlightSettled();
     }
     if (identical(oldWidget.activity, widget.activity)) return;
     oldWidget.activity._openingPhase.removeListener(_onOpeningPhaseChanged);
@@ -556,6 +620,7 @@ class _BookOpenFlightState extends State<_BookOpenFlight>
         widget.activity._openingPhase.value == _BookOpeningPhase.waiting
         ? 0
         : 1;
+    _maybeMarkFlightSettled();
   }
 
   void _onOpeningPhaseChanged() {
@@ -568,6 +633,29 @@ class _BookOpenFlightState extends State<_BookOpenFlight>
 
   void _onRouteAnimationStatusChanged(AnimationStatus _) {
     _syncExitSnapshotState();
+    _maybeMarkFlightSettled();
+  }
+
+  void _onOpeningRevealStatusChanged(AnimationStatus _) {
+    _maybeMarkFlightSettled();
+  }
+
+  void _maybeMarkFlightSettled() {
+    // 可见飞行 = 路由动画 + 正文渐显（reveal）两条时间轴的并集。
+    if (widget.animation.status == AnimationStatus.completed) {
+      widget.activity._markCoverHoldReached();
+      if (_openingRevealController.isCompleted) {
+        widget.activity._markFlightSettled();
+      }
+    }
+  }
+
+  void _markCoverHoldReachedAfterFrame() {
+    if (widget.activity._coverHoldReached.value) return;
+    final activity = widget.activity;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      activity._markCoverHoldReached();
+    });
   }
 
   void _syncExitSnapshotState() {
@@ -635,6 +723,10 @@ class _BookOpenFlightState extends State<_BookOpenFlight>
             animation.status == AnimationStatus.reverse ||
             predictiveBackInProgress();
         final t = isExiting ? routeT : _openingVisualProgress(routeT);
+        // 封面到达停留点后画面静止，此时才允许阅读器执行整章排版。
+        if (!isExiting && routeT >= _openingHold) {
+          _markCoverHoldReachedAfterFrame();
+        }
         final surface = isExiting
             ? appSurface
             : readerBackgroundColor ?? appSurface;
