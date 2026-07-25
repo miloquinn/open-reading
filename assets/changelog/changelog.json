@@ -2,6 +2,23 @@
     "schemaVersion":  1,
     "entries":  [
                     {
+                        "version":  "2.3.8",
+                        "notes":  {
+                                      "en":  [
+                                                 "Unified reader font initialization and scaling so text sizing stays consistent across reader entry points, platforms, and repagination"
+                                             ],
+                                      "zh":  [
+                                                 "统一阅读器字体初始化与缩放计算，确保不同阅读入口、平台和重新分页后的字号表现一致"
+                                             ],
+                                      "zh-TW":  [
+                                                    "統一閱讀器字型初始化與縮放計算，確保不同閱讀入口、平台和重新分頁後的字號表現一致"
+                                                ],
+                                      "ja":  [
+                                                 "リーダーのフォント初期化とスケーリングを統一し、入口・プラットフォーム・再ページ分割後も文字サイズを一貫させました"
+                                             ]
+                                  }
+                    },
+                    {
                         "version":  "2.3.7",
                         "notes":  {
                                       "en":  [
