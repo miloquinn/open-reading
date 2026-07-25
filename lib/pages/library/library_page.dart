@@ -1238,9 +1238,9 @@ class _LibraryPageState extends State<LibraryPage> {
       isScrollControlled: true,
       builder: (context) {
         final localScheme = Theme.of(context).colorScheme;
-        final progress = (book.currentPage /
-                (book.totalPages > 0 ? book.totalPages : 1))
-            .clamp(0.0, 1.0);
+        final progress =
+            (book.currentPage / (book.totalPages > 0 ? book.totalPages : 1))
+                .clamp(0.0, 1.0);
         final content = Container(
           decoration: BoxDecoration(
             color: isMaterial3Style

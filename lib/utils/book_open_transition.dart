@@ -143,10 +143,13 @@ class BookOpenTransition {
         ._flightSettled;
   }
 
-  /// 封面飞行到达停留点（等待正文的静止画面）后变为 true。
+  /// 路由的封面飞行动画（460ms）完全结束后变为 true。
   ///
-  /// 从这一刻到正文渐显开始之间画面完全静止，是执行整章排版这类
-  /// 主线程重活的唯一无感知窗口；封面仍在运动时执行会直接冻结飞行帧。
+  /// 封面在视觉上于 52% 处就已经停止运动（等待正文），但底层路由动画
+  /// 控制器仍在继续行进到 100%、每帧都在请求新帧；这段时间里执行整章
+  /// 排版这类主线程重活仍会挤占帧预算、拖慢同时播放的其它动画（如首页
+  /// 悬浮导航收起），实测会掉帧。真正的无感知窗口从路由动画完全停止
+  /// 请求新帧开始，因此这里等到 100% 而非视觉停留的 52%。
   /// 无封面飞行的转场在入场完成后变为 true。不在打开转场路由中返回 null。
   static ValueListenable<bool>? openingCoverHoldListenableOf(
     BuildContext context,
@@ -650,14 +653,6 @@ class _BookOpenFlightState extends State<_BookOpenFlight>
     }
   }
 
-  void _markCoverHoldReachedAfterFrame() {
-    if (widget.activity._coverHoldReached.value) return;
-    final activity = widget.activity;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      activity._markCoverHoldReached();
-    });
-  }
-
   void _syncExitSnapshotState() {
     if (animation.status == AnimationStatus.completed &&
         !BookOpenTransition._exitInProgress) {
@@ -723,10 +718,6 @@ class _BookOpenFlightState extends State<_BookOpenFlight>
             animation.status == AnimationStatus.reverse ||
             predictiveBackInProgress();
         final t = isExiting ? routeT : _openingVisualProgress(routeT);
-        // 封面到达停留点后画面静止，此时才允许阅读器执行整章排版。
-        if (!isExiting && routeT >= _openingHold) {
-          _markCoverHoldReachedAfterFrame();
-        }
         final surface = isExiting
             ? appSurface
             : readerBackgroundColor ?? appSurface;

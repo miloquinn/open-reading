@@ -271,7 +271,10 @@ void main() {
     }
     // 时间靠左、电量靠右，且与屏幕圆角保持至少 32 的间距。
     expect(tester.getRect(time).left, leafRect.left + 32);
-    expect(tester.getRect(battery).right, lessThanOrEqualTo(leafRect.right - 32));
+    expect(
+      tester.getRect(battery).right,
+      lessThanOrEqualTo(leafRect.right - 32),
+    );
     expect(tester.getCenter(time).dx, lessThan(leafRect.center.dx));
     expect(tester.getCenter(battery).dx, greaterThan(leafRect.center.dx));
   });

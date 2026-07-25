@@ -381,10 +381,12 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     setState(() {});
   }
 
-  /// 封面飞行是否已到达静止的停留画面（或本就没有封面飞行）。
+  /// 封面飞行路由动画是否已完全结束（或本就没有封面飞行）。
   ///
-  /// 停留点之前封面在高速运动，整章排版（一次 50~100ms）会直接冻结飞行帧；
-  /// 停留点到正文渐显之间画面完全静止，是执行这类重活的无感知窗口。
+  /// 底层路由动画请求新帧会一直持续到 100%，即使封面在视觉上早就静止；
+  /// 这期间执行整章排版（一次 50~100ms）仍会挤占帧预算、拖慢同时播放
+  /// 的其它动画（如首页悬浮导航收起），实测会掉帧。等到路由动画彻底
+  /// 停止请求新帧才是真正的无感知窗口。
   bool get _openingCoverHoldReachedNow =>
       _openingCoverHoldReached?.value ?? true;
 
@@ -3425,7 +3427,8 @@ class _NativeReaderPageState extends State<NativeReaderPage>
                                     : chapter.title,
                                 statusBottom: _readerSafeArea.pageNumberBottom,
                                 showViewportStatus:
-                                    _pageMode == NativePageMode.verticalScroll &&
+                                    _pageMode ==
+                                        NativePageMode.verticalScroll &&
                                     _topBarStyle != ReaderTopBarStyle.hidden,
                                 showViewportTitle:
                                     _pageMode ==
