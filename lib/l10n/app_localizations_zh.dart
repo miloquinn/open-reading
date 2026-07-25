@@ -625,6 +625,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get letterSpacingLabel => '字间距';
 
   @override
+  String get textAlignmentLabel => '对齐方式';
+
+  @override
+  String get textAlignmentNatural => '自然对齐';
+
+  @override
+  String get textAlignmentJustified => '两端对齐';
+
+  @override
   String get firstLineIndentLabel => '首行缩进';
 
   @override
@@ -4278,6 +4287,15 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get letterSpacingLabel => '字距';
+
+  @override
+  String get textAlignmentLabel => '對齊方式';
+
+  @override
+  String get textAlignmentNatural => '自然對齊';
+
+  @override
+  String get textAlignmentJustified => '左右對齊';
 
   @override
   String get firstLineIndentLabel => '首行縮排';

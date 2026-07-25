@@ -500,6 +500,18 @@
   "@letterSpacingLabel": {
     "description": "字间距标签"
   },
+  "textAlignmentLabel": "对齐方式",
+  "@textAlignmentLabel": {
+    "description": "阅读正文对齐方式标签"
+  },
+  "textAlignmentNatural": "自然对齐",
+  "@textAlignmentNatural": {
+    "description": "阅读正文自然对齐"
+  },
+  "textAlignmentJustified": "两端对齐",
+  "@textAlignmentJustified": {
+    "description": "阅读正文两端对齐"
+  },
   "firstLineIndentLabel": "首行缩进",
   "@firstLineIndentLabel": {
     "description": "首行缩进标签"

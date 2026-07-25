@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:xxread/core/reader/reader_system_ui.dart';
+import 'package:xxread/core/reader/reader_settings.dart';
 import 'package:xxread/utils/reader_themes.dart';
 import 'package:xxread/widgets/reader_settings_controls.dart';
 
@@ -10,6 +11,8 @@ void main() {
     (tester) async {
       int? changedIndent;
       int? changedSpacing;
+      double? changedLetterSpacing;
+      ReaderTextAlignment? changedAlignment;
       bool? pullBookmark;
       bool? tapAnimation;
       bool? tabletTwoPage;
@@ -33,6 +36,10 @@ void main() {
             tabletTwoPageHint: 'Show two pages in landscape',
             fontSizeLabel: 'Font size',
             lineHeightLabel: 'Line height',
+            letterSpacingLabel: 'Letter spacing',
+            textAlignmentLabel: 'Alignment',
+            textAlignmentNaturalLabel: 'Natural',
+            textAlignmentJustifiedLabel: 'Justified',
             firstLineIndentLabel: 'First-line indent',
             paragraphSpacingLabel: 'Paragraph spacing',
             horizontalMarginLabel: 'Horizontal margin',
@@ -41,6 +48,8 @@ void main() {
             themeId: ReaderThemes.day.id,
             fontSize: 19,
             lineHeight: 1.7,
+            letterSpacing: 0.3,
+            textAlignment: ReaderTextAlignment.natural,
             firstLineIndent: 2,
             paragraphSpacing: 1,
             horizontalMargin: 18,
@@ -56,6 +65,8 @@ void main() {
             onTopBarStyleTap: () {},
             onFontSizeChanged: (_) {},
             onLineHeightChanged: (_) {},
+            onLetterSpacingChanged: (value) => changedLetterSpacing = value,
+            onTextAlignmentChanged: (value) => changedAlignment = value,
             onFirstLineIndentChanged: (value) => changedIndent = value,
             onParagraphSpacingChanged: (value) => changedSpacing = value,
             onHorizontalMarginChanged: (_) {},
@@ -76,6 +87,10 @@ void main() {
         of: find.byKey(const ValueKey('reader-paragraph-spacing-slider')),
         matching: find.byType(Slider),
       );
+      final letterSpacingFinder = find.descendant(
+        of: find.byKey(const ValueKey('reader-letter-spacing-slider')),
+        matching: find.byType(Slider),
+      );
 
       final initialIndent = tester.widget<Slider>(indentFinder);
       expect(initialIndent.value, 2);
@@ -89,6 +104,11 @@ void main() {
       expect(initialSpacing.max, 2);
       expect(initialSpacing.divisions, 2);
 
+      final initialLetterSpacing = tester.widget<Slider>(letterSpacingFinder);
+      expect(initialLetterSpacing.value, 0.3);
+      expect(initialLetterSpacing.min, ReaderSettings.minLetterSpacing);
+      expect(initialLetterSpacing.max, ReaderSettings.maxLetterSpacing);
+
       initialIndent.onChanged!(3.6);
       await tester.pump();
       expect(tester.widget<Slider>(indentFinder).value, 4);
@@ -99,8 +119,20 @@ void main() {
       expect(tester.widget<Slider>(spacingFinder).value, 2);
       tester.widget<Slider>(spacingFinder).onChangeEnd!(1.6);
 
+      initialLetterSpacing.onChanged!(0.8);
+      await tester.pump();
+      tester.widget<Slider>(letterSpacingFinder).onChangeEnd!(0.8);
+      tester
+          .widget<SegmentedButton<ReaderTextAlignment>>(
+            find.byKey(const ValueKey('reader-text-alignment-control')),
+          )
+          .onSelectionChanged!({ReaderTextAlignment.justified});
+      await tester.pump();
+
       expect(changedIndent, 4);
       expect(changedSpacing, 2);
+      expect(changedLetterSpacing, 0.8);
+      expect(changedAlignment, ReaderTextAlignment.justified);
 
       await tester.drag(find.byType(ReaderThemeStrip), const Offset(-900, 0));
       await tester.pumpAndSettle();

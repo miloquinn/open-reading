@@ -628,6 +628,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get letterSpacingLabel => '字間';
 
   @override
+  String get textAlignmentLabel => '文字揃え';
+
+  @override
+  String get textAlignmentNatural => '自然';
+
+  @override
+  String get textAlignmentJustified => '両端揃え';
+
+  @override
   String get firstLineIndentLabel => '字下げ';
 
   @override

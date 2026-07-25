@@ -317,7 +317,7 @@ void main() {
     BookSourcePageMode.verticalScroll,
     BookSourcePageMode.instantPage,
   ]) {
-    testWidgets('justifies source body text in ${mode.name} mode', (
+    testWidgets('naturally aligns source body text in ${mode.name} mode', (
       tester,
     ) async {
       SharedPreferences.setMockInitialValues({
@@ -358,9 +358,49 @@ void main() {
       await tester.pumpAndSettle();
       await _pumpUntilFound(tester, bodyFinder);
 
-      expect(tester.widget<RichText>(bodyFinder).textAlign, TextAlign.justify);
+      expect(tester.widget<RichText>(bodyFinder).textAlign, TextAlign.start);
     });
   }
+
+  testWidgets('applies persisted source alignment and letter spacing', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({
+      ReaderSettingsStore.pageModeKey: BookSourcePageMode.instantPage.name,
+      ReaderSettingsStore.letterSpacingKey: 0.7,
+      ReaderSettingsStore.textAlignmentKey: ReaderTextAlignment.justified.name,
+    });
+
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: BookSourceReaderPage(
+          source: _testSource(),
+          book: const BookSourceBook(
+            id: 'book-1',
+            title: 'Test book',
+            author: 'Author',
+            description: '',
+            categories: [],
+          ),
+          client: _FakeBookSourceClient(),
+        ),
+      ),
+    );
+    final bodyFinder = find.textContaining('第一章正文', findRichText: true);
+    await _pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('book-source-reader-surface')),
+    );
+    await tester.tapAt(const Offset(760, 300));
+    await tester.pumpAndSettle();
+    await _pumpUntilFound(tester, bodyFinder);
+
+    final body = tester.widget<RichText>(bodyFinder);
+    expect(body.textAlign, TextAlign.justify);
+    expect(body.text.style?.letterSpacing, 0.7);
+  });
 
   testWidgets('vertical source pages are clipped to one fixed reading window', (
     tester,

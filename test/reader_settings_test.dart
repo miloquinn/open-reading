@@ -10,6 +10,8 @@ void main() {
     final settings = await const ReaderSettingsStore().load();
 
     expect(settings.pageMode, ReaderPageMode.horizontalSlide);
+    expect(settings.letterSpacing, ReaderSettings.defaultLetterSpacing);
+    expect(settings.textAlignment, ReaderTextAlignment.natural);
   });
 
   test(
@@ -39,6 +41,8 @@ void main() {
     const settings = ReaderSettings(
       fontSize: 22,
       lineHeight: 1.8,
+      letterSpacing: 0.6,
+      textAlignment: ReaderTextAlignment.justified,
       horizontalMargin: 20,
       topMargin: 7,
       bottomMargin: 3,
@@ -57,6 +61,8 @@ void main() {
     );
 
     expect(restored.fontSize, 22);
+    expect(restored.letterSpacing, 0.6);
+    expect(restored.textAlignment, ReaderTextAlignment.justified);
     expect(restored.topMargin, 7);
     expect(restored.bottomMargin, 3);
     expect(restored.themeId, 'mist');
@@ -101,6 +107,8 @@ void main() {
     SharedPreferences.setMockInitialValues({
       ReaderSettingsStore.firstLineIndentKey: 20,
       ReaderSettingsStore.paragraphSpacingKey: -3,
+      ReaderSettingsStore.letterSpacingKey: 9.0,
+      ReaderSettingsStore.textAlignmentKey: 'unknown',
       'native_reader_page_turn_style': 'cylinder',
     });
 
@@ -110,11 +118,17 @@ void main() {
 
     expect(restored.firstLineIndent, 4);
     expect(restored.paragraphSpacing, 0);
+    expect(restored.letterSpacing, ReaderSettings.maxLetterSpacing);
+    expect(restored.textAlignment, ReaderTextAlignment.natural);
     expect(restored.pullBookmarkEnabled, isFalse);
     expect(restored.tapPageAnimationEnabled, isTrue);
     expect(restored.tabletTwoPageEnabled, isTrue);
     expect(restored.copyWith(firstLineIndent: -1).firstLineIndent, 0);
     expect(restored.copyWith(paragraphSpacing: 9).paragraphSpacing, 2);
+    expect(
+      restored.copyWith(letterSpacing: -1).letterSpacing,
+      ReaderSettings.minLetterSpacing,
+    );
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getString('native_reader_page_turn_style'), isNull);
   });

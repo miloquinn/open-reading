@@ -134,12 +134,6 @@ class _NativeReaderPageState extends State<NativeReaderPage>
   static final Map<String, Map<String, List<_ReaderPageData>>>
   _paginationMemoryCache = {};
   static const _spreadGutter = 24.0;
-  static const _textStyle = TextStyle(
-    fontSize: 19,
-    height: 1.75,
-    letterSpacing: 0.2,
-  );
-
   late final Future<List<_NativeChapter>> _chaptersFuture;
   PageController? _pageController;
   int _pageControllerGeneration = 0;
@@ -191,6 +185,8 @@ class _NativeReaderPageState extends State<NativeReaderPage>
   bool _scrollByChapter = true;
   double _fontSize = 19;
   double _lineHeight = 1.75;
+  double _letterSpacing = ReaderSettings.defaultLetterSpacing;
+  ReaderTextAlignment _textAlignment = ReaderSettings.defaultTextAlignment;
   int _firstLineIndent = ReaderSettings.defaultFirstLineIndent;
   int _paragraphSpacing = ReaderSettings.defaultParagraphSpacing;
   double _horizontalMargin = 18;
@@ -202,6 +198,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
   bool _tapPageAnimationEnabled = true;
   bool _tabletTwoPageEnabled = ReaderSettings.defaultTabletTwoPageEnabled;
   bool _readerSettingsLoaded = false;
+  bool _readerFontReady = true;
   bool _readerSystemUiApplied = false;
   bool _readerSystemUiApplyScheduled = false;
   bool _routeEntranceCompleted = false;
@@ -336,11 +333,15 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     super.didChangeDependencies();
     _bindRouteAnimation();
     var nextReaderFont = FontCatalog.defaultReaderFont;
+    var nextReaderFontReady = true;
     try {
-      nextReaderFont = context.watch<AppSettingsNotifier>().readerFont;
+      final appSettings = context.watch<AppSettingsNotifier>();
+      nextReaderFontReady = appSettings.isInitialized;
+      if (nextReaderFontReady) nextReaderFont = appSettings.readerFont;
     } on ProviderNotFoundException {
       // Reader widgets remain embeddable in tests and isolated previews.
     }
+    _readerFontReady = nextReaderFontReady;
     if (_readerFont.id != nextReaderFont.id) {
       _readerFont = nextReaderFont;
       if (_readerDependenciesInitialized) {
@@ -553,6 +554,8 @@ class _NativeReaderPageState extends State<NativeReaderPage>
         _pageMode = settings.pageMode;
         _fontSize = settings.fontSize;
         _lineHeight = settings.lineHeight;
+        _letterSpacing = settings.letterSpacing;
+        _textAlignment = settings.textAlignment;
         _horizontalMargin = settings.horizontalMargin;
         _topMargin = settings.topMargin;
         _bottomMargin = settings.bottomMargin;
@@ -617,6 +620,8 @@ class _NativeReaderPageState extends State<NativeReaderPage>
   ReaderSettings get _readerSettings => ReaderSettings(
     fontSize: _fontSize,
     lineHeight: _lineHeight,
+    letterSpacing: _letterSpacing,
+    textAlignment: _textAlignment,
     horizontalMargin: _horizontalMargin,
     topMargin: _topMargin,
     bottomMargin: _bottomMargin,
@@ -637,9 +642,14 @@ class _NativeReaderPageState extends State<NativeReaderPage>
         : _readerFont.fallbackFamilies,
     fontSize: _fontSize,
     height: _lineHeight,
-    letterSpacing: _textStyle.letterSpacing,
+    letterSpacing: _letterSpacing,
     color: _readerTheme.text,
   );
+
+  TextAlign get _readerTextAlign => switch (_textAlignment) {
+    ReaderTextAlignment.natural => TextAlign.start,
+    ReaderTextAlignment.justified => TextAlign.justify,
+  };
 
   NativeTextFlowStyle _readerTextFlowStyle({
     TextDirection? direction,
@@ -648,10 +658,11 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     final style = _readerTextStyle;
     return NativeTextFlowStyle(
       textDirection: direction ?? Directionality.of(context),
-      textScaler: textScaler ?? MediaQuery.textScalerOf(context),
+      textScaler: textScaler ?? readerBodyTextScaler,
       locale: Localizations.maybeLocaleOf(context),
       strutStyle: readerStrutStyle(style),
       textHeightBehavior: readerTextHeightBehavior,
+      textAlign: _readerTextAlign,
     );
   }
 
@@ -703,6 +714,8 @@ class _NativeReaderPageState extends State<NativeReaderPage>
   Future<void> _updateLayout({
     double? fontSize,
     double? lineHeight,
+    double? letterSpacing,
+    ReaderTextAlignment? textAlignment,
     int? firstLineIndent,
     int? paragraphSpacing,
     double? horizontalMargin,
@@ -712,6 +725,11 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     setState(() {
       _fontSize = fontSize ?? _fontSize;
       _lineHeight = (lineHeight ?? _lineHeight).clamp(1.4, 2.1);
+      _letterSpacing = (letterSpacing ?? _letterSpacing).clamp(
+        ReaderSettings.minLetterSpacing,
+        ReaderSettings.maxLetterSpacing,
+      );
+      _textAlignment = textAlignment ?? _textAlignment;
       _firstLineIndent = (firstLineIndent ?? _firstLineIndent).clamp(0, 4);
       _paragraphSpacing = (paragraphSpacing ?? _paragraphSpacing).clamp(0, 2);
       _horizontalMargin = (horizontalMargin ?? _horizontalMargin).clamp(
@@ -735,6 +753,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
   String get _layoutSignature =>
       '${_fontSize.toStringAsFixed(1)}:'
       '${_lineHeight.toStringAsFixed(2)}:'
+      '${_letterSpacing.toStringAsFixed(1)}:${_textAlignment.name}:'
       '${_horizontalMargin.toStringAsFixed(1)}:'
       '${_topMargin.toStringAsFixed(1)}:'
       '${_bottomMargin.toStringAsFixed(1)}:${_pageMode.name}:'
@@ -1295,6 +1314,10 @@ class _NativeReaderPageState extends State<NativeReaderPage>
         tabletTwoPageHint: context.l10n.readerTabletTwoPageHint,
         fontSizeLabel: context.l10n.fontSizeLabel,
         lineHeightLabel: context.l10n.lineSpacingLabel,
+        letterSpacingLabel: context.l10n.letterSpacingLabel,
+        textAlignmentLabel: context.l10n.textAlignmentLabel,
+        textAlignmentNaturalLabel: context.l10n.textAlignmentNatural,
+        textAlignmentJustifiedLabel: context.l10n.textAlignmentJustified,
         firstLineIndentLabel: context.l10n.firstLineIndentLabel,
         paragraphSpacingLabel: context.l10n.paragraphSpacingLabel,
         horizontalMarginLabel: context.l10n.readerHorizontalMarginLabel,
@@ -1303,6 +1326,8 @@ class _NativeReaderPageState extends State<NativeReaderPage>
         themeId: _readerThemeId,
         fontSize: _fontSize,
         lineHeight: _lineHeight,
+        letterSpacing: _letterSpacing,
+        textAlignment: _textAlignment,
         firstLineIndent: _firstLineIndent,
         paragraphSpacing: _paragraphSpacing,
         horizontalMargin: _horizontalMargin,
@@ -1319,6 +1344,10 @@ class _NativeReaderPageState extends State<NativeReaderPage>
         onFontSizeChanged: (value) => unawaited(_updateLayout(fontSize: value)),
         onLineHeightChanged: (value) =>
             unawaited(_updateLayout(lineHeight: value)),
+        onLetterSpacingChanged: (value) =>
+            unawaited(_updateLayout(letterSpacing: value)),
+        onTextAlignmentChanged: (value) =>
+            unawaited(_updateLayout(textAlignment: value)),
         onFirstLineIndentChanged: (value) =>
             unawaited(_updateLayout(firstLineIndent: value)),
         onParagraphSpacingChanged: (value) =>
@@ -1842,6 +1871,8 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     viewport: size,
     fontSize: _fontSize,
     lineHeight: _lineHeight,
+    letterSpacing: _letterSpacing,
+    textAlign: _readerTextAlign,
     horizontalMargin: _horizontalMargin,
     verticalMargin: _topMargin + _bottomMargin,
     textScaler: textScaler,
@@ -2338,7 +2369,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
       _visibleChapters = chapters;
       _verticalViewportSize = viewport;
       _verticalTextDirection = Directionality.of(context);
-      _verticalTextScaler = MediaQuery.textScalerOf(context);
+      _verticalTextScaler = readerBodyTextScaler;
       if (!_scrollByChapter) {
         return _buildVerticalReadingWindow(
           _buildVerticalBook(chapters, viewport),
@@ -2355,7 +2386,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
             chapters,
             _paginationSize(viewport, usesTwoPageLayout),
             Directionality.of(context),
-            MediaQuery.textScalerOf(context),
+            readerBodyTextScaler,
             usesTwoPageLayout: usesTwoPageLayout,
           );
           return false;
@@ -2957,7 +2988,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
           child: FutureBuilder<List<_NativeChapter>>(
             future: _chaptersFuture,
             builder: (context, snapshot) {
-              if (!_readerSettingsLoaded) {
+              if (!_readerSettingsLoaded || !_readerFontReady) {
                 return _openingCrossfade(
                   _buildOpeningScaffold(
                     key: const ValueKey('native-reader-opening-placeholder'),
@@ -3044,7 +3075,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
                         _lastPaginationSize = paginationSize;
                         _lastUsesTwoPageLayout = usesTwoPageLayout;
                         final textDirection = Directionality.of(context);
-                        final textScaler = MediaQuery.textScalerOf(context);
+                        const textScaler = readerBodyTextScaler;
                         final pages = _pagesFor(
                           chapter,
                           _chapterIndex,

@@ -119,9 +119,12 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   Object? _error;
   double _fontSize = 19;
   double _lineHeight = 1.75;
+  double _letterSpacing = ReaderSettings.defaultLetterSpacing;
+  ReaderTextAlignment _textAlignment = ReaderSettings.defaultTextAlignment;
   int _firstLineIndent = ReaderSettings.defaultFirstLineIndent;
   int _paragraphSpacing = ReaderSettings.defaultParagraphSpacing;
   FontOption _readerFont = FontCatalog.defaultReaderFont;
+  bool _readerFontReady = true;
   double _horizontalMargin = ReaderSettings.defaultHorizontalMargin;
   double _topMargin = ReaderMarginSettings.defaultTop;
   double _bottomMargin = ReaderMarginSettings.defaultBottom;
@@ -195,6 +198,8 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   ReaderSettings get _readerSettings => ReaderSettings(
     fontSize: _fontSize,
     lineHeight: _lineHeight,
+    letterSpacing: _letterSpacing,
+    textAlignment: _textAlignment,
     horizontalMargin: _horizontalMargin,
     topMargin: _topMargin,
     bottomMargin: _bottomMargin,
@@ -281,11 +286,15 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   void didChangeDependencies() {
     super.didChangeDependencies();
     var nextReaderFont = FontCatalog.defaultReaderFont;
+    var nextReaderFontReady = true;
     try {
-      nextReaderFont = context.watch<AppSettingsNotifier>().readerFont;
+      final appSettings = context.watch<AppSettingsNotifier>();
+      nextReaderFontReady = appSettings.isInitialized;
+      if (nextReaderFontReady) nextReaderFont = appSettings.readerFont;
     } on ProviderNotFoundException {
       // Reader widgets remain embeddable in tests and isolated previews.
     }
+    _readerFontReady = nextReaderFontReady;
     if (_readerFont.id == nextReaderFont.id) return;
     _readerFont = nextReaderFont;
     _paginationKey = null;
@@ -443,6 +452,8 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         _topMargin = settings.topMargin;
         _bottomMargin = settings.bottomMargin;
         _lineHeight = settings.lineHeight;
+        _letterSpacing = settings.letterSpacing;
+        _textAlignment = settings.textAlignment;
         _firstLineIndent = settings.firstLineIndent;
         _paragraphSpacing = settings.paragraphSpacing;
         _readerThemeId = ReaderThemes.byId(settings.themeId).id;
@@ -1303,6 +1314,8 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   Future<void> _updateReadingSettings({
     double? fontSize,
     double? lineHeight,
+    double? letterSpacing,
+    ReaderTextAlignment? textAlignment,
     int? firstLineIndent,
     int? paragraphSpacing,
     double? horizontalMargin,
@@ -1317,6 +1330,8 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     final repaginate =
         fontSize != null ||
         lineHeight != null ||
+        letterSpacing != null ||
+        textAlignment != null ||
         firstLineIndent != null ||
         paragraphSpacing != null ||
         horizontalMargin != null ||
@@ -1330,6 +1345,11 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     setState(() {
       _fontSize = fontSize ?? _fontSize;
       _lineHeight = (lineHeight ?? _lineHeight).clamp(1.4, 2.1);
+      _letterSpacing = (letterSpacing ?? _letterSpacing).clamp(
+        ReaderSettings.minLetterSpacing,
+        ReaderSettings.maxLetterSpacing,
+      );
+      _textAlignment = textAlignment ?? _textAlignment;
       _firstLineIndent = (firstLineIndent ?? _firstLineIndent).clamp(0, 4);
       _paragraphSpacing = (paragraphSpacing ?? _paragraphSpacing).clamp(0, 2);
       _horizontalMargin = (horizontalMargin ?? _horizontalMargin).clamp(
@@ -1468,6 +1488,10 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         tabletTwoPageHint: context.l10n.readerTabletTwoPageHint,
         fontSizeLabel: context.l10n.fontSizeLabel,
         lineHeightLabel: context.l10n.lineSpacingLabel,
+        letterSpacingLabel: context.l10n.letterSpacingLabel,
+        textAlignmentLabel: context.l10n.textAlignmentLabel,
+        textAlignmentNaturalLabel: context.l10n.textAlignmentNatural,
+        textAlignmentJustifiedLabel: context.l10n.textAlignmentJustified,
         firstLineIndentLabel: context.l10n.firstLineIndentLabel,
         paragraphSpacingLabel: context.l10n.paragraphSpacingLabel,
         horizontalMarginLabel: context.l10n.readerHorizontalMarginLabel,
@@ -1476,6 +1500,8 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         themeId: _readerThemeId,
         fontSize: _fontSize,
         lineHeight: _lineHeight,
+        letterSpacing: _letterSpacing,
+        textAlignment: _textAlignment,
         firstLineIndent: _firstLineIndent,
         paragraphSpacing: _paragraphSpacing,
         horizontalMargin: _horizontalMargin,
@@ -1494,6 +1520,10 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
             unawaited(_updateReadingSettings(fontSize: value)),
         onLineHeightChanged: (value) =>
             unawaited(_updateReadingSettings(lineHeight: value)),
+        onLetterSpacingChanged: (value) =>
+            unawaited(_updateReadingSettings(letterSpacing: value)),
+        onTextAlignmentChanged: (value) =>
+            unawaited(_updateReadingSettings(textAlignment: value)),
         onFirstLineIndentChanged: (value) =>
             unawaited(_updateReadingSettings(firstLineIndent: value)),
         onParagraphSpacingChanged: (value) =>
@@ -1705,7 +1735,9 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   }
 
   String get _bodyTransitionKey {
-    if (_loadingCatalog || (_loadingContent && _content == null)) {
+    if (!_readerFontReady ||
+        _loadingCatalog ||
+        (_loadingContent && _content == null)) {
       return _showOpeningLoader ? 'loading' : 'loading-placeholder';
     }
     if (_error != null) return 'error';
@@ -1745,7 +1777,9 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   }
 
   Widget _buildBody() {
-    if (_loadingCatalog || (_loadingContent && _content == null)) {
+    if (!_readerFontReady ||
+        _loadingCatalog ||
+        (_loadingContent && _content == null)) {
       if (!_showOpeningLoader) {
         return GestureDetector(
           key: const ValueKey('book-source-reader-loading-placeholder'),
@@ -1847,8 +1881,13 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     color: _readerTheme.text,
     fontSize: _fontSize,
     height: _lineHeight,
-    letterSpacing: 0.2,
+    letterSpacing: _letterSpacing,
   );
+
+  TextAlign get _bodyTextAlign => switch (_textAlignment) {
+    ReaderTextAlignment.natural => TextAlign.start,
+    ReaderTextAlignment.justified => TextAlign.justify,
+  };
 
   NativeTextFlowStyle _bodyTextFlowStyle({
     TextDirection? direction,
@@ -1856,10 +1895,11 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     Locale? locale,
   }) => NativeTextFlowStyle(
     textDirection: direction ?? Directionality.of(context),
-    textScaler: textScaler ?? MediaQuery.textScalerOf(context),
+    textScaler: textScaler ?? readerBodyTextScaler,
     locale: locale ?? Localizations.maybeLocaleOf(context),
     strutStyle: readerStrutStyle(_bodyTextStyle),
     textHeightBehavior: readerTextHeightBehavior,
+    textAlign: _bodyTextAlign,
   );
 
   ReaderViewportChromeMetrics get _verticalChrome =>
@@ -1895,7 +1935,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     final chrome = _verticalChrome;
     final width = readerTextContentWidth(viewport.width, _horizontalMargin);
     final height = _verticalPageExtentFor(viewport);
-    final textScaler = MediaQuery.textScalerOf(context);
+    const textScaler = readerBodyTextScaler;
     final locale = Localizations.maybeLocaleOf(context);
     final direction = Directionality.of(context);
     final fingerprint = ReaderLayoutFingerprint(
@@ -1903,6 +1943,8 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       viewport: Size(width, height),
       fontSize: _fontSize,
       lineHeight: _lineHeight,
+      letterSpacing: _letterSpacing,
+      textAlign: _bodyTextAlign,
       horizontalMargin: _horizontalMargin,
       verticalMargin: _topMargin + _bottomMargin,
       textScaler: textScaler,
@@ -1927,6 +1969,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       style: _bodyTextStyle,
       textDirection: direction,
       textScaler: textScaler,
+      textAlign: _bodyTextAlign,
       locale: locale,
       firstLineIndent: _firstLineIndent,
       paragraphSpacing: _paragraphSpacing,
@@ -2201,6 +2244,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
           'source-vertical-book:${viewport.width.toStringAsFixed(1)}:'
           '${viewport.height.toStringAsFixed(1)}:'
           '${_fontSize.toStringAsFixed(1)}:${_lineHeight.toStringAsFixed(2)}:'
+          '${_letterSpacing.toStringAsFixed(1)}:${_textAlignment.name}:'
           '$_firstLineIndent:$_paragraphSpacing:${_readerFont.id}:'
           '${_verticalChrome.paginationSignature}',
         ),
@@ -2227,13 +2271,15 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     final bottom = _readerSafeArea.contentBottom;
     final width = readerTextContentWidth(viewport.width, _horizontalMargin);
     final height = readerTextContentHeight(viewport.height, top, bottom);
-    final textScaler = MediaQuery.textScalerOf(context);
+    const textScaler = readerBodyTextScaler;
     final locale = Localizations.maybeLocaleOf(context);
     final key = ReaderLayoutFingerprint(
       contentKey: _chapters[chapterIndex].id,
       viewport: Size(width, height),
       fontSize: _fontSize,
       lineHeight: _lineHeight,
+      letterSpacing: _letterSpacing,
+      textAlign: _bodyTextAlign,
       horizontalMargin: _horizontalMargin,
       verticalMargin: _topMargin + _bottomMargin,
       textScaler: textScaler,
@@ -2258,6 +2304,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       style: _bodyTextStyle,
       textDirection: Directionality.of(context),
       textScaler: textScaler,
+      textAlign: _bodyTextAlign,
       locale: locale,
       firstLineIndent: _firstLineIndent,
       paragraphSpacing: _paragraphSpacing,

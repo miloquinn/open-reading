@@ -4,10 +4,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'reader_layout.dart';
 import 'reader_margin_settings.dart';
 
+enum ReaderTextAlignment { natural, justified }
+
 @immutable
 class ReaderSettings {
   static const double defaultFontSize = 19;
   static const double defaultLineHeight = 1.75;
+  static const double minLetterSpacing = 0;
+  static const double maxLetterSpacing = 1.2;
+  static const double defaultLetterSpacing = 0;
+  static const ReaderTextAlignment defaultTextAlignment =
+      ReaderTextAlignment.natural;
   static const double defaultHorizontalMargin = 18;
   static const int defaultFirstLineIndent = 2;
   static const int defaultParagraphSpacing = 0;
@@ -18,6 +25,8 @@ class ReaderSettings {
   const ReaderSettings({
     required this.fontSize,
     required this.lineHeight,
+    this.letterSpacing = defaultLetterSpacing,
+    this.textAlignment = defaultTextAlignment,
     required this.horizontalMargin,
     required this.topMargin,
     required this.bottomMargin,
@@ -32,6 +41,8 @@ class ReaderSettings {
 
   final double fontSize;
   final double lineHeight;
+  final double letterSpacing;
+  final ReaderTextAlignment textAlignment;
   final double horizontalMargin;
   final double topMargin;
   final double bottomMargin;
@@ -46,6 +57,8 @@ class ReaderSettings {
   ReaderSettings copyWith({
     double? fontSize,
     double? lineHeight,
+    double? letterSpacing,
+    ReaderTextAlignment? textAlignment,
     double? horizontalMargin,
     double? topMargin,
     double? bottomMargin,
@@ -60,6 +73,11 @@ class ReaderSettings {
     return ReaderSettings(
       fontSize: (fontSize ?? this.fontSize).clamp(14, 32),
       lineHeight: (lineHeight ?? this.lineHeight).clamp(1.4, 2.1),
+      letterSpacing: (letterSpacing ?? this.letterSpacing).clamp(
+        minLetterSpacing,
+        maxLetterSpacing,
+      ),
+      textAlignment: textAlignment ?? this.textAlignment,
       horizontalMargin: (horizontalMargin ?? this.horizontalMargin).clamp(
         ReaderMarginSettings.horizontalMin,
         ReaderMarginSettings.horizontalMax,
@@ -87,6 +105,8 @@ class ReaderSettings {
 class ReaderSettingsStore {
   static const fontSizeKey = 'native_reader_font_size';
   static const lineHeightKey = 'native_reader_line_height';
+  static const letterSpacingKey = 'native_reader_letter_spacing';
+  static const textAlignmentKey = 'native_reader_text_alignment';
   static const horizontalMarginKey = 'native_reader_horizontal_margin';
   static const topMarginKey = 'native_reader_top_margin';
   static const bottomMarginKey = 'native_reader_bottom_margin';
@@ -138,6 +158,17 @@ class ReaderSettingsStore {
                   prefs.getDouble(legacyBookSourceLineHeightKey) ??
                   ReaderSettings.defaultLineHeight)
               .clamp(1.4, 2.1),
+      letterSpacing:
+          (prefs.getDouble(letterSpacingKey) ??
+                  ReaderSettings.defaultLetterSpacing)
+              .clamp(
+                ReaderSettings.minLetterSpacing,
+                ReaderSettings.maxLetterSpacing,
+              ),
+      textAlignment: ReaderTextAlignment.values.firstWhere(
+        (alignment) => alignment.name == prefs.getString(textAlignmentKey),
+        orElse: () => ReaderSettings.defaultTextAlignment,
+      ),
       horizontalMargin:
           (prefs.getDouble(horizontalMarginKey) ??
                   ReaderSettings.defaultHorizontalMargin)
@@ -173,6 +204,8 @@ class ReaderSettingsStore {
     await Future.wait([
       prefs.setDouble(fontSizeKey, settings.fontSize),
       prefs.setDouble(lineHeightKey, settings.lineHeight),
+      prefs.setDouble(letterSpacingKey, settings.letterSpacing),
+      prefs.setString(textAlignmentKey, settings.textAlignment.name),
       prefs.setDouble(horizontalMarginKey, settings.horizontalMargin),
       prefs.setDouble(topMarginKey, settings.topMargin),
       prefs.setDouble(bottomMarginKey, settings.bottomMargin),

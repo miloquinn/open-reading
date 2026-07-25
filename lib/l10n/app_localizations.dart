@@ -1295,6 +1295,24 @@ abstract class AppLocalizations {
   /// **'Letter Spacing'**
   String get letterSpacingLabel;
 
+  /// Reader body text alignment label
+  ///
+  /// In en, this message translates to:
+  /// **'Text Alignment'**
+  String get textAlignmentLabel;
+
+  /// Natural reader body text alignment
+  ///
+  /// In en, this message translates to:
+  /// **'Natural'**
+  String get textAlignmentNatural;
+
+  /// Justified reader body text alignment
+  ///
+  /// In en, this message translates to:
+  /// **'Justified'**
+  String get textAlignmentJustified;
+
   /// First line indent label
   ///
   /// In en, this message translates to:

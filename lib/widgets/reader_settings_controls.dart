@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/reader/reader_layout.dart';
 import '../core/reader/reader_margin_settings.dart';
+import '../core/reader/reader_settings.dart';
 import '../core/reader/reader_custom_theme.dart';
 import '../core/reader/reader_system_ui.dart';
 import '../utils/reader_themes.dart';
@@ -26,6 +27,10 @@ class ReaderSettingsSheet extends StatefulWidget {
     required this.tabletTwoPageHint,
     required this.fontSizeLabel,
     required this.lineHeightLabel,
+    required this.letterSpacingLabel,
+    required this.textAlignmentLabel,
+    required this.textAlignmentNaturalLabel,
+    required this.textAlignmentJustifiedLabel,
     required this.firstLineIndentLabel,
     required this.paragraphSpacingLabel,
     required this.horizontalMarginLabel,
@@ -34,6 +39,8 @@ class ReaderSettingsSheet extends StatefulWidget {
     required this.themeId,
     required this.fontSize,
     required this.lineHeight,
+    required this.letterSpacing,
+    required this.textAlignment,
     required this.firstLineIndent,
     required this.paragraphSpacing,
     required this.horizontalMargin,
@@ -49,6 +56,8 @@ class ReaderSettingsSheet extends StatefulWidget {
     required this.onTopBarStyleTap,
     required this.onFontSizeChanged,
     required this.onLineHeightChanged,
+    required this.onLetterSpacingChanged,
+    required this.onTextAlignmentChanged,
     required this.onFirstLineIndentChanged,
     required this.onParagraphSpacingChanged,
     required this.onHorizontalMarginChanged,
@@ -75,6 +84,10 @@ class ReaderSettingsSheet extends StatefulWidget {
   final String tabletTwoPageHint;
   final String fontSizeLabel;
   final String lineHeightLabel;
+  final String letterSpacingLabel;
+  final String textAlignmentLabel;
+  final String textAlignmentNaturalLabel;
+  final String textAlignmentJustifiedLabel;
   final String firstLineIndentLabel;
   final String paragraphSpacingLabel;
   final String horizontalMarginLabel;
@@ -83,6 +96,8 @@ class ReaderSettingsSheet extends StatefulWidget {
   final String themeId;
   final double fontSize;
   final double lineHeight;
+  final double letterSpacing;
+  final ReaderTextAlignment textAlignment;
   final int firstLineIndent;
   final int paragraphSpacing;
   final double horizontalMargin;
@@ -98,6 +113,8 @@ class ReaderSettingsSheet extends StatefulWidget {
   final VoidCallback onTopBarStyleTap;
   final ValueChanged<double> onFontSizeChanged;
   final ValueChanged<double> onLineHeightChanged;
+  final ValueChanged<double> onLetterSpacingChanged;
+  final ValueChanged<ReaderTextAlignment> onTextAlignmentChanged;
   final ValueChanged<int> onFirstLineIndentChanged;
   final ValueChanged<int> onParagraphSpacingChanged;
   final ValueChanged<double> onHorizontalMarginChanged;
@@ -115,6 +132,8 @@ class _ReaderSettingsSheetState extends State<ReaderSettingsSheet> {
   late String _themeId = widget.themeId;
   late double _fontSize = widget.fontSize;
   late double _lineHeight = widget.lineHeight;
+  late double _letterSpacing = widget.letterSpacing;
+  late ReaderTextAlignment _textAlignment = widget.textAlignment;
   late int _firstLineIndent = widget.firstLineIndent;
   late int _paragraphSpacing = widget.paragraphSpacing;
   late double _horizontalMargin = widget.horizontalMargin;
@@ -232,6 +251,52 @@ class _ReaderSettingsSheetState extends State<ReaderSettingsSheet> {
             divisions: 7,
             onChanged: (value) => setState(() => _lineHeight = value),
             onChangeEnd: widget.onLineHeightChanged,
+          ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  widget.textAlignmentLabel,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 8),
+                SegmentedButton<ReaderTextAlignment>(
+                  key: const ValueKey('reader-text-alignment-control'),
+                  expandedInsets: EdgeInsets.zero,
+                  segments: [
+                    ButtonSegment(
+                      value: ReaderTextAlignment.natural,
+                      label: Text(widget.textAlignmentNaturalLabel),
+                    ),
+                    ButtonSegment(
+                      value: ReaderTextAlignment.justified,
+                      label: Text(widget.textAlignmentJustifiedLabel),
+                    ),
+                  ],
+                  selected: {_textAlignment},
+                  onSelectionChanged: (selection) {
+                    final value = selection.first;
+                    setState(() => _textAlignment = value);
+                    widget.onTextAlignmentChanged(value);
+                  },
+                ),
+              ],
+            ),
+          ),
+          ReaderSettingSlider(
+            key: const ValueKey('reader-letter-spacing-slider'),
+            label: widget.letterSpacingLabel,
+            value: _letterSpacing,
+            valueLabel: _letterSpacing.toStringAsFixed(1),
+            min: ReaderSettings.minLetterSpacing,
+            max: ReaderSettings.maxLetterSpacing,
+            divisions: 12,
+            onChanged: (value) => setState(() => _letterSpacing = value),
+            onChangeEnd: widget.onLetterSpacingChanged,
           ),
           ReaderSettingSlider(
             key: const ValueKey('reader-first-line-indent-slider'),

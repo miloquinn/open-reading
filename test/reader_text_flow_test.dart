@@ -117,7 +117,19 @@ void main() {
     expect(trimmed.first.lineCount, 2);
   });
 
-  test('reader flow fills both edges of wrapped Chinese lines', () {
+  test('reader flow defaults to natural alignment', () {
+    const flow = NativeTextFlowStyle(
+      textDirection: TextDirection.ltr,
+      textScaler: TextScaler.noScaling,
+      locale: Locale('zh', 'CN'),
+      strutStyle: null,
+      textHeightBehavior: readerTextHeightBehavior,
+    );
+
+    expect(flow.textAlign, TextAlign.start);
+  });
+
+  test('explicit justified flow fills both edges of wrapped Chinese lines', () {
     const width = 219.0;
     const bodyStyle = TextStyle(
       fontFamily: 'SourceHanSerifCN',
@@ -130,6 +142,7 @@ void main() {
       locale: Locale('zh', 'CN'),
       strutStyle: StrutStyle(fontFamily: 'SourceHanSerifCN', fontSize: 20),
       textHeightBehavior: readerTextHeightBehavior,
+      textAlign: TextAlign.justify,
     );
     final painter = flow.createPainter(
       TextSpan(text: List.filled(20, '开元阅读正文排版').join(), style: bodyStyle),
