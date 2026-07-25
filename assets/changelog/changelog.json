@@ -1,804 +1,837 @@
 {
-    "schemaVersion":  1,
-    "entries":  [
-                    {
-                        "version":  "2.3.8",
-                        "notes":  {
-                                      "en":  [
-                                                 "Unified reader font initialization and scaling so text sizing stays consistent across reader entry points, platforms, and repagination"
-                                             ],
-                                      "zh":  [
-                                                 "统一阅读器字体初始化与缩放计算，确保不同阅读入口、平台和重新分页后的字号表现一致"
-                                             ],
-                                      "zh-TW":  [
-                                                    "統一閱讀器字型初始化與縮放計算，確保不同閱讀入口、平台和重新分頁後的字號表現一致"
-                                                ],
-                                      "ja":  [
-                                                 "リーダーのフォント初期化とスケーリングを統一し、入口・プラットフォーム・再ページ分割後も文字サイズを一貫させました"
-                                             ]
-                                  }
-                    },
-                    {
-                        "version":  "2.3.7",
-                        "notes":  {
-                                      "en":  [
-                                                 "Rebuilt book opening and closing around a responsive fast-then-slow cover motion, with the cover staying visible until the first reader frame is actually ready",
-                                                 "Made cover-to-content, cover-to-loader, and loader-to-content handoffs longer true crossfades; loading screens now keep the title and reader controls available for exit",
-                                                 "Made the floating bottom navigation slide away immediately when a book opens",
-                                                 "Added a spring-back animation for the floating bottom navigation during book opening and closing, with predictive-back cancellation returning it to the correct state",
-                                                 "Connected Android 14+ predictive back progress directly to the reader-to-cover handoff so the closing animation follows the finger and resumes from the committed position",
-                                                 "Freezes the current reader screen into a texture when exit starts, so the closing motion transforms one snapshot instead of recompositing dense text every frame; cancelled predictive back restores live content only after reaching full screen",
-                                                 "Moved expensive page-curl snapshots and shelf refreshes out of the closing animation, with safe cover-position fallback to prevent brief red error frames",
-                                                 "Redesigned Discover book details and kept add method, progress, success, already-added, and retry states in one animated flow with a bookshelf drop-in confirmation",
-                                                 "Removed stalls when opening and jumping through very large tables of contents by prebuilding display data and loading indexed TXT chapter ranges asynchronously",
-                                                 "Moved online chapter conversion, adjacent pagination, and cache persistence out of the horizontal swipe path to smooth chapter title pages",
-                                                 "Split every oversized chapter in very large TXT files into lazy 32K-character sections, read only the current and required adjacent sections asynchronously, and delayed first-time indexing until after the cover-to-loader handoff",
-                                                 "Fixed large TXT books incorrectly showing no readable body when an active opening route was mistaken for cancellation, and made Android SAF imports materialize off the main thread with file-size verification",
-                                                 "Merged app themes and accent colors into one Material 3 color source with automatic migration of earlier theme choices",
-                                                 "Reorganized Settings by merging related options and moving floating navigation and library layout controls into focused detail pages"
-                                             ],
-                                      "zh":  [
-                                                 "重做书籍打开与关闭动画：封面采用先快后慢的展开/缩回曲线，并在正文首帧真正就绪前保持可见",
-                                                 "封面到正文、封面到加载动画、加载动画到正文都改为更长的真实渐隐渐现；加载时仍可呼出标题栏和控制栏退出",
-                                                 "打开书籍时底部悬浮导航栏立即向下滑出",
-                                                 "增加底部悬浮导航栏在书籍打开、关闭时的回弹动画；预测性返回取消后会恢复到正确状态",
-                                                 "Android 14+ 预测性返回进度直接驱动正文到封面的交接，缩回动画跟随手指并从提交位置继续",
-                                                 "退出起步时把当前阅读屏冻结为纹理快照，缩回过程只变换快照而不再逐帧合成大量正文；预测性返回取消后回到全屏再恢复实时内容",
-                                                 "退出期间暂停仿真翻页快照和书架刷新，封面位置未布局时安全降级，避免偶发一两帧红色错误页",
-                                                 "优化发现页书籍详情的 UI 与动画，加入方式、进度、成功、已存在和失败重试统一在同一动画流程中，并增加封面落入书架的成功反馈",
-                                                 "修复超长目录打开和目录跳转卡顿：提前生成展示数据，并异步读取大型 TXT 的目标章节区间",
-                                                 "将在线章节正文转换、相邻章节分页和缓存写入移出水平滑动关键路径，修复章节标题页滑动卡顿",
-                                                 "超大 TXT 的每个巨型章节都按约 32K 字符分片懒加载，只异步读取当前与必要相邻片段；首次索引延后到封面转入加载动画之后执行",
-                                                 "修复大型 TXT 开书动画仍在进行时被误判为取消并提示没有正文的问题；Android SAF 导入改为后台物化并校验文件大小",
-                                                 "应用主题与强调色合并为统一的 Material 3 配色来源，并自动迁移旧主题配置",
-                                                 "重大优化设置页，合并相关设置选项，并将悬浮导航栏与书库布局收纳到独立详情页"
-                                             ],
-                                      "zh-TW":  [
-                                                    "重做書籍開啟與關閉動畫：封面採用先快後慢的展開/縮回曲線，並在正文首幀真正就緒前保持可見",
-                                                    "封面到正文、封面到載入動畫、載入動畫到正文都改為更長的真實淡入淡出；載入時仍可叫出標題列與控制列退出",
-                                                    "開啟書籍時底部懸浮導覽列立即向下滑出",
-                                                    "增加底部懸浮導覽列在書籍開啟、關閉時的回彈動畫；預測性返回取消後會恢復至正確狀態",
-                                                    "Android 14+ 預測性返回進度直接驅動正文到封面的交接，縮回動畫跟隨手指並從提交位置繼續",
-                                                    "退出起步時將目前閱讀畫面凍結為紋理快照，縮回過程只變換快照而不再逐幀合成大量正文；預測性返回取消後回到全螢幕再恢復即時內容",
-                                                    "退出期間暫停仿真翻頁快照與書架更新，封面位置尚未排版時安全降級，避免偶發一兩幀紅色錯誤頁",
-                                                    "最佳化發現頁書籍詳情的 UI 與動畫，加入方式、進度、成功、已存在與失敗重試統一於同一動畫流程，並加入封面落入書架的成功回饋",
-                                                    "修復超長目錄開啟與目錄跳轉卡頓：預先產生顯示資料，並非同步讀取大型 TXT 的目標章節區間",
-                                                    "將線上章節正文轉換、相鄰章節分頁與快取寫入移出水平滑動關鍵路徑，修復章節標題頁滑動卡頓",
-                                                    "超大 TXT 的每個巨型章節都以約 32K 字元分片延遲載入，只非同步讀取目前與必要相鄰片段；首次索引延後到封面轉入載入動畫後執行",
-                                                    "修復大型 TXT 開書動畫仍在進行時被誤判為取消並提示沒有正文的問題；Android SAF 匯入改為背景實體化並驗證檔案大小",
-                                                    "應用程式主題與強調色合併為統一的 Material 3 配色來源，並自動遷移舊主題設定",
-                                                    "大幅最佳化設定頁，合併相關設定選項，並將懸浮導覽列與書庫版面收納至獨立詳情頁"
-                                                ],
-                                      "ja":  [
-                                                 "書籍の開閉アニメーションを再設計し、表紙を素早く反応してゆっくり収束する動きに変更。本文の初回描画が完了するまで表紙を維持します",
-                                                 "表紙から本文、表紙から読み込み、読み込みから本文への切り替えを長めのクロスフェードにし、読み込み中もタイトルと操作バーから終了できます",
-                                                 "書籍を開くと下部のフローティングナビゲーションが即座に下へ退避します",
-                                                 "書籍の開閉時に下部フローティングナビゲーションのバウンド復帰アニメーションを追加し、予測型戻るのキャンセル時も正しい状態へ戻します",
-                                                 "Android 14 以降の予測型戻る進捗を本文から表紙への切り替えへ直接反映し、指に追従して確定位置から続行します",
-                                                 "終了開始時に現在の読書画面をテクスチャへ固定し、縮小中は大量の本文を毎フレーム再合成せず1枚のスナップショットだけを変形します。予測型戻るのキャンセル時は全画面へ戻ってからライブ表示へ復帰します",
-                                                 "終了中はページカールのスナップショットと本棚更新を停止し、表紙位置が未レイアウトでも安全にフォールバックして赤いエラーフレームを防ぎます",
-                                                 "発見画面の書籍詳細 UI とアニメーションを改善し、追加方法、進捗、成功、追加済み、再試行を一つのアニメーションフローに統合して表紙が本棚へ入る成功演出を追加しました",
-                                                 "非常に長い目次の表示と目次ジャンプの停止を、表示データの事前生成と大容量 TXT の対象章範囲の非同期読み込みで改善しました",
-                                                 "オンライン章の本文変換、隣接章のページ分割、キャッシュ保存を横スワイプの重要経路から外し、章タイトルページの引っかかりを改善しました",
-                                                 "巨大 TXT のすべての大きすぎる章を約 32K 文字単位へ分割し、現在と必要な隣接部分だけを非同期で読み込みます。初回索引作成は表紙から読み込み表示への移行後まで延期します",
-                                                 "大容量 TXT の開くアニメーション中にキャンセルと誤判定され本文なしになる問題を修正し、Android SAF の取り込みをバックグラウンド化してファイルサイズを検証します",
-                                                 "アプリテーマとアクセントカラーを一つの Material 3 配色元へ統合し、以前のテーマ設定を自動移行します",
-                                                 "設定画面を大幅に整理し、関連項目を統合してフローティングナビゲーションとライブラリ表示を専用詳細画面へまとめました"
-                                             ]
-                                  }
-                    },
-                    {
-                        "version":  "2.3.6",
-                        "notes":  {
-                                      "en":  [
-                                                 "Made online source reading cache-first: recently opened catalogs and chapters reopen immediately and remain available offline for up to 30 days while stale data refreshes in the background",
-                                                 "Opening an online book from Home now goes straight to the source reader instead of treating it as a local file",
-                                                 "Preloaded and pre-paginated adjacent online chapters now form one continuous horizontal page sequence, so chapter titles and body pages turn normally without boundary bounce-back",
-                                                 "Made large online-font downloads smoother by moving file verification off the UI thread and limiting progress redraws to the font list",
-                                                 "Added an optional grid setting that shows each book title, a compact progress bar, and its reading percentage below the cover",
-                                                 "Kept grid titles to one ellipsized line so long names do not change row heights; the existing cover-only grid remains the default",
-                                                 "Stored newly uploaded WebDAV books as unencrypted original files under readable Book title - Author/original file name folders, while keeping SHA-256 only for integrity checks",
-                                                 "Kept legacy content-addressed WebDAV books downloadable without resync and added an in-app compatibility notice for existing users"
-                                             ],
-                                      "zh":  [
-                                                 "在线书源阅读改为缓存优先：已读目录和正文可立即恢复，陈旧缓存后台刷新，30 天内内容在离线时仍可阅读",
-                                                 "首页打开在线书籍会直接进入书源阅读器，不再按本地文件处理",
-                                                 "在线书源会预加载并预先分页相邻章节，将前后章节接入同一条水平翻页序列，章节标题与正文可连续翻动且不会在边界回弹",
-                                                 "大型在线字体的校验改在后台执行，下载进度只刷新字体列表，界面更流畅",
-                                                 "书库网格新增可选的“显示书名和进度”，在封面下展示书名、精简进度条和阅读百分比",
-                                                 "书名固定单行并在过长时显示省略号，网格行高保持一致；默认仍为纯封面布局",
-                                                 "WebDAV 新上传书籍以未加密原文件保存到“书名 - 作者/原文件名”可读目录，SHA-256 仅用于完整性校验",
-                                                 "旧版内容寻址书籍继续兼容下载，无需重新同步；检测到旧记录时会显示兼容提示"
-                                             ],
-                                      "zh-TW":  [
-                                                    "線上書源閱讀改為快取優先：已讀目錄與正文可立即恢復，過期快取於背景更新，30 天內內容離線時仍可閱讀",
-                                                    "首頁開啟線上書籍會直接進入書源閱讀器，不再當成本機檔案處理",
-                                                    "線上書源會預先載入並分頁相鄰章節，將前後章節接入同一條水平翻頁序列，章節標題與正文可連續翻動且不會在邊界回彈",
-                                                    "大型線上字型的校驗改在背景執行，下載進度只更新字型清單，介面更流暢",
-                                                    "書庫網格新增可選的「顯示書名和進度」，在封面下顯示書名、精簡進度列與閱讀百分比",
-                                                    "書名固定單行並在過長時顯示省略號，網格列高保持一致；預設仍為純封面版面",
-                                                    "WebDAV 新上傳書籍以未加密原始檔保存到「書名 - 作者/原始檔名」可讀目錄，SHA-256 僅用於完整性校驗",
-                                                    "舊版內容定址書籍繼續相容下載，無需重新同步；偵測到舊記錄時會顯示相容提示"
-                                                ],
-                                      "ja":  [
-                                                 "オンライン書源の読書をキャッシュ優先にし、既読の目次と本文をすぐ復元。古いキャッシュはバックグラウンドで更新され、30日間はオフラインでも読めます",
-                                                 "ホームからオンライン書籍をローカルファイルとして扱わず、直接書源リーダーで開けるようにしました",
-                                                 "隣接するオンライン章を事前取得・ページ分割して一続きの横送りに組み込み、章タイトルと本文を境界で跳ね返らず通常のページと同様に移動できるようにしました",
-                                                 "大きなオンラインフォントの検証をバックグラウンドへ移し、進捗更新をフォント一覧だけに限定して操作を滑らかにしました",
-                                                 "ライブラリのグリッドに、表紙の下へ書名、コンパクトな進捗バー、読書率を表示するオプションを追加しました",
-                                                 "長い書名は1行で省略し、行の高さを揃えます。従来の表紙のみのグリッドが引き続き既定です",
-                                                 "WebDAV へ新しくアップロードする書籍を暗号化せず元のファイルのまま「書名 - 著者/元のファイル名」に保存し、SHA-256 は整合性確認だけに使用します",
-                                                 "旧形式のコンテンツアドレス書籍も再同期なしで引き続きダウンロードでき、該当する場合は互換性案内を表示します"
-                                             ]
-                                  }
-                    },
-                    {
-                        "version":  "2.3.5",
-                        "notes":  {
-                                      "en":  [
-                                                 "Redesigned the home page around continuing the most recent book, reading rhythm, and a lightweight recent-books shelf",
-                                                 "Removed daily goals, reading plans, focus timers, and AI advice from the home page",
-                                                 "Added browser database persistence through an IndexedDB-backed SQLite compatibility layer",
-                                                 "Added validated Flutter Web release artifacts and atomic official-site deployment through the protected release environment",
-                                                 "Added a macOS Universal App pipeline with Developer ID signing, notarization, stapling, and Gatekeeper verification",
-                                                 "Removed unrelated product promotion from Settings and made AI model shortcuts more compact",
-                                                 "Standardized cover-grid cropping and refined Android and legacy iOS launcher icon safe areas",
-                                                 "Removed legacy online cover lookup during local imports; embedded covers are preferred and missing covers are generated locally"
-                                             ],
-                                      "zh":  [
-                                                 "首页改为聚焦继续阅读、阅读节奏和轻量最近阅读书架",
-                                                 "移除首页的每日目标、阅读计划、专注计时和 AI 阅读建议",
-                                                 "浏览器端通过基于 IndexedDB 的 SQLite 兼容层持久化结构化数据",
-                                                 "新增经过校验的 Flutter Web 发布产物和受保护环境下的官网原子部署",
-                                                 "新增 macOS Universal App、Developer ID 签名、公证、staple 与 Gatekeeper 验证链路",
-                                                 "设置页移除无关产品推广，并压缩 AI 快捷模型入口",
-                                                 "统一封面网格裁切并优化 Android 与旧版 iOS 启动图标安全区",
-                                                 "移除本地导入时残留的联网封面搜索，优先使用内置封面，否则仅在本地生成默认封面"
-                                             ],
-                                      "zh-TW":  [
-                                                    "首頁改為聚焦繼續閱讀、閱讀節奏與輕量最近閱讀書架",
-                                                    "移除首頁的每日目標、閱讀計畫、專注計時與 AI 閱讀建議",
-                                                    "瀏覽器端透過以 IndexedDB 為基礎的 SQLite 相容層保存結構化資料",
-                                                    "新增經過驗證的 Flutter Web 發布產物與受保護環境下的官網原子部署",
-                                                    "新增 macOS Universal App、Developer ID 簽署、公證、staple 與 Gatekeeper 驗證流程",
-                                                    "設定頁移除無關產品推廣，並壓縮 AI 快捷模型入口",
-                                                    "統一封面網格裁切並最佳化 Android 與舊版 iOS 啟動圖示安全區",
-                                                    "移除本機匯入時殘留的連網封面搜尋，優先使用內建封面，否則僅在本機產生預設封面"
-                                                ],
-                                      "ja":  [
-                                                 "ホーム画面を最近の本の続き、読書リズム、軽量な最近読んだ本の一覧に再設計しました",
-                                                 "ホーム画面から毎日の目標、読書プラン、集中タイマー、AI 読書アドバイスを削除しました",
-                                                 "IndexedDB ベースの SQLite 互換レイヤーでブラウザーの構造化データを永続化しました",
-                                                 "検証済み Flutter Web リリース成果物と保護された環境からの公式サイトへのアトミック配備を追加しました",
-                                                 "macOS Universal App、Developer ID 署名、公証、staple、Gatekeeper 検証のリリース工程を追加しました",
-                                                 "設定画面から無関係な製品紹介を削除し、AI モデルのショートカットをコンパクトにしました",
-                                                 "表紙グリッドのトリミングを統一し、Android と旧 iOS の起動アイコンの安全領域を調整しました",
-                                                 "ローカル読み込み時に残っていたオンライン表紙検索を削除し、埋め込み表紙を優先して、ない場合は端末内で既定表紙を生成するようにしました"
-                                             ]
-                                  }
-                    },
-                    {
-                        "version":  "2.3.1",
-                        "notes":  {
-                                      "en":  [
-                                                 "Focused WebDAV sync on bookshelf metadata, reading progress, bookmarks, and reading statistics while reserving notes for a safe future migration",
-                                                 "Added ask-every-time, automatic, and manual upload policies for newly imported book files",
-                                                 "Improved Android WebDAV compatibility and failure-stage diagnostics",
-                                                 "Synced persistent book covers and preserved remote titles and authors when restoring book files",
-                                                 "Separated connection settings from sync-content switches, which now save immediately",
-                                                 "Added safe cache management and bounded, retryable source-cover caching",
-                                                 "Added per-task cancellation for queued and active book downloads"
-                                             ],
-                                      "zh":  [
-                                                 "WebDAV 当前聚焦书架信息、阅读进度、书签与阅读统计，笔记数据集保留用于未来安全迁移",
-                                                 "新导入书籍支持每次询问、自动上传和始终手动三种文件策略",
-                                                 "增强 Android WebDAV 兼容性并显示具体失败阶段",
-                                                 "书籍文件同步会传输持久封面，恢复时保持远端书名与作者",
-                                                 "连接配置与同步内容分开管理，同步范围开关修改后立即保存",
-                                                 "新增安全缓存管理和并发受限、可重试的书源封面缓存",
-                                                 "下载任务支持逐条取消等待中或下载中的书籍"
-                                             ],
-                                      "zh-TW":  [
-                                                    "WebDAV 目前聚焦書庫資訊、閱讀進度、書籤與閱讀統計，筆記資料集保留供未來安全遷移",
-                                                    "新匯入書籍支援每次詢問、自動上傳與始終手動三種檔案策略",
-                                                    "增強 Android WebDAV 相容性並顯示具體失敗階段",
-                                                    "書籍檔案同步會傳輸持久封面，還原時保留遠端書名與作者",
-                                                    "連線設定與同步內容分開管理，同步範圍開關變更後立即儲存",
-                                                    "新增安全快取管理及限制並行、可重試的書源封面快取",
-                                                    "下載任務支援逐項取消等待中或下載中的書籍"
-                                                ],
-                                      "ja":  [
-                                                 "WebDAV 同期を本棚情報、読書位置、しおり、読書統計に絞り、メモ用データセットは将来の安全な移行のため予約しました",
-                                                 "新しく読み込んだ書籍ファイルに毎回確認、自動アップロード、常に手動の3つの方針を追加しました",
-                                                 "Android の WebDAV 互換性と失敗段階の診断表示を改善しました",
-                                                 "書籍ファイルと永続表紙を同期し、復元時にリモートの書名と著者を保持するようにしました",
-                                                 "接続設定と同期内容を分離し、同期範囲の変更を即時保存するようにしました",
-                                                 "安全なキャッシュ管理と同時実行数を制限した再試行可能な表紙キャッシュを追加しました",
-                                                 "待機中または実行中の書籍ダウンロードをタスク単位でキャンセルできるようにしました"
-                                             ]
-                                  }
-                    },
-                    {
-                        "version":  "2.3.0",
-                        "notes":  {
-                                      "en":  [
-                                                 "Added ColorOS Fluid Cloud support for live book and official APK download progress, with standard notification fallback on unsupported systems",
-                                                 "Added local-first WebDAV sync for bookshelf metadata, reading progress, bookmarks, notes, highlights, and reading statistics",
-                                                 "Added manual and automatic synchronization with durable offline changes and deterministic cross-device conflict merging",
-                                                 "Added opt-in per-book file upload and download with SHA-256 deduplication and a 100 MiB safety limit",
-                                                 "Kept WebDAV passwords in secure storage, required HTTPS by default, restricted credential redirects, and disclosed that remote data is not end-to-end encrypted",
-                                                 "Added library book export and registered TXT/EPUB system open and share flows across supported platforms",
-                                                 "Added library card and cover-grid layouts with two- or three-column phone density",
-                                                 "Redesigned source cards and the mobile source-add panel so metadata and controls remain readable on narrow screens",
-                                                 "Replaced blocking bottom messages with accessible non-blocking top notifications throughout the app"
-                                             ],
-                                      "zh":  [
-                                                 "支持 ColorOS 流体云实时展示书籍与官网 APK 下载进度，不支持时自动回退普通通知",
-                                                 "新增本地优先的 WebDAV 同步，覆盖书架信息、阅读进度、书签、笔记、高亮与阅读统计",
-                                                 "支持手动与自动同步，离线变更可靠留存在本机，并确定性合并多设备冲突",
-                                                 "书籍原文件支持明确授权后的逐本上传与下载，并使用 SHA-256 去重和 100 MiB 安全上限",
-                                                 "WebDAV 密码仅存安全存储，默认要求 HTTPS、限制凭据重定向，并明确远端数据不是端到端加密",
-                                                 "书库支持导出本地书，TXT 与 EPUB 可从系统打开或分享至开元阅读",
-                                                 "书库新增卡片与纯封面网格布局，手机可选择每行 2 本或 3 本",
-                                                 "重做书源卡片与手机添加书源面板，窄屏下的来源信息和操作不再互相挤压",
-                                                 "应用内短反馈统一改为支持点击穿透和无障碍提示的顶部浮层"
-                                             ],
-                                      "zh-TW":  [
-                                                    "支援 ColorOS 流體雲即時顯示書籍與官方網站 APK 下載進度，不支援時自動回退一般通知",
-                                                    "新增本機優先的 WebDAV 同步，涵蓋書架資訊、閱讀進度、書籤、筆記、醒目標示與閱讀統計",
-                                                    "支援手動與自動同步，離線變更可靠保留在本機，並以確定性規則合併多裝置衝突",
-                                                    "書籍原始檔案支援明確授權後逐本上傳與下載，並使用 SHA-256 去重和 100 MiB 安全上限",
-                                                    "WebDAV 密碼只存於安全儲存空間，預設要求 HTTPS、限制憑證重新導向，並明確說明遠端資料不是端對端加密",
-                                                    "書庫支援匯出本機書籍，TXT 與 EPUB 可從系統開啟或分享至開元閱讀",
-                                                    "書庫新增卡片與純封面網格版面，手機可選擇每列 2 本或 3 本",
-                                                    "重新設計書源卡片與手機新增書源面板，窄螢幕下的來源資訊和操作不再互相擠壓",
-                                                    "應用程式內短暫回饋統一改為可點擊穿透並支援無障礙提示的頂部浮層"
-                                                ],
-                                      "ja":  [
-                                                 "ColorOS Fluid Cloud に書籍と公式 APK のダウンロード進捗をリアルタイム表示し、未対応環境では通常の通知へ自動的に切り替えるようにしました",
-                                                 "本棚情報、読書位置、しおり、メモ、ハイライト、読書統計を対象とするローカル優先の WebDAV 同期を追加しました",
-                                                 "手動・自動同期に対応し、オフライン変更を端末に安全に保持して複数端末の競合を決定的に統合します",
-                                                 "明示的に許可した書籍ファイルを個別にアップロード・ダウンロードでき、SHA-256 重複排除と 100 MiB の安全上限を適用します",
-                                                 "WebDAV パスワードを安全なストレージだけに保存し、既定で HTTPS を要求して認証情報のリダイレクトを制限し、リモートデータがエンドツーエンド暗号化されないことを明示しました",
-                                                 "ライブラリからローカル書籍を書き出し、TXT と EPUB をシステムから開く・共有する機能を追加しました",
-                                                 "ライブラリにカード表示と表紙のみのグリッド表示を追加し、スマートフォンでは1行2冊または3冊を選べるようにしました",
-                                                 "狭い画面でも情報と操作が読みやすいよう、書籍ソースカードとモバイルのソース追加パネルを再設計しました",
-                                                 "アプリ内の短い通知を、操作を妨げずアクセシビリティに対応した上部オーバーレイへ統一しました"
-                                             ]
-                                  }
-                    },
-                    {
-                        "version":  "2.2.10",
-                        "notes":  {
-                                      "en":  [
-                                                 "Added Android 16 system live progress notifications for book and official APK downloads",
-                                                 "Kept standard progress notifications as the fallback on older Android versions and unsupported OEM surfaces",
-                                                 "Added book export from the library, including Android Download/Open Reading output and system save panels on Apple and desktop platforms",
-                                                 "Registered Open Reading for TXT and EPUB open/share flows so external files can enter the existing import and reading workflow"
-                                             ],
-                                      "zh":  [
-                                                 "为书籍与官网 APK 下载新增 Android 16 系统原生实时进度通知",
-                                                 "旧版 Android 或 OEM 不支持提升展示时继续使用普通进度通知",
-                                                 "书库本地书支持导出，Android 默认保存到 Download/开元阅读，Apple 与桌面平台使用系统保存面板",
-                                                 "TXT 与 EPUB 可从系统打开或分享至开元阅读，并进入现有导入与阅读流程"
-                                             ],
-                                      "zh-TW":  [
-                                                    "為書籍與官方網站 APK 下載新增 Android 16 系統原生即時進度通知",
-                                                    "舊版 Android 或 OEM 不支援提升顯示時繼續使用一般進度通知",
-                                                    "書庫本機書籍支援匯出，Android 預設儲存到 Download/開元閱讀，Apple 與桌面平台使用系統儲存面板",
-                                                    "TXT 與 EPUB 可從系統開啟或分享至開元閱讀，並進入既有匯入與閱讀流程"
-                                                ],
-                                      "ja":  [
-                                                 "書籍と公式 APK のダウンロードに Android 16 のシステム標準ライブ進捗通知を追加しました",
-                                                 "旧バージョンの Android や未対応 OEM では通常の進捗通知を引き続き使用します",
-                                                 "ライブラリから書籍を書き出せるようになり、Android は Download/開元閱讀、Apple とデスクトップはシステム保存画面を使用します",
-                                                 "TXT と EPUB をシステムから開く、または共有して既存の読み込み・読書フローへ渡せるようになりました"
-                                             ]
-                                  }
-                    },
-                    {
-                        "version":  "2.2.9",
-                        "notes":  {
-                                      "en":  [
-                                                 "Fixed first-line indentation disappearing when justified long paragraphs wrap",
-                                                 "Applied the configured indent to quoted paragraphs and paragraphs with existing leading spaces across all reflowable formats",
-                                                 "Restored automatic Android system-installer launch after an official-site APK finishes downloading",
-                                                 "Kept the verified completion notification as a retry path when the installer request is dismissed or the app is backgrounded"
-                                             ],
-                                      "zh":  [
-                                                 "修复两端对齐长段落自动换行时首行缩进消失的问题",
-                                                 "引号开头及原文带空格的段落统一按阅读设置缩进，并覆盖全部可重排格式",
-                                                 "修复 Android 从官网下载 APK 完成后不会自动拉起系统安装器的问题",
-                                                 "保留已校验下载完成通知，在安装请求被忽略或应用退到后台时可以重试"
-                                             ],
-                                      "zh-TW":  [
-                                                    "修正左右對齊長段落自動換行時首行縮排消失的問題",
-                                                    "引號開頭及原文帶空格的段落統一依閱讀設定縮排，並涵蓋全部可重排格式",
-                                                    "修正 Android 從官方網站下載 APK 完成後不會自動開啟系統安裝程式的問題",
-                                                    "保留已驗證的下載完成通知，在安裝要求被忽略或應用程式退到背景時可以重試"
-                                                ],
-                                      "ja":  [
-                                                 "両端揃えの長い段落が折り返すと先頭行の字下げが消える問題を修正しました",
-                                                 "引用符で始まる段落や先頭に空白がある段落にも、すべてのリフロー可能な形式で読書設定の字下げを適用しました",
-                                                 "公式サイトから APK のダウンロードが完了した後に Android のシステムインストーラーが自動で開かれない問題を修正しました",
-                                                 "インストーラーの要求を閉じた場合やアプリをバックグラウンドに移した場合に再試行できるよう、検証済み完了通知を残しました"
-                                             ]
-                                  }
-                    },
-                    {
-                        "version":  "2.2.7",
-                        "notes":  {
-                                      "en":  [
-                                                 "Unified first-line indentation across TXT, EPUB, HTML, Markdown, FB2, RTF, DOCX, and online sources",
-                                                 "Updated ORSP to 1.4 with required Core Reading capabilities",
-                                                 "Added a searchable lazy category picker for large source catalogs",
-                                                 "Added safe manifest refresh for registered book sources",
-                                                 "Moved in-app release history to a localized data-driven catalog"
-                                             ],
-                                      "zh":  [
-                                                 "统一修复 TXT、EPUB、HTML、Markdown、FB2、RTF、DOCX 与在线书源的首行缩进",
-                                                 "开放书源协议升级到 ORSP 1.4，并要求完整核心阅读能力",
-                                                 "为大量书源分类新增可搜索的惰性选择器",
-                                                 "已添加书源支持安全刷新发现清单",
-                                                 "应用内版本历史改为四语数据驱动目录"
-                                             ],
-                                      "zh-TW":  [
-                                                    "統一修正 TXT、EPUB、HTML、Markdown、FB2、RTF、DOCX 與線上書源的首行縮排",
-                                                    "開放書源協定升級至 ORSP 1.4，並要求完整核心閱讀能力",
-                                                    "為大量書源分類新增可搜尋的惰性選擇器",
-                                                    "已新增書源支援安全重新整理探索清單",
-                                                    "應用程式內版本歷史改為四語資料驅動目錄"
-                                                ],
-                                      "ja":  [
-                                                 "TXT、EPUB、HTML、Markdown、FB2、RTF、DOCX、オンラインソースの字下げを統一して修正しました",
-                                                 "ORSP を 1.4 に更新し、コア読書機能の宣言を必須にしました",
-                                                 "多数のソースカテゴリ向けに検索可能な遅延選択画面を追加しました",
-                                                 "登録済みソースのマニフェストを安全に更新できるようにしました",
-                                                 "アプリ内の更新履歴を4言語のデータ駆動カタログに移行しました"
-                                             ]
-                                  }
-                    },
-                    {
-                        "version":  "2.2.6",
-                        "notes":  {
-                                      "en":  [
-                                                 "Fixed paragraph boundaries and first-line indentation for online chapter text",
-                                                 "Moved interface and reader fonts to on-demand downloads to reduce the app size",
-                                                 "Expanded AI reading model settings and localized service error messages",
-                                                 "Made horizontal turns between online chapters complete smoothly using warmed layouts",
-                                                 "Added a shared download queue with Android progress notifications so downloads continue outside the active screen",
-                                                 "Reduced the Android launcher symbol\u0027s visual footprint for more balanced padding"
-                                             ],
-                                      "zh":  [
-                                                 "修复在线章节正文的段落边界与首行缩进",
-                                                 "界面与阅读字体改为按需下载，减小应用安装包体积",
-                                                 "完善 AI 阅读模型设置，并统一服务错误提示的本地化文案",
-                                                 "复用预热布局，让在线书源水平跨章切换完整顺滑",
-                                                 "新增共享下载队列与 Android 进度通知，离开当前页面后下载仍会继续",
-                                                 "缩小 Android 启动器图标主体，增加更均衡的四周留白"
-                                             ],
-                                      "zh-TW":  [
-                                                    "修正線上章節正文的段落邊界與首行縮排",
-                                                    "介面與閱讀字型改為按需下載，縮小應用程式安裝包體積",
-                                                    "完善 AI 閱讀模型設定，並統一服務錯誤提示的本地化文案",
-                                                    "重用預熱版面，讓線上書源水平跨章切換完整流暢",
-                                                    "新增共用下載佇列與 Android 進度通知，離開目前頁面後下載仍會繼續",
-                                                    "縮小 Android 啟動器圖示主體，增加更均衡的四周留白"
-                                                ],
-                                      "ja":  [
-                                                 "オンライン章本文の段落境界と字下げが失われる問題を修正しました",
-                                                 "画面・読書用フォントをオンデマンド配信に変更し、アプリ容量を削減しました",
-                                                 "AI 読書のモデル設定を拡充し、サービスのエラー表示を多言語化しました",
-                                                 "準備済みレイアウトを再利用し、オンライン章間の横スライドを滑らかにしました",
-                                                 "共有ダウンロードキューと Android の進捗通知を追加し、画面を離れてもダウンロードを継続できるようにしました",
-                                                 "Android ランチャーアイコンの主体を縮小し、周囲の余白を整えました"
-                                             ]
-                                  }
-                    },
-                    {
-                        "version":  "2.2.5",
-                        "notes":  {
-                                      "en":  [
-                                                 "Unified local files and online sources on the same text pagination and rendering engine",
-                                                 "Fixed horizontal cross-chapter turns rebuilding the page before the animation finished",
-                                                 "Updated app icons consistently across mobile, desktop, web, and OpenHarmony"
-                                             ],
-                                      "zh":  [
-                                                 "本地文件与在线书源统一使用同一套文字分页和渲染内核",
-                                                 "修复水平滑动跨章时动画未结束就重建页面导致的顿挫",
-                                                 "统一更新移动端、桌面端、Web 与鸿蒙应用图标"
-                                             ],
-                                      "zh-TW":  [
-                                                    "本機檔案與線上書源統一使用同一套文字分頁與繪製核心",
-                                                    "修正水平滑動跨章時動畫尚未結束就重建頁面造成的頓挫",
-                                                    "統一更新行動端、桌面端、Web 與鴻蒙應用程式圖示"
-                                                ],
-                                      "ja":  [
-                                                 "ローカルファイルとオンラインソースで同じテキストページ分割・描画エンジンを使用するようにしました",
-                                                 "横スライドで章をまたぐ際にアニメーション完了前にページが再構築される引っかかりを修正しました",
-                                                 "モバイル、デスクトップ、Web、OpenHarmony のアプリアイコンを統一して更新しました"
-                                             ]
-                                  }
-                    },
-                    {
-                        "version":  "2.2.4",
-                        "notes":  {
-                                      "en":  [
-                                                 "Updated source support to ORSP 1.3 and fetch complete chapter catalogs using each source\u0027s declared page-size limit",
-                                                 "Fixed paragraph boundaries being lost when source HTML separates paragraphs with \u003cbr\u003e elements",
-                                                 "Reduced the mobile home floating navigation height to leave more room for content"
-                                             ],
-                                      "zh":  [
-                                                 "书源支持升级到 ORSP 1.3，并按各书源声明的单页上限完整获取章节目录",
-                                                 "修复书源 HTML 使用 \u003cbr\u003e 分隔段落时丢失段落边界的问题",
-                                                 "缩小手机首页悬浮导航高度，为内容留出更多空间"
-                                             ],
-                                      "zh-TW":  [
-                                                    "書源支援升級至 ORSP 1.3，並依各書源宣告的單頁上限完整取得章節目錄",
-                                                    "修正書源 HTML 使用 \u003cbr\u003e 分隔段落時遺失段落邊界的問題",
-                                                    "縮小手機首頁懸浮導覽高度，為內容保留更多空間"
-                                                ],
-                                      "ja":  [
-                                                 "ソース対応を ORSP 1.3 に更新し、各ソースが宣言したページ上限に従って章一覧全体を取得するようにしました",
-                                                 "ソース HTML が \u003cbr\u003e で段落を区切る場合に段落境界が失われる問題を修正しました",
-                                                 "モバイルホームのフローティングナビゲーションを低くし、コンテンツ領域を広げました"
-                                             ]
-                                  }
-                    },
-                    {
-                        "version":  "2.2.1",
-                        "notes":  {
-                                      "en":  [
-                                                 "Fixed tablet spread page-curl backs so turning the right page shows the next left page in normal reading orientation"
-                                             ],
-                                      "zh":  [
-                                                 "修复平板双页仿真翻页纸背，右页翻动时会显示正向的下一左页内容"
-                                             ],
-                                      "zh-TW":  [
-                                                    "修正平板雙頁擬真翻頁紙背，右頁翻動時會顯示正向的下一張左頁內容"
-                                                ],
-                                      "ja":  [
-                                                 "タブレット見開きの紙面裏側を修正し、右ページをめくると次の左ページが正しい向きで表示されるようにしました"
-                                             ]
-                                  }
-                    },
-                    {
-                        "version":  "2.2.0",
-                        "notes":  {
-                                      "en":  [
-                                                 "Added an optional landscape tablet spread with top information split across the left and right pages",
-                                                 "Rebuilt page-curl tracking, cross-spine layering, and settling to fix jumps, tails, and incorrect overlap",
-                                                 "Improved TXT opening transitions, source chapter prefetching, and pagination reuse to reduce waiting",
-                                                 "Added icon-only or labeled floating navigation and unified sorting for built-in and custom reader themes",
-                                                 "Redesigned detailed reading statistics with a consistent paper-inspired layout",
-                                                 "Reorganized page source by feature area with consistent naming and module boundaries",
-                                                 "Added GitHub and official-site update choices; Android can download, verify, and hand official APKs to the system installer",
-                                                 "Added official-site mirrors and download statistics with stricter asset, checksum, APK version, and signing verification",
-                                                 "Clarified third-party source responsibilities and added developer product and optional support entries"
-                                             ],
-                                      "zh":  [
-                                                 "平板新增可关闭的横屏双页布局，左右页顶部信息分工显示",
-                                                 "重做仿真翻页跟手、跨书脊层级与回弹收尾，修复闪跳、甩尾和遮挡",
-                                                 "优化 TXT 打开转场、书源章节预取和分页复用，降低打开与跨章等待",
-                                                 "手机悬浮导航支持图标文字切换，预设与自定义阅读主题可统一排序",
-                                                 "阅读统计详情页采用统一书卷风格并重新设计各项统计内容",
-                                                 "页面源码按功能域重新整理，统一文件命名、模块边界和跨域引用",
-                                                 "更新检查新增 GitHub 与官网双来源；Android 可在应用内下载、校验并请求系统安装官网 APK",
-                                                 "官网新增安装包镜像与下载统计，发布流程强化资产、校验和、APK 版本与签名核验",
-                                                 "明确第三方书源责任边界，并新增开发者产品和自愿支持入口"
-                                             ],
-                                      "zh-TW":  [
-                                                    "平板新增可關閉的橫向雙頁版面，左右頁頂部資訊分工顯示",
-                                                    "重做擬真翻頁跟手、跨書脊層級與回彈收尾，修正跳動、甩尾和遮擋",
-                                                    "最佳化 TXT 開啟轉場、書源章節預取與分頁重用，減少開啟和跨章等待",
-                                                    "手機懸浮導覽支援圖示文字切換，預設與自訂閱讀主題可統一排序",
-                                                    "閱讀統計詳情頁採用統一書卷風格並重新設計各項統計內容",
-                                                    "頁面原始碼依功能領域重新整理，統一檔案命名、模組邊界與跨領域引用",
-                                                    "更新檢查新增 GitHub 與官網雙來源；Android 可在應用程式內下載、校驗並請求系統安裝官網 APK",
-                                                    "官網新增安裝檔鏡像與下載統計，發布流程加強資產、校驗和、APK 版本與簽章驗證",
-                                                    "明確第三方書源責任邊界，並新增開發者產品和自願支持入口"
-                                                ],
-                                      "ja":  [
-                                                 "タブレットに無効化可能な横向き見開き表示を追加し、左右ページで上部情報を分担しました",
-                                                 "ページめくりの追従、見開き中央の描画順、反発収束を作り直し、跳ね・尾引き・重なりを修正しました",
-                                                 "TXT の起動遷移、書籍ソースの章プリフェッチ、ページ分割の再利用を最適化しました",
-                                                 "モバイルのフローティングナビでアイコンのみ／ラベル付き表示を切り替え、読書テーマを統一順序で並べ替え可能にしました",
-                                                 "読書統計の詳細画面を統一された紙面スタイルで再設計しました",
-                                                 "画面ソースを機能領域ごとに再編し、ファイル命名、モジュール境界、領域間参照を統一しました",
-                                                 "GitHub と公式サイトの更新元を選べるようにし、Android では公式 APK をアプリ内でダウンロード・検証してシステムインストーラーへ渡せるようにしました",
-                                                 "公式サイトへの配布ミラーとダウンロード統計を追加し、資産、チェックサム、APK バージョン、署名の検証を強化しました",
-                                                 "第三者書籍ソースの責任範囲を明確化し、開発者製品と任意支援への入口を追加しました"
-                                             ]
-                                  }
-                    },
-                    {
-                        "version":  "2.0.3",
-                        "notes":  {
-                                      "en":  [
-                                                 "Added settings links for 小元读书 and 小元读书社区",
-                                                 "Added optional WeChat and Alipay donation entries with no effect on app features"
-                                             ],
-                                      "zh":  [
-                                                 "设置页新增小元读书和小元读书社区入口",
-                                                 "新增自愿微信和支付宝捐赠入口，并明确不影响任何功能"
-                                             ],
-                                      "zh-TW":  [
-                                                    "設定頁新增小元读书和小元读书社区入口",
-                                                    "新增自願微信和支付寶捐贈入口，並明確不影響任何功能"
-                                                ],
-                                      "ja":  [
-                                                 "設定画面に小元读书と小元读书社区へのリンクを追加しました",
-                                                 "任意の WeChat・Alipay 寄付入口を追加し、機能には影響しないことを明記しました"
-                                             ]
-                                  }
-                    },
-                    {
-                        "version":  "2.0.2",
-                        "notes":  {
-                                      "en":  [
-                                                 "Embedded reader information in each paper page so it moves with slide and page-curl turns",
-                                                 "Inset page numbers from screen edges to avoid rounded-corner clipping"
-                                             ],
-                                      "zh":  [
-                                                 "阅读信息栏嵌入每张纸页，横滑和仿真翻页时随页面一起移动",
-                                                 "页码向屏幕内侧留出安全距离，避免被圆角遮挡"
-                                             ],
-                                      "zh-TW":  [
-                                                    "閱讀資訊列嵌入每張紙頁，橫向滑動與擬真翻頁時會隨頁面一起移動",
-                                                    "頁碼向螢幕內側保留安全距離，避免被圓角遮擋"
-                                                ],
-                                      "ja":  [
-                                                 "読書情報バーを各ページ内に配置し、横スライドやページめくりと一緒に動くよう修正しました",
-                                                 "画面の角丸で隠れないよう、ページ番号を画面端から内側へ調整しました"
-                                             ]
-                                  }
-                    },
-                    {
-                        "version":  "2.0.1",
-                        "notes":  {
-                                      "en":  [
-                                                 "Improved backward simulated turns with immediate mid-screen tracking and a stable binding edge during vertical hand movement",
-                                                 "Preheated both adjacent pages together to reduce first backward-turn latency",
-                                                 "Added all-source and per-source discovery filters with balanced latest-book interleaving"
-                                             ],
-                                      "zh":  [
-                                                 "优化上一页仿真翻页，中间起手立即跟手，纵向晃动不再带偏装订边",
-                                                 "前后相邻页同步预热，减少首次反向翻页卡顿",
-                                                 "发现页支持全部或单一书源筛选，最新书籍在多个书源间均衡穿插"
-                                             ],
-                                      "zh-TW":  [
-                                                    "最佳化上一頁擬真翻頁，從中央起手立即跟手，垂直晃動不再帶偏裝訂邊",
-                                                    "前後相鄰頁同步預熱，減少首次反向翻頁卡頓",
-                                                    "發現頁支援全部或單一書源篩選，最新書籍在多個書源間均衡穿插"
-                                                ],
-                                      "ja":  [
-                                                 "前のページへの紙面めくりを改善し、画面中央からでも即座に追従して上下の手ぶれで綴じ目がずれないようにしました",
-                                                 "前後の隣接ページを同時にプリヒートし、最初の逆方向ページめくりの遅延を軽減しました",
-                                                 "すべて／個別の書籍ソース絞り込みと最新書籍の均等な交互表示に対応しました"
-                                             ]
-                                  }
-                    },
-                    {
-                        "version":  "2.0.0",
-                        "notes":  {
-                                      "en":  [
-                                                 "Upgraded top information, page numbering, and simulated page turns",
-                                                 "Added multiple custom reading themes, image backgrounds, and drag sorting",
-                                                 "Improved EPUB pagination and collapsible nested contents",
-                                                 "Enabled real keep-screen-on behavior while reading on Android"
-                                             ],
-                                      "zh":  [
-                                                 "升级顶部信息、纸页页码与仿真翻页体验",
-                                                 "支持多套自定义阅读主题、图片背景与拖拽排序",
-                                                 "优化 EPUB 分页与可折叠多级目录",
-                                                 "Android 阅读时保持屏幕常亮正式生效"
-                                             ],
-                                      "zh-TW":  [
-                                                    "升級頂部資訊、紙頁頁碼與擬真翻頁體驗",
-                                                    "支援多套自訂閱讀主題、圖片背景與拖曳排序",
-                                                    "最佳化 EPUB 分頁與可摺疊多層目錄",
-                                                    "Android 閱讀時保持螢幕常亮正式生效"
-                                                ],
-                                      "ja":  [
-                                                 "上部情報、ページ番号、紙面めくり体験を刷新",
-                                                 "複数のカスタム読書テーマ、画像背景、ドラッグ並べ替えに対応",
-                                                 "EPUB のページ分割と折りたたみ可能な階層目次を改善",
-                                                 "Android で読書中の画面常時点灯を実際に有効化"
-                                             ]
-                                  }
-                    },
-                    {
-                        "version":  "1.2.4",
-                        "notes":  {
-                                      "en":  [
-                                                 "Added paper-bound page chrome, classic fold animation, and reader typography controls"
-                                             ],
-                                      "zh":  [
-                                                 "新增纸页化页脚、经典折页动画与阅读排版设置"
-                                             ],
-                                      "zh-TW":  [
-                                                    "新增紙頁化頁腳、經典摺頁動畫與閱讀排版設定"
-                                                ],
-                                      "ja":  [
-                                                 "紙面に追従するページ情報、クラシック折り、読書組版設定を追加"
-                                             ]
-                                  }
-                    },
-                    {
-                        "version":  "1.2.2",
-                        "notes":  {
-                                      "en":  [
-                                                 "Restored center-tap reader controls during continuous online scrolling"
-                                             ],
-                                      "zh":  [
-                                                 "修复在线连续滚动无法中间点击呼出控制栏"
-                                             ],
-                                      "zh-TW":  [
-                                                    "修正線上連續捲動無法點擊中央叫出控制列"
-                                                ],
-                                      "ja":  [
-                                                 "オンライン連続スクロールで中央タップの操作バー表示を復元"
-                                             ]
-                                  }
-                    },
-                    {
-                        "version":  "1.2.1",
-                        "notes":  {
-                                      "en":  [
-                                                 "Added shared chapter-by-chapter and continuous whole-book scrolling for online sources",
-                                                 "Fixed asymmetric Chinese text margins and aligned pagination with rendering"
-                                             ],
-                                      "zh":  [
-                                                 "在线书源补齐按章节滚动与整书连续滚动",
-                                                 "修复中文正文左右留白不对称并统一分页绘制"
-                                             ],
-                                      "zh-TW":  [
-                                                    "線上書源補齊按章節捲動與整書連續捲動",
-                                                    "修正中文正文左右留白不對稱並統一分頁繪製"
-                                                ],
-                                      "ja":  [
-                                                 "オンライン書籍に章単位と全巻連続スクロールを追加",
-                                                 "中国語本文の左右余白とページ分割・描画の不一致を修正"
-                                             ]
-                                  }
-                    },
-                    {
-                        "version":  "1.2.0",
-                        "notes":  {
-                                      "en":  [
-                                                 "Improved reader layout with zero margins and more text per page",
-                                                 "Added volume-key page turning on Android",
-                                                 "Improved custom fonts with import and management",
-                                                 "Polished the status bar and reading controls",
-                                                 "Redesigned book open and close animations",
-                                                 "Improved the tablet library layout",
-                                                 "Redesigned book import with safer bottom controls",
-                                                 "Generated simple covers for books without artwork",
-                                                 "Added offline open-source license viewing"
-                                             ],
-                                      "zh":  [
-                                                 "优化阅读排版，支持零边距与同页更多文字",
-                                                 "接入音量键翻页",
-                                                 "完善自定义字体，支持导入与管理",
-                                                 "美化状态栏与阅读控制栏",
-                                                 "重做书籍打开与关闭动画",
-                                                 "优化平板书库布局",
-                                                 "重构书籍导入，适配安全区更易用",
-                                                 "无封面书籍统一生成简约封面",
-                                                 "新增应用内开源许可查看"
-                                             ],
-                                      "zh-TW":  [
-                                                    "優化閱讀排版，支援零邊距與同頁更多文字",
-                                                    "接入音量鍵翻頁",
-                                                    "完善自訂字型，支援匯入與管理",
-                                                    "美化狀態列與閱讀控制列",
-                                                    "重做書籍開啟與關閉動畫",
-                                                    "優化平板書庫版面",
-                                                    "重構書籍匯入，適配安全區更易用",
-                                                    "無封面書籍統一產生簡約封面",
-                                                    "新增應用內開源授權檢視"
-                                                ],
-                                      "ja":  [
-                                                 "余白0と1ページあたりの表示量を改善した読字レイアウト",
-                                                 "音量キーでのページ送りに対応",
-                                                 "カスタムフォントの取り込みと管理を強化",
-                                                 "ステータスバーと読書コントロールを改善",
-                                                 "本を開く・閉じるアニメーションを刷新",
-                                                 "タブレットの本棚レイアウトを最適化",
-                                                 "書籍インポート画面を安全領域対応で再設計",
-                                                 "表紙のない書籍に統一のシンプル表紙を生成",
-                                                 "アプリ内でオープンソースライセンスを閲覧可能に"
-                                             ]
-                                  }
-                    },
-                    {
-                        "version":  "1.1.0",
-                        "notes":  {
-                                      "en":  [
-                                                 "Added custom fonts",
-                                                 "Added bookmark support"
-                                             ],
-                                      "zh":  [
-                                                 "新增自定义字体",
-                                                 "新增加入书签"
-                                             ],
-                                      "zh-TW":  [
-                                                    "新增自訂字型",
-                                                    "新增加入書籤"
-                                                ],
-                                      "ja":  [
-                                                 "カスタムフォントを追加",
-                                                 "ブックマーク追加機能を追加"
-                                             ]
-                                  }
-                    },
-                    {
-                        "version":  "1.0.2",
-                        "notes":  {
-                                      "en":  [
-                                                 "Improved discovery, standalone search, and reading settings"
-                                             ],
-                                      "zh":  [
-                                                 "优化发现页、独立搜索和阅读设置"
-                                             ],
-                                      "zh-TW":  [
-                                                    "最佳化發現頁、獨立搜尋和閱讀設定"
-                                                ],
-                                      "ja":  [
-                                                 "発見ページ、独立検索、読書設定を改善"
-                                             ]
-                                  }
-                    },
-                    {
-                        "version":  "1.0.1",
-                        "notes":  {
-                                      "en":  [
-                                                 "Added discovery, paginated search, and open-source licensing notes"
-                                             ],
-                                      "zh":  [
-                                                 "新增发现功能、分页搜索和开源许可说明"
-                                             ],
-                                      "zh-TW":  [
-                                                    "新增發現功能、分頁搜尋和開源授權說明"
-                                                ],
-                                      "ja":  [
-                                                 "発見機能、ページ検索、オープンソースライセンス案内を追加"
-                                             ]
-                                  }
-                    },
-                    {
-                        "version":  "1.0.0",
-                        "notes":  {
-                                      "en":  [
-                                                 "Added open book sources, reading themes, and page-turn animation"
-                                             ],
-                                      "zh":  [
-                                                 "新增开放书源、多主题和仿真翻页"
-                                             ],
-                                      "zh-TW":  [
-                                                    "新增開放書源、多主題和仿真翻頁"
-                                                ],
-                                      "ja":  [
-                                                 "オープン書籍ソース、複数テーマ、ページめくり効果を追加"
-                                             ]
-                                  }
-                    },
-                    {
-                        "version":  "0.9.1",
-                        "notes":  {
-                                      "en":  [
-                                                 "Added tablet spreads and cross-platform release support"
-                                             ],
-                                      "zh":  [
-                                                 "新增平板双页布局和跨平台发布支持"
-                                             ],
-                                      "zh-TW":  [
-                                                    "新增平板雙頁版面和跨平台發布支援"
-                                                ],
-                                      "ja":  [
-                                                 "タブレット見開き表示とクロスプラットフォーム配布に対応"
-                                             ]
-                                  }
-                    }
+    "schemaVersion": 1,
+    "entries": [
+        {
+            "version": "2.3.9",
+            "notes": {
+                "en": [
+                    "Fixed several main-thread frame drops in the book-open animation found through on-device profiling, for both local and online books",
+                    "Added a \"Dynamic Info Bar\" top style that reuses the hidden status bar area for time and battery, without taking space from the reading area",
+                    "\"Full immersion\" now removes all reserved top and bottom space in vertical scroll mode",
+                    "Reworked the reading settings panel: shorter height, typography sliders moved to the top",
+                    "Added book renaming from the library, with the local file renamed to match"
+                ],
+                "zh": [
+                    "修复书籍打开动画在真机实测中发现的多处主线程掉帧，本地与在线书籍均已修复",
+                    "新增顶部信息样式「灵动信息栏」，借用系统状态栏区域显示时间与电量，不再挤占正文空间",
+                    "「完全沉浸」在上下滚动模式下取消全部顶部与底部预留区域",
+                    "重做阅读设置面板：高度收窄，排版滑块移到最上方",
+                    "书库新增书籍重命名，本地文件同步重命名"
+                ],
+                "zh-TW": [
+                    "修復書籍開啟動畫在真機實測中發現的多處主執行緒掉幀，本地與線上書籍均已修復",
+                    "新增頂部資訊樣式「靈動資訊列」，借用系統狀態列區域顯示時間與電量，不再擠占正文空間",
+                    "「完全沉浸」在上下捲動模式下取消全部頂部與底部保留區域",
+                    "重做閱讀設定面板：高度收窄，排版滑桿移到最上方",
+                    "書庫新增書籍重新命名，本機檔案同步重新命名"
+                ],
+                "ja": [
+                    "実機プロファイリングで見つかった書籍を開くアニメーションの複数のフレーム落ちを修正（ローカル・オンライン書籍とも）",
+                    "隠れたステータスバー領域を利用して時刻とバッテリーを表示する新しい上部表示スタイル「ダイナミック情報バー」を追加",
+                    "「完全没入」モードでは縦スクロール時の上下の予約領域をすべて廃止",
+                    "読書設定パネルを再設計：高さを縮小し、書式スライダーを上部に移動",
+                    "書庫に書籍名変更機能を追加、ローカルファイルも同時にリネーム"
                 ]
+            }
+        },
+        {
+            "version": "2.3.8",
+            "notes": {
+                "en": [
+                    "Unified reader font initialization and scaling so text sizing stays consistent across reader entry points, platforms, and repagination"
+                ],
+                "zh": [
+                    "统一阅读器字体初始化与缩放计算，确保不同阅读入口、平台和重新分页后的字号表现一致"
+                ],
+                "zh-TW": [
+                    "統一閱讀器字型初始化與縮放計算，確保不同閱讀入口、平台和重新分頁後的字號表現一致"
+                ],
+                "ja": [
+                    "リーダーのフォント初期化とスケーリングを統一し、入口・プラットフォーム・再ページ分割後も文字サイズを一貫させました"
+                ]
+            }
+        },
+        {
+            "version": "2.3.7",
+            "notes": {
+                "en": [
+                    "Rebuilt book opening and closing around a responsive fast-then-slow cover motion, with the cover staying visible until the first reader frame is actually ready",
+                    "Made cover-to-content, cover-to-loader, and loader-to-content handoffs longer true crossfades; loading screens now keep the title and reader controls available for exit",
+                    "Made the floating bottom navigation slide away immediately when a book opens",
+                    "Added a spring-back animation for the floating bottom navigation during book opening and closing, with predictive-back cancellation returning it to the correct state",
+                    "Connected Android 14+ predictive back progress directly to the reader-to-cover handoff so the closing animation follows the finger and resumes from the committed position",
+                    "Freezes the current reader screen into a texture when exit starts, so the closing motion transforms one snapshot instead of recompositing dense text every frame; cancelled predictive back restores live content only after reaching full screen",
+                    "Moved expensive page-curl snapshots and shelf refreshes out of the closing animation, with safe cover-position fallback to prevent brief red error frames",
+                    "Redesigned Discover book details and kept add method, progress, success, already-added, and retry states in one animated flow with a bookshelf drop-in confirmation",
+                    "Removed stalls when opening and jumping through very large tables of contents by prebuilding display data and loading indexed TXT chapter ranges asynchronously",
+                    "Moved online chapter conversion, adjacent pagination, and cache persistence out of the horizontal swipe path to smooth chapter title pages",
+                    "Split every oversized chapter in very large TXT files into lazy 32K-character sections, read only the current and required adjacent sections asynchronously, and delayed first-time indexing until after the cover-to-loader handoff",
+                    "Fixed large TXT books incorrectly showing no readable body when an active opening route was mistaken for cancellation, and made Android SAF imports materialize off the main thread with file-size verification",
+                    "Merged app themes and accent colors into one Material 3 color source with automatic migration of earlier theme choices",
+                    "Reorganized Settings by merging related options and moving floating navigation and library layout controls into focused detail pages"
+                ],
+                "zh": [
+                    "重做书籍打开与关闭动画：封面采用先快后慢的展开/缩回曲线，并在正文首帧真正就绪前保持可见",
+                    "封面到正文、封面到加载动画、加载动画到正文都改为更长的真实渐隐渐现；加载时仍可呼出标题栏和控制栏退出",
+                    "打开书籍时底部悬浮导航栏立即向下滑出",
+                    "增加底部悬浮导航栏在书籍打开、关闭时的回弹动画；预测性返回取消后会恢复到正确状态",
+                    "Android 14+ 预测性返回进度直接驱动正文到封面的交接，缩回动画跟随手指并从提交位置继续",
+                    "退出起步时把当前阅读屏冻结为纹理快照，缩回过程只变换快照而不再逐帧合成大量正文；预测性返回取消后回到全屏再恢复实时内容",
+                    "退出期间暂停仿真翻页快照和书架刷新，封面位置未布局时安全降级，避免偶发一两帧红色错误页",
+                    "优化发现页书籍详情的 UI 与动画，加入方式、进度、成功、已存在和失败重试统一在同一动画流程中，并增加封面落入书架的成功反馈",
+                    "修复超长目录打开和目录跳转卡顿：提前生成展示数据，并异步读取大型 TXT 的目标章节区间",
+                    "将在线章节正文转换、相邻章节分页和缓存写入移出水平滑动关键路径，修复章节标题页滑动卡顿",
+                    "超大 TXT 的每个巨型章节都按约 32K 字符分片懒加载，只异步读取当前与必要相邻片段；首次索引延后到封面转入加载动画之后执行",
+                    "修复大型 TXT 开书动画仍在进行时被误判为取消并提示没有正文的问题；Android SAF 导入改为后台物化并校验文件大小",
+                    "应用主题与强调色合并为统一的 Material 3 配色来源，并自动迁移旧主题配置",
+                    "重大优化设置页，合并相关设置选项，并将悬浮导航栏与书库布局收纳到独立详情页"
+                ],
+                "zh-TW": [
+                    "重做書籍開啟與關閉動畫：封面採用先快後慢的展開/縮回曲線，並在正文首幀真正就緒前保持可見",
+                    "封面到正文、封面到載入動畫、載入動畫到正文都改為更長的真實淡入淡出；載入時仍可叫出標題列與控制列退出",
+                    "開啟書籍時底部懸浮導覽列立即向下滑出",
+                    "增加底部懸浮導覽列在書籍開啟、關閉時的回彈動畫；預測性返回取消後會恢復至正確狀態",
+                    "Android 14+ 預測性返回進度直接驅動正文到封面的交接，縮回動畫跟隨手指並從提交位置繼續",
+                    "退出起步時將目前閱讀畫面凍結為紋理快照，縮回過程只變換快照而不再逐幀合成大量正文；預測性返回取消後回到全螢幕再恢復即時內容",
+                    "退出期間暫停仿真翻頁快照與書架更新，封面位置尚未排版時安全降級，避免偶發一兩幀紅色錯誤頁",
+                    "最佳化發現頁書籍詳情的 UI 與動畫，加入方式、進度、成功、已存在與失敗重試統一於同一動畫流程，並加入封面落入書架的成功回饋",
+                    "修復超長目錄開啟與目錄跳轉卡頓：預先產生顯示資料，並非同步讀取大型 TXT 的目標章節區間",
+                    "將線上章節正文轉換、相鄰章節分頁與快取寫入移出水平滑動關鍵路徑，修復章節標題頁滑動卡頓",
+                    "超大 TXT 的每個巨型章節都以約 32K 字元分片延遲載入，只非同步讀取目前與必要相鄰片段；首次索引延後到封面轉入載入動畫後執行",
+                    "修復大型 TXT 開書動畫仍在進行時被誤判為取消並提示沒有正文的問題；Android SAF 匯入改為背景實體化並驗證檔案大小",
+                    "應用程式主題與強調色合併為統一的 Material 3 配色來源，並自動遷移舊主題設定",
+                    "大幅最佳化設定頁，合併相關設定選項，並將懸浮導覽列與書庫版面收納至獨立詳情頁"
+                ],
+                "ja": [
+                    "書籍の開閉アニメーションを再設計し、表紙を素早く反応してゆっくり収束する動きに変更。本文の初回描画が完了するまで表紙を維持します",
+                    "表紙から本文、表紙から読み込み、読み込みから本文への切り替えを長めのクロスフェードにし、読み込み中もタイトルと操作バーから終了できます",
+                    "書籍を開くと下部のフローティングナビゲーションが即座に下へ退避します",
+                    "書籍の開閉時に下部フローティングナビゲーションのバウンド復帰アニメーションを追加し、予測型戻るのキャンセル時も正しい状態へ戻します",
+                    "Android 14 以降の予測型戻る進捗を本文から表紙への切り替えへ直接反映し、指に追従して確定位置から続行します",
+                    "終了開始時に現在の読書画面をテクスチャへ固定し、縮小中は大量の本文を毎フレーム再合成せず1枚のスナップショットだけを変形します。予測型戻るのキャンセル時は全画面へ戻ってからライブ表示へ復帰します",
+                    "終了中はページカールのスナップショットと本棚更新を停止し、表紙位置が未レイアウトでも安全にフォールバックして赤いエラーフレームを防ぎます",
+                    "発見画面の書籍詳細 UI とアニメーションを改善し、追加方法、進捗、成功、追加済み、再試行を一つのアニメーションフローに統合して表紙が本棚へ入る成功演出を追加しました",
+                    "非常に長い目次の表示と目次ジャンプの停止を、表示データの事前生成と大容量 TXT の対象章範囲の非同期読み込みで改善しました",
+                    "オンライン章の本文変換、隣接章のページ分割、キャッシュ保存を横スワイプの重要経路から外し、章タイトルページの引っかかりを改善しました",
+                    "巨大 TXT のすべての大きすぎる章を約 32K 文字単位へ分割し、現在と必要な隣接部分だけを非同期で読み込みます。初回索引作成は表紙から読み込み表示への移行後まで延期します",
+                    "大容量 TXT の開くアニメーション中にキャンセルと誤判定され本文なしになる問題を修正し、Android SAF の取り込みをバックグラウンド化してファイルサイズを検証します",
+                    "アプリテーマとアクセントカラーを一つの Material 3 配色元へ統合し、以前のテーマ設定を自動移行します",
+                    "設定画面を大幅に整理し、関連項目を統合してフローティングナビゲーションとライブラリ表示を専用詳細画面へまとめました"
+                ]
+            }
+        },
+        {
+            "version": "2.3.6",
+            "notes": {
+                "en": [
+                    "Made online source reading cache-first: recently opened catalogs and chapters reopen immediately and remain available offline for up to 30 days while stale data refreshes in the background",
+                    "Opening an online book from Home now goes straight to the source reader instead of treating it as a local file",
+                    "Preloaded and pre-paginated adjacent online chapters now form one continuous horizontal page sequence, so chapter titles and body pages turn normally without boundary bounce-back",
+                    "Made large online-font downloads smoother by moving file verification off the UI thread and limiting progress redraws to the font list",
+                    "Added an optional grid setting that shows each book title, a compact progress bar, and its reading percentage below the cover",
+                    "Kept grid titles to one ellipsized line so long names do not change row heights; the existing cover-only grid remains the default",
+                    "Stored newly uploaded WebDAV books as unencrypted original files under readable Book title - Author/original file name folders, while keeping SHA-256 only for integrity checks",
+                    "Kept legacy content-addressed WebDAV books downloadable without resync and added an in-app compatibility notice for existing users"
+                ],
+                "zh": [
+                    "在线书源阅读改为缓存优先：已读目录和正文可立即恢复，陈旧缓存后台刷新，30 天内内容在离线时仍可阅读",
+                    "首页打开在线书籍会直接进入书源阅读器，不再按本地文件处理",
+                    "在线书源会预加载并预先分页相邻章节，将前后章节接入同一条水平翻页序列，章节标题与正文可连续翻动且不会在边界回弹",
+                    "大型在线字体的校验改在后台执行，下载进度只刷新字体列表，界面更流畅",
+                    "书库网格新增可选的“显示书名和进度”，在封面下展示书名、精简进度条和阅读百分比",
+                    "书名固定单行并在过长时显示省略号，网格行高保持一致；默认仍为纯封面布局",
+                    "WebDAV 新上传书籍以未加密原文件保存到“书名 - 作者/原文件名”可读目录，SHA-256 仅用于完整性校验",
+                    "旧版内容寻址书籍继续兼容下载，无需重新同步；检测到旧记录时会显示兼容提示"
+                ],
+                "zh-TW": [
+                    "線上書源閱讀改為快取優先：已讀目錄與正文可立即恢復，過期快取於背景更新，30 天內內容離線時仍可閱讀",
+                    "首頁開啟線上書籍會直接進入書源閱讀器，不再當成本機檔案處理",
+                    "線上書源會預先載入並分頁相鄰章節，將前後章節接入同一條水平翻頁序列，章節標題與正文可連續翻動且不會在邊界回彈",
+                    "大型線上字型的校驗改在背景執行，下載進度只更新字型清單，介面更流暢",
+                    "書庫網格新增可選的「顯示書名和進度」，在封面下顯示書名、精簡進度列與閱讀百分比",
+                    "書名固定單行並在過長時顯示省略號，網格列高保持一致；預設仍為純封面版面",
+                    "WebDAV 新上傳書籍以未加密原始檔保存到「書名 - 作者/原始檔名」可讀目錄，SHA-256 僅用於完整性校驗",
+                    "舊版內容定址書籍繼續相容下載，無需重新同步；偵測到舊記錄時會顯示相容提示"
+                ],
+                "ja": [
+                    "オンライン書源の読書をキャッシュ優先にし、既読の目次と本文をすぐ復元。古いキャッシュはバックグラウンドで更新され、30日間はオフラインでも読めます",
+                    "ホームからオンライン書籍をローカルファイルとして扱わず、直接書源リーダーで開けるようにしました",
+                    "隣接するオンライン章を事前取得・ページ分割して一続きの横送りに組み込み、章タイトルと本文を境界で跳ね返らず通常のページと同様に移動できるようにしました",
+                    "大きなオンラインフォントの検証をバックグラウンドへ移し、進捗更新をフォント一覧だけに限定して操作を滑らかにしました",
+                    "ライブラリのグリッドに、表紙の下へ書名、コンパクトな進捗バー、読書率を表示するオプションを追加しました",
+                    "長い書名は1行で省略し、行の高さを揃えます。従来の表紙のみのグリッドが引き続き既定です",
+                    "WebDAV へ新しくアップロードする書籍を暗号化せず元のファイルのまま「書名 - 著者/元のファイル名」に保存し、SHA-256 は整合性確認だけに使用します",
+                    "旧形式のコンテンツアドレス書籍も再同期なしで引き続きダウンロードでき、該当する場合は互換性案内を表示します"
+                ]
+            }
+        },
+        {
+            "version": "2.3.5",
+            "notes": {
+                "en": [
+                    "Redesigned the home page around continuing the most recent book, reading rhythm, and a lightweight recent-books shelf",
+                    "Removed daily goals, reading plans, focus timers, and AI advice from the home page",
+                    "Added browser database persistence through an IndexedDB-backed SQLite compatibility layer",
+                    "Added validated Flutter Web release artifacts and atomic official-site deployment through the protected release environment",
+                    "Added a macOS Universal App pipeline with Developer ID signing, notarization, stapling, and Gatekeeper verification",
+                    "Removed unrelated product promotion from Settings and made AI model shortcuts more compact",
+                    "Standardized cover-grid cropping and refined Android and legacy iOS launcher icon safe areas",
+                    "Removed legacy online cover lookup during local imports; embedded covers are preferred and missing covers are generated locally"
+                ],
+                "zh": [
+                    "首页改为聚焦继续阅读、阅读节奏和轻量最近阅读书架",
+                    "移除首页的每日目标、阅读计划、专注计时和 AI 阅读建议",
+                    "浏览器端通过基于 IndexedDB 的 SQLite 兼容层持久化结构化数据",
+                    "新增经过校验的 Flutter Web 发布产物和受保护环境下的官网原子部署",
+                    "新增 macOS Universal App、Developer ID 签名、公证、staple 与 Gatekeeper 验证链路",
+                    "设置页移除无关产品推广，并压缩 AI 快捷模型入口",
+                    "统一封面网格裁切并优化 Android 与旧版 iOS 启动图标安全区",
+                    "移除本地导入时残留的联网封面搜索，优先使用内置封面，否则仅在本地生成默认封面"
+                ],
+                "zh-TW": [
+                    "首頁改為聚焦繼續閱讀、閱讀節奏與輕量最近閱讀書架",
+                    "移除首頁的每日目標、閱讀計畫、專注計時與 AI 閱讀建議",
+                    "瀏覽器端透過以 IndexedDB 為基礎的 SQLite 相容層保存結構化資料",
+                    "新增經過驗證的 Flutter Web 發布產物與受保護環境下的官網原子部署",
+                    "新增 macOS Universal App、Developer ID 簽署、公證、staple 與 Gatekeeper 驗證流程",
+                    "設定頁移除無關產品推廣，並壓縮 AI 快捷模型入口",
+                    "統一封面網格裁切並最佳化 Android 與舊版 iOS 啟動圖示安全區",
+                    "移除本機匯入時殘留的連網封面搜尋，優先使用內建封面，否則僅在本機產生預設封面"
+                ],
+                "ja": [
+                    "ホーム画面を最近の本の続き、読書リズム、軽量な最近読んだ本の一覧に再設計しました",
+                    "ホーム画面から毎日の目標、読書プラン、集中タイマー、AI 読書アドバイスを削除しました",
+                    "IndexedDB ベースの SQLite 互換レイヤーでブラウザーの構造化データを永続化しました",
+                    "検証済み Flutter Web リリース成果物と保護された環境からの公式サイトへのアトミック配備を追加しました",
+                    "macOS Universal App、Developer ID 署名、公証、staple、Gatekeeper 検証のリリース工程を追加しました",
+                    "設定画面から無関係な製品紹介を削除し、AI モデルのショートカットをコンパクトにしました",
+                    "表紙グリッドのトリミングを統一し、Android と旧 iOS の起動アイコンの安全領域を調整しました",
+                    "ローカル読み込み時に残っていたオンライン表紙検索を削除し、埋め込み表紙を優先して、ない場合は端末内で既定表紙を生成するようにしました"
+                ]
+            }
+        },
+        {
+            "version": "2.3.1",
+            "notes": {
+                "en": [
+                    "Focused WebDAV sync on bookshelf metadata, reading progress, bookmarks, and reading statistics while reserving notes for a safe future migration",
+                    "Added ask-every-time, automatic, and manual upload policies for newly imported book files",
+                    "Improved Android WebDAV compatibility and failure-stage diagnostics",
+                    "Synced persistent book covers and preserved remote titles and authors when restoring book files",
+                    "Separated connection settings from sync-content switches, which now save immediately",
+                    "Added safe cache management and bounded, retryable source-cover caching",
+                    "Added per-task cancellation for queued and active book downloads"
+                ],
+                "zh": [
+                    "WebDAV 当前聚焦书架信息、阅读进度、书签与阅读统计，笔记数据集保留用于未来安全迁移",
+                    "新导入书籍支持每次询问、自动上传和始终手动三种文件策略",
+                    "增强 Android WebDAV 兼容性并显示具体失败阶段",
+                    "书籍文件同步会传输持久封面，恢复时保持远端书名与作者",
+                    "连接配置与同步内容分开管理，同步范围开关修改后立即保存",
+                    "新增安全缓存管理和并发受限、可重试的书源封面缓存",
+                    "下载任务支持逐条取消等待中或下载中的书籍"
+                ],
+                "zh-TW": [
+                    "WebDAV 目前聚焦書庫資訊、閱讀進度、書籤與閱讀統計，筆記資料集保留供未來安全遷移",
+                    "新匯入書籍支援每次詢問、自動上傳與始終手動三種檔案策略",
+                    "增強 Android WebDAV 相容性並顯示具體失敗階段",
+                    "書籍檔案同步會傳輸持久封面，還原時保留遠端書名與作者",
+                    "連線設定與同步內容分開管理，同步範圍開關變更後立即儲存",
+                    "新增安全快取管理及限制並行、可重試的書源封面快取",
+                    "下載任務支援逐項取消等待中或下載中的書籍"
+                ],
+                "ja": [
+                    "WebDAV 同期を本棚情報、読書位置、しおり、読書統計に絞り、メモ用データセットは将来の安全な移行のため予約しました",
+                    "新しく読み込んだ書籍ファイルに毎回確認、自動アップロード、常に手動の3つの方針を追加しました",
+                    "Android の WebDAV 互換性と失敗段階の診断表示を改善しました",
+                    "書籍ファイルと永続表紙を同期し、復元時にリモートの書名と著者を保持するようにしました",
+                    "接続設定と同期内容を分離し、同期範囲の変更を即時保存するようにしました",
+                    "安全なキャッシュ管理と同時実行数を制限した再試行可能な表紙キャッシュを追加しました",
+                    "待機中または実行中の書籍ダウンロードをタスク単位でキャンセルできるようにしました"
+                ]
+            }
+        },
+        {
+            "version": "2.3.0",
+            "notes": {
+                "en": [
+                    "Added ColorOS Fluid Cloud support for live book and official APK download progress, with standard notification fallback on unsupported systems",
+                    "Added local-first WebDAV sync for bookshelf metadata, reading progress, bookmarks, notes, highlights, and reading statistics",
+                    "Added manual and automatic synchronization with durable offline changes and deterministic cross-device conflict merging",
+                    "Added opt-in per-book file upload and download with SHA-256 deduplication and a 100 MiB safety limit",
+                    "Kept WebDAV passwords in secure storage, required HTTPS by default, restricted credential redirects, and disclosed that remote data is not end-to-end encrypted",
+                    "Added library book export and registered TXT/EPUB system open and share flows across supported platforms",
+                    "Added library card and cover-grid layouts with two- or three-column phone density",
+                    "Redesigned source cards and the mobile source-add panel so metadata and controls remain readable on narrow screens",
+                    "Replaced blocking bottom messages with accessible non-blocking top notifications throughout the app"
+                ],
+                "zh": [
+                    "支持 ColorOS 流体云实时展示书籍与官网 APK 下载进度，不支持时自动回退普通通知",
+                    "新增本地优先的 WebDAV 同步，覆盖书架信息、阅读进度、书签、笔记、高亮与阅读统计",
+                    "支持手动与自动同步，离线变更可靠留存在本机，并确定性合并多设备冲突",
+                    "书籍原文件支持明确授权后的逐本上传与下载，并使用 SHA-256 去重和 100 MiB 安全上限",
+                    "WebDAV 密码仅存安全存储，默认要求 HTTPS、限制凭据重定向，并明确远端数据不是端到端加密",
+                    "书库支持导出本地书，TXT 与 EPUB 可从系统打开或分享至开元阅读",
+                    "书库新增卡片与纯封面网格布局，手机可选择每行 2 本或 3 本",
+                    "重做书源卡片与手机添加书源面板，窄屏下的来源信息和操作不再互相挤压",
+                    "应用内短反馈统一改为支持点击穿透和无障碍提示的顶部浮层"
+                ],
+                "zh-TW": [
+                    "支援 ColorOS 流體雲即時顯示書籍與官方網站 APK 下載進度，不支援時自動回退一般通知",
+                    "新增本機優先的 WebDAV 同步，涵蓋書架資訊、閱讀進度、書籤、筆記、醒目標示與閱讀統計",
+                    "支援手動與自動同步，離線變更可靠保留在本機，並以確定性規則合併多裝置衝突",
+                    "書籍原始檔案支援明確授權後逐本上傳與下載，並使用 SHA-256 去重和 100 MiB 安全上限",
+                    "WebDAV 密碼只存於安全儲存空間，預設要求 HTTPS、限制憑證重新導向，並明確說明遠端資料不是端對端加密",
+                    "書庫支援匯出本機書籍，TXT 與 EPUB 可從系統開啟或分享至開元閱讀",
+                    "書庫新增卡片與純封面網格版面，手機可選擇每列 2 本或 3 本",
+                    "重新設計書源卡片與手機新增書源面板，窄螢幕下的來源資訊和操作不再互相擠壓",
+                    "應用程式內短暫回饋統一改為可點擊穿透並支援無障礙提示的頂部浮層"
+                ],
+                "ja": [
+                    "ColorOS Fluid Cloud に書籍と公式 APK のダウンロード進捗をリアルタイム表示し、未対応環境では通常の通知へ自動的に切り替えるようにしました",
+                    "本棚情報、読書位置、しおり、メモ、ハイライト、読書統計を対象とするローカル優先の WebDAV 同期を追加しました",
+                    "手動・自動同期に対応し、オフライン変更を端末に安全に保持して複数端末の競合を決定的に統合します",
+                    "明示的に許可した書籍ファイルを個別にアップロード・ダウンロードでき、SHA-256 重複排除と 100 MiB の安全上限を適用します",
+                    "WebDAV パスワードを安全なストレージだけに保存し、既定で HTTPS を要求して認証情報のリダイレクトを制限し、リモートデータがエンドツーエンド暗号化されないことを明示しました",
+                    "ライブラリからローカル書籍を書き出し、TXT と EPUB をシステムから開く・共有する機能を追加しました",
+                    "ライブラリにカード表示と表紙のみのグリッド表示を追加し、スマートフォンでは1行2冊または3冊を選べるようにしました",
+                    "狭い画面でも情報と操作が読みやすいよう、書籍ソースカードとモバイルのソース追加パネルを再設計しました",
+                    "アプリ内の短い通知を、操作を妨げずアクセシビリティに対応した上部オーバーレイへ統一しました"
+                ]
+            }
+        },
+        {
+            "version": "2.2.10",
+            "notes": {
+                "en": [
+                    "Added Android 16 system live progress notifications for book and official APK downloads",
+                    "Kept standard progress notifications as the fallback on older Android versions and unsupported OEM surfaces",
+                    "Added book export from the library, including Android Download/Open Reading output and system save panels on Apple and desktop platforms",
+                    "Registered Open Reading for TXT and EPUB open/share flows so external files can enter the existing import and reading workflow"
+                ],
+                "zh": [
+                    "为书籍与官网 APK 下载新增 Android 16 系统原生实时进度通知",
+                    "旧版 Android 或 OEM 不支持提升展示时继续使用普通进度通知",
+                    "书库本地书支持导出，Android 默认保存到 Download/开元阅读，Apple 与桌面平台使用系统保存面板",
+                    "TXT 与 EPUB 可从系统打开或分享至开元阅读，并进入现有导入与阅读流程"
+                ],
+                "zh-TW": [
+                    "為書籍與官方網站 APK 下載新增 Android 16 系統原生即時進度通知",
+                    "舊版 Android 或 OEM 不支援提升顯示時繼續使用一般進度通知",
+                    "書庫本機書籍支援匯出，Android 預設儲存到 Download/開元閱讀，Apple 與桌面平台使用系統儲存面板",
+                    "TXT 與 EPUB 可從系統開啟或分享至開元閱讀，並進入既有匯入與閱讀流程"
+                ],
+                "ja": [
+                    "書籍と公式 APK のダウンロードに Android 16 のシステム標準ライブ進捗通知を追加しました",
+                    "旧バージョンの Android や未対応 OEM では通常の進捗通知を引き続き使用します",
+                    "ライブラリから書籍を書き出せるようになり、Android は Download/開元閱讀、Apple とデスクトップはシステム保存画面を使用します",
+                    "TXT と EPUB をシステムから開く、または共有して既存の読み込み・読書フローへ渡せるようになりました"
+                ]
+            }
+        },
+        {
+            "version": "2.2.9",
+            "notes": {
+                "en": [
+                    "Fixed first-line indentation disappearing when justified long paragraphs wrap",
+                    "Applied the configured indent to quoted paragraphs and paragraphs with existing leading spaces across all reflowable formats",
+                    "Restored automatic Android system-installer launch after an official-site APK finishes downloading",
+                    "Kept the verified completion notification as a retry path when the installer request is dismissed or the app is backgrounded"
+                ],
+                "zh": [
+                    "修复两端对齐长段落自动换行时首行缩进消失的问题",
+                    "引号开头及原文带空格的段落统一按阅读设置缩进，并覆盖全部可重排格式",
+                    "修复 Android 从官网下载 APK 完成后不会自动拉起系统安装器的问题",
+                    "保留已校验下载完成通知，在安装请求被忽略或应用退到后台时可以重试"
+                ],
+                "zh-TW": [
+                    "修正左右對齊長段落自動換行時首行縮排消失的問題",
+                    "引號開頭及原文帶空格的段落統一依閱讀設定縮排，並涵蓋全部可重排格式",
+                    "修正 Android 從官方網站下載 APK 完成後不會自動開啟系統安裝程式的問題",
+                    "保留已驗證的下載完成通知，在安裝要求被忽略或應用程式退到背景時可以重試"
+                ],
+                "ja": [
+                    "両端揃えの長い段落が折り返すと先頭行の字下げが消える問題を修正しました",
+                    "引用符で始まる段落や先頭に空白がある段落にも、すべてのリフロー可能な形式で読書設定の字下げを適用しました",
+                    "公式サイトから APK のダウンロードが完了した後に Android のシステムインストーラーが自動で開かれない問題を修正しました",
+                    "インストーラーの要求を閉じた場合やアプリをバックグラウンドに移した場合に再試行できるよう、検証済み完了通知を残しました"
+                ]
+            }
+        },
+        {
+            "version": "2.2.7",
+            "notes": {
+                "en": [
+                    "Unified first-line indentation across TXT, EPUB, HTML, Markdown, FB2, RTF, DOCX, and online sources",
+                    "Updated ORSP to 1.4 with required Core Reading capabilities",
+                    "Added a searchable lazy category picker for large source catalogs",
+                    "Added safe manifest refresh for registered book sources",
+                    "Moved in-app release history to a localized data-driven catalog"
+                ],
+                "zh": [
+                    "统一修复 TXT、EPUB、HTML、Markdown、FB2、RTF、DOCX 与在线书源的首行缩进",
+                    "开放书源协议升级到 ORSP 1.4，并要求完整核心阅读能力",
+                    "为大量书源分类新增可搜索的惰性选择器",
+                    "已添加书源支持安全刷新发现清单",
+                    "应用内版本历史改为四语数据驱动目录"
+                ],
+                "zh-TW": [
+                    "統一修正 TXT、EPUB、HTML、Markdown、FB2、RTF、DOCX 與線上書源的首行縮排",
+                    "開放書源協定升級至 ORSP 1.4，並要求完整核心閱讀能力",
+                    "為大量書源分類新增可搜尋的惰性選擇器",
+                    "已新增書源支援安全重新整理探索清單",
+                    "應用程式內版本歷史改為四語資料驅動目錄"
+                ],
+                "ja": [
+                    "TXT、EPUB、HTML、Markdown、FB2、RTF、DOCX、オンラインソースの字下げを統一して修正しました",
+                    "ORSP を 1.4 に更新し、コア読書機能の宣言を必須にしました",
+                    "多数のソースカテゴリ向けに検索可能な遅延選択画面を追加しました",
+                    "登録済みソースのマニフェストを安全に更新できるようにしました",
+                    "アプリ内の更新履歴を4言語のデータ駆動カタログに移行しました"
+                ]
+            }
+        },
+        {
+            "version": "2.2.6",
+            "notes": {
+                "en": [
+                    "Fixed paragraph boundaries and first-line indentation for online chapter text",
+                    "Moved interface and reader fonts to on-demand downloads to reduce the app size",
+                    "Expanded AI reading model settings and localized service error messages",
+                    "Made horizontal turns between online chapters complete smoothly using warmed layouts",
+                    "Added a shared download queue with Android progress notifications so downloads continue outside the active screen",
+                    "Reduced the Android launcher symbol's visual footprint for more balanced padding"
+                ],
+                "zh": [
+                    "修复在线章节正文的段落边界与首行缩进",
+                    "界面与阅读字体改为按需下载，减小应用安装包体积",
+                    "完善 AI 阅读模型设置，并统一服务错误提示的本地化文案",
+                    "复用预热布局，让在线书源水平跨章切换完整顺滑",
+                    "新增共享下载队列与 Android 进度通知，离开当前页面后下载仍会继续",
+                    "缩小 Android 启动器图标主体，增加更均衡的四周留白"
+                ],
+                "zh-TW": [
+                    "修正線上章節正文的段落邊界與首行縮排",
+                    "介面與閱讀字型改為按需下載，縮小應用程式安裝包體積",
+                    "完善 AI 閱讀模型設定，並統一服務錯誤提示的本地化文案",
+                    "重用預熱版面，讓線上書源水平跨章切換完整流暢",
+                    "新增共用下載佇列與 Android 進度通知，離開目前頁面後下載仍會繼續",
+                    "縮小 Android 啟動器圖示主體，增加更均衡的四周留白"
+                ],
+                "ja": [
+                    "オンライン章本文の段落境界と字下げが失われる問題を修正しました",
+                    "画面・読書用フォントをオンデマンド配信に変更し、アプリ容量を削減しました",
+                    "AI 読書のモデル設定を拡充し、サービスのエラー表示を多言語化しました",
+                    "準備済みレイアウトを再利用し、オンライン章間の横スライドを滑らかにしました",
+                    "共有ダウンロードキューと Android の進捗通知を追加し、画面を離れてもダウンロードを継続できるようにしました",
+                    "Android ランチャーアイコンの主体を縮小し、周囲の余白を整えました"
+                ]
+            }
+        },
+        {
+            "version": "2.2.5",
+            "notes": {
+                "en": [
+                    "Unified local files and online sources on the same text pagination and rendering engine",
+                    "Fixed horizontal cross-chapter turns rebuilding the page before the animation finished",
+                    "Updated app icons consistently across mobile, desktop, web, and OpenHarmony"
+                ],
+                "zh": [
+                    "本地文件与在线书源统一使用同一套文字分页和渲染内核",
+                    "修复水平滑动跨章时动画未结束就重建页面导致的顿挫",
+                    "统一更新移动端、桌面端、Web 与鸿蒙应用图标"
+                ],
+                "zh-TW": [
+                    "本機檔案與線上書源統一使用同一套文字分頁與繪製核心",
+                    "修正水平滑動跨章時動畫尚未結束就重建頁面造成的頓挫",
+                    "統一更新行動端、桌面端、Web 與鴻蒙應用程式圖示"
+                ],
+                "ja": [
+                    "ローカルファイルとオンラインソースで同じテキストページ分割・描画エンジンを使用するようにしました",
+                    "横スライドで章をまたぐ際にアニメーション完了前にページが再構築される引っかかりを修正しました",
+                    "モバイル、デスクトップ、Web、OpenHarmony のアプリアイコンを統一して更新しました"
+                ]
+            }
+        },
+        {
+            "version": "2.2.4",
+            "notes": {
+                "en": [
+                    "Updated source support to ORSP 1.3 and fetch complete chapter catalogs using each source's declared page-size limit",
+                    "Fixed paragraph boundaries being lost when source HTML separates paragraphs with <br> elements",
+                    "Reduced the mobile home floating navigation height to leave more room for content"
+                ],
+                "zh": [
+                    "书源支持升级到 ORSP 1.3，并按各书源声明的单页上限完整获取章节目录",
+                    "修复书源 HTML 使用 <br> 分隔段落时丢失段落边界的问题",
+                    "缩小手机首页悬浮导航高度，为内容留出更多空间"
+                ],
+                "zh-TW": [
+                    "書源支援升級至 ORSP 1.3，並依各書源宣告的單頁上限完整取得章節目錄",
+                    "修正書源 HTML 使用 <br> 分隔段落時遺失段落邊界的問題",
+                    "縮小手機首頁懸浮導覽高度，為內容保留更多空間"
+                ],
+                "ja": [
+                    "ソース対応を ORSP 1.3 に更新し、各ソースが宣言したページ上限に従って章一覧全体を取得するようにしました",
+                    "ソース HTML が <br> で段落を区切る場合に段落境界が失われる問題を修正しました",
+                    "モバイルホームのフローティングナビゲーションを低くし、コンテンツ領域を広げました"
+                ]
+            }
+        },
+        {
+            "version": "2.2.1",
+            "notes": {
+                "en": [
+                    "Fixed tablet spread page-curl backs so turning the right page shows the next left page in normal reading orientation"
+                ],
+                "zh": [
+                    "修复平板双页仿真翻页纸背，右页翻动时会显示正向的下一左页内容"
+                ],
+                "zh-TW": [
+                    "修正平板雙頁擬真翻頁紙背，右頁翻動時會顯示正向的下一張左頁內容"
+                ],
+                "ja": [
+                    "タブレット見開きの紙面裏側を修正し、右ページをめくると次の左ページが正しい向きで表示されるようにしました"
+                ]
+            }
+        },
+        {
+            "version": "2.2.0",
+            "notes": {
+                "en": [
+                    "Added an optional landscape tablet spread with top information split across the left and right pages",
+                    "Rebuilt page-curl tracking, cross-spine layering, and settling to fix jumps, tails, and incorrect overlap",
+                    "Improved TXT opening transitions, source chapter prefetching, and pagination reuse to reduce waiting",
+                    "Added icon-only or labeled floating navigation and unified sorting for built-in and custom reader themes",
+                    "Redesigned detailed reading statistics with a consistent paper-inspired layout",
+                    "Reorganized page source by feature area with consistent naming and module boundaries",
+                    "Added GitHub and official-site update choices; Android can download, verify, and hand official APKs to the system installer",
+                    "Added official-site mirrors and download statistics with stricter asset, checksum, APK version, and signing verification",
+                    "Clarified third-party source responsibilities and added developer product and optional support entries"
+                ],
+                "zh": [
+                    "平板新增可关闭的横屏双页布局，左右页顶部信息分工显示",
+                    "重做仿真翻页跟手、跨书脊层级与回弹收尾，修复闪跳、甩尾和遮挡",
+                    "优化 TXT 打开转场、书源章节预取和分页复用，降低打开与跨章等待",
+                    "手机悬浮导航支持图标文字切换，预设与自定义阅读主题可统一排序",
+                    "阅读统计详情页采用统一书卷风格并重新设计各项统计内容",
+                    "页面源码按功能域重新整理，统一文件命名、模块边界和跨域引用",
+                    "更新检查新增 GitHub 与官网双来源；Android 可在应用内下载、校验并请求系统安装官网 APK",
+                    "官网新增安装包镜像与下载统计，发布流程强化资产、校验和、APK 版本与签名核验",
+                    "明确第三方书源责任边界，并新增开发者产品和自愿支持入口"
+                ],
+                "zh-TW": [
+                    "平板新增可關閉的橫向雙頁版面，左右頁頂部資訊分工顯示",
+                    "重做擬真翻頁跟手、跨書脊層級與回彈收尾，修正跳動、甩尾和遮擋",
+                    "最佳化 TXT 開啟轉場、書源章節預取與分頁重用，減少開啟和跨章等待",
+                    "手機懸浮導覽支援圖示文字切換，預設與自訂閱讀主題可統一排序",
+                    "閱讀統計詳情頁採用統一書卷風格並重新設計各項統計內容",
+                    "頁面原始碼依功能領域重新整理，統一檔案命名、模組邊界與跨領域引用",
+                    "更新檢查新增 GitHub 與官網雙來源；Android 可在應用程式內下載、校驗並請求系統安裝官網 APK",
+                    "官網新增安裝檔鏡像與下載統計，發布流程加強資產、校驗和、APK 版本與簽章驗證",
+                    "明確第三方書源責任邊界，並新增開發者產品和自願支持入口"
+                ],
+                "ja": [
+                    "タブレットに無効化可能な横向き見開き表示を追加し、左右ページで上部情報を分担しました",
+                    "ページめくりの追従、見開き中央の描画順、反発収束を作り直し、跳ね・尾引き・重なりを修正しました",
+                    "TXT の起動遷移、書籍ソースの章プリフェッチ、ページ分割の再利用を最適化しました",
+                    "モバイルのフローティングナビでアイコンのみ／ラベル付き表示を切り替え、読書テーマを統一順序で並べ替え可能にしました",
+                    "読書統計の詳細画面を統一された紙面スタイルで再設計しました",
+                    "画面ソースを機能領域ごとに再編し、ファイル命名、モジュール境界、領域間参照を統一しました",
+                    "GitHub と公式サイトの更新元を選べるようにし、Android では公式 APK をアプリ内でダウンロード・検証してシステムインストーラーへ渡せるようにしました",
+                    "公式サイトへの配布ミラーとダウンロード統計を追加し、資産、チェックサム、APK バージョン、署名の検証を強化しました",
+                    "第三者書籍ソースの責任範囲を明確化し、開発者製品と任意支援への入口を追加しました"
+                ]
+            }
+        },
+        {
+            "version": "2.0.3",
+            "notes": {
+                "en": [
+                    "Added settings links for 小元读书 and 小元读书社区",
+                    "Added optional WeChat and Alipay donation entries with no effect on app features"
+                ],
+                "zh": [
+                    "设置页新增小元读书和小元读书社区入口",
+                    "新增自愿微信和支付宝捐赠入口，并明确不影响任何功能"
+                ],
+                "zh-TW": [
+                    "設定頁新增小元读书和小元读书社区入口",
+                    "新增自願微信和支付寶捐贈入口，並明確不影響任何功能"
+                ],
+                "ja": [
+                    "設定画面に小元读书と小元读书社区へのリンクを追加しました",
+                    "任意の WeChat・Alipay 寄付入口を追加し、機能には影響しないことを明記しました"
+                ]
+            }
+        },
+        {
+            "version": "2.0.2",
+            "notes": {
+                "en": [
+                    "Embedded reader information in each paper page so it moves with slide and page-curl turns",
+                    "Inset page numbers from screen edges to avoid rounded-corner clipping"
+                ],
+                "zh": [
+                    "阅读信息栏嵌入每张纸页，横滑和仿真翻页时随页面一起移动",
+                    "页码向屏幕内侧留出安全距离，避免被圆角遮挡"
+                ],
+                "zh-TW": [
+                    "閱讀資訊列嵌入每張紙頁，橫向滑動與擬真翻頁時會隨頁面一起移動",
+                    "頁碼向螢幕內側保留安全距離，避免被圓角遮擋"
+                ],
+                "ja": [
+                    "読書情報バーを各ページ内に配置し、横スライドやページめくりと一緒に動くよう修正しました",
+                    "画面の角丸で隠れないよう、ページ番号を画面端から内側へ調整しました"
+                ]
+            }
+        },
+        {
+            "version": "2.0.1",
+            "notes": {
+                "en": [
+                    "Improved backward simulated turns with immediate mid-screen tracking and a stable binding edge during vertical hand movement",
+                    "Preheated both adjacent pages together to reduce first backward-turn latency",
+                    "Added all-source and per-source discovery filters with balanced latest-book interleaving"
+                ],
+                "zh": [
+                    "优化上一页仿真翻页，中间起手立即跟手，纵向晃动不再带偏装订边",
+                    "前后相邻页同步预热，减少首次反向翻页卡顿",
+                    "发现页支持全部或单一书源筛选，最新书籍在多个书源间均衡穿插"
+                ],
+                "zh-TW": [
+                    "最佳化上一頁擬真翻頁，從中央起手立即跟手，垂直晃動不再帶偏裝訂邊",
+                    "前後相鄰頁同步預熱，減少首次反向翻頁卡頓",
+                    "發現頁支援全部或單一書源篩選，最新書籍在多個書源間均衡穿插"
+                ],
+                "ja": [
+                    "前のページへの紙面めくりを改善し、画面中央からでも即座に追従して上下の手ぶれで綴じ目がずれないようにしました",
+                    "前後の隣接ページを同時にプリヒートし、最初の逆方向ページめくりの遅延を軽減しました",
+                    "すべて／個別の書籍ソース絞り込みと最新書籍の均等な交互表示に対応しました"
+                ]
+            }
+        },
+        {
+            "version": "2.0.0",
+            "notes": {
+                "en": [
+                    "Upgraded top information, page numbering, and simulated page turns",
+                    "Added multiple custom reading themes, image backgrounds, and drag sorting",
+                    "Improved EPUB pagination and collapsible nested contents",
+                    "Enabled real keep-screen-on behavior while reading on Android"
+                ],
+                "zh": [
+                    "升级顶部信息、纸页页码与仿真翻页体验",
+                    "支持多套自定义阅读主题、图片背景与拖拽排序",
+                    "优化 EPUB 分页与可折叠多级目录",
+                    "Android 阅读时保持屏幕常亮正式生效"
+                ],
+                "zh-TW": [
+                    "升級頂部資訊、紙頁頁碼與擬真翻頁體驗",
+                    "支援多套自訂閱讀主題、圖片背景與拖曳排序",
+                    "最佳化 EPUB 分頁與可摺疊多層目錄",
+                    "Android 閱讀時保持螢幕常亮正式生效"
+                ],
+                "ja": [
+                    "上部情報、ページ番号、紙面めくり体験を刷新",
+                    "複数のカスタム読書テーマ、画像背景、ドラッグ並べ替えに対応",
+                    "EPUB のページ分割と折りたたみ可能な階層目次を改善",
+                    "Android で読書中の画面常時点灯を実際に有効化"
+                ]
+            }
+        },
+        {
+            "version": "1.2.4",
+            "notes": {
+                "en": [
+                    "Added paper-bound page chrome, classic fold animation, and reader typography controls"
+                ],
+                "zh": [
+                    "新增纸页化页脚、经典折页动画与阅读排版设置"
+                ],
+                "zh-TW": [
+                    "新增紙頁化頁腳、經典摺頁動畫與閱讀排版設定"
+                ],
+                "ja": [
+                    "紙面に追従するページ情報、クラシック折り、読書組版設定を追加"
+                ]
+            }
+        },
+        {
+            "version": "1.2.2",
+            "notes": {
+                "en": [
+                    "Restored center-tap reader controls during continuous online scrolling"
+                ],
+                "zh": [
+                    "修复在线连续滚动无法中间点击呼出控制栏"
+                ],
+                "zh-TW": [
+                    "修正線上連續捲動無法點擊中央叫出控制列"
+                ],
+                "ja": [
+                    "オンライン連続スクロールで中央タップの操作バー表示を復元"
+                ]
+            }
+        },
+        {
+            "version": "1.2.1",
+            "notes": {
+                "en": [
+                    "Added shared chapter-by-chapter and continuous whole-book scrolling for online sources",
+                    "Fixed asymmetric Chinese text margins and aligned pagination with rendering"
+                ],
+                "zh": [
+                    "在线书源补齐按章节滚动与整书连续滚动",
+                    "修复中文正文左右留白不对称并统一分页绘制"
+                ],
+                "zh-TW": [
+                    "線上書源補齊按章節捲動與整書連續捲動",
+                    "修正中文正文左右留白不對稱並統一分頁繪製"
+                ],
+                "ja": [
+                    "オンライン書籍に章単位と全巻連続スクロールを追加",
+                    "中国語本文の左右余白とページ分割・描画の不一致を修正"
+                ]
+            }
+        },
+        {
+            "version": "1.2.0",
+            "notes": {
+                "en": [
+                    "Improved reader layout with zero margins and more text per page",
+                    "Added volume-key page turning on Android",
+                    "Improved custom fonts with import and management",
+                    "Polished the status bar and reading controls",
+                    "Redesigned book open and close animations",
+                    "Improved the tablet library layout",
+                    "Redesigned book import with safer bottom controls",
+                    "Generated simple covers for books without artwork",
+                    "Added offline open-source license viewing"
+                ],
+                "zh": [
+                    "优化阅读排版，支持零边距与同页更多文字",
+                    "接入音量键翻页",
+                    "完善自定义字体，支持导入与管理",
+                    "美化状态栏与阅读控制栏",
+                    "重做书籍打开与关闭动画",
+                    "优化平板书库布局",
+                    "重构书籍导入，适配安全区更易用",
+                    "无封面书籍统一生成简约封面",
+                    "新增应用内开源许可查看"
+                ],
+                "zh-TW": [
+                    "優化閱讀排版，支援零邊距與同頁更多文字",
+                    "接入音量鍵翻頁",
+                    "完善自訂字型，支援匯入與管理",
+                    "美化狀態列與閱讀控制列",
+                    "重做書籍開啟與關閉動畫",
+                    "優化平板書庫版面",
+                    "重構書籍匯入，適配安全區更易用",
+                    "無封面書籍統一產生簡約封面",
+                    "新增應用內開源授權檢視"
+                ],
+                "ja": [
+                    "余白0と1ページあたりの表示量を改善した読字レイアウト",
+                    "音量キーでのページ送りに対応",
+                    "カスタムフォントの取り込みと管理を強化",
+                    "ステータスバーと読書コントロールを改善",
+                    "本を開く・閉じるアニメーションを刷新",
+                    "タブレットの本棚レイアウトを最適化",
+                    "書籍インポート画面を安全領域対応で再設計",
+                    "表紙のない書籍に統一のシンプル表紙を生成",
+                    "アプリ内でオープンソースライセンスを閲覧可能に"
+                ]
+            }
+        },
+        {
+            "version": "1.1.0",
+            "notes": {
+                "en": [
+                    "Added custom fonts",
+                    "Added bookmark support"
+                ],
+                "zh": [
+                    "新增自定义字体",
+                    "新增加入书签"
+                ],
+                "zh-TW": [
+                    "新增自訂字型",
+                    "新增加入書籤"
+                ],
+                "ja": [
+                    "カスタムフォントを追加",
+                    "ブックマーク追加機能を追加"
+                ]
+            }
+        },
+        {
+            "version": "1.0.2",
+            "notes": {
+                "en": [
+                    "Improved discovery, standalone search, and reading settings"
+                ],
+                "zh": [
+                    "优化发现页、独立搜索和阅读设置"
+                ],
+                "zh-TW": [
+                    "最佳化發現頁、獨立搜尋和閱讀設定"
+                ],
+                "ja": [
+                    "発見ページ、独立検索、読書設定を改善"
+                ]
+            }
+        },
+        {
+            "version": "1.0.1",
+            "notes": {
+                "en": [
+                    "Added discovery, paginated search, and open-source licensing notes"
+                ],
+                "zh": [
+                    "新增发现功能、分页搜索和开源许可说明"
+                ],
+                "zh-TW": [
+                    "新增發現功能、分頁搜尋和開源授權說明"
+                ],
+                "ja": [
+                    "発見機能、ページ検索、オープンソースライセンス案内を追加"
+                ]
+            }
+        },
+        {
+            "version": "1.0.0",
+            "notes": {
+                "en": [
+                    "Added open book sources, reading themes, and page-turn animation"
+                ],
+                "zh": [
+                    "新增开放书源、多主题和仿真翻页"
+                ],
+                "zh-TW": [
+                    "新增開放書源、多主題和仿真翻頁"
+                ],
+                "ja": [
+                    "オープン書籍ソース、複数テーマ、ページめくり効果を追加"
+                ]
+            }
+        },
+        {
+            "version": "0.9.1",
+            "notes": {
+                "en": [
+                    "Added tablet spreads and cross-platform release support"
+                ],
+                "zh": [
+                    "新增平板双页布局和跨平台发布支持"
+                ],
+                "zh-TW": [
+                    "新增平板雙頁版面和跨平台發布支援"
+                ],
+                "ja": [
+                    "タブレット見開き表示とクロスプラットフォーム配布に対応"
+                ]
+            }
+        }
+    ]
 }
