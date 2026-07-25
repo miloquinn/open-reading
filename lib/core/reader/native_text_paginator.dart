@@ -7,9 +7,9 @@ import 'reader_text_characters.dart';
 
 typedef NativeTextSpanBuilder = TextSpan Function(int start, int end);
 
-/// 正文使用两端对齐，让中文软换行产生的不足一字宽余量分散到字间，
-/// 而不是全部堆在右侧。分页测量和实际绘制必须共用这一规则。
-const TextAlign readerBodyTextAlign = TextAlign.justify;
+/// 自然对齐保持显式字间距稳定；用户仍可在排版设置中选择两端对齐。
+/// 分页测量和实际绘制必须共用同一个对齐方式。
+const TextAlign readerBodyTextAlign = TextAlign.start;
 
 /// Book text has its own explicit font-size controls, so it must not be scaled
 /// a second time by iOS Dynamic Type or Windows system text scaling. Reader

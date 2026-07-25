@@ -38,6 +38,7 @@ List<BookSourceTextPage> paginateBookSourceText(
   required TextStyle style,
   required TextDirection textDirection,
   TextScaler textScaler = TextScaler.noScaling,
+  TextAlign textAlign = TextAlign.start,
   Locale? locale,
   int firstLineIndent = 0,
   int paragraphSpacing = 0,
@@ -49,6 +50,7 @@ List<BookSourceTextPage> paginateBookSourceText(
     locale: locale,
     strutStyle: readerStrutStyle(style),
     textHeightBehavior: readerTextHeightBehavior,
+    textAlign: textAlign,
   );
   return paginateReaderText(
     text: text,

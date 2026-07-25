@@ -500,6 +500,18 @@
   "@letterSpacingLabel": {
     "description": "Letter spacing label"
   },
+  "textAlignmentLabel": "Text Alignment",
+  "@textAlignmentLabel": {
+    "description": "Reader body text alignment label"
+  },
+  "textAlignmentNatural": "Natural",
+  "@textAlignmentNatural": {
+    "description": "Natural reader body text alignment"
+  },
+  "textAlignmentJustified": "Justified",
+  "@textAlignmentJustified": {
+    "description": "Justified reader body text alignment"
+  },
   "firstLineIndentLabel": "First-line Indent",
   "@firstLineIndentLabel": {
     "description": "First line indent label"

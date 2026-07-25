@@ -33,6 +33,8 @@ class ReaderLayoutFingerprint {
     required this.viewport,
     required this.fontSize,
     required this.lineHeight,
+    this.letterSpacing = 0,
+    this.textAlign = TextAlign.start,
     required this.horizontalMargin,
     required this.verticalMargin,
     required this.textScaler,
@@ -48,6 +50,8 @@ class ReaderLayoutFingerprint {
   final Size viewport;
   final double fontSize;
   final double lineHeight;
+  final double letterSpacing;
+  final TextAlign textAlign;
   final double horizontalMargin;
   final double verticalMargin;
   final TextScaler textScaler;
@@ -67,6 +71,7 @@ class ReaderLayoutFingerprint {
     return '$version:$contentKey:${viewport.width.toStringAsFixed(2)}:'
         '${viewport.height.toStringAsFixed(2)}:'
         '${fontSize.toStringAsFixed(2)}:${lineHeight.toStringAsFixed(3)}:'
+        '${letterSpacing.toStringAsFixed(2)}:${textAlign.name}:'
         '${horizontalMargin.toStringAsFixed(2)}:'
         '${verticalMargin.toStringAsFixed(2)}:$scalerKey:'
         '${locale?.toLanguageTag()}:${textDirection?.name}:${pageMode.name}:'

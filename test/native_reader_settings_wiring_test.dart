@@ -27,6 +27,8 @@ void main() {
       ReaderSettingsStore.pageModeKey: ReaderPageMode.pageCurl.name,
       ReaderSettingsStore.firstLineIndentKey: 3,
       ReaderSettingsStore.paragraphSpacingKey: 1,
+      ReaderSettingsStore.letterSpacingKey: 0.4,
+      ReaderSettingsStore.textAlignmentKey: ReaderTextAlignment.justified.name,
     });
     bookFile = File('test/fixtures/reader_settings_test.html');
     final messenger =
@@ -96,8 +98,21 @@ void main() {
           of: find.byKey(const ValueKey('reader-paragraph-spacing-slider')),
           matching: find.byType(Slider),
         );
+        final letterSpacingFinder = find.descendant(
+          of: find.byKey(const ValueKey('reader-letter-spacing-slider')),
+          matching: find.byType(Slider),
+        );
         expect(tester.widget<Slider>(indentFinder).value, 3);
         expect(tester.widget<Slider>(spacingFinder).value, 1);
+        expect(tester.widget<Slider>(letterSpacingFinder).value, 0.4);
+        expect(
+          tester
+              .widget<SegmentedButton<ReaderTextAlignment>>(
+                find.byKey(const ValueKey('reader-text-alignment-control')),
+              )
+              .selected,
+          {ReaderTextAlignment.justified},
+        );
 
         tester.widget<Slider>(indentFinder).onChanged!(4);
         await tester.pump();
@@ -105,11 +120,24 @@ void main() {
         tester.widget<Slider>(spacingFinder).onChanged!(2);
         await tester.pump();
         tester.widget<Slider>(spacingFinder).onChangeEnd!(2);
+        tester.widget<Slider>(letterSpacingFinder).onChanged!(0.8);
+        await tester.pump();
+        tester.widget<Slider>(letterSpacingFinder).onChangeEnd!(0.8);
+        tester
+            .widget<SegmentedButton<ReaderTextAlignment>>(
+              find.byKey(const ValueKey('reader-text-alignment-control')),
+            )
+            .onSelectionChanged!({ReaderTextAlignment.natural});
         await tester.pumpAndSettle();
 
         final prefs = await SharedPreferences.getInstance();
         expect(prefs.getInt(ReaderSettingsStore.firstLineIndentKey), 4);
         expect(prefs.getInt(ReaderSettingsStore.paragraphSpacingKey), 2);
+        expect(prefs.getDouble(ReaderSettingsStore.letterSpacingKey), 0.8);
+        expect(
+          prefs.getString(ReaderSettingsStore.textAlignmentKey),
+          ReaderTextAlignment.natural.name,
+        );
         expect(find.byIcon(Icons.auto_stories_outlined), findsNothing);
       } finally {
         await tester.pumpWidget(const SizedBox.shrink());

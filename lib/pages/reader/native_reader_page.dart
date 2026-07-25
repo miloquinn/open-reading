@@ -134,12 +134,6 @@ class _NativeReaderPageState extends State<NativeReaderPage>
   static final Map<String, Map<String, List<_ReaderPageData>>>
   _paginationMemoryCache = {};
   static const _spreadGutter = 24.0;
-  static const _textStyle = TextStyle(
-    fontSize: 19,
-    height: 1.75,
-    letterSpacing: 0.2,
-  );
-
   late final Future<List<_NativeChapter>> _chaptersFuture;
   PageController? _pageController;
   int _pageControllerGeneration = 0;
@@ -191,6 +185,8 @@ class _NativeReaderPageState extends State<NativeReaderPage>
   bool _scrollByChapter = true;
   double _fontSize = 19;
   double _lineHeight = 1.75;
+  double _letterSpacing = ReaderSettings.defaultLetterSpacing;
+  ReaderTextAlignment _textAlignment = ReaderSettings.defaultTextAlignment;
   int _firstLineIndent = ReaderSettings.defaultFirstLineIndent;
   int _paragraphSpacing = ReaderSettings.defaultParagraphSpacing;
   double _horizontalMargin = 18;
@@ -558,6 +554,8 @@ class _NativeReaderPageState extends State<NativeReaderPage>
         _pageMode = settings.pageMode;
         _fontSize = settings.fontSize;
         _lineHeight = settings.lineHeight;
+        _letterSpacing = settings.letterSpacing;
+        _textAlignment = settings.textAlignment;
         _horizontalMargin = settings.horizontalMargin;
         _topMargin = settings.topMargin;
         _bottomMargin = settings.bottomMargin;
@@ -622,6 +620,8 @@ class _NativeReaderPageState extends State<NativeReaderPage>
   ReaderSettings get _readerSettings => ReaderSettings(
     fontSize: _fontSize,
     lineHeight: _lineHeight,
+    letterSpacing: _letterSpacing,
+    textAlignment: _textAlignment,
     horizontalMargin: _horizontalMargin,
     topMargin: _topMargin,
     bottomMargin: _bottomMargin,
@@ -642,9 +642,14 @@ class _NativeReaderPageState extends State<NativeReaderPage>
         : _readerFont.fallbackFamilies,
     fontSize: _fontSize,
     height: _lineHeight,
-    letterSpacing: _textStyle.letterSpacing,
+    letterSpacing: _letterSpacing,
     color: _readerTheme.text,
   );
+
+  TextAlign get _readerTextAlign => switch (_textAlignment) {
+    ReaderTextAlignment.natural => TextAlign.start,
+    ReaderTextAlignment.justified => TextAlign.justify,
+  };
 
   NativeTextFlowStyle _readerTextFlowStyle({
     TextDirection? direction,
@@ -657,6 +662,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
       locale: Localizations.maybeLocaleOf(context),
       strutStyle: readerStrutStyle(style),
       textHeightBehavior: readerTextHeightBehavior,
+      textAlign: _readerTextAlign,
     );
   }
 
@@ -708,6 +714,8 @@ class _NativeReaderPageState extends State<NativeReaderPage>
   Future<void> _updateLayout({
     double? fontSize,
     double? lineHeight,
+    double? letterSpacing,
+    ReaderTextAlignment? textAlignment,
     int? firstLineIndent,
     int? paragraphSpacing,
     double? horizontalMargin,
@@ -717,6 +725,11 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     setState(() {
       _fontSize = fontSize ?? _fontSize;
       _lineHeight = (lineHeight ?? _lineHeight).clamp(1.4, 2.1);
+      _letterSpacing = (letterSpacing ?? _letterSpacing).clamp(
+        ReaderSettings.minLetterSpacing,
+        ReaderSettings.maxLetterSpacing,
+      );
+      _textAlignment = textAlignment ?? _textAlignment;
       _firstLineIndent = (firstLineIndent ?? _firstLineIndent).clamp(0, 4);
       _paragraphSpacing = (paragraphSpacing ?? _paragraphSpacing).clamp(0, 2);
       _horizontalMargin = (horizontalMargin ?? _horizontalMargin).clamp(
@@ -740,6 +753,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
   String get _layoutSignature =>
       '${_fontSize.toStringAsFixed(1)}:'
       '${_lineHeight.toStringAsFixed(2)}:'
+      '${_letterSpacing.toStringAsFixed(1)}:${_textAlignment.name}:'
       '${_horizontalMargin.toStringAsFixed(1)}:'
       '${_topMargin.toStringAsFixed(1)}:'
       '${_bottomMargin.toStringAsFixed(1)}:${_pageMode.name}:'
@@ -1300,6 +1314,10 @@ class _NativeReaderPageState extends State<NativeReaderPage>
         tabletTwoPageHint: context.l10n.readerTabletTwoPageHint,
         fontSizeLabel: context.l10n.fontSizeLabel,
         lineHeightLabel: context.l10n.lineSpacingLabel,
+        letterSpacingLabel: context.l10n.letterSpacingLabel,
+        textAlignmentLabel: context.l10n.textAlignmentLabel,
+        textAlignmentNaturalLabel: context.l10n.textAlignmentNatural,
+        textAlignmentJustifiedLabel: context.l10n.textAlignmentJustified,
         firstLineIndentLabel: context.l10n.firstLineIndentLabel,
         paragraphSpacingLabel: context.l10n.paragraphSpacingLabel,
         horizontalMarginLabel: context.l10n.readerHorizontalMarginLabel,
@@ -1308,6 +1326,8 @@ class _NativeReaderPageState extends State<NativeReaderPage>
         themeId: _readerThemeId,
         fontSize: _fontSize,
         lineHeight: _lineHeight,
+        letterSpacing: _letterSpacing,
+        textAlignment: _textAlignment,
         firstLineIndent: _firstLineIndent,
         paragraphSpacing: _paragraphSpacing,
         horizontalMargin: _horizontalMargin,
@@ -1324,6 +1344,10 @@ class _NativeReaderPageState extends State<NativeReaderPage>
         onFontSizeChanged: (value) => unawaited(_updateLayout(fontSize: value)),
         onLineHeightChanged: (value) =>
             unawaited(_updateLayout(lineHeight: value)),
+        onLetterSpacingChanged: (value) =>
+            unawaited(_updateLayout(letterSpacing: value)),
+        onTextAlignmentChanged: (value) =>
+            unawaited(_updateLayout(textAlignment: value)),
         onFirstLineIndentChanged: (value) =>
             unawaited(_updateLayout(firstLineIndent: value)),
         onParagraphSpacingChanged: (value) =>
@@ -1847,6 +1871,8 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     viewport: size,
     fontSize: _fontSize,
     lineHeight: _lineHeight,
+    letterSpacing: _letterSpacing,
+    textAlign: _readerTextAlign,
     horizontalMargin: _horizontalMargin,
     verticalMargin: _topMargin + _bottomMargin,
     textScaler: textScaler,

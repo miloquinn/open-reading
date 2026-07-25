@@ -653,6 +653,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get letterSpacingLabel => 'Letter Spacing';
 
   @override
+  String get textAlignmentLabel => 'Text Alignment';
+
+  @override
+  String get textAlignmentNatural => 'Natural';
+
+  @override
+  String get textAlignmentJustified => 'Justified';
+
+  @override
   String get firstLineIndentLabel => 'First-line Indent';
 
   @override
