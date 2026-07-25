@@ -1000,12 +1000,14 @@ jobs:
           | --- | --- |
           | Android | [![Android APK ARM64-v8a](https://img.shields.io/badge/Android-APK%20ARM64--v8a-3DDC84?logo=android&logoColor=white)](${release_url}/OpenReading-Android-arm64-v8a-${version}.apk) [![Android APK ARMv7](https://img.shields.io/badge/Android-APK%20ARMv7-69C36D?logo=android&logoColor=white)](${release_url}/OpenReading-Android-armeabi-v7a-${version}.apk) [![Android APK x86_64](https://img.shields.io/badge/Android-APK%20x86__64-8BC34A?logo=android&logoColor=white)](${release_url}/OpenReading-Android-x86_64-${version}.apk) |
           ${ios_download_row}
+          | Web | [![Open Reading Web](https://img.shields.io/badge/Web-在线阅读-287FCD?logo=googlechrome&logoColor=white)](https://read.xxread.top/) |
           ${macos_download_row}
           | Windows | [![Windows x64](https://img.shields.io/badge/Windows-ZIP%20x64-0078D4?logo=windows&logoColor=white)](${release_url}/OpenReading-Windows-x64-${version}.zip) |
           | Linux | [![Linux x64](https://img.shields.io/badge/Linux-tar.gz%20x64-FCC624?logo=linux&logoColor=black)](${release_url}/OpenReading-Linux-x64-${version}.tar.gz) |
 
           - Android arm64-v8a 适合绝大多数现代 Android 设备；ARMv7 适合较旧的 32 位设备；x86_64 适合模拟器或少数 x86_64 设备。
           - iOS 未签名 IPA 仅供开发者自行签名或重新打包，不能直接安装；普通测试请使用 TestFlight。
+          - Web 版无需下载，在现代浏览器中直接打开即可开始阅读。
           - Windows 解压 ZIP 后运行 \`xxread.exe\`；Linux 解压后运行 \`bundle/open_reading\`，需要 GTK 3 运行环境。
           - [![SHA-256 checksums](https://img.shields.io/badge/SHA--256-校验清单-4B8BBE)](${release_url}/SHA256SUMS.txt)
           ${macos_note}
