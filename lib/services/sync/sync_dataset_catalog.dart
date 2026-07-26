@@ -7,6 +7,7 @@ import 'sync_models.dart';
 /// app's business tables. A future release can enable the capability and
 /// materialize those retained records without changing remote identities.
 enum SyncDataset {
+  bookSources('book_sources'),
   books('books'),
   progress('progress'),
   bookmarks('bookmarks'),
@@ -29,6 +30,7 @@ class SyncDatasetCatalog {
   const SyncDatasetCatalog._();
 
   static bool isSupported(SyncDataset dataset) => switch (dataset) {
+    SyncDataset.bookSources ||
     SyncDataset.books ||
     SyncDataset.progress ||
     SyncDataset.bookmarks ||
@@ -40,6 +42,7 @@ class SyncDatasetCatalog {
   static bool isEnabled(SyncDataset dataset, WebDavSyncScope scope) {
     if (!isSupported(dataset)) return false;
     return switch (dataset) {
+      SyncDataset.bookSources => scope.bookSources,
       SyncDataset.books => scope.books,
       SyncDataset.progress => scope.progress,
       SyncDataset.bookmarks => scope.bookmarks,

@@ -143,6 +143,7 @@ class WebDavSyncConfiguration {
 
 class WebDavSyncScope {
   const WebDavSyncScope({
+    this.bookSources = true,
     this.books = true,
     this.progress = true,
     this.bookmarks = true,
@@ -151,6 +152,7 @@ class WebDavSyncScope {
     this.bookFiles = false,
   });
 
+  final bool bookSources;
   final bool books;
   final bool progress;
   final bool bookmarks;
@@ -159,6 +161,7 @@ class WebDavSyncScope {
   final bool bookFiles;
 
   Map<String, Object?> toJson() => {
+    'book_sources': bookSources,
     'books': books,
     'progress': progress,
     'bookmarks': bookmarks,
@@ -169,6 +172,7 @@ class WebDavSyncScope {
 
   factory WebDavSyncScope.fromJson(Map<String, dynamic> json) =>
       WebDavSyncScope(
+        bookSources: json['book_sources'] as bool? ?? true,
         books: json['books'] as bool? ?? true,
         progress: json['progress'] as bool? ?? true,
         bookmarks: json['bookmarks'] as bool? ?? true,
@@ -178,6 +182,7 @@ class WebDavSyncScope {
       );
 
   WebDavSyncScope copyWith({
+    bool? bookSources,
     bool? books,
     bool? progress,
     bool? bookmarks,
@@ -185,6 +190,7 @@ class WebDavSyncScope {
     bool? readingSessions,
     bool? bookFiles,
   }) => WebDavSyncScope(
+    bookSources: bookSources ?? this.bookSources,
     books: books ?? this.books,
     progress: progress ?? this.progress,
     bookmarks: bookmarks ?? this.bookmarks,

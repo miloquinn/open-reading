@@ -3690,7 +3690,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get webDavSyncContent => 'Sync content';
 
   @override
-  String get webDavScopeBooks => 'Library metadata';
+  String get webDavScopeBookSources => 'Book sources';
+
+  @override
+  String get webDavScopeBooks => 'Library and online books';
 
   @override
   String get webDavScopeProgress => 'Reading progress';
@@ -3927,4 +3930,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get webDavFilesTransferComplete => 'Book-file transfer complete';
+
+  @override
+  String get readerAddAnnotation => 'Add annotation';
+
+  @override
+  String get readerAnnotationHint => 'Write your thoughts about this passage…';
+
+  @override
+  String get readerAnnotationSaved => 'Annotation saved';
+
+  @override
+  String get readerAnnotationDeleted => 'Annotation deleted';
+
+  @override
+  String get readerAnnotationShelfRequired =>
+      'Add this book to the shelf before saving annotations';
+
+  @override
+  String get readerNoAnnotations => 'No annotations yet';
+
+  @override
+  String get readerNoAnnotationsHint =>
+      'Select text to highlight or add a comment. Tap an underlined comment to read it again.';
 }

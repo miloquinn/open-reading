@@ -61,12 +61,38 @@ class ReaderTextPage {
   /// Compatibility name for the former book-source-only page model.
   bool get showsChapterTitle => isChapterTitle;
 
+  /// Maps a UTF-16 offset in the text actually painted by this page back to
+  /// the canonical chapter text. Generated indentation and paragraph spacing
+  /// are therefore never persisted as annotation offsets.
+  int sourceOffsetForTextOffset(
+    int textOffset, {
+    bool preferVisibleStart = false,
+  }) {
+    final visibleLength = (displayEnd - displayStart).clamp(0, text.length);
+    final safeOffset = textOffset.clamp(0, visibleLength);
+    final textLayout = layout;
+    if (textLayout == null) {
+      return (startOffset + safeOffset).clamp(startOffset, endOffset);
+    }
+    final displayOffset = displayStart + safeOffset;
+    return preferVisibleStart
+        ? textLayout.sourceOffsetForVisibleStart(displayOffset)
+        : textLayout.sourceOffsetForDisplayOffset(displayOffset);
+  }
+
   TextSpan buildSpan({
     required TextStyle style,
     ReaderSourceSpanBuilder? sourceSpanBuilder,
   }) {
     final textLayout = layout;
-    if (textLayout == null) return TextSpan(text: text, style: style);
+    if (textLayout == null) {
+      final sourceSpan = sourceSpanBuilder?.call(startOffset, endOffset);
+      return switch (sourceSpan) {
+        final TextSpan span => span,
+        final InlineSpan span => TextSpan(style: style, children: [span]),
+        null => TextSpan(text: text, style: style),
+      };
+    }
     return textLayout.buildSpan(
       displayStart,
       displayEnd,

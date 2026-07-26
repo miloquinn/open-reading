@@ -60,6 +60,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    expect(find.text('书源'), findsOneWidget);
+    expect(find.text('书架与在线书籍'), findsOneWidget);
     final progressSwitch = find.widgetWithText(SwitchListTile, '阅读进度');
     expect(progressSwitch, findsOneWidget);
     expect(tester.widget<SwitchListTile>(progressSwitch).value, isTrue);

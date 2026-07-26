@@ -6534,10 +6534,16 @@ abstract class AppLocalizations {
   /// **'Sync content'**
   String get webDavSyncContent;
 
+  /// Sync scope for registered book sources
+  ///
+  /// In en, this message translates to:
+  /// **'Book sources'**
+  String get webDavScopeBookSources;
+
   /// Sync scope for book metadata
   ///
   /// In en, this message translates to:
-  /// **'Library metadata'**
+  /// **'Library and online books'**
   String get webDavScopeBooks;
 
   /// Sync scope for reading progress
@@ -6941,6 +6947,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Book-file transfer complete'**
   String get webDavFilesTransferComplete;
+
+  /// No description provided for @readerAddAnnotation.
+  ///
+  /// In en, this message translates to:
+  /// **'Add annotation'**
+  String get readerAddAnnotation;
+
+  /// No description provided for @readerAnnotationHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Write your thoughts about this passage…'**
+  String get readerAnnotationHint;
+
+  /// No description provided for @readerAnnotationSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Annotation saved'**
+  String get readerAnnotationSaved;
+
+  /// No description provided for @readerAnnotationDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Annotation deleted'**
+  String get readerAnnotationDeleted;
+
+  /// No description provided for @readerAnnotationShelfRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Add this book to the shelf before saving annotations'**
+  String get readerAnnotationShelfRequired;
+
+  /// No description provided for @readerNoAnnotations.
+  ///
+  /// In en, this message translates to:
+  /// **'No annotations yet'**
+  String get readerNoAnnotations;
+
+  /// No description provided for @readerNoAnnotationsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select text to highlight or add a comment. Tap an underlined comment to read it again.'**
+  String get readerNoAnnotationsHint;
 }
 
 class _AppLocalizationsDelegate

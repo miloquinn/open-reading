@@ -29,6 +29,8 @@ void main() {
 
       expect(layout.text, '正文\n下一段');
       expect(layout.sourceOffsetForDisplayOffset(0), 0);
+      expect(layout.sourceOffsetForVisibleStart(0), 2);
+      expect(layout.sourceOffsetForVisibleStart(1), 3);
       expect(
         layout.sourceOffsetForDisplayOffset(layout.text.length),
         source.length,

@@ -43,9 +43,7 @@ void main() {
     final leadingPageCount = pageViewWidget.controller!.page!.round();
     expect(leadingPageCount, greaterThan(2));
     ReaderPaperPageLeaf previewAt(int index) {
-      final previewShell = delegate.builder(tester.element(pageView), index)!;
-      expect(previewShell, isA<GestureDetector>());
-      final previewBuilder = (previewShell as GestureDetector).child!;
+      final previewBuilder = delegate.builder(tester.element(pageView), index)!;
       expect(previewBuilder, isA<LayoutBuilder>());
       final preview = (previewBuilder as LayoutBuilder).builder(
         tester.element(pageView),
@@ -84,8 +82,7 @@ void main() {
         pageViewWidget.childrenDelegate as SliverChildBuilderDelegate;
     final itemCount = delegate.estimatedChildCount!;
     ReaderPaperPageLeaf leafAt(int index) {
-      final shell = delegate.builder(tester.element(pageView), index)!;
-      final child = (shell as GestureDetector).child!;
+      final child = delegate.builder(tester.element(pageView), index)!;
       if (child is ReaderPaperPageLeaf) return child;
       final preview = (child as LayoutBuilder).builder(
         tester.element(pageView),

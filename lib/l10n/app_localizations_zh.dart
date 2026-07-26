@@ -3525,7 +3525,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get webDavSyncContent => '同步内容';
 
   @override
-  String get webDavScopeBooks => '书架信息';
+  String get webDavScopeBookSources => '书源';
+
+  @override
+  String get webDavScopeBooks => '书架与在线书籍';
 
   @override
   String get webDavScopeProgress => '阅读进度';
@@ -3743,6 +3746,27 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get webDavFilesTransferComplete => '书籍文件传输完成';
+
+  @override
+  String get readerAddAnnotation => '添加批注';
+
+  @override
+  String get readerAnnotationHint => '写下你对这段文字的想法…';
+
+  @override
+  String get readerAnnotationSaved => '批注已保存';
+
+  @override
+  String get readerAnnotationDeleted => '批注已删除';
+
+  @override
+  String get readerAnnotationShelfRequired => '请先将本书加入书架，再保存高亮和批注';
+
+  @override
+  String get readerNoAnnotations => '还没有批注';
+
+  @override
+  String get readerNoAnnotationsHint => '选中文字即可高亮或添加文字批注；点击带下划线的批注文字可再次查看笔记。';
 }
 
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).
@@ -7223,7 +7247,10 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get webDavSyncContent => '同步內容';
 
   @override
-  String get webDavScopeBooks => '書庫資訊';
+  String get webDavScopeBookSources => '書源';
+
+  @override
+  String get webDavScopeBooks => '書庫與線上書籍';
 
   @override
   String get webDavScopeProgress => '閱讀進度';
@@ -7441,4 +7468,25 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get webDavFilesTransferComplete => '書籍檔案傳輸完成';
+
+  @override
+  String get readerAddAnnotation => '新增批註';
+
+  @override
+  String get readerAnnotationHint => '寫下你對這段文字的想法…';
+
+  @override
+  String get readerAnnotationSaved => '批註已儲存';
+
+  @override
+  String get readerAnnotationDeleted => '批註已刪除';
+
+  @override
+  String get readerAnnotationShelfRequired => '請先將本書加入書架，再儲存高亮與批註';
+
+  @override
+  String get readerNoAnnotations => '還沒有批註';
+
+  @override
+  String get readerNoAnnotationsHint => '選取文字即可高亮或新增文字批註；點擊帶底線的批註文字可再次查看筆記。';
 }

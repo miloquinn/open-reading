@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../../models/book.dart';
+import '../library/library_event_bus_service.dart';
 
 import 'secure_sync_config.dart';
 import 'sync_change_store.dart';
@@ -176,6 +177,9 @@ class WebDavSyncController extends ChangeNotifier {
       );
       _pendingChanges = await _changeStore.pendingCount();
       await _refreshRemoteBooks();
+      if (result.downloaded > 0) {
+        LibraryEventBus().notifyLibraryChanged();
+      }
       _status = WebDavSyncStatus.success;
       _phase = WebDavSyncPhase.none;
       notifyListeners();

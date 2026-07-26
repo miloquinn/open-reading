@@ -27,6 +27,9 @@ class ReaderChromeOverlay extends StatelessWidget {
     required this.tableOfContentsTooltip,
     required this.settingsTooltip,
     required this.bookmarked,
+    this.onReadAloud,
+    this.readAloudTooltip,
+    this.readAloudActive = false,
     this.bookmarkBusy = false,
     this.topKey,
     this.bottomKey,
@@ -50,11 +53,14 @@ class ReaderChromeOverlay extends StatelessWidget {
   final VoidCallback? onBookmark;
   final VoidCallback? onTableOfContents;
   final VoidCallback onSettings;
+  final VoidCallback? onReadAloud;
   final String backTooltip;
   final String bookmarkTooltip;
   final String tableOfContentsTooltip;
   final String settingsTooltip;
+  final String? readAloudTooltip;
   final bool bookmarked;
+  final bool readAloudActive;
   final bool bookmarkBusy;
   final Key? topKey;
   final Key? bottomKey;
@@ -211,6 +217,7 @@ class ReaderChromeOverlay extends StatelessWidget {
                     vertical: 9,
                   ),
                   child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       ReaderControlIconButton(
                         palette: palette,
@@ -218,26 +225,22 @@ class ReaderChromeOverlay extends StatelessWidget {
                         tooltip: tableOfContentsTooltip,
                         icon: Icons.format_list_bulleted_rounded,
                       ),
-                      Expanded(
-                        child: statusBuilder(
-                          context,
-                          textTheme.labelLarge?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.15,
-                            color: palette.secondaryText,
-                          ),
-                          null,
+                      if (onReadAloud != null)
+                        ReaderControlIconButton(
+                          palette: palette,
+                          onPressed: onReadAloud,
+                          tooltip: readAloudTooltip ?? '',
+                          icon: readAloudActive
+                              ? Icons.graphic_eq_rounded
+                              : Icons.headphones_rounded,
                         ),
-                      ),
                       if (showSettingsAction)
                         ReaderControlIconButton(
                           palette: palette,
                           onPressed: onSettings,
                           tooltip: settingsTooltip,
                           icon: Icons.tune_rounded,
-                        )
-                      else
-                        const SizedBox(width: 48),
+                        ),
                     ],
                   ),
                 ),

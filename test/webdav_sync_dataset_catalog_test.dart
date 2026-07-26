@@ -22,8 +22,22 @@ void main() {
   });
 
   test('supported datasets still follow the user scope', () {
-    const scope = WebDavSyncScope(bookmarks: false);
+    const scope = WebDavSyncScope(bookSources: false, bookmarks: false);
     expect(SyncDatasetCatalog.isEnabled(SyncDataset.books, scope), isTrue);
+    expect(
+      SyncDatasetCatalog.isEnabled(SyncDataset.bookSources, scope),
+      isFalse,
+    );
     expect(SyncDatasetCatalog.isEnabled(SyncDataset.bookmarks, scope), isFalse);
+  });
+
+  test('book source scope is enabled by default and survives JSON storage', () {
+    const scope = WebDavSyncScope();
+    expect(scope.bookSources, isTrue);
+    expect(WebDavSyncScope.fromJson(scope.toJson()).bookSources, isTrue);
+    expect(
+      WebDavSyncScope.fromJson(const <String, dynamic>{}).bookSources,
+      isTrue,
+    );
   });
 }

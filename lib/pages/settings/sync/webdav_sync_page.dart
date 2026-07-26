@@ -246,6 +246,7 @@ class _ScopeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final enabled = <String>[
+      if (sync.scope.bookSources) l10n.webDavScopeBookSources,
       if (sync.scope.books) l10n.webDavScopeBooks,
       if (sync.scope.progress) l10n.webDavScopeProgress,
       if (sync.scope.bookmarks) l10n.webDavScopeBookmarks,

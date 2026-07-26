@@ -115,6 +115,68 @@ void main() {
     expect(roseSurface.r, greaterThan(greenSurface.r));
     expect(roseSurface.g, lessThan(greenSurface.g));
   });
+
+  testWidgets('bottom control bar only shows reader actions', (tester) async {
+    const bottomKey = ValueKey('reader-bottom-controls');
+    const statusKey = ValueKey('reader-status');
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ReaderChromeOverlay(
+            palette: ReaderThemes.day,
+            visible: true,
+            title: 'Chapter 4',
+            statusBottom: 8,
+            statusBuilder: (context, style, key) =>
+                Text('4 / 12', key: key, style: style),
+            onBack: () {},
+            onBookmark: () {},
+            onTableOfContents: () {},
+            onReadAloud: () {},
+            onSettings: () {},
+            backTooltip: 'Back',
+            bookmarkTooltip: 'Bookmark',
+            tableOfContentsTooltip: 'Contents',
+            readAloudTooltip: 'Read aloud',
+            settingsTooltip: 'Settings',
+            bookmarked: false,
+            bottomKey: bottomKey,
+            statusKey: statusKey,
+            showViewportStatus: false,
+          ),
+        ),
+      ),
+    );
+
+    final bottomControls = find.byKey(bottomKey);
+    expect(
+      find.descendant(of: bottomControls, matching: find.text('4 / 12')),
+      findsNothing,
+    );
+    expect(
+      find.descendant(
+        of: bottomControls,
+        matching: find.byIcon(Icons.format_list_bulleted_rounded),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: bottomControls,
+        matching: find.byIcon(Icons.headphones_rounded),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: bottomControls,
+        matching: find.byIcon(Icons.tune_rounded),
+      ),
+      findsOneWidget,
+    );
+    expect(find.byKey(statusKey), findsOneWidget);
+  });
 }
 
 Widget _testApp({

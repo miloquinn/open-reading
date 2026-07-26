@@ -13,12 +13,15 @@ import 'package:xxread/book_sources/services/book_source_reading_progress.dart';
 import 'package:xxread/book_sources/services/book_source_shelf_service.dart';
 import 'package:xxread/book_sources/services/book_source_text_paginator.dart';
 import 'package:xxread/core/reader/canonical_locator.dart';
+import 'package:xxread/core/reader/android_reader_aloud_notification.dart';
 import 'package:xxread/core/reader/native_text_paginator.dart';
+import 'package:xxread/core/reader/reader_annotation.dart';
 import 'package:xxread/core/reader/reader_custom_theme.dart';
 import 'package:xxread/core/reader/reader_leaf_status.dart';
 import 'package:xxread/core/reader/reader_layout.dart';
 import 'package:xxread/core/reader/reader_keep_screen_on.dart';
 import 'package:xxread/core/reader/reader_margin_settings.dart';
+import 'package:xxread/core/reader/reader_aloud_controller.dart';
 import 'package:xxread/core/reader/reader_safe_area.dart';
 import 'package:xxread/core/reader/reader_settings.dart';
 import 'package:xxread/core/reader/reader_system_ui.dart';
@@ -26,16 +29,23 @@ import 'package:xxread/core/reader/reader_text_pagination.dart';
 import 'package:xxread/core/reader/reader_theme_order.dart';
 import 'package:xxread/core/reader/reader_vertical_paging.dart';
 import 'package:xxread/core/reader/reader_volume_key_controller.dart';
+import 'package:xxread/models/book.dart';
 import 'package:xxread/models/bookmark.dart';
+import 'package:xxread/models/book_note.dart';
+import 'package:xxread/services/books/book_note_dao.dart';
 import 'package:xxread/services/books/bookmark_dao.dart';
 import 'package:xxread/services/core/app_settings_service.dart';
 import 'package:xxread/services/reading/reading_stats_dao.dart';
+import 'package:xxread/services/tts_service.dart';
+import 'package:xxread/services/reader_aloud_service.dart';
 import 'package:xxread/utils/book_open_transition.dart';
 import 'package:xxread/utils/font_catalog_helper.dart';
 import 'package:xxread/utils/glass_config.dart';
 import 'package:xxread/utils/localization_extension.dart';
 import 'package:xxread/utils/reader_themes.dart';
 import 'package:xxread/utils/system_ui_helper.dart';
+import 'package:xxread/widgets/reader_annotated_text_page.dart';
+import 'package:xxread/widgets/reader_aloud_panel.dart';
 import 'package:xxread/widgets/reader_control_chrome.dart';
 import 'package:xxread/widgets/reader_navigation_sheet.dart';
 import 'package:xxread/widgets/reader_opening_loader.dart';
@@ -43,8 +53,8 @@ import 'package:xxread/widgets/reader_paper_page_leaf.dart';
 import 'package:xxread/widgets/reader_pull_bookmark.dart';
 import 'package:xxread/widgets/reader_settings_controls.dart';
 import 'package:xxread/widgets/reader_shader_page_curl.dart';
+import 'package:xxread/widgets/reader_tap_observer.dart';
 import 'package:xxread/widgets/reader_theme_background.dart';
-import 'package:xxread/widgets/reader_text_page_content.dart';
 import 'package:xxread/widgets/reader_top_information_bar.dart';
 import 'package:xxread/widgets/reader_vertical_paging_surface.dart';
 import 'package:xxread/widgets/side_toast.dart';
@@ -170,12 +180,17 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   int? _pagedLayoutWarmTimerIndex;
   final ReadingStatsDao _readingStatsDao = ReadingStatsDao();
   final BookmarkDao _bookmarkDao = BookmarkDao();
+  final BookNoteDao _bookNoteDao = BookNoteDao();
   final ReaderSettingsStore _readerSettingsStore = const ReaderSettingsStore();
   final ReaderCustomThemeStore _customThemeStore =
       const ReaderCustomThemeStore();
   final ReaderThemeOrderStore _themeOrderStore = const ReaderThemeOrderStore();
   List<Bookmark> _bookmarks = const [];
   bool _bookmarkBusy = false;
+  List<BookNote> _annotations = const [];
+  bool _annotationBusy = false;
+  bool _annotationInteractionActive = false;
+  int _annotationRevision = 0;
   DateTime? _readingSessionStartedAt;
   int _sessionPagesRead = 0;
   bool _readerSystemUiApplied = false;
@@ -184,6 +199,9 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   Timer? _openingLoaderTimer;
   Timer? _openingContentReadyTimer;
   ReaderTopBarStyle _topBarStyle = ReaderTopBarStyle.reader;
+  ReaderAloudController? _readerAloudController;
+  bool _readerAloudActive = false;
+  ReaderAloudHighlight? _readerAloudHighlight;
 
   ReaderThemePalette get _readerTheme =>
       _loadingCatalog && widget.initialTheme != null
@@ -239,10 +257,12 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       math.max(32, _horizontalMargin);
 
   /// 阅读信息栏与灵动信息栏都画进纸页快照，需要随分钟时钟/电量刷新重绘。
-  int get _leafContentRevision =>
-      _topBarStyle == ReaderTopBarStyle.reader || _showLeafFloatingStatus
-      ? _leafStatusController.value.revision
-      : 0;
+  int get _leafContentRevision => Object.hash(
+    _topBarStyle == ReaderTopBarStyle.reader || _showLeafFloatingStatus
+        ? _leafStatusController.value.revision
+        : 0,
+    _annotationRevision,
+  );
 
   bool _shouldUseTwoPageLayout(Size size) =>
       _tabletTwoPageEnabled &&
@@ -388,6 +408,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     _progressSaveTimer?.cancel();
     _controlsTimer?.cancel();
     _pagedLayoutWarmTimer?.cancel();
+    _readerAloudController?.dispose();
     unawaited(_saveProgress());
     unawaited(_flushReadingSession());
     _verticalPagePositionsListener.itemPositions.removeListener(
@@ -444,8 +465,11 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         ..sort((a, b) => a.order.compareTo(b.order));
       final navigationChapters = List<ReaderNavigationChapter>.generate(
         chapters.length,
-        (index) =>
-            ReaderNavigationChapter(title: chapters[index].title, index: index),
+        (index) => ReaderNavigationChapter(
+          title: chapters[index].title,
+          index: index,
+          id: chapters[index].id,
+        ),
         growable: false,
       );
       final saved = results[1] as BookSourceReadingProgress?;
@@ -600,20 +624,122 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   }
 
   Future<void> _resolveShelfBook() async {
-    final shelfBook = await _shelfService.findShelfBook(
-      sourceId: widget.source.id,
-      sourceBookId: widget.book.id,
-    );
+    Book? shelfBook;
+    try {
+      shelfBook = await _shelfService.findShelfBook(
+        sourceId: widget.source.id,
+        sourceBookId: widget.book.id,
+      );
+    } catch (error) {
+      debugPrint('resolve source shelf book failed: $error');
+      return;
+    }
     if (!mounted) return;
     setState(() => _shelfBookId = shelfBook?.id);
     final shelfBookId = _shelfBookId;
     if (shelfBookId == null) return;
     try {
-      final bookmarks = await _bookmarkDao.getBookmarksForBook(shelfBookId);
-      if (mounted) setState(() => _bookmarks = bookmarks);
+      final results = await Future.wait<Object>([
+        _bookmarkDao.getBookmarksForBook(shelfBookId),
+        _bookNoteDao.selectBookNotesByBookId(shelfBookId),
+      ]);
+      if (mounted) {
+        setState(() {
+          _bookmarks = results[0] as List<Bookmark>;
+          _annotations = results[1] as List<BookNote>;
+          _annotationRevision++;
+        });
+      }
     } catch (error) {
-      debugPrint('load source bookmarks failed: $error');
+      debugPrint('load source bookmarks and annotations failed: $error');
     }
+  }
+
+  Future<void> _reloadAnnotations() async {
+    final bookId = _shelfBookId;
+    if (bookId == null) return;
+    final annotations = await _bookNoteDao.selectBookNotesByBookId(bookId);
+    if (!mounted) return;
+    setState(() {
+      _annotations = annotations;
+      _annotationRevision++;
+    });
+  }
+
+  bool _ensureAnnotationBook() {
+    if (_shelfBookId != null) return true;
+    showSideToast(
+      context,
+      context.l10n.readerAnnotationShelfRequired,
+      duration: const Duration(milliseconds: 2200),
+      icon: Icons.add_to_photos_outlined,
+      kind: SideToastKind.info,
+    );
+    return false;
+  }
+
+  Future<void> _saveTextAnnotation(
+    ReaderSelectionSnapshot selection,
+    ReaderAnnotationEditorResult annotation,
+  ) async {
+    if (!_ensureAnnotationBook() || _annotationBusy) return;
+    final bookId = _shelfBookId!;
+    setState(() => _annotationBusy = true);
+    try {
+      final now = DateTime.now();
+      await _bookNoteDao.insertBookNote(
+        BookNote(
+          bookId: bookId,
+          content: selection.selectedText,
+          cfi: selection.cfiFor(annotation.type),
+          canonicalLocator: selection.canonicalLocatorJson,
+          chapter: selection.chapterTitle,
+          type: annotation.type,
+          color: annotation.colorHex,
+          readerNote: annotation.note,
+          pageNumber: selection.pageIndex,
+          startOffset: selection.startOffset,
+          endOffset: selection.endOffset,
+          createTime: now,
+          updateTime: now,
+        ),
+      );
+      await _reloadAnnotations();
+      if (!mounted) return;
+      showSideToast(
+        context,
+        context.l10n.readerAnnotationSaved,
+        duration: const Duration(milliseconds: 1600),
+        icon: annotation.type == readerAnnotationTypeNote
+            ? Icons.mode_comment_rounded
+            : Icons.auto_awesome_rounded,
+        kind: SideToastKind.success,
+      );
+    } catch (error) {
+      debugPrint('save source annotation failed: $error');
+    } finally {
+      if (mounted) setState(() => _annotationBusy = false);
+    }
+  }
+
+  Future<void> _deleteAnnotation(BookNote annotation) async {
+    final id = annotation.id;
+    if (id == null) return;
+    await _bookNoteDao.deleteBookNoteById(id);
+    if (!mounted) return;
+    setState(() {
+      _annotations = _annotations
+          .where((candidate) => candidate.id != id)
+          .toList(growable: false);
+      _annotationRevision++;
+    });
+    showSideToast(
+      context,
+      context.l10n.readerAnnotationDeleted,
+      duration: const Duration(milliseconds: 1600),
+      icon: Icons.delete_outline_rounded,
+      kind: SideToastKind.success,
+    );
   }
 
   Future<void> _loadChapter(
@@ -892,7 +1018,20 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         ? 0
         : targetPage / (_verticalPageCount - 1);
     await WidgetsBinding.instance.endOfFrame;
-    if (!mounted || !_verticalChapterScrollController.isAttached) return;
+    if (!mounted) return;
+    if (_scrollByChapter) {
+      if (_verticalPageScrollController.isAttached) {
+        await _verticalPageScrollController.scrollTo(
+          index: targetPage,
+          duration: const Duration(milliseconds: 320),
+          curve: Curves.easeOutCubic,
+        );
+      }
+      unawaited(_preloadAround(index));
+      _scheduleProgressSave();
+      return;
+    }
+    if (!_verticalChapterScrollController.isAttached) return;
     await _verticalChapterScrollController.scrollTo(
       index: index,
       duration: const Duration(milliseconds: 320),
@@ -925,6 +1064,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   }
 
   void _toggleControls() {
+    if (_annotationInteractionActive) return;
     _controlsTimer?.cancel();
     setState(() => _controlsVisible = !_controlsVisible);
   }
@@ -989,6 +1129,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   }
 
   void _handleHorizontalSwipe(DragEndDetails details) {
+    if (_annotationInteractionActive) return;
     final velocity = details.primaryVelocity ?? 0;
     if (velocity < -350 && _chapterIndex < _chapters.length - 1) {
       unawaited(_loadChapter(_chapterIndex + 1));
@@ -998,6 +1139,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   }
 
   void _handlePagedSwipe(DragEndDetails details) {
+    if (_annotationInteractionActive) return;
     final velocity = details.primaryVelocity ?? 0;
     if (velocity < -350) {
       unawaited(_turnForward());
@@ -1092,12 +1234,14 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     });
   }
 
-  void _handleSlidePageTap(TapUpDetails details, double width) {
-    if (_pageController.hasClients) {
+  void _handleReaderTap(Offset localPosition) {
+    if (_pageMode == BookSourcePageMode.horizontalSlide &&
+        _pageController.hasClients) {
       final page = _pageController.page;
       if (page != null && (page - page.round()).abs() > 0.001) return;
     }
-    _handlePageTap(details, width);
+    final width = MediaQuery.sizeOf(context).width;
+    if (width > 0) _handlePageTapFraction(localPosition.dx / width);
   }
 
   Future<void> _turnForward() async {
@@ -1289,6 +1433,28 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     );
   }
 
+  Future<void> _jumpToAnnotation(BookNote annotation) {
+    final chapterId = readerAnnotationChapterId(annotation);
+    var chapterIndex = chapterId == null
+        ? -1
+        : _chapters.indexWhere((chapter) => chapter.id == chapterId);
+    if (chapterIndex < 0 && annotation.chapter.trim().isNotEmpty) {
+      chapterIndex = _chapters.indexWhere(
+        (chapter) => chapter.title.trim() == annotation.chapter.trim(),
+      );
+    }
+    return _jumpToBookmark(
+      Bookmark(
+        bookId: annotation.bookId,
+        pageNumber: annotation.pageNumber ?? 0,
+        canonicalLocator: annotation.canonicalLocator,
+        chapterIndex: chapterIndex < 0 ? null : chapterIndex,
+        chapterTitle: annotation.chapter,
+        excerpt: annotation.content,
+      ),
+    );
+  }
+
   Future<void> _showCatalog() async {
     if (_chapters.isEmpty) return;
     _controlsTimer?.cancel();
@@ -1312,6 +1478,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
             chapters: navigationChapters,
             currentChapterIndex: _chapterIndex,
             bookmarks: _bookmarks,
+            annotations: _annotations,
             currentAnchorKey: _currentBookmarkAnchorKey,
             onChapterSelected: (index) {
               Navigator.of(sheetContext).pop();
@@ -1328,6 +1495,14 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
             },
             onBookmarkDeleted: (bookmark) async {
               await _deleteBookmark(bookmark);
+              if (mounted) setSheetState(() {});
+            },
+            onAnnotationSelected: (annotation) {
+              Navigator.of(sheetContext).pop();
+              unawaited(_jumpToAnnotation(annotation));
+            },
+            onAnnotationDeleted: (annotation) async {
+              await _deleteAnnotation(annotation);
               if (mounted) setSheetState(() {});
             },
           ),
@@ -1508,6 +1683,168 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     ReaderTopBarStyle.floating => context.l10n.readerTopBarStyleFloatingHint,
     ReaderTopBarStyle.hidden => context.l10n.readerTopBarStyleHiddenHint,
   };
+
+  ReaderAloudController? _ensureReaderAloudController() {
+    final existing = _readerAloudController;
+    if (existing != null) return existing;
+    ReaderAloudService aloudService;
+    try {
+      aloudService = context.read<ReaderAloudService>();
+    } on ProviderNotFoundException {
+      return null;
+    }
+    final controller = ReaderAloudController(
+      engine: aloudService,
+      notificationSink: AndroidReaderAloudNotification.instance,
+      source: CallbackReaderAloudSource(
+        bookTitle: widget.book.title,
+        chapterCount: () => _chapters.length,
+        currentPosition: () async {
+          if (_chapters.isEmpty) {
+            return const ReaderAloudPosition(chapterIndex: 0, offset: 0);
+          }
+          final chapterIndex = _chapterIndex.clamp(0, _chapters.length - 1);
+          final content = await _continuousContentFor(chapterIndex);
+          final text =
+              _readableChapterText[chapterIndex] ??
+              await readableBookSourceChapterTextAsync(
+                content,
+                fallbackTitle: _chapters[chapterIndex].title,
+              );
+          final offset =
+              _currentTextOffset ??
+              (text.length * _currentReadingProgress).round();
+          return ReaderAloudPosition(
+            chapterIndex: chapterIndex,
+            offset: offset.clamp(0, text.length),
+          );
+        },
+        loadChapter: (index) async {
+          if (index < 0 || index >= _chapters.length) return null;
+          final content = await _continuousContentFor(index);
+          final text =
+              _readableChapterText[index] ??
+              await readableBookSourceChapterTextAsync(
+                content,
+                fallbackTitle: _chapters[index].title,
+              );
+          return ReaderAloudChapter(
+            index: index,
+            id: _chapters[index].id,
+            title: _chapters[index].title,
+            text: text,
+          );
+        },
+        revealPosition: _revealReaderAloudPosition,
+        persistPosition: _persistReaderAloudPosition,
+      ),
+    )..addListener(_onReaderAloudChanged);
+    _readerAloudController = controller;
+    return controller;
+  }
+
+  void _onReaderAloudChanged() {
+    final active = _readerAloudController?.isActive ?? false;
+    final highlight = _readerAloudController?.highlight;
+    if (!mounted) return;
+    if (active == _readerAloudActive && highlight == _readerAloudHighlight) {
+      return;
+    }
+    setState(() {
+      _readerAloudActive = active;
+      _readerAloudHighlight = highlight;
+    });
+  }
+
+  Future<void> _revealReaderAloudPosition(ReaderAloudPosition position) async {
+    if (!mounted || _chapters.isEmpty) return;
+    final chapterIndex = position.chapterIndex.clamp(0, _chapters.length - 1);
+    final content = await _continuousContentFor(chapterIndex);
+    if (!mounted) return;
+    final text =
+        _readableChapterText[chapterIndex] ??
+        await readableBookSourceChapterTextAsync(
+          content,
+          fallbackTitle: _chapters[chapterIndex].title,
+        );
+    final offset = position.offset.clamp(0, text.length);
+    final progress = text.isEmpty ? 0.0 : offset / text.length;
+
+    if (_pageMode == BookSourcePageMode.verticalScroll) {
+      await _jumpToVerticalChapter(
+        chapterIndex,
+        textOffset: offset,
+        progress: progress,
+      );
+      return;
+    }
+    if (chapterIndex != _chapterIndex || _pagedViewportSize.isEmpty) {
+      await _loadChapter(chapterIndex, restoreProgress: progress);
+      return;
+    }
+    final layout = _pagedLayoutFor(chapterIndex, content, _pagedViewportSize);
+    final pageIndex = bookSourcePageIndexForOffset(layout.pages, offset);
+    _paginatedPages = layout.pages;
+    _setPagedIndex(pageIndex, jumpPageView: true);
+  }
+
+  Future<void> _persistReaderAloudPosition(ReaderAloudPosition position) async {
+    if (_chapters.isEmpty) return;
+    final chapterIndex = position.chapterIndex.clamp(0, _chapters.length - 1);
+    final content = await _continuousContentFor(chapterIndex);
+    final text =
+        _readableChapterText[chapterIndex] ??
+        await readableBookSourceChapterTextAsync(
+          content,
+          fallbackTitle: _chapters[chapterIndex].title,
+        );
+    final progress = text.isEmpty
+        ? 0.0
+        : (position.offset / text.length).clamp(0.0, 1.0);
+    final progressSnapshot = BookSourceReadingProgress(
+      chapterId: _chapters[chapterIndex].id,
+      chapterIndex: chapterIndex,
+      chapterProgress: progress,
+      updatedAt: DateTime.now().toUtc(),
+    );
+    final shelfBookId = _shelfBookId;
+    final chapterCount = _chapters.length;
+    _progressSaveQueue = _progressSaveQueue.then((_) async {
+      try {
+        await widget.progressStore.save(
+          sourceId: widget.source.id,
+          bookId: widget.book.id,
+          progress: progressSnapshot,
+        );
+        if (shelfBookId != null) {
+          await _shelfService.updateShelfProgress(
+            shelfBookId: shelfBookId,
+            chapterIndex: chapterIndex,
+            chapterCount: chapterCount,
+            chapterProgress: progress,
+          );
+        }
+      } catch (error) {
+        debugPrint('save source reader aloud progress failed: $error');
+      }
+    });
+    await _progressSaveQueue;
+  }
+
+  Future<void> _showReaderAloudPanel() async {
+    final controller = _ensureReaderAloudController();
+    if (controller == null) return;
+    final ttsService = context.read<TtsService>();
+    final aloudService = context.read<ReaderAloudService>();
+    await showReaderAloudPanelSheet(
+      context: context,
+      controller: controller,
+      ttsService: ttsService,
+      aloudService: aloudService,
+      palette: _readerTheme,
+      themeData: _readerThemeData,
+    );
+  }
 
   Future<void> _showReadingSettings() async {
     _controlsTimer?.cancel();
@@ -1717,9 +2054,21 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
                 child: Stack(
                   children: [
                     Positioned.fill(
-                      child: Semantics(
-                        label: widget.book.title,
-                        child: _buildBodyCrossfade(),
+                      child: ReaderTapObserver(
+                        key: const ValueKey('book-source-reader-tap-observer'),
+                        enabled:
+                            _readerFontReady &&
+                            !_loadingCatalog &&
+                            (!_loadingContent || _content != null) &&
+                            _error == null &&
+                            _chapters.isNotEmpty &&
+                            _content != null &&
+                            !_annotationInteractionActive,
+                        onTap: _handleReaderTap,
+                        child: Semantics(
+                          label: widget.book.title,
+                          child: _buildBodyCrossfade(),
+                        ),
                       ),
                     ),
                     if (_showLeafFloatingStatus &&
@@ -1764,6 +2113,12 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
                       onTableOfContents: _chapters.isEmpty
                           ? null
                           : _showCatalog,
+                      onReadAloud:
+                          _chapters.isEmpty || !isReaderAloudPlatformSupported
+                          ? null
+                          : () => unawaited(_showReaderAloudPanel()),
+                      readAloudTooltip: context.l10n.ttsReading,
+                      readAloudActive: _readerAloudActive,
                       onSettings: _showReadingSettings,
                       backTooltip: MaterialLocalizations.of(
                         context,
@@ -2171,11 +2526,58 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     _scheduleProgressSave();
   }
 
+  Widget _buildAnnotatedTextPage(
+    BookSourceTextPage page, {
+    required int chapterIndex,
+    required int pageIndex,
+    required BookSourceChapterContent content,
+  }) {
+    final chapterTitle = content.title.isEmpty
+        ? _chapters[chapterIndex].title
+        : content.title;
+    final sourceText =
+        _readableChapterText[chapterIndex] ??
+        readableBookSourceChapterText(
+          content,
+          fallbackTitle: _chapters[chapterIndex].title,
+        );
+    return ReaderAnnotatedTextPage(
+      key: ValueKey(
+        'source-annotated-page:${_chapters[chapterIndex].id}:$pageIndex:'
+        '${page.startOffset}:${page.endOffset}',
+      ),
+      page: page,
+      sourceText: sourceText,
+      chapterId: _chapters[chapterIndex].id,
+      chapterTitle: chapterTitle,
+      chapterIndex: chapterIndex,
+      pageIndex: pageIndex,
+      bookId: _shelfBookId,
+      format: content.contentType == 'text/html'
+          ? BookFormat.html
+          : BookFormat.txt,
+      renderer: ReaderRendererType.flutterNative,
+      palette: _readerTheme,
+      bodyStyle: _bodyTextStyle,
+      flowStyle: _bodyTextFlowStyle(),
+      annotations: _annotations,
+      spokenHighlight: _readerAloudHighlight,
+      onSaveTextAnnotation: _saveTextAnnotation,
+      onAnnotationUnavailable: () => _ensureAnnotationBook(),
+      onInteractionChanged: (active) {
+        if (!mounted || _annotationInteractionActive == active) return;
+        setState(() => _annotationInteractionActive = active);
+      },
+    );
+  }
+
   Widget _buildVerticalPageCell(
     BookSourceTextPage page,
-    Size viewport,
-    String chapterTitle,
-  ) {
+    Size viewport, {
+    required int chapterIndex,
+    required int pageIndex,
+    required BookSourceChapterContent content,
+  }) {
     return SizedBox(
       key: ValueKey(
         'book-source-vertical-page:${page.startOffset}:${page.endOffset}:'
@@ -2190,11 +2592,11 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
               maxWidth: readerMaxTextContentWidth,
             ),
             child: SizedBox.expand(
-              child: ReaderTextPageContent(
-                page: page,
-                chapterTitle: chapterTitle,
-                bodyStyle: _bodyTextStyle,
-                flowStyle: _bodyTextFlowStyle(),
+              child: _buildAnnotatedTextPage(
+                page,
+                chapterIndex: chapterIndex,
+                pageIndex: pageIndex,
+                content: content,
               ),
             ),
           ),
@@ -2207,13 +2609,16 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     final cached = _prefetchedContent[chapterIndex];
     Widget buildContent(BookSourceChapterContent content) {
       final layout = _verticalLayoutFor(chapterIndex, content, viewport);
-      final chapterTitle = content.title.isEmpty
-          ? _chapters[chapterIndex].title
-          : content.title;
       return Column(
         children: [
-          for (final page in layout.pages)
-            _buildVerticalPageCell(page, viewport, chapterTitle),
+          for (var pageIndex = 0; pageIndex < layout.pages.length; pageIndex++)
+            _buildVerticalPageCell(
+              layout.pages[pageIndex],
+              viewport,
+              chapterIndex: chapterIndex,
+              pageIndex: pageIndex,
+              content: content,
+            ),
         ],
       );
     }
@@ -2268,7 +2673,6 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     _restoreVerticalPosition(layout, wholeBook: false);
     return ReaderVerticalPagingSurface(
       surfaceKey: const ValueKey('book-source-reader-surface'),
-      onTap: _toggleControls,
       onHorizontalDragEnd: _handleHorizontalSwipe,
       child: ScrollablePositionedList.builder(
         key: ValueKey(
@@ -2288,9 +2692,9 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         itemBuilder: (context, index) => _buildVerticalPageCell(
           layout.pages[index],
           viewport,
-          _content!.title.isEmpty
-              ? _chapters[_chapterIndex].title
-              : _content!.title,
+          chapterIndex: _chapterIndex,
+          pageIndex: index,
+          content: _content!,
         ),
       ),
     );
@@ -2316,7 +2720,6 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     _restoreVerticalPosition(currentLayout, wholeBook: true);
     return ReaderVerticalPagingSurface(
       surfaceKey: const ValueKey('book-source-reader-surface'),
-      onTap: _toggleControls,
       child: ScrollablePositionedList.builder(
         key: ValueKey(
           'source-vertical-book:${viewport.width.toStringAsFixed(1)}:'
@@ -2495,11 +2898,11 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
               maxWidth: readerMaxTextContentWidth,
             ),
             child: SizedBox.expand(
-              child: ReaderTextPageContent(
-                page: page,
-                chapterTitle: chapterTitle,
-                bodyStyle: _bodyTextStyle,
-                flowStyle: _bodyTextFlowStyle(),
+              child: _buildAnnotatedTextPage(
+                page,
+                chapterIndex: resolvedIndex,
+                pageIndex: pageIndex,
+                content: resolvedContent,
               ),
             ),
           ),
@@ -2671,8 +3074,12 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     ),
   );
 
-  void _handlePageTap(TapUpDetails details, double width) {
-    final x = details.localPosition.dx / width;
+  void _handlePageTapFraction(double x) {
+    if (_annotationInteractionActive) return;
+    if (_pageMode == BookSourcePageMode.verticalScroll) {
+      if (x >= 0.28 && x <= 0.72) _toggleControls();
+      return;
+    }
     if (x < 0.28) {
       unawaited(_turnFromTap(forward: false));
     } else if (x > 0.72) {
@@ -2732,7 +3139,6 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       label: _pageModeHint(BookSourcePageMode.instantPage),
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTapUp: (details) => _handlePageTap(details, constraints.maxWidth),
         onHorizontalDragEnd: _handlePagedSwipe,
         child: _buildPageLeaf(
           _paginatedPages[_pageIndex],
@@ -2775,6 +3181,9 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       child: PageView.builder(
         key: ValueKey('source-slide:${_chapters[_chapterIndex].id}'),
         controller: _pageController,
+        physics: _annotationInteractionActive
+            ? const NeverScrollableScrollPhysics()
+            : null,
         itemCount: _pageViewLeading + _pageCount + trailing,
         onPageChanged: (viewIndex) {
           if (_ignoreSlidePageChanges) return;
@@ -2833,12 +3242,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
               layoutFingerprint: _paginationKey!,
             );
           }
-          return GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            onTapUp: (details) =>
-                _handleSlidePageTap(details, MediaQuery.sizeOf(context).width),
-            child: child,
-          );
+          return child;
         },
       ),
     );
@@ -2915,19 +3319,15 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
                 chapterIndex: _chapterIndex - 1,
                 chapterContent: backwardData.content,
               );
-        return GestureDetector(
-          behavior: HitTestBehavior.translucent,
-          onTapUp: (details) => _handlePageTap(details, constraints.maxWidth),
-          child: ReaderShaderPageCurl(
-            key: ValueKey('source-curl:${widget.source.id}:${widget.book.id}'),
-            controller: _pageCurlController,
-            paperColor: _readerTheme.background,
-            currentPage: currentSnapshot,
-            forwardPage: forwardSnapshot,
-            backwardPage: backwardSnapshot,
-            onTurnForward: _turnForward,
-            onTurnBackward: _turnBackward,
-          ),
+        return ReaderShaderPageCurl(
+          key: ValueKey('source-curl:${widget.source.id}:${widget.book.id}'),
+          controller: _pageCurlController,
+          paperColor: _readerTheme.background,
+          currentPage: currentSnapshot,
+          forwardPage: forwardSnapshot,
+          backwardPage: backwardSnapshot,
+          onTurnForward: _turnForward,
+          onTurnBackward: _turnBackward,
         );
       },
     );
@@ -3173,11 +3573,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
           onTurnBackward: () {},
         );
 
-        return GestureDetector(
-          behavior: HitTestBehavior.translucent,
-          onTapUp: (details) => _handlePageTap(details, constraints.maxWidth),
-          child: _buildSourceSpread(left: left, right: right),
-        );
+        return _buildSourceSpread(left: left, right: right);
       },
     );
   }

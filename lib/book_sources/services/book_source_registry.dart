@@ -68,9 +68,14 @@ class BookSourceRegistry {
         apiBaseUrl: source.apiBaseUrl,
         iconUrl: source.iconUrl,
         websiteUrl: source.websiteUrl,
+        operatorName: source.operatorName,
+        contactUrl: source.contactUrl,
+        contentLicense: source.contentLicense,
+        rightsStatement: source.rightsStatement,
         protocolVersion: source.protocolVersion,
         languages: source.languages,
         capabilities: source.capabilities,
+        maxCatalogPageSize: source.maxCatalogPageSize,
         enabled: previous.enabled,
         addedAt: previous.addedAt,
       );
@@ -115,6 +120,25 @@ class BookSourceRegistry {
 
   Future<List<RegisteredBookSource>> remove(String id) async {
     final sources = (await load()).where((source) => source.id != id).toList();
+    await _save(sources);
+    _changesController.add(null);
+    return load();
+  }
+
+  /// Applies an exact record-level winner received from the user's sync space.
+  ///
+  /// Unlike manifest refresh, sync must preserve the remote device's enabled
+  /// state and added time because those fields are part of the synced record.
+  Future<List<RegisteredBookSource>> applySynced(
+    RegisteredBookSource source,
+  ) async {
+    final sources = (await load()).toList();
+    final index = sources.indexWhere((item) => item.id == source.id);
+    if (index < 0) {
+      sources.add(source);
+    } else {
+      sources[index] = source;
+    }
     await _save(sources);
     _changesController.add(null);
     return load();

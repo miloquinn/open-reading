@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../core/reader/reader_annotation.dart';
+import '../models/book_note.dart';
 import '../models/bookmark.dart';
 import '../utils/localization_extension.dart';
 import '../utils/reader_themes.dart';
@@ -9,11 +11,13 @@ class ReaderNavigationChapter {
   const ReaderNavigationChapter({
     required this.title,
     required this.index,
+    this.id,
     this.depth = 0,
   });
 
   final String title;
   final int index;
+  final String? id;
   final int depth;
 }
 
@@ -27,6 +31,9 @@ class ReaderNavigationSheet extends StatefulWidget {
     required this.onChapterSelected,
     required this.onBookmarkSelected,
     required this.onBookmarkDeleted,
+    this.annotations = const [],
+    this.onAnnotationSelected,
+    this.onAnnotationDeleted,
     this.currentAnchorKey,
   });
 
@@ -34,10 +41,13 @@ class ReaderNavigationSheet extends StatefulWidget {
   final List<ReaderNavigationChapter> chapters;
   final int currentChapterIndex;
   final List<Bookmark> bookmarks;
+  final List<BookNote> annotations;
   final String? currentAnchorKey;
   final ValueChanged<int> onChapterSelected;
   final ValueChanged<Bookmark> onBookmarkSelected;
   final ValueChanged<Bookmark> onBookmarkDeleted;
+  final ValueChanged<BookNote>? onAnnotationSelected;
+  final ValueChanged<BookNote>? onAnnotationDeleted;
 
   @override
   State<ReaderNavigationSheet> createState() => _ReaderNavigationSheetState();
@@ -61,7 +71,7 @@ class _ReaderNavigationSheetState extends State<ReaderNavigationSheet>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this)
+    _tabController = TabController(length: 3, vsync: this)
       ..addListener(_handleTabChanged);
     _treeEntries = _computeTreeEntries();
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToCurrent());
@@ -268,6 +278,7 @@ class _ReaderNavigationSheetState extends State<ReaderNavigationSheet>
                     children: [
                       _buildCatalog(themedContext),
                       _buildBookmarks(themedContext),
+                      _buildAnnotations(themedContext),
                     ],
                   ),
                 ),
@@ -362,6 +373,7 @@ class _ReaderNavigationSheetState extends State<ReaderNavigationSheet>
               child: _tabLabel(label: context.l10n.readerToolbarTOC),
             ),
             Tab(height: 42, child: _tabLabel(label: context.l10n.bookmarks)),
+            Tab(height: 42, child: _tabLabel(label: context.l10n.notes)),
           ],
         ),
       ),
@@ -643,6 +655,164 @@ class _ReaderNavigationSheetState extends State<ReaderNavigationSheet>
             bookmark.anchorKey == widget.currentAnchorKey;
         return _buildBookmarkTile(context, bookmark, current);
       },
+    );
+  }
+
+  Widget _buildAnnotations(BuildContext context) {
+    final annotations = widget.annotations
+        .where((annotation) => annotation.type != readerAnnotationTypeInk)
+        .toList(growable: false);
+    if (annotations.isEmpty) {
+      return _emptyState(
+        context,
+        title: context.l10n.readerNoAnnotations,
+        message: context.l10n.readerNoAnnotationsHint,
+      );
+    }
+    annotations.sort((a, b) {
+      final chapter = _annotationChapterPosition(
+        a,
+      ).compareTo(_annotationChapterPosition(b));
+      if (chapter != 0) return chapter;
+      return (a.startOffset ?? 0).compareTo(b.startOffset ?? 0);
+    });
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 24),
+      itemCount: annotations.length,
+      separatorBuilder: (_, _) => const SizedBox(height: 9),
+      itemBuilder: (context, index) =>
+          _buildAnnotationTile(context, annotations[index]),
+    );
+  }
+
+  int _annotationChapterPosition(BookNote annotation) {
+    final chapterId = readerAnnotationChapterId(annotation);
+    if (chapterId != null) {
+      final match = widget.chapters.indexWhere(
+        (chapter) => chapter.id == chapterId,
+      );
+      if (match >= 0) return widget.chapters[match].index;
+    }
+    final chapterTitle = annotation.chapter.trim();
+    if (chapterTitle.isNotEmpty) {
+      final match = widget.chapters.indexWhere(
+        (chapter) => chapter.title.trim() == chapterTitle,
+      );
+      if (match >= 0) return widget.chapters[match].index;
+    }
+    return 0x3fffffff;
+  }
+
+  Widget _buildAnnotationTile(BuildContext context, BookNote annotation) {
+    final color = readerAnnotationColor(annotation.color, widget.palette);
+    final title = annotation.chapter.trim().isEmpty
+        ? context.l10n.readerChapterFallback((annotation.pageNumber ?? 0) + 1)
+        : annotation.chapter.trim();
+    final note = annotation.readerNote?.trim() ?? '';
+    final excerpt = note.isNotEmpty
+        ? note
+        : annotation.content.replaceAll(RegExp(r'\s+'), ' ').trim();
+    final date = annotation.createTime ?? annotation.updateTime;
+    final dateText =
+        '${date.year}-${date.month.toString().padLeft(2, '0')}-'
+        '${date.day.toString().padLeft(2, '0')}';
+    final typeLabel = switch (annotation.type) {
+      readerAnnotationTypeUnderline => context.l10n.noteTypeUnderline,
+      readerAnnotationTypeNote => context.l10n.noteTypeNote,
+      _ => context.l10n.noteTypeHighlight,
+    };
+    return Material(
+      color: widget.palette.controlBar.withValues(alpha: 0.72),
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        onTap: widget.onAnnotationSelected == null
+            ? null
+            : () => widget.onAnnotationSelected!(annotation),
+        borderRadius: BorderRadius.circular(18),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(14, 13, 8, 13),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 4,
+                height: 54,
+                margin: const EdgeInsets.only(right: 12),
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(99),
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          annotation.type == readerAnnotationTypeNote
+                              ? Icons.mode_comment_outlined
+                              : annotation.type == readerAnnotationTypeUnderline
+                              ? Icons.format_underlined_rounded
+                              : Icons.auto_awesome_rounded,
+                          size: 17,
+                          color: color,
+                        ),
+                        const SizedBox(width: 7),
+                        Expanded(
+                          child: Text(
+                            title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.titleSmall
+                                ?.copyWith(fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (excerpt.isNotEmpty) ...[
+                      const SizedBox(height: 5),
+                      Text(
+                        excerpt,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: widget.palette.secondaryText,
+                          height: 1.45,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 7),
+                    Text(
+                      '$typeLabel · $dateText',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: widget.palette.secondaryText,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              PopupMenuButton<String>(
+                tooltip: MaterialLocalizations.of(context).showMenuTooltip,
+                onSelected: (value) {
+                  if (value == 'delete') {
+                    widget.onAnnotationDeleted?.call(annotation);
+                  }
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: 'delete',
+                    enabled: widget.onAnnotationDeleted != null,
+                    child: Text(
+                      MaterialLocalizations.of(context).deleteButtonTooltip,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

@@ -1,6 +1,7 @@
 // 文件说明：笔记与高亮 DAO，负责书摘、批注和高亮数据的本地读写。
 // 技术要点：服务层。
 
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:xxread/models/book_note.dart';
 import 'package:xxread/services/core/database_service.dart';
 
@@ -12,7 +13,13 @@ import 'package:xxread/services/core/database_service.dart';
 /// - 搜索和筛选功能
 /// - 统计信息获取
 class BookNoteDao {
-  final _dbService = DatabaseService();
+  final Future<DatabaseExecutor> Function() _databaseProvider;
+
+  BookNoteDao({Future<DatabaseExecutor> Function()? databaseProvider})
+    : _databaseProvider =
+          databaseProvider ?? (() => DatabaseService().database);
+
+  Future<DatabaseExecutor> get _database => _databaseProvider();
 
   /// 插入或更新注释
   ///
@@ -28,11 +35,24 @@ class BookNoteDao {
       return bookNote.id!;
     }
 
-    // 检查相同CFI位置是否已有注释
-    List<BookNote> existingNotes = await selectBookNoteByCfiAndBookId(
-      bookNote.cfi,
-      bookNote.bookId,
+    final existingByAnnotationId = await _selectBookNoteByAnnotationIdOrNull(
+      bookNote.annotationId,
     );
+    if (existingByAnnotationId != null) {
+      await updateBookNoteById(
+        bookNote.copyWith(id: existingByAnnotationId.id),
+      );
+      return existingByAnnotationId.id!;
+    }
+
+    // Ink strokes at the same locator are independent records. Text
+    // annotations retain the historical merge-by-CFI behavior.
+    final existingNotes = bookNote.type == 'ink'
+        ? const <BookNote>[]
+        : (await selectBookNoteByCfiAndBookId(
+            bookNote.cfi,
+            bookNote.bookId,
+          )).where((note) => note.type != 'ink').toList();
 
     if (existingNotes.isNotEmpty) {
       // 合并现有注释
@@ -42,7 +62,7 @@ class BookNoteDao {
       return existing.id!;
     }
 
-    final db = await _dbService.database;
+    final db = await _database;
     return await db.insert('book_notes', bookNote.toMap());
   }
 
@@ -51,7 +71,7 @@ class BookNoteDao {
     String cfi,
     int bookId,
   ) async {
-    final db = await _dbService.database;
+    final db = await _database;
     final List<Map<String, dynamic>> maps = await db.query(
       'book_notes',
       where: 'cfi = ? AND book_id = ?',
@@ -62,7 +82,7 @@ class BookNoteDao {
 
   /// 根据书籍ID获取所有注释
   Future<List<BookNote>> selectBookNotesByBookId(int bookId) async {
-    final db = await _dbService.database;
+    final db = await _database;
     final List<Map<String, dynamic>> maps = await db.query(
       'book_notes',
       where: 'book_id = ?',
@@ -74,7 +94,7 @@ class BookNoteDao {
 
   /// 根据书籍ID和类型获取注释
   Future<List<BookNote>> selectBookNotesByType(int bookId, String type) async {
-    final db = await _dbService.database;
+    final db = await _database;
     final List<Map<String, dynamic>> maps = await db.query(
       'book_notes',
       where: 'book_id = ? AND type = ?',
@@ -89,7 +109,7 @@ class BookNoteDao {
     int bookId,
     int pageNumber,
   ) async {
-    final db = await _dbService.database;
+    final db = await _database;
     final List<Map<String, dynamic>> maps = await db.query(
       'book_notes',
       where: 'book_id = ? AND page_number = ?',
@@ -104,7 +124,7 @@ class BookNoteDao {
     int bookId,
     String chapter,
   ) async {
-    final db = await _dbService.database;
+    final db = await _database;
     final List<Map<String, dynamic>> maps = await db.query(
       'book_notes',
       where: 'book_id = ? AND chapter = ?',
@@ -116,7 +136,7 @@ class BookNoteDao {
 
   /// 更新注释
   Future<void> updateBookNoteById(BookNote bookNote) async {
-    final db = await _dbService.database;
+    final db = await _database;
     await db.update(
       'book_notes',
       bookNote.copyWith(updateTime: DateTime.now()).toMap(),
@@ -127,7 +147,7 @@ class BookNoteDao {
 
   /// 根据ID查询注释
   Future<BookNote> selectBookNoteById(int id) async {
-    final db = await _dbService.database;
+    final db = await _database;
     final List<Map<String, dynamic>> maps = await db.query(
       'book_notes',
       where: 'id = ?',
@@ -139,21 +159,43 @@ class BookNoteDao {
     return BookNote.fromMap(maps[0]);
   }
 
+  /// Looks up an annotation by its stable UUID.
+  Future<BookNote> selectBookNoteByAnnotationId(String annotationId) async {
+    final note = await _selectBookNoteByAnnotationIdOrNull(annotationId);
+    if (note == null) {
+      throw Exception('BookNote with annotation id $annotationId not found');
+    }
+    return note;
+  }
+
+  Future<BookNote?> _selectBookNoteByAnnotationIdOrNull(
+    String annotationId,
+  ) async {
+    final db = await _database;
+    final maps = await db.query(
+      'book_notes',
+      where: 'annotation_id = ?',
+      whereArgs: [annotationId],
+      limit: 1,
+    );
+    return maps.isEmpty ? null : BookNote.fromMap(maps.first);
+  }
+
   /// 删除注释
   Future<void> deleteBookNoteById(int id) async {
-    final db = await _dbService.database;
+    final db = await _database;
     await db.delete('book_notes', where: 'id = ?', whereArgs: [id]);
   }
 
   /// 删除书籍的所有注释
   Future<void> deleteBookNotesByBookId(int bookId) async {
-    final db = await _dbService.database;
+    final db = await _database;
     await db.delete('book_notes', where: 'book_id = ?', whereArgs: [bookId]);
   }
 
   /// 搜索注释内容
   Future<List<BookNote>> searchBookNotes(int bookId, String query) async {
-    final db = await _dbService.database;
+    final db = await _database;
     final List<Map<String, dynamic>> maps = await db.query(
       'book_notes',
       where: 'book_id = ? AND (content LIKE ? OR reader_note LIKE ?)',
@@ -165,7 +207,7 @@ class BookNoteDao {
 
   /// 获取所有书籍的注释统计
   Future<List<Map<String, int>>> selectAllBookIdAndNotes() async {
-    final db = await _dbService.database;
+    final db = await _database;
     final List<Map<String, dynamic>> maps = await db.rawQuery('''
       SELECT book_id, COUNT(id) AS number_of_notes 
       FROM book_notes 
@@ -183,7 +225,7 @@ class BookNoteDao {
 
   /// 获取注释和书籍总数统计
   Future<Map<String, int>> selectNumberOfNotesAndBooks() async {
-    final db = await _dbService.database;
+    final db = await _database;
     final List<Map<String, dynamic>> maps = await db.rawQuery('''
       SELECT COUNT(id) AS number_of_notes, 
              COUNT(DISTINCT book_id) AS number_of_books 
@@ -197,7 +239,7 @@ class BookNoteDao {
 
   /// 获取按类型分组的统计
   Future<Map<String, int>> selectNoteStatsByType(int bookId) async {
-    final db = await _dbService.database;
+    final db = await _database;
     final List<Map<String, dynamic>> maps = await db.rawQuery(
       '''
       SELECT type, COUNT(id) AS count 
@@ -220,7 +262,7 @@ class BookNoteDao {
     int bookId, {
     int limit = 10,
   }) async {
-    final db = await _dbService.database;
+    final db = await _database;
     final List<Map<String, dynamic>> maps = await db.query(
       'book_notes',
       where: 'book_id = ?',
@@ -233,7 +275,7 @@ class BookNoteDao {
 
   /// 获取带笔记的注释
   Future<List<BookNote>> selectBookNotesWithReaderNotes(int bookId) async {
-    final db = await _dbService.database;
+    final db = await _database;
     final List<Map<String, dynamic>> maps = await db.query(
       'book_notes',
       where: 'book_id = ? AND reader_note IS NOT NULL AND reader_note != ""',
@@ -265,7 +307,7 @@ class BookNoteDao {
 
   /// 批量导入注释
   Future<void> batchInsertBookNotes(List<BookNote> notes) async {
-    final db = await _dbService.database;
+    final db = await _database;
     final batch = db.batch();
 
     for (final note in notes) {
@@ -281,7 +323,7 @@ class BookNoteDao {
     DateTime startDate,
     DateTime endDate,
   ) async {
-    final db = await _dbService.database;
+    final db = await _database;
     final List<Map<String, dynamic>> maps = await db.query(
       'book_notes',
       where: 'book_id = ? AND create_time >= ? AND create_time <= ?',
@@ -297,7 +339,7 @@ class BookNoteDao {
 
   /// 获取所有注释（用于同步）
   Future<List<BookNote>> getAllNotes() async {
-    final db = await _dbService.database;
+    final db = await _database;
     final List<Map<String, dynamic>> maps = await db.query(
       'book_notes',
       orderBy: 'update_time DESC',

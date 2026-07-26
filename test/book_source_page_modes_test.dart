@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -119,6 +118,23 @@ void main() {
       find.byKey(const ValueKey('book-source-top-controls')),
     );
     expect(topAfterDrag.top, -130);
+
+    final statusFinder = find.byKey(
+      const ValueKey('book-source-reader-status'),
+    );
+    final statusBeforeEdgeTap = tester.widget<Text>(statusFinder).data;
+    final surfaceRect = tester.getRect(surface);
+    await tester.tapAt(Offset(surfaceRect.right - 8, surfaceRect.center.dy));
+    await tester.pump();
+    expect(
+      tester
+          .widget<AnimatedPositioned>(
+            find.byKey(const ValueKey('book-source-top-controls')),
+          )
+          .top,
+      -130,
+    );
+    expect(tester.widget<Text>(statusFinder).data, statusBeforeEdgeTap);
 
     await tester.tapAt(tester.getRect(surface).center);
     await tester.pump();
@@ -306,32 +322,14 @@ void main() {
       RegExp(r'(\d+)/(\d+)').allMatches(currentStatus()).toList()[1].group(1)!,
     );
     final initialPage = currentPage();
-    final pageTapDetector = tester
-        .widgetList<GestureDetector>(
-          find.descendant(
-            of: find.byType(PageView),
-            matching: find.byType(GestureDetector),
-          ),
-        )
-        .firstWhere((detector) => detector.onTapUp != null);
-
-    pageTapDetector.onTapUp!(
-      TapUpDetails(
-        localPosition: const Offset(760, 100),
-        globalPosition: const Offset(760, 100),
-        kind: PointerDeviceKind.touch,
-      ),
+    final tapRect = tester.getRect(
+      find.byKey(const ValueKey('book-source-reader-tap-observer')),
     );
+    await tester.tapAt(Offset(tapRect.right - 24, tapRect.center.dy));
     await tester.pumpAndSettle();
     expect(currentPage(), initialPage + 1);
 
-    pageTapDetector.onTapUp!(
-      TapUpDetails(
-        localPosition: const Offset(10, 100),
-        globalPosition: const Offset(10, 100),
-        kind: PointerDeviceKind.touch,
-      ),
-    );
+    await tester.tapAt(Offset(tapRect.left + 24, tapRect.center.dy));
     await tester.pumpAndSettle();
     expect(currentPage(), initialPage);
   });
@@ -355,22 +353,10 @@ void main() {
           .group(1)!,
     );
     final initialPage = currentPage();
-    final pageTapDetector = tester
-        .widgetList<GestureDetector>(
-          find.descendant(
-            of: find.byType(PageView),
-            matching: find.byType(GestureDetector),
-          ),
-        )
-        .firstWhere((detector) => detector.onTapUp != null);
-
-    pageTapDetector.onTapUp!(
-      TapUpDetails(
-        localPosition: const Offset(760, 100),
-        globalPosition: const Offset(760, 100),
-        kind: PointerDeviceKind.touch,
-      ),
+    final tapRect = tester.getRect(
+      find.byKey(const ValueKey('book-source-reader-tap-observer')),
     );
+    await tester.tapAt(Offset(tapRect.right - 24, tapRect.center.dy));
     await tester.pump();
 
     expect(currentPage(), initialPage + 1);

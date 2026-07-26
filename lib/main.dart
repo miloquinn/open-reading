@@ -28,6 +28,7 @@ import 'services/library/download_task_controller.dart';
 import 'services/sync/webdav_sync_controller.dart';
 import 'utils/app_themes.dart';
 import 'services/tts_service.dart';
+import 'services/reader_aloud_service.dart';
 import 'package:path_provider/path_provider.dart';
 import 'utils/glass_config.dart';
 import 'utils/localization_extension.dart';
@@ -87,6 +88,16 @@ void main(List<String> arguments) async {
           provider.ChangeNotifierProvider(create: (_) => ThemeNotifier()),
           provider.ChangeNotifierProvider(create: (_) => AppSettingsNotifier()),
           provider.ChangeNotifierProvider(create: (_) => TtsService()),
+          provider.ChangeNotifierProxyProvider<TtsService, ReaderAloudService>(
+            create: (context) => ReaderAloudService(
+              systemEngine: provider.Provider.of<TtsService>(
+                context,
+                listen: false,
+              ),
+            ),
+            update: (context, tts, service) =>
+                service ?? ReaderAloudService(systemEngine: tts),
+          ),
           provider.ChangeNotifierProvider(
             create: (_) => DownloadTaskController(),
           ),

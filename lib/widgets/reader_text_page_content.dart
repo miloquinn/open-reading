@@ -35,6 +35,10 @@ class ReaderTextPageContent extends StatelessWidget {
         style: bodyStyle,
         sourceSpanBuilder: sourceSpanBuilder,
       ),
+      selectionRegistrar: SelectionContainer.maybeOf(context),
+      selectionColor:
+          DefaultSelectionStyle.of(context).selectionColor ??
+          Theme.of(context).colorScheme.primary.withValues(alpha: 0.28),
       textAlign: flowStyle.textAlign,
       textDirection: flowStyle.textDirection,
       textScaler: flowStyle.textScaler,

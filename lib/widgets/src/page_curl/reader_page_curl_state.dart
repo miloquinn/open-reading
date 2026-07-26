@@ -40,6 +40,11 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
   Completer<void>? _turnCompleter;
 
   Size _viewportSize = Size.zero;
+  int? _activePointer;
+  VelocityTracker? _velocityTracker;
+  Timer? _selectionHoldTimer;
+  bool _pointerMoveStarted = false;
+  bool _longPressExpired = false;
   Offset? _pointerDown;
   Offset? _dragOrigin;
   Offset? _catchUpStartPointer;
@@ -143,6 +148,7 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
       if (!turn.completer.isCompleted) turn.completer.complete();
     }
     _programmaticTurns.clear();
+    _selectionHoldTimer?.cancel();
     _catchUpTicker.dispose();
     _forwardSpringTicker.dispose();
     _backwardSpringTicker.dispose();
@@ -353,8 +359,68 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
   };
 
   void _onPointerDown(PointerDownEvent event) {
-    if (_phase != _PageTurnPhase.idle) return;
+    if (_phase != _PageTurnPhase.idle || _activePointer != null) return;
+    _activePointer = event.pointer;
+    _pointerMoveStarted = false;
+    _longPressExpired = false;
+    _selectionHoldTimer?.cancel();
+    _selectionHoldTimer = Timer(kLongPressTimeout, () {
+      if (_phase == _PageTurnPhase.dragging) return;
+      _longPressExpired = true;
+      if (_phase == _PageTurnPhase.pointerPending) _resetToIdle();
+    });
+    _velocityTracker = VelocityTracker.withKind(event.kind)
+      ..addPosition(event.timeStamp, event.position);
     _pointerDown = event.localPosition;
+  }
+
+  void _onPointerMove(PointerMoveEvent event) {
+    if (event.pointer != _activePointer) return;
+    _velocityTracker?.addPosition(event.timeStamp, event.position);
+    if (_longPressExpired) return;
+    if (!_pointerMoveStarted) {
+      _pointerMoveStarted = true;
+      _onPanStart(
+        DragStartDetails(
+          sourceTimeStamp: event.timeStamp,
+          globalPosition: event.position,
+          localPosition: event.localPosition,
+          kind: event.kind,
+        ),
+      );
+    }
+    _onPanUpdate(
+      DragUpdateDetails(
+        sourceTimeStamp: event.timeStamp,
+        delta: event.delta,
+        globalPosition: event.position,
+        localPosition: event.localPosition,
+      ),
+    );
+  }
+
+  void _onPointerUp(PointerUpEvent event) {
+    if (event.pointer != _activePointer) return;
+    final tracker = _velocityTracker
+      ?..addPosition(event.timeStamp, event.position);
+    final velocity = tracker?.getVelocity() ?? Velocity.zero;
+    _clearPointerTracking();
+    _onPanEnd(DragEndDetails(velocity: velocity));
+  }
+
+  void _onPointerCancel(PointerCancelEvent event) {
+    if (event.pointer != _activePointer) return;
+    _clearPointerTracking();
+    _onPanCancel();
+  }
+
+  void _clearPointerTracking() {
+    _activePointer = null;
+    _velocityTracker = null;
+    _selectionHoldTimer?.cancel();
+    _selectionHoldTimer = null;
+    _pointerMoveStarted = false;
+    _longPressExpired = false;
   }
 
   void _onPanStart(DragStartDetails details) {
@@ -441,6 +507,8 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
   }) {
     final layers = _turnLayers(direction);
     if (layers == null || !_acquireTurnSlot()) return false;
+    _selectionHoldTimer?.cancel();
+    _selectionHoldTimer = null;
     final source = layers.source;
     final target = layers.target;
     _direction = direction;
@@ -1173,38 +1241,34 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
         return Listener(
           behavior: HitTestBehavior.opaque,
           onPointerDown: _onPointerDown,
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onPanStart: _onPanStart,
-            onPanUpdate: _onPanUpdate,
-            onPanEnd: _onPanEnd,
-            onPanCancel: _onPanCancel,
-            child: Stack(
-              fit: StackFit.expand,
-              clipBehavior: widget.coordinator == null
-                  ? Clip.hardEdge
-                  : Clip.none,
-              children: [
-                for (final entry in boundaryPages.entries)
-                  if (!identical(entry.key, visibleKey))
-                    _paper(entry.key, entry.value, hidden: true),
-                _paper(visibleKey, visiblePage, hidden: false),
-                if (animationReady)
-                  Positioned.fill(
-                    child: CustomPaint(
-                      painter: _pageTurnPainter(
-                        geometry: geometry!,
-                        sourceImage: sourceImage!,
-                        backImage: backImage,
-                        bindingOverflow: widget.coordinator == null
-                            ? 0
-                            : geometry.size.width +
-                                  widget.coordinator!.gutterWidth,
-                      ),
+          onPointerMove: _onPointerMove,
+          onPointerUp: _onPointerUp,
+          onPointerCancel: _onPointerCancel,
+          child: Stack(
+            fit: StackFit.expand,
+            clipBehavior: widget.coordinator == null
+                ? Clip.hardEdge
+                : Clip.none,
+            children: [
+              for (final entry in boundaryPages.entries)
+                if (!identical(entry.key, visibleKey))
+                  _paper(entry.key, entry.value, hidden: true),
+              _paper(visibleKey, visiblePage, hidden: false),
+              if (animationReady)
+                Positioned.fill(
+                  child: CustomPaint(
+                    painter: _pageTurnPainter(
+                      geometry: geometry!,
+                      sourceImage: sourceImage!,
+                      backImage: backImage,
+                      bindingOverflow: widget.coordinator == null
+                          ? 0
+                          : geometry.size.width +
+                                widget.coordinator!.gutterWidth,
                     ),
                   ),
-              ],
-            ),
+                ),
+            ],
           ),
         );
       },

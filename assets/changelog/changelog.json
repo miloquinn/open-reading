@@ -2,6 +2,59 @@
     "schemaVersion": 1,
     "entries": [
         {
+            "version": "2.4.0",
+            "notes": {
+                "en": [
+                    "Added themed text-selection tools for highlights, underlines, quoted annotations, and copying in both local and online readers",
+                    "Underlined annotations are now tappable in the text, opening the saved quote and note without accidentally turning the page",
+                    "Added an annotation library with chapter-aware navigation and deletion; stable canonical anchors keep notes attached after repagination",
+        "Added continuous read aloud from the current text position, with live sentence highlighting, pause and resume, sentence navigation, automatic chapter advance, and page following",
+        "Added secure OpenAI-compatible cloud TTS with configurable endpoint, model, voice, audio format, session caching, response limits, and automatic system-voice fallback",
+        "Redesigned the read-aloud sheet with a 72% height limit, drag-to-dismiss handle, scrollable content, and freely selectable hour-and-minute sleep timers",
+        "Voice, speed, volume, pitch, and cloud model changes now take effect during playback and continue from the current sentence position",
+                    "Added Android media playback integration with foreground playback, MediaSession controls, notification actions, and Android 16 live-progress presentation when eligible",
+                    "Expanded WebDAV metadata sync to registered book sources, online shelf books, and chapter progress while keeping credentials and cached reading content local",
+                    "Fixed page-curl taps and swipes becoming unreliable after text selection was added, while preserving long-press selection"
+                ],
+                "zh": [
+                    "本地书籍与在线书源阅读器新增主题化选区工具栏，支持高亮、下划线、引用批注和复制",
+                    "文字批注会在原文下方显示可点击划线，轻点即可查看引用原文和笔记内容，且不会误触翻页",
+                    "新增批注管理页，可按章节浏览、定位和删除；稳定 canonical 锚点确保重新分页后仍能找回原文位置",
+        "新增从当前文字位置开始的连续听书，支持当前句实时高亮、暂停恢复、上下句、自动跨章和页面跟随",
+        "新增安全的 OpenAI-compatible 云端 TTS，可配置服务地址、模型、音色和音频格式，并支持会话缓存、响应限制及系统语音自动回退",
+        "听书面板限制为最高 72% 屏高，可拖动横条下拉关闭，长内容支持内部滚动；定时关闭可自由选择小时和分钟",
+        "播放中调整音色、语速、音量、音调或云端模型会立即生效，并从当前句的实时位置继续朗读",
+                    "Android 接入前台媒体播放、MediaSession、通知操作和外设媒体键；Android 16 在系统允许时展示实时进度样式",
+                    "WebDAV 元数据同步扩展到书源、在线书架书籍与章节进度，密码、章节正文和本地缓存继续只保存在设备上",
+                    "修复加入文字选择后仿真翻页轻点和滑动偶发失灵的问题，同时保留长按选字交互"
+                ],
+                "zh-TW": [
+                    "本機書籍與線上書源閱讀器新增主題化選取工具列，支援醒目標記、底線、引用批註和複製",
+                    "文字批註會在原文下方顯示可點擊底線，輕點即可查看引用原文與筆記內容，且不會誤觸翻頁",
+                    "新增批註管理頁，可依章節瀏覽、定位和刪除；穩定 canonical 錨點確保重新分頁後仍能找回原文位置",
+        "新增從目前文字位置開始的連續聽書，支援目前句即時醒目顯示、暫停恢復、上下句、自動跨章和頁面跟隨",
+        "新增安全的 OpenAI-compatible 雲端 TTS，可設定服務位址、模型、音色和音訊格式，並支援工作階段快取、回應限制及系統語音自動回退",
+        "聽書面板限制為最高 72% 螢幕高度，可拖動橫條下拉關閉，長內容支援內部捲動；定時關閉可自由選擇小時和分鐘",
+        "播放中調整音色、語速、音量、音調或雲端模型會立即生效，並從目前句的即時位置繼續朗讀",
+                    "Android 接入前景媒體播放、MediaSession、通知操作和外接媒體鍵；Android 16 在系統允許時顯示即時進度樣式",
+                    "WebDAV 中繼資料同步擴充至書源、線上書架書籍與章節進度，密碼、章節正文和本機快取仍只保存在裝置上",
+                    "修復加入文字選取後仿真翻頁輕點與滑動偶發失靈的問題，同時保留長按選字互動"
+                ],
+                "ja": [
+                    "ローカル書籍とオンライン書籍リーダーにテーマ対応の選択ツールバーを追加し、ハイライト、下線、引用付き注釈、コピーに対応しました",
+                    "下線付きの注釈をタップすると引用文とメモを確認でき、ページ送りが誤作動しないようにしました",
+                    "章ごとの閲覧、移動、削除ができる注釈管理画面を追加し、安定した canonical アンカーで再ページ分割後も原文位置を復元できるようにしました",
+        "現在の文章位置から始める連続読み上げを追加し、読み上げ中の文のリアルタイム強調、一時停止と再開、前後の文、自動章送り、ページ追従に対応しました",
+        "安全な OpenAI 互換クラウド TTS を追加し、接続先、モデル、音声、音声形式、セッションキャッシュ、応答上限、システム音声への自動フォールバックを設定できるようにしました",
+        "読み上げパネルを画面高の最大 72% に抑え、ハンドルを下へドラッグして閉じられるようにし、内容のスクロールと任意の時間・分を指定するスリープタイマーに対応しました",
+        "再生中の音声、速度、音量、ピッチ、クラウドモデルの変更がすぐに反映され、現在の文の位置から読み上げを続けるようにしました",
+                    "Android のフォアグラウンドメディア再生、MediaSession、通知操作、外部メディアキーに対応し、Android 16 では条件を満たす場合にライブ進捗表示を使用します",
+                    "WebDAV メタデータ同期を登録済み書籍ソース、オンライン本棚、章の進捗まで拡張し、認証情報、章本文、端末キャッシュは引き続き端末内だけに保持します",
+                    "文字選択の追加後にページカールのタップやスワイプが反応しないことがある問題を修正し、長押し選択も維持しました"
+                ]
+            }
+        },
+        {
             "version": "2.3.9",
             "notes": {
                 "en": [

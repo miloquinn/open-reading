@@ -179,6 +179,22 @@ class ReaderTextLayout {
     return _sourceBoundaries[safeOffset];
   }
 
+  /// Maps a selection start to the first source code unit represented by the
+  /// visible display character at [displayOffset].
+  ///
+  /// Pagination must keep the ordinary boundary mapping so hidden indentation
+  /// remains covered by adjacent page ranges. Selection starts use this
+  /// right-biased mapping to avoid persisting source whitespace removed by a
+  /// zero-indent projection.
+  int sourceOffsetForVisibleStart(int displayOffset) {
+    if (_sourceBoundaries.isEmpty) return sourceOffset;
+    final safeOffset = displayOffset.clamp(0, text.length);
+    if (safeOffset >= text.length) return _sourceBoundaries[safeOffset];
+    final current = _sourceBoundaries[safeOffset];
+    final next = _sourceBoundaries[safeOffset + 1];
+    return next - current > 1 ? next - 1 : current;
+  }
+
   TextSpan buildSpan(
     int displayStart,
     int displayEnd, {

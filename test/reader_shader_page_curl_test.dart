@@ -391,6 +391,82 @@ void main() {
     await tester.pumpAndSettle();
   });
 
+  testWidgets('selectable text keeps the right-edge curl gesture responsive', (
+    tester,
+  ) async {
+    final controller = ReaderPageCurlController();
+    var forwardTurns = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SizedBox(
+          width: 400,
+          height: 700,
+          child: ReaderShaderPageCurl(
+            controller: controller,
+            currentPage: _selectableSnapshot('current selectable text'),
+            forwardPage: _snapshot('next'),
+            onTurnForward: () => forwardTurns++,
+            onTurnBackward: () {},
+            paperColor: Colors.white,
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final rect = tester.getRect(find.byType(ReaderShaderPageCurl));
+    final gesture = await tester.startGesture(
+      Offset(rect.right - 8, rect.center.dy),
+    );
+    await gesture.moveBy(const Offset(-48, 2));
+    await tester.pump();
+    expect(controller.debugMotion, ReaderPageTurnMotion.outgoing);
+
+    await gesture.moveBy(Offset(-rect.width * 0.55, 0));
+    await gesture.up();
+    await tester.pumpAndSettle();
+
+    expect(forwardTurns, 1);
+  });
+
+  testWidgets('selectable text long press does not start a page curl', (
+    tester,
+  ) async {
+    final controller = ReaderPageCurlController();
+    var forwardTurns = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SizedBox(
+          width: 400,
+          height: 700,
+          child: ReaderShaderPageCurl(
+            controller: controller,
+            currentPage: _selectableSnapshot('long press selectable text'),
+            forwardPage: _snapshot('next'),
+            onTurnForward: () => forwardTurns++,
+            onTurnBackward: () {},
+            paperColor: Colors.white,
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final textCenter = tester.getCenter(
+      find.text('long press selectable text'),
+    );
+    final gesture = await tester.startGesture(textCenter);
+    await gesture.moveBy(const Offset(4, 0));
+    await tester.pump(const Duration(milliseconds: 550));
+    await gesture.moveBy(const Offset(-48, 0));
+    await tester.pump();
+
+    expect(controller.debugMotion, isNull);
+    await gesture.up();
+    await tester.pumpAndSettle();
+    expect(forwardTurns, 0);
+  });
+
   testWidgets(
     'middle backward drag drives an incoming crease from displacement',
     (tester) async {
@@ -1215,6 +1291,21 @@ ReaderPageSnapshot _snapshot(String id) => ReaderPageSnapshot(
   ),
   contentRevision: 0,
   child: Text(id),
+);
+
+ReaderPageSnapshot _selectableSnapshot(String text) => ReaderPageSnapshot(
+  key: ReaderPageSnapshotKey(
+    pageIdentity: text,
+    layoutFingerprint: 'layout',
+    themeId: 'day',
+  ),
+  contentRevision: 0,
+  child: SelectionArea(
+    child: Align(
+      alignment: Alignment.topLeft,
+      child: Text(text, style: const TextStyle(fontSize: 20)),
+    ),
+  ),
 );
 
 ReaderPageSnapshot _revisionSnapshot(String id, int revision) =>

@@ -3557,7 +3557,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get webDavSyncContent => '同期する内容';
 
   @override
-  String get webDavScopeBooks => 'ライブラリ情報';
+  String get webDavScopeBookSources => 'ブックソース';
+
+  @override
+  String get webDavScopeBooks => 'ライブラリとオンライン書籍';
 
   @override
   String get webDavScopeProgress => '読書進捗';
@@ -3778,4 +3781,26 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get webDavFilesTransferComplete => '書籍ファイルの転送が完了しました';
+
+  @override
+  String get readerAddAnnotation => '注釈を追加';
+
+  @override
+  String get readerAnnotationHint => 'この文章について考えたことを書いてください…';
+
+  @override
+  String get readerAnnotationSaved => '注釈を保存しました';
+
+  @override
+  String get readerAnnotationDeleted => '注釈を削除しました';
+
+  @override
+  String get readerAnnotationShelfRequired => '注釈を保存するには、先にこの本を本棚へ追加してください';
+
+  @override
+  String get readerNoAnnotations => '注釈はまだありません';
+
+  @override
+  String get readerNoAnnotationsHint =>
+      '文章を選択してハイライトやコメントを追加できます。下線付きのコメントをタップすると内容を確認できます。';
 }

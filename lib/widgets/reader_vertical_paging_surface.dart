@@ -9,13 +9,13 @@ class ReaderVerticalPagingSurface extends StatelessWidget {
   const ReaderVerticalPagingSurface({
     super.key,
     required this.child,
-    required this.onTap,
+    this.onTap,
     this.surfaceKey,
     this.onHorizontalDragEnd,
   });
 
   final Widget child;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final Key? surfaceKey;
   final GestureDragEndCallback? onHorizontalDragEnd;
 

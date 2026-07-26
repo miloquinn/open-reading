@@ -3755,7 +3755,9 @@
   "@webDavAutomaticSyncHint": {"description": "Automatic WebDAV sync explanation"},
   "webDavSyncContent": "Sync content",
   "@webDavSyncContent": {"description": "WebDAV scope section title"},
-  "webDavScopeBooks": "Library metadata",
+  "webDavScopeBookSources": "Book sources",
+  "@webDavScopeBookSources": {"description": "Sync scope for registered book sources"},
+  "webDavScopeBooks": "Library and online books",
   "@webDavScopeBooks": {"description": "Sync scope for book metadata"},
   "webDavScopeProgress": "Reading progress",
   "@webDavScopeProgress": {"description": "Sync scope for reading progress"},
@@ -3890,5 +3892,12 @@
   "webDavFilesEmpty": "No books in this category",
   "@webDavFilesEmpty": {"description": "Empty book-file category"},
   "webDavFilesTransferComplete": "Book-file transfer complete",
-  "@webDavFilesTransferComplete": {"description": "Book-file transfer success"}
+  "@webDavFilesTransferComplete": {"description": "Book-file transfer success"},
+  "readerAddAnnotation": "Add annotation",
+  "readerAnnotationHint": "Write your thoughts about this passage…",
+  "readerAnnotationSaved": "Annotation saved",
+  "readerAnnotationDeleted": "Annotation deleted",
+  "readerAnnotationShelfRequired": "Add this book to the shelf before saving annotations",
+  "readerNoAnnotations": "No annotations yet",
+  "readerNoAnnotationsHint": "Select text to highlight or add a comment. Tap an underlined comment to read it again."
 }

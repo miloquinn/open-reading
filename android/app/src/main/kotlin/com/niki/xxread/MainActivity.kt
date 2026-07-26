@@ -25,6 +25,7 @@ class MainActivity : FlutterActivity() {
     private var incomingBookIntentBridge: IncomingBookIntentBridge? = null
     private var appUpdateBridge: AppUpdateBridge? = null
     private var backgroundDownloadBridge: BackgroundDownloadBridge? = null
+    private var readerAloudBridge: ReaderAloudBridge? = null
     @Volatile private var volumePagingEnabled: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -111,6 +112,10 @@ class MainActivity : FlutterActivity() {
             this,
             flutterEngine.dartExecutor.binaryMessenger,
         )
+        readerAloudBridge = ReaderAloudBridge(
+            this,
+            flutterEngine.dartExecutor.binaryMessenger,
+        )
 
     }
 
@@ -137,6 +142,9 @@ class MainActivity : FlutterActivity() {
         if (backgroundDownloadBridge?.onRequestPermissionsResult(requestCode, grantResults) == true) {
             return
         }
+        if (readerAloudBridge?.onRequestPermissionsResult(requestCode, grantResults) == true) {
+            return
+        }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
@@ -152,6 +160,8 @@ class MainActivity : FlutterActivity() {
         incomingBookIntentBridge = null
         safDirectoryBridge?.dispose()
         safDirectoryBridge = null
+        readerAloudBridge?.dispose()
+        readerAloudBridge = null
         super.onDestroy()
     }
 

@@ -4,6 +4,9 @@ import 'dart:io';
 import 'package:crypto/crypto.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
+import '../../../book_sources/models/registered_book_source.dart';
+import '../../../book_sources/services/book_source_reading_progress.dart';
+import '../../../book_sources/services/book_source_registry.dart';
 import '../../core/database_service.dart';
 import '../sync_change_store.dart';
 import '../sync_clock.dart';
@@ -17,28 +20,38 @@ abstract interface class MetadataSyncAdapter {
   Future<void> apply(Transaction txn, SyncOperation operation);
 }
 
+typedef SyncDatabaseProvider = Future<Database> Function();
+
 class MetadataSyncAdapters {
   MetadataSyncAdapters({
     required SyncChangeStore store,
     DatabaseService? databaseService,
+    SyncDatabaseProvider? database,
+    BookSourceRegistry? bookSourceRegistry,
+    BookSourceReadingProgressStore? sourceProgressStore,
     Iterable<MetadataSyncAdapter>? registeredAdapters,
-  }) : _databaseService = databaseService ?? DatabaseService(),
+  }) : _databaseProvider =
+           database ?? (() => (databaseService ?? DatabaseService()).database),
        _store = store,
        adapters = registeredAdapters == null
            ? []
            : List<MetadataSyncAdapter>.of(registeredAdapters) {
     if (registeredAdapters == null) {
+      final registry = bookSourceRegistry ?? BookSourceRegistry();
+      final progressStore =
+          sourceProgressStore ?? const BookSourceReadingProgressStore();
       adapters.addAll([
-        BooksSyncAdapter(store, _databaseService),
-        ProgressSyncAdapter(store, _databaseService),
-        BookmarksSyncAdapter(store, _databaseService),
-        NotesSyncAdapter(store, _databaseService),
-        ReadingSessionsSyncAdapter(store, _databaseService),
+        BookSourcesSyncAdapter(store, registry),
+        BooksSyncAdapter(store, _databaseProvider),
+        ProgressSyncAdapter(store, _databaseProvider, progressStore),
+        BookmarksSyncAdapter(store, _databaseProvider),
+        NotesSyncAdapter(store, _databaseProvider),
+        ReadingSessionsSyncAdapter(store, _databaseProvider),
       ]);
     }
   }
 
-  final DatabaseService _databaseService;
+  final SyncDatabaseProvider _databaseProvider;
   final SyncChangeStore _store;
   final List<MetadataSyncAdapter> adapters;
 
@@ -68,7 +81,7 @@ class MetadataSyncAdapters {
       if (observed != '1') pending.add(record);
     }
     if (pending.isEmpty) return;
-    final db = await _databaseService.database;
+    final db = await _databaseProvider();
     await db.transaction((txn) async {
       for (final record in pending) {
         await adapter.apply(txn, record.toOperation());
@@ -85,13 +98,13 @@ class MetadataSyncAdapters {
 }
 
 abstract class _BaseAdapter implements MetadataSyncAdapter {
-  _BaseAdapter(this.store, this.databaseService);
+  _BaseAdapter(this.store, this.database);
 
   final SyncChangeStore store;
-  final DatabaseService databaseService;
+  final SyncDatabaseProvider database;
 
   Future<Map<int, String>> bookUids() async {
-    final db = await databaseService.database;
+    final db = await database();
     final rows = await db.query('books');
     final result = <int, String>{};
     for (final row in rows) {
@@ -133,15 +146,79 @@ abstract class _BaseAdapter implements MetadataSyncAdapter {
   }
 }
 
+class BookSourcesSyncAdapter implements MetadataSyncAdapter {
+  BookSourcesSyncAdapter(this.store, this.registry);
+
+  final SyncChangeStore store;
+  final BookSourceRegistry registry;
+
+  @override
+  String get dataset => 'book_sources';
+
+  @override
+  Future<void> scan(HybridLogicalClock clock) async {
+    final sources = await registry.load();
+    final seen = <String>{};
+    for (final source in sources) {
+      final recordId = stableRecordId('book_source', source.id);
+      seen.add(recordId);
+      await store.recordLocal(
+        dataset: dataset,
+        recordId: recordId,
+        entityKey: source.id,
+        payload: source.toJson(),
+        deleted: false,
+        clock: clock,
+      );
+    }
+    for (final record in await store.recordsForDataset(dataset)) {
+      final locallyObserved = await store.getState(
+        'locally_observed:$dataset:${record.recordId}',
+      );
+      if (!record.deleted &&
+          locallyObserved == '1' &&
+          !seen.contains(record.recordId)) {
+        await store.recordLocal(
+          dataset: dataset,
+          recordId: record.recordId,
+          entityKey: record.entityKey,
+          payload: record.payload,
+          deleted: true,
+          clock: clock,
+        );
+      }
+    }
+  }
+
+  @override
+  Future<void> apply(Transaction txn, SyncOperation operation) async {
+    if (operation.deleted) {
+      await registry.remove(operation.entityKey);
+      return;
+    }
+    final payload = operation.payload;
+    if (payload == null) return;
+    final source = RegisteredBookSource.fromJson(payload);
+    if (source.id != operation.entityKey ||
+        operation.recordId != stableRecordId('book_source', source.id)) {
+      throw const WebDavSyncFailure(
+        WebDavSyncErrorCode.corruptRemoteData,
+        'A synced book source has an invalid identity.',
+      );
+    }
+    await registry.applySynced(source);
+  }
+}
+
 class BooksSyncAdapter extends _BaseAdapter {
-  BooksSyncAdapter(super.store, super.databaseService);
+  BooksSyncAdapter(super.store, super.database);
 
   @override
   String get dataset => 'books';
 
   @override
   Future<void> scan(HybridLogicalClock clock) async {
-    final db = await databaseService.database;
+    final db = await database();
     final rows = await db.query('books');
     final seen = <String>{};
     for (final row in rows) {
@@ -163,9 +240,12 @@ class BooksSyncAdapter extends _BaseAdapter {
           'title': row['title'],
           'author': row['author'],
           'format': row['format'],
+          'import_date': row['importDate'],
           'storage_type': row['storage_type'],
           'source_id': row['source_id'],
           'source_book_id': row['source_book_id'],
+          'source_json': row['source_json'],
+          'source_book_json': row['source_book_json'],
           ...bookFileSyncPayload(file),
         },
         deleted: false,
@@ -178,16 +258,80 @@ class BooksSyncAdapter extends _BaseAdapter {
   @override
   Future<void> apply(Transaction txn, SyncOperation operation) async {
     final id = await localBookId(txn, operation.entityKey);
-    if (id == null || operation.deleted || operation.payload == null) return;
-    await txn.update(
+    if (operation.deleted) {
+      if (id == null) return;
+      final rows = await txn.query(
+        'books',
+        columns: ['storage_type'],
+        where: 'id = ?',
+        whereArgs: [id],
+        limit: 1,
+      );
+      if (rows.isNotEmpty && rows.first['storage_type'] == 'online') {
+        await txn.delete('books', where: 'id = ?', whereArgs: [id]);
+      }
+      return;
+    }
+    final payload = operation.payload;
+    if (payload == null) return;
+    final sourceId = _nonEmptyString(payload['source_id']);
+    final sourceBookId = _nonEmptyString(payload['source_book_id']);
+    final sourceJson = _nonEmptyString(payload['source_json']);
+    final sourceBookJson = _nonEmptyString(payload['source_book_json']);
+    final restorableOnline =
+        payload['storage_type'] == 'online' &&
+        sourceId != null &&
+        sourceBookId != null &&
+        sourceJson != null &&
+        sourceBookJson != null;
+    if (id == null) {
+      if (!restorableOnline) return;
+      await txn.insert('books', {
+        'title': _nonEmptyString(payload['title']) ?? 'Untitled',
+        'author': payload['author'] as String? ?? '',
+        'filePath': '',
+        'format': _nonEmptyString(payload['format']) ?? 'source',
+        'currentPage': 0,
+        'totalPages': 1,
+        'importDate':
+            (payload['import_date'] as num?)?.toInt() ??
+            DateTime.now().millisecondsSinceEpoch,
+        'storage_type': 'online',
+        'source_id': sourceId,
+        'source_book_id': sourceBookId,
+        'source_json': sourceJson,
+        'source_book_json': sourceBookJson,
+      }, conflictAlgorithm: ConflictAlgorithm.ignore);
+      return;
+    }
+    final rows = await txn.query(
       'books',
-      {
-        'title': operation.payload!['title'],
-        'author': operation.payload!['author'],
-      },
+      columns: ['storage_type'],
       where: 'id = ?',
       whereArgs: [id],
+      limit: 1,
     );
+    if (rows.isEmpty) return;
+    final values = <String, Object?>{
+      'title': payload['title'],
+      'author': payload['author'],
+    };
+    if (restorableOnline) {
+      values.addAll({
+        'source_id': sourceId,
+        'source_book_id': sourceBookId,
+        'source_json': sourceJson,
+        'source_book_json': sourceBookJson,
+      });
+      if (rows.first['storage_type'] == 'online') {
+        values.addAll({
+          'filePath': '',
+          'format': _nonEmptyString(payload['format']) ?? 'source',
+          'storage_type': 'online',
+        });
+      }
+    }
+    await txn.update('books', values, where: 'id = ?', whereArgs: [id]);
   }
 }
 
@@ -212,33 +356,48 @@ Map<String, Object?> bookFileSyncPayload(Map<String, Object?>? file) {
 }
 
 class ProgressSyncAdapter extends _BaseAdapter {
-  ProgressSyncAdapter(super.store, super.databaseService);
+  ProgressSyncAdapter(super.store, super.database, this.progressStore);
+
+  final BookSourceReadingProgressStore progressStore;
 
   @override
   String get dataset => 'progress';
 
   @override
   Future<void> scan(HybridLogicalClock clock) async {
-    final db = await databaseService.database;
-    final rows = await db.query(
-      'books',
-      where: 'last_canonical_locator IS NOT NULL',
-    );
+    final db = await database();
+    final rows = await db.query('books');
     final seen = <String>{};
     for (final row in rows) {
       final uid = await bookUidForMap(row);
+      final locator = _decodeOptionalJson(row['last_canonical_locator']);
+      BookSourceReadingProgress? sourceProgress;
+      final sourceId = _nonEmptyString(row['source_id']);
+      final sourceBookId = _nonEmptyString(row['source_book_id']);
+      if (row['storage_type'] == 'online' &&
+          sourceId != null &&
+          sourceBookId != null) {
+        sourceProgress = await progressStore.load(
+          sourceId: sourceId,
+          bookId: sourceBookId,
+        );
+      }
+      if (locator == null && sourceProgress == null) continue;
       seen.add(uid);
-      dynamic locator;
-      try {
-        locator = jsonDecode(row['last_canonical_locator'] as String);
-      } catch (_) {
-        continue;
+      final payload = <String, dynamic>{'book_uid': uid};
+      if (locator != null) payload['canonical_locator'] = locator;
+      if (sourceProgress != null) {
+        payload.addAll({
+          'source_progress': sourceProgress.toJson(),
+          'current_page': row['currentPage'],
+          'total_pages': row['totalPages'],
+        });
       }
       await store.recordLocal(
         dataset: dataset,
         recordId: uid,
         entityKey: uid,
-        payload: {'book_uid': uid, 'canonical_locator': locator},
+        payload: payload,
         deleted: false,
         clock: clock,
       );
@@ -250,28 +409,67 @@ class ProgressSyncAdapter extends _BaseAdapter {
   Future<void> apply(Transaction txn, SyncOperation operation) async {
     final id = await localBookId(txn, operation.entityKey);
     if (id == null) return;
-    await txn.update(
+    final rows = await txn.query(
       'books',
-      {
-        'last_canonical_locator': operation.deleted
-            ? null
-            : jsonEncode(operation.payload?['canonical_locator']),
-      },
+      columns: ['storage_type', 'source_id', 'source_book_id'],
       where: 'id = ?',
       whereArgs: [id],
+      limit: 1,
     );
+    if (rows.isEmpty) return;
+    final row = rows.first;
+    final sourceId = _nonEmptyString(row['source_id']);
+    final sourceBookId = _nonEmptyString(row['source_book_id']);
+    if (operation.deleted) {
+      final values = <String, Object?>{'last_canonical_locator': null};
+      if (row['storage_type'] == 'online') values['currentPage'] = 0;
+      await txn.update('books', values, where: 'id = ?', whereArgs: [id]);
+      if (row['storage_type'] == 'online' &&
+          sourceId != null &&
+          sourceBookId != null) {
+        await progressStore.delete(sourceId: sourceId, bookId: sourceBookId);
+      }
+      return;
+    }
+    final payload = operation.payload;
+    if (payload == null) return;
+    final values = <String, Object?>{};
+    if (payload.containsKey('canonical_locator')) {
+      values['last_canonical_locator'] = jsonEncode(
+        payload['canonical_locator'],
+      );
+    }
+    final rawSourceProgress = payload['source_progress'];
+    if (row['storage_type'] == 'online' &&
+        sourceId != null &&
+        sourceBookId != null &&
+        rawSourceProgress is Map) {
+      final sourceProgress = BookSourceReadingProgress.fromJson(
+        rawSourceProgress.map((key, value) => MapEntry('$key', value)),
+      );
+      await progressStore.save(
+        sourceId: sourceId,
+        bookId: sourceBookId,
+        progress: sourceProgress,
+      );
+      values['currentPage'] = (payload['current_page'] as num?)?.toInt() ?? 0;
+      values['totalPages'] = (payload['total_pages'] as num?)?.toInt() ?? 1;
+    }
+    if (values.isNotEmpty) {
+      await txn.update('books', values, where: 'id = ?', whereArgs: [id]);
+    }
   }
 }
 
 class BookmarksSyncAdapter extends _BaseAdapter {
-  BookmarksSyncAdapter(super.store, super.databaseService);
+  BookmarksSyncAdapter(super.store, super.database);
 
   @override
   String get dataset => 'bookmarks';
 
   @override
   Future<void> scan(HybridLogicalClock clock) async {
-    final db = await databaseService.database;
+    final db = await database();
     final uids = await bookUids();
     final rows = await db.query('bookmarks');
     final seen = <String>{};
@@ -359,14 +557,14 @@ class BookmarksSyncAdapter extends _BaseAdapter {
 }
 
 class NotesSyncAdapter extends _BaseAdapter {
-  NotesSyncAdapter(super.store, super.databaseService);
+  NotesSyncAdapter(super.store, super.database);
 
   @override
   String get dataset => 'notes';
 
   @override
   Future<void> scan(HybridLogicalClock clock) async {
-    final db = await databaseService.database;
+    final db = await database();
     final uids = await bookUids();
     final rows = await db.query('book_notes');
     final seen = <String>{};
@@ -383,6 +581,7 @@ class NotesSyncAdapter extends _BaseAdapter {
         recordId: recordId,
         entityKey: bookUid,
         payload: {
+          'annotation_id': row['annotation_id'],
           'book_uid': bookUid,
           'content': row['content'],
           'cfi': row['cfi'],
@@ -394,6 +593,7 @@ class NotesSyncAdapter extends _BaseAdapter {
           'start_offset': row['start_offset'],
           'end_offset': row['end_offset'],
           'canonical_locator': _decodeOptionalJson(row['canonical_locator']),
+          'payload_json': _decodeOptionalJson(row['payload_json']),
           'create_time': row['create_time'],
           'update_time': row['update_time'],
         },
@@ -415,8 +615,17 @@ class NotesSyncAdapter extends _BaseAdapter {
       where: 'book_id = ?',
       whereArgs: [bookId],
     );
+    final annotationId =
+        _nonEmptyString(payload['annotation_id']) ?? operation.recordId;
     int? existingId;
     for (final row in localRows) {
+      if (row['annotation_id'] == annotationId) {
+        existingId = row['id'] as int?;
+        break;
+      }
+    }
+    for (final row in localRows) {
+      if (existingId != null) break;
       final identity =
           '${operation.entityKey}|${row['cfi']}|${row['create_time'] ?? row['update_time']}';
       if (stableRecordId('note', identity) == operation.recordId) {
@@ -435,6 +644,7 @@ class NotesSyncAdapter extends _BaseAdapter {
       return;
     }
     final values = {
+      'annotation_id': annotationId,
       'book_id': bookId,
       'content': payload['content'],
       'cfi': payload['cfi'],
@@ -448,6 +658,9 @@ class NotesSyncAdapter extends _BaseAdapter {
       'canonical_locator': payload['canonical_locator'] == null
           ? null
           : jsonEncode(payload['canonical_locator']),
+      'payload_json': payload['payload_json'] == null
+          ? null
+          : jsonEncode(payload['payload_json']),
       'create_time': payload['create_time'],
       'update_time': payload['update_time'],
     };
@@ -465,14 +678,14 @@ class NotesSyncAdapter extends _BaseAdapter {
 }
 
 class ReadingSessionsSyncAdapter extends _BaseAdapter {
-  ReadingSessionsSyncAdapter(super.store, super.databaseService);
+  ReadingSessionsSyncAdapter(super.store, super.database);
 
   @override
   String get dataset => 'reading_sessions';
 
   @override
   Future<void> scan(HybridLogicalClock clock) async {
-    final db = await databaseService.database;
+    final db = await database();
     final uids = await bookUids();
     final rows = await db.query('reading_sessions');
     final seen = <String>{};
@@ -583,4 +796,10 @@ Object? _decodeOptionalJson(Object? raw) {
   } catch (_) {
     return null;
   }
+}
+
+String? _nonEmptyString(Object? value) {
+  if (value is! String) return null;
+  final trimmed = value.trim();
+  return trimmed.isEmpty ? null : value;
 }

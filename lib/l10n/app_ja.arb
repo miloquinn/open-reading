@@ -1715,7 +1715,8 @@
   "webDavAutomaticSync": "自動同期",
   "webDavAutomaticSyncHint": "起動時またはアプリへ戻ったときに自動同期します",
   "webDavSyncContent": "同期する内容",
-  "webDavScopeBooks": "ライブラリ情報",
+  "webDavScopeBookSources": "ブックソース",
+  "webDavScopeBooks": "ライブラリとオンライン書籍",
   "webDavScopeProgress": "読書進捗",
   "webDavScopeBookmarks": "しおり",
   "webDavScopeReadingSessions": "読書統計",
@@ -1782,5 +1783,12 @@
   "webDavNewBooksUploadResult": "新しい書籍のアップロード完了: 成功 {success} 冊、失敗 {failed} 冊",
   "webDavFilesTooLarge": "このバージョンでは 100 MiB を超える書籍ファイルに対応していません",
   "webDavFilesEmpty": "この分類に書籍はありません",
-  "webDavFilesTransferComplete": "書籍ファイルの転送が完了しました"
+  "webDavFilesTransferComplete": "書籍ファイルの転送が完了しました",
+  "readerAddAnnotation": "注釈を追加",
+  "readerAnnotationHint": "この文章について考えたことを書いてください…",
+  "readerAnnotationSaved": "注釈を保存しました",
+  "readerAnnotationDeleted": "注釈を削除しました",
+  "readerAnnotationShelfRequired": "注釈を保存するには、先にこの本を本棚へ追加してください",
+  "readerNoAnnotations": "注釈はまだありません",
+  "readerNoAnnotationsHint": "文章を選択してハイライトやコメントを追加できます。下線付きのコメントをタップすると内容を確認できます。"
 }

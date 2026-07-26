@@ -68,6 +68,14 @@ class BookSourceReadingProgressStore {
     );
   }
 
+  Future<void> delete({
+    required String sourceId,
+    required String bookId,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_key(sourceId, bookId));
+  }
+
   String _key(String sourceId, String bookId) =>
       '$_prefix:${Uri.encodeComponent(sourceId)}:${Uri.encodeComponent(bookId)}';
 }

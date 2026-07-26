@@ -103,6 +103,15 @@ class _WebDavSyncContentPageState extends State<WebDavSyncContentPage> {
                       child: Column(
                         children: [
                           _ScopeSwitch(
+                            title: l10n.webDavScopeBookSources,
+                            icon: Icons.hub_outlined,
+                            value: _scope.bookSources,
+                            enabled: !_saving,
+                            onChanged: (value) => _updateScope(
+                              _scope.copyWith(bookSources: value),
+                            ),
+                          ),
+                          _ScopeSwitch(
                             title: l10n.webDavScopeBooks,
                             icon: Icons.library_books_outlined,
                             value: _scope.books,

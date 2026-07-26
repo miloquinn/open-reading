@@ -1953,7 +1953,8 @@
   "webDavAutomaticSync": "自动同步",
   "webDavAutomaticSyncHint": "启动应用或回到前台时自动同步",
   "webDavSyncContent": "同步内容",
-  "webDavScopeBooks": "书架信息",
+  "webDavScopeBookSources": "书源",
+  "webDavScopeBooks": "书架与在线书籍",
   "webDavScopeProgress": "阅读进度",
   "webDavScopeBookmarks": "书签",
   "webDavScopeReadingSessions": "阅读统计",
@@ -2020,5 +2021,12 @@
   "webDavNewBooksUploadResult": "新书上传完成：成功 {success} 本，失败 {failed} 本",
   "webDavFilesTooLarge": "当前版本暂不支持超过 100 MiB 的书籍文件",
   "webDavFilesEmpty": "这个分类中没有书籍",
-  "webDavFilesTransferComplete": "书籍文件传输完成"
+  "webDavFilesTransferComplete": "书籍文件传输完成",
+  "readerAddAnnotation": "添加批注",
+  "readerAnnotationHint": "写下你对这段文字的想法…",
+  "readerAnnotationSaved": "批注已保存",
+  "readerAnnotationDeleted": "批注已删除",
+  "readerAnnotationShelfRequired": "请先将本书加入书架，再保存高亮和批注",
+  "readerNoAnnotations": "还没有批注",
+  "readerNoAnnotationsHint": "选中文字即可高亮或添加文字批注；点击带下划线的批注文字可再次查看笔记。"
 }

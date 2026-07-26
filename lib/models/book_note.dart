@@ -2,6 +2,7 @@
 // 技术要点：Dart 数据模型、Flutter。
 
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 
 /// 统一的书籍注释模型
 /// 整合高亮和笔记功能
@@ -13,6 +14,9 @@ import 'package:flutter/material.dart';
 /// - 章节信息关联
 /// - 导出和分享功能
 class BookNote {
+  /// Stable cross-device annotation identity.
+  final String annotationId;
+
   /// 唯一标识符
   final int? id;
 
@@ -25,10 +29,17 @@ class BookNote {
   /// CFI定位信息（用于EPUB精确定位）
   final String cfi;
 
+  /// Canonical reader locator serialized as JSON.
+  final String? canonicalLocator;
+
+  /// Type-specific annotation payload serialized as JSON.
+  final String? payloadJson;
+
   /// 章节标题或标识符
   final String chapter;
 
-  /// 注释类型：'highlight'（高亮）、'underline'（下划线）、'note'（纯笔记）
+  /// 注释类型：'highlight'（高亮）、'underline'（下划线）、'note'（纯笔记）。
+  /// 旧版的 'ink' 记录仍可反序列化，但不再作为可创建类型暴露。
   final String type;
 
   /// 高亮颜色（十六进制字符串，不含#前缀）
@@ -53,10 +64,13 @@ class BookNote {
   final DateTime updateTime;
 
   BookNote({
+    String? annotationId,
     this.id,
     required this.bookId,
     required this.content,
     required this.cfi,
+    this.canonicalLocator,
+    this.payloadJson,
     required this.chapter,
     required this.type,
     required this.color,
@@ -66,7 +80,10 @@ class BookNote {
     this.endOffset,
     this.createTime,
     DateTime? updateTime,
-  }) : updateTime = updateTime ?? DateTime.now();
+  }) : annotationId = annotationId == null || annotationId.isEmpty
+           ? const Uuid().v4()
+           : annotationId,
+       updateTime = updateTime ?? DateTime.now();
 
   /// 设置ID（用于数据库插入后）
   void setId(int newId) {
@@ -77,9 +94,12 @@ class BookNote {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
+      'annotation_id': annotationId,
       'book_id': bookId,
       'content': content,
       'cfi': cfi,
+      'canonical_locator': canonicalLocator,
+      'payload_json': payloadJson,
       'chapter': chapter,
       'type': type,
       'color': color,
@@ -95,10 +115,13 @@ class BookNote {
   /// 从数据库Map创建实例
   factory BookNote.fromMap(Map<String, dynamic> map) {
     return BookNote(
+      annotationId: map['annotation_id'],
       id: map['id'],
       bookId: map['book_id'],
       content: map['content'],
       cfi: map['cfi'],
+      canonicalLocator: map['canonical_locator'],
+      payloadJson: map['payload_json'],
       chapter: map['chapter'],
       type: map['type'],
       color: map['color'],
@@ -131,10 +154,13 @@ class BookNote {
 
   /// 创建副本
   BookNote copyWith({
+    String? annotationId,
     int? id,
     int? bookId,
     String? content,
     String? cfi,
+    String? canonicalLocator,
+    String? payloadJson,
     String? chapter,
     String? type,
     String? color,
@@ -146,10 +172,13 @@ class BookNote {
     DateTime? updateTime,
   }) {
     return BookNote(
+      annotationId: annotationId ?? this.annotationId,
       id: id ?? this.id,
       bookId: bookId ?? this.bookId,
       content: content ?? this.content,
       cfi: cfi ?? this.cfi,
+      canonicalLocator: canonicalLocator ?? this.canonicalLocator,
+      payloadJson: payloadJson ?? this.payloadJson,
       chapter: chapter ?? this.chapter,
       type: type ?? this.type,
       color: color ?? this.color,
@@ -217,6 +246,8 @@ class BookNote {
         return 'underline';
       case 'note':
         return 'note';
+      case 'ink':
+        return 'ink';
       default:
         return 'unknown';
     }
@@ -231,6 +262,8 @@ class BookNote {
         return Icons.format_underlined;
       case 'note':
         return Icons.note_alt;
+      case 'ink':
+        return Icons.gesture;
       default:
         return Icons.bookmark;
     }

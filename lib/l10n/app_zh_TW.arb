@@ -1715,7 +1715,8 @@
   "webDavAutomaticSync": "自動同步",
   "webDavAutomaticSyncHint": "啟動應用程式或回到前景時自動同步",
   "webDavSyncContent": "同步內容",
-  "webDavScopeBooks": "書庫資訊",
+  "webDavScopeBookSources": "書源",
+  "webDavScopeBooks": "書庫與線上書籍",
   "webDavScopeProgress": "閱讀進度",
   "webDavScopeBookmarks": "書籤",
   "webDavScopeReadingSessions": "閱讀統計",
@@ -1782,5 +1783,12 @@
   "webDavNewBooksUploadResult": "新書上傳完成：成功 {success} 本，失敗 {failed} 本",
   "webDavFilesTooLarge": "目前版本暫不支援超過 100 MiB 的書籍檔案",
   "webDavFilesEmpty": "此分類中沒有書籍",
-  "webDavFilesTransferComplete": "書籍檔案傳輸完成"
+  "webDavFilesTransferComplete": "書籍檔案傳輸完成",
+  "readerAddAnnotation": "新增批註",
+  "readerAnnotationHint": "寫下你對這段文字的想法…",
+  "readerAnnotationSaved": "批註已儲存",
+  "readerAnnotationDeleted": "批註已刪除",
+  "readerAnnotationShelfRequired": "請先將本書加入書架，再儲存高亮與批註",
+  "readerNoAnnotations": "還沒有批註",
+  "readerNoAnnotationsHint": "選取文字即可高亮或新增文字批註；點擊帶底線的批註文字可再次查看筆記。"
 }

@@ -8,6 +8,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../core/reader/reader_aloud_controller.dart';
+
 class TtsVoiceOption {
   final String name;
   final String locale;
@@ -144,7 +146,7 @@ class TtsVoiceOption {
 }
 
 /// 只使用系统 TTS（flutter_tts 封装平台系统引擎）。
-class TtsService extends ChangeNotifier {
+class TtsService extends ChangeNotifier implements ReaderAloudAdjustableEngine {
   static const String _voiceIdPrefKey = 'tts_voice_id';
   static const String _voiceIdentifierPrefKey = 'tts_voice_identifier';
   static const String _voiceNamePrefKey = 'tts_voice_name';
@@ -153,7 +155,8 @@ class TtsService extends ChangeNotifier {
   FlutterTts? _flutterTts;
   Future<void>? _initializationFuture;
   Future<void>? _voiceLoadingFuture;
-  Timer? _parameterApplyDebounceTimer;
+  Completer<void>? _activeSpeakSignal;
+  int _speakCancellationVersion = 0;
   bool _isDisposed = false;
 
   bool _isPlaying = false;
@@ -167,6 +170,7 @@ class TtsService extends ChangeNotifier {
   List<String> _availableLanguages = const <String>[];
   String _currentText = '';
   int _currentPosition = 0;
+  int _utteranceBasePosition = 0;
   String? _lastError;
   String? _lastErrorLanguage;
   bool _isLoadingVoices = false;
@@ -174,19 +178,24 @@ class TtsService extends ChangeNotifier {
   List<TtsVoiceOption> _availableVoices = const <TtsVoiceOption>[];
   TtsVoiceOption? _currentVoice;
 
+  @override
   bool get isPlaying => _isPlaying;
+  @override
   bool get isPaused => _isPaused;
   bool get isInitialized => _isInitialized;
   bool get isInitializing => _isInitializing;
   bool get isAvailable => _isInitialized;
   String? get lastError => _lastError;
   String? get lastErrorLanguage => _lastErrorLanguage;
+  @override
   double get speechRate => _speechRate;
+  @override
   double get speechVolume => _speechVolume;
   double get speechPitch => _speechPitch;
   String get currentLanguage => _currentLanguage;
   List<String> get availableLanguages => _availableLanguages;
   String get currentText => _currentText;
+  @override
   int get currentPosition => _currentPosition;
   bool get isLoadingVoices => _isLoadingVoices;
   String? get voiceLoadError => _voiceLoadError;
@@ -298,6 +307,7 @@ class TtsService extends ChangeNotifier {
       _isPlaying = false;
       _isPaused = false;
       _currentPosition = 0;
+      _utteranceBasePosition = 0;
       _notifySafe();
     });
 
@@ -316,6 +326,7 @@ class TtsService extends ChangeNotifier {
     tts.setCancelHandler(() {
       _isPlaying = false;
       _isPaused = false;
+      _utteranceBasePosition = 0;
       _notifySafe();
     });
 
@@ -325,14 +336,23 @@ class TtsService extends ChangeNotifier {
       int endOffset,
       String word,
     ) {
-      _currentPosition = startOffset.clamp(0, _currentText.length);
+      _currentPosition = (_utteranceBasePosition + startOffset).clamp(
+        0,
+        _currentText.length,
+      );
       _notifySafe();
     });
 
     tts.setErrorHandler((message) {
       _isPlaying = false;
       _isPaused = false;
-      _lastError = message;
+      _lastError = message?.toString().trim().isNotEmpty == true
+          ? message.toString()
+          : 'tts_call_failed';
+      final activeSignal = _activeSpeakSignal;
+      if (activeSignal != null && !activeSignal.isCompleted) {
+        activeSignal.completeError(StateError('tts_call_failed'));
+      }
       _notifySafe();
       debugPrint('TTS 运行错误: $message');
     });
@@ -427,11 +447,7 @@ class TtsService extends ChangeNotifier {
           _syncVoiceWithAvailableList(voice, _availableVoices) ?? voice;
 
       await _saveSettings();
-      if (_isPlaying && !_isPaused) {
-        await _restartCurrentPlaybackWithLatestSettings();
-      } else {
-        _notifySafe();
-      }
+      _notifySafe();
     } catch (e) {
       _lastError = _toErrorText(e);
       _notifySafe();
@@ -456,12 +472,7 @@ class TtsService extends ChangeNotifier {
       await _trySetLanguage(tts, _currentLanguage);
       _currentVoice = null;
       await _saveSettings();
-
-      if (_isPlaying && !_isPaused) {
-        await _restartCurrentPlaybackWithLatestSettings();
-      } else {
-        _notifySafe();
-      }
+      _notifySafe();
     } catch (e) {
       _lastError = _toErrorText(e);
       _notifySafe();
@@ -546,6 +557,7 @@ class TtsService extends ChangeNotifier {
     }
   }
 
+  @override
   Future<void> speak(String text) async {
     final content = text.trim();
     if (content.isEmpty) {
@@ -557,30 +569,59 @@ class TtsService extends ChangeNotifier {
     if (!_isInitialized || tts == null) {
       _lastError = _lastError ?? 'tts_unavailable';
       _notifySafe();
-      return;
+      throw StateError('tts_unavailable');
     }
 
+    var cancellationVersion = _speakCancellationVersion;
+    Completer<void>? activeSignal;
     try {
       if (_isPlaying || _isPaused) {
+        _speakCancellationVersion++;
+        _completeActiveSpeakWait();
         await tts.stop();
       }
 
+      cancellationVersion = _speakCancellationVersion;
+      activeSignal = Completer<void>();
+      _activeSpeakSignal = activeSignal;
       _currentText = content;
       _currentPosition = 0;
+      _utteranceBasePosition = 0;
       _lastError = null;
       _notifySafe();
 
       await _applyCurrentVoiceIfNeeded(tts);
-      await tts.speak(content);
-    } catch (e) {
+      final result = await Future.any<dynamic>([
+        _speakWithAudioFocus(tts, content),
+        activeSignal.future,
+      ]);
+      if (cancellationVersion != _speakCancellationVersion) return;
+      if (result == 0 || result == false) {
+        throw StateError('tts_call_failed');
+      }
+    } catch (e, stackTrace) {
+      if (activeSignal?.isCompleted == false) {
+        activeSignal?.complete();
+      }
+      if (cancellationVersion != _speakCancellationVersion) return;
       _isPlaying = false;
       _isPaused = false;
-      _lastError = _toErrorText(e);
+      _lastError =
+          e is StateError &&
+              (e.message == 'tts_unavailable' || e.message == 'tts_call_failed')
+          ? e.message
+          : _toErrorText(e);
       _notifySafe();
       debugPrint('TTS 播放失败: $e');
+      Error.throwWithStackTrace(e, stackTrace);
+    } finally {
+      if (identical(_activeSpeakSignal, activeSignal)) {
+        _activeSpeakSignal = null;
+      }
     }
   }
 
+  @override
   Future<void> pause() async {
     final tts = _flutterTts;
     if (!_isInitialized || tts == null || !_isPlaying || _isPaused) {
@@ -588,14 +629,17 @@ class TtsService extends ChangeNotifier {
     }
 
     try {
+      _speakCancellationVersion++;
+      _completeActiveSpeakWait();
       await tts.pause();
       _isPlaying = false;
       _isPaused = true;
       _notifySafe();
-    } catch (e) {
+    } catch (e, stackTrace) {
       _lastError = _toErrorText(e);
       _notifySafe();
       debugPrint('TTS 暂停失败: $e');
+      Error.throwWithStackTrace(e, stackTrace);
     }
   }
 
@@ -611,11 +655,12 @@ class TtsService extends ChangeNotifier {
       final remainingText = startIndex < fallbackText.length
           ? fallbackText.substring(startIndex)
           : '';
+      _utteranceBasePosition = startIndex;
       await _applyCurrentVoiceIfNeeded(tts);
-      await tts.speak(remainingText.isEmpty ? fallbackText : remainingText);
-      _isPlaying = true;
-      _isPaused = false;
-      _notifySafe();
+      await _speakWithAudioFocus(
+        tts,
+        remainingText.isEmpty ? fallbackText : remainingText,
+      );
     } catch (e) {
       _lastError = _toErrorText(e);
       _notifySafe();
@@ -623,6 +668,7 @@ class TtsService extends ChangeNotifier {
     }
   }
 
+  @override
   Future<void> stop() async {
     final tts = _flutterTts;
     if (tts == null) {
@@ -630,6 +676,8 @@ class TtsService extends ChangeNotifier {
     }
 
     try {
+      _speakCancellationVersion++;
+      _completeActiveSpeakWait();
       await tts.stop();
     } catch (e) {
       _lastError = _toErrorText(e);
@@ -638,6 +686,7 @@ class TtsService extends ChangeNotifier {
       _isPlaying = false;
       _isPaused = false;
       _currentPosition = 0;
+      _utteranceBasePosition = 0;
       _notifySafe();
     }
   }
@@ -648,7 +697,6 @@ class TtsService extends ChangeNotifier {
     if (tts != null) {
       await _safeSetSpeechRate(tts, _speechRate);
     }
-    _schedulePlaybackRefreshIfNeeded();
     await _saveSettings();
     _notifySafe();
   }
@@ -659,7 +707,6 @@ class TtsService extends ChangeNotifier {
     if (tts != null) {
       await _safeSetVolume(tts, _speechVolume);
     }
-    _schedulePlaybackRefreshIfNeeded();
     await _saveSettings();
     _notifySafe();
   }
@@ -670,52 +717,20 @@ class TtsService extends ChangeNotifier {
     if (tts != null) {
       await _safeSetPitch(tts, _speechPitch);
     }
-    _schedulePlaybackRefreshIfNeeded();
     await _saveSettings();
     _notifySafe();
   }
 
-  void _schedulePlaybackRefreshIfNeeded() {
-    _parameterApplyDebounceTimer?.cancel();
-    if (!_isPlaying || _isPaused || _currentText.trim().isEmpty) {
-      return;
+  Future<dynamic> _speakWithAudioFocus(FlutterTts tts, String text) {
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      return tts.speak(text, focus: true);
     }
-    _parameterApplyDebounceTimer = Timer(
-      const Duration(milliseconds: 220),
-      () => unawaited(_restartCurrentPlaybackWithLatestSettings()),
-    );
+    return tts.speak(text);
   }
 
-  Future<void> _restartCurrentPlaybackWithLatestSettings() async {
-    final tts = _flutterTts;
-    if (!_isInitialized ||
-        tts == null ||
-        !_isPlaying ||
-        _isPaused ||
-        _currentText.trim().isEmpty) {
-      return;
-    }
-
-    final text = _currentText;
-    final startIndex = _currentPosition.clamp(0, text.length);
-    final remainingText = startIndex < text.length
-        ? text.substring(startIndex).trimLeft()
-        : '';
-    final content = remainingText.isNotEmpty ? remainingText : text;
-    try {
-      await tts.stop();
-      await _safeSetSpeechRate(tts, _speechRate);
-      await _safeSetVolume(tts, _speechVolume);
-      await _safeSetPitch(tts, _speechPitch);
-      await _applyCurrentVoiceIfNeeded(tts);
-      _currentText = content;
-      _currentPosition = 0;
-      await tts.speak(content);
-    } catch (e) {
-      _lastError = _toErrorText(e);
-      _notifySafe();
-      debugPrint('TTS 参数应用失败: $e');
-    }
+  void _completeActiveSpeakWait() {
+    final active = _activeSpeakSignal;
+    if (active != null && !active.isCompleted) active.complete();
   }
 
   Future<void> setLanguage(String language) async {
@@ -1018,8 +1033,8 @@ class TtsService extends ChangeNotifier {
   @override
   void dispose() {
     _isDisposed = true;
-    _parameterApplyDebounceTimer?.cancel();
-    _parameterApplyDebounceTimer = null;
+    _speakCancellationVersion++;
+    _completeActiveSpeakWait();
     final tts = _flutterTts;
     _flutterTts = null;
     _initializationFuture = null;
