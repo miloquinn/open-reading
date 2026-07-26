@@ -552,7 +552,6 @@ class ReaderHttpAIService implements ConfigurableAIService {
   static const _geminiTemperatureKey = 'reader_ai_gemini_temp_v1';
 
   final Dio _dio;
-  AIProviderSettings? _cachedActive;
 
   static const _secureStorage = FlutterSecureStorage();
 
@@ -626,9 +625,6 @@ class ReaderHttpAIService implements ConfigurableAIService {
       temperature: temperature,
     ).normalized();
 
-    if (provider == null || provider == settings.provider) {
-      _cachedActive = settings;
-    }
     return settings;
   }
 
@@ -648,7 +644,6 @@ class ReaderHttpAIService implements ConfigurableAIService {
       _temperatureKey(normalized.provider),
       normalized.temperature,
     );
-    _cachedActive = normalized;
   }
 
   Future<List<String>> fetchAvailableModels(AIProviderSettings settings) async {
@@ -821,12 +816,9 @@ class ReaderHttpAIService implements ConfigurableAIService {
     }
   }
 
-  Future<AIProviderSettings> _resolveActiveSettings() async {
-    if (_cachedActive != null) {
-      return _cachedActive!;
-    }
-    return loadSettings();
-  }
+  /// 每次请求都重新读取当前激活配置：服务在各页面被独立实例化，
+  /// 实例级缓存会让设置页切换的模型无法作用到已打开的对话界面。
+  Future<AIProviderSettings> _resolveActiveSettings() => loadSettings();
 
   String _compactPageContext(String pageText) {
     final text = pageText
