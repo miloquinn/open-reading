@@ -8,9 +8,12 @@ import 'package:xxread/services/ai/book_preprocess_service.dart';
 import 'package:xxread/services/ai/global_ai_reading_service.dart';
 import 'package:xxread/services/books/book_text_extraction_service.dart';
 
-/// 记录调用并按外部指令放行的假 AI 服务。
+/// 记录调用并按外部指令放行的假 AI 服务；可预置若干次失败。
 class _RecordingAIService implements AIService {
   final List<String> chatCalls = <String>[];
+
+  /// 每次 chat 调用先消费一个预置错误；耗尽后正常返回。
+  final List<AIServiceException> pendingErrors = <AIServiceException>[];
 
   @override
   Future<String> chat({
@@ -19,6 +22,9 @@ class _RecordingAIService implements AIService {
     required AIRequestMeta meta,
   }) async {
     chatCalls.add(meta.chapterId);
+    if (pendingErrors.isNotEmpty) {
+      throw pendingErrors.removeAt(0);
+    }
     return '总结：${meta.chapterId}';
   }
 
@@ -62,6 +68,23 @@ class _MemoryKnowledge extends GlobalAIReadingService {
 
 Book _testBook() =>
     Book(id: 7, title: '并发测试', filePath: 'test.txt', format: 'txt');
+
+/// 测试用预处理服务：去掉请求间隔，退避序列可注入。
+BookPreprocessService _testService({
+  required _RecordingAIService ai,
+  required _MemoryKnowledge knowledge,
+  required AiRequestCoordinator coordinator,
+  List<Duration> retryDelays = const [],
+}) {
+  return BookPreprocessService(
+    ai: ai,
+    extractor: const _FakeExtractor(),
+    knowledge: knowledge,
+    coordinator: coordinator,
+    requestGap: Duration.zero,
+    retryDelays: retryDelays,
+  );
+}
 
 void main() {
   group('AiRequestCoordinator', () {
@@ -147,9 +170,8 @@ void main() {
       final coordinator = AiRequestCoordinator.forTesting();
       final ai = _RecordingAIService();
       final knowledge = _MemoryKnowledge();
-      final service = BookPreprocessService(
+      final service = _testService(
         ai: ai,
-        extractor: const _FakeExtractor(),
         knowledge: knowledge,
         coordinator: coordinator,
       );
@@ -174,9 +196,8 @@ void main() {
       final coordinator = AiRequestCoordinator.forTesting();
       final ai = _RecordingAIService();
       final knowledge = _MemoryKnowledge();
-      final service = BookPreprocessService(
+      final service = _testService(
         ai: ai,
-        extractor: const _FakeExtractor(),
         knowledge: knowledge,
         coordinator: coordinator,
       );
@@ -203,9 +224,8 @@ void main() {
       final coordinator = AiRequestCoordinator.forTesting();
       final ai = _RecordingAIService();
       final knowledge = _MemoryKnowledge();
-      final service = BookPreprocessService(
+      final service = _testService(
         ai: ai,
-        extractor: const _FakeExtractor(),
         knowledge: knowledge,
         coordinator: coordinator,
       );
@@ -213,6 +233,129 @@ void main() {
       final summary = await service.preprocessBook(book: _testBook());
       expect(ai.chatCalls, hasLength(2));
       expect(summary, isNotEmpty);
+    });
+  });
+
+  group('BookPreprocessService 限流重试', () {
+    test('429 限流按退避重试，成功后任务继续', () async {
+      final coordinator = AiRequestCoordinator.forTesting();
+      final ai = _RecordingAIService()
+        ..pendingErrors.addAll(const [
+          AIServiceException(code: 'request_failed_generic', status: '429'),
+          AIServiceException(code: 'request_failed_generic', status: '429'),
+        ]);
+      final knowledge = _MemoryKnowledge();
+      final service = _testService(
+        ai: ai,
+        knowledge: knowledge,
+        coordinator: coordinator,
+        retryDelays: const [Duration.zero, Duration.zero, Duration.zero],
+      );
+
+      final summary = await service.preprocessBook(book: _testBook());
+      // 第一块失败 2 次 + 成功 1 次，合并 1 次。
+      expect(ai.chatCalls, hasLength(4));
+      expect(summary, isNotEmpty);
+      expect(knowledge.summaries['7'], summary);
+    });
+
+    test('网络传输失败同样重试', () async {
+      final coordinator = AiRequestCoordinator.forTesting();
+      final ai = _RecordingAIService()
+        ..pendingErrors.add(
+          const AIServiceException(code: 'network_request_failed'),
+        );
+      final knowledge = _MemoryKnowledge();
+      final service = _testService(
+        ai: ai,
+        knowledge: knowledge,
+        coordinator: coordinator,
+        retryDelays: const [Duration.zero],
+      );
+
+      final summary = await service.preprocessBook(book: _testBook());
+      expect(ai.chatCalls, hasLength(3));
+      expect(summary, isNotEmpty);
+    });
+
+    test('配置类错误不重试，立即失败', () async {
+      final coordinator = AiRequestCoordinator.forTesting();
+      final ai = _RecordingAIService()
+        ..pendingErrors.add(const AIServiceException(code: 'api_key_required'));
+      final knowledge = _MemoryKnowledge();
+      final service = _testService(
+        ai: ai,
+        knowledge: knowledge,
+        coordinator: coordinator,
+        retryDelays: const [Duration.zero, Duration.zero],
+      );
+
+      await expectLater(
+        service.preprocessBook(book: _testBook()),
+        throwsA(
+          isA<AIServiceException>().having(
+            (e) => e.code,
+            'code',
+            'api_key_required',
+          ),
+        ),
+      );
+      expect(ai.chatCalls, hasLength(1), reason: '不应对配置错误重试');
+      expect(knowledge.summaries, isEmpty);
+    });
+
+    test('重试次数耗尽后抛出最后一次错误', () async {
+      final coordinator = AiRequestCoordinator.forTesting();
+      final ai = _RecordingAIService()
+        ..pendingErrors.addAll(const [
+          AIServiceException(code: 'request_failed_generic', status: '429'),
+          AIServiceException(code: 'request_failed_generic', status: '503'),
+        ]);
+      final knowledge = _MemoryKnowledge();
+      final service = _testService(
+        ai: ai,
+        knowledge: knowledge,
+        coordinator: coordinator,
+        retryDelays: const [Duration.zero],
+      );
+
+      await expectLater(
+        service.preprocessBook(book: _testBook()),
+        throwsA(
+          isA<AIServiceException>().having((e) => e.status, 'status', '503'),
+        ),
+      );
+      expect(ai.chatCalls, hasLength(2));
+    });
+
+    test('退避等待期间取消任务立即生效', () async {
+      final coordinator = AiRequestCoordinator.forTesting();
+      final ai = _RecordingAIService()
+        ..pendingErrors.add(
+          const AIServiceException(
+            code: 'request_failed_generic',
+            status: '429',
+          ),
+        );
+      final knowledge = _MemoryKnowledge();
+      final service = _testService(
+        ai: ai,
+        knowledge: knowledge,
+        coordinator: coordinator,
+        retryDelays: const [Duration(seconds: 30)],
+      );
+
+      final cancelToken = BookPreprocessCancelToken();
+      final preprocess = service.preprocessBook(
+        book: _testBook(),
+        cancelToken: cancelToken,
+      );
+      // 等第一次请求抛出 429 并进入退避等待。
+      await pumpEventQueue();
+      expect(ai.chatCalls, hasLength(1));
+
+      cancelToken.cancel();
+      await expectLater(preprocess, throwsA(isA<BookPreprocessCancelled>()));
     });
   });
 }

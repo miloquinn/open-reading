@@ -295,53 +295,83 @@ class _ReaderAiPanelState extends State<ReaderAiPanel> {
     });
   }
 
+  /// 键盘收起时为系统手势区高度，弹出时键盘已顶起面板、无需再让位。
+  double get _gestureInset {
+    final media = MediaQuery.of(context);
+    return media.viewInsets.bottom > 0 ? 0.0 : media.viewPadding.bottom;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final palette = widget.palette;
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
+    // 不用 SafeArea 包内容：对话一直铺到面板底边（手势区照常显示消息），
+    // 只有悬浮胶囊自己抬高避开手势提示线。
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.auto_awesome_outlined, color: palette.accent),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  l10n.settingsAiAssistantTitle,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: palette.text,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          if (_configChecked && !_configured)
+            _ReaderAiNotice(
+              palette: palette,
+              icon: Icons.key_off_outlined,
+              text: l10n.readerAiNotConfiguredHint,
+            ),
+          // 输入胶囊悬浮在对话上方：只有胶囊本体有背景，
+          // 四周透出消息内容；列表底部预留胶囊高度。
+          Expanded(
+            child: Stack(
               children: [
-                Icon(Icons.auto_awesome_outlined, color: palette.accent),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    l10n.settingsAiAssistantTitle,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: palette.text,
-                      fontWeight: FontWeight.w600,
-                    ),
+                Positioned.fill(child: _buildConversation(context)),
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 12 + _gestureInset,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (_error != null) ...[
+                        // 悬浮态下垫一层实色，避免下方文字透进半透明错误条。
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: palette.surface,
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: _ReaderAiNotice(
+                            palette: palette,
+                            icon: Icons.error_outline_rounded,
+                            text: _error!,
+                            isError: true,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                      ],
+                      _buildInputRow(context),
+                    ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 10),
-            if (_configChecked && !_configured)
-              _ReaderAiNotice(
-                palette: palette,
-                icon: Icons.key_off_outlined,
-                text: l10n.readerAiNotConfiguredHint,
-              ),
-            Expanded(child: _buildConversation(context)),
-            if (_error != null) ...[
-              const SizedBox(height: 8),
-              _ReaderAiNotice(
-                palette: palette,
-                icon: Icons.error_outline_rounded,
-                text: _error!,
-                isError: true,
-              ),
-            ],
-            const SizedBox(height: 10),
-            _buildInputRow(context),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -366,7 +396,13 @@ class _ReaderAiPanelState extends State<ReaderAiPanel> {
     }
     return ListView(
       controller: _scrollController,
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      // 底部预留悬浮胶囊（约 52px + 抬高量）与错误条的高度。
+      padding: EdgeInsets.fromLTRB(
+        0,
+        6,
+        0,
+        72 + _gestureInset + (_error != null ? 64 : 0),
+      ),
       children: [
         for (final entry in _entries)
           _ReaderAiBubble(palette: palette, entry: entry),
