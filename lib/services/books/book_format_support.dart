@@ -204,14 +204,38 @@ class BookFormatRegistry {
       lightinkNote: '无漫画引擎。OR 扩展能力。',
     ),
     BookFormatSpec(
+      id: 'cbt',
+      extensions: <String>['cbt'],
+      displayName: 'Comic (CBT)',
+      capability: BookFormatCapability.fullReader,
+      pipeline: BookReaderPipeline.dedicatedRenderer,
+      acceptInFilePicker: true,
+      notes: 'TAR 容器漫画；与 CBZ 共用 ComicReaderPage 与页解压管线。',
+      lightinkNote: '未支持。',
+    ),
+    BookFormatSpec(
       id: 'cbr',
       extensions: <String>['cbr'],
       displayName: 'Comic (CBR)',
       capability: BookFormatCapability.metadataImport,
       pipeline: BookReaderPipeline.dedicatedRenderer,
       acceptInFilePicker: true,
-      notes: 'RAR 容器需平台解压依赖，正文暂不可读；提示用户转 CBZ。',
+      notes:
+          'RAR 无纯 Dart 解码；打开时按文件头识别真实容器，'
+          '大量改名自 ZIP/TAR 的 CBR 可直接阅读，真 RAR 提示转 CBZ。',
       lightinkNote: 'CBR 仅 MIME 级；无漫画引擎。',
+    ),
+    BookFormatSpec(
+      id: 'cb7',
+      extensions: <String>['cb7'],
+      displayName: 'Comic (CB7)',
+      capability: BookFormatCapability.metadataImport,
+      pipeline: BookReaderPipeline.dedicatedRenderer,
+      acceptInFilePicker: true,
+      notes:
+          '7z 无纯 Dart 解码；打开时按文件头识别真实容器，'
+          '实为 ZIP/TAR 的文件可直接阅读，真 7z 提示转 CBZ。',
+      lightinkNote: '未支持。',
     ),
     BookFormatSpec(
       id: 'zip',

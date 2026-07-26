@@ -1,6 +1,6 @@
 # 本地书籍格式支持（Open Reading）
 
-> 状态：架构基线（2026-07-18），能力矩阵更新（2026-07-26：Kindle 正文 / CBZ 漫画 / HTML / Markdown 已接线）  
+> 状态：架构基线（2026-07-18），能力矩阵更新（2026-07-26：Kindle 正文 / CBZ 漫画 / HTML / Markdown 已接线；CBT 可读、CBR/CB7 按文件头嗅探）  
 > 代码单一事实来源：`lib/services/books/book_format_support.dart`  
 > Lightink 对照资料：`F:\work\lightink-reverse\docs\09-reader-complete.md`（及 05/06）
 
@@ -49,7 +49,9 @@
 | HTML | `html` `htm` `xhtml` | ✓ | **转文本后阅读** | 按标题切章→统一分页 | 无 |
 | Markdown | `md` `markdown` | ✓ | **转文本后阅读** | 去标记→TXT 章节规则 | 无 |
 | Comic (CBZ) | `cbz` | ✓ | **专用漫画阅读** | ComicReaderPage 按页图渲染 | 基本无 |
-| Comic (CBR) | `cbr` | ✓ | 元数据导入（提示转 CBZ） | RAR 需平台解压依赖 | 基本无 |
+| Comic (CBT) | `cbt` | ✓ | **专用漫画阅读** | TAR 容器→同一 ComicReaderPage | 无 |
+| Comic (CBR) | `cbr` | ✓ | **按文件头尝试阅读**（实为 ZIP/TAR 可读；真 RAR 提示转 CBZ） | 容器嗅探→ComicReaderPage | 基本无 |
+| Comic (CB7) | `cb7` | ✓ | 按文件头尝试阅读（实为 ZIP/TAR 可读；真 7z 提示转 CBZ） | 容器嗅探→ComicReaderPage | 无 |
 | ZIP | `zip` | 计划中 | **planned** | 解压→内层分流 | 有 ZipDecoder 容器 |
 | RAR | `rar` | 计划中 | **planned** | 解压→内层分流 | 有 `unrar_file` |
 
@@ -110,7 +112,7 @@ zip/rar → 解压到临时/托管目录
 - `PdfReaderPage`（`pages/reader/pdf_reader_page.dart`）：pdfx `PdfDocument` 打开，
   按页渲染 PNG 位图（屏幕像素密度自适应、白底、最大宽 2160px），
   **渲染严格串行**（Android 不允许并行渲染），LRU 缓存 5 页 + 相邻页预载。  
-- UI 骨架与 CBZ 漫画共用 `paged_image_reader.dart`（翻页/缩放/跳页/进度）。  
+- UI 骨架与 CBZ 漫画共用 `paged_image_reader.dart`（翻页/缩放/跳页/进度/点击区域/阅读方向/背景色/音量键/屏幕常亮）。  
 - 平台：Android / iOS / macOS / Windows / Web（pdf.js 已在 `web/index.html` 配置）；
   **pdfx 无 Linux 实现**，Linux 端打开提示 `readerPdfLinuxUnsupported`。  
 - 不与 `NativeTextPaginator` 混用；进度存 `currentPage`（页索引）。  
@@ -120,10 +122,13 @@ zip/rar → 解压到临时/托管目录
 一律：**进口转换 → 章节纯文本 → 统一分页**。  
 复杂版式不承诺 1:1，以可读为主。
 
-### 3.7 CBZ / CBR（漫画）
+### 3.7 CBZ / CBT / CBR / CB7（漫画）
 
 - CBZ：**已接线**（2026-07-26）。`ComicReaderPage`（`pages/reader/comic_reader_page.dart`）+ `comic_book_parser.dart`：isolate 解 ZIP 目录建页索引（数字感知排序、过滤 __MACOSX/隐藏文件）、按需解压单页、LRU 页缓存与相邻页预载、双击/双指缩放（缩放中锁翻页）、进度写回 `currentPage`。不走文本行盒。  
-- CBR：RAR 解压在桌面端无纯 Dart 方案，暂只导入元数据；打开时提示转 CBZ（`readerComicCbrUnsupported`）。  
+- **共享控制层**（2026-07-26）：`paged_image_reader.dart` 为漫画与 PDF 提供统一控制层——共享 3×3 点击区域（`reader_tap_zones`，RTL 下镜像列）、Android 音量键翻页与屏幕常亮、上/下一页按钮、进度滑条、跳页输入；`paged_image_reader_settings.dart` 持久化按书阅读方向（日漫 RTL）与全局页面背景色（黑/灰/白）。  
+- **容器嗅探**（2026-07-26）：所有漫画格式打开与导入时按文件头识别真实容器（ZIP 前缀魔数 / `Rar!` / 7z 魔数 / offset 257 的 `ustar`），扩展名只作无魔数时的兜底。市面上大量 CBR/CB7 实为 ZIP 改名，识别后直接走 CBZ 同款管线。  
+- CBT：**已接线**。TAR 容器由 `archive` 的 `TarDecoder` 解包，页索引/解压/阅读与 CBZ 完全共用；旧式 V7 TAR 无 ustar 魔数时按扩展名兜底。  
+- CBR / CB7：真实容器为 RAR/7z 时无纯 Dart 解码，`comic_book_parser` 抛 `ComicArchiveUnsupportedException`，阅读页展示本地化提示（真 RAR→`readerComicCbrUnsupported`，其余→`readerComicArchiveUnsupported`）；元数据与封面在容器可解包时照常提取，否则回退估算值。  
 
 ---
 
@@ -159,8 +164,9 @@ zip/rar → 解压到临时/托管目录
 | P1 | MOBI/AZW/AZW3 正文可读 | ✅ 2026-07-26（kindle_unpack） |
 | P2 | FB2 / RTF / DOCX / HTML / Markdown 正文可读 | ✅（简化排版） |
 | P3 | CBZ 漫画阅读 | ✅ 2026-07-26（ComicReaderPage） |
+| P3 | CBT 漫画 + CBR/CB7 文件头嗅探 | ✅ 2026-07-26（改名 ZIP/TAR 可读；真 RAR/7z 提示转 CBZ） |
 | P1 | ZIP 容器导入 | 待做；与 Lightink 对齐，实现成本低 |
-| P2 | RAR 容器 / CBR 漫画 | 待做；需解压依赖与授权评估 |
+| P2 | 真 RAR 容器解压 | 待做；需平台解压依赖与授权评估 |
 | P3 | PDF 应用内阅读 | ✅ 2026-07-26（PdfReaderPage；Linux 待引擎支持） |
 | P3 | DOC（旧版二进制）正文 | 无纯 Dart 方案，暂不做 |
 

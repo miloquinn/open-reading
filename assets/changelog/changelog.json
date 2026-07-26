@@ -2,6 +2,47 @@
     "schemaVersion": 1,
     "entries": [
         {
+            "version": "2.4.2",
+            "notes": {
+                "en": [
+                    "Added a Cover page-turn mode: pages stack like sheets of paper, so turning forward slides the current page off to the left to uncover the next one, and turning back slides the previous page back over it; drags follow your finger and settle with a spring, taps and volume keys turn pages too, and the mode is available in both local and online-source readers",
+                    "Added customizable tap zones: the screen splits into a 3×3 grid and each area can be set to next page, previous page, next or previous chapter, menu, or nothing; configure it right on the reading page with a full-screen preview, and if no menu zone remains the center automatically becomes Menu",
+                    "Comics now open in more formats: CBT (TAR) comics are fully readable, and CBR/CB7 files are inspected by their real file header — the many that are actually renamed ZIP archives now open directly, while true RAR/7z archives show a clear notice to convert to CBZ; every comic format now imports with a real page count and first-page cover when the archive can be unpacked",
+                    "The comic and PDF reader gained a full control bar: previous/next buttons, a draggable progress slider, go-to-page input, a per-book reading direction with right-to-left manga support, and a settings sheet with page background color, keep-screen-on, and volume-key paging; the shared 3×3 tap zones and Android volume keys now work here too",
+                    "Added a \"Resume reading on launch\" switch under Settings → Reading settings: if you leave the app while reading, the next launch reopens that book at your last position; exiting from the bookshelf keeps the normal home screen, and notification taps or files opened from outside always take priority",
+                    "Reorganized the reader's Reading settings sheet into four tabs — Theme, Text, Layout, and Paging — so each group fits without endless scrolling; letter spacing, first-line indent, and paragraph spacing moved into a collapsed Advanced typography section under the Text tab",
+                    "AI book preprocessing no longer blocks AI chat: conversations now take priority and the preprocessing queue yields between its requests until your answer arrives; whole-book text extraction also moved to a background isolate, so preprocessing a large book no longer freezes the interface"
+                ],
+                "zh": [
+                    "新增「覆盖翻页」模式：页面像一摞纸的最上层，向前翻时当前页向左划出、露出底下静止的下一页，回翻时上一页从左缘盖回；拖动实时跟手，松手按速度用弹簧动画完成或回弹，点击与音量键翻页同样生效，本地书籍与在线书源阅读器均可选择",
+                    "新增点击区域设置：屏幕分成 3×3 九宫格，每格可自定义为上一页、下一页、上一章、下一章、菜单或无操作；在阅读页上全屏预览直接配置，若没有任何菜单区域，中间会自动恢复为菜单",
+                    "漫画支持更多格式：新增 CBT（TAR 容器）直接阅读；CBR/CB7 按文件头识别真实容器，改名自 ZIP 的文件现在可以直接阅读，真正的 RAR/7z 会明确提示转换为 CBZ；所有漫画格式导入时都会尝试提取真实页数与第一页封面",
+                    "漫画与 PDF 阅读器补齐完整控制栏：上一页/下一页按钮、可拖动进度条、跳页输入、按书记忆的阅读方向（支持日漫从右到左），设置面板提供页面背景色、屏幕常亮与音量键翻页开关；共享的 3×3 点击区域和 Android 音量键翻页同样生效",
+                    "设置 → 阅读设置新增「启动时回到上次阅读」开关：阅读中退出应用后，下次启动自动打开当时的书并回到上次阅读位置；从书架正常退出则仍停留在首页，点通知或从外部打开文件进入时不受影响",
+                    "阅读页的「阅读设置」弹窗重新排版为「主题 / 文字 / 版式 / 翻页」四个页签，不再是一列长滚动列表；字间距、首行缩进、段间距收进「文字」页签下默认折叠的「高级排版」，本地书籍与在线书源阅读器同步生效",
+                    "AI 预处理与 AI 对话可以同时使用：对话请求优先执行，预处理队列在分块请求之间主动让行，等你的回答返回后再继续；整本书的章节抽取也移到后台 isolate，预处理大书时界面不再卡顿"
+                ],
+                "zh-TW": [
+                    "新增「覆蓋翻頁」模式：頁面像一疊紙的最上層，向前翻時目前頁向左滑出、露出底下靜止的下一頁，回翻時上一頁從左緣蓋回；拖曳即時跟手，放開後依速度以彈簧動畫完成或回彈，點擊與音量鍵翻頁同樣生效，本機書籍與線上書源閱讀器均可選擇",
+                    "新增點擊區域設定：螢幕分成 3×3 九宮格，每格可自訂為上一頁、下一頁、上一章、下一章、選單或無操作；在閱讀頁上全螢幕預覽直接設定，若沒有任何選單區域，中間會自動恢復為選單",
+                    "漫畫支援更多格式：新增 CBT（TAR 容器）直接閱讀；CBR/CB7 依檔案標頭識別真實容器，由 ZIP 改名的檔案現在可以直接閱讀，真正的 RAR/7z 會明確提示轉換為 CBZ；所有漫畫格式匯入時都會嘗試擷取真實頁數與第一頁封面",
+                    "漫畫與 PDF 閱讀器補齊完整控制列：上一頁/下一頁按鈕、可拖曳進度條、跳頁輸入、按書記憶的閱讀方向（支援日漫從右到左），設定面板提供頁面背景色、螢幕常亮與音量鍵翻頁開關；共享的 3×3 點擊區域和 Android 音量鍵翻頁同樣生效",
+                    "設定 → 閱讀設定新增「啟動時回到上次閱讀」開關：閱讀中退出應用程式後，下次啟動自動開啟當時的書並回到上次閱讀位置；從書架正常退出則仍停留在首頁，點通知或從外部開啟檔案進入時不受影響",
+                    "閱讀頁的「閱讀設定」彈窗重新排版為「主題 / 文字 / 版式 / 翻頁」四個頁籤，不再是一列長捲動清單；字距、首行縮排、段落間距收進「文字」頁籤下預設摺疊的「進階排版」，本機書籍與線上書源閱讀器同步生效",
+                    "AI 預處理與 AI 對話可以同時使用：對話請求優先執行，預處理佇列在分塊請求之間主動讓行，等你的回答返回後再繼續；整本書的章節擷取也移到背景 isolate，預處理大書時介面不再卡頓"
+                ],
+                "ja": [
+                    "「カバー」ページめくりを追加：重なった紙のように、進むときは現在のページが左へスライドして下の次ページが現れ、戻るときは前のページが左端から覆いかぶさります。ドラッグは指に追従し、離すと速度に応じてスプリングで完了または戻ります。タップや音量キーでのページ送りにも対応し、ローカル書籍とオンライン書源の両方で選択できます",
+                    "タップ領域のカスタマイズを追加：画面を3×3のグリッドに分け、各エリアに前後ページ・前後章・メニュー・操作なしを割り当てられます。閲覧ページ上の全画面プレビューでそのまま設定でき、メニュー領域がなくなった場合は中央が自動的にメニューへ戻ります",
+                    "コミックの対応形式を拡大：CBT（TAR コンテナ）を直接読めるようになり、CBR/CB7 はファイルヘッダーで実際のコンテナを判定します。ZIP を改名しただけのファイルはそのまま読め、本物の RAR/7z には CBZ への変換を促す明確な案内を表示します。すべてのコミック形式で実ページ数と 1 ページ目の表紙の取り込みを試みます",
+                    "コミック・PDF リーダーのコントロールバーを一新：前後ページボタン、ドラッグできる進捗スライダー、ページ指定入力、書籍ごとに記憶される読む方向（マンガの右から左に対応）を追加し、設定シートでページ背景色・画面常時点灯・音量キーめくりを切り替えられます。共有の 3×3 タップ領域と Android 音量キーにも対応しました",
+                    "設定 → 読書設定に「起動時に読書を再開」スイッチを追加：読書中にアプリを終了すると、次回起動時にその本を前回の位置で自動的に開きます。本棚から通常どおり終了した場合はホームが表示され、通知タップや外部ファイルからの起動が優先されます",
+                    "読書設定シートを「テーマ・文字・版面・めくり」の4つのタブに再構成し、長いスクロールなしで設定できるようになりました。字間・字下げ・段落間隔は「文字」タブ内の折りたたみ式「詳細な組版」にまとめました",
+                    "AI 事前処理中でも AI チャットが使えるようになりました：会話リクエストを優先し、事前処理キューはリクエストの合間に譲って回答を待ってから再開します。全文抽出もバックグラウンド isolate に移し、大きな本の事前処理開始時に画面が固まる問題を修正しました"
+                ]
+            }
+        },
+        {
             "version": "2.4.1",
             "notes": {
                 "en": [

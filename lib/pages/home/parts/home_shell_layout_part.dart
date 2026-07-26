@@ -232,7 +232,16 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
       screenWidth: mediaQuery.size.width,
       itemCount: navigationCount,
     );
+    // 键盘可见性必须在 Scaffold 外层读取：resizeToAvoidBottomInset 会把
+    // 键盘 inset 从子树 MediaQuery 中消费掉，Scaffold 内读到的恒为 0。
+    final keyboardVisible = mediaQuery.viewInsets.bottom > 0;
     final visualSelectedIndex = _targetTabIndex ?? _selectedIndex;
+    final activeDestination =
+        _navigationItems[visualSelectedIndex.clamp(
+              0,
+              _navigationItems.length - 1,
+            )]
+            .destination;
     final navBorderRadius = BorderRadius.circular(
       metrics.floatingNavHeight / 2,
     );
@@ -244,38 +253,45 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
         child: Stack(
           children: [
             // 主内容 - 优化的PageView，减少卡顿
-            PageView(
-              controller: _pageController,
-              // 预构建相邻页面，避免首次滑动时页面构建/数据加载挤在动画帧里造成掉帧
-              allowImplicitScrolling: true,
-              onPageChanged: (index) {
-                final pendingPageIndex = _pendingPageControllerIndex;
-                if (pendingPageIndex != null && index != pendingPageIndex) {
-                  return;
-                }
-                if (pendingPageIndex == index) {
-                  _pendingPageControllerIndex = null;
-                }
-                // animateToPage 跨两页时会先经过中间页。程序化切换期间忽略
-                // 这个中间回调，避免底部导航出现“首页 -> 书库 -> 设置”的闪跳。
-                final targetIndex = _targetTabIndex;
-                if (targetIndex != null && index != targetIndex) {
-                  return;
-                }
-                if (targetIndex == index) {
-                  _completeTabTransition(index);
-                  return;
-                }
-                if (mounted && _selectedIndex != index) {
-                  _updateSelectedIndex(index);
-                }
-              },
-              // PageScrollPhysics 保留整页吸附，同时减少 Bouncing 在页面落位时
-              // 额外的回弹帧，让三页之间的切换更干净。
-              physics: const PageScrollPhysics(parent: ClampingScrollPhysics()),
-              // 禁用页面捕捉以减少卡顿
-              pageSnapping: true,
-              children: _mobilePages,
+            // HomeTabFocusScope：只有当前 tab 的子树可持有焦点，防止相邻
+            // 缓存页里的输入框在上层路由关闭时抢回焦点并拖拽 PageView。
+            HomeTabFocusScope(
+              activeDestination: activeDestination,
+              child: PageView(
+                controller: _pageController,
+                // 预构建相邻页面，避免首次滑动时页面构建/数据加载挤在动画帧里造成掉帧
+                allowImplicitScrolling: true,
+                onPageChanged: (index) {
+                  final pendingPageIndex = _pendingPageControllerIndex;
+                  if (pendingPageIndex != null && index != pendingPageIndex) {
+                    return;
+                  }
+                  if (pendingPageIndex == index) {
+                    _pendingPageControllerIndex = null;
+                  }
+                  // animateToPage 跨两页时会先经过中间页。程序化切换期间忽略
+                  // 这个中间回调，避免底部导航出现“首页 -> 书库 -> 设置”的闪跳。
+                  final targetIndex = _targetTabIndex;
+                  if (targetIndex != null && index != targetIndex) {
+                    return;
+                  }
+                  if (targetIndex == index) {
+                    _completeTabTransition(index);
+                    return;
+                  }
+                  if (mounted && _selectedIndex != index) {
+                    _updateSelectedIndex(index);
+                  }
+                },
+                // PageScrollPhysics 保留整页吸附，同时减少 Bouncing 在页面落位时
+                // 额外的回弹帧，让三页之间的切换更干净。
+                physics: const PageScrollPhysics(
+                  parent: ClampingScrollPhysics(),
+                ),
+                // 禁用页面捕捉以减少卡顿
+                pageSnapping: true,
+                children: _mobilePages,
+              ),
             ),
             _buildMobileTopBarOverlay(),
             // 悬浮药丸导航栏（RepaintBoundary 隔离：避免 PageView 滑动时
@@ -288,22 +304,20 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
                 valueListenable: BookOpenTransition.navigationHiddenListenable,
                 builder: (context, readingActive, navigationBar) {
                   final reduceMotion = MediaQuery.of(context).disableAnimations;
+                  // 键盘弹出时导航栏滑出隐藏，而不是被键盘顶起（AI 页输入等）。
+                  final hidden = readingActive || keyboardVisible;
                   return IgnorePointer(
                     key: const ValueKey('home-floating-navigation-pointer'),
-                    ignoring: readingActive,
+                    ignoring: hidden,
                     child: AnimatedSlide(
                       key: const ValueKey('home-floating-navigation-motion'),
-                      offset: readingActive
-                          ? const Offset(0, 1.15)
-                          : Offset.zero,
+                      offset: hidden ? const Offset(0, 1.15) : Offset.zero,
                       duration: reduceMotion
                           ? Duration.zero
-                          : readingActive
+                          : hidden
                           ? const Duration(milliseconds: 180)
                           : const Duration(milliseconds: 360),
-                      curve: readingActive
-                          ? Curves.easeOutCubic
-                          : Curves.easeOutBack,
+                      curve: hidden ? Curves.easeOutCubic : Curves.easeOutBack,
                       child: navigationBar!,
                     ),
                   );
@@ -439,6 +453,23 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
           onTap: () => _switchToTab(settingsIndex),
         );
       }
+    } else if (currentPage is AiPage) {
+      trailing = Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildTopBarActionButton(
+            icon: Icons.history_rounded,
+            tooltip: context.l10n.aiHistoryTitle,
+            onTap: _aiPageController.openHistory,
+          ),
+          const SizedBox(width: 8),
+          _buildTopBarActionButton(
+            icon: Icons.add_comment_outlined,
+            tooltip: context.l10n.aiChatNewChat,
+            onTap: _aiPageController.startNewChat,
+          ),
+        ],
+      );
     } else if (currentPage is LibraryPage) {
       trailing = Row(
         mainAxisSize: MainAxisSize.min,
@@ -638,10 +669,11 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
     return page;
   }
 
-  Widget _buildPageWrapper(Widget page) {
+  Widget _buildPageWrapper(HomeNavigationItem item) {
     // 这里是“页面装配中心”：
     // 不同页面统一在这里包壳（顶栏、背景、系统UI处理）。
     // 这样以后你要替换某个页面的外壳，只改这里。
+    final page = item.page;
     Widget wrappedPage;
 
     // 手机端针对不同页面应用不同包装策略。
@@ -653,7 +685,12 @@ extension _HomeShellLayoutPart on _HomeShellPageState {
     }
 
     // KeepAlive 能让 tab 切换时保留页面状态（滚动位置/已加载数据）。
-    return HomeKeepAlivePageWrapper(child: wrappedPage);
+    return HomeKeepAlivePageWrapper(
+      child: HomeTabFocusGate(
+        destination: item.destination,
+        child: wrappedPage,
+      ),
+    );
   }
 
   void _navigateToImport() {

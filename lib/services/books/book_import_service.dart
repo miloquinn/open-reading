@@ -872,8 +872,8 @@ class BookImportService implements BookFileImporter {
     const int maxBytesForMetadata = 10 * 1024 * 1024; // 10MB
 
     // Kindle 的 EXTH 封面记录位于文件尾部，截断头部会丢封面且破坏
-    // PalmDB 记录表偏移；CBZ 的 ZIP 中央目录也在尾部（页数与首页封面
-    // 依赖完整包），因此这些格式必须完整读取。
+    // PalmDB 记录表偏移；漫画容器的 ZIP 中央目录也在尾部、TAR 条目
+    // 顺序排布（页数与首页封面依赖完整包），因此这些格式必须完整读取。
     const fullReadExtensions = <String>{
       'txt',
       'epub',
@@ -881,6 +881,9 @@ class BookImportService implements BookFileImporter {
       'azw',
       'azw3',
       'cbz',
+      'cbt',
+      'cbr',
+      'cb7',
     };
     if (fileSize > maxBytesForMetadata && !fullReadExtensions.contains(ext)) {
       // 非TXT/EPUB的大文件只读取前10MB用于元数据提取
@@ -939,7 +942,10 @@ class BookImportService implements BookFileImporter {
         'azw' ||
         'azw3' => await _extractMobiMetadata(bytes, fileName),
         'fb2' => await _extractFb2Metadata(bytes, fileName),
-        'cbz' || 'cbr' => await _extractComicMetadata(bytes, fileName),
+        'cbz' ||
+        'cbr' ||
+        'cbt' ||
+        'cb7' => await _extractComicMetadata(bytes, fileName),
         'rtf' => await _extractRtfMetadata(bytes, fileName),
         _ => _extractBasicMetadata(bytes, fileName),
       };
@@ -1587,16 +1593,15 @@ class BookImportService implements BookFileImporter {
     );
   }
 
-  /// Extract Comic Book (CBZ/CBR) metadata
+  /// Extract Comic Book (CBZ/CBR/CBT/CB7) metadata
   Future<EnhancedBookMetadata> _extractComicMetadata(
     Uint8List bytes,
     String fileName,
   ) async {
     try {
-      // CBZ files are ZIP archives containing images
-      // CBR files are RAR archives containing images
+      // 漫画容器统一按文件头识别：ZIP/TAR（含改名的 CBR/CB7）可解包。
       final extension = fileName.split('.').last.toLowerCase();
-      final title = fileName.replaceAll(RegExp(r'\.(cbz|cbr)$'), '');
+      final title = fileName.replaceAll(RegExp(r'\.(cbz|cbr|cbt|cb7)$'), '');
 
       // For comic books, we can extract some basic info
       String author = 'Unknown';
@@ -1607,25 +1612,25 @@ class BookImportService implements BookFileImporter {
         author = 'Series: ${seriesMatch.group(1)}';
       }
 
-      // CBZ 是 ZIP：真实页数 + 第一页作封面。CBR（RAR）或字节被截断
-      // 时解包会抛错，回退到估算值和生成封面。
+      // 可解包的容器取真实页数 + 第一页作封面；真 RAR/7z 或字节被
+      // 截断时解包会抛错，回退到估算值和生成封面。
       int estimatedPages = extension == 'cbz' ? 25 : 30;
       Uint8List? coverImage;
-      if (extension == 'cbz') {
-        try {
-          final pages = await compute(indexComicPages, <String, dynamic>{
+      try {
+        final pages = await compute(indexComicPages, <String, dynamic>{
+          'bytes': bytes,
+          'ext': extension,
+        });
+        if (pages.isNotEmpty) {
+          estimatedPages = pages.length;
+          coverImage = await compute(extractComicPage, <String, dynamic>{
             'bytes': bytes,
+            'ext': extension,
+            'name': pages.first,
           });
-          if (pages.isNotEmpty) {
-            estimatedPages = pages.length;
-            coverImage = await compute(extractComicPage, <String, dynamic>{
-              'bytes': bytes,
-              'name': pages.first,
-            });
-          }
-        } catch (e) {
-          debugPrint('CBZ 页索引/封面提取失败，使用回退元数据: $e');
         }
+      } catch (e) {
+        debugPrint('漫画页索引/封面提取失败，使用回退元数据: $e');
       }
 
       return EnhancedBookMetadata(

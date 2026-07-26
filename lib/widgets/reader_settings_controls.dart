@@ -12,7 +12,11 @@ class ReaderSettingsSheet extends StatefulWidget {
   const ReaderSettingsSheet({
     super.key,
     required this.title,
-    required this.themeTitle,
+    required this.tabThemeLabel,
+    required this.tabTextLabel,
+    required this.tabLayoutLabel,
+    required this.tabPagingLabel,
+    required this.advancedTypographyTitle,
     required this.themeDescription,
     required this.pageModeTitle,
     required this.pageModeSummary,
@@ -22,6 +26,8 @@ class ReaderSettingsSheet extends StatefulWidget {
     required this.pullBookmarkHint,
     required this.tapPageAnimationTitle,
     required this.tapPageAnimationHint,
+    required this.tapZonesTitle,
+    required this.tapZonesHint,
     required this.showTabletTwoPageToggle,
     required this.tabletTwoPageTitle,
     required this.tabletTwoPageHint,
@@ -54,6 +60,7 @@ class ReaderSettingsSheet extends StatefulWidget {
     required this.onCustomThemeTap,
     required this.onPageModeTap,
     required this.onTopBarStyleTap,
+    required this.onTapZonesTap,
     required this.onFontSizeChanged,
     required this.onLineHeightChanged,
     required this.onLetterSpacingChanged,
@@ -69,7 +76,11 @@ class ReaderSettingsSheet extends StatefulWidget {
   });
 
   final String title;
-  final String themeTitle;
+  final String tabThemeLabel;
+  final String tabTextLabel;
+  final String tabLayoutLabel;
+  final String tabPagingLabel;
+  final String advancedTypographyTitle;
   final String themeDescription;
   final String pageModeTitle;
   final String pageModeSummary;
@@ -79,6 +90,8 @@ class ReaderSettingsSheet extends StatefulWidget {
   final String pullBookmarkHint;
   final String tapPageAnimationTitle;
   final String tapPageAnimationHint;
+  final String tapZonesTitle;
+  final String tapZonesHint;
   final bool showTabletTwoPageToggle;
   final String tabletTwoPageTitle;
   final String tabletTwoPageHint;
@@ -111,6 +124,7 @@ class ReaderSettingsSheet extends StatefulWidget {
   final VoidCallback onCustomThemeTap;
   final VoidCallback onPageModeTap;
   final VoidCallback onTopBarStyleTap;
+  final VoidCallback onTapZonesTap;
   final ValueChanged<double> onFontSizeChanged;
   final ValueChanged<double> onLineHeightChanged;
   final ValueChanged<double> onLetterSpacingChanged;
@@ -142,6 +156,7 @@ class _ReaderSettingsSheetState extends State<ReaderSettingsSheet> {
   late bool _pullBookmarkEnabled = widget.pullBookmarkEnabled;
   late bool _tapPageAnimationEnabled = widget.tapPageAnimationEnabled;
   late bool _tabletTwoPageEnabled = widget.tabletTwoPageEnabled;
+  _ReaderSettingsTab _tab = _ReaderSettingsTab.theme;
 
   @override
   Widget build(BuildContext context) {
@@ -158,198 +173,262 @@ class _ReaderSettingsSheetState extends State<ReaderSettingsSheet> {
         children: [
           Text(widget.title, style: theme.textTheme.titleLarge),
           const SizedBox(height: 12),
-          ReaderSettingSlider(
-            label: widget.fontSizeLabel,
-            value: _fontSize,
-            valueLabel: _fontSize.round().toString(),
-            min: 14,
-            max: 32,
-            divisions: 18,
-            onChanged: (value) => setState(() => _fontSize = value),
-            onChangeEnd: widget.onFontSizeChanged,
+          SegmentedButton<_ReaderSettingsTab>(
+            key: const ValueKey('reader-settings-tab-bar'),
+            expandedInsets: EdgeInsets.zero,
+            showSelectedIcon: false,
+            segments: [
+              ButtonSegment(
+                value: _ReaderSettingsTab.theme,
+                label: Text(widget.tabThemeLabel),
+              ),
+              ButtonSegment(
+                value: _ReaderSettingsTab.text,
+                label: Text(widget.tabTextLabel),
+              ),
+              ButtonSegment(
+                value: _ReaderSettingsTab.layout,
+                label: Text(widget.tabLayoutLabel),
+              ),
+              ButtonSegment(
+                value: _ReaderSettingsTab.paging,
+                label: Text(widget.tabPagingLabel),
+              ),
+            ],
+            selected: {_tab},
+            onSelectionChanged: (selection) =>
+                setState(() => _tab = selection.first),
           ),
-          ReaderSettingSlider(
-            label: widget.lineHeightLabel,
-            value: _lineHeight,
-            valueLabel: _lineHeight.toStringAsFixed(1),
-            min: 1.4,
-            max: 2.1,
-            divisions: 7,
-            onChanged: (value) => setState(() => _lineHeight = value),
-            onChangeEnd: widget.onLineHeightChanged,
-          ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  widget.textAlignmentLabel,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 8),
-                SegmentedButton<ReaderTextAlignment>(
-                  key: const ValueKey('reader-text-alignment-control'),
-                  expandedInsets: EdgeInsets.zero,
-                  segments: [
-                    ButtonSegment(
-                      value: ReaderTextAlignment.natural,
-                      label: Text(widget.textAlignmentNaturalLabel),
-                    ),
-                    ButtonSegment(
-                      value: ReaderTextAlignment.justified,
-                      label: Text(widget.textAlignmentJustifiedLabel),
-                    ),
-                  ],
-                  selected: {_textAlignment},
-                  onSelectionChanged: (selection) {
-                    final value = selection.first;
-                    setState(() => _textAlignment = value);
-                    widget.onTextAlignmentChanged(value);
-                  },
-                ),
-              ],
-            ),
-          ),
-          ReaderSettingSlider(
-            key: const ValueKey('reader-letter-spacing-slider'),
-            label: widget.letterSpacingLabel,
-            value: _letterSpacing,
-            valueLabel: _letterSpacing.toStringAsFixed(1),
-            min: ReaderSettings.minLetterSpacing,
-            max: ReaderSettings.maxLetterSpacing,
-            divisions: 12,
-            onChanged: (value) => setState(() => _letterSpacing = value),
-            onChangeEnd: widget.onLetterSpacingChanged,
-          ),
-          ReaderSettingSlider(
-            key: const ValueKey('reader-first-line-indent-slider'),
-            label: widget.firstLineIndentLabel,
-            value: _firstLineIndent.toDouble(),
-            valueLabel: _firstLineIndent.toString(),
-            min: 0,
-            max: 4,
-            divisions: 4,
-            onChanged: (value) =>
-                setState(() => _firstLineIndent = value.round()),
-            onChangeEnd: (value) =>
-                widget.onFirstLineIndentChanged(value.round()),
-          ),
-          ReaderSettingSlider(
-            key: const ValueKey('reader-paragraph-spacing-slider'),
-            label: widget.paragraphSpacingLabel,
-            value: _paragraphSpacing.toDouble(),
-            valueLabel: _paragraphSpacing.toString(),
-            min: 0,
-            max: 2,
-            divisions: 2,
-            onChanged: (value) =>
-                setState(() => _paragraphSpacing = value.round()),
-            onChangeEnd: (value) =>
-                widget.onParagraphSpacingChanged(value.round()),
-          ),
-          ReaderSettingSlider(
-            key: const ValueKey('reader-horizontal-margin-slider'),
-            label: widget.horizontalMarginLabel,
-            value: _horizontalMargin,
-            valueLabel: _horizontalMargin.round().toString(),
-            min: ReaderMarginSettings.horizontalMin,
-            max: ReaderMarginSettings.horizontalMax,
-            divisions: 48,
-            onChanged: (value) => setState(() => _horizontalMargin = value),
-            onChangeEnd: widget.onHorizontalMarginChanged,
-          ),
-          ReaderMarginControls(
-            topLabel: widget.topMarginLabel,
-            bottomLabel: widget.bottomMarginLabel,
-            topMargin: _topMargin,
-            bottomMargin: _bottomMargin,
-            onTopChanged: (value) => setState(() => _topMargin = value),
-            onBottomChanged: (value) => setState(() => _bottomMargin = value),
-            onTopChangeEnd: widget.onTopMarginChanged,
-            onBottomChangeEnd: widget.onBottomMarginChanged,
-          ),
-          const Divider(height: 28),
-          Text(
-            widget.themeTitle,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(widget.themeDescription, style: theme.textTheme.bodySmall),
-          const SizedBox(height: 12),
-          ReaderThemeStrip(
-            selectedThemeId: _themeId,
-            labelFor: widget.themeLabelFor,
-            onSelected: (themeId) {
-              setState(() => _themeId = themeId);
-              widget.onThemeChanged(themeId);
-            },
-            onCustomThemeTap: widget.onCustomThemeTap,
-          ),
-          const Divider(height: 28),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.swap_calls),
-            title: Text(widget.pageModeTitle),
-            subtitle: Text(widget.pageModeSummary),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: widget.onPageModeTap,
-          ),
-          if (widget.showTabletTwoPageToggle)
-            SwitchListTile(
-              key: const ValueKey('reader-tablet-two-page-switch'),
-              contentPadding: EdgeInsets.zero,
-              secondary: const Icon(Icons.menu_book_rounded),
-              value: _tabletTwoPageEnabled,
-              title: Text(widget.tabletTwoPageTitle),
-              subtitle: Text(widget.tabletTwoPageHint),
-              onChanged: (value) {
-                setState(() => _tabletTwoPageEnabled = value);
-                widget.onTabletTwoPageChanged(value);
-              },
-            ),
-          ListTile(
-            key: const ValueKey('reader-top-bar-style-tile'),
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.vertical_align_top_rounded),
-            title: Text(widget.topBarStyleTitle),
-            subtitle: Text(widget.topBarStyleSummary),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: widget.onTopBarStyleTap,
-          ),
-          SwitchListTile(
-            key: const ValueKey('reader-pull-bookmark-switch'),
-            contentPadding: EdgeInsets.zero,
-            secondary: const Icon(Icons.bookmark_add_outlined),
-            value: _pullBookmarkEnabled,
-            title: Text(widget.pullBookmarkTitle),
-            subtitle: Text(widget.pullBookmarkHint),
-            onChanged: (value) {
-              setState(() => _pullBookmarkEnabled = value);
-              widget.onPullBookmarkChanged(value);
-            },
-          ),
-          SwitchListTile(
-            key: const ValueKey('reader-tap-page-animation-switch'),
-            contentPadding: EdgeInsets.zero,
-            secondary: const Icon(Icons.animation_rounded),
-            value: _tapPageAnimationEnabled,
-            title: Text(widget.tapPageAnimationTitle),
-            subtitle: Text(widget.tapPageAnimationHint),
-            onChanged: (value) {
-              setState(() => _tapPageAnimationEnabled = value);
-              widget.onTapPageAnimationChanged(value);
-            },
-          ),
+          const SizedBox(height: 16),
+          ...switch (_tab) {
+            _ReaderSettingsTab.theme => _themeTabChildren(theme),
+            _ReaderSettingsTab.text => _textTabChildren(context),
+            _ReaderSettingsTab.layout => _layoutTabChildren(),
+            _ReaderSettingsTab.paging => _pagingTabChildren(),
+          },
         ],
       ),
     );
   }
+
+  List<Widget> _textTabChildren(BuildContext context) => [
+    ReaderSettingSlider(
+      label: widget.fontSizeLabel,
+      value: _fontSize,
+      valueLabel: _fontSize.round().toString(),
+      min: 14,
+      max: 32,
+      divisions: 18,
+      onChanged: (value) => setState(() => _fontSize = value),
+      onChangeEnd: widget.onFontSizeChanged,
+    ),
+    ReaderSettingSlider(
+      label: widget.lineHeightLabel,
+      value: _lineHeight,
+      valueLabel: _lineHeight.toStringAsFixed(1),
+      min: 1.4,
+      max: 2.1,
+      divisions: 7,
+      onChanged: (value) => setState(() => _lineHeight = value),
+      onChangeEnd: widget.onLineHeightChanged,
+    ),
+    Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            widget.textAlignmentLabel,
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 8),
+          SegmentedButton<ReaderTextAlignment>(
+            key: const ValueKey('reader-text-alignment-control'),
+            expandedInsets: EdgeInsets.zero,
+            segments: [
+              ButtonSegment(
+                value: ReaderTextAlignment.natural,
+                label: Text(widget.textAlignmentNaturalLabel),
+              ),
+              ButtonSegment(
+                value: ReaderTextAlignment.justified,
+                label: Text(widget.textAlignmentJustifiedLabel),
+              ),
+            ],
+            selected: {_textAlignment},
+            onSelectionChanged: (selection) {
+              final value = selection.first;
+              setState(() => _textAlignment = value);
+              widget.onTextAlignmentChanged(value);
+            },
+          ),
+        ],
+      ),
+    ),
+    ExpansionTile(
+      key: const ValueKey('reader-advanced-typography-tile'),
+      tilePadding: EdgeInsets.zero,
+      childrenPadding: EdgeInsets.zero,
+      shape: const Border(),
+      collapsedShape: const Border(),
+      title: Text(widget.advancedTypographyTitle),
+      subtitle: Text(
+        '${widget.letterSpacingLabel} · ${widget.firstLineIndentLabel}'
+        ' · ${widget.paragraphSpacingLabel}',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      children: [
+        ReaderSettingSlider(
+          key: const ValueKey('reader-letter-spacing-slider'),
+          label: widget.letterSpacingLabel,
+          value: _letterSpacing,
+          valueLabel: _letterSpacing.toStringAsFixed(1),
+          min: ReaderSettings.minLetterSpacing,
+          max: ReaderSettings.maxLetterSpacing,
+          divisions: 12,
+          onChanged: (value) => setState(() => _letterSpacing = value),
+          onChangeEnd: widget.onLetterSpacingChanged,
+        ),
+        ReaderSettingSlider(
+          key: const ValueKey('reader-first-line-indent-slider'),
+          label: widget.firstLineIndentLabel,
+          value: _firstLineIndent.toDouble(),
+          valueLabel: _firstLineIndent.toString(),
+          min: 0,
+          max: 4,
+          divisions: 4,
+          onChanged: (value) =>
+              setState(() => _firstLineIndent = value.round()),
+          onChangeEnd: (value) =>
+              widget.onFirstLineIndentChanged(value.round()),
+        ),
+        ReaderSettingSlider(
+          key: const ValueKey('reader-paragraph-spacing-slider'),
+          label: widget.paragraphSpacingLabel,
+          value: _paragraphSpacing.toDouble(),
+          valueLabel: _paragraphSpacing.toString(),
+          min: 0,
+          max: 2,
+          divisions: 2,
+          onChanged: (value) =>
+              setState(() => _paragraphSpacing = value.round()),
+          onChangeEnd: (value) =>
+              widget.onParagraphSpacingChanged(value.round()),
+        ),
+      ],
+    ),
+  ];
+
+  List<Widget> _layoutTabChildren() => [
+    ReaderSettingSlider(
+      key: const ValueKey('reader-horizontal-margin-slider'),
+      label: widget.horizontalMarginLabel,
+      value: _horizontalMargin,
+      valueLabel: _horizontalMargin.round().toString(),
+      min: ReaderMarginSettings.horizontalMin,
+      max: ReaderMarginSettings.horizontalMax,
+      divisions: 48,
+      onChanged: (value) => setState(() => _horizontalMargin = value),
+      onChangeEnd: widget.onHorizontalMarginChanged,
+    ),
+    ReaderMarginControls(
+      topLabel: widget.topMarginLabel,
+      bottomLabel: widget.bottomMarginLabel,
+      topMargin: _topMargin,
+      bottomMargin: _bottomMargin,
+      onTopChanged: (value) => setState(() => _topMargin = value),
+      onBottomChanged: (value) => setState(() => _bottomMargin = value),
+      onTopChangeEnd: widget.onTopMarginChanged,
+      onBottomChangeEnd: widget.onBottomMarginChanged,
+    ),
+  ];
+
+  List<Widget> _themeTabChildren(ThemeData theme) => [
+    Text(widget.themeDescription, style: theme.textTheme.bodySmall),
+    const SizedBox(height: 12),
+    ReaderThemeStrip(
+      selectedThemeId: _themeId,
+      labelFor: widget.themeLabelFor,
+      onSelected: (themeId) {
+        setState(() => _themeId = themeId);
+        widget.onThemeChanged(themeId);
+      },
+      onCustomThemeTap: widget.onCustomThemeTap,
+    ),
+    const Divider(height: 28),
+    ListTile(
+      key: const ValueKey('reader-top-bar-style-tile'),
+      contentPadding: EdgeInsets.zero,
+      leading: const Icon(Icons.vertical_align_top_rounded),
+      title: Text(widget.topBarStyleTitle),
+      subtitle: Text(widget.topBarStyleSummary),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: widget.onTopBarStyleTap,
+    ),
+  ];
+
+  List<Widget> _pagingTabChildren() => [
+    ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: const Icon(Icons.swap_calls),
+      title: Text(widget.pageModeTitle),
+      subtitle: Text(widget.pageModeSummary),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: widget.onPageModeTap,
+    ),
+    if (widget.showTabletTwoPageToggle)
+      SwitchListTile(
+        key: const ValueKey('reader-tablet-two-page-switch'),
+        contentPadding: EdgeInsets.zero,
+        secondary: const Icon(Icons.menu_book_rounded),
+        value: _tabletTwoPageEnabled,
+        title: Text(widget.tabletTwoPageTitle),
+        subtitle: Text(widget.tabletTwoPageHint),
+        onChanged: (value) {
+          setState(() => _tabletTwoPageEnabled = value);
+          widget.onTabletTwoPageChanged(value);
+        },
+      ),
+    SwitchListTile(
+      key: const ValueKey('reader-tap-page-animation-switch'),
+      contentPadding: EdgeInsets.zero,
+      secondary: const Icon(Icons.animation_rounded),
+      value: _tapPageAnimationEnabled,
+      title: Text(widget.tapPageAnimationTitle),
+      subtitle: Text(widget.tapPageAnimationHint),
+      onChanged: (value) {
+        setState(() => _tapPageAnimationEnabled = value);
+        widget.onTapPageAnimationChanged(value);
+      },
+    ),
+    ListTile(
+      key: const ValueKey('reader-tap-zones-tile'),
+      contentPadding: EdgeInsets.zero,
+      leading: const Icon(Icons.grid_view_rounded),
+      title: Text(widget.tapZonesTitle),
+      subtitle: Text(widget.tapZonesHint),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: widget.onTapZonesTap,
+    ),
+    SwitchListTile(
+      key: const ValueKey('reader-pull-bookmark-switch'),
+      contentPadding: EdgeInsets.zero,
+      secondary: const Icon(Icons.bookmark_add_outlined),
+      value: _pullBookmarkEnabled,
+      title: Text(widget.pullBookmarkTitle),
+      subtitle: Text(widget.pullBookmarkHint),
+      onChanged: (value) {
+        setState(() => _pullBookmarkEnabled = value);
+        widget.onPullBookmarkChanged(value);
+      },
+    ),
+  ];
 }
+
+enum _ReaderSettingsTab { theme, text, layout, paging }
 
 class ReaderTopBarStyleSheet extends StatelessWidget {
   const ReaderTopBarStyleSheet({

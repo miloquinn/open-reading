@@ -35,6 +35,10 @@ class NativeReaderService {
   /// kindle_unpack 依赖 dart:io，Web 端只有安全桩，不放行。
   static const _kindleFormats = <String>{'mobi', 'azw', 'azw3'};
 
+  /// 漫画容器统一进 ComicReaderPage；真实容器在打开时按文件头识别，
+  /// 真 RAR/7z 由阅读页展示本地化的「转 CBZ」提示。
+  static const _comicFormats = <String>{'cbz', 'cbt', 'cbr', 'cb7'};
+
   static bool _canOpenFormat(String format) {
     if (_supportedFormats.contains(format)) return true;
     if (!kIsWeb && _kindleFormats.contains(format)) return true;
@@ -66,7 +70,7 @@ class NativeReaderService {
       return;
     }
     final format = repaired.format.toLowerCase();
-    if (format == 'cbz') {
+    if (_comicFormats.contains(format)) {
       if (!context.mounted) return;
       await ComicReaderPage.open(
         context,
@@ -99,9 +103,7 @@ class NativeReaderService {
       if (context.mounted) {
         showSideToast(
           context,
-          format == 'cbr'
-              ? context.l10n.readerComicCbrUnsupported
-              : context.l10n.readerUnsupportedFormat,
+          context.l10n.readerUnsupportedFormat,
           kind: SideToastKind.warning,
         );
       }

@@ -1,6 +1,7 @@
-// 文件说明：CBZ 漫画专用阅读页（整页图片渲染，不走文本行盒）。
-// 技术要点：isolate 内解 ZIP 目录建页索引、按需解压单页避免整本驻留内存；
-// LRU 页缓存；UI 骨架复用 paged_image_reader.dart；进度写回 currentPage。
+// 文件说明：CBZ/CBT/CBR/CB7 漫画专用阅读页（整页图片渲染，不走文本行盒）。
+// 技术要点：isolate 内按文件头识别容器并建页索引、按需解压单页避免整本驻留内存；
+// 真 RAR/7z 显示本地化「转 CBZ」提示；LRU 页缓存；UI 骨架复用
+// paged_image_reader.dart；进度写回 currentPage。
 // 解析逻辑见 comic_book_parser.dart；格式能力矩阵见 docs/book-format-support.md。
 
 import 'dart:async';
@@ -13,6 +14,7 @@ import 'package:xxread/models/book.dart';
 import 'package:xxread/services/books/book_dao.dart';
 import 'package:xxread/services/books/comic_book_parser.dart';
 import 'package:xxread/services/books/web_book_file_store.dart';
+import 'package:xxread/services/reading/reading_resume_service.dart';
 import 'package:xxread/pages/reader/paged_image_reader.dart';
 import 'package:xxread/utils/book_open_transition.dart';
 import 'package:xxread/utils/localization_extension.dart';
@@ -59,7 +61,14 @@ class _ComicReaderPageState extends State<ComicReaderPage> {
   @override
   void initState() {
     super.initState();
+    unawaited(ReadingResumeService.markReading(widget.book.id));
     _pagesFuture = _loadPages();
+  }
+
+  @override
+  void dispose() {
+    unawaited(ReadingResumeService.markClosed(widget.book.id));
+    super.dispose();
   }
 
   Future<List<String>> _loadPages() async {
@@ -69,9 +78,12 @@ class _ComicReaderPageState extends State<ComicReaderPage> {
       if (_webBytes == null) {
         throw StateError('Web 书籍文件不存在');
       }
-      args = <String, dynamic>{'bytes': _webBytes};
+      args = <String, dynamic>{'bytes': _webBytes, 'ext': widget.book.format};
     } else {
-      args = <String, dynamic>{'path': widget.book.filePath};
+      args = <String, dynamic>{
+        'path': widget.book.filePath,
+        'ext': widget.book.format,
+      };
     }
     return compute(indexComicPages, args);
   }
@@ -86,6 +98,7 @@ class _ComicReaderPageState extends State<ComicReaderPage> {
     if (pending != null) return pending;
     final future = compute(extractComicPage, <String, dynamic>{
       if (kIsWeb) 'bytes': _webBytes else 'path': widget.book.filePath,
+      'ext': widget.book.format,
       'name': pages[index],
     });
     _pendingPages[index] = future;
@@ -119,9 +132,16 @@ class _ComicReaderPageState extends State<ComicReaderPage> {
         future: _pagesFuture,
         builder: (context, snapshot) {
           if (snapshot.hasError) {
+            final error = snapshot.error;
+            // 真 RAR/7z 等无法解压的容器给「转 CBZ」引导，其余按原始错误展示。
+            final message = error is ComicArchiveUnsupportedException
+                ? (error.container == ComicContainerFormat.rar
+                      ? l10n.readerComicCbrUnsupported
+                      : l10n.readerComicArchiveUnsupported)
+                : l10n.readerOpenFailed(error.toString());
             return PagedReaderMessageScaffold(
               title: widget.book.title,
-              message: l10n.readerOpenFailed(snapshot.error.toString()),
+              message: message,
             );
           }
           final pages = snapshot.data;
@@ -142,6 +162,7 @@ class _ComicReaderPageState extends State<ComicReaderPage> {
             initialPage: widget.book.currentPage,
             loadPage: (index) => _loadPage(pages, index),
             onPageChanged: _saveProgress,
+            bookId: widget.book.id,
           );
         },
       ),

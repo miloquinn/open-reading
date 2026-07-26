@@ -15,6 +15,7 @@ import 'package:pdfx/pdfx.dart';
 import 'package:xxread/models/book.dart';
 import 'package:xxread/services/books/book_dao.dart';
 import 'package:xxread/services/books/web_book_file_store.dart';
+import 'package:xxread/services/reading/reading_resume_service.dart';
 import 'package:xxread/pages/reader/paged_image_reader.dart';
 import 'package:xxread/utils/book_open_transition.dart';
 import 'package:xxread/utils/localization_extension.dart';
@@ -71,6 +72,7 @@ class _PdfReaderPageState extends State<PdfReaderPage> {
   @override
   void initState() {
     super.initState();
+    unawaited(ReadingResumeService.markReading(widget.book.id));
     _documentFuture = _openDocument();
   }
 
@@ -87,6 +89,7 @@ class _PdfReaderPageState extends State<PdfReaderPage> {
   @override
   void dispose() {
     _disposed = true;
+    unawaited(ReadingResumeService.markClosed(widget.book.id));
     // 等在途渲染排空后再关文档，避免 close 与 render 竞争。
     unawaited(
       _renderChain.whenComplete(() async {
@@ -205,6 +208,7 @@ class _PdfReaderPageState extends State<PdfReaderPage> {
             initialPage: widget.book.currentPage,
             loadPage: (index) => _loadPage(document, index),
             onPageChanged: _saveProgress,
+            bookId: widget.book.id,
           );
         },
       ),

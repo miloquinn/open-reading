@@ -615,7 +615,7 @@
   "@pageTurningScroll": {
     "description": "滚动翻页"
   },
-  "tapZoneSettings": "点击翻页区域",
+  "tapZoneSettings": "点击区域设置",
   "@tapZoneSettings": {
     "description": "点击区域设置"
   },
@@ -634,6 +634,34 @@
   "tapZoneLegend": "图例",
   "@tapZoneLegend": {
     "description": "点击区域图例"
+  },
+  "tapZoneNextChapter": "下一章",
+  "@tapZoneNextChapter": {
+    "description": "下一章点击区域"
+  },
+  "tapZonePreviousChapter": "上一章",
+  "@tapZonePreviousChapter": {
+    "description": "上一章点击区域"
+  },
+  "tapZoneNone": "无操作",
+  "@tapZoneNone": {
+    "description": "无动作点击区域"
+  },
+  "tapZoneSettingsHint": "自定义九宫格每个区域的点击动作",
+  "@tapZoneSettingsHint": {
+    "description": "点击区域设置入口提示"
+  },
+  "tapZoneChooseAction": "选择操作",
+  "@tapZoneChooseAction": {
+    "description": "点击区域动作选择标题"
+  },
+  "tapZoneMenuRequiredHint": "点击任意区域修改动作。至少保留一个菜单区域；全部移除时，中间区域会自动恢复为菜单。",
+  "@tapZoneMenuRequiredHint": {
+    "description": "点击区域编辑器菜单保留提示"
+  },
+  "tapZoneReset": "恢复默认",
+  "@tapZoneReset": {
+    "description": "点击区域恢复默认按钮"
   },
   "highlightColor": "荧光笔颜色",
   "@highlightColor": {
@@ -1110,7 +1138,17 @@
   "readerUnsupportedFormat": "该文件格式暂不支持阅读",
   "readerKindleDrmProtected": "这本 Kindle 书籍受 DRM 加密保护，无法阅读，仅支持无 DRM 的书籍",
   "readerComicNoPages": "这本漫画压缩包里没有找到图片页",
-  "readerComicCbrUnsupported": "CBR 漫画暂不支持阅读，请先转换为 CBZ 格式",
+  "readerComicCbrUnsupported": "这本 CBR 漫画使用真实 RAR 压缩，暂不支持阅读，请先转换为 CBZ 格式",
+  "readerComicArchiveUnsupported": "这本漫画的压缩格式暂不支持阅读，请先转换为 CBZ 格式",
+  "imageReaderSettings": "阅读设置",
+  "imageReaderDirectionTitle": "阅读方向",
+  "imageReaderDirectionLtr": "从左到右",
+  "imageReaderDirectionRtl": "从右到左（漫画）",
+  "imageReaderJumpToPage": "跳转页码",
+  "imageReaderBackgroundTitle": "页面背景",
+  "imageReaderBackgroundBlack": "黑色",
+  "imageReaderBackgroundGray": "灰色",
+  "imageReaderBackgroundWhite": "白色",
   "readerPdfLinuxUnsupported": "Linux 平台暂不支持 PDF 阅读",
   "bootstrapDataServiceFailed": "数据系统初始化失败",
   "bootstrapImageManagerFailed": "图片管理器初始化失败",
@@ -1227,6 +1265,8 @@
   "readerScrollByChapterOffHint": "所有章节按页连接为可定位的纵向列表",
   "readerModeHorizontalPageHint": "点击左侧上一页，点击右侧下一页",
   "readerModeHorizontalSlideHint": "页面跟随手指横向移动并吸附翻页",
+  "readerModeCoverSlide": "覆盖翻页",
+  "readerModeCoverSlideHint": "当前页向左划出，底下的下一页逐渐露出",
   "readerModePageCurl": "仿真翻页",
   "readerModePageCurlHint": "左右拖动卷起页面，松手后完成翻页或回弹",
   "readerFontSizeValue": "字体大小  {size}",
@@ -1259,6 +1299,8 @@
   "settingsSaveFailed": "保存失败: {error}",
   "settingsVolumeKeyTurnTitle": "音量键翻页",
   "settingsVolumeKeyTurnSubtitle": "在非滚动翻页模式下使用音量键翻页",
+  "settingsAutoResumeReadingTitle": "启动时回到上次阅读",
+  "settingsAutoResumeReadingSubtitle": "阅读中退出应用后，下次启动自动回到上次阅读位置",
   "settingsShowStatusBarTitle": "阅读时显示系统状态栏",
   "settingsShowStatusBarOnSubtitle": "已隐藏阅读页电量/时间 UI",
   "settingsShowStatusBarOffSubtitle": "使用阅读页电量/时间 UI",
@@ -1273,6 +1315,10 @@
   "readerTopBarStyleHiddenHint": "顶部不显示任何信息",
   "settingsAiAssistantTitle": "AI 阅读助手",
   "settingsSystemSettingsTitle": "系统设置",
+  "settingsSectionAppearanceFonts": "外观与字体",
+  "settingsSectionDataServices": "数据与服务",
+  "settingsSectionGeneral": "通用",
+  "settingsSectionAboutSupport": "关于与支持",
   "settingsKeepScreenOnTitle": "保持屏幕常亮",
   "settingsKeepScreenOnSubtitle": "阅读时防止屏幕自动关闭",
   "settingsAutoSaveTitle": "自动保存",
@@ -1312,7 +1358,7 @@
   "settingsDonationVoluntaryNotice": "捐赠完全自愿，不影响任何功能，也不构成购买或服务承诺。",
   "settingsDonationQrCodeLabel": "微信捐赠二维码",
   "settingsAlipayDonationQrCodeLabel": "支付宝捐赠二维码",
-  "settingsAiSwipeHint": "左右滑动选择模型，点击卡片即可切换。",
+  "settingsAiSwipeHint": "左右滑动选择模型，点击切换，长按编辑或删除。",
   "settingsAiLegacyIntro": "选择服务商和模型，填写 API Key 即可。其余参数保持默认。",
   "settingsAiModelLabel": "模型",
   "settingsAiUsingCustomParams": "正在使用自定义模型参数",
@@ -1543,6 +1589,11 @@
   "bookSourceOnlineDataBroken": "在线书籍信息损坏：{error}",
   "readerThemeTitle": "阅读主题",
   "readerThemeDescription": "仅改变阅读页面与阅读控制栏，不影响应用主题",
+  "readerSettingsTabTheme": "主题",
+  "readerSettingsTabText": "文字",
+  "readerSettingsTabLayout": "版式",
+  "readerSettingsTabPaging": "翻页",
+  "readerSettingsAdvancedTypography": "高级排版",
   "readerThemeDay": "白天",
   "readerThemeFollowSystem": "跟随系统",
   "readerThemeMist": "晨雾",
@@ -1668,6 +1719,40 @@
         "error": {"type": "String"}
     }
   },
+  "settingsAiPreprocessTitle": "AI 预处理书籍",
+  "settingsAiPreprocessSubtitle": "导入书籍后自动让 AI 通读并生成本地摘要知识库",
+  "settingsAiPreprocessWarning": "预处理会把整本书分段发送给 AI 模型，消耗大量 token，且耗时较长。确定开启？",
+  "settingsAiPreprocessNeedModel": "请先配置可用的 AI 模型和 API Key",
+  "libraryAiPreprocess": "AI 预处理",
+  "libraryAiPreprocessConfirm": "让 AI 通读《{title}》并生成摘要知识库？将消耗大量 token。",
+  "libraryAiPreprocessProgress": "AI 正在通读本书…（第 {done}/{total} 步）",
+  "libraryAiPreprocessDone": "AI 知识库已生成",
+  "libraryAiPreprocessFailed": "AI 预处理失败：{error}",
+  "libraryAiPreprocessUnsupported": "该书格式暂不支持 AI 预处理",
+  "libraryAiPreprocessQueued": "已加入 AI 预处理队列，可在下载任务页查看进度。",
+  "downloadTasksTabDownloads": "下载",
+  "aiPreprocessTaskRunning": "AI 通读中…",
+  "aiPreprocessTasksEmpty": "暂无 AI 预处理任务",
+  "aiPreprocessClearFinished": "清除已完成",
+  "aiChatNewChat": "新对话",
+  "aiChatSelectBook": "关联书籍",
+  "aiChatNoBook": "不关联书籍",
+  "navAi": "AI",
+  "aiHistoryTitle": "AI 对话记录",
+  "aiHistoryEmpty": "还没有 AI 对话。\n阅读时点击“问AI”发起第一次对话。",
+  "aiHistoryMessageCount": "{count} 条消息",
+  "aiHistoryClearAll": "清空全部",
+  "aiHistoryClearAllConfirm": "删除全部 AI 对话记录？此操作不可恢复。",
+  "aiHistoryDeleteConfirm": "删除这条对话记录？",
+  "floatingNavigationVisibilityHint": "关闭开关即可隐藏对应页面；设置不可隐藏。",
+  "readerAskAi": "问AI",
+  "readerAiInputHint": "就本书内容提问…",
+  "readerAiSendButton": "发送",
+  "readerAiThinking": "思考中…",
+  "readerAiNotConfiguredHint": "尚未配置 AI 模型。请前往 设置 → AI 阅读助手 添加模型与 API Key。",
+  "readerAiEmptyHint": "可以向 AI 询问当前页或本书的任何内容。",
+  "readerAiSelectionQuestionLabel": "解释这段选中内容",
+  "readerAiSelectionPrompt": "请解释下面这段选中文本，并给出 3 条要点。\n\n【选中文本】\n{selection}\n\n【上文】\n{before}\n\n【下文】\n{after}",
   "readerAiEnterQuestionFirst": "请输入问题后再发送",
   "readerAiEmptyResponse": "模型返回为空，请重试",
   "readerAiRequestFailed": "请求失败：{error}",

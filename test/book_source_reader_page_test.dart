@@ -284,6 +284,9 @@ void main() {
     await tester.tap(find.byIcon(Icons.tune_rounded));
     await tester.pumpAndSettle();
 
+    await tester.tap(find.text('Layout'));
+    await tester.pumpAndSettle();
+
     expect(
       find.byKey(const ValueKey('reader-top-margin-slider')),
       findsOneWidget,

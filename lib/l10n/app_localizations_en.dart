@@ -754,6 +754,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tapZoneLegend => 'Legend';
 
   @override
+  String get tapZoneNextChapter => 'Next Chapter';
+
+  @override
+  String get tapZonePreviousChapter => 'Previous Chapter';
+
+  @override
+  String get tapZoneNone => 'No Action';
+
+  @override
+  String get tapZoneSettingsHint =>
+      'Customize what each of the nine tap areas does';
+
+  @override
+  String get tapZoneChooseAction => 'Choose an action';
+
+  @override
+  String get tapZoneMenuRequiredHint =>
+      'Tap an area to change its action. At least one area must stay Menu; if every Menu is removed, the center area becomes Menu again.';
+
+  @override
+  String get tapZoneReset => 'Restore Defaults';
+
+  @override
   String get highlightColor => 'Highlight Color';
 
   @override
@@ -1190,7 +1213,38 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get readerComicCbrUnsupported =>
-      'CBR comics aren\'t readable yet. Please convert them to CBZ.';
+      'This CBR comic uses real RAR compression and isn\'t readable yet. Please convert it to CBZ.';
+
+  @override
+  String get readerComicArchiveUnsupported =>
+      'This comic\'s archive format isn\'t readable yet. Please convert it to CBZ.';
+
+  @override
+  String get imageReaderSettings => 'Reading settings';
+
+  @override
+  String get imageReaderDirectionTitle => 'Reading direction';
+
+  @override
+  String get imageReaderDirectionLtr => 'Left to right';
+
+  @override
+  String get imageReaderDirectionRtl => 'Right to left (manga)';
+
+  @override
+  String get imageReaderJumpToPage => 'Go to page';
+
+  @override
+  String get imageReaderBackgroundTitle => 'Page background';
+
+  @override
+  String get imageReaderBackgroundBlack => 'Black';
+
+  @override
+  String get imageReaderBackgroundGray => 'Gray';
+
+  @override
+  String get imageReaderBackgroundWhite => 'White';
 
   @override
   String get readerPdfLinuxUnsupported =>
@@ -1628,6 +1682,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Pages follow your finger horizontally and snap into place';
 
   @override
+  String get readerModeCoverSlide => 'Cover';
+
+  @override
+  String get readerModeCoverSlideHint =>
+      'The current page slides off to the left, uncovering the next page beneath it';
+
+  @override
   String get readerModePageCurl => 'Page Curl';
 
   @override
@@ -1758,6 +1819,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Use volume keys in paged reading modes';
 
   @override
+  String get settingsAutoResumeReadingTitle => 'Resume reading on launch';
+
+  @override
+  String get settingsAutoResumeReadingSubtitle =>
+      'If you leave the app while reading, the next launch returns to where you left off';
+
+  @override
   String get settingsShowStatusBarTitle =>
       'Show system status bar while reading';
 
@@ -1802,6 +1870,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsSystemSettingsTitle => 'System Settings';
+
+  @override
+  String get settingsSectionAppearanceFonts => 'Appearance & Fonts';
+
+  @override
+  String get settingsSectionDataServices => 'Data & Services';
+
+  @override
+  String get settingsSectionGeneral => 'General';
+
+  @override
+  String get settingsSectionAboutSupport => 'About & Support';
 
   @override
   String get settingsKeepScreenOnTitle => 'Keep screen on';
@@ -1937,7 +2017,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsAiSwipeHint =>
-      'Swipe through models and tap a card to switch.';
+      'Swipe through models, tap to switch, long-press to edit or delete.';
 
   @override
   String get settingsAiLegacyIntro =>
@@ -2711,6 +2791,21 @@ class AppLocalizationsEn extends AppLocalizations {
       'Only changes the reading page and its controls';
 
   @override
+  String get readerSettingsTabTheme => 'Theme';
+
+  @override
+  String get readerSettingsTabText => 'Text';
+
+  @override
+  String get readerSettingsTabLayout => 'Layout';
+
+  @override
+  String get readerSettingsTabPaging => 'Paging';
+
+  @override
+  String get readerSettingsAdvancedTypography => 'Advanced typography';
+
+  @override
   String get readerThemeDay => 'Day';
 
   @override
@@ -3097,6 +3192,132 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String settingsAiFetchModelsFailed(String error) {
     return 'Failed to fetch models: $error';
+  }
+
+  @override
+  String get settingsAiPreprocessTitle => 'AI book preprocessing';
+
+  @override
+  String get settingsAiPreprocessSubtitle =>
+      'After importing a book, let AI read it and build a local summary knowledge base automatically';
+
+  @override
+  String get settingsAiPreprocessWarning =>
+      'Preprocessing sends the whole book to the AI model in chunks. It consumes a large number of tokens and takes a while. Enable anyway?';
+
+  @override
+  String get settingsAiPreprocessNeedModel =>
+      'Configure a working AI model with an API key first';
+
+  @override
+  String get libraryAiPreprocess => 'AI preprocessing';
+
+  @override
+  String libraryAiPreprocessConfirm(String title) {
+    return 'Let AI read \"$title\" and build a summary knowledge base? This consumes a large number of tokens.';
+  }
+
+  @override
+  String libraryAiPreprocessProgress(int done, int total) {
+    return 'AI is reading this book… (step $done/$total)';
+  }
+
+  @override
+  String get libraryAiPreprocessDone => 'AI knowledge base generated';
+
+  @override
+  String libraryAiPreprocessFailed(String error) {
+    return 'AI preprocessing failed: $error';
+  }
+
+  @override
+  String get libraryAiPreprocessUnsupported =>
+      'This book format doesn\'t support AI preprocessing yet';
+
+  @override
+  String get libraryAiPreprocessQueued =>
+      'Added to the AI preprocessing queue. Check progress in Download Tasks.';
+
+  @override
+  String get downloadTasksTabDownloads => 'Downloads';
+
+  @override
+  String get aiPreprocessTaskRunning => 'AI is reading…';
+
+  @override
+  String get aiPreprocessTasksEmpty => 'No AI preprocessing tasks';
+
+  @override
+  String get aiPreprocessClearFinished => 'Clear finished';
+
+  @override
+  String get aiChatNewChat => 'New chat';
+
+  @override
+  String get aiChatSelectBook => 'Link a book';
+
+  @override
+  String get aiChatNoBook => 'No linked book';
+
+  @override
+  String get navAi => 'AI';
+
+  @override
+  String get aiHistoryTitle => 'AI Chats';
+
+  @override
+  String get aiHistoryEmpty =>
+      'No AI chats yet.\nTap Ask AI while reading to start your first conversation.';
+
+  @override
+  String aiHistoryMessageCount(int count) {
+    return '$count messages';
+  }
+
+  @override
+  String get aiHistoryClearAll => 'Clear all';
+
+  @override
+  String get aiHistoryClearAllConfirm =>
+      'Delete all AI chat history? This cannot be undone.';
+
+  @override
+  String get aiHistoryDeleteConfirm => 'Delete this chat?';
+
+  @override
+  String get floatingNavigationVisibilityHint =>
+      'Turn a switch off to hide that page; Settings can\'t be hidden.';
+
+  @override
+  String get readerAskAi => 'Ask AI';
+
+  @override
+  String get readerAiInputHint => 'Ask about this book…';
+
+  @override
+  String get readerAiSendButton => 'Send';
+
+  @override
+  String get readerAiThinking => 'Thinking…';
+
+  @override
+  String get readerAiNotConfiguredHint =>
+      'No AI model is configured yet. Go to Settings → AI Reading Assistant to add a model and API key.';
+
+  @override
+  String get readerAiEmptyHint =>
+      'Ask the AI about the current page or anything in this book.';
+
+  @override
+  String get readerAiSelectionQuestionLabel => 'Explain this selection';
+
+  @override
+  String readerAiSelectionPrompt(
+    String selection,
+    String before,
+    String after,
+  ) {
+    return 'Explain the selected passage below and give 3 key points.\n\nSelected text:\n$selection\n\nContext before:\n$before\n\nContext after:\n$after';
   }
 
   @override

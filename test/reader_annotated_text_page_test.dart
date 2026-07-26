@@ -107,6 +107,84 @@ void main() {
     },
   );
 
+  testWidgets('ask AI action hands the selection to the reader', (
+    tester,
+  ) async {
+    ReaderSelectionSnapshot? askedSelection;
+    final interactionChanges = <bool>[];
+    const bodyStyle = TextStyle(fontSize: 20, height: 1.6);
+    final flowStyle = NativeTextFlowStyle(
+      textDirection: TextDirection.ltr,
+      textScaler: TextScaler.noScaling,
+      locale: const Locale('zh'),
+      strutStyle: readerStrutStyle(bodyStyle),
+      textHeightBehavior: readerTextHeightBehavior,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: Center(
+            child: SizedBox(
+              width: 360,
+              height: 260,
+              child: ReaderAnnotatedTextPage(
+                page: const ReaderTextPage(text: '选择这段文字去问问AI助手。'),
+                sourceText: '选择这段文字去问问AI助手。',
+                chapterId: 'chapter-1',
+                chapterTitle: '第一章',
+                chapterIndex: 0,
+                pageIndex: 0,
+                bookId: 1,
+                format: BookFormat.txt,
+                renderer: ReaderRendererType.flutterNative,
+                palette: ReaderThemes.green,
+                bodyStyle: bodyStyle,
+                flowStyle: flowStyle,
+                annotations: const [],
+                onSaveTextAnnotation: (_, _) async {},
+                onAskAiSelection: (selection) async {
+                  askedSelection = selection;
+                },
+                onInteractionChanged: interactionChanges.add,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final richText = find.descendant(
+      of: find.byType(ReaderAnnotatedTextPage),
+      matching: find.byType(RichText),
+    );
+    final paragraph = tester.renderObject<RenderParagraph>(richText);
+    final characterBox = paragraph
+        .getBoxesForSelection(
+          const TextSelection(baseOffset: 5, extentOffset: 6),
+        )
+        .single
+        .toRect();
+    final gesture = await tester.startGesture(
+      paragraph.localToGlobal(characterBox.center),
+    );
+    addTearDown(gesture.removePointer);
+    await tester.pump(const Duration(milliseconds: 500));
+    await gesture.up();
+    await tester.pumpAndSettle();
+
+    expect(find.text('问AI'), findsOneWidget);
+    await tester.tap(find.text('问AI'));
+    await tester.pumpAndSettle();
+
+    expect(askedSelection?.selectedText, isNotEmpty);
+    expect(interactionChanges, [true, false]);
+  });
+
   testWidgets(
     'tapping an underlined note opens its details without turning the page',
     (tester) async {

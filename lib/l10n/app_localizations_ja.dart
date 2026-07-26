@@ -729,6 +729,28 @@ class AppLocalizationsJa extends AppLocalizations {
   String get tapZoneLegend => '凡例';
 
   @override
+  String get tapZoneNextChapter => '次の章';
+
+  @override
+  String get tapZonePreviousChapter => '前の章';
+
+  @override
+  String get tapZoneNone => '操作なし';
+
+  @override
+  String get tapZoneSettingsHint => '9分割エリアそれぞれのタップ動作をカスタマイズ';
+
+  @override
+  String get tapZoneChooseAction => '操作を選択';
+
+  @override
+  String get tapZoneMenuRequiredHint =>
+      'エリアをタップして動作を変更します。メニューは少なくとも1つ必要です。すべて外すと中央が自動的にメニューへ戻ります。';
+
+  @override
+  String get tapZoneReset => '既定に戻す';
+
+  @override
   String get highlightColor => 'マーカーの色';
 
   @override
@@ -1154,7 +1176,39 @@ class AppLocalizationsJa extends AppLocalizations {
   String get readerComicNoPages => 'このコミックアーカイブに画像ページが見つかりませんでした';
 
   @override
-  String get readerComicCbrUnsupported => 'CBR コミックはまだ対応していません。CBZ に変換してください';
+  String get readerComicCbrUnsupported =>
+      'この CBR コミックは本物の RAR 圧縮のためまだ読めません。CBZ に変換してください';
+
+  @override
+  String get readerComicArchiveUnsupported =>
+      'このコミックの圧縮形式はまだ対応していません。CBZ に変換してください';
+
+  @override
+  String get imageReaderSettings => '閲覧設定';
+
+  @override
+  String get imageReaderDirectionTitle => '読む方向';
+
+  @override
+  String get imageReaderDirectionLtr => '左から右';
+
+  @override
+  String get imageReaderDirectionRtl => '右から左（マンガ）';
+
+  @override
+  String get imageReaderJumpToPage => 'ページ指定';
+
+  @override
+  String get imageReaderBackgroundTitle => 'ページ背景';
+
+  @override
+  String get imageReaderBackgroundBlack => '黒';
+
+  @override
+  String get imageReaderBackgroundGray => 'グレー';
+
+  @override
+  String get imageReaderBackgroundWhite => '白';
 
   @override
   String get readerPdfLinuxUnsupported => 'Linux では PDF の閲覧にまだ対応していません';
@@ -1565,6 +1619,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get readerModeHorizontalSlideHint => 'ページが指に追従して横に動き、離すと吸着します';
 
   @override
+  String get readerModeCoverSlide => 'カバー';
+
+  @override
+  String get readerModeCoverSlideHint => '現在のページが左へスライドし、下にある次のページが現れます';
+
+  @override
   String get readerModePageCurl => 'ページカール';
 
   @override
@@ -1692,6 +1752,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsVolumeKeyTurnSubtitle => 'ページ表示モードで音量キーを使ってページをめくります';
 
   @override
+  String get settingsAutoResumeReadingTitle => '起動時に読書を再開';
+
+  @override
+  String get settingsAutoResumeReadingSubtitle =>
+      '読書中にアプリを終了しても、次回起動時に前回の位置へ戻ります';
+
+  @override
   String get settingsShowStatusBarTitle => '読書中にステータスバーを表示';
 
   @override
@@ -1733,6 +1800,18 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get settingsSystemSettingsTitle => 'システム設定';
+
+  @override
+  String get settingsSectionAppearanceFonts => '外観とフォント';
+
+  @override
+  String get settingsSectionDataServices => 'データとサービス';
+
+  @override
+  String get settingsSectionGeneral => '一般';
+
+  @override
+  String get settingsSectionAboutSupport => 'アプリ情報とサポート';
 
   @override
   String get settingsKeepScreenOnTitle => '画面を常にオン';
@@ -1861,7 +1940,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsAlipayDonationQrCodeLabel => 'Alipay 寄付用 QR コード';
 
   @override
-  String get settingsAiSwipeHint => '左右にスワイプしてモデルを選び、カードをタップで切り替え。';
+  String get settingsAiSwipeHint => '左右にスワイプしてモデルを選択、タップで切替、長押しで編集・削除。';
 
   @override
   String get settingsAiLegacyIntro =>
@@ -2605,6 +2684,21 @@ class AppLocalizationsJa extends AppLocalizations {
   String get readerThemeDescription => '読書画面と読書コントロールだけを変更します';
 
   @override
+  String get readerSettingsTabTheme => 'テーマ';
+
+  @override
+  String get readerSettingsTabText => '文字';
+
+  @override
+  String get readerSettingsTabLayout => '版面';
+
+  @override
+  String get readerSettingsTabPaging => 'めくり';
+
+  @override
+  String get readerSettingsAdvancedTypography => '詳細な組版';
+
+  @override
   String get readerThemeDay => '昼';
 
   @override
@@ -2972,6 +3066,127 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String settingsAiFetchModelsFailed(String error) {
     return 'モデルの取得に失敗しました：$error';
+  }
+
+  @override
+  String get settingsAiPreprocessTitle => 'AI による書籍前処理';
+
+  @override
+  String get settingsAiPreprocessSubtitle =>
+      '書籍のインポート後、AI が通読して要約ナレッジベースを自動生成します';
+
+  @override
+  String get settingsAiPreprocessWarning =>
+      '前処理は本全体を分割して AI モデルへ送信します。大量のトークンを消費し、時間もかかります。有効にしますか？';
+
+  @override
+  String get settingsAiPreprocessNeedModel => '先に利用可能な AI モデルと API キーを設定してください';
+
+  @override
+  String get libraryAiPreprocess => 'AI 前処理';
+
+  @override
+  String libraryAiPreprocessConfirm(String title) {
+    return 'AI に『$title』を通読させ、要約ナレッジベースを生成しますか？大量のトークンを消費します。';
+  }
+
+  @override
+  String libraryAiPreprocessProgress(int done, int total) {
+    return 'AI が本を読んでいます…（$done/$total）';
+  }
+
+  @override
+  String get libraryAiPreprocessDone => 'AI ナレッジベースを生成しました';
+
+  @override
+  String libraryAiPreprocessFailed(String error) {
+    return 'AI 前処理に失敗しました：$error';
+  }
+
+  @override
+  String get libraryAiPreprocessUnsupported => 'この形式は AI 前処理に未対応です';
+
+  @override
+  String get libraryAiPreprocessQueued =>
+      'AI 前処理キューに追加しました。進捗はダウンロードタスクページで確認できます。';
+
+  @override
+  String get downloadTasksTabDownloads => 'ダウンロード';
+
+  @override
+  String get aiPreprocessTaskRunning => 'AI が読んでいます…';
+
+  @override
+  String get aiPreprocessTasksEmpty => 'AI 前処理タスクはありません';
+
+  @override
+  String get aiPreprocessClearFinished => '完了分をクリア';
+
+  @override
+  String get aiChatNewChat => '新しいチャット';
+
+  @override
+  String get aiChatSelectBook => '本を関連付け';
+
+  @override
+  String get aiChatNoBook => '本を関連付けない';
+
+  @override
+  String get navAi => 'AI';
+
+  @override
+  String get aiHistoryTitle => 'AI チャット履歴';
+
+  @override
+  String get aiHistoryEmpty => 'AI チャットはまだありません。\n読書中に「AIに質問」から会話を始められます。';
+
+  @override
+  String aiHistoryMessageCount(int count) {
+    return '$count 件のメッセージ';
+  }
+
+  @override
+  String get aiHistoryClearAll => 'すべて削除';
+
+  @override
+  String get aiHistoryClearAllConfirm => 'すべての AI チャット履歴を削除しますか？この操作は元に戻せません。';
+
+  @override
+  String get aiHistoryDeleteConfirm => 'このチャットを削除しますか？';
+
+  @override
+  String get floatingNavigationVisibilityHint =>
+      'スイッチをオフにするとページを非表示にできます。設定は非表示にできません。';
+
+  @override
+  String get readerAskAi => 'AIに質問';
+
+  @override
+  String get readerAiInputHint => 'この本について質問…';
+
+  @override
+  String get readerAiSendButton => '送信';
+
+  @override
+  String get readerAiThinking => '考え中…';
+
+  @override
+  String get readerAiNotConfiguredHint =>
+      'AI モデルが未設定です。設定 → AI 読書アシスタント からモデルと API キーを追加してください。';
+
+  @override
+  String get readerAiEmptyHint => '現在のページや本の内容について AI に質問できます。';
+
+  @override
+  String get readerAiSelectionQuestionLabel => 'この選択箇所を説明';
+
+  @override
+  String readerAiSelectionPrompt(
+    String selection,
+    String before,
+    String after,
+  ) {
+    return '以下の選択テキストを説明し、要点を 3 つ挙げてください。\n\n【選択テキスト】\n$selection\n\n【前の文脈】\n$before\n\n【後の文脈】\n$after';
   }
 
   @override

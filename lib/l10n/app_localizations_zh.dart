@@ -711,7 +711,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pageTurningScroll => '上下翻页';
 
   @override
-  String get tapZoneSettings => '点击翻页区域';
+  String get tapZoneSettings => '点击区域设置';
 
   @override
   String get tapZoneNextPage => '下一页';
@@ -724,6 +724,28 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get tapZoneLegend => '图例';
+
+  @override
+  String get tapZoneNextChapter => '下一章';
+
+  @override
+  String get tapZonePreviousChapter => '上一章';
+
+  @override
+  String get tapZoneNone => '无操作';
+
+  @override
+  String get tapZoneSettingsHint => '自定义九宫格每个区域的点击动作';
+
+  @override
+  String get tapZoneChooseAction => '选择操作';
+
+  @override
+  String get tapZoneMenuRequiredHint =>
+      '点击任意区域修改动作。至少保留一个菜单区域；全部移除时，中间区域会自动恢复为菜单。';
+
+  @override
+  String get tapZoneReset => '恢复默认';
 
   @override
   String get highlightColor => '荧光笔颜色';
@@ -1149,7 +1171,38 @@ class AppLocalizationsZh extends AppLocalizations {
   String get readerComicNoPages => '这本漫画压缩包里没有找到图片页';
 
   @override
-  String get readerComicCbrUnsupported => 'CBR 漫画暂不支持阅读，请先转换为 CBZ 格式';
+  String get readerComicCbrUnsupported =>
+      '这本 CBR 漫画使用真实 RAR 压缩，暂不支持阅读，请先转换为 CBZ 格式';
+
+  @override
+  String get readerComicArchiveUnsupported => '这本漫画的压缩格式暂不支持阅读，请先转换为 CBZ 格式';
+
+  @override
+  String get imageReaderSettings => '阅读设置';
+
+  @override
+  String get imageReaderDirectionTitle => '阅读方向';
+
+  @override
+  String get imageReaderDirectionLtr => '从左到右';
+
+  @override
+  String get imageReaderDirectionRtl => '从右到左（漫画）';
+
+  @override
+  String get imageReaderJumpToPage => '跳转页码';
+
+  @override
+  String get imageReaderBackgroundTitle => '页面背景';
+
+  @override
+  String get imageReaderBackgroundBlack => '黑色';
+
+  @override
+  String get imageReaderBackgroundGray => '灰色';
+
+  @override
+  String get imageReaderBackgroundWhite => '白色';
 
   @override
   String get readerPdfLinuxUnsupported => 'Linux 平台暂不支持 PDF 阅读';
@@ -1559,6 +1612,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get readerModeHorizontalSlideHint => '页面跟随手指横向移动并吸附翻页';
 
   @override
+  String get readerModeCoverSlide => '覆盖翻页';
+
+  @override
+  String get readerModeCoverSlideHint => '当前页向左划出，底下的下一页逐渐露出';
+
+  @override
   String get readerModePageCurl => '仿真翻页';
 
   @override
@@ -1683,6 +1742,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsVolumeKeyTurnSubtitle => '在非滚动翻页模式下使用音量键翻页';
 
   @override
+  String get settingsAutoResumeReadingTitle => '启动时回到上次阅读';
+
+  @override
+  String get settingsAutoResumeReadingSubtitle => '阅读中退出应用后，下次启动自动回到上次阅读位置';
+
+  @override
   String get settingsShowStatusBarTitle => '阅读时显示系统状态栏';
 
   @override
@@ -1723,6 +1788,18 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsSystemSettingsTitle => '系统设置';
+
+  @override
+  String get settingsSectionAppearanceFonts => '外观与字体';
+
+  @override
+  String get settingsSectionDataServices => '数据与服务';
+
+  @override
+  String get settingsSectionGeneral => '通用';
+
+  @override
+  String get settingsSectionAboutSupport => '关于与支持';
 
   @override
   String get settingsKeepScreenOnTitle => '保持屏幕常亮';
@@ -1847,7 +1924,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsAlipayDonationQrCodeLabel => '支付宝捐赠二维码';
 
   @override
-  String get settingsAiSwipeHint => '左右滑动选择模型，点击卡片即可切换。';
+  String get settingsAiSwipeHint => '左右滑动选择模型，点击切换，长按编辑或删除。';
 
   @override
   String get settingsAiLegacyIntro => '选择服务商和模型，填写 API Key 即可。其余参数保持默认。';
@@ -2582,6 +2659,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get readerThemeDescription => '仅改变阅读页面与阅读控制栏，不影响应用主题';
 
   @override
+  String get readerSettingsTabTheme => '主题';
+
+  @override
+  String get readerSettingsTabText => '文字';
+
+  @override
+  String get readerSettingsTabLayout => '版式';
+
+  @override
+  String get readerSettingsTabPaging => '翻页';
+
+  @override
+  String get readerSettingsAdvancedTypography => '高级排版';
+
+  @override
   String get readerThemeDay => '白天';
 
   @override
@@ -2944,6 +3036,124 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String settingsAiFetchModelsFailed(String error) {
     return '获取模型失败：$error';
+  }
+
+  @override
+  String get settingsAiPreprocessTitle => 'AI 预处理书籍';
+
+  @override
+  String get settingsAiPreprocessSubtitle => '导入书籍后自动让 AI 通读并生成本地摘要知识库';
+
+  @override
+  String get settingsAiPreprocessWarning =>
+      '预处理会把整本书分段发送给 AI 模型，消耗大量 token，且耗时较长。确定开启？';
+
+  @override
+  String get settingsAiPreprocessNeedModel => '请先配置可用的 AI 模型和 API Key';
+
+  @override
+  String get libraryAiPreprocess => 'AI 预处理';
+
+  @override
+  String libraryAiPreprocessConfirm(String title) {
+    return '让 AI 通读《$title》并生成摘要知识库？将消耗大量 token。';
+  }
+
+  @override
+  String libraryAiPreprocessProgress(int done, int total) {
+    return 'AI 正在通读本书…（第 $done/$total 步）';
+  }
+
+  @override
+  String get libraryAiPreprocessDone => 'AI 知识库已生成';
+
+  @override
+  String libraryAiPreprocessFailed(String error) {
+    return 'AI 预处理失败：$error';
+  }
+
+  @override
+  String get libraryAiPreprocessUnsupported => '该书格式暂不支持 AI 预处理';
+
+  @override
+  String get libraryAiPreprocessQueued => '已加入 AI 预处理队列，可在下载任务页查看进度。';
+
+  @override
+  String get downloadTasksTabDownloads => '下载';
+
+  @override
+  String get aiPreprocessTaskRunning => 'AI 通读中…';
+
+  @override
+  String get aiPreprocessTasksEmpty => '暂无 AI 预处理任务';
+
+  @override
+  String get aiPreprocessClearFinished => '清除已完成';
+
+  @override
+  String get aiChatNewChat => '新对话';
+
+  @override
+  String get aiChatSelectBook => '关联书籍';
+
+  @override
+  String get aiChatNoBook => '不关联书籍';
+
+  @override
+  String get navAi => 'AI';
+
+  @override
+  String get aiHistoryTitle => 'AI 对话记录';
+
+  @override
+  String get aiHistoryEmpty => '还没有 AI 对话。\n阅读时点击“问AI”发起第一次对话。';
+
+  @override
+  String aiHistoryMessageCount(int count) {
+    return '$count 条消息';
+  }
+
+  @override
+  String get aiHistoryClearAll => '清空全部';
+
+  @override
+  String get aiHistoryClearAllConfirm => '删除全部 AI 对话记录？此操作不可恢复。';
+
+  @override
+  String get aiHistoryDeleteConfirm => '删除这条对话记录？';
+
+  @override
+  String get floatingNavigationVisibilityHint => '关闭开关即可隐藏对应页面；设置不可隐藏。';
+
+  @override
+  String get readerAskAi => '问AI';
+
+  @override
+  String get readerAiInputHint => '就本书内容提问…';
+
+  @override
+  String get readerAiSendButton => '发送';
+
+  @override
+  String get readerAiThinking => '思考中…';
+
+  @override
+  String get readerAiNotConfiguredHint =>
+      '尚未配置 AI 模型。请前往 设置 → AI 阅读助手 添加模型与 API Key。';
+
+  @override
+  String get readerAiEmptyHint => '可以向 AI 询问当前页或本书的任何内容。';
+
+  @override
+  String get readerAiSelectionQuestionLabel => '解释这段选中内容';
+
+  @override
+  String readerAiSelectionPrompt(
+    String selection,
+    String before,
+    String after,
+  ) {
+    return '请解释下面这段选中文本，并给出 3 条要点。\n\n【选中文本】\n$selection\n\n【上文】\n$before\n\n【下文】\n$after';
   }
 
   @override
@@ -4476,7 +4686,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get pageTurningScroll => '上下翻頁';
 
   @override
-  String get tapZoneSettings => '點擊翻頁區域';
+  String get tapZoneSettings => '點擊區域設定';
 
   @override
   String get tapZoneNextPage => '下一頁';
@@ -4489,6 +4699,28 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get tapZoneLegend => '圖例';
+
+  @override
+  String get tapZoneNextChapter => '下一章';
+
+  @override
+  String get tapZonePreviousChapter => '上一章';
+
+  @override
+  String get tapZoneNone => '無操作';
+
+  @override
+  String get tapZoneSettingsHint => '自訂九宮格每個區域的點擊動作';
+
+  @override
+  String get tapZoneChooseAction => '選擇操作';
+
+  @override
+  String get tapZoneMenuRequiredHint =>
+      '點擊任意區域修改動作。至少保留一個選單區域；全部移除時，中間區域會自動恢復為選單。';
+
+  @override
+  String get tapZoneReset => '恢復預設';
 
   @override
   String get highlightColor => '螢光筆顏色';
@@ -4914,7 +5146,38 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get readerComicNoPages => '這本漫畫壓縮檔裡沒有找到圖片頁';
 
   @override
-  String get readerComicCbrUnsupported => 'CBR 漫畫暫不支援閱讀，請先轉換為 CBZ 格式';
+  String get readerComicCbrUnsupported =>
+      '這本 CBR 漫畫使用真實 RAR 壓縮，暫不支援閱讀，請先轉換為 CBZ 格式';
+
+  @override
+  String get readerComicArchiveUnsupported => '這本漫畫的壓縮格式暫不支援閱讀，請先轉換為 CBZ 格式';
+
+  @override
+  String get imageReaderSettings => '閱讀設定';
+
+  @override
+  String get imageReaderDirectionTitle => '閱讀方向';
+
+  @override
+  String get imageReaderDirectionLtr => '從左到右';
+
+  @override
+  String get imageReaderDirectionRtl => '從右到左（漫畫）';
+
+  @override
+  String get imageReaderJumpToPage => '跳轉頁碼';
+
+  @override
+  String get imageReaderBackgroundTitle => '頁面背景';
+
+  @override
+  String get imageReaderBackgroundBlack => '黑色';
+
+  @override
+  String get imageReaderBackgroundGray => '灰色';
+
+  @override
+  String get imageReaderBackgroundWhite => '白色';
 
   @override
   String get readerPdfLinuxUnsupported => 'Linux 平台暫不支援 PDF 閱讀';
@@ -5324,6 +5587,12 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get readerModeHorizontalSlideHint => '頁面跟隨手指橫向移動並吸附翻頁';
 
   @override
+  String get readerModeCoverSlide => '覆蓋翻頁';
+
+  @override
+  String get readerModeCoverSlideHint => '目前頁面向左滑出，底下的下一頁逐漸露出';
+
+  @override
   String get readerModePageCurl => '仿真翻頁';
 
   @override
@@ -5448,6 +5717,12 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get settingsVolumeKeyTurnSubtitle => '在非捲動翻頁模式下使用音量鍵翻頁';
 
   @override
+  String get settingsAutoResumeReadingTitle => '啟動時回到上次閱讀';
+
+  @override
+  String get settingsAutoResumeReadingSubtitle => '閱讀中退出應用程式後，下次啟動自動回到上次閱讀位置';
+
+  @override
   String get settingsShowStatusBarTitle => '閱讀時顯示系統狀態列';
 
   @override
@@ -5488,6 +5763,18 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get settingsSystemSettingsTitle => '系統設定';
+
+  @override
+  String get settingsSectionAppearanceFonts => '外觀與字體';
+
+  @override
+  String get settingsSectionDataServices => '資料與服務';
+
+  @override
+  String get settingsSectionGeneral => '通用';
+
+  @override
+  String get settingsSectionAboutSupport => '關於與支持';
 
   @override
   String get settingsKeepScreenOnTitle => '保持螢幕恆亮';
@@ -5612,7 +5899,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get settingsAlipayDonationQrCodeLabel => '支付寶捐贈二維碼';
 
   @override
-  String get settingsAiSwipeHint => '左右滑動選擇模型，點擊卡片即可切換。';
+  String get settingsAiSwipeHint => '左右滑動選擇模型，點擊切換，長按編輯或刪除。';
 
   @override
   String get settingsAiLegacyIntro => '選擇服務商和模型，填寫 API Key 即可。其餘參數保持預設。';
@@ -6347,6 +6634,21 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get readerThemeDescription => '僅改變閱讀頁面與閱讀控制列，不影響應用程式主題';
 
   @override
+  String get readerSettingsTabTheme => '主題';
+
+  @override
+  String get readerSettingsTabText => '文字';
+
+  @override
+  String get readerSettingsTabLayout => '版式';
+
+  @override
+  String get readerSettingsTabPaging => '翻頁';
+
+  @override
+  String get readerSettingsAdvancedTypography => '進階排版';
+
+  @override
   String get readerThemeDay => '白天';
 
   @override
@@ -6709,6 +7011,124 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   @override
   String settingsAiFetchModelsFailed(String error) {
     return '取得模型失敗：$error';
+  }
+
+  @override
+  String get settingsAiPreprocessTitle => 'AI 預處理書籍';
+
+  @override
+  String get settingsAiPreprocessSubtitle => '匯入書籍後自動讓 AI 通讀並產生本機摘要知識庫';
+
+  @override
+  String get settingsAiPreprocessWarning =>
+      '預處理會把整本書分段傳送給 AI 模型，消耗大量 token，且耗時較長。確定開啟？';
+
+  @override
+  String get settingsAiPreprocessNeedModel => '請先設定可用的 AI 模型與 API Key';
+
+  @override
+  String get libraryAiPreprocess => 'AI 預處理';
+
+  @override
+  String libraryAiPreprocessConfirm(String title) {
+    return '讓 AI 通讀《$title》並產生摘要知識庫？將消耗大量 token。';
+  }
+
+  @override
+  String libraryAiPreprocessProgress(int done, int total) {
+    return 'AI 正在通讀本書…（第 $done/$total 步）';
+  }
+
+  @override
+  String get libraryAiPreprocessDone => 'AI 知識庫已產生';
+
+  @override
+  String libraryAiPreprocessFailed(String error) {
+    return 'AI 預處理失敗：$error';
+  }
+
+  @override
+  String get libraryAiPreprocessUnsupported => '該書格式暫不支援 AI 預處理';
+
+  @override
+  String get libraryAiPreprocessQueued => '已加入 AI 預處理佇列，可在下載任務頁查看進度。';
+
+  @override
+  String get downloadTasksTabDownloads => '下載';
+
+  @override
+  String get aiPreprocessTaskRunning => 'AI 通讀中…';
+
+  @override
+  String get aiPreprocessTasksEmpty => '暫無 AI 預處理任務';
+
+  @override
+  String get aiPreprocessClearFinished => '清除已完成';
+
+  @override
+  String get aiChatNewChat => '新對話';
+
+  @override
+  String get aiChatSelectBook => '關聯書籍';
+
+  @override
+  String get aiChatNoBook => '不關聯書籍';
+
+  @override
+  String get navAi => 'AI';
+
+  @override
+  String get aiHistoryTitle => 'AI 對話記錄';
+
+  @override
+  String get aiHistoryEmpty => '還沒有 AI 對話。\n閱讀時點擊「問AI」發起第一次對話。';
+
+  @override
+  String aiHistoryMessageCount(int count) {
+    return '$count 則訊息';
+  }
+
+  @override
+  String get aiHistoryClearAll => '清空全部';
+
+  @override
+  String get aiHistoryClearAllConfirm => '刪除全部 AI 對話記錄？此操作無法復原。';
+
+  @override
+  String get aiHistoryDeleteConfirm => '刪除這則對話記錄？';
+
+  @override
+  String get floatingNavigationVisibilityHint => '關閉開關即可隱藏對應頁面；設定無法隱藏。';
+
+  @override
+  String get readerAskAi => '問AI';
+
+  @override
+  String get readerAiInputHint => '就本書內容提問…';
+
+  @override
+  String get readerAiSendButton => '傳送';
+
+  @override
+  String get readerAiThinking => '思考中…';
+
+  @override
+  String get readerAiNotConfiguredHint =>
+      '尚未設定 AI 模型。請前往 設定 → AI 閱讀助手 新增模型與 API Key。';
+
+  @override
+  String get readerAiEmptyHint => '可以向 AI 詢問目前頁面或本書的任何內容。';
+
+  @override
+  String get readerAiSelectionQuestionLabel => '解釋這段選取內容';
+
+  @override
+  String readerAiSelectionPrompt(
+    String selection,
+    String before,
+    String after,
+  ) {
+    return '請解釋下面這段選取文字，並給出 3 條要點。\n\n【選取文字】\n$selection\n\n【上文】\n$before\n\n【下文】\n$after';
   }
 
   @override
