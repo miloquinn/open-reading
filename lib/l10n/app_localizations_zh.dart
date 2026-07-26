@@ -1139,7 +1139,20 @@ class AppLocalizationsZh extends AppLocalizations {
   String get readerFileMissing => '书籍文件不存在，请重新导入';
 
   @override
-  String get readerUnsupportedFormat => '原生阅读器当前仅支持 EPUB 和 TXT';
+  String get readerUnsupportedFormat => '该文件格式暂不支持阅读';
+
+  @override
+  String get readerKindleDrmProtected =>
+      '这本 Kindle 书籍受 DRM 加密保护，无法阅读，仅支持无 DRM 的书籍';
+
+  @override
+  String get readerComicNoPages => '这本漫画压缩包里没有找到图片页';
+
+  @override
+  String get readerComicCbrUnsupported => 'CBR 漫画暂不支持阅读，请先转换为 CBZ 格式';
+
+  @override
+  String get readerPdfLinuxUnsupported => 'Linux 平台暂不支持 PDF 阅读';
 
   @override
   String get bootstrapDataServiceFailed => '数据系统初始化失败';
@@ -1368,6 +1381,36 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get libraryRenameBookFailed => '重命名失败';
+
+  @override
+  String get libraryCustomCover => '自定义封面';
+
+  @override
+  String get libraryCustomCoverHint => '选择一张图片作为这本书的封面';
+
+  @override
+  String get libraryCustomCoverSuccess => '封面已更新';
+
+  @override
+  String get libraryCoverUnsupportedFormat => '不支持的图片格式';
+
+  @override
+  String get libraryCoverFileTooLarge => '图片超过 20 MB 大小限制';
+
+  @override
+  String get libraryCoverReadFailed => '无法读取所选图片';
+
+  @override
+  String get libraryCoverSaveFailed => '封面保存失败';
+
+  @override
+  String get libraryResetCover => '恢复默认封面';
+
+  @override
+  String get libraryResetCoverHint => '移除自定义封面，恢复原来的封面';
+
+  @override
+  String get libraryResetCoverSuccess => '已恢复默认封面';
 
   @override
   String get libraryExportBook => '导出书籍';
@@ -4861,7 +4904,20 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get readerFileMissing => '書籍檔案不存在，請重新匯入';
 
   @override
-  String get readerUnsupportedFormat => '原生閱讀器目前僅支援 EPUB 和 TXT';
+  String get readerUnsupportedFormat => '該檔案格式暫不支援閱讀';
+
+  @override
+  String get readerKindleDrmProtected =>
+      '這本 Kindle 書籍受 DRM 加密保護，無法閱讀，僅支援無 DRM 的書籍';
+
+  @override
+  String get readerComicNoPages => '這本漫畫壓縮檔裡沒有找到圖片頁';
+
+  @override
+  String get readerComicCbrUnsupported => 'CBR 漫畫暫不支援閱讀，請先轉換為 CBZ 格式';
+
+  @override
+  String get readerPdfLinuxUnsupported => 'Linux 平台暫不支援 PDF 閱讀';
 
   @override
   String get bootstrapDataServiceFailed => '資料系統初始化失敗';
@@ -5090,6 +5146,36 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get libraryRenameBookFailed => '重新命名失敗';
+
+  @override
+  String get libraryCustomCover => '自訂封面';
+
+  @override
+  String get libraryCustomCoverHint => '選擇一張圖片作為這本書的封面';
+
+  @override
+  String get libraryCustomCoverSuccess => '封面已更新';
+
+  @override
+  String get libraryCoverUnsupportedFormat => '不支援的圖片格式';
+
+  @override
+  String get libraryCoverFileTooLarge => '圖片超過 20 MB 大小限制';
+
+  @override
+  String get libraryCoverReadFailed => '無法讀取所選圖片';
+
+  @override
+  String get libraryCoverSaveFailed => '封面儲存失敗';
+
+  @override
+  String get libraryResetCover => '還原預設封面';
+
+  @override
+  String get libraryResetCoverHint => '移除自訂封面，還原原本的封面';
+
+  @override
+  String get libraryResetCoverSuccess => '已還原預設封面';
 
   @override
   String get libraryExportBook => '匯出書籍';

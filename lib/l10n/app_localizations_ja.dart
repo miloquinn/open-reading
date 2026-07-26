@@ -1144,7 +1144,20 @@ class AppLocalizationsJa extends AppLocalizations {
   String get readerFileMissing => '書籍ファイルが見つかりません。再度追加してください。';
 
   @override
-  String get readerUnsupportedFormat => 'ネイティブリーダーは現在 EPUB と TXT のみ対応しています';
+  String get readerUnsupportedFormat => 'この形式はまだ読書に対応していません';
+
+  @override
+  String get readerKindleDrmProtected =>
+      'この Kindle ブックは DRM で保護されているため読めません。DRM フリーのブックのみ対応しています';
+
+  @override
+  String get readerComicNoPages => 'このコミックアーカイブに画像ページが見つかりませんでした';
+
+  @override
+  String get readerComicCbrUnsupported => 'CBR コミックはまだ対応していません。CBZ に変換してください';
+
+  @override
+  String get readerPdfLinuxUnsupported => 'Linux では PDF の閲覧にまだ対応していません';
 
   @override
   String get bootstrapDataServiceFailed => 'データシステムの初期化に失敗しました';
@@ -1373,6 +1386,36 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get libraryRenameBookFailed => '名前を変更できませんでした';
+
+  @override
+  String get libraryCustomCover => 'カスタム表紙';
+
+  @override
+  String get libraryCustomCoverHint => '画像を選んでこの本の表紙にします';
+
+  @override
+  String get libraryCustomCoverSuccess => '表紙を更新しました';
+
+  @override
+  String get libraryCoverUnsupportedFormat => '対応していない画像形式です';
+
+  @override
+  String get libraryCoverFileTooLarge => '画像が 20 MB の上限を超えています';
+
+  @override
+  String get libraryCoverReadFailed => '選択した画像を読み込めませんでした';
+
+  @override
+  String get libraryCoverSaveFailed => '表紙を保存できませんでした';
+
+  @override
+  String get libraryResetCover => '既定の表紙に戻す';
+
+  @override
+  String get libraryResetCoverHint => 'カスタム表紙を削除して元の表紙に戻します';
+
+  @override
+  String get libraryResetCoverSuccess => '既定の表紙に戻しました';
 
   @override
   String get libraryExportBook => '書籍を書き出す';

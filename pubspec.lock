@@ -445,6 +445,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.9.0"
+  kindle_unpack:
+    dependency: "direct main"
+    description:
+      name: kindle_unpack
+      sha256: "3d53c5dd5c9c49fd950f64dcec7801ae61a641b7f8c516191947541b33aeaa08"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.1"
   leak_tracker:
     dependency: transitive
     description:

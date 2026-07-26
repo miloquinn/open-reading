@@ -1454,6 +1454,42 @@ class _LibraryPageState extends State<LibraryPage> {
                         },
                       ),
                       const SizedBox(height: 8),
+                      if (!kIsWeb) ...[
+                        _buildOptionItem(
+                          context: context,
+                          icon: Icons.image_outlined,
+                          iconColor: localScheme.secondary,
+                          title: context.l10n.libraryCustomCover,
+                          subtitle: context.l10n.libraryCustomCoverHint,
+                          backgroundColor: localScheme.secondaryContainer
+                              .withValues(
+                                alpha: isMaterial3Style ? 0.44 : 0.15,
+                              ),
+                          onTap: () {
+                            Navigator.pop(context);
+                            unawaited(_pickCustomCover(book));
+                          },
+                        ),
+                        const SizedBox(height: 8),
+                        if (BookCoverEditService.hasCustomCover(book)) ...[
+                          _buildOptionItem(
+                            context: context,
+                            icon: Icons.restore,
+                            iconColor: localScheme.secondary,
+                            title: context.l10n.libraryResetCover,
+                            subtitle: context.l10n.libraryResetCoverHint,
+                            backgroundColor: localScheme.secondaryContainer
+                                .withValues(
+                                  alpha: isMaterial3Style ? 0.44 : 0.15,
+                                ),
+                            onTap: () {
+                              Navigator.pop(context);
+                              unawaited(_resetCustomCover(book));
+                            },
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+                      ],
                       if (!book.isOnline && book.filePath.isNotEmpty) ...[
                         _buildOptionItem(
                           context: context,
@@ -1580,6 +1616,63 @@ class _LibraryPageState extends State<LibraryPage> {
       showSideToast(
         toastContext,
         l10n.libraryRenameBookFailed,
+        kind: SideToastKind.error,
+      );
+    }
+  }
+
+  /// 让用户挑选本地图片替换 [book] 的封面，成功后刷新书库。
+  Future<void> _pickCustomCover(Book book) async {
+    final l10n = context.l10n;
+    final toastContext = context;
+    try {
+      final applied = await BookCoverEditService().pickAndApplyCover(book);
+      if (!applied) return; // 用户取消挑选
+      _loadBooks();
+      if (!toastContext.mounted) return;
+      showSideToast(
+        toastContext,
+        l10n.libraryCustomCoverSuccess,
+        kind: SideToastKind.success,
+      );
+    } on BookCoverEditException catch (error) {
+      if (!toastContext.mounted) return;
+      final message = switch (error.code) {
+        BookCoverEditError.unsupportedFormat =>
+          l10n.libraryCoverUnsupportedFormat,
+        BookCoverEditError.fileTooLarge => l10n.libraryCoverFileTooLarge,
+        BookCoverEditError.readFailed => l10n.libraryCoverReadFailed,
+        BookCoverEditError.storageFailed => l10n.libraryCoverSaveFailed,
+      };
+      showSideToast(toastContext, message, kind: SideToastKind.error);
+    } catch (_) {
+      if (!toastContext.mounted) return;
+      showSideToast(
+        toastContext,
+        l10n.libraryCoverSaveFailed,
+        kind: SideToastKind.error,
+      );
+    }
+  }
+
+  /// 撤销 [book] 的自定义封面，恢复原封面或回退到书源/生成封面。
+  Future<void> _resetCustomCover(Book book) async {
+    final l10n = context.l10n;
+    final toastContext = context;
+    try {
+      await BookCoverEditService().resetCover(book);
+      _loadBooks();
+      if (!toastContext.mounted) return;
+      showSideToast(
+        toastContext,
+        l10n.libraryResetCoverSuccess,
+        kind: SideToastKind.success,
+      );
+    } catch (_) {
+      if (!toastContext.mounted) return;
+      showSideToast(
+        toastContext,
+        l10n.libraryCoverSaveFailed,
         kind: SideToastKind.error,
       );
     }
@@ -1917,6 +2010,10 @@ class _LibraryPageState extends State<LibraryPage> {
           await coverFile.delete();
           debugPrint('✅ 已删除封面图片: ${book.coverImagePath}');
         }
+      }
+      if (!kIsWeb) {
+        // 清理换封面留下的原封面备份等残留文件
+        await BookCoverEditService().cleanupForDeletedBook(book);
       }
 
       // 3. 删除数据库记录（会级联删除笔记、书签等）

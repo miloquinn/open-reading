@@ -10,6 +10,7 @@ void main() {
       picker,
       containsAll(<String>['fb2', 'rtf', 'doc', 'docx', 'cbz', 'cbr']),
     );
+    expect(picker, containsAll(<String>['html', 'htm', 'xhtml', 'md']));
     expect(picker.contains('zip'), isFalse);
     expect(picker.contains('rar'), isFalse);
   });
@@ -31,7 +32,10 @@ void main() {
   test('当前已具备正文阅读管线的格式', () {
     expect(BookFormatRegistry.hasReadableTextPipeline('txt'), isTrue);
     expect(BookFormatRegistry.hasReadableTextPipeline('epub'), isTrue);
-    expect(BookFormatRegistry.hasReadableTextPipeline('mobi'), isFalse);
+    expect(BookFormatRegistry.hasReadableTextPipeline('mobi'), isTrue);
+    expect(BookFormatRegistry.hasReadableTextPipeline('docx'), isTrue);
+    expect(BookFormatRegistry.hasReadableTextPipeline('doc'), isFalse);
+    expect(BookFormatRegistry.hasReadableTextPipeline('cbr'), isFalse);
     expect(BookFormatRegistry.hasReadableTextPipeline('zip'), isFalse);
   });
 

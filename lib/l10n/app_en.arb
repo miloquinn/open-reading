@@ -1164,9 +1164,25 @@
   "@readerFileMissing": {
     "description": "Toast shown when opening a book whose file is missing"
   },
-  "readerUnsupportedFormat": "The native reader currently only supports EPUB and TXT.",
+  "readerUnsupportedFormat": "This format can't be read yet.",
   "@readerUnsupportedFormat": {
     "description": "Toast shown when opening an unsupported book format"
+  },
+  "readerKindleDrmProtected": "This Kindle book is DRM-protected and can't be read here. Only DRM-free books are supported.",
+  "@readerKindleDrmProtected": {
+    "description": "Error shown when opening a DRM-encrypted MOBI/AZW/AZW3 book"
+  },
+  "readerComicNoPages": "No image pages were found in this comic archive.",
+  "@readerComicNoPages": {
+    "description": "Error shown when a CBZ comic contains no readable images"
+  },
+  "readerComicCbrUnsupported": "CBR comics aren't readable yet. Please convert them to CBZ.",
+  "@readerComicCbrUnsupported": {
+    "description": "Toast shown when opening a CBR comic, which requires RAR extraction"
+  },
+  "readerPdfLinuxUnsupported": "PDF reading isn't available on Linux yet.",
+  "@readerPdfLinuxUnsupported": {
+    "description": "Toast shown when opening a PDF on Linux, where the PDF engine has no implementation"
   },
   "bootstrapDataServiceFailed": "Failed to initialize the data system",
   "@bootstrapDataServiceFailed": {
@@ -1533,6 +1549,46 @@
   "libraryRenameBookFailed": "Could not rename the book",
   "@libraryRenameBookFailed": {
     "description": "Toast shown when renaming a book fails"
+  },
+  "libraryCustomCover": "Custom cover",
+  "@libraryCustomCover": {
+    "description": "Long-press option title for replacing a book cover with a user-picked image"
+  },
+  "libraryCustomCoverHint": "Pick an image to use as this book's cover",
+  "@libraryCustomCoverHint": {
+    "description": "Subtitle of the custom cover option"
+  },
+  "libraryCustomCoverSuccess": "Cover updated",
+  "@libraryCustomCoverSuccess": {
+    "description": "Toast shown after successfully applying a custom cover"
+  },
+  "libraryCoverUnsupportedFormat": "Unsupported image format",
+  "@libraryCoverUnsupportedFormat": {
+    "description": "Toast shown when the picked cover image has an unsupported format"
+  },
+  "libraryCoverFileTooLarge": "The image exceeds the 20 MB size limit",
+  "@libraryCoverFileTooLarge": {
+    "description": "Toast shown when the picked cover image is too large"
+  },
+  "libraryCoverReadFailed": "Could not read the selected image",
+  "@libraryCoverReadFailed": {
+    "description": "Toast shown when the picked cover image cannot be read"
+  },
+  "libraryCoverSaveFailed": "Could not save the cover",
+  "@libraryCoverSaveFailed": {
+    "description": "Toast shown when saving the custom cover fails"
+  },
+  "libraryResetCover": "Restore default cover",
+  "@libraryResetCover": {
+    "description": "Long-press option title for removing a custom cover"
+  },
+  "libraryResetCoverHint": "Remove the custom cover and restore the original",
+  "@libraryResetCoverHint": {
+    "description": "Subtitle of the restore default cover option"
+  },
+  "libraryResetCoverSuccess": "Default cover restored",
+  "@libraryResetCoverSuccess": {
+    "description": "Toast shown after restoring the default cover"
   },
   "libraryExportBook": "Export book",
   "libraryExportOriginalHint": "Copy the original file to another location",

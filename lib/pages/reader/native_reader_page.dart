@@ -44,6 +44,7 @@ import 'package:xxread/services/books/book_dao.dart';
 import 'package:xxread/services/books/book_note_dao.dart';
 import 'package:xxread/services/books/bookmark_dao.dart';
 import 'package:xxread/services/books/enhanced_txt_import_service.dart';
+import 'package:xxread/services/books/kindle_book_parser.dart';
 import 'package:xxread/services/books/web_book_file_store.dart';
 import 'package:xxread/services/core/app_settings_service.dart';
 import 'package:xxread/services/reading/reading_stats_dao.dart';
@@ -1223,24 +1224,17 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     final bytes = webBytes ?? await File(widget.book.filePath).readAsBytes();
     switch (format) {
       case 'epub':
-        final parsed = await compute(_parseEpubChapters, bytes);
-        return parsed
-            .map(
-              (chapter) => _NativeChapter(
-                id: chapter['id'] as String? ?? '',
-                title: chapter['title'] as String? ?? '',
-                depth: chapter['depth'] as int? ?? 0,
-                plainText: chapter['plainText'] as String? ?? '',
-                blocks: (chapter['blocks'] as List<dynamic>)
-                    .map(
-                      (block) => _NativeBlock.fromMap(
-                        Map<String, String>.from(block as Map),
-                      ),
-                    )
-                    .toList(growable: false),
-              ),
-            )
-            .toList(growable: false);
+        return _richChaptersFromMaps(await compute(_parseEpubChapters, bytes));
+      case 'mobi':
+      case 'azw':
+      case 'azw3':
+        try {
+          return _richChaptersFromMaps(
+            await compute(_parseKindleChapters, bytes),
+          );
+        } on KindleDrmException {
+          throw _ReaderBookLoadException(l10n.readerKindleDrmProtected);
+        }
       case 'html':
       case 'htm':
       case 'xhtml':
@@ -4270,19 +4264,14 @@ Future<List<Map<String, dynamic>>> _parseEpubChapters(Uint8List bytes) async {
     }
   }
 
-  final cssRules = <String, String>{};
+  final cssSources = <String>[];
   final cssEntries = epub.Content?.Css?.values;
   if (cssEntries != null) {
     for (final cssFile in cssEntries) {
-      final css = cssFile.Content ?? '';
-      for (final match in RegExp(r'([^{}]+)\{([^{}]+)\}').allMatches(css)) {
-        final declarations = match.group(2)?.trim() ?? '';
-        for (final selector in (match.group(1) ?? '').split(',')) {
-          cssRules[selector.trim().toLowerCase()] = declarations;
-        }
-      }
+      cssSources.add(cssFile.Content ?? '');
     }
   }
+  final cssRules = _cssRulesFromSources(cssSources);
 
   // epub.Chapters only covers files that have a navPoint in toc.ncx. Some
   // EPUBs (e.g. color-plate pages exported without TOC entries) put extra
@@ -4322,127 +4311,208 @@ Future<List<Map<String, dynamic>>> _parseEpubChapters(Uint8List bytes) async {
     spineFiles.add(href);
   }
 
-  void append(List<String> files) {
-    for (final href in files) {
-      final decodedHref = Uri.decodeFull(href);
-      final title = titleByFile[decodedHref] ?? '';
-      final depth = depthByFile[decodedHref] ?? 0;
-      final document = html_parser.parse(htmlContent![href]?.Content ?? '');
-      final blocks = <Map<String, String>>[];
-      final plainText = StringBuffer();
-      final elements =
-          document.body?.querySelectorAll(
-            'h1,h2,h3,h4,h5,h6,p,div,section,article,li,dd,dt,blockquote,pre,stanza,v,subtitle,a,img,svg image',
-          ) ??
-          const <html_dom.Element>[];
-      for (final element in elements) {
-        final isImage =
-            element.localName == 'img' ||
-            (element.localName == 'image' && element.namespaceUri != null);
-        if (isImage) {
-          final src = _epubImageSrc(element);
-          if (src == null || src.startsWith('data:')) continue;
-          final name = path
-              .basename(Uri.decodeFull(src.split('?').first.split('#').first))
-              .toLowerCase();
-          final encoded = imagesByName[name];
-          if (encoded != null) {
-            blocks.add(<String, String>{
-              'type': 'image',
-              'content': encoded,
-              'startOffset': '${plainText.length}',
-              'endOffset': '${plainText.length}',
-            });
-          }
-          continue;
-        }
-        if (element.localName == 'a' && _hasEpubTextBlockAncestor(element)) {
-          continue;
-        }
-        // 只取块的"自有文本"（排除嵌套块子树）：querySelectorAll 会同时
-        // 命中 blockquote 与其内部的 p，用整棵子树的 text 会导致正文重复。
-        //
-        // 源 XHTML 常把一个段落的文本折行排版，文本节点里会带着裸换行；
-        // 这些换行只是排版折行，不是真正的段落分隔（段落间已由下方的
-        // `\n\n` 显式分隔）。除 <pre> 外一律把内部空白（含换行）折叠成
-        // 空格，否则会被 normalizeParagraphBreaks 误判成新段落，导致
-        // 首行缩进出现在折行处而非每段真正的开头。
-        final isPreformatted = element.localName == 'pre';
-        final rawText = _epubElementOwnText(element);
-        final text = _normalizeEpubElementText(
-          rawText,
-          preformatted: isPreformatted,
-        );
-        if (text.isNotEmpty) {
-          if (plainText.isNotEmpty) plainText.write('\n\n');
-          final startOffset = plainText.length;
-          plainText.write(text);
-          final tag = (element.localName ?? '').toLowerCase();
-          final classes = element.classes
-              .map((className) => cssRules['.${className.toLowerCase()}'])
-              .whereType<String>();
-          final styleSource = <String>[
-            cssRules[tag] ?? '',
-            ...classes,
-            element.attributes['style'] ?? '',
-          ].join(';').toLowerCase();
-          final headingLevel = tag.startsWith('h')
-              ? int.tryParse(tag.substring(1))?.clamp(1, 6)
-              : null;
-          const headingScales = <int, double>{
-            1: 1.75,
-            2: 1.5,
-            3: 1.3,
-            4: 1.18,
-            5: 1.1,
-            6: 1.05,
-          };
-          final color = RegExp(
-            r'color\s*:\s*([^;]+)',
-          ).firstMatch(styleSource)?.group(1)?.trim();
-          blocks.add(<String, String>{
-            'type': 'text',
-            'content': text,
-            'startOffset': '$startOffset',
-            'endOffset': '${plainText.length}',
-            'fontScale': '${headingScales[headingLevel] ?? 1}',
-            'bold':
-                '${headingLevel != null || tag == 'strong' || tag == 'b' || styleSource.contains('font-weight:bold') || styleSource.contains('font-weight: bold')}',
-            'italic':
-                '${tag == 'em' || tag == 'i' || styleSource.contains('font-style:italic') || styleSource.contains('font-style: italic')}',
-            if (color != null) 'color': color,
-          });
-        }
-      }
-      if (blocks.isEmpty) {
-        final fallback = _extractHtmlParagraphText(
-          document.body?.nodes ?? const [],
-        );
-        if (fallback.isNotEmpty) {
-          plainText.write(fallback);
-          blocks.add(<String, String>{
-            'type': 'text',
-            'content': fallback,
-            'startOffset': '0',
-            'endOffset': '${fallback.length}',
-          });
-        }
-      }
-      if (plainText.isNotEmpty || blocks.isNotEmpty) {
-        result.add(<String, dynamic>{
-          'id': decodedHref,
-          'title': title,
-          'depth': depth,
-          'plainText': plainText.toString(),
-          'blocks': blocks,
-        });
+  for (final href in spineFiles) {
+    final decodedHref = Uri.decodeFull(href);
+    final chapter = _chapterMapFromHtmlDocument(
+      id: decodedHref,
+      title: titleByFile[decodedHref] ?? '',
+      depth: depthByFile[decodedHref] ?? 0,
+      document: html_parser.parse(htmlContent![href]?.Content ?? ''),
+      imagesByName: imagesByName,
+      cssRules: cssRules,
+    );
+    if (chapter != null) result.add(chapter);
+  }
+  return result;
+}
+
+/// 把扁平 CSS 文本解析为「选择器 → 声明」查找表（与阅读器的
+/// 样式块提取相配的近似解析，不处理嵌套/媒体查询）。
+Map<String, String> _cssRulesFromSources(Iterable<String> sources) {
+  final cssRules = <String, String>{};
+  for (final css in sources) {
+    for (final match in RegExp(r'([^{}]+)\{([^{}]+)\}').allMatches(css)) {
+      final declarations = match.group(2)?.trim() ?? '';
+      for (final selector in (match.group(1) ?? '').split(',')) {
+        cssRules[selector.trim().toLowerCase()] = declarations;
       }
     }
   }
+  return cssRules;
+}
 
-  append(spineFiles);
+/// 把单个 XHTML 文档转换为章节 map（plainText + 样式/图片 blocks）。
+///
+/// EPUB 与 Kindle（MOBI/KF8）共用：两者正文都是 HTML，差异只在
+/// 图片命名与 CSS 来源，由调用方先行归一化（imagesByName 的值为
+/// base64 字符串，图片引用需已重写为可按 basename 命中的文件名）。
+Map<String, dynamic>? _chapterMapFromHtmlDocument({
+  required String id,
+  required String title,
+  required int depth,
+  required html_dom.Document document,
+  required Map<String, String> imagesByName,
+  required Map<String, String> cssRules,
+}) {
+  final blocks = <Map<String, String>>[];
+  final plainText = StringBuffer();
+  final elements =
+      document.body?.querySelectorAll(
+        'h1,h2,h3,h4,h5,h6,p,div,section,article,li,dd,dt,blockquote,pre,stanza,v,subtitle,a,img,svg image',
+      ) ??
+      const <html_dom.Element>[];
+  for (final element in elements) {
+    final isImage =
+        element.localName == 'img' ||
+        (element.localName == 'image' && element.namespaceUri != null);
+    if (isImage) {
+      final src = _epubImageSrc(element);
+      if (src == null || src.startsWith('data:')) continue;
+      final name = path
+          .basename(Uri.decodeFull(src.split('?').first.split('#').first))
+          .toLowerCase();
+      final encoded = imagesByName[name];
+      if (encoded != null) {
+        blocks.add(<String, String>{
+          'type': 'image',
+          'content': encoded,
+          'startOffset': '${plainText.length}',
+          'endOffset': '${plainText.length}',
+        });
+      }
+      continue;
+    }
+    if (element.localName == 'a' && _hasEpubTextBlockAncestor(element)) {
+      continue;
+    }
+    // 只取块的"自有文本"（排除嵌套块子树）：querySelectorAll 会同时
+    // 命中 blockquote 与其内部的 p，用整棵子树的 text 会导致正文重复。
+    //
+    // 源 XHTML 常把一个段落的文本折行排版，文本节点里会带着裸换行；
+    // 这些换行只是排版折行，不是真正的段落分隔（段落间已由下方的
+    // `\n\n` 显式分隔）。除 <pre> 外一律把内部空白（含换行）折叠成
+    // 空格，否则会被 normalizeParagraphBreaks 误判成新段落，导致
+    // 首行缩进出现在折行处而非每段真正的开头。
+    final isPreformatted = element.localName == 'pre';
+    final rawText = _epubElementOwnText(element);
+    final text = _normalizeEpubElementText(
+      rawText,
+      preformatted: isPreformatted,
+    );
+    if (text.isNotEmpty) {
+      if (plainText.isNotEmpty) plainText.write('\n\n');
+      final startOffset = plainText.length;
+      plainText.write(text);
+      final tag = (element.localName ?? '').toLowerCase();
+      final classes = element.classes
+          .map((className) => cssRules['.${className.toLowerCase()}'])
+          .whereType<String>();
+      final styleSource = <String>[
+        cssRules[tag] ?? '',
+        ...classes,
+        element.attributes['style'] ?? '',
+      ].join(';').toLowerCase();
+      final headingLevel = tag.startsWith('h')
+          ? int.tryParse(tag.substring(1))?.clamp(1, 6)
+          : null;
+      const headingScales = <int, double>{
+        1: 1.75,
+        2: 1.5,
+        3: 1.3,
+        4: 1.18,
+        5: 1.1,
+        6: 1.05,
+      };
+      final color = RegExp(
+        r'color\s*:\s*([^;]+)',
+      ).firstMatch(styleSource)?.group(1)?.trim();
+      blocks.add(<String, String>{
+        'type': 'text',
+        'content': text,
+        'startOffset': '$startOffset',
+        'endOffset': '${plainText.length}',
+        'fontScale': '${headingScales[headingLevel] ?? 1}',
+        'bold':
+            '${headingLevel != null || tag == 'strong' || tag == 'b' || styleSource.contains('font-weight:bold') || styleSource.contains('font-weight: bold')}',
+        'italic':
+            '${tag == 'em' || tag == 'i' || styleSource.contains('font-style:italic') || styleSource.contains('font-style: italic')}',
+        if (color != null) 'color': color,
+      });
+    }
+  }
+  if (blocks.isEmpty) {
+    final fallback = _extractHtmlParagraphText(document.body?.nodes ?? const []);
+    if (fallback.isNotEmpty) {
+      plainText.write(fallback);
+      blocks.add(<String, String>{
+        'type': 'text',
+        'content': fallback,
+        'startOffset': '0',
+        'endOffset': '${fallback.length}',
+      });
+    }
+  }
+  if (plainText.isEmpty && blocks.isEmpty) return null;
+  return <String, dynamic>{
+    'id': id,
+    'title': title,
+    'depth': depth,
+    'plainText': plainText.toString(),
+    'blocks': blocks,
+  };
+}
+
+/// Kindle（MOBI/AZW/AZW3）→ 章节 map 列表，在 compute isolate 中执行。
+///
+/// KF8 的 skeleton 分段天然就是章节；MOBI7 只有一整段 HTML，按
+/// `<mbp:pagebreak>` 切分。图片引用（`recindex` / `kindle:embed`，均为
+/// 1-based 块索引）先重写成 KindleUnpack 文件名，再走共用的 HTML
+/// 章节转换。DRM 书籍抛 [KindleDrmException]。
+Future<List<Map<String, dynamic>>> _parseKindleChapters(Uint8List bytes) async {
+  final content = parseKindleContent(bytes);
+  final imagesByName = <String, String>{
+    for (final entry in content.imagesByName.entries)
+      entry.key.toLowerCase(): base64Encode(entry.value),
+  };
+  final cssRules = _cssRulesFromSources(content.cssParts);
+
+  final sections = <String>[];
+  if (content.htmlParts.length == 1) {
+    sections.addAll(
+      content.htmlParts.single
+          .split(RegExp(r'<mbp:pagebreak[^>]*>', caseSensitive: false))
+          .where((part) => part.trim().isNotEmpty),
+    );
+  } else {
+    sections.addAll(content.htmlParts);
+  }
+
+  final result = <Map<String, dynamic>>[];
+  for (var i = 0; i < sections.length; i++) {
+    final html = rewriteKindleImageRefs(
+      sections[i],
+      content.imageNameByBlockIndex,
+    );
+    final document = html_parser.parse(html);
+    // Kindle 没有可靠的 TOC 标签传导到分段这里，用分段内第一个标题
+    // 作为章节名；没有标题的分段留空，与无 NCX 条目的 EPUB 行为一致。
+    final heading = document.body
+        ?.querySelector('h1,h2,h3,h4,h5,h6')
+        ?.text
+        .trim();
+    final chapter = _chapterMapFromHtmlDocument(
+      id: 'kindle-$i',
+      title: heading ?? '',
+      depth: 0,
+      document: document,
+      imagesByName: imagesByName,
+      cssRules: cssRules,
+    );
+    if (chapter != null) result.add(chapter);
+  }
   return result;
 }
+
 
 bool _hasEpubTextBlockAncestor(html_dom.Element element) {
   html_dom.Element? ancestor = element.parent;
@@ -4690,6 +4760,36 @@ void _writeParsedChapterCache(Map<String, dynamic> arguments) {
   for (final stale in cachedFiles.skip(3)) {
     stale.deleteSync();
   }
+}
+
+/// 携带面向用户文案的书籍加载异常；错误页直接展示 [message]。
+class _ReaderBookLoadException implements Exception {
+  const _ReaderBookLoadException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
+}
+
+/// EPUB/Kindle 等富文本管线的章节 map → [_NativeChapter]（保留样式与图片块）。
+List<_NativeChapter> _richChaptersFromMaps(List<Map<String, dynamic>> parsed) {
+  return parsed
+      .map(
+        (chapter) => _NativeChapter(
+          id: chapter['id'] as String? ?? '',
+          title: chapter['title'] as String? ?? '',
+          depth: chapter['depth'] as int? ?? 0,
+          plainText: chapter['plainText'] as String? ?? '',
+          blocks: (chapter['blocks'] as List<dynamic>)
+              .map(
+                (block) =>
+                    _NativeBlock.fromMap(Map<String, String>.from(block as Map)),
+              )
+              .toList(growable: false),
+        ),
+      )
+      .toList(growable: false);
 }
 
 _NativeChapter _nativeChapterFromMap(Map<String, dynamic> chapter) {

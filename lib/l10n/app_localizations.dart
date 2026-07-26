@@ -2294,8 +2294,32 @@ abstract class AppLocalizations {
   /// Toast shown when opening an unsupported book format
   ///
   /// In en, this message translates to:
-  /// **'The native reader currently only supports EPUB and TXT.'**
+  /// **'This format can\'t be read yet.'**
   String get readerUnsupportedFormat;
+
+  /// Error shown when opening a DRM-encrypted MOBI/AZW/AZW3 book
+  ///
+  /// In en, this message translates to:
+  /// **'This Kindle book is DRM-protected and can\'t be read here. Only DRM-free books are supported.'**
+  String get readerKindleDrmProtected;
+
+  /// Error shown when a CBZ comic contains no readable images
+  ///
+  /// In en, this message translates to:
+  /// **'No image pages were found in this comic archive.'**
+  String get readerComicNoPages;
+
+  /// Toast shown when opening a CBR comic, which requires RAR extraction
+  ///
+  /// In en, this message translates to:
+  /// **'CBR comics aren\'t readable yet. Please convert them to CBZ.'**
+  String get readerComicCbrUnsupported;
+
+  /// Toast shown when opening a PDF on Linux, where the PDF engine has no implementation
+  ///
+  /// In en, this message translates to:
+  /// **'PDF reading isn\'t available on Linux yet.'**
+  String get readerPdfLinuxUnsupported;
 
   /// Startup error when the data/cache services fail to initialize
   ///
@@ -2656,6 +2680,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not rename the book'**
   String get libraryRenameBookFailed;
+
+  /// Long-press option title for replacing a book cover with a user-picked image
+  ///
+  /// In en, this message translates to:
+  /// **'Custom cover'**
+  String get libraryCustomCover;
+
+  /// Subtitle of the custom cover option
+  ///
+  /// In en, this message translates to:
+  /// **'Pick an image to use as this book\'s cover'**
+  String get libraryCustomCoverHint;
+
+  /// Toast shown after successfully applying a custom cover
+  ///
+  /// In en, this message translates to:
+  /// **'Cover updated'**
+  String get libraryCustomCoverSuccess;
+
+  /// Toast shown when the picked cover image has an unsupported format
+  ///
+  /// In en, this message translates to:
+  /// **'Unsupported image format'**
+  String get libraryCoverUnsupportedFormat;
+
+  /// Toast shown when the picked cover image is too large
+  ///
+  /// In en, this message translates to:
+  /// **'The image exceeds the 20 MB size limit'**
+  String get libraryCoverFileTooLarge;
+
+  /// Toast shown when the picked cover image cannot be read
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read the selected image'**
+  String get libraryCoverReadFailed;
+
+  /// Toast shown when saving the custom cover fails
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the cover'**
+  String get libraryCoverSaveFailed;
+
+  /// Long-press option title for removing a custom cover
+  ///
+  /// In en, this message translates to:
+  /// **'Restore default cover'**
+  String get libraryResetCover;
+
+  /// Subtitle of the restore default cover option
+  ///
+  /// In en, this message translates to:
+  /// **'Remove the custom cover and restore the original'**
+  String get libraryResetCoverHint;
+
+  /// Toast shown after restoring the default cover
+  ///
+  /// In en, this message translates to:
+  /// **'Default cover restored'**
+  String get libraryResetCoverSuccess;
 
   /// No description provided for @libraryExportBook.
   ///

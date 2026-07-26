@@ -1178,8 +1178,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get readerFileMissing => 'Book file not found. Please re-import it.';
 
   @override
-  String get readerUnsupportedFormat =>
-      'The native reader currently only supports EPUB and TXT.';
+  String get readerUnsupportedFormat => 'This format can\'t be read yet.';
+
+  @override
+  String get readerKindleDrmProtected =>
+      'This Kindle book is DRM-protected and can\'t be read here. Only DRM-free books are supported.';
+
+  @override
+  String get readerComicNoPages =>
+      'No image pages were found in this comic archive.';
+
+  @override
+  String get readerComicCbrUnsupported =>
+      'CBR comics aren\'t readable yet. Please convert them to CBZ.';
+
+  @override
+  String get readerPdfLinuxUnsupported =>
+      'PDF reading isn\'t available on Linux yet.';
 
   @override
   String get bootstrapDataServiceFailed =>
@@ -1414,6 +1429,39 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get libraryRenameBookFailed => 'Could not rename the book';
+
+  @override
+  String get libraryCustomCover => 'Custom cover';
+
+  @override
+  String get libraryCustomCoverHint =>
+      'Pick an image to use as this book\'s cover';
+
+  @override
+  String get libraryCustomCoverSuccess => 'Cover updated';
+
+  @override
+  String get libraryCoverUnsupportedFormat => 'Unsupported image format';
+
+  @override
+  String get libraryCoverFileTooLarge =>
+      'The image exceeds the 20 MB size limit';
+
+  @override
+  String get libraryCoverReadFailed => 'Could not read the selected image';
+
+  @override
+  String get libraryCoverSaveFailed => 'Could not save the cover';
+
+  @override
+  String get libraryResetCover => 'Restore default cover';
+
+  @override
+  String get libraryResetCoverHint =>
+      'Remove the custom cover and restore the original';
+
+  @override
+  String get libraryResetCoverSuccess => 'Default cover restored';
 
   @override
   String get libraryExportBook => 'Export book';

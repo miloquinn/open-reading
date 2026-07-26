@@ -2,6 +2,27 @@
     "schemaVersion": 1,
     "entries": [
         {
+            "version": "2.4.1",
+            "notes": {
+                "en": [
+                    "DRM-free Kindle books (MOBI/AZW/AZW3) can now be read directly, with real metadata, embedded covers, chapter structure, text styling, and inline images; DRM-protected books show a clear notice",
+                    "Added a dedicated CBZ comic reader with page turning, double-tap and pinch zoom, page slider, progress memory, and low-memory on-demand page extraction; comics now import with the first page as cover and a real page count",
+                    "Added in-app PDF reading on Android, iOS, macOS, Windows, and Web with crisp density-aware rendering and the same page, zoom, and progress controls; Linux shows a clear notice for now",
+                    "HTML and Markdown files can now be imported from the file picker and system open-with",
+                    "Long-press a book to set a custom cover from a local image, with one-tap restore of the original cover",
+                    "Clearer format messages (DRM Kindle, CBR comics, unsupported types) in Simplified Chinese, Traditional Chinese, English, and Japanese"
+                ],
+                "zh": [
+                    "无 DRM 的 Kindle 书籍（MOBI/AZW/AZW3）现在可以直接阅读：真实书名、作者与内嵌封面，正文保留章节结构、样式与插图；DRM 加密书籍有明确提示",
+                    "新增 CBZ 漫画专用阅读器：左右翻页、双击/双指缩放、进度条跳页与进度记忆，大文件按需解压不占内存；导入漫画以第一页为封面并统计真实页数",
+                    "新增应用内 PDF 阅读（Android/iOS/macOS/Windows/Web），按屏幕清晰度渲染，翻页、缩放与进度操作与漫画阅读器一致；Linux 平台暂不支持并有明确提示",
+                    "HTML 和 Markdown 文件现在可以从文件选择器与系统「打开方式」导入书架",
+                    "长按书籍可自定义封面：挑选本地图片替换，一键恢复原始封面，删除书籍时自动清理",
+                    "DRM Kindle、CBR 漫画与不支持格式的提示更清晰，覆盖简中、繁中、英文、日文"
+                ]
+            }
+        },
+        {
             "version": "2.4.0",
             "notes": {
                 "en": [

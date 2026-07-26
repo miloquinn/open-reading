@@ -1,6 +1,6 @@
 # 本地书籍格式支持（Open Reading）
 
-> 状态：架构基线（2026-07-18）  
+> 状态：架构基线（2026-07-18），能力矩阵更新（2026-07-26：Kindle 正文 / CBZ 漫画 / HTML / Markdown 已接线）  
 > 代码单一事实来源：`lib/services/books/book_format_support.dart`  
 > Lightink 对照资料：`F:\work\lightink-reverse\docs\09-reader-complete.md`（及 05/06）
 
@@ -36,16 +36,20 @@
 
 ## 2. 格式能力矩阵
 
-| 格式 | 扩展名 | 选择器 | 当前能力 | 目标管线 | Lightink 对照 |
+| 格式 | 扩展名 | 选择器 | 当前能力 | 管线 | Lightink 对照 |
 |------|--------|--------|----------|----------|----------------|
 | TXT | `txt` | ✓ | **完整阅读** | 编码→切章→统一分页 | 完整主路径 |
 | EPUB | `epub` | ✓ | **转文本后阅读** | epubx→章节文本→统一分页 | 完整（自研解析→TxtLayout） |
-| PDF | `pdf` | ✓ | 元数据/导入为主 | 专用 PDF 渲染 | 不支持阅读排版 |
-| MOBI/AZW/AZW3 | `mobi` `azw` `azw3` | ✓ | 元数据导入 | 解析→纯文本→统一分页 | 仅图标/MIME，无本地引擎 |
-| FB2 | `fb2` | ✓ | 元数据导入 | XML→纯文本→统一分页 | 无 |
-| RTF | `rtf` | ✓ | 元数据导入 | 去控制字→纯文本→统一分页 | 无 |
-| Word | `doc` `docx` | ✓ | 元数据导入 | 抽正文→统一分页 | 无 |
-| Comic | `cbz` `cbr` | ✓ | 元数据导入 | 按页图专用渲染 | 基本无 |
+| PDF | `pdf` | ✓ | **专用渲染阅读**（Linux 除外） | PdfReaderPage 按页位图渲染（pdfx） | 不支持阅读排版 |
+| MOBI/AZW/AZW3 | `mobi` `azw` `azw3` | ✓ | **转文本后阅读**（无 DRM；Web 端不放行） | kindle_unpack→XHTML→EPUB 同款章节转换→统一分页 | 仅图标/MIME，无本地引擎 |
+| FB2 | `fb2` | ✓ | **转文本后阅读** | section 切章→纯文本→统一分页 | 无 |
+| RTF | `rtf` | ✓ | **转文本后阅读** | 去控制字→纯文本→统一分页 | 无 |
+| Word (DOCX) | `docx` | ✓ | **转文本后阅读** | document.xml 抽正文→统一分页 | 无 |
+| Word (DOC) | `doc` | ✓ | 元数据导入 | 无纯 Dart 方案，暂不读 | 无 |
+| HTML | `html` `htm` `xhtml` | ✓ | **转文本后阅读** | 按标题切章→统一分页 | 无 |
+| Markdown | `md` `markdown` | ✓ | **转文本后阅读** | 去标记→TXT 章节规则 | 无 |
+| Comic (CBZ) | `cbz` | ✓ | **专用漫画阅读** | ComicReaderPage 按页图渲染 | 基本无 |
+| Comic (CBR) | `cbr` | ✓ | 元数据导入（提示转 CBZ） | RAR 需平台解压依赖 | 基本无 |
 | ZIP | `zip` | 计划中 | **planned** | 解压→内层分流 | 有 ZipDecoder 容器 |
 | RAR | `rar` | 计划中 | **planned** | 解压→内层分流 | 有 `unrar_file` |
 
@@ -80,17 +84,15 @@ bytes → 编码探测 → 章节规则切章 → NativeTextPaginator → 阅读
 - **正文主路径不走 WebView**  
 - 图文混排：后续增量；首期保证纯文本阅读质量  
 
-### 3.3 MOBI / AZW / AZW3（必须支持，分阶段）
+### 3.3 MOBI / AZW / AZW3（已接线，2026-07-26）
 
-Lightink **没有**完整本地引擎；Open Reading **明确要做**，避免用户只能「导入进书架却打不开正文」。
+基于 `kindle_unpack`（纯 Dart，PalmDB → EXTH → PalmDOC/HUFF-CDIC 解压 → KF8 XHTML 拼接）：
 
-| 阶段 | 交付 |
-|------|------|
-| 现有 | 选择器可进、元数据/封面尽力提取 |
-| P1 | 可靠抽纯文本 + 切章 + 统一分页可读 |
-| P2 | 目录、封面、编码边界用例与回归测试 |
-
-实现可选：成熟 Dart/原生解析库，或受限转换；**出口必须是章节纯文本**。
+- **导入**：`_extractMobiMetadata` 走 `parseKindleMetadata`，取 EXTH 真实书名/作者/简介/语言/ISBN/主题与内嵌封面；DRM 只影响正文，元数据/封面仍可用。Kindle 文件全量读取（EXTH 封面在文件尾部，禁止 10MB 截断）。
+- **阅读**：`native_reader_page` 的 `_parseKindleChapters`（compute isolate）→ KF8 skeleton 分段成章 / MOBI7 按 `<mbp:pagebreak>` 切章 → `recindex`/`kindle:embed` 图片引用重写（`rewriteKindleImageRefs`）→ 与 EPUB 共用 `_chapterMapFromHtmlDocument`（样式块 + 内嵌图片）→ 统一分页。
+- **DRM**：抛 `KindleDrmException` → 阅读器展示本地化提示（`readerKindleDrmProtected`）。
+- **Web**：`kindle_unpack` 依赖 dart:io，Web 端为安全桩，`NativeReaderService` 不放行。
+- 解析器文件：`kindle_book_parser{,_types,_io,_stub}.dart`。
 
 ### 3.4 ZIP / RAR（容器，必须支持）
 
@@ -103,11 +105,15 @@ zip/rar → 解压到临时/托管目录
 - 实现完成前 **`acceptInFilePicker: false`**，避免选中却无法读  
 - 实现后打开选择器，并写清「压缩包内需含可读格式」  
 
-### 3.5 PDF（专用路径）
+### 3.5 PDF（专用路径，已接线 2026-07-26）
 
-- 不与 `NativeTextPaginator` 混用  
-- 保留 pdfx（或后续引擎）做页渲染 / 元数据  
-- 与文字书设置面板可共用主题/亮度等，分页模型独立  
+- `PdfReaderPage`（`pages/reader/pdf_reader_page.dart`）：pdfx `PdfDocument` 打开，
+  按页渲染 PNG 位图（屏幕像素密度自适应、白底、最大宽 2160px），
+  **渲染严格串行**（Android 不允许并行渲染），LRU 缓存 5 页 + 相邻页预载。  
+- UI 骨架与 CBZ 漫画共用 `paged_image_reader.dart`（翻页/缩放/跳页/进度）。  
+- 平台：Android / iOS / macOS / Windows / Web（pdf.js 已在 `web/index.html` 配置）；
+  **pdfx 无 Linux 实现**，Linux 端打开提示 `readerPdfLinuxUnsupported`。  
+- 不与 `NativeTextPaginator` 混用；进度存 `currentPage`（页索引）。  
 
 ### 3.6 FB2 / RTF / DOC / DOCX（OR 扩展，Lightink 无）
 
@@ -116,8 +122,8 @@ zip/rar → 解压到临时/托管目录
 
 ### 3.7 CBZ / CBR（漫画）
 
-- 专用图页阅读器（左右翻页/竖滑）  
-- 不走文本行盒  
+- CBZ：**已接线**（2026-07-26）。`ComicReaderPage`（`pages/reader/comic_reader_page.dart`）+ `comic_book_parser.dart`：isolate 解 ZIP 目录建页索引（数字感知排序、过滤 __MACOSX/隐藏文件）、按需解压单页、LRU 页缓存与相邻页预载、双击/双指缩放（缩放中锁翻页）、进度写回 `currentPage`。不走文本行盒。  
+- CBR：RAR 解压在桌面端无纯 Dart 方案，暂只导入元数据；打开时提示转 CBZ（`readerComicCbrUnsupported`）。  
 
 ---
 
@@ -146,16 +152,17 @@ zip/rar → 解压到临时/托管目录
 
 ## 5. 实施优先级（建议）
 
-| 优先级 | 项 | 原因 |
+| 优先级 | 项 | 状态 / 原因 |
 |--------|----|------|
-| P0 | 注册表统一 + 文档（本文） | 避免分叉 |
-| P0 | TXT / EPUB 阅读质量与 Lightink 体验对齐 | 主路径 |
-| P1 | MOBI/AZW/AZW3 → 纯文本可读 | 用户刚需；Lightink 也做不到完整 |
-| P1 | ZIP 容器导入 | 与 Lightink 对齐；实现成本低 |
-| P2 | RAR 容器 | 需解压依赖与授权评估 |
-| P2 | FB2 / RTF 正文可读 | OR 扩展优势 |
-| P3 | DOC/DOCX 正文 | 依赖重、版式复杂 |
-| P3 | PDF / 漫画阅读体验完善 | 专用 UI |
+| P0 | 注册表统一 + 文档（本文） | ✅ |
+| P0 | TXT / EPUB 阅读质量与 Lightink 体验对齐 | 主路径，持续 |
+| P1 | MOBI/AZW/AZW3 正文可读 | ✅ 2026-07-26（kindle_unpack） |
+| P2 | FB2 / RTF / DOCX / HTML / Markdown 正文可读 | ✅（简化排版） |
+| P3 | CBZ 漫画阅读 | ✅ 2026-07-26（ComicReaderPage） |
+| P1 | ZIP 容器导入 | 待做；与 Lightink 对齐，实现成本低 |
+| P2 | RAR 容器 / CBR 漫画 | 待做；需解压依赖与授权评估 |
+| P3 | PDF 应用内阅读 | ✅ 2026-07-26（PdfReaderPage；Linux 待引擎支持） |
+| P3 | DOC（旧版二进制）正文 | 无纯 Dart 方案，暂不做 |
 
 ---
 
