@@ -8,9 +8,7 @@ import 'package:xxread/services/books/comic_book_parser.dart';
 Uint8List _buildCbz(Map<String, List<int>> entries) {
   final archive = Archive();
   for (final entry in entries.entries) {
-    archive.addFile(
-      ArchiveFile(entry.key, entry.value.length, entry.value),
-    );
+    archive.addFile(ArchiveFile(entry.key, entry.value.length, entry.value));
   }
   return Uint8List.fromList(ZipEncoder().encode(archive)!);
 }

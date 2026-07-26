@@ -4441,7 +4441,9 @@ Map<String, dynamic>? _chapterMapFromHtmlDocument({
     }
   }
   if (blocks.isEmpty) {
-    final fallback = _extractHtmlParagraphText(document.body?.nodes ?? const []);
+    final fallback = _extractHtmlParagraphText(
+      document.body?.nodes ?? const [],
+    );
     if (fallback.isNotEmpty) {
       plainText.write(fallback);
       blocks.add(<String, String>{
@@ -4512,7 +4514,6 @@ Future<List<Map<String, dynamic>>> _parseKindleChapters(Uint8List bytes) async {
   }
   return result;
 }
-
 
 bool _hasEpubTextBlockAncestor(html_dom.Element element) {
   html_dom.Element? ancestor = element.parent;
@@ -4783,8 +4784,9 @@ List<_NativeChapter> _richChaptersFromMaps(List<Map<String, dynamic>> parsed) {
           plainText: chapter['plainText'] as String? ?? '',
           blocks: (chapter['blocks'] as List<dynamic>)
               .map(
-                (block) =>
-                    _NativeBlock.fromMap(Map<String, String>.from(block as Map)),
+                (block) => _NativeBlock.fromMap(
+                  Map<String, String>.from(block as Map),
+                ),
               )
               .toList(growable: false),
         ),

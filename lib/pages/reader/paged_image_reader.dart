@@ -58,9 +58,7 @@ class _PagedImageReaderState extends State<PagedImageReader> {
   void _preloadAround(int index) {
     for (final neighbor in <int>[index + 1, index - 1, index + 2]) {
       if (neighbor < 0 || neighbor >= widget.pageCount) continue;
-      unawaited(
-        widget.loadPage(neighbor).then((_) {}, onError: (Object _) {}),
-      );
+      unawaited(widget.loadPage(neighbor).then((_) {}, onError: (Object _) {}));
     }
   }
 

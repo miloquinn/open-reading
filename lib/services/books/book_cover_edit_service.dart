@@ -11,7 +11,12 @@ import 'package:xxread/models/book.dart';
 import 'package:xxread/services/books/book_dao.dart';
 
 /// 自定义封面操作的失败原因，由 UI 层解析为本地化文案。
-enum BookCoverEditError { unsupportedFormat, fileTooLarge, readFailed, storageFailed }
+enum BookCoverEditError {
+  unsupportedFormat,
+  fileTooLarge,
+  readFailed,
+  storageFailed,
+}
 
 class BookCoverEditException implements Exception {
   const BookCoverEditException(this.code, [this.cause]);

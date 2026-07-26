@@ -128,8 +128,10 @@ void main() {
 
   test('超过 20 MB 的图片抛 fileTooLarge', () async {
     final service = buildService(
-      pick: () =>
-          pickedImage('big.jpg', Uint8List(BookCoverEditService.maxImageBytes + 1)),
+      pick: () => pickedImage(
+        'big.jpg',
+        Uint8List(BookCoverEditService.maxImageBytes + 1),
+      ),
     );
 
     await expectLater(
@@ -206,10 +208,7 @@ void main() {
   test('cleanupForDeletedBook 只清理本书的自定义封面与备份', () async {
     final coversDir = Directory(p.join(documentsDir.path, 'covers'));
     await coversDir.create(recursive: true);
-    final mine = [
-      coversPath('custom_1_123.png'),
-      coversPath('original_1.jpg'),
-    ];
+    final mine = [coversPath('custom_1_123.png'), coversPath('original_1.jpg')];
     final others = [
       coversPath('custom_2_456.png'),
       coversPath('original_2.jpg'),
