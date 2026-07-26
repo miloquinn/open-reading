@@ -32,7 +32,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('reading settings expose all four page turning modes', (
+  testWidgets('reading settings expose all five page turning modes', (
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({
@@ -51,7 +51,9 @@ void main() {
         .onPressed!();
     await tester.pumpAndSettle();
 
-    // 设置面板新增条目后「翻页模式」可能位于可视区外，先滚动到可见。
+    // 设置面板分页签后「翻页模式」入口在「翻页」页签里。
+    await tester.tap(find.text('翻页'));
+    await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('翻页模式'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('翻页模式'));
@@ -60,6 +62,7 @@ void main() {
     expect(find.text('上下翻页'), findsOneWidget);
     expect(find.text('无动画'), findsOneWidget);
     expect(find.text('水平滑动'), findsOneWidget);
+    expect(find.text('覆盖翻页'), findsOneWidget);
     expect(find.text('仿真翻页'), findsOneWidget);
     expect(find.text('按章节滚动'), findsOneWidget);
     final scrollSwitch = find.descendant(
@@ -222,6 +225,9 @@ void main() {
         )
         .onPressed!();
     await tester.pumpAndSettle();
+    // 字号与行距滑杆在「文字」页签里。
+    await tester.tap(find.text('文字'));
+    await tester.pumpAndSettle();
     final sliders = tester.widgetList<Slider>(find.byType(Slider)).toList();
     expect(sliders.length, greaterThanOrEqualTo(2));
     sliders[1].onChanged!(2.1);
@@ -255,6 +261,16 @@ void main() {
           ),
         )
         .onPressed!();
+    await tester.pumpAndSettle();
+
+    // 缩进与段距滑杆在「文字」页签的「高级排版」折叠区里。
+    await tester.tap(find.text('文字'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('reader-advanced-typography-tile')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('高级排版'));
     await tester.pumpAndSettle();
 
     final indentFinder = find.descendant(

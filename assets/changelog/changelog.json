@@ -5,6 +5,11 @@
             "version": "2.4.2",
             "notes": {
                 "en": [
+                    "Ask AI while reading: new Ask AI entries in the reader control bar and the text-selection toolbar send the current page or the selected passage with its context to your model, support follow-up questions, and render answers as Markdown that follows your reading theme",
+                    "New AI tab in the bottom navigation opens straight into a chat with a floating glass input bar; the plus button links a book so answers draw on its local knowledge base plus your notes and highlights, and the history entry lets you revisit, continue, or delete past conversations",
+                    "AI book preprocessing (off by default, with a clear token-cost confirmation) reads a whole book in chunks and distills it into a local Markdown knowledge base; tasks run in a background queue with a new AI tab on the download tasks page, can be triggered per book from the library long-press menu, and support TXT/EPUB/Kindle",
+                    "AI model management moved to a dedicated settings page with a vertical list — tap to switch, long-press to edit or delete; presets cover OpenAI, Claude, Gemini, GLM, MiniMax and OpenAI-compatible services such as DeepSeek and Qwen, and a crash when saving a model configuration was fixed",
+                    "Navigation pages can now be hidden from the floating nav bar (Settings stays locked), the bar slides away while the keyboard is open, and the library long-press menu was compacted into a tidy list",
                     "Added a Cover page-turn mode: pages stack like sheets of paper, so turning forward slides the current page off to the left to uncover the next one, and turning back slides the previous page back over it; drags follow your finger and settle with a spring, taps and volume keys turn pages too, and the mode is available in both local and online-source readers",
                     "Added customizable tap zones: the screen splits into a 3×3 grid and each area can be set to next page, previous page, next or previous chapter, menu, or nothing; configure it right on the reading page with a full-screen preview, and if no menu zone remains the center automatically becomes Menu",
                     "Comics now open in more formats: CBT (TAR) comics are fully readable, and CBR/CB7 files are inspected by their real file header — the many that are actually renamed ZIP archives now open directly, while true RAR/7z archives show a clear notice to convert to CBZ; every comic format now imports with a real page count and first-page cover when the archive can be unpacked",
@@ -15,6 +20,11 @@
                     "AI preprocessing is much more resilient to rate limits: requests are spaced out instead of fired back-to-back, and rate-limit or network errors are retried automatically with increasing back-off (up to 3 times) instead of failing the whole task; configuration errors such as an invalid API key still fail immediately with a clear message"
                 ],
                 "zh": [
+                    "阅读时随时「问AI」：控制栏与选中文字工具栏双入口，自动携带当前页或选中段落及上下文发起提问，可连续追问，回答按 Markdown 渲染并跟随阅读主题",
+                    "底部导航新增「AI」页，进入即为对话界面（悬浮玻璃输入条）；输入框左侧加号可关联书籍，回答会参考该书本地知识库与你的笔记、高亮；历史入口可回看、继续或删除过往对话",
+                    "新增「AI 预处理书籍」（默认关闭，开启前明确提示 token 消耗）：AI 分块通读整本书，生成 Markdown 摘要作为本地知识库；任务在后台队列执行，下载任务页新增「AI 预处理」标签页，书架长按可手动触发，支持 TXT/EPUB/Kindle",
+                    "AI 模型管理整理为独立设置页与竖排列表，点击切换、长按编辑或删除；预置 OpenAI、Claude、Gemini、GLM、MiniMax 及 DeepSeek、Qwen 等 OpenAI 兼容服务模板；修复保存模型配置时可能崩溃的问题",
+                    "悬浮导航栏的页面现在可以隐藏（含首页，设置页锁定），键盘弹出时导航栏自动滑出隐藏；书架长按菜单重排为紧凑列表",
                     "新增「覆盖翻页」模式：页面像一摞纸的最上层，向前翻时当前页向左划出、露出底下静止的下一页，回翻时上一页从左缘盖回；拖动实时跟手，松手按速度用弹簧动画完成或回弹，点击与音量键翻页同样生效，本地书籍与在线书源阅读器均可选择",
                     "新增点击区域设置：屏幕分成 3×3 九宫格，每格可自定义为上一页、下一页、上一章、下一章、菜单或无操作；在阅读页上全屏预览直接配置，若没有任何菜单区域，中间会自动恢复为菜单",
                     "漫画支持更多格式：新增 CBT（TAR 容器）直接阅读；CBR/CB7 按文件头识别真实容器，改名自 ZIP 的文件现在可以直接阅读，真正的 RAR/7z 会明确提示转换为 CBZ；所有漫画格式导入时都会尝试提取真实页数与第一页封面",
@@ -25,6 +35,11 @@
                     "AI 预处理更抗限流：分块请求不再背靠背连发，相邻请求保留间隔；遇到限流或网络错误按退避自动重试（最多 3 次），不再直接判整个任务失败；API Key 无效等配置错误仍立即提示"
                 ],
                 "zh-TW": [
+                    "閱讀時隨時「問AI」：控制列與選取文字工具列雙入口，自動攜帶目前頁或選取段落及上下文發起提問，可連續追問，回答按 Markdown 呈現並跟隨閱讀主題",
+                    "底部導覽新增「AI」頁，進入即為對話介面（懸浮玻璃輸入條）；輸入框左側加號可關聯書籍，回答會參考該書本機知識庫與你的筆記、螢光標記；歷史入口可回看、繼續或刪除過往對話",
+                    "新增「AI 預處理書籍」（預設關閉，開啟前明確提示 token 消耗）：AI 分塊通讀整本書，產生 Markdown 摘要作為本機知識庫；任務在背景佇列執行，下載任務頁新增「AI 預處理」頁籤，書架長按可手動觸發，支援 TXT/EPUB/Kindle",
+                    "AI 模型管理整理為獨立設定頁與直排清單，點擊切換、長按編輯或刪除；預置 OpenAI、Claude、Gemini、GLM、MiniMax 及 DeepSeek、Qwen 等 OpenAI 相容服務範本；修復儲存模型設定時可能當機的問題",
+                    "懸浮導覽列的頁面現在可以隱藏（含首頁，設定頁鎖定），鍵盤彈出時導覽列自動滑出隱藏；書架長按選單重排為緊湊清單",
                     "新增「覆蓋翻頁」模式：頁面像一疊紙的最上層，向前翻時目前頁向左滑出、露出底下靜止的下一頁，回翻時上一頁從左緣蓋回；拖曳即時跟手，放開後依速度以彈簧動畫完成或回彈，點擊與音量鍵翻頁同樣生效，本機書籍與線上書源閱讀器均可選擇",
                     "新增點擊區域設定：螢幕分成 3×3 九宮格，每格可自訂為上一頁、下一頁、上一章、下一章、選單或無操作；在閱讀頁上全螢幕預覽直接設定，若沒有任何選單區域，中間會自動恢復為選單",
                     "漫畫支援更多格式：新增 CBT（TAR 容器）直接閱讀；CBR/CB7 依檔案標頭識別真實容器，由 ZIP 改名的檔案現在可以直接閱讀，真正的 RAR/7z 會明確提示轉換為 CBZ；所有漫畫格式匯入時都會嘗試擷取真實頁數與第一頁封面",
@@ -35,6 +50,11 @@
                     "AI 預處理更抗限流：分塊請求不再背靠背連發，相鄰請求保留間隔；遇到限流或網路錯誤按退避自動重試（最多 3 次），不再直接判整個任務失敗；API Key 無效等設定錯誤仍立即提示"
                 ],
                 "ja": [
+                    "読書中いつでも「AIに質問」：リーダーのコントロールバーとテキスト選択ツールバーの両方から、現在のページや選択した一節を文脈ごとモデルに送って質問できます。追加質問にも対応し、回答は読書テーマに合わせた Markdown で表示されます",
+                    "ボトムナビに「AI」タブを追加：開くとすぐチャット画面（フローティングのガラス入力バー）。入力欄左のプラスから本を関連付けると、その本のローカルナレッジベースとあなたのメモ・ハイライトを参照して回答します。履歴から過去の会話を見返し、続きから再開したり削除もできます",
+                    "「AI による書籍の事前処理」を追加（既定はオフ、有効化時にトークン消費を明確に確認）：AI が本全体を分割して読み、Markdown の要約をローカルナレッジベースとして生成します。タスクはバックグラウンドのキューで実行され、ダウンロードタスクページの新しい「AI 事前処理」タブで進捗確認とキャンセルが可能。本棚の長押しから個別に実行でき、TXT/EPUB/Kindle に対応します",
+                    "AI モデル管理を専用設定ページの縦リストに整理：タップで切替、長押しで編集・削除。OpenAI、Claude、Gemini、GLM、MiniMax に加え DeepSeek や Qwen などの OpenAI 互換テンプレートを内蔵。モデル設定保存時にクラッシュすることがある問題を修正しました",
+                    "フローティングナビのページを非表示にできるようになりました（ホームも可、設定はロック）。キーボード表示中はナビが自動的に隠れます。本棚の長押しメニューはコンパクトなリストに再構成しました",
                     "「カバー」ページめくりを追加：重なった紙のように、進むときは現在のページが左へスライドして下の次ページが現れ、戻るときは前のページが左端から覆いかぶさります。ドラッグは指に追従し、離すと速度に応じてスプリングで完了または戻ります。タップや音量キーでのページ送りにも対応し、ローカル書籍とオンライン書源の両方で選択できます",
                     "タップ領域のカスタマイズを追加：画面を3×3のグリッドに分け、各エリアに前後ページ・前後章・メニュー・操作なしを割り当てられます。閲覧ページ上の全画面プレビューでそのまま設定でき、メニュー領域がなくなった場合は中央が自動的にメニューへ戻ります",
                     "コミックの対応形式を拡大：CBT（TAR コンテナ）を直接読めるようになり、CBR/CB7 はファイルヘッダーで実際のコンテナを判定します。ZIP を改名しただけのファイルはそのまま読め、本物の RAR/7z には CBZ への変換を促す明確な案内を表示します。すべてのコミック形式で実ページ数と 1 ページ目の表紙の取り込みを試みます",
