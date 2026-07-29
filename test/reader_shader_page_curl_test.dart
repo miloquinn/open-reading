@@ -285,6 +285,41 @@ void main() {
     expect(forwardTurns, 1);
   });
 
+  testWidgets('left-side leftward swipe turns forward on a full-page curl', (
+    tester,
+  ) async {
+    var forwardTurns = 0;
+    var backwardTurns = 0;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SizedBox(
+          width: 400,
+          height: 700,
+          child: ReaderShaderPageCurl(
+            currentPage: _snapshot('current'),
+            forwardPage: _snapshot('next'),
+            backwardPage: _snapshot('previous'),
+            onTurnForward: () => forwardTurns++,
+            onTurnBackward: () => backwardTurns++,
+            paperColor: Colors.white,
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final rect = tester.getRect(find.byType(ReaderShaderPageCurl));
+    await tester.dragFrom(
+      Offset(rect.left + rect.width * 0.15, rect.center.dy),
+      Offset(-rect.width * 0.4, 0),
+    );
+    await tester.pumpAndSettle();
+
+    expect(forwardTurns, 1);
+    expect(backwardTurns, 0);
+  });
+
   testWidgets('middle forward drag catches up from the right edge', (
     tester,
   ) async {

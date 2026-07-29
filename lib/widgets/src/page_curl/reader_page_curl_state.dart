@@ -427,12 +427,16 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
     if (_phase != _PageTurnPhase.idle || _viewportSize.isEmpty) return;
     final pointerDown = _pointerDown ?? details.localPosition;
     final fraction = pointerDown.dx / _viewportSize.width;
-    if (fraction >= 1 - _edgeStartFraction && widget.forwardPage != null) {
+    if (!widget.edgeDragOnly) {
+      // A full-page gesture follows the actual swipe direction. Locking the
+      // direction from the touch-down edge made a left-side leftward swipe get
+      // classified as "previous page" and then ignored.
+      _pendingDirection = null;
+    } else if (fraction >= 1 - _edgeStartFraction &&
+        widget.forwardPage != null) {
       _pendingDirection = ReaderPageTurnDirection.forward;
     } else if (fraction <= _edgeStartFraction && widget.backwardPage != null) {
       _pendingDirection = ReaderPageTurnDirection.backward;
-    } else if (!widget.edgeDragOnly) {
-      _pendingDirection = null;
     } else {
       _pointerDown = null;
       _dragOrigin = null;
@@ -451,7 +455,7 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
         return;
       }
       final pendingDirection = _pendingDirection;
-      final startedFromEdge = pendingDirection != null;
+      var startedFromEdge = pendingDirection != null;
       final ReaderPageTurnDirection direction;
       if (pendingDirection != null) {
         final movesTowardTurn =
@@ -464,10 +468,17 @@ class _ReaderShaderPageCurlState extends State<ReaderShaderPageCurl>
         }
         direction = pendingDirection;
       } else {
-        if (delta.dx.abs() < delta.dy.abs() * _horizontalIntentRatio) return;
         direction = delta.dx < 0
             ? ReaderPageTurnDirection.forward
             : ReaderPageTurnDirection.backward;
+        final startFraction = pointerDown.dx / _viewportSize.width;
+        startedFromEdge = direction == ReaderPageTurnDirection.forward
+            ? startFraction >= 1 - _edgeStartFraction
+            : startFraction <= _edgeStartFraction;
+        final intentRatio = startedFromEdge
+            ? _edgeHorizontalIntentRatio
+            : _horizontalIntentRatio;
+        if (delta.dx.abs() < delta.dy.abs() * intentRatio) return;
       }
       if (!_hasPage(direction)) {
         _resetToIdle();

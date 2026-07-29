@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -25,6 +26,53 @@ NativeTextFlowStyle _flowStyle(
 void main() {
   test('reader body font size is independent from platform text scaling', () {
     expect(readerBodyTextScaler.scale(19), 19);
+  });
+
+  test('iOS system reader font pins the native Chinese fallback face', () {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+
+    expect(
+      readerFontFamilyFallbacks(
+        fontFamily: null,
+        configuredFallbacks: const <String>[],
+        locale: const Locale('zh', 'CN'),
+      ),
+      const <String>['PingFang SC', 'PingFang TC'],
+    );
+    expect(
+      readerFontFamilyFallbacks(
+        fontFamily: null,
+        configuredFallbacks: const <String>[],
+        locale: const Locale.fromSubtags(
+          languageCode: 'zh',
+          scriptCode: 'Hant',
+        ),
+      ),
+      const <String>['PingFang TC', 'PingFang SC'],
+    );
+  });
+
+  test('reader font fallback keeps explicit and non-iOS choices intact', () {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+
+    expect(
+      readerFontFamilyFallbacks(
+        fontFamily: null,
+        configuredFallbacks: const <String>[],
+        locale: const Locale('zh', 'CN'),
+      ),
+      isNull,
+    );
+    expect(
+      readerFontFamilyFallbacks(
+        fontFamily: 'CustomReaderFont',
+        configuredFallbacks: const <String>['FallbackFont'],
+        locale: const Locale('zh', 'CN'),
+      ),
+      const <String>['FallbackFont'],
+    );
   });
 
   TestWidgetsFlutterBinding.ensureInitialized();

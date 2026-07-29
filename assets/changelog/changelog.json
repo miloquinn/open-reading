@@ -5,16 +5,24 @@
             "version": "2.4.3",
             "notes": {
                 "en": [
-                    "Fixed switching AI models not taking effect in already-open chat surfaces: the reader Ask AI panel and the AI tab now use the newly selected model and settings on the next message, no restart needed"
+                    "Fixed switching AI models not taking effect in already-open chat surfaces: the reader Ask AI panel and the AI tab now use the newly selected model and settings on the next message, no restart needed",
+                    "Fixed uneven Chinese glyph weight and apparent size on iOS when the reader font is System Default by pinning the native PingFang fallback for local and online-source text readers",
+                    "Page Curl now follows the actual swipe direction across the full phone page, so a leftward swipe starting from the left half also turns to the next page"
                 ],
                 "zh": [
-                    "修复切换 AI 模型后已打开的对话界面不生效的问题：阅读器「问AI」面板与 AI 页现在下一条消息即使用新选择的模型与配置，无需重启应用"
+                    "修复切换 AI 模型后已打开的对话界面不生效的问题：阅读器「问AI」面板与 AI 页现在下一条消息即使用新选择的模型与配置，无需重启应用",
+                    "修复 iOS 中文阅读使用「系统默认」字体时，相邻汉字可能出现粗细或视觉大小不一致的问题；本地书籍与在线书源阅读器现在稳定使用系统自带的苹方回退字体",
+                    "修复仿真翻页从屏幕左半边向左滑无法翻到下一页的问题；手机单页现在按真实滑动方向判断，从任意横向位置向左滑均可翻下一页"
                 ],
                 "zh-TW": [
-                    "修復切換 AI 模型後已開啟的對話介面不生效的問題：閱讀器「問AI」面板與 AI 頁現在下一則訊息即使用新選擇的模型與設定，無需重新啟動應用程式"
+                    "修復切換 AI 模型後已開啟的對話介面不生效的問題：閱讀器「問AI」面板與 AI 頁現在下一則訊息即使用新選擇的模型與設定，無需重新啟動應用程式",
+                    "修復 iOS 中文閱讀使用「系統預設」字型時，相鄰漢字可能出現粗細或視覺大小不一致的問題；本機書籍與線上書源閱讀器現在穩定使用系統內建的蘋方回退字型",
+                    "修復仿真翻頁從螢幕左半邊向左滑無法翻到下一頁的問題；手機單頁現在依實際滑動方向判斷，從任意橫向位置向左滑皆可翻下一頁"
                 ],
                 "ja": [
-                    "AI モデルを切り替えても開いているチャット画面に反映されない問題を修正：リーダーの「AIに質問」パネルと AI タブは、再起動なしで次のメッセージから新しいモデルと設定を使用します"
+                    "AI モデルを切り替えても開いているチャット画面に反映されない問題を修正：リーダーの「AIに質問」パネルと AI タブは、再起動なしで次のメッセージから新しいモデルと設定を使用します",
+                    "iOS で読書フォントを「システム既定」にした際、中国語の文字ごとに太さや見かけの大きさが不揃いになることがある問題を修正し、ローカル書籍とオンライン書源でシステム内蔵の PingFang フォールバックを安定して使用するようにしました",
+                    "ページカールで画面左半分から左へスワイプしても次ページへ進まない問題を修正し、スマートフォンの単ページ表示では開始位置に関係なく実際のスワイプ方向で前後ページを判定するようにしました"
                 ]
             }
         },

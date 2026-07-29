@@ -829,9 +829,11 @@ class _NativeReaderPageState extends State<NativeReaderPage>
   TextStyle get _readerTextStyle => TextStyle(
     inherit: false,
     fontFamily: _readerFont.family,
-    fontFamilyFallback: _readerFont.fallbackFamilies.isEmpty
-        ? null
-        : _readerFont.fallbackFamilies,
+    fontFamilyFallback: readerFontFamilyFallbacks(
+      fontFamily: _readerFont.family,
+      configuredFallbacks: _readerFont.fallbackFamilies,
+      locale: Localizations.maybeLocaleOf(context),
+    ),
     fontSize: _fontSize,
     height: _lineHeight,
     letterSpacing: _letterSpacing,
