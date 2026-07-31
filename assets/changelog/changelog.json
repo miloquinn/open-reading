@@ -2,6 +2,23 @@
     "schemaVersion": 1,
     "entries": [
         {
+            "version": "2.4.4",
+            "notes": {
+                "en": [
+                    "Fixed some EPUB books becoming unresponsive or nearly frozen when opened: books split internally into thousands of fragment files that all reuse the same illustration (e.g. a page-header logo) previously had that image duplicated into every referencing chapter. Each image is now decoded once and shared across chapters instead, cutting the open time for affected books from minutes down to a few seconds like any other book"
+                ],
+                "zh": [
+                    "修复部分 EPUB 打开长时间无响应甚至接近卡死的问题：某些内部被拆分为数千个碎片文件、且同一张插图（如页头 logo）被大量章节复用的书籍，此前会把该图片重复内联进每一个引用它的章节。现在每张图片只解码一次并在章节间共享，受影响书籍的打开耗时从数分钟量级降到与普通书籍一致的数秒"
+                ],
+                "zh-TW": [
+                    "修復部分 EPUB 開啟長時間無回應甚至接近卡死的問題：某些內部被拆分為數千個碎片檔案、且同一張插圖（如頁首 logo）被大量章節複用的書籍，此前會把該圖片重複內聯進每一個引用它的章節。現在每張圖片只解碼一次並在章節間共享，受影響書籍的開啟耗時從數分鐘量級降到與一般書籍一致的數秒"
+                ],
+                "ja": [
+                    "内部が数千個の断片ファイルに分割され、同じ挿絵（ページヘッダーのロゴなど）が大量の章で再利用されている一部の EPUB を開くと、長時間応答がなくなったりほぼフリーズしたりする問題を修正しました。以前はその画像が参照するすべての章に重複して埋め込まれていましたが、今では画像ごとに一度だけデコードして章間で共有するようにし、該当書籍を開く時間が数分単位から通常の書籍と同じ数秒に短縮されました"
+                ]
+            }
+        },
+        {
             "version": "2.4.3",
             "notes": {
                 "en": [

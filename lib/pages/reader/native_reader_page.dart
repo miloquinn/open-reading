@@ -1242,12 +1242,14 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     final bytes = webBytes ?? await File(widget.book.filePath).readAsBytes();
     switch (format) {
       case 'epub':
-        return _richChaptersFromMaps(await compute(_parseEpubChapters, bytes));
+        return _richChaptersFromParsed(
+          await compute(_parseEpubChapters, bytes),
+        );
       case 'mobi':
       case 'azw':
       case 'azw3':
         try {
-          return _richChaptersFromMaps(
+          return _richChaptersFromParsed(
             await compute(_parseKindleChapters, bytes),
           );
         } on KindleDrmException {
@@ -4143,7 +4145,7 @@ List<_ReaderPageData> _paginateChapter(
   var searchFrom = 0;
   for (var i = 0; i < chapter.blocks.length; i++) {
     final block = chapter.blocks[i];
-    if (block.imageBase64 != null) {
+    if (block.imageBytes != null) {
       final offset = block.startOffset >= 0 ? block.startOffset : searchFrom;
       imageOffsets.add((offset.clamp(searchFrom, chapter.plainText.length), i));
       continue;
@@ -4405,20 +4407,30 @@ class _ReaderPageData extends ReaderTextPage {
 class _NativeBlock {
   _NativeBlock._({
     this.text,
-    this.imageBase64,
+    this.imageBytes,
     this.startOffset = -1,
     this.endOffset = -1,
     this.fontScale = 1,
     this.bold = false,
     this.italic = false,
     this.colorHex,
-  }) : imageBytes = imageBase64 == null ? null : base64Decode(imageBase64);
+  });
 
   factory _NativeBlock.text(String text) => _NativeBlock._(text: text);
 
-  factory _NativeBlock.fromMap(Map<String, String> map) => _NativeBlock._(
+  /// [resolveImage] looks up already-decoded bytes by the shared image name
+  /// stashed in `content` (see [_richChaptersFromParsed]) instead of each
+  /// block carrying its own base64 copy — a page-header image reused across
+  /// thousands of chapters would otherwise be duplicated and re-decoded that
+  /// many times.
+  factory _NativeBlock.fromMap(
+    Map<String, String> map, {
+    Uint8List? Function(String name)? resolveImage,
+  }) => _NativeBlock._(
     text: map['type'] == 'text' ? map['content'] : null,
-    imageBase64: map['type'] == 'image' ? map['content'] : null,
+    imageBytes: map['type'] == 'image'
+        ? resolveImage?.call(map['content'] ?? '')
+        : null,
     startOffset: int.tryParse(map['startOffset'] ?? '') ?? -1,
     endOffset: int.tryParse(map['endOffset'] ?? '') ?? -1,
     fontScale: double.tryParse(map['fontScale'] ?? '') ?? 1,
@@ -4428,7 +4440,6 @@ class _NativeBlock {
   );
 
   final String? text;
-  final String? imageBase64;
   final Uint8List? imageBytes;
   final int startOffset;
   final int endOffset;
@@ -4502,7 +4513,7 @@ String? _epubImageSrc(html_dom.Element element) {
   return null;
 }
 
-Future<List<Map<String, dynamic>>> _parseEpubChapters(Uint8List bytes) async {
+Future<Map<String, dynamic>> _parseEpubChapters(Uint8List bytes) async {
   final epub = await EpubReader.readBook(bytes);
   final result = <Map<String, dynamic>>[];
   final imagesByName = <String, String>{};
@@ -4576,7 +4587,7 @@ Future<List<Map<String, dynamic>>> _parseEpubChapters(Uint8List bytes) async {
     );
     if (chapter != null) result.add(chapter);
   }
-  return result;
+  return <String, dynamic>{'chapters': result, 'images': imagesByName};
 }
 
 /// 把扁平 CSS 文本解析为「选择器 → 声明」查找表（与阅读器的
@@ -4624,11 +4635,14 @@ Map<String, dynamic>? _chapterMapFromHtmlDocument({
       final name = path
           .basename(Uri.decodeFull(src.split('?').first.split('#').first))
           .toLowerCase();
-      final encoded = imagesByName[name];
-      if (encoded != null) {
+      // 只存图片名，不把 base64 内容内联进每一个块：同一张图（例如页头
+      // logo）可能被数千个章节复用，内联会把它的编码内容复制数千份，
+      // 拖慢解析并在重建 _NativeBlock 时于主线程重复 base64 解码。真正的
+      // 内容由 [_richChaptersFromParsed] 按图片名解码一次、共享给所有引用。
+      if (imagesByName.containsKey(name)) {
         blocks.add(<String, String>{
           'type': 'image',
-          'content': encoded,
+          'content': name,
           'startOffset': '${plainText.length}',
           'endOffset': '${plainText.length}',
         });
@@ -4723,7 +4737,7 @@ Map<String, dynamic>? _chapterMapFromHtmlDocument({
 /// `<mbp:pagebreak>` 切分。图片引用（`recindex` / `kindle:embed`，均为
 /// 1-based 块索引）先重写成 KindleUnpack 文件名，再走共用的 HTML
 /// 章节转换。DRM 书籍抛 [KindleDrmException]。
-Future<List<Map<String, dynamic>>> _parseKindleChapters(Uint8List bytes) async {
+Future<Map<String, dynamic>> _parseKindleChapters(Uint8List bytes) async {
   final content = parseKindleContent(bytes);
   final imagesByName = <String, String>{
     for (final entry in content.imagesByName.entries)
@@ -4765,7 +4779,7 @@ Future<List<Map<String, dynamic>>> _parseKindleChapters(Uint8List bytes) async {
     );
     if (chapter != null) result.add(chapter);
   }
-  return result;
+  return <String, dynamic>{'chapters': result, 'images': imagesByName};
 }
 
 bool _hasEpubTextBlockAncestor(html_dom.Element element) {
@@ -5026,9 +5040,31 @@ class _ReaderBookLoadException implements Exception {
   String toString() => message;
 }
 
-/// EPUB/Kindle 等富文本管线的章节 map → [_NativeChapter]（保留样式与图片块）。
-List<_NativeChapter> _richChaptersFromMaps(List<Map<String, dynamic>> parsed) {
-  return parsed
+/// EPUB/Kindle 等富文本管线的解析结果（`{'chapters': [...], 'images': {name:
+/// base64}}`，见 [_parseEpubChapters]/[_parseKindleChapters]）→
+/// [_NativeChapter]（保留样式与图片块）。
+///
+/// 每张图片的 base64 只在这里按名字解码一次并在所有引用它的章节间共享——
+/// 图片内容不会像章节文本那样逐块内联，避免一张被数千个章节复用的页头图
+/// 被重复解码数千次。
+List<_NativeChapter> _richChaptersFromParsed(Map<String, dynamic> parsed) {
+  final imagesByName = Map<String, String>.from(
+    parsed['images'] as Map? ?? const {},
+  );
+  final decodedImages = <String, Uint8List>{};
+  Uint8List? resolveImage(String name) {
+    final cached = decodedImages[name];
+    if (cached != null) return cached;
+    final encoded = imagesByName[name];
+    if (encoded == null) return null;
+    final decoded = base64Decode(encoded);
+    decodedImages[name] = decoded;
+    return decoded;
+  }
+
+  final chapters = parsed['chapters'] as List<dynamic>? ?? const [];
+  return chapters
+      .map((chapter) => Map<String, dynamic>.from(chapter as Map))
       .map(
         (chapter) => _NativeChapter(
           id: chapter['id'] as String? ?? '',
@@ -5039,6 +5075,7 @@ List<_NativeChapter> _richChaptersFromMaps(List<Map<String, dynamic>> parsed) {
               .map(
                 (block) => _NativeBlock.fromMap(
                   Map<String, String>.from(block as Map),
+                  resolveImage: resolveImage,
                 ),
               )
               .toList(growable: false),
