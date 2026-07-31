@@ -25,6 +25,7 @@ import 'package:xxread/core/reader/reader_aloud_controller.dart';
 import 'package:xxread/core/reader/reader_safe_area.dart';
 import 'package:xxread/core/reader/reader_settings.dart';
 import 'package:xxread/core/reader/reader_system_ui.dart';
+import 'package:xxread/core/reader/reader_tap_zones.dart';
 import 'package:xxread/core/reader/reader_text_pagination.dart';
 import 'package:xxread/core/reader/reader_theme_order.dart';
 import 'package:xxread/core/reader/reader_vertical_paging.dart';
@@ -32,9 +33,11 @@ import 'package:xxread/core/reader/reader_volume_key_controller.dart';
 import 'package:xxread/models/book.dart';
 import 'package:xxread/models/bookmark.dart';
 import 'package:xxread/models/book_note.dart';
+import 'package:xxread/reader_core/ai/ai_service.dart';
 import 'package:xxread/services/books/book_note_dao.dart';
 import 'package:xxread/services/books/bookmark_dao.dart';
 import 'package:xxread/services/core/app_settings_service.dart';
+import 'package:xxread/services/reading/reading_resume_service.dart';
 import 'package:xxread/services/reading/reading_stats_dao.dart';
 import 'package:xxread/services/tts_service.dart';
 import 'package:xxread/services/reader_aloud_service.dart';
@@ -44,9 +47,11 @@ import 'package:xxread/utils/glass_config.dart';
 import 'package:xxread/utils/localization_extension.dart';
 import 'package:xxread/utils/reader_themes.dart';
 import 'package:xxread/utils/system_ui_helper.dart';
+import 'package:xxread/widgets/reader_ai_panel.dart';
 import 'package:xxread/widgets/reader_annotated_text_page.dart';
 import 'package:xxread/widgets/reader_aloud_panel.dart';
 import 'package:xxread/widgets/reader_control_chrome.dart';
+import 'package:xxread/widgets/reader_cover_page_turn.dart';
 import 'package:xxread/widgets/reader_navigation_sheet.dart';
 import 'package:xxread/widgets/reader_opening_loader.dart';
 import 'package:xxread/widgets/reader_paper_page_leaf.dart';
@@ -54,6 +59,7 @@ import 'package:xxread/widgets/reader_pull_bookmark.dart';
 import 'package:xxread/widgets/reader_settings_controls.dart';
 import 'package:xxread/widgets/reader_shader_page_curl.dart';
 import 'package:xxread/widgets/reader_tap_observer.dart';
+import 'package:xxread/widgets/reader_tap_zone_editor.dart';
 import 'package:xxread/widgets/reader_theme_background.dart';
 import 'package:xxread/widgets/reader_top_information_bar.dart';
 import 'package:xxread/widgets/reader_vertical_paging_surface.dart';
@@ -115,6 +121,8 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       ReaderPageCurlController();
   final ReaderPageCurlCoordinator _spreadPageCurlCoordinator =
       ReaderPageCurlCoordinator(gutterWidth: _spreadGutter);
+  final ReaderCoverPageTurnController _coverPageTurnController =
+      ReaderCoverPageTurnController();
   final ValueNotifier<double> _scrollProgress = ValueNotifier(0);
   final ReaderLeafStatusController _leafStatusController =
       ReaderLeafStatusController();
@@ -142,6 +150,8 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   BookSourcePageMode _pageMode = ReaderSettings.defaultPageMode;
   bool _pullBookmarkEnabled = false;
   bool _tapPageAnimationEnabled = true;
+  ReaderTapZones _tapZones = ReaderTapZones.defaults;
+  bool _tapZoneEditorVisible = false;
   bool _tabletTwoPageEnabled = ReaderSettings.defaultTabletTwoPageEnabled;
   int _pageIndex = 0;
   bool _usesTwoPageLayout = false;
@@ -426,6 +436,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     unawaited(ReaderVolumeKeyController.deactivate(this));
     unawaited(ReaderKeepScreenOnController.deactivate(this));
     unawaited(ReaderSystemUiController.restore());
+    unawaited(ReadingResumeService.markClosed(_shelfBookId));
     super.dispose();
   }
 
@@ -460,6 +471,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         _readerSettingsStore.loadScrollByChapter(),
         _customThemeStore.loadAll(),
         _themeOrderStore.load(),
+        _readerSettingsStore.loadTapZones(),
       ]);
       final chapters = [...results[0]! as List<BookSourceChapter>]
         ..sort((a, b) => a.order.compareTo(b.order));
@@ -477,6 +489,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       final scrollByChapter = results[3]! as bool;
       final customThemes = results[4] as List<ReaderCustomTheme>;
       final themeOrder = results[5] as List<String>;
+      final tapZones = results[6] as ReaderTapZones;
       var initialIndex = saved?.chapterIndex ?? 0;
       if (saved != null && saved.chapterId.isNotEmpty) {
         final byId = chapters.indexWhere(
@@ -507,6 +520,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         _pageMode = settings.pageMode;
         _pullBookmarkEnabled = settings.pullBookmarkEnabled;
         _tapPageAnimationEnabled = settings.tapPageAnimationEnabled;
+        _tapZones = tapZones;
         _tabletTwoPageEnabled = settings.tabletTwoPageEnabled;
         _scrollByChapter = scrollByChapter;
         _loadingCatalog = false;
@@ -554,6 +568,14 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         await controller.turnForward();
       } else {
         await controller.turnBackward();
+      }
+      return;
+    }
+    if (_pageMode == BookSourcePageMode.coverSlide) {
+      if (forward) {
+        await _coverPageTurnController.turnForward();
+      } else {
+        await _coverPageTurnController.turnBackward();
       }
       return;
     }
@@ -638,6 +660,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     setState(() => _shelfBookId = shelfBook?.id);
     final shelfBookId = _shelfBookId;
     if (shelfBookId == null) return;
+    unawaited(ReadingResumeService.markReading(shelfBookId));
     try {
       final results = await Future.wait<Object>([
         _bookmarkDao.getBookmarksForBook(shelfBookId),
@@ -1240,8 +1263,26 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       final page = _pageController.page;
       if (page != null && (page - page.round()).abs() > 0.001) return;
     }
-    final width = MediaQuery.sizeOf(context).width;
-    if (width > 0) _handlePageTapFraction(localPosition.dx / width);
+    _handleTapZoneAction(
+      _tapZones.actionAt(localPosition, MediaQuery.sizeOf(context)),
+    );
+  }
+
+  void _setTapZones(ReaderTapZones zones) {
+    if (zones == _tapZones) return;
+    setState(() => _tapZones = zones);
+    unawaited(_readerSettingsStore.saveTapZones(zones));
+  }
+
+  Future<void> _showTapZoneSettings() async {
+    Navigator.of(context).pop();
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
+    _controlsTimer?.cancel();
+    setState(() {
+      _controlsVisible = false;
+      _tapZoneEditorVisible = true;
+    });
   }
 
   Future<void> _turnForward() async {
@@ -1658,6 +1699,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     BookSourcePageMode.verticalScroll => context.l10n.pageTurningScroll,
     BookSourcePageMode.instantPage => context.l10n.readerModeHorizontalPage,
     BookSourcePageMode.horizontalSlide => context.l10n.pageTurningSlide,
+    BookSourcePageMode.coverSlide => context.l10n.readerModeCoverSlide,
     BookSourcePageMode.pageCurl => context.l10n.readerModePageCurl,
   };
 
@@ -1667,6 +1709,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     BookSourcePageMode.instantPage => context.l10n.readerModeHorizontalPageHint,
     BookSourcePageMode.horizontalSlide =>
       context.l10n.readerModeHorizontalSlideHint,
+    BookSourcePageMode.coverSlide => context.l10n.readerModeCoverSlideHint,
     BookSourcePageMode.pageCurl => context.l10n.readerModePageCurlHint,
   };
 
@@ -1846,6 +1889,57 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     );
   }
 
+  Future<void> _showAskAiPanel() async {
+    if (_chapters.isEmpty) return;
+    final chapterIndex = _chapterIndex.clamp(0, _chapters.length - 1);
+    var pageText = '';
+    if (_paginatedPages.isNotEmpty) {
+      pageText =
+          _paginatedPages[_pageIndex.clamp(0, _paginatedPages.length - 1)].text;
+    }
+    final content = _content;
+    if (pageText.trim().isEmpty && content != null) {
+      pageText =
+          _readableChapterText[chapterIndex] ??
+          readableBookSourceChapterText(
+            content,
+            fallbackTitle: _chapters[chapterIndex].title,
+          );
+    }
+    await showReaderAiPanelSheet(
+      context: context,
+      palette: _readerTheme,
+      themeData: _readerThemeData,
+      meta: AIRequestMeta(
+        bookId: _shelfBookId?.toString() ?? widget.book.id,
+        chapterId: _chapters[chapterIndex].id,
+        pageIndex: _pageIndex,
+      ),
+      pageText: pageText,
+      bookTitle: widget.book.title,
+    );
+  }
+
+  Future<void> _askAiAboutSelection(ReaderSelectionSnapshot selection) async {
+    await showReaderAiPanelSheet(
+      context: context,
+      palette: _readerTheme,
+      themeData: _readerThemeData,
+      meta: AIRequestMeta(
+        bookId: _shelfBookId?.toString() ?? widget.book.id,
+        chapterId: selection.chapterId,
+        pageIndex: selection.pageIndex,
+      ),
+      pageText: readerAiPageContextFromSelection(selection),
+      bookTitle: widget.book.title,
+      selection: ReaderAiSelectionContext(
+        selectedText: selection.selectedText,
+        contextBefore: selection.prefix,
+        contextAfter: selection.suffix,
+      ),
+    );
+  }
+
   Future<void> _showReadingSettings() async {
     _controlsTimer?.cancel();
     final selectedMode = await showModalBottomSheet<BookSourcePageMode>(
@@ -1854,7 +1948,11 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       isScrollControlled: true,
       builder: (sheetContext) => ReaderSettingsSheet(
         title: context.l10n.readingSettings,
-        themeTitle: context.l10n.readerThemeTitle,
+        tabThemeLabel: context.l10n.readerSettingsTabTheme,
+        tabTextLabel: context.l10n.readerSettingsTabText,
+        tabLayoutLabel: context.l10n.readerSettingsTabLayout,
+        tabPagingLabel: context.l10n.readerSettingsTabPaging,
+        advancedTypographyTitle: context.l10n.readerSettingsAdvancedTypography,
         themeDescription: context.l10n.readerThemeDescription,
         pageModeTitle: context.l10n.pageTurningMode,
         pageModeSummary: _pageModeSummary(),
@@ -1864,6 +1962,8 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         pullBookmarkHint: context.l10n.readerPullBookmarkHint,
         tapPageAnimationTitle: context.l10n.readerTapAnimationTitle,
         tapPageAnimationHint: context.l10n.readerTapAnimationHint,
+        tapZonesTitle: context.l10n.tapZoneSettings,
+        tapZonesHint: context.l10n.tapZoneSettingsHint,
         showTabletTwoPageToggle: ReaderLayoutBreakpoints.isTablet(
           MediaQuery.sizeOf(context),
         ),
@@ -1899,6 +1999,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         onCustomThemeTap: _showCustomThemeEditor,
         onPageModeTap: _showPageModeSettings,
         onTopBarStyleTap: _showTopBarStyleSettings,
+        onTapZonesTap: () => unawaited(_showTapZoneSettings()),
         onFontSizeChanged: (value) =>
             unawaited(_updateReadingSettings(fontSize: value)),
         onLineHeightChanged: (value) =>
@@ -2021,10 +2122,12 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       key: const ValueKey('reader-system-ui-region'),
       value: _readerSystemUiOverlayStyle,
       child: PopScope(
-        canPop: _canPopWithoutPrompt,
+        canPop: _canPopWithoutPrompt && !_tapZoneEditorVisible,
         onPopInvokedWithResult: (didPop, _) {
           if (didPop) {
             BookOpenTransition.beginExit();
+          } else if (_tapZoneEditorVisible) {
+            setState(() => _tapZoneEditorVisible = false);
           } else {
             unawaited(_requestExit());
           }
@@ -2043,7 +2146,10 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
             body: ReaderThemeBackground(
               palette: _readerTheme,
               child: ReaderPullBookmark(
-                enabled: _pullBookmarkEnabled && _chapters.isNotEmpty,
+                enabled:
+                    _pullBookmarkEnabled &&
+                    _chapters.isNotEmpty &&
+                    !_tapZoneEditorVisible,
                 bookmarked: _currentPageIsBookmarked,
                 busy: _bookmarkBusy,
                 palette: _readerTheme,
@@ -2119,6 +2225,10 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
                           : () => unawaited(_showReaderAloudPanel()),
                       readAloudTooltip: context.l10n.ttsReading,
                       readAloudActive: _readerAloudActive,
+                      onAskAi: _chapters.isEmpty
+                          ? null
+                          : () => unawaited(_showAskAiPanel()),
+                      askAiTooltip: context.l10n.readerAskAi,
                       onSettings: _showReadingSettings,
                       backTooltip: MaterialLocalizations.of(
                         context,
@@ -2134,6 +2244,16 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
                       bottomKey: const ValueKey('book-source-bottom-controls'),
                       statusKey: const ValueKey('book-source-reader-status'),
                     ),
+                    if (_tapZoneEditorVisible)
+                      Positioned.fill(
+                        child: ReaderTapZoneEditorOverlay(
+                          palette: _readerTheme,
+                          zones: _tapZones,
+                          onZonesChanged: _setTapZones,
+                          onClose: () =>
+                              setState(() => _tapZoneEditorVisible = false),
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -2292,6 +2412,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         return switch (_pageMode) {
           BookSourcePageMode.instantPage => _buildInstantReader(),
           BookSourcePageMode.horizontalSlide => _buildSlideReader(),
+          BookSourcePageMode.coverSlide => _buildCoverReader(),
           BookSourcePageMode.pageCurl => _buildCurlReader(
             usesTwoPageLayout: usesTwoPageLayout,
           ),
@@ -2304,9 +2425,11 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   TextStyle get _bodyTextStyle => TextStyle(
     inherit: false,
     fontFamily: _readerFont.family,
-    fontFamilyFallback: _readerFont.fallbackFamilies.isEmpty
-        ? null
-        : _readerFont.fallbackFamilies,
+    fontFamilyFallback: readerFontFamilyFallbacks(
+      fontFamily: _readerFont.family,
+      configuredFallbacks: _readerFont.fallbackFamilies,
+      locale: Localizations.maybeLocaleOf(context),
+    ),
     color: _readerTheme.text,
     fontSize: _fontSize,
     height: _lineHeight,
@@ -2564,6 +2687,7 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
       spokenHighlight: _readerAloudHighlight,
       onSaveTextAnnotation: _saveTextAnnotation,
       onAnnotationUnavailable: () => _ensureAnnotationBook(),
+      onAskAiSelection: _askAiAboutSelection,
       onInteractionChanged: (active) {
         if (!mounted || _annotationInteractionActive == active) return;
         setState(() => _annotationInteractionActive = active);
@@ -3074,18 +3198,34 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
     ),
   );
 
-  void _handlePageTapFraction(double x) {
+  void _handleTapZoneAction(ReaderTapZoneAction action) {
     if (_annotationInteractionActive) return;
-    if (_pageMode == BookSourcePageMode.verticalScroll) {
-      if (x >= 0.28 && x <= 0.72) _toggleControls();
-      return;
+    switch (action) {
+      case ReaderTapZoneAction.menu:
+        _toggleControls();
+      case ReaderTapZoneAction.none:
+        break;
+      case ReaderTapZoneAction.previousPage:
+        // 上下翻页由滚动手势负责，点击翻页保持关闭。
+        if (_pageMode == BookSourcePageMode.verticalScroll) return;
+        unawaited(_turnFromTap(forward: false));
+      case ReaderTapZoneAction.nextPage:
+        if (_pageMode == BookSourcePageMode.verticalScroll) return;
+        unawaited(_turnFromTap(forward: true));
+      case ReaderTapZoneAction.previousChapter:
+        _openAdjacentChapter(-1);
+      case ReaderTapZoneAction.nextChapter:
+        _openAdjacentChapter(1);
     }
-    if (x < 0.28) {
-      unawaited(_turnFromTap(forward: false));
-    } else if (x > 0.72) {
-      unawaited(_turnFromTap(forward: true));
+  }
+
+  void _openAdjacentChapter(int delta) {
+    final target = _chapterIndex + delta;
+    if (target < 0 || target >= _chapters.length) return;
+    if (_pageMode == BookSourcePageMode.verticalScroll && !_scrollByChapter) {
+      unawaited(_jumpToVerticalChapter(target));
     } else {
-      _toggleControls();
+      unawaited(_loadChapter(target));
     }
   }
 
@@ -3124,6 +3264,14 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
         await controller.turnForward();
       } else {
         await controller.turnBackward();
+      }
+      return;
+    }
+    if (_pageMode == BookSourcePageMode.coverSlide) {
+      if (forward) {
+        await _coverPageTurnController.turnForward();
+      } else {
+        await _coverPageTurnController.turnBackward();
       }
       return;
     }
@@ -3251,81 +3399,113 @@ class _BookSourceReaderPageState extends State<BookSourceReaderPage>
   Widget _buildCurlReader({required bool usesTwoPageLayout}) =>
       usesTwoPageLayout ? _buildCurlSpreadReader() : _buildSingleCurlReader();
 
-  Widget _buildSingleCurlReader() {
+  ({
+    ReaderPageSnapshot current,
+    ReaderPageSnapshot? forward,
+    ReaderPageSnapshot? backward,
+  })
+  _singlePageTurnSnapshots(Size viewport) {
     final hasForward =
         _pageIndex + 1 < _pageCount || _chapterIndex + 1 < _chapters.length;
     final hasBackward = _pageIndex > 0 || _chapterIndex > 0;
+    final forwardData = _pageIndex + 1 < _pageCount
+        ? null
+        : _chapterIndex + 1 < _chapters.length
+        ? _adjacentPageData(
+            _chapterIndex + 1,
+            viewport,
+            selectPageIndex: (_) => 0,
+          )
+        : null;
+    final backwardData = _pageIndex > 0
+        ? null
+        : _chapterIndex > 0
+        ? _adjacentPageData(
+            _chapterIndex - 1,
+            viewport,
+            selectPageIndex: (pageCount) => pageCount - 1,
+          )
+        : null;
+    final currentSnapshot = _buildPageSnapshot(
+      _paginatedPages[_pageIndex],
+      pageIndex: _pageIndex,
+      pageCount: _pageCount,
+      layoutFingerprint: _paginationKey!,
+    );
+    final forwardSnapshot = !hasForward
+        ? null
+        : _pageIndex + 1 < _pageCount
+        ? _buildPageSnapshot(
+            _paginatedPages[_pageIndex + 1],
+            pageIndex: _pageIndex + 1,
+            pageCount: _pageCount,
+            layoutFingerprint: _paginationKey!,
+          )
+        : forwardData == null
+        ? _buildBoundarySnapshot(forward: true)
+        : _buildPageSnapshot(
+            forwardData.page,
+            pageIndex: forwardData.pageIndex,
+            pageCount: forwardData.pageCount,
+            layoutFingerprint: forwardData.layoutFingerprint,
+            chapterIndex: _chapterIndex + 1,
+            chapterContent: forwardData.content,
+          );
+    final backwardSnapshot = !hasBackward
+        ? null
+        : _pageIndex > 0
+        ? _buildPageSnapshot(
+            _paginatedPages[_pageIndex - 1],
+            pageIndex: _pageIndex - 1,
+            pageCount: _pageCount,
+            layoutFingerprint: _paginationKey!,
+          )
+        : backwardData == null
+        ? _buildBoundarySnapshot(forward: false)
+        : _buildPageSnapshot(
+            backwardData.page,
+            pageIndex: backwardData.pageIndex,
+            pageCount: backwardData.pageCount,
+            layoutFingerprint: backwardData.layoutFingerprint,
+            chapterIndex: _chapterIndex - 1,
+            chapterContent: backwardData.content,
+          );
+    return (
+      current: currentSnapshot,
+      forward: forwardSnapshot,
+      backward: backwardSnapshot,
+    );
+  }
+
+  Widget _buildSingleCurlReader() {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final forwardData = _pageIndex + 1 < _pageCount
-            ? null
-            : _chapterIndex + 1 < _chapters.length
-            ? _adjacentPageData(
-                _chapterIndex + 1,
-                constraints.biggest,
-                selectPageIndex: (_) => 0,
-              )
-            : null;
-        final backwardData = _pageIndex > 0
-            ? null
-            : _chapterIndex > 0
-            ? _adjacentPageData(
-                _chapterIndex - 1,
-                constraints.biggest,
-                selectPageIndex: (pageCount) => pageCount - 1,
-              )
-            : null;
-        final currentSnapshot = _buildPageSnapshot(
-          _paginatedPages[_pageIndex],
-          pageIndex: _pageIndex,
-          pageCount: _pageCount,
-          layoutFingerprint: _paginationKey!,
-        );
-        final forwardSnapshot = !hasForward
-            ? null
-            : _pageIndex + 1 < _pageCount
-            ? _buildPageSnapshot(
-                _paginatedPages[_pageIndex + 1],
-                pageIndex: _pageIndex + 1,
-                pageCount: _pageCount,
-                layoutFingerprint: _paginationKey!,
-              )
-            : forwardData == null
-            ? _buildBoundarySnapshot(forward: true)
-            : _buildPageSnapshot(
-                forwardData.page,
-                pageIndex: forwardData.pageIndex,
-                pageCount: forwardData.pageCount,
-                layoutFingerprint: forwardData.layoutFingerprint,
-                chapterIndex: _chapterIndex + 1,
-                chapterContent: forwardData.content,
-              );
-        final backwardSnapshot = !hasBackward
-            ? null
-            : _pageIndex > 0
-            ? _buildPageSnapshot(
-                _paginatedPages[_pageIndex - 1],
-                pageIndex: _pageIndex - 1,
-                pageCount: _pageCount,
-                layoutFingerprint: _paginationKey!,
-              )
-            : backwardData == null
-            ? _buildBoundarySnapshot(forward: false)
-            : _buildPageSnapshot(
-                backwardData.page,
-                pageIndex: backwardData.pageIndex,
-                pageCount: backwardData.pageCount,
-                layoutFingerprint: backwardData.layoutFingerprint,
-                chapterIndex: _chapterIndex - 1,
-                chapterContent: backwardData.content,
-              );
+        final snapshots = _singlePageTurnSnapshots(constraints.biggest);
         return ReaderShaderPageCurl(
           key: ValueKey('source-curl:${widget.source.id}:${widget.book.id}'),
           controller: _pageCurlController,
           paperColor: _readerTheme.background,
-          currentPage: currentSnapshot,
-          forwardPage: forwardSnapshot,
-          backwardPage: backwardSnapshot,
+          currentPage: snapshots.current,
+          forwardPage: snapshots.forward,
+          backwardPage: snapshots.backward,
+          onTurnForward: _turnForward,
+          onTurnBackward: _turnBackward,
+        );
+      },
+    );
+  }
+
+  Widget _buildCoverReader() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final snapshots = _singlePageTurnSnapshots(constraints.biggest);
+        return ReaderCoverPageTurn(
+          key: ValueKey('source-cover:${widget.source.id}:${widget.book.id}'),
+          controller: _coverPageTurnController,
+          paperColor: _readerTheme.background,
+          currentPage: snapshots.current,
+          forwardPage: snapshots.forward,
+          backwardPage: snapshots.backward,
           onTurnForward: _turnForward,
           onTurnBackward: _turnBackward,
         );

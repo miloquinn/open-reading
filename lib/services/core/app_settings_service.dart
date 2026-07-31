@@ -26,6 +26,7 @@ class AppSettingsNotifier extends ChangeNotifier {
   static const String _keyHideNavigationLabels =
       'hide_home_navigation_labels_v1';
   static const String _keyHomeNavigationOrder = 'home_navigation_order_v1';
+  static const String _keyHomeNavigationHidden = 'home_navigation_hidden_v1';
   static const String _keyLibraryLayoutMode = 'library_layout_mode_v1';
   static const String _keyLibraryGridColumns = 'library_grid_columns_v1';
   static const String _keyLibraryGridShowDetails =
@@ -38,6 +39,8 @@ class AppSettingsNotifier extends ChangeNotifier {
   bool _hideNavigationLabels = true;
   List<HomeNavigationDestination> _homeNavigationOrder =
       defaultHomeNavigationOrder;
+  Set<HomeNavigationDestination> _hiddenHomeNavigationDestinations =
+      const <HomeNavigationDestination>{};
   LibraryLayoutMode _libraryLayoutMode = LibraryLayoutMode.grid;
   int _libraryGridColumns = 2;
   bool _libraryGridShowDetails = true;
@@ -64,6 +67,21 @@ class AppSettingsNotifier extends ChangeNotifier {
   bool get showNavigationLabels => !_hideNavigationLabels;
   List<HomeNavigationDestination> get homeNavigationOrder =>
       _homeNavigationOrder;
+  Set<HomeNavigationDestination> get hiddenHomeNavigationDestinations =>
+      _hiddenHomeNavigationDestinations;
+
+  /// 按用户顺序过滤隐藏项后的实际导航列表；设置页永远可见。
+  List<HomeNavigationDestination> get visibleHomeNavigationOrder =>
+      List<HomeNavigationDestination>.unmodifiable(
+        _homeNavigationOrder.where(
+          (destination) =>
+              !_hiddenHomeNavigationDestinations.contains(destination),
+        ),
+      );
+
+  bool isHomeNavigationDestinationVisible(
+    HomeNavigationDestination destination,
+  ) => !_hiddenHomeNavigationDestinations.contains(destination);
   LibraryLayoutMode get libraryLayoutMode => _libraryLayoutMode;
   int get libraryGridColumns => _libraryGridColumns;
   bool get libraryGridShowDetails => _libraryGridShowDetails;
@@ -259,6 +277,10 @@ class AppSettingsNotifier extends ChangeNotifier {
         normalizedNavigationIds,
       );
     }
+    _hiddenHomeNavigationDestinations =
+        normalizeHiddenHomeNavigationDestinations(
+          prefs.getStringList(_keyHomeNavigationHidden),
+        );
     _libraryLayoutMode = switch (prefs.getString(_keyLibraryLayoutMode)) {
       'card' => LibraryLayoutMode.card,
       _ => LibraryLayoutMode.grid,
@@ -424,8 +446,35 @@ class AppSettingsNotifier extends ChangeNotifier {
     );
   }
 
-  Future<void> resetHomeNavigationOrder() =>
-      setHomeNavigationOrder(defaultHomeNavigationOrder);
+  Future<void> setHomeNavigationDestinationVisible(
+    HomeNavigationDestination destination,
+    bool visible,
+  ) async {
+    if (destination == HomeNavigationDestination.settings && !visible) return;
+    final next = Set<HomeNavigationDestination>.of(
+      _hiddenHomeNavigationDestinations,
+    );
+    final changed = visible ? next.remove(destination) : next.add(destination);
+    if (!changed) return;
+    _hiddenHomeNavigationDestinations =
+        Set<HomeNavigationDestination>.unmodifiable(next);
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      _keyHomeNavigationHidden,
+      next.map((destination) => destination.storageId).toList(growable: false),
+    );
+  }
+
+  Future<void> resetHomeNavigationOrder() async {
+    await setHomeNavigationOrder(defaultHomeNavigationOrder);
+    if (_hiddenHomeNavigationDestinations.isNotEmpty) {
+      _hiddenHomeNavigationDestinations = const <HomeNavigationDestination>{};
+      notifyListeners();
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList(_keyHomeNavigationHidden, const <String>[]);
+    }
+  }
 
   Future<void> setLibraryLayoutMode(LibraryLayoutMode mode) async {
     if (_libraryLayoutMode == mode) return;

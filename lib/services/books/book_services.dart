@@ -4,6 +4,7 @@
 // Book domain services barrel.
 //
 // 作用：集中导出书籍导入、封面、DAO 与图片相关服务。
+export 'package:xxread/services/books/book_cover_edit_service.dart';
 export 'package:xxread/services/books/book_dao.dart';
 export 'package:xxread/services/books/book_export_models.dart';
 export 'package:xxread/services/books/book_export_service.dart';

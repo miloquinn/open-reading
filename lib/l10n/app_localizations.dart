@@ -1493,6 +1493,48 @@ abstract class AppLocalizations {
   /// **'Legend'**
   String get tapZoneLegend;
 
+  /// Next chapter tap zone
+  ///
+  /// In en, this message translates to:
+  /// **'Next Chapter'**
+  String get tapZoneNextChapter;
+
+  /// Previous chapter tap zone
+  ///
+  /// In en, this message translates to:
+  /// **'Previous Chapter'**
+  String get tapZonePreviousChapter;
+
+  /// Tap zone without any action
+  ///
+  /// In en, this message translates to:
+  /// **'No Action'**
+  String get tapZoneNone;
+
+  /// Tap zone settings entry hint
+  ///
+  /// In en, this message translates to:
+  /// **'Customize what each of the nine tap areas does'**
+  String get tapZoneSettingsHint;
+
+  /// Tap zone action picker title
+  ///
+  /// In en, this message translates to:
+  /// **'Choose an action'**
+  String get tapZoneChooseAction;
+
+  /// Tap zone editor menu requirement hint
+  ///
+  /// In en, this message translates to:
+  /// **'Tap an area to change its action. At least one area must stay Menu; if every Menu is removed, the center area becomes Menu again.'**
+  String get tapZoneMenuRequiredHint;
+
+  /// Tap zone reset button
+  ///
+  /// In en, this message translates to:
+  /// **'Restore Defaults'**
+  String get tapZoneReset;
+
   /// Highlight color label
   ///
   /// In en, this message translates to:
@@ -2294,8 +2336,92 @@ abstract class AppLocalizations {
   /// Toast shown when opening an unsupported book format
   ///
   /// In en, this message translates to:
-  /// **'The native reader currently only supports EPUB and TXT.'**
+  /// **'This format can\'t be read yet.'**
   String get readerUnsupportedFormat;
+
+  /// Error shown when opening a DRM-encrypted MOBI/AZW/AZW3 book
+  ///
+  /// In en, this message translates to:
+  /// **'This Kindle book is DRM-protected and can\'t be read here. Only DRM-free books are supported.'**
+  String get readerKindleDrmProtected;
+
+  /// Error shown when a CBZ comic contains no readable images
+  ///
+  /// In en, this message translates to:
+  /// **'No image pages were found in this comic archive.'**
+  String get readerComicNoPages;
+
+  /// Error shown when a comic archive turns out to be a real RAR container, which has no pure-Dart extractor
+  ///
+  /// In en, this message translates to:
+  /// **'This CBR comic uses real RAR compression and isn\'t readable yet. Please convert it to CBZ.'**
+  String get readerComicCbrUnsupported;
+
+  /// Error shown when a comic archive uses an unsupported container such as 7z or an unrecognized file header
+  ///
+  /// In en, this message translates to:
+  /// **'This comic\'s archive format isn\'t readable yet. Please convert it to CBZ.'**
+  String get readerComicArchiveUnsupported;
+
+  /// Title of the comic/PDF reader settings sheet and its bottom-bar entry
+  ///
+  /// In en, this message translates to:
+  /// **'Reading settings'**
+  String get imageReaderSettings;
+
+  /// Section label for the comic/PDF page-turn direction choice
+  ///
+  /// In en, this message translates to:
+  /// **'Reading direction'**
+  String get imageReaderDirectionTitle;
+
+  /// Standard left-to-right page-turn direction option
+  ///
+  /// In en, this message translates to:
+  /// **'Left to right'**
+  String get imageReaderDirectionLtr;
+
+  /// Right-to-left page-turn direction option used by Japanese manga
+  ///
+  /// In en, this message translates to:
+  /// **'Right to left (manga)'**
+  String get imageReaderDirectionRtl;
+
+  /// Label and dialog title for jumping to a page number in the comic/PDF reader
+  ///
+  /// In en, this message translates to:
+  /// **'Go to page'**
+  String get imageReaderJumpToPage;
+
+  /// Section label for the comic/PDF letterbox background color
+  ///
+  /// In en, this message translates to:
+  /// **'Page background'**
+  String get imageReaderBackgroundTitle;
+
+  /// Black background option for the comic/PDF reader
+  ///
+  /// In en, this message translates to:
+  /// **'Black'**
+  String get imageReaderBackgroundBlack;
+
+  /// Gray background option for the comic/PDF reader
+  ///
+  /// In en, this message translates to:
+  /// **'Gray'**
+  String get imageReaderBackgroundGray;
+
+  /// White background option for the comic/PDF reader
+  ///
+  /// In en, this message translates to:
+  /// **'White'**
+  String get imageReaderBackgroundWhite;
+
+  /// Toast shown when opening a PDF on Linux, where the PDF engine has no implementation
+  ///
+  /// In en, this message translates to:
+  /// **'PDF reading isn\'t available on Linux yet.'**
+  String get readerPdfLinuxUnsupported;
 
   /// Startup error when the data/cache services fail to initialize
   ///
@@ -2657,6 +2783,66 @@ abstract class AppLocalizations {
   /// **'Could not rename the book'**
   String get libraryRenameBookFailed;
 
+  /// Long-press option title for replacing a book cover with a user-picked image
+  ///
+  /// In en, this message translates to:
+  /// **'Custom cover'**
+  String get libraryCustomCover;
+
+  /// Subtitle of the custom cover option
+  ///
+  /// In en, this message translates to:
+  /// **'Pick an image to use as this book\'s cover'**
+  String get libraryCustomCoverHint;
+
+  /// Toast shown after successfully applying a custom cover
+  ///
+  /// In en, this message translates to:
+  /// **'Cover updated'**
+  String get libraryCustomCoverSuccess;
+
+  /// Toast shown when the picked cover image has an unsupported format
+  ///
+  /// In en, this message translates to:
+  /// **'Unsupported image format'**
+  String get libraryCoverUnsupportedFormat;
+
+  /// Toast shown when the picked cover image is too large
+  ///
+  /// In en, this message translates to:
+  /// **'The image exceeds the 20 MB size limit'**
+  String get libraryCoverFileTooLarge;
+
+  /// Toast shown when the picked cover image cannot be read
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read the selected image'**
+  String get libraryCoverReadFailed;
+
+  /// Toast shown when saving the custom cover fails
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the cover'**
+  String get libraryCoverSaveFailed;
+
+  /// Long-press option title for removing a custom cover
+  ///
+  /// In en, this message translates to:
+  /// **'Restore default cover'**
+  String get libraryResetCover;
+
+  /// Subtitle of the restore default cover option
+  ///
+  /// In en, this message translates to:
+  /// **'Remove the custom cover and restore the original'**
+  String get libraryResetCoverHint;
+
+  /// Toast shown after restoring the default cover
+  ///
+  /// In en, this message translates to:
+  /// **'Default cover restored'**
+  String get libraryResetCoverSuccess;
+
   /// No description provided for @libraryExportBook.
   ///
   /// In en, this message translates to:
@@ -2921,6 +3107,18 @@ abstract class AppLocalizations {
   /// **'Pages follow your finger horizontally and snap into place'**
   String get readerModeHorizontalSlideHint;
 
+  /// Page mode option where the current page slides away over the next one like a stacked sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Cover'**
+  String get readerModeCoverSlide;
+
+  /// Subtitle explaining the cover page turn mode
+  ///
+  /// In en, this message translates to:
+  /// **'The current page slides off to the left, uncovering the next page beneath it'**
+  String get readerModeCoverSlideHint;
+
   /// Page mode option with an interactive simulated paper curl
   ///
   /// In en, this message translates to:
@@ -3118,6 +3316,18 @@ abstract class AppLocalizations {
   /// **'Use volume keys in paged reading modes'**
   String get settingsVolumeKeyTurnSubtitle;
 
+  /// Switch title for automatically reopening the last-read book on app launch
+  ///
+  /// In en, this message translates to:
+  /// **'Resume reading on launch'**
+  String get settingsAutoResumeReadingTitle;
+
+  /// Switch subtitle for automatically reopening the last-read book on app launch
+  ///
+  /// In en, this message translates to:
+  /// **'If you leave the app while reading, the next launch returns to where you left off'**
+  String get settingsAutoResumeReadingSubtitle;
+
   /// Switch title for showing system status bar in reader
   ///
   /// In en, this message translates to:
@@ -3201,6 +3411,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'System Settings'**
   String get settingsSystemSettingsTitle;
+
+  /// Section title grouping appearance and font settings
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance & Fonts'**
+  String get settingsSectionAppearanceFonts;
+
+  /// Section title grouping book sources, sync, cache and AI
+  ///
+  /// In en, this message translates to:
+  /// **'Data & Services'**
+  String get settingsSectionDataServices;
+
+  /// Section title grouping language and system toggles
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get settingsSectionGeneral;
+
+  /// Section title grouping donation, about info and contributors
+  ///
+  /// In en, this message translates to:
+  /// **'About & Support'**
+  String get settingsSectionAboutSupport;
 
   /// Switch title for keeping screen on
   ///
@@ -3439,7 +3673,7 @@ abstract class AppLocalizations {
   /// Hint above the horizontal AI model card list
   ///
   /// In en, this message translates to:
-  /// **'Swipe through models and tap a card to switch.'**
+  /// **'Swipe through models, tap to switch, long-press to edit or delete.'**
   String get settingsAiSwipeHint;
 
   /// Intro text on the legacy AI settings page
@@ -4792,6 +5026,36 @@ abstract class AppLocalizations {
   /// **'Only changes the reading page and its controls'**
   String get readerThemeDescription;
 
+  /// Reader settings sheet tab with the theme picker and top bar style
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get readerSettingsTabTheme;
+
+  /// Reader settings sheet tab with font size, line height and alignment
+  ///
+  /// In en, this message translates to:
+  /// **'Text'**
+  String get readerSettingsTabText;
+
+  /// Reader settings sheet tab with the page margins
+  ///
+  /// In en, this message translates to:
+  /// **'Layout'**
+  String get readerSettingsTabLayout;
+
+  /// Reader settings sheet tab with page-turning behavior
+  ///
+  /// In en, this message translates to:
+  /// **'Paging'**
+  String get readerSettingsTabPaging;
+
+  /// Collapsed section holding letter spacing, first-line indent and paragraph spacing
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced typography'**
+  String get readerSettingsAdvancedTypography;
+
   /// Day reading theme name
   ///
   /// In en, this message translates to:
@@ -5481,6 +5745,210 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to fetch models: {error}'**
   String settingsAiFetchModelsFailed(String error);
+
+  /// Switch title: let AI read imported books and build a summary knowledge base
+  ///
+  /// In en, this message translates to:
+  /// **'AI book preprocessing'**
+  String get settingsAiPreprocessTitle;
+
+  /// Subtitle of the AI preprocessing switch
+  ///
+  /// In en, this message translates to:
+  /// **'After importing a book, let AI read it and build a local summary knowledge base automatically'**
+  String get settingsAiPreprocessSubtitle;
+
+  /// Confirmation shown before enabling AI book preprocessing
+  ///
+  /// In en, this message translates to:
+  /// **'Preprocessing sends the whole book to the AI model in chunks. It consumes a large number of tokens and takes a while. Enable anyway?'**
+  String get settingsAiPreprocessWarning;
+
+  /// Error shown when enabling preprocessing without a configured AI model
+  ///
+  /// In en, this message translates to:
+  /// **'Configure a working AI model with an API key first'**
+  String get settingsAiPreprocessNeedModel;
+
+  /// Long-press menu action that runs AI preprocessing for one book
+  ///
+  /// In en, this message translates to:
+  /// **'AI preprocessing'**
+  String get libraryAiPreprocess;
+
+  /// Confirmation before manually preprocessing one book
+  ///
+  /// In en, this message translates to:
+  /// **'Let AI read \"{title}\" and build a summary knowledge base? This consumes a large number of tokens.'**
+  String libraryAiPreprocessConfirm(String title);
+
+  /// Progress text while AI preprocessing runs
+  ///
+  /// In en, this message translates to:
+  /// **'AI is reading this book… (step {done}/{total})'**
+  String libraryAiPreprocessProgress(int done, int total);
+
+  /// Toast when AI preprocessing finishes
+  ///
+  /// In en, this message translates to:
+  /// **'AI knowledge base generated'**
+  String get libraryAiPreprocessDone;
+
+  /// Toast when AI preprocessing fails
+  ///
+  /// In en, this message translates to:
+  /// **'AI preprocessing failed: {error}'**
+  String libraryAiPreprocessFailed(String error);
+
+  /// Toast when the book format cannot be preprocessed
+  ///
+  /// In en, this message translates to:
+  /// **'This book format doesn\'t support AI preprocessing yet'**
+  String get libraryAiPreprocessUnsupported;
+
+  /// Toast after a book is queued for background AI preprocessing
+  ///
+  /// In en, this message translates to:
+  /// **'Added to the AI preprocessing queue. Check progress in Download Tasks.'**
+  String get libraryAiPreprocessQueued;
+
+  /// First tab of the background tasks page: online book downloads
+  ///
+  /// In en, this message translates to:
+  /// **'Downloads'**
+  String get downloadTasksTabDownloads;
+
+  /// Status of a running AI preprocessing task
+  ///
+  /// In en, this message translates to:
+  /// **'AI is reading…'**
+  String get aiPreprocessTaskRunning;
+
+  /// Empty state of the AI preprocessing task list
+  ///
+  /// In en, this message translates to:
+  /// **'No AI preprocessing tasks'**
+  String get aiPreprocessTasksEmpty;
+
+  /// Button that removes finished AI preprocessing tasks from the list
+  ///
+  /// In en, this message translates to:
+  /// **'Clear finished'**
+  String get aiPreprocessClearFinished;
+
+  /// Button that starts a new AI chat from the AI page
+  ///
+  /// In en, this message translates to:
+  /// **'New chat'**
+  String get aiChatNewChat;
+
+  /// Chip label prompting to pick a book for AI chat context
+  ///
+  /// In en, this message translates to:
+  /// **'Link a book'**
+  String get aiChatSelectBook;
+
+  /// Option that clears the linked book in the AI chat book picker
+  ///
+  /// In en, this message translates to:
+  /// **'No linked book'**
+  String get aiChatNoBook;
+
+  /// Label of the AI destination in home navigation
+  ///
+  /// In en, this message translates to:
+  /// **'AI'**
+  String get navAi;
+
+  /// Title of the AI chat history page
+  ///
+  /// In en, this message translates to:
+  /// **'AI Chats'**
+  String get aiHistoryTitle;
+
+  /// Empty state of the AI chat history page
+  ///
+  /// In en, this message translates to:
+  /// **'No AI chats yet.\nTap Ask AI while reading to start your first conversation.'**
+  String get aiHistoryEmpty;
+
+  /// Message count shown in an AI chat history list item
+  ///
+  /// In en, this message translates to:
+  /// **'{count} messages'**
+  String aiHistoryMessageCount(int count);
+
+  /// Button that deletes all AI chat history
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all'**
+  String get aiHistoryClearAll;
+
+  /// Confirmation message before clearing all AI chat history
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all AI chat history? This cannot be undone.'**
+  String get aiHistoryClearAllConfirm;
+
+  /// Confirmation message before deleting one AI chat session
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this chat?'**
+  String get aiHistoryDeleteConfirm;
+
+  /// Hint explaining the visibility switches in floating navigation settings
+  ///
+  /// In en, this message translates to:
+  /// **'Turn a switch off to hide that page; Settings can\'t be hidden.'**
+  String get floatingNavigationVisibilityHint;
+
+  /// Label for the Ask AI action in the reader control bar and text-selection toolbar
+  ///
+  /// In en, this message translates to:
+  /// **'Ask AI'**
+  String get readerAskAi;
+
+  /// Hint text in the Ask AI panel input field
+  ///
+  /// In en, this message translates to:
+  /// **'Ask about this book…'**
+  String get readerAiInputHint;
+
+  /// Tooltip of the send button in the Ask AI panel
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get readerAiSendButton;
+
+  /// Progress label shown while the AI request is in flight
+  ///
+  /// In en, this message translates to:
+  /// **'Thinking…'**
+  String get readerAiThinking;
+
+  /// Notice shown in the Ask AI panel when no provider has an API key configured
+  ///
+  /// In en, this message translates to:
+  /// **'No AI model is configured yet. Go to Settings → AI Reading Assistant to add a model and API key.'**
+  String get readerAiNotConfiguredHint;
+
+  /// Placeholder shown in the Ask AI panel before any message is sent
+  ///
+  /// In en, this message translates to:
+  /// **'Ask the AI about the current page or anything in this book.'**
+  String get readerAiEmptyHint;
+
+  /// Display label of the auto-generated question when the panel opens from the selection toolbar
+  ///
+  /// In en, this message translates to:
+  /// **'Explain this selection'**
+  String get readerAiSelectionQuestionLabel;
+
+  /// Prompt sent to the AI when asking about a text selection
+  ///
+  /// In en, this message translates to:
+  /// **'Explain the selected passage below and give 3 key points.\n\nSelected text:\n{selection}\n\nContext before:\n{before}\n\nContext after:\n{after}'**
+  String readerAiSelectionPrompt(String selection, String before, String after);
 
   /// AIServiceException when no user message is present in the chat
   ///

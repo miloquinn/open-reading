@@ -108,6 +108,25 @@ class FloatingNavigationSettingsPage extends StatelessWidget {
                     ),
                   ],
                 ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.visibility_off_outlined,
+                      size: 17,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        l10n.floatingNavigationVisibilityHint,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 10),
               ],
             ),
@@ -208,9 +227,10 @@ class _NavigationPreview extends StatelessWidget {
           context,
         ).extension<UiStyleThemeExtension>()?.isMaterial3Style ??
         false;
+    final visibleOrder = settings.visibleHomeNavigationOrder;
     final width = homeMobileFloatingNavWidthFor(
       screenWidth: MediaQuery.sizeOf(context).width,
-      itemCount: settings.homeNavigationOrder.length,
+      itemCount: visibleOrder.length,
     );
 
     return Center(
@@ -245,7 +265,7 @@ class _NavigationPreview extends StatelessWidget {
           child: IgnorePointer(
             child: Row(
               children: [
-                for (final destination in settings.homeNavigationOrder)
+                for (final destination in visibleOrder)
                   Expanded(
                     child: HomeBounceNavigationItem(
                       item: _navigationItem(context, destination),
@@ -273,6 +293,9 @@ class _NavigationOrderTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final settings = context.watch<AppSettingsNotifier>();
+    final visible = settings.isHomeNavigationDestinationVisible(destination);
+    final lockedVisible = destination == HomeNavigationDestination.settings;
     return Material(
       color: scheme.surfaceContainerLow,
       borderRadius: BorderRadius.circular(18),
@@ -282,20 +305,49 @@ class _NavigationOrderTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(18),
           side: BorderSide(color: scheme.outlineVariant),
         ),
-        leading: Icon(_destinationIcon(destination), color: scheme.primary),
+        leading: Icon(
+          _destinationIcon(destination),
+          color: visible
+              ? scheme.primary
+              : scheme.onSurfaceVariant.withValues(alpha: 0.6),
+        ),
         title: Text(
           _destinationLabel(context, destination),
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
-        trailing: ReorderableDragStartListener(
-          index: index,
-          child: Padding(
-            padding: const EdgeInsets.all(10),
-            child: Icon(
-              Icons.drag_handle_rounded,
-              color: scheme.onSurfaceVariant,
-            ),
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            color: visible
+                ? null
+                : scheme.onSurfaceVariant.withValues(alpha: 0.7),
           ),
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Switch(
+              key: ValueKey(
+                'floating-navigation-visible-${destination.storageId}',
+              ),
+              value: visible,
+              onChanged: lockedVisible
+                  ? null
+                  : (value) => unawaited(
+                      settings.setHomeNavigationDestinationVisible(
+                        destination,
+                        value,
+                      ),
+                    ),
+            ),
+            ReorderableDragStartListener(
+              index: index,
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Icon(
+                  Icons.drag_handle_rounded,
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -340,6 +392,7 @@ String _destinationLabel(
     HomeNavigationDestination.home => l10n.home,
     HomeNavigationDestination.library => l10n.library,
     HomeNavigationDestination.discover => l10n.discover,
+    HomeNavigationDestination.ai => l10n.navAi,
     HomeNavigationDestination.settings => l10n.settings,
   };
 }
@@ -349,6 +402,7 @@ IconData _destinationIcon(HomeNavigationDestination destination) {
     HomeNavigationDestination.home => Icons.home_outlined,
     HomeNavigationDestination.library => Icons.library_books_outlined,
     HomeNavigationDestination.discover => Icons.explore_outlined,
+    HomeNavigationDestination.ai => Icons.auto_awesome_outlined,
     HomeNavigationDestination.settings => Icons.settings_outlined,
   };
 }
@@ -358,6 +412,7 @@ IconData _destinationSelectedIcon(HomeNavigationDestination destination) {
     HomeNavigationDestination.home => Icons.home,
     HomeNavigationDestination.library => Icons.library_books,
     HomeNavigationDestination.discover => Icons.explore_rounded,
+    HomeNavigationDestination.ai => Icons.auto_awesome,
     HomeNavigationDestination.settings => Icons.settings,
   };
 }

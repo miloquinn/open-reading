@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'reader_layout.dart';
 import 'reader_margin_settings.dart';
+import 'reader_tap_zones.dart';
 
 enum ReaderTextAlignment { natural, justified }
 
@@ -120,6 +121,7 @@ class ReaderSettingsStore {
   static const tapPageAnimationKey = 'reader_tap_page_animation_enabled';
   static const tabletTwoPageKey = 'reader_tablet_two_page_enabled';
   static const scrollByChapterKey = 'native_reader_scroll_by_chapter';
+  static const tapZonesKey = 'reader_tap_zones_v1';
   static const legacyBookSourceLineHeightKey = 'book_source_reader_line_height';
 
   const ReaderSettingsStore();
@@ -227,5 +229,15 @@ class ReaderSettingsStore {
   Future<void> saveScrollByChapter(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(scrollByChapterKey, value);
+  }
+
+  Future<ReaderTapZones> loadTapZones() async {
+    final prefs = await SharedPreferences.getInstance();
+    return ReaderTapZones.decode(prefs.getString(tapZonesKey));
+  }
+
+  Future<void> saveTapZones(ReaderTapZones zones) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(tapZonesKey, zones.encode());
   }
 }

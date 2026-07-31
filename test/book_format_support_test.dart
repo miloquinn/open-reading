@@ -10,6 +10,8 @@ void main() {
       picker,
       containsAll(<String>['fb2', 'rtf', 'doc', 'docx', 'cbz', 'cbr']),
     );
+    expect(picker, containsAll(<String>['cbt', 'cb7']));
+    expect(picker, containsAll(<String>['html', 'htm', 'xhtml', 'md']));
     expect(picker.contains('zip'), isFalse);
     expect(picker.contains('rar'), isFalse);
   });
@@ -31,8 +33,35 @@ void main() {
   test('当前已具备正文阅读管线的格式', () {
     expect(BookFormatRegistry.hasReadableTextPipeline('txt'), isTrue);
     expect(BookFormatRegistry.hasReadableTextPipeline('epub'), isTrue);
-    expect(BookFormatRegistry.hasReadableTextPipeline('mobi'), isFalse);
+    expect(BookFormatRegistry.hasReadableTextPipeline('mobi'), isTrue);
+    expect(BookFormatRegistry.hasReadableTextPipeline('docx'), isTrue);
+    expect(BookFormatRegistry.hasReadableTextPipeline('doc'), isFalse);
+    expect(BookFormatRegistry.hasReadableTextPipeline('cbr'), isFalse);
     expect(BookFormatRegistry.hasReadableTextPipeline('zip'), isFalse);
+  });
+
+  test('漫画容器：CBZ/CBT 完整可读，CBR/CB7 按文件头尝试', () {
+    expect(
+      BookFormatRegistry.specForExtension('cbz')?.capability,
+      BookFormatCapability.fullReader,
+    );
+    expect(
+      BookFormatRegistry.specForExtension('cbt')?.capability,
+      BookFormatCapability.fullReader,
+    );
+    expect(
+      BookFormatRegistry.specForExtension('cbr')?.capability,
+      BookFormatCapability.metadataImport,
+    );
+    expect(
+      BookFormatRegistry.specForExtension('cb7')?.capability,
+      BookFormatCapability.metadataImport,
+    );
+    expect(
+      BookFormatRegistry.specForExtension('cbt')?.pipeline,
+      BookReaderPipeline.dedicatedRenderer,
+    );
+    expect(BookFormatRegistry.isAcceptedByPicker('CB7'), isTrue);
   });
 
   test('ZIP/RAR 标记为容器计划项', () {

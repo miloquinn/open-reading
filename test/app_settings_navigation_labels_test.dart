@@ -69,6 +69,7 @@ void main() {
       HomeNavigationDestination.home,
       HomeNavigationDestination.library,
       HomeNavigationDestination.discover,
+      HomeNavigationDestination.ai,
     ]);
 
     final repairedPrefs = await SharedPreferences.getInstance();
@@ -77,6 +78,7 @@ void main() {
       'home',
       'library',
       'discover',
+      'ai',
     ]);
 
     await notifier.setHomeNavigationOrder(const [
@@ -92,6 +94,58 @@ void main() {
       'settings',
       'home',
       'library',
+      'ai',
+    ]);
+  });
+
+  test('destination visibility hides pages but never settings', () async {
+    final notifier = await _loadNotifier();
+    addTearDown(notifier.dispose);
+
+    expect(notifier.visibleHomeNavigationOrder, defaultHomeNavigationOrder);
+
+    await notifier.setHomeNavigationDestinationVisible(
+      HomeNavigationDestination.home,
+      false,
+    );
+    expect(
+      notifier.visibleHomeNavigationOrder,
+      isNot(contains(HomeNavigationDestination.home)),
+    );
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getStringList('home_navigation_hidden_v1'), ['home']);
+
+    // 设置页拒绝隐藏。
+    await notifier.setHomeNavigationDestinationVisible(
+      HomeNavigationDestination.settings,
+      false,
+    );
+    expect(
+      notifier.visibleHomeNavigationOrder,
+      contains(HomeNavigationDestination.settings),
+    );
+
+    // 恢复默认同时清空隐藏集合。
+    await notifier.resetHomeNavigationOrder();
+    expect(notifier.visibleHomeNavigationOrder, defaultHomeNavigationOrder);
+    expect(prefs.getStringList('home_navigation_hidden_v1'), isEmpty);
+  });
+
+  test('hidden destinations restore from prefs and drop invalid ids', () async {
+    SharedPreferences.setMockInitialValues({
+      'home_navigation_hidden_v1': ['home', 'settings', 'unknown'],
+    });
+    final notifier = await _loadNotifier();
+    addTearDown(notifier.dispose);
+
+    expect(notifier.hiddenHomeNavigationDestinations, {
+      HomeNavigationDestination.home,
+    });
+    expect(notifier.visibleHomeNavigationOrder, [
+      HomeNavigationDestination.library,
+      HomeNavigationDestination.discover,
+      HomeNavigationDestination.ai,
+      HomeNavigationDestination.settings,
     ]);
   });
 }

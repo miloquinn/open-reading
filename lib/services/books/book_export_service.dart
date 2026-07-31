@@ -117,6 +117,8 @@ String mimeTypeForBookFile(String fileName, {String fallback = ''}) {
     'html' || 'htm' || 'xhtml' => 'text/html',
     'cbz' => 'application/vnd.comicbook+zip',
     'cbr' => 'application/vnd.comicbook-rar',
+    'cbt' => 'application/x-cbt',
+    'cb7' => 'application/x-cb7',
     _ => 'application/octet-stream',
   };
 }

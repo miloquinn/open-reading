@@ -14,19 +14,24 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'l10n/app_localizations.dart';
+import 'book_sources/services/book_source_client.dart';
+import 'book_sources/services/book_source_shelf_service.dart';
 import 'core/reader/native_reader_service.dart';
 import 'models/book.dart';
 import 'pages/home/home_shell_page.dart';
 import 'pages/library/import_book/import_book_page.dart';
 import 'pages/legal/user_agreement_page.dart';
+import 'pages/reader/book_source_reader_page.dart';
 import 'services/books/book_services.dart';
 import 'services/books/book_format_support.dart';
+import 'services/reading/reading_resume_service.dart';
 import 'services/core/app_update_download_service.dart';
 import 'services/core/background_download_notifier.dart';
 import 'services/core/core_services.dart';
 import 'services/library/download_task_controller.dart';
 import 'services/sync/webdav_sync_controller.dart';
 import 'utils/app_themes.dart';
+import 'utils/book_open_transition.dart';
 import 'services/tts_service.dart';
 import 'services/reader_aloud_service.dart';
 import 'package:path_provider/path_provider.dart';
@@ -342,6 +347,7 @@ class _XxReadAppState extends State<XxReadApp> with WidgetsBindingObserver {
   StreamSubscription<BackgroundDownloadTap>? _notificationTapSubscription;
   BackgroundDownloadTap? _pendingNotificationTap;
   bool _webDavSyncInitialized = false;
+  bool _resumeReadingHandled = false;
   late final IncomingBookService _incomingBookService;
 
   @override
@@ -417,6 +423,8 @@ class _XxReadAppState extends State<XxReadApp> with WidgetsBindingObserver {
   }
 
   Future<void> _openIncomingBook(Book book) async {
+    // 外部打开文件是显式意图，本次启动不再自动恢复上次阅读。
+    _resumeReadingHandled = true;
     final context = _navigatorKey.currentContext;
     if (!mounted || context == null) {
       throw StateError('Navigator is not ready for an incoming book');
@@ -431,6 +439,7 @@ class _XxReadAppState extends State<XxReadApp> with WidgetsBindingObserver {
   }
 
   Future<void> _openIncomingImportQueue(List<BookImportSource> sources) async {
+    _resumeReadingHandled = true;
     final context = _navigatorKey.currentContext;
     if (!mounted || context == null) {
       throw StateError('Navigator is not ready for incoming books');
@@ -561,6 +570,7 @@ class _XxReadAppState extends State<XxReadApp> with WidgetsBindingObserver {
     });
     _syncIncomingBookReadiness();
     unawaited(_openPendingNotificationTap());
+    _scheduleResumeLastReading();
   }
 
   /// 检查用户是否已同意协议
@@ -572,6 +582,7 @@ class _XxReadAppState extends State<XxReadApp> with WidgetsBindingObserver {
     });
     _syncIncomingBookReadiness();
     unawaited(_openPendingNotificationTap());
+    _scheduleResumeLastReading();
     debugPrint('📋 协议状态检查: ${hasAccepted ? "已同意" : "未同意"}');
   }
 
@@ -583,6 +594,7 @@ class _XxReadAppState extends State<XxReadApp> with WidgetsBindingObserver {
     });
     _syncIncomingBookReadiness();
     unawaited(_openPendingNotificationTap());
+    _scheduleResumeLastReading();
     debugPrint('✅ 用户协议已同意，进入主应用');
   }
 
@@ -596,6 +608,8 @@ class _XxReadAppState extends State<XxReadApp> with WidgetsBindingObserver {
     final tap = _pendingNotificationTap;
     if (tap == null) return;
     _pendingNotificationTap = null;
+    // 用户点通知进来，意图明确，本次启动不再自动恢复上次阅读。
+    _resumeReadingHandled = true;
     if (tap.kind == BackgroundDownloadKind.update) {
       final apkPath = tap.apkPath;
       final buildNumber = tap.expectedBuildNumber;
@@ -619,6 +633,56 @@ class _XxReadAppState extends State<XxReadApp> with WidgetsBindingObserver {
       return;
     }
     await NativeReaderService.openBook(_navigatorKey.currentContext!, book);
+  }
+
+  /// 启动后自动回到上次阅读。
+  ///
+  /// 仅当「阅读中退出应用」留下的会话记录存在且设置开关开启时触发；
+  /// 通知点击、外部文件打开等显式意图优先，命中时本次启动不再自动恢复。
+  void _scheduleResumeLastReading() {
+    if (!_isBootstrapped || _hasAcceptedAgreement != true) return;
+    if (_resumeReadingHandled) return;
+    if (_navigatorKey.currentContext == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _scheduleResumeLastReading();
+      });
+      return;
+    }
+    unawaited(_resumeLastReading());
+  }
+
+  Future<void> _resumeLastReading() async {
+    if (_resumeReadingHandled) return;
+    _resumeReadingHandled = true;
+    // 桌面端带文件参数启动时，交给入站书籍通道打开目标文件。
+    if (widget.initialFilePaths.isNotEmpty) return;
+    try {
+      final bookId = await ReadingResumeService.takePendingResumeBookId();
+      if (bookId == null) return;
+      final book = await BookDao().getBookById(bookId);
+      if (book == null || !mounted) return;
+      final context = _navigatorKey.currentContext;
+      if (context == null || !context.mounted) return;
+      if (book.isOnline) {
+        final client = BookSourceClient();
+        final shelfService = BookSourceShelfService(client: client);
+        final route = BookOpenTransition.createRoute<void>(
+          BookSourceReaderPage(
+            source: shelfService.sourceFrom(book),
+            book: shelfService.sourceBookFrom(book),
+            client: client,
+            shelfService: shelfService,
+          ),
+          waitForReaderReady: true,
+        );
+        await BookOpenTransition.push<void>(context, route);
+      } else {
+        await NativeReaderService.openBook(context, book);
+      }
+    } catch (error) {
+      // 自动恢复失败不打扰用户，停留首页即可。
+      debugPrint('自动恢复上次阅读失败（已忽略）: $error');
+    }
   }
 
   /// 处理用户拒绝协议

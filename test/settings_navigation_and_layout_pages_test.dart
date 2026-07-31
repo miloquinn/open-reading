@@ -93,6 +93,7 @@ void main() {
       HomeNavigationDestination.library,
       HomeNavigationDestination.discover,
       HomeNavigationDestination.home,
+      HomeNavigationDestination.ai,
       HomeNavigationDestination.settings,
     ]);
 
@@ -101,6 +102,7 @@ void main() {
       'library',
       'discover',
       'home',
+      'ai',
       'settings',
     ]);
 

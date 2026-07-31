@@ -9,7 +9,12 @@ import 'package:flutter/material.dart' show Color, immutable;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:xxread/models/book.dart' as legacy;
+import 'package:xxread/reader_core/ai/ai_service.dart';
+import 'package:xxread/services/ai/ai_preprocess_task_controller.dart';
+import 'package:xxread/services/ai/book_preprocess_service.dart';
+import 'package:xxread/services/books/book_text_extraction_service.dart';
 
 // ── 内联术语标注模型（原 reader_models.dart 已移除）────────────────────
 
@@ -137,16 +142,33 @@ class GlobalAIReadingService {
 
   GlobalAIReadingService._();
 
+  /// 测试专用构造：允许子类替换落盘行为。
+  @visibleForTesting
+  GlobalAIReadingService.forTesting();
+
   static final GlobalAIReadingService _instance = GlobalAIReadingService._();
 
   static const String _rootFolder = 'ai_knowledge';
 
-  /// 旧版导入后自动解析入口。
-  /// 当前阅读页按需解析内容，因此保留空实现兼容旧调用点。
+  /// 导入后自动预处理入口：仅在“AI 预处理书籍”开启、AI 已配置、
+  /// 格式受支持且尚无摘要时后台执行；失败只记日志，不打断导入。
   Future<void> scheduleImportedBookAnalysis({required legacy.Book book}) async {
-    debugPrint(
-      '[GlobalAI] scheduleImportedBookAnalysis skipped: parsers removed',
-    );
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (prefs.getBool(aiPreprocessBooksPrefsKey) != true) return;
+      if (!BookTextExtractionService.supports(book)) return;
+      final bookId = book.id?.toString() ?? '';
+      if (bookId.isEmpty || await hasBookSummary(bookId)) return;
+      final settings = await ReaderHttpAIService().loadSettings();
+      if (!settings.isConfigured) return;
+      debugPrint(
+        '[GlobalAI] queueing imported book preprocessing: '
+        '${book.title}',
+      );
+      AiPreprocessTaskController().enqueue(book);
+    } catch (error) {
+      debugPrint('[GlobalAI] preprocessing failed: $error');
+    }
   }
 
   /// 旧版：为已解析书籍生成知识库。因 ParsedBook 依赖已移除的 parser 模块，
@@ -182,6 +204,33 @@ class GlobalAIReadingService {
   Future<Map<String, dynamic>?> loadBookMemory(String bookId) async {
     return _readJson(await _bookMemoryFile(bookId));
   }
+
+  /// AI 预处理产物：整本书的 Markdown 摘要，写入 memory.json 的 summary 字段，
+  /// 供阅读器注入上下文与 AI 页对话复用。
+  Future<void> saveBookSummary({
+    required String bookId,
+    required String summary,
+  }) async {
+    final memoryFile = await _bookMemoryFile(bookId);
+    final memory = await _readJson(memoryFile) ?? <String, dynamic>{};
+    await _writeJson(memoryFile, <String, dynamic>{
+      ...memory,
+      'summary': summary,
+      'summaryCreatedAt': DateTime.now().toIso8601String(),
+      'updatedAt': DateTime.now().toIso8601String(),
+    });
+  }
+
+  /// 读取预处理摘要；没有则返回 null。
+  Future<String?> loadBookSummary(String bookId) async {
+    final memory = await loadBookMemory(bookId);
+    final summary = memory?['summary'];
+    if (summary is! String || summary.trim().isEmpty) return null;
+    return summary;
+  }
+
+  Future<bool> hasBookSummary(String bookId) async =>
+      (await loadBookSummary(bookId)) != null;
 
   Future<List<KnowledgeSnippet>> findRelevantSnippets({
     required String bookId,

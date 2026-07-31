@@ -74,6 +74,12 @@ android {
                 signingConfig = signingConfigs.getByName("release")
             }
         }
+        debug {
+            // 临时：本机验证时用发布签名覆盖安装正式版，避免签名不一致被拒装
+            if (hasReleaseSigning) {
+                signingConfig = signingConfigs.getByName("release")
+            }
+        }
         getByName("profile") {
             if (hasReleaseSigning) {
                 signingConfig = signingConfigs.getByName("release")

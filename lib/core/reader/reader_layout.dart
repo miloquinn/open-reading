@@ -1,7 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
 
-enum ReaderPageMode { verticalScroll, instantPage, horizontalSlide, pageCurl }
+enum ReaderPageMode {
+  verticalScroll,
+  instantPage,
+  horizontalSlide,
+  coverSlide,
+  pageCurl,
+}
 
 abstract final class ReaderLayoutBreakpoints {
   static const double tabletShortestSide = 600;

@@ -60,11 +60,17 @@ class HomeMobileChromeMetrics {
   final double topBarContentHeight;
   final double floatingNavHeight;
 
+  /// 键盘是否可见。必须在壳层 Scaffold 外侧读取原始 viewInsets 得出——
+  /// Scaffold 的键盘避让会把 inset 从子树 MediaQuery 中消费掉，
+  /// 页面内部无法自行判断（AI 页输入条等依赖此值收起底部留白）。
+  final bool keyboardVisible;
+
   const HomeMobileChromeMetrics({
     required this.systemTopInset,
     required this.systemBottomInset,
     this.topBarContentHeight = kHomeMobileTopBarContentHeight,
     this.floatingNavHeight = kHomeMobileFloatingNavHeight,
+    this.keyboardVisible = false,
   });
 
   factory HomeMobileChromeMetrics.fromMediaQuery(
@@ -75,6 +81,7 @@ class HomeMobileChromeMetrics {
     return HomeMobileChromeMetrics(
       systemTopInset: resolvedInsets.top,
       systemBottomInset: resolvedInsets.bottom,
+      keyboardVisible: mediaQuery.viewInsets.bottom > 0,
     );
   }
 
@@ -140,6 +147,7 @@ class HomeMobileChromeScope extends InheritedWidget {
     return oldWidget.metrics.systemTopInset != metrics.systemTopInset ||
         oldWidget.metrics.systemBottomInset != metrics.systemBottomInset ||
         oldWidget.metrics.topBarContentHeight != metrics.topBarContentHeight ||
-        oldWidget.metrics.floatingNavHeight != metrics.floatingNavHeight;
+        oldWidget.metrics.floatingNavHeight != metrics.floatingNavHeight ||
+        oldWidget.metrics.keyboardVisible != metrics.keyboardVisible;
   }
 }

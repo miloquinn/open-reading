@@ -30,6 +30,8 @@ class ReaderChromeOverlay extends StatelessWidget {
     this.onReadAloud,
     this.readAloudTooltip,
     this.readAloudActive = false,
+    this.onAskAi,
+    this.askAiTooltip,
     this.bookmarkBusy = false,
     this.topKey,
     this.bottomKey,
@@ -54,6 +56,8 @@ class ReaderChromeOverlay extends StatelessWidget {
   final VoidCallback? onTableOfContents;
   final VoidCallback onSettings;
   final VoidCallback? onReadAloud;
+  final VoidCallback? onAskAi;
+  final String? askAiTooltip;
   final String backTooltip;
   final String bookmarkTooltip;
   final String tableOfContentsTooltip;
@@ -233,6 +237,13 @@ class ReaderChromeOverlay extends StatelessWidget {
                           icon: readAloudActive
                               ? Icons.graphic_eq_rounded
                               : Icons.headphones_rounded,
+                        ),
+                      if (onAskAi != null)
+                        ReaderControlIconButton(
+                          palette: palette,
+                          onPressed: onAskAi,
+                          tooltip: askAiTooltip ?? '',
+                          icon: Icons.auto_awesome_outlined,
                         ),
                       if (showSettingsAction)
                         ReaderControlIconButton(

@@ -19,7 +19,10 @@ import 'package:xxread/pages/home/home_mobile_chrome.dart';
 import 'package:xxread/pages/home/home_shell_page.dart';
 import 'package:xxread/pages/reader/book_source_reader_page.dart';
 import 'package:xxread/pages/settings/sync/book_file_sync_page.dart';
+import 'package:xxread/reader_core/ai/ai_service.dart';
+import 'package:xxread/services/ai/ai_preprocess_task_controller.dart';
 import 'package:xxread/services/books/book_services.dart';
+import 'package:xxread/services/books/book_text_extraction_service.dart';
 import 'package:xxread/services/core/app_settings_service.dart';
 import 'package:xxread/services/library/library_services.dart';
 import 'package:xxread/services/library/download_task_controller.dart';
@@ -1185,6 +1188,51 @@ class _LibraryPageState extends State<LibraryPage> {
     showSideToast(context, context.l10n.downloadRunningInBackground);
   }
 
+  /// 手动 AI 预处理：校验模型可用并确认 token 消耗后加入后台队列，
+  /// 进度到"下载任务"页的 AI 预处理 Tab 查看。
+  Future<void> _confirmAiPreprocess(Book book) async {
+    final l10n = context.l10n;
+    final settings = await ReaderHttpAIService().loadSettings();
+    if (!mounted) return;
+    if (!settings.isConfigured) {
+      showSideToast(
+        context,
+        l10n.settingsAiPreprocessNeedModel,
+        kind: SideToastKind.error,
+      );
+      return;
+    }
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.libraryAiPreprocess),
+        content: Text(l10n.libraryAiPreprocessConfirm(book.title)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton.tonal(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(l10n.confirm),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    // 列表查询不含 textEncoding 等全量字段，入队前取完整记录。
+    final fullBook = book.id == null
+        ? null
+        : await _bookDao.getBookById(book.id!);
+    if (!mounted) return;
+    AiPreprocessTaskController().enqueue(fullBook ?? book);
+    showSideToast(
+      context,
+      l10n.libraryAiPreprocessQueued,
+      kind: SideToastKind.success,
+    );
+  }
+
   Future<void> _exportBook(Book book) async {
     if (!_exportingBookPaths.add(book.filePath)) return;
     showSideToast(context, context.l10n.bookExportInProgress);
@@ -1380,10 +1428,7 @@ class _LibraryPageState extends State<LibraryPage> {
                   color: localScheme.outline.withValues(alpha: 0.15),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
+                  padding: const EdgeInsets.fromLTRB(12, 6, 12, 8),
                   child: Column(
                     children: [
                       _buildOptionItem(
@@ -1391,13 +1436,11 @@ class _LibraryPageState extends State<LibraryPage> {
                         icon: Icons.play_circle_outline,
                         iconColor: localScheme.primary,
                         title: context.l10n.continueReading,
-                        subtitle: book.isOnline
+                        trailing: book.isOnline
                             ? context.l10n.bookSourceOnlineBadge
                             : book.currentPage > 0
                             ? context.l10n.libraryPageNumber(book.currentPage)
                             : context.l10n.libraryStartFromBeginning,
-                        backgroundColor: localScheme.primaryContainer
-                            .withValues(alpha: isMaterial3Style ? 0.42 : 0.15),
                         onTap: () async {
                           Navigator.pop(context);
                           final fullBook = await _bookDao.getBookById(book.id!);
@@ -1407,84 +1450,89 @@ class _LibraryPageState extends State<LibraryPage> {
                           }
                         },
                       ),
-                      const SizedBox(height: 8),
-                      if (book.isOnline) ...[
+                      if (book.isOnline)
                         _buildOptionItem(
                           context: context,
                           icon: Icons.download_for_offline_outlined,
                           iconColor: localScheme.secondary,
                           title: context.l10n.bookSourceDownloadLocal,
-                          subtitle: context.l10n.bookSourceDownloadLocalHint,
-                          backgroundColor: localScheme.secondaryContainer
-                              .withValues(
-                                alpha: isMaterial3Style ? 0.44 : 0.15,
-                              ),
                           onTap: () {
                             Navigator.pop(context);
                             unawaited(_downloadOnlineBook(book));
                           },
                         ),
-                        const SizedBox(height: 8),
-                      ],
                       _buildOptionItem(
                         context: context,
                         icon: Icons.info_outline,
                         iconColor: localScheme.tertiary,
                         title: context.l10n.libraryBookInfo,
-                        subtitle: _bookInfoSubtitle(context, book),
-                        backgroundColor: localScheme.tertiaryContainer
-                            .withValues(alpha: isMaterial3Style ? 0.44 : 0.15),
+                        trailing: _bookInfoSubtitle(context, book),
                         onTap: () {
                           Navigator.pop(context);
                           _showBookInfo(book);
                         },
                       ),
-                      const SizedBox(height: 8),
                       _buildOptionItem(
                         context: context,
                         icon: Icons.edit_outlined,
                         iconColor: localScheme.secondary,
                         title: context.l10n.libraryRenameBook,
-                        subtitle: context.l10n.libraryRenameBookHint,
-                        backgroundColor: localScheme.secondaryContainer
-                            .withValues(alpha: isMaterial3Style ? 0.44 : 0.15),
                         onTap: () {
                           Navigator.pop(context);
                           _renameBook(book);
                         },
                       ),
-                      const SizedBox(height: 8),
-                      if (!book.isOnline && book.filePath.isNotEmpty) ...[
+                      if (!kIsWeb) ...[
+                        _buildOptionItem(
+                          context: context,
+                          icon: Icons.image_outlined,
+                          iconColor: localScheme.secondary,
+                          title: context.l10n.libraryCustomCover,
+                          onTap: () {
+                            Navigator.pop(context);
+                            unawaited(_pickCustomCover(book));
+                          },
+                        ),
+                        if (BookCoverEditService.hasCustomCover(book))
+                          _buildOptionItem(
+                            context: context,
+                            icon: Icons.restore,
+                            iconColor: localScheme.secondary,
+                            title: context.l10n.libraryResetCover,
+                            onTap: () {
+                              Navigator.pop(context);
+                              unawaited(_resetCustomCover(book));
+                            },
+                          ),
+                      ],
+                      if (!book.isOnline && book.filePath.isNotEmpty)
                         _buildOptionItem(
                           context: context,
                           icon: Icons.file_upload_outlined,
                           iconColor: localScheme.secondary,
                           title: context.l10n.libraryExportBook,
-                          subtitle:
-                              book.sourceId != null &&
-                                  book.format.toLowerCase() == 'txt'
-                              ? context.l10n.libraryExportDownloadedTxtHint
-                              : context.l10n.libraryExportOriginalHint,
-                          backgroundColor: localScheme.secondaryContainer
-                              .withValues(
-                                alpha: isMaterial3Style ? 0.44 : 0.15,
-                              ),
                           onTap: () {
                             Navigator.pop(context);
                             unawaited(_exportBook(book));
                           },
                         ),
-                        const SizedBox(height: 8),
-                      ],
+                      if (BookTextExtractionService.supports(book))
+                        _buildOptionItem(
+                          context: context,
+                          icon: Icons.auto_awesome_outlined,
+                          iconColor: localScheme.primary,
+                          title: context.l10n.libraryAiPreprocess,
+                          onTap: () {
+                            Navigator.pop(context);
+                            unawaited(_confirmAiPreprocess(book));
+                          },
+                        ),
                       _buildOptionItem(
                         context: context,
                         icon: Icons.delete_outline_rounded,
                         iconColor: localScheme.error,
                         title: context.l10n.deleteBook,
-                        subtitle: context.l10n.libraryDeleteBookHint,
-                        backgroundColor: localScheme.errorContainer.withValues(
-                          alpha: isMaterial3Style ? 0.46 : 0.15,
-                        ),
+                        destructive: true,
                         onTap: () {
                           Navigator.pop(context);
                           _confirmDeleteBook(book);
@@ -1585,77 +1633,118 @@ class _LibraryPageState extends State<LibraryPage> {
     }
   }
 
+  /// 让用户挑选本地图片替换 [book] 的封面，成功后刷新书库。
+  Future<void> _pickCustomCover(Book book) async {
+    final l10n = context.l10n;
+    final toastContext = context;
+    try {
+      final applied = await BookCoverEditService().pickAndApplyCover(book);
+      if (!applied) return; // 用户取消挑选
+      _loadBooks();
+      if (!toastContext.mounted) return;
+      showSideToast(
+        toastContext,
+        l10n.libraryCustomCoverSuccess,
+        kind: SideToastKind.success,
+      );
+    } on BookCoverEditException catch (error) {
+      if (!toastContext.mounted) return;
+      final message = switch (error.code) {
+        BookCoverEditError.unsupportedFormat =>
+          l10n.libraryCoverUnsupportedFormat,
+        BookCoverEditError.fileTooLarge => l10n.libraryCoverFileTooLarge,
+        BookCoverEditError.readFailed => l10n.libraryCoverReadFailed,
+        BookCoverEditError.storageFailed => l10n.libraryCoverSaveFailed,
+      };
+      showSideToast(toastContext, message, kind: SideToastKind.error);
+    } catch (_) {
+      if (!toastContext.mounted) return;
+      showSideToast(
+        toastContext,
+        l10n.libraryCoverSaveFailed,
+        kind: SideToastKind.error,
+      );
+    }
+  }
+
+  /// 撤销 [book] 的自定义封面，恢复原封面或回退到书源/生成封面。
+  Future<void> _resetCustomCover(Book book) async {
+    final l10n = context.l10n;
+    final toastContext = context;
+    try {
+      await BookCoverEditService().resetCover(book);
+      _loadBooks();
+      if (!toastContext.mounted) return;
+      showSideToast(
+        toastContext,
+        l10n.libraryResetCoverSuccess,
+        kind: SideToastKind.success,
+      );
+    } catch (_) {
+      if (!toastContext.mounted) return;
+      showSideToast(
+        toastContext,
+        l10n.libraryCoverSaveFailed,
+        kind: SideToastKind.error,
+      );
+    }
+  }
+
   /// 构建操作选项项
+  /// 紧凑操作行：小图标 + 标题 +（可选）右侧摘要，替代旧版大卡片。
   Widget _buildOptionItem({
     required BuildContext context,
     required IconData icon,
     required Color iconColor,
     required String title,
-    required String subtitle,
-    required Color backgroundColor,
+    String? trailing,
+    bool destructive = false,
     required VoidCallback onTap,
   }) {
-    final isMaterial3Style =
-        Theme.of(
-          context,
-        ).extension<UiStyleThemeExtension>()?.isMaterial3Style ??
-        false;
+    final scheme = Theme.of(context).colorScheme;
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
-            color: backgroundColor,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: iconColor.withValues(alpha: isMaterial3Style ? 0.28 : 0.2),
-              width: isMaterial3Style ? 0.9 : 1,
-            ),
-          ),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: iconColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
+                  color: iconColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(icon, color: iconColor, size: 24),
+                child: Icon(icon, color: iconColor, size: 17),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 12),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withValues(alpha: 0.6),
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: destructive ? scheme.error : scheme.onSurface,
+                  ),
                 ),
               ),
-              Icon(
-                Icons.chevron_right,
-                color: Theme.of(
-                  context,
-                ).colorScheme.onSurface.withValues(alpha: 0.4),
-                size: 20,
-              ),
+              if (trailing != null) ...[
+                const SizedBox(width: 10),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 150),
+                  child: Text(
+                    trailing,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -1917,6 +2006,10 @@ class _LibraryPageState extends State<LibraryPage> {
           await coverFile.delete();
           debugPrint('✅ 已删除封面图片: ${book.coverImagePath}');
         }
+      }
+      if (!kIsWeb) {
+        // 清理换封面留下的原封面备份等残留文件
+        await BookCoverEditService().cleanupForDeletedBook(book);
       }
 
       // 3. 删除数据库记录（会级联删除笔记、书签等）

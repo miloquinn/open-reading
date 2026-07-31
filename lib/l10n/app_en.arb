@@ -635,6 +635,34 @@
   "@tapZoneLegend": {
     "description": "Tap zone legend"
   },
+  "tapZoneNextChapter": "Next Chapter",
+  "@tapZoneNextChapter": {
+    "description": "Next chapter tap zone"
+  },
+  "tapZonePreviousChapter": "Previous Chapter",
+  "@tapZonePreviousChapter": {
+    "description": "Previous chapter tap zone"
+  },
+  "tapZoneNone": "No Action",
+  "@tapZoneNone": {
+    "description": "Tap zone without any action"
+  },
+  "tapZoneSettingsHint": "Customize what each of the nine tap areas does",
+  "@tapZoneSettingsHint": {
+    "description": "Tap zone settings entry hint"
+  },
+  "tapZoneChooseAction": "Choose an action",
+  "@tapZoneChooseAction": {
+    "description": "Tap zone action picker title"
+  },
+  "tapZoneMenuRequiredHint": "Tap an area to change its action. At least one area must stay Menu; if every Menu is removed, the center area becomes Menu again.",
+  "@tapZoneMenuRequiredHint": {
+    "description": "Tap zone editor menu requirement hint"
+  },
+  "tapZoneReset": "Restore Defaults",
+  "@tapZoneReset": {
+    "description": "Tap zone reset button"
+  },
   "highlightColor": "Highlight Color",
   "@highlightColor": {
     "description": "Highlight color label"
@@ -1164,9 +1192,65 @@
   "@readerFileMissing": {
     "description": "Toast shown when opening a book whose file is missing"
   },
-  "readerUnsupportedFormat": "The native reader currently only supports EPUB and TXT.",
+  "readerUnsupportedFormat": "This format can't be read yet.",
   "@readerUnsupportedFormat": {
     "description": "Toast shown when opening an unsupported book format"
+  },
+  "readerKindleDrmProtected": "This Kindle book is DRM-protected and can't be read here. Only DRM-free books are supported.",
+  "@readerKindleDrmProtected": {
+    "description": "Error shown when opening a DRM-encrypted MOBI/AZW/AZW3 book"
+  },
+  "readerComicNoPages": "No image pages were found in this comic archive.",
+  "@readerComicNoPages": {
+    "description": "Error shown when a CBZ comic contains no readable images"
+  },
+  "readerComicCbrUnsupported": "This CBR comic uses real RAR compression and isn't readable yet. Please convert it to CBZ.",
+  "@readerComicCbrUnsupported": {
+    "description": "Error shown when a comic archive turns out to be a real RAR container, which has no pure-Dart extractor"
+  },
+  "readerComicArchiveUnsupported": "This comic's archive format isn't readable yet. Please convert it to CBZ.",
+  "@readerComicArchiveUnsupported": {
+    "description": "Error shown when a comic archive uses an unsupported container such as 7z or an unrecognized file header"
+  },
+  "imageReaderSettings": "Reading settings",
+  "@imageReaderSettings": {
+    "description": "Title of the comic/PDF reader settings sheet and its bottom-bar entry"
+  },
+  "imageReaderDirectionTitle": "Reading direction",
+  "@imageReaderDirectionTitle": {
+    "description": "Section label for the comic/PDF page-turn direction choice"
+  },
+  "imageReaderDirectionLtr": "Left to right",
+  "@imageReaderDirectionLtr": {
+    "description": "Standard left-to-right page-turn direction option"
+  },
+  "imageReaderDirectionRtl": "Right to left (manga)",
+  "@imageReaderDirectionRtl": {
+    "description": "Right-to-left page-turn direction option used by Japanese manga"
+  },
+  "imageReaderJumpToPage": "Go to page",
+  "@imageReaderJumpToPage": {
+    "description": "Label and dialog title for jumping to a page number in the comic/PDF reader"
+  },
+  "imageReaderBackgroundTitle": "Page background",
+  "@imageReaderBackgroundTitle": {
+    "description": "Section label for the comic/PDF letterbox background color"
+  },
+  "imageReaderBackgroundBlack": "Black",
+  "@imageReaderBackgroundBlack": {
+    "description": "Black background option for the comic/PDF reader"
+  },
+  "imageReaderBackgroundGray": "Gray",
+  "@imageReaderBackgroundGray": {
+    "description": "Gray background option for the comic/PDF reader"
+  },
+  "imageReaderBackgroundWhite": "White",
+  "@imageReaderBackgroundWhite": {
+    "description": "White background option for the comic/PDF reader"
+  },
+  "readerPdfLinuxUnsupported": "PDF reading isn't available on Linux yet.",
+  "@readerPdfLinuxUnsupported": {
+    "description": "Toast shown when opening a PDF on Linux, where the PDF engine has no implementation"
   },
   "bootstrapDataServiceFailed": "Failed to initialize the data system",
   "@bootstrapDataServiceFailed": {
@@ -1534,6 +1618,46 @@
   "@libraryRenameBookFailed": {
     "description": "Toast shown when renaming a book fails"
   },
+  "libraryCustomCover": "Custom cover",
+  "@libraryCustomCover": {
+    "description": "Long-press option title for replacing a book cover with a user-picked image"
+  },
+  "libraryCustomCoverHint": "Pick an image to use as this book's cover",
+  "@libraryCustomCoverHint": {
+    "description": "Subtitle of the custom cover option"
+  },
+  "libraryCustomCoverSuccess": "Cover updated",
+  "@libraryCustomCoverSuccess": {
+    "description": "Toast shown after successfully applying a custom cover"
+  },
+  "libraryCoverUnsupportedFormat": "Unsupported image format",
+  "@libraryCoverUnsupportedFormat": {
+    "description": "Toast shown when the picked cover image has an unsupported format"
+  },
+  "libraryCoverFileTooLarge": "The image exceeds the 20 MB size limit",
+  "@libraryCoverFileTooLarge": {
+    "description": "Toast shown when the picked cover image is too large"
+  },
+  "libraryCoverReadFailed": "Could not read the selected image",
+  "@libraryCoverReadFailed": {
+    "description": "Toast shown when the picked cover image cannot be read"
+  },
+  "libraryCoverSaveFailed": "Could not save the cover",
+  "@libraryCoverSaveFailed": {
+    "description": "Toast shown when saving the custom cover fails"
+  },
+  "libraryResetCover": "Restore default cover",
+  "@libraryResetCover": {
+    "description": "Long-press option title for removing a custom cover"
+  },
+  "libraryResetCoverHint": "Remove the custom cover and restore the original",
+  "@libraryResetCoverHint": {
+    "description": "Subtitle of the restore default cover option"
+  },
+  "libraryResetCoverSuccess": "Default cover restored",
+  "@libraryResetCoverSuccess": {
+    "description": "Toast shown after restoring the default cover"
+  },
   "libraryExportBook": "Export book",
   "libraryExportOriginalHint": "Copy the original file to another location",
   "libraryExportDownloadedTxtHint": "Export the downloaded book as a generated TXT file",
@@ -1689,6 +1813,14 @@
   "readerModeHorizontalSlideHint": "Pages follow your finger horizontally and snap into place",
   "@readerModeHorizontalSlideHint": {
     "description": "Subtitle explaining the horizontal slide page mode"
+  },
+  "readerModeCoverSlide": "Cover",
+  "@readerModeCoverSlide": {
+    "description": "Page mode option where the current page slides away over the next one like a stacked sheet"
+  },
+  "readerModeCoverSlideHint": "The current page slides off to the left, uncovering the next page beneath it",
+  "@readerModeCoverSlideHint": {
+    "description": "Subtitle explaining the cover page turn mode"
   },
   "readerModePageCurl": "Page Curl",
   "@readerModePageCurl": {
@@ -1873,6 +2005,14 @@
   "@settingsVolumeKeyTurnSubtitle": {
     "description": "Switch subtitle for volume-key page turning"
   },
+  "settingsAutoResumeReadingTitle": "Resume reading on launch",
+  "@settingsAutoResumeReadingTitle": {
+    "description": "Switch title for automatically reopening the last-read book on app launch"
+  },
+  "settingsAutoResumeReadingSubtitle": "If you leave the app while reading, the next launch returns to where you left off",
+  "@settingsAutoResumeReadingSubtitle": {
+    "description": "Switch subtitle for automatically reopening the last-read book on app launch"
+  },
   "settingsShowStatusBarTitle": "Show system status bar while reading",
   "@settingsShowStatusBarTitle": {
     "description": "Switch title for showing system status bar in reader"
@@ -1904,6 +2044,22 @@
   "settingsSystemSettingsTitle": "System Settings",
   "@settingsSystemSettingsTitle": {
     "description": "Section title for system settings"
+  },
+  "settingsSectionAppearanceFonts": "Appearance & Fonts",
+  "@settingsSectionAppearanceFonts": {
+    "description": "Section title grouping appearance and font settings"
+  },
+  "settingsSectionDataServices": "Data & Services",
+  "@settingsSectionDataServices": {
+    "description": "Section title grouping book sources, sync, cache and AI"
+  },
+  "settingsSectionGeneral": "General",
+  "@settingsSectionGeneral": {
+    "description": "Section title grouping language and system toggles"
+  },
+  "settingsSectionAboutSupport": "About & Support",
+  "@settingsSectionAboutSupport": {
+    "description": "Section title grouping donation, about info and contributors"
   },
   "settingsKeepScreenOnTitle": "Keep screen on",
   "@settingsKeepScreenOnTitle": {
@@ -2071,7 +2227,7 @@
   "@settingsAlipayDonationQrCodeLabel": {
     "description": "Accessibility label for the Alipay donation QR code image"
   },
-  "settingsAiSwipeHint": "Swipe through models and tap a card to switch.",
+  "settingsAiSwipeHint": "Swipe through models, tap to switch, long-press to edit or delete.",
   "@settingsAiSwipeHint": {
     "description": "Hint above the horizontal AI model card list"
   },
@@ -2860,6 +3016,26 @@
   "@readerThemeDescription": {
     "description": "Explains that reading themes are independent from the app theme"
   },
+  "readerSettingsTabTheme": "Theme",
+  "@readerSettingsTabTheme": {
+    "description": "Reader settings sheet tab with the theme picker and top bar style"
+  },
+  "readerSettingsTabText": "Text",
+  "@readerSettingsTabText": {
+    "description": "Reader settings sheet tab with font size, line height and alignment"
+  },
+  "readerSettingsTabLayout": "Layout",
+  "@readerSettingsTabLayout": {
+    "description": "Reader settings sheet tab with the page margins"
+  },
+  "readerSettingsTabPaging": "Paging",
+  "@readerSettingsTabPaging": {
+    "description": "Reader settings sheet tab with page-turning behavior"
+  },
+  "readerSettingsAdvancedTypography": "Advanced typography",
+  "@readerSettingsAdvancedTypography": {
+    "description": "Collapsed section holding letter spacing, first-line indent and paragraph spacing"
+  },
   "readerThemeDay": "Day",
   "@readerThemeDay": {
     "description": "Day reading theme name"
@@ -3075,6 +3251,176 @@
     "description": "AIServiceException wrapping an unexpected error during model fetching",
     "placeholders": {
         "error": {"type": "String"}
+    }
+  },
+  "settingsAiPreprocessTitle": "AI book preprocessing",
+  "@settingsAiPreprocessTitle": {
+    "description": "Switch title: let AI read imported books and build a summary knowledge base"
+  },
+  "settingsAiPreprocessSubtitle": "After importing a book, let AI read it and build a local summary knowledge base automatically",
+  "@settingsAiPreprocessSubtitle": {
+    "description": "Subtitle of the AI preprocessing switch"
+  },
+  "settingsAiPreprocessWarning": "Preprocessing sends the whole book to the AI model in chunks. It consumes a large number of tokens and takes a while. Enable anyway?",
+  "@settingsAiPreprocessWarning": {
+    "description": "Confirmation shown before enabling AI book preprocessing"
+  },
+  "settingsAiPreprocessNeedModel": "Configure a working AI model with an API key first",
+  "@settingsAiPreprocessNeedModel": {
+    "description": "Error shown when enabling preprocessing without a configured AI model"
+  },
+  "libraryAiPreprocess": "AI preprocessing",
+  "@libraryAiPreprocess": {
+    "description": "Long-press menu action that runs AI preprocessing for one book"
+  },
+  "libraryAiPreprocessConfirm": "Let AI read \"{title}\" and build a summary knowledge base? This consumes a large number of tokens.",
+  "@libraryAiPreprocessConfirm": {
+    "description": "Confirmation before manually preprocessing one book",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryAiPreprocessProgress": "AI is reading this book… (step {done}/{total})",
+  "@libraryAiPreprocessProgress": {
+    "description": "Progress text while AI preprocessing runs",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryAiPreprocessDone": "AI knowledge base generated",
+  "@libraryAiPreprocessDone": {
+    "description": "Toast when AI preprocessing finishes"
+  },
+  "libraryAiPreprocessFailed": "AI preprocessing failed: {error}",
+  "@libraryAiPreprocessFailed": {
+    "description": "Toast when AI preprocessing fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryAiPreprocessUnsupported": "This book format doesn't support AI preprocessing yet",
+  "@libraryAiPreprocessUnsupported": {
+    "description": "Toast when the book format cannot be preprocessed"
+  },
+  "libraryAiPreprocessQueued": "Added to the AI preprocessing queue. Check progress in Download Tasks.",
+  "@libraryAiPreprocessQueued": {
+    "description": "Toast after a book is queued for background AI preprocessing"
+  },
+  "downloadTasksTabDownloads": "Downloads",
+  "@downloadTasksTabDownloads": {
+    "description": "First tab of the background tasks page: online book downloads"
+  },
+  "aiPreprocessTaskRunning": "AI is reading…",
+  "@aiPreprocessTaskRunning": {
+    "description": "Status of a running AI preprocessing task"
+  },
+  "aiPreprocessTasksEmpty": "No AI preprocessing tasks",
+  "@aiPreprocessTasksEmpty": {
+    "description": "Empty state of the AI preprocessing task list"
+  },
+  "aiPreprocessClearFinished": "Clear finished",
+  "@aiPreprocessClearFinished": {
+    "description": "Button that removes finished AI preprocessing tasks from the list"
+  },
+  "aiChatNewChat": "New chat",
+  "@aiChatNewChat": {
+    "description": "Button that starts a new AI chat from the AI page"
+  },
+  "aiChatSelectBook": "Link a book",
+  "@aiChatSelectBook": {
+    "description": "Chip label prompting to pick a book for AI chat context"
+  },
+  "aiChatNoBook": "No linked book",
+  "@aiChatNoBook": {
+    "description": "Option that clears the linked book in the AI chat book picker"
+  },
+  "navAi": "AI",
+  "@navAi": {
+    "description": "Label of the AI destination in home navigation"
+  },
+  "aiHistoryTitle": "AI Chats",
+  "@aiHistoryTitle": {
+    "description": "Title of the AI chat history page"
+  },
+  "aiHistoryEmpty": "No AI chats yet.\nTap Ask AI while reading to start your first conversation.",
+  "@aiHistoryEmpty": {
+    "description": "Empty state of the AI chat history page"
+  },
+  "aiHistoryMessageCount": "{count} messages",
+  "@aiHistoryMessageCount": {
+    "description": "Message count shown in an AI chat history list item",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiHistoryClearAll": "Clear all",
+  "@aiHistoryClearAll": {
+    "description": "Button that deletes all AI chat history"
+  },
+  "aiHistoryClearAllConfirm": "Delete all AI chat history? This cannot be undone.",
+  "@aiHistoryClearAllConfirm": {
+    "description": "Confirmation message before clearing all AI chat history"
+  },
+  "aiHistoryDeleteConfirm": "Delete this chat?",
+  "@aiHistoryDeleteConfirm": {
+    "description": "Confirmation message before deleting one AI chat session"
+  },
+  "floatingNavigationVisibilityHint": "Turn a switch off to hide that page; Settings can't be hidden.",
+  "@floatingNavigationVisibilityHint": {
+    "description": "Hint explaining the visibility switches in floating navigation settings"
+  },
+  "readerAskAi": "Ask AI",
+  "@readerAskAi": {
+    "description": "Label for the Ask AI action in the reader control bar and text-selection toolbar"
+  },
+  "readerAiInputHint": "Ask about this book…",
+  "@readerAiInputHint": {
+    "description": "Hint text in the Ask AI panel input field"
+  },
+  "readerAiSendButton": "Send",
+  "@readerAiSendButton": {
+    "description": "Tooltip of the send button in the Ask AI panel"
+  },
+  "readerAiThinking": "Thinking…",
+  "@readerAiThinking": {
+    "description": "Progress label shown while the AI request is in flight"
+  },
+  "readerAiNotConfiguredHint": "No AI model is configured yet. Go to Settings → AI Reading Assistant to add a model and API key.",
+  "@readerAiNotConfiguredHint": {
+    "description": "Notice shown in the Ask AI panel when no provider has an API key configured"
+  },
+  "readerAiEmptyHint": "Ask the AI about the current page or anything in this book.",
+  "@readerAiEmptyHint": {
+    "description": "Placeholder shown in the Ask AI panel before any message is sent"
+  },
+  "readerAiSelectionQuestionLabel": "Explain this selection",
+  "@readerAiSelectionQuestionLabel": {
+    "description": "Display label of the auto-generated question when the panel opens from the selection toolbar"
+  },
+  "readerAiSelectionPrompt": "Explain the selected passage below and give 3 key points.\n\nSelected text:\n{selection}\n\nContext before:\n{before}\n\nContext after:\n{after}",
+  "@readerAiSelectionPrompt": {
+    "description": "Prompt sent to the AI when asking about a text selection",
+    "placeholders": {
+      "selection": {
+        "type": "String"
+      },
+      "before": {
+        "type": "String"
+      },
+      "after": {
+        "type": "String"
+      }
     }
   },
   "readerAiEnterQuestionFirst": "Please enter a question before sending",

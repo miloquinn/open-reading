@@ -21,7 +21,11 @@ void main() {
         MaterialApp(
           home: ReaderSettingsSheet(
             title: 'Reading settings',
-            themeTitle: 'Theme',
+            tabThemeLabel: 'Theme tab',
+            tabTextLabel: 'Text tab',
+            tabLayoutLabel: 'Layout tab',
+            tabPagingLabel: 'Paging tab',
+            advancedTypographyTitle: 'Advanced typography',
             themeDescription: 'Choose a theme',
             pageModeTitle: 'Page mode',
             pageModeSummary: 'Page curl',
@@ -31,6 +35,8 @@ void main() {
             pullBookmarkHint: 'Pull down from the top',
             tapPageAnimationTitle: 'Tap animation',
             tapPageAnimationHint: 'Animate side taps',
+            tapZonesTitle: 'Tap zones',
+            tapZonesHint: 'Customize the nine tap areas',
             showTabletTwoPageToggle: true,
             tabletTwoPageTitle: 'Tablet two-page layout',
             tabletTwoPageHint: 'Show two pages in landscape',
@@ -63,6 +69,7 @@ void main() {
             onCustomThemeTap: () {},
             onPageModeTap: () {},
             onTopBarStyleTap: () {},
+            onTapZonesTap: () {},
             onFontSizeChanged: (_) {},
             onLineHeightChanged: (_) {},
             onLetterSpacingChanged: (value) => changedLetterSpacing = value,
@@ -78,6 +85,19 @@ void main() {
           ),
         ),
       );
+
+      await tester.tap(find.text('Text tab'));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('reader-letter-spacing-slider')),
+        findsNothing,
+      );
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('reader-advanced-typography-tile')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Advanced typography'));
+      await tester.pumpAndSettle();
 
       final indentFinder = find.descendant(
         of: find.byKey(const ValueKey('reader-first-line-indent-slider')),
@@ -134,11 +154,16 @@ void main() {
       expect(changedLetterSpacing, 0.8);
       expect(changedAlignment, ReaderTextAlignment.justified);
 
+      await tester.tap(find.text('Theme tab'));
+      await tester.pumpAndSettle();
       await tester.ensureVisible(find.byType(ReaderThemeStrip));
       await tester.pumpAndSettle();
       await tester.drag(find.byType(ReaderThemeStrip), const Offset(-900, 0));
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('reader-custom-theme-card')), findsOne);
+
+      await tester.tap(find.text('Paging tab'));
+      await tester.pumpAndSettle();
       final pullSwitch = tester.widget<SwitchListTile>(
         find.byKey(const ValueKey('reader-pull-bookmark-switch')),
       );

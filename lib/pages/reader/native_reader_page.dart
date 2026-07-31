@@ -31,6 +31,7 @@ import 'package:xxread/core/reader/reader_aloud_controller.dart';
 import 'package:xxread/core/reader/reader_safe_area.dart';
 import 'package:xxread/core/reader/reader_settings.dart';
 import 'package:xxread/core/reader/reader_system_ui.dart';
+import 'package:xxread/core/reader/reader_tap_zones.dart';
 import 'package:xxread/core/reader/reader_text_characters.dart';
 import 'package:xxread/core/reader/reader_text_pagination.dart';
 import 'package:xxread/core/reader/reader_theme_order.dart';
@@ -39,13 +40,16 @@ import 'package:xxread/core/reader/reader_volume_key_controller.dart';
 import 'package:xxread/core/reader/txt_chapter_parser.dart';
 import 'package:xxread/models/book.dart';
 import 'package:xxread/models/book_note.dart';
+import 'package:xxread/reader_core/ai/ai_service.dart';
 import 'package:xxread/models/bookmark.dart';
 import 'package:xxread/services/books/book_dao.dart';
 import 'package:xxread/services/books/book_note_dao.dart';
 import 'package:xxread/services/books/bookmark_dao.dart';
 import 'package:xxread/services/books/enhanced_txt_import_service.dart';
+import 'package:xxread/services/books/kindle_book_parser.dart';
 import 'package:xxread/services/books/web_book_file_store.dart';
 import 'package:xxread/services/core/app_settings_service.dart';
+import 'package:xxread/services/reading/reading_resume_service.dart';
 import 'package:xxread/services/reading/reading_stats_dao.dart';
 import 'package:xxread/services/tts_service.dart';
 import 'package:xxread/services/reader_aloud_service.dart';
@@ -55,9 +59,11 @@ import 'package:xxread/utils/glass_config.dart';
 import 'package:xxread/utils/localization_extension.dart';
 import 'package:xxread/utils/reader_themes.dart';
 import 'package:xxread/utils/system_ui_helper.dart';
+import 'package:xxread/widgets/reader_ai_panel.dart';
 import 'package:xxread/widgets/reader_annotated_text_page.dart';
 import 'package:xxread/widgets/reader_aloud_panel.dart';
 import 'package:xxread/widgets/reader_control_chrome.dart';
+import 'package:xxread/widgets/reader_cover_page_turn.dart';
 import 'package:xxread/widgets/reader_navigation_sheet.dart';
 import 'package:xxread/widgets/reader_opening_loader.dart';
 import 'package:xxread/widgets/reader_paper_page_leaf.dart';
@@ -65,6 +71,7 @@ import 'package:xxread/widgets/reader_pull_bookmark.dart';
 import 'package:xxread/widgets/reader_settings_controls.dart';
 import 'package:xxread/widgets/reader_shader_page_curl.dart';
 import 'package:xxread/widgets/reader_tap_observer.dart';
+import 'package:xxread/widgets/reader_tap_zone_editor.dart';
 import 'package:xxread/widgets/reader_theme_background.dart';
 import 'package:xxread/widgets/reader_top_information_bar.dart';
 import 'package:xxread/widgets/reader_vertical_paging_surface.dart';
@@ -169,6 +176,8 @@ class _NativeReaderPageState extends State<NativeReaderPage>
       ReaderPageCurlController();
   final ReaderPageCurlCoordinator _spreadPageCurlCoordinator =
       ReaderPageCurlCoordinator(gutterWidth: _spreadGutter);
+  final ReaderCoverPageTurnController _coverPageTurnController =
+      ReaderCoverPageTurnController();
   final ValueNotifier<double> _verticalScrollProgress = ValueNotifier(0);
   final ReaderLeafStatusController _leafStatusController =
       ReaderLeafStatusController();
@@ -206,6 +215,8 @@ class _NativeReaderPageState extends State<NativeReaderPage>
   String _readerThemeId = ReaderThemes.day.id;
   bool _pullBookmarkEnabled = false;
   bool _tapPageAnimationEnabled = true;
+  ReaderTapZones _tapZones = ReaderTapZones.defaults;
+  bool _tapZoneEditorVisible = false;
   bool _tabletTwoPageEnabled = ReaderSettings.defaultTabletTwoPageEnabled;
   bool _readerSettingsLoaded = false;
   bool _readerFontReady = true;
@@ -263,6 +274,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
       ..addListener(_onLeafStatusChanged)
       ..start();
     unawaited(ReaderKeepScreenOnController.activate(this));
+    unawaited(ReadingResumeService.markReading(widget.book.id));
     _startReadingSession();
     _chapterIndex = widget.book.currentPage;
     _horizontalFirstChapter = (_chapterIndex - 1).clamp(0, _chapterIndex);
@@ -691,6 +703,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     unawaited(ReaderVolumeKeyController.deactivate(this));
     unawaited(ReaderKeepScreenOnController.deactivate(this));
     unawaited(ReaderSystemUiController.restore());
+    unawaited(ReadingResumeService.markClosed(widget.book.id));
     super.dispose();
   }
 
@@ -717,12 +730,14 @@ class _NativeReaderPageState extends State<NativeReaderPage>
         _customThemeStore.loadAll(),
         _themeOrderStore.load(),
         ReaderSystemUiController.loadPreference(),
+        _readerSettingsStore.loadTapZones(),
       ]);
       final settings = results[0] as ReaderSettings;
       final scrollByChapter = results[1] as bool;
       final customThemes = results[2] as List<ReaderCustomTheme>;
       final themeOrder = results[3] as List<String>;
       final topBarStyle = results[4] as ReaderTopBarStyle;
+      final tapZones = results[5] as ReaderTapZones;
       if (!mounted) return;
       ReaderThemes.setCustomThemes(customThemes);
       ReaderThemes.setThemeOrder(themeOrder);
@@ -741,6 +756,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
         _readerThemeId = ReaderThemes.byId(settings.themeId).id;
         _pullBookmarkEnabled = settings.pullBookmarkEnabled;
         _tapPageAnimationEnabled = settings.tapPageAnimationEnabled;
+        _tapZones = tapZones;
         _tabletTwoPageEnabled = settings.tabletTwoPageEnabled;
         _topBarStyle = topBarStyle;
         _readerSettingsLoaded = true;
@@ -813,9 +829,11 @@ class _NativeReaderPageState extends State<NativeReaderPage>
   TextStyle get _readerTextStyle => TextStyle(
     inherit: false,
     fontFamily: _readerFont.family,
-    fontFamilyFallback: _readerFont.fallbackFamilies.isEmpty
-        ? null
-        : _readerFont.fallbackFamilies,
+    fontFamilyFallback: readerFontFamilyFallbacks(
+      fontFamily: _readerFont.family,
+      configuredFallbacks: _readerFont.fallbackFamilies,
+      locale: Localizations.maybeLocaleOf(context),
+    ),
     fontSize: _fontSize,
     height: _lineHeight,
     letterSpacing: _letterSpacing,
@@ -879,6 +897,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
       baseSourceSpanBuilder: (start, end) =>
           _styledSpanForRange(chapter, start, end, _readerTextStyle),
       onSaveTextAnnotation: _saveTextAnnotation,
+      onAskAiSelection: _askAiAboutSelection,
       onInteractionChanged: (active) {
         if (!mounted || _annotationInteractionActive == active) return;
         setState(() => _annotationInteractionActive = active);
@@ -1223,24 +1242,17 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     final bytes = webBytes ?? await File(widget.book.filePath).readAsBytes();
     switch (format) {
       case 'epub':
-        final parsed = await compute(_parseEpubChapters, bytes);
-        return parsed
-            .map(
-              (chapter) => _NativeChapter(
-                id: chapter['id'] as String? ?? '',
-                title: chapter['title'] as String? ?? '',
-                depth: chapter['depth'] as int? ?? 0,
-                plainText: chapter['plainText'] as String? ?? '',
-                blocks: (chapter['blocks'] as List<dynamic>)
-                    .map(
-                      (block) => _NativeBlock.fromMap(
-                        Map<String, String>.from(block as Map),
-                      ),
-                    )
-                    .toList(growable: false),
-              ),
-            )
-            .toList(growable: false);
+        return _richChaptersFromMaps(await compute(_parseEpubChapters, bytes));
+      case 'mobi':
+      case 'azw':
+      case 'azw3':
+        try {
+          return _richChaptersFromMaps(
+            await compute(_parseKindleChapters, bytes),
+          );
+        } on KindleDrmException {
+          throw _ReaderBookLoadException(l10n.readerKindleDrmProtected);
+        }
       case 'html':
       case 'htm':
       case 'xhtml':
@@ -1364,6 +1376,10 @@ class _NativeReaderPageState extends State<NativeReaderPage>
       unawaited(controller.turnForward());
       return;
     }
+    if (_pageMode == NativePageMode.coverSlide && animate) {
+      unawaited(_coverPageTurnController.turnForward());
+      return;
+    }
     final pageController = _pageController;
     if (_pageMode == NativePageMode.horizontalSlide &&
         pageController != null &&
@@ -1401,6 +1417,10 @@ class _NativeReaderPageState extends State<NativeReaderPage>
       unawaited(controller.turnBackward());
       return;
     }
+    if (_pageMode == NativePageMode.coverSlide && animate) {
+      unawaited(_coverPageTurnController.turnBackward());
+      return;
+    }
     final pageController = _pageController;
     if (_pageMode == NativePageMode.horizontalSlide &&
         pageController != null &&
@@ -1435,6 +1455,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     if (_annotationInteractionActive) return;
     final velocity = details.primaryVelocity ?? 0;
     if (_pageMode == NativePageMode.horizontalSlide ||
+        _pageMode == NativePageMode.coverSlide ||
         _pageMode == NativePageMode.pageCurl) {
       return;
     }
@@ -1460,42 +1481,81 @@ class _NativeReaderPageState extends State<NativeReaderPage>
 
   void _handleTap(
     Offset localPosition,
-    double width,
+    Size viewportSize,
     List<_ReaderPageData> pages,
     int chapterCount,
     bool usesTwoPageLayout,
   ) {
     if (_annotationInteractionActive) return;
-    final fraction = localPosition.dx / width;
-    if (fraction < 0.28) {
-      if (_pageMode == NativePageMode.verticalScroll) return;
-      _previousPage(
-        pages,
-        chapterCount,
-        usesTwoPageLayout: usesTwoPageLayout,
-        animate: _tapPageAnimationEnabled,
-      );
-    } else if (fraction > 0.72) {
-      if (_pageMode == NativePageMode.verticalScroll) return;
-      _nextPage(
-        pages,
-        chapterCount,
-        usesTwoPageLayout: usesTwoPageLayout,
-        animate: _tapPageAnimationEnabled,
-      );
-    } else {
-      _toggleControls();
+    switch (_tapZones.actionAt(localPosition, viewportSize)) {
+      case ReaderTapZoneAction.menu:
+        _toggleControls();
+      case ReaderTapZoneAction.none:
+        break;
+      case ReaderTapZoneAction.previousPage:
+        // 上下翻页由滚动手势负责，点击翻页保持关闭。
+        if (_pageMode == NativePageMode.verticalScroll) return;
+        _previousPage(
+          pages,
+          chapterCount,
+          usesTwoPageLayout: usesTwoPageLayout,
+          animate: _tapPageAnimationEnabled,
+        );
+      case ReaderTapZoneAction.nextPage:
+        if (_pageMode == NativePageMode.verticalScroll) return;
+        _nextPage(
+          pages,
+          chapterCount,
+          usesTwoPageLayout: usesTwoPageLayout,
+          animate: _tapPageAnimationEnabled,
+        );
+      case ReaderTapZoneAction.previousChapter:
+        if (_chapterIndex > 0) {
+          unawaited(
+            _setChapter(
+              _chapterIndex - 1,
+              chapterCount,
+              recenterContinuousScroll: true,
+            ),
+          );
+        }
+      case ReaderTapZoneAction.nextChapter:
+        if (_chapterIndex < chapterCount - 1) {
+          unawaited(
+            _setChapter(
+              _chapterIndex + 1,
+              chapterCount,
+              recenterContinuousScroll: true,
+            ),
+          );
+        }
     }
   }
 
   void _handleReaderTap(Offset localPosition) {
     _handleTap(
       localPosition,
-      _readerViewportSize.width,
+      _readerViewportSize,
       _visiblePages,
       _visibleChapterCount,
       _visibleUsesTwoPageLayout,
     );
+  }
+
+  void _setTapZones(ReaderTapZones zones) {
+    if (zones == _tapZones) return;
+    setState(() => _tapZones = zones);
+    unawaited(_readerSettingsStore.saveTapZones(zones));
+  }
+
+  Future<void> _showTapZoneSettings() async {
+    Navigator.of(context).pop();
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
+    setState(() {
+      _controlsVisible = false;
+      _tapZoneEditorVisible = true;
+    });
   }
 
   void _toggleControls() {
@@ -1673,6 +1733,45 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     );
   }
 
+  Future<void> _showAskAiPanel(
+    _NativeChapter chapter,
+    _ReaderPageData page,
+  ) async {
+    final pageText = page.text.trim().isEmpty ? chapter.plainText : page.text;
+    await showReaderAiPanelSheet(
+      context: context,
+      palette: _readerTheme,
+      themeData: _readerThemeData,
+      meta: AIRequestMeta(
+        bookId: widget.book.id?.toString() ?? '',
+        chapterId: chapter.id,
+        pageIndex: _pageIndex,
+      ),
+      pageText: pageText,
+      bookTitle: widget.book.title,
+    );
+  }
+
+  Future<void> _askAiAboutSelection(ReaderSelectionSnapshot selection) async {
+    await showReaderAiPanelSheet(
+      context: context,
+      palette: _readerTheme,
+      themeData: _readerThemeData,
+      meta: AIRequestMeta(
+        bookId: widget.book.id?.toString() ?? '',
+        chapterId: selection.chapterId,
+        pageIndex: selection.pageIndex,
+      ),
+      pageText: readerAiPageContextFromSelection(selection),
+      bookTitle: widget.book.title,
+      selection: ReaderAiSelectionContext(
+        selectedText: selection.selectedText,
+        contextBefore: selection.prefix,
+        contextAfter: selection.suffix,
+      ),
+    );
+  }
+
   Future<void> _showReadingSettings() async {
     final selectedMode = await showModalBottomSheet<NativePageMode>(
       context: context,
@@ -1680,7 +1779,11 @@ class _NativeReaderPageState extends State<NativeReaderPage>
       isScrollControlled: true,
       builder: (sheetContext) => ReaderSettingsSheet(
         title: context.l10n.readingSettings,
-        themeTitle: context.l10n.readerThemeTitle,
+        tabThemeLabel: context.l10n.readerSettingsTabTheme,
+        tabTextLabel: context.l10n.readerSettingsTabText,
+        tabLayoutLabel: context.l10n.readerSettingsTabLayout,
+        tabPagingLabel: context.l10n.readerSettingsTabPaging,
+        advancedTypographyTitle: context.l10n.readerSettingsAdvancedTypography,
         themeDescription: context.l10n.readerThemeDescription,
         pageModeTitle: context.l10n.pageTurningMode,
         pageModeSummary: _pageModeSummary(context),
@@ -1690,6 +1793,8 @@ class _NativeReaderPageState extends State<NativeReaderPage>
         pullBookmarkHint: context.l10n.readerPullBookmarkHint,
         tapPageAnimationTitle: context.l10n.readerTapAnimationTitle,
         tapPageAnimationHint: context.l10n.readerTapAnimationHint,
+        tapZonesTitle: context.l10n.tapZoneSettings,
+        tapZonesHint: context.l10n.tapZoneSettingsHint,
         showTabletTwoPageToggle: ReaderLayoutBreakpoints.isTablet(
           MediaQuery.sizeOf(context),
         ),
@@ -1724,6 +1829,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
         onCustomThemeTap: _showCustomThemeEditor,
         onPageModeTap: _showPageModeSettings,
         onTopBarStyleTap: _showTopBarStyleSettings,
+        onTapZonesTap: () => unawaited(_showTapZoneSettings()),
         onFontSizeChanged: (value) => unawaited(_updateLayout(fontSize: value)),
         onLineHeightChanged: (value) =>
             unawaited(_updateLayout(lineHeight: value)),
@@ -1817,6 +1923,8 @@ class _NativeReaderPageState extends State<NativeReaderPage>
         return context.l10n.readerModeHorizontalPageHint;
       case NativePageMode.horizontalSlide:
         return context.l10n.readerModeHorizontalSlideHint;
+      case NativePageMode.coverSlide:
+        return context.l10n.readerModeCoverSlideHint;
       case NativePageMode.pageCurl:
         return context.l10n.readerModePageCurlHint;
     }
@@ -1880,6 +1988,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     NativePageMode.verticalScroll => context.l10n.pageTurningScroll,
     NativePageMode.instantPage => context.l10n.readerModeHorizontalPage,
     NativePageMode.horizontalSlide => context.l10n.pageTurningSlide,
+    NativePageMode.coverSlide => context.l10n.readerModeCoverSlide,
     NativePageMode.pageCurl => context.l10n.readerModePageCurl,
   };
 
@@ -1888,6 +1997,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     NativePageMode.instantPage => context.l10n.readerModeHorizontalPageHint,
     NativePageMode.horizontalSlide =>
       context.l10n.readerModeHorizontalSlideHint,
+    NativePageMode.coverSlide => context.l10n.readerModeCoverSlideHint,
     NativePageMode.pageCurl => context.l10n.readerModePageCurlHint,
   };
 
@@ -2509,6 +2619,12 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     }
     _horizontalBackwardExpansionPending = false;
     _horizontalBackwardExpansionWarmPending = false;
+    if (_pageMode != NativePageMode.horizontalSlide) {
+      // Cover mode locates the current page by identity on every build, so
+      // the window can grow without preserving a scroll position.
+      setState(() => _horizontalFirstChapter = nextFirstChapter);
+      return;
+    }
     final addedPages = _pagesFor(
       chapter,
       nextFirstChapter,
@@ -2903,6 +3019,80 @@ class _NativeReaderPageState extends State<NativeReaderPage>
         ),
       );
     }
+    if (_pageMode == NativePageMode.coverSlide) {
+      final currentIndex = bookPages.indexWhere(
+        (page) =>
+            page.chapterIndex == _chapterIndex && page.pageIndex == _pageIndex,
+      );
+      if (currentIndex < 0) {
+        return _buildPageLeaf(
+          chapter,
+          pages[_pageIndex],
+          chapterIndex: _chapterIndex,
+          pageIndex: _pageIndex,
+          pageCount: pages.length,
+          layoutFingerprint: layoutFingerprint,
+        );
+      }
+      final paginationSize = _paginationSize(viewport, usesTwoPageLayout);
+      final textDirection = Directionality.of(context);
+      void commitTurn(int targetIndex) {
+        _onBookPageChanged(targetIndex, bookPages, chapters);
+        _commitHorizontalBackwardExpansion(
+          chapters,
+          paginationSize,
+          textDirection,
+          readerBodyTextScaler,
+          usesTwoPageLayout: usesTwoPageLayout,
+        );
+      }
+
+      final coverKey = ValueKey(
+        'native-cover:${widget.book.id ?? _bookCacheKey}',
+      );
+      if (usesTwoPageLayout) {
+        final spreadStart = _spreadStartForPage(currentIndex);
+        final hasForward = spreadStart + 2 < bookPages.length;
+        final hasBackward = spreadStart >= 2;
+        return ReaderCoverPageTurn(
+          key: coverKey,
+          controller: _coverPageTurnController,
+          currentPage: _buildCoverSpreadSnapshot(
+            chapters,
+            bookPages,
+            spreadStart,
+          ),
+          forwardPage: hasForward
+              ? _buildCoverSpreadSnapshot(chapters, bookPages, spreadStart + 2)
+              : null,
+          backwardPage: hasBackward
+              ? _buildCoverSpreadSnapshot(chapters, bookPages, spreadStart - 2)
+              : null,
+          onTurnForward: () => commitTurn(spreadStart + 2),
+          onTurnBackward: () => commitTurn(spreadStart - 2),
+          paperColor: _readerTheme.background,
+        );
+      }
+      final current = bookPages[currentIndex];
+      final forward = currentIndex + 1 < bookPages.length
+          ? bookPages[currentIndex + 1]
+          : null;
+      final backward = currentIndex > 0 ? bookPages[currentIndex - 1] : null;
+      return ReaderCoverPageTurn(
+        key: coverKey,
+        controller: _coverPageTurnController,
+        currentPage: _buildBookPageSnapshot(chapters, current),
+        forwardPage: forward != null
+            ? _buildBookPageSnapshot(chapters, forward)
+            : null,
+        backwardPage: backward != null
+            ? _buildBookPageSnapshot(chapters, backward)
+            : null,
+        onTurnForward: () => commitTurn(currentIndex + 1),
+        onTurnBackward: () => commitTurn(currentIndex - 1),
+        paperColor: _readerTheme.background,
+      );
+    }
     if (_pageMode == NativePageMode.pageCurl) {
       final currentIndex = bookPages.indexWhere(
         (page) =>
@@ -3009,6 +3199,43 @@ class _NativeReaderPageState extends State<NativeReaderPage>
       layoutFingerprint: page.layoutFingerprint,
       pageNumberPlacement: pageNumberPlacement,
       topInformationLayout: topInformationLayout,
+    );
+  }
+
+  ReaderPageSnapshot _buildCoverSpreadSnapshot(
+    List<_NativeChapter> chapters,
+    List<_BookPageRef> bookPages,
+    int spreadStart,
+  ) {
+    final left = bookPages[spreadStart];
+    final right = spreadStart + 1 < bookPages.length
+        ? bookPages[spreadStart + 1]
+        : null;
+    return ReaderPageSnapshot(
+      key: ReaderPageSnapshotKey(
+        pageIdentity:
+            'native:${widget.book.id ?? _bookCacheKey}:'
+            'cover-spread:${left.chapterIndex}:${left.pageIndex}',
+        layoutFingerprint: left.layoutFingerprint,
+        themeId: _readerTheme.cacheKey,
+      ),
+      contentRevision: _leafContentRevision,
+      child: _buildSpread(
+        left: _buildBookPageLeaf(
+          chapters,
+          left,
+          pageNumberPlacement: ReaderPageNumberPlacement.bottomLeft,
+          topInformationLayout: ReaderTopInformationLayout.spreadLeft,
+        ),
+        right: right == null
+            ? null
+            : _buildBookPageLeaf(
+                chapters,
+                right,
+                pageNumberPlacement: ReaderPageNumberPlacement.bottomRight,
+                topInformationLayout: ReaderTopInformationLayout.spreadRight,
+              ),
+      ),
     );
   }
 
@@ -3456,10 +3683,12 @@ class _NativeReaderPageState extends State<NativeReaderPage>
       key: const ValueKey('reader-system-ui-region'),
       value: systemUiOverlayStyle,
       child: PopScope(
-        canPop: true,
+        canPop: !_tapZoneEditorVisible,
         onPopInvokedWithResult: (didPop, _) {
           if (didPop) {
             BookOpenTransition.beginExit();
+          } else if (_tapZoneEditorVisible) {
+            setState(() => _tapZoneEditorVisible = false);
           } else {
             unawaited(_exitReader());
           }
@@ -3581,6 +3810,7 @@ class _NativeReaderPageState extends State<NativeReaderPage>
                         _visibleUsesTwoPageLayout = usesTwoPageLayout;
                         final bookPages =
                             _pageMode == NativePageMode.horizontalSlide ||
+                                _pageMode == NativePageMode.coverSlide ||
                                 _pageMode == NativePageMode.pageCurl
                             ? _bookPagesFor(
                                 chapters,
@@ -3747,6 +3977,8 @@ class _NativeReaderPageState extends State<NativeReaderPage>
                                         _pageMode ==
                                                 NativePageMode
                                                     .horizontalSlide ||
+                                            _pageMode ==
+                                                NativePageMode.coverSlide ||
                                             _pageMode == NativePageMode.pageCurl
                                         ? null
                                         : (details) => _handleHorizontalSwipe(
@@ -3828,6 +4060,10 @@ class _NativeReaderPageState extends State<NativeReaderPage>
                                     : null,
                                 readAloudTooltip: context.l10n.ttsReading,
                                 readAloudActive: _readerAloudActive,
+                                onAskAi: () => unawaited(
+                                  _showAskAiPanel(chapter, bookmarkPage),
+                                ),
+                                askAiTooltip: context.l10n.readerAskAi,
                                 onSettings: _showReadingSettings,
                                 backTooltip: MaterialLocalizations.of(
                                   context,
@@ -3865,6 +4101,17 @@ class _NativeReaderPageState extends State<NativeReaderPage>
                                   ),
                                   color: _readerTheme.background,
                                   child: const SizedBox.expand(),
+                                ),
+                              ),
+                            if (_tapZoneEditorVisible)
+                              Positioned.fill(
+                                child: ReaderTapZoneEditorOverlay(
+                                  palette: _readerTheme,
+                                  zones: _tapZones,
+                                  onZonesChanged: _setTapZones,
+                                  onClose: () => setState(
+                                    () => _tapZoneEditorVisible = false,
+                                  ),
                                 ),
                               ),
                           ],
@@ -4270,19 +4517,14 @@ Future<List<Map<String, dynamic>>> _parseEpubChapters(Uint8List bytes) async {
     }
   }
 
-  final cssRules = <String, String>{};
+  final cssSources = <String>[];
   final cssEntries = epub.Content?.Css?.values;
   if (cssEntries != null) {
     for (final cssFile in cssEntries) {
-      final css = cssFile.Content ?? '';
-      for (final match in RegExp(r'([^{}]+)\{([^{}]+)\}').allMatches(css)) {
-        final declarations = match.group(2)?.trim() ?? '';
-        for (final selector in (match.group(1) ?? '').split(',')) {
-          cssRules[selector.trim().toLowerCase()] = declarations;
-        }
-      }
+      cssSources.add(cssFile.Content ?? '');
     }
   }
+  final cssRules = _cssRulesFromSources(cssSources);
 
   // epub.Chapters only covers files that have a navPoint in toc.ncx. Some
   // EPUBs (e.g. color-plate pages exported without TOC entries) put extra
@@ -4322,125 +4564,207 @@ Future<List<Map<String, dynamic>>> _parseEpubChapters(Uint8List bytes) async {
     spineFiles.add(href);
   }
 
-  void append(List<String> files) {
-    for (final href in files) {
-      final decodedHref = Uri.decodeFull(href);
-      final title = titleByFile[decodedHref] ?? '';
-      final depth = depthByFile[decodedHref] ?? 0;
-      final document = html_parser.parse(htmlContent![href]?.Content ?? '');
-      final blocks = <Map<String, String>>[];
-      final plainText = StringBuffer();
-      final elements =
-          document.body?.querySelectorAll(
-            'h1,h2,h3,h4,h5,h6,p,div,section,article,li,dd,dt,blockquote,pre,stanza,v,subtitle,a,img,svg image',
-          ) ??
-          const <html_dom.Element>[];
-      for (final element in elements) {
-        final isImage =
-            element.localName == 'img' ||
-            (element.localName == 'image' && element.namespaceUri != null);
-        if (isImage) {
-          final src = _epubImageSrc(element);
-          if (src == null || src.startsWith('data:')) continue;
-          final name = path
-              .basename(Uri.decodeFull(src.split('?').first.split('#').first))
-              .toLowerCase();
-          final encoded = imagesByName[name];
-          if (encoded != null) {
-            blocks.add(<String, String>{
-              'type': 'image',
-              'content': encoded,
-              'startOffset': '${plainText.length}',
-              'endOffset': '${plainText.length}',
-            });
-          }
-          continue;
-        }
-        if (element.localName == 'a' && _hasEpubTextBlockAncestor(element)) {
-          continue;
-        }
-        // 只取块的"自有文本"（排除嵌套块子树）：querySelectorAll 会同时
-        // 命中 blockquote 与其内部的 p，用整棵子树的 text 会导致正文重复。
-        //
-        // 源 XHTML 常把一个段落的文本折行排版，文本节点里会带着裸换行；
-        // 这些换行只是排版折行，不是真正的段落分隔（段落间已由下方的
-        // `\n\n` 显式分隔）。除 <pre> 外一律把内部空白（含换行）折叠成
-        // 空格，否则会被 normalizeParagraphBreaks 误判成新段落，导致
-        // 首行缩进出现在折行处而非每段真正的开头。
-        final isPreformatted = element.localName == 'pre';
-        final rawText = _epubElementOwnText(element);
-        final text = _normalizeEpubElementText(
-          rawText,
-          preformatted: isPreformatted,
-        );
-        if (text.isNotEmpty) {
-          if (plainText.isNotEmpty) plainText.write('\n\n');
-          final startOffset = plainText.length;
-          plainText.write(text);
-          final tag = (element.localName ?? '').toLowerCase();
-          final classes = element.classes
-              .map((className) => cssRules['.${className.toLowerCase()}'])
-              .whereType<String>();
-          final styleSource = <String>[
-            cssRules[tag] ?? '',
-            ...classes,
-            element.attributes['style'] ?? '',
-          ].join(';').toLowerCase();
-          final headingLevel = tag.startsWith('h')
-              ? int.tryParse(tag.substring(1))?.clamp(1, 6)
-              : null;
-          const headingScales = <int, double>{
-            1: 1.75,
-            2: 1.5,
-            3: 1.3,
-            4: 1.18,
-            5: 1.1,
-            6: 1.05,
-          };
-          final color = RegExp(
-            r'color\s*:\s*([^;]+)',
-          ).firstMatch(styleSource)?.group(1)?.trim();
-          blocks.add(<String, String>{
-            'type': 'text',
-            'content': text,
-            'startOffset': '$startOffset',
-            'endOffset': '${plainText.length}',
-            'fontScale': '${headingScales[headingLevel] ?? 1}',
-            'bold':
-                '${headingLevel != null || tag == 'strong' || tag == 'b' || styleSource.contains('font-weight:bold') || styleSource.contains('font-weight: bold')}',
-            'italic':
-                '${tag == 'em' || tag == 'i' || styleSource.contains('font-style:italic') || styleSource.contains('font-style: italic')}',
-            if (color != null) 'color': color,
-          });
-        }
-      }
-      if (blocks.isEmpty) {
-        final fallback = _extractHtmlParagraphText(
-          document.body?.nodes ?? const [],
-        );
-        if (fallback.isNotEmpty) {
-          plainText.write(fallback);
-          blocks.add(<String, String>{
-            'type': 'text',
-            'content': fallback,
-            'startOffset': '0',
-            'endOffset': '${fallback.length}',
-          });
-        }
-      }
-      if (plainText.isNotEmpty || blocks.isNotEmpty) {
-        result.add(<String, dynamic>{
-          'id': decodedHref,
-          'title': title,
-          'depth': depth,
-          'plainText': plainText.toString(),
-          'blocks': blocks,
-        });
+  for (final href in spineFiles) {
+    final decodedHref = Uri.decodeFull(href);
+    final chapter = _chapterMapFromHtmlDocument(
+      id: decodedHref,
+      title: titleByFile[decodedHref] ?? '',
+      depth: depthByFile[decodedHref] ?? 0,
+      document: html_parser.parse(htmlContent![href]?.Content ?? ''),
+      imagesByName: imagesByName,
+      cssRules: cssRules,
+    );
+    if (chapter != null) result.add(chapter);
+  }
+  return result;
+}
+
+/// 把扁平 CSS 文本解析为「选择器 → 声明」查找表（与阅读器的
+/// 样式块提取相配的近似解析，不处理嵌套/媒体查询）。
+Map<String, String> _cssRulesFromSources(Iterable<String> sources) {
+  final cssRules = <String, String>{};
+  for (final css in sources) {
+    for (final match in RegExp(r'([^{}]+)\{([^{}]+)\}').allMatches(css)) {
+      final declarations = match.group(2)?.trim() ?? '';
+      for (final selector in (match.group(1) ?? '').split(',')) {
+        cssRules[selector.trim().toLowerCase()] = declarations;
       }
     }
   }
+  return cssRules;
+}
 
-  append(spineFiles);
+/// 把单个 XHTML 文档转换为章节 map（plainText + 样式/图片 blocks）。
+///
+/// EPUB 与 Kindle（MOBI/KF8）共用：两者正文都是 HTML，差异只在
+/// 图片命名与 CSS 来源，由调用方先行归一化（imagesByName 的值为
+/// base64 字符串，图片引用需已重写为可按 basename 命中的文件名）。
+Map<String, dynamic>? _chapterMapFromHtmlDocument({
+  required String id,
+  required String title,
+  required int depth,
+  required html_dom.Document document,
+  required Map<String, String> imagesByName,
+  required Map<String, String> cssRules,
+}) {
+  final blocks = <Map<String, String>>[];
+  final plainText = StringBuffer();
+  final elements =
+      document.body?.querySelectorAll(
+        'h1,h2,h3,h4,h5,h6,p,div,section,article,li,dd,dt,blockquote,pre,stanza,v,subtitle,a,img,svg image',
+      ) ??
+      const <html_dom.Element>[];
+  for (final element in elements) {
+    final isImage =
+        element.localName == 'img' ||
+        (element.localName == 'image' && element.namespaceUri != null);
+    if (isImage) {
+      final src = _epubImageSrc(element);
+      if (src == null || src.startsWith('data:')) continue;
+      final name = path
+          .basename(Uri.decodeFull(src.split('?').first.split('#').first))
+          .toLowerCase();
+      final encoded = imagesByName[name];
+      if (encoded != null) {
+        blocks.add(<String, String>{
+          'type': 'image',
+          'content': encoded,
+          'startOffset': '${plainText.length}',
+          'endOffset': '${plainText.length}',
+        });
+      }
+      continue;
+    }
+    if (element.localName == 'a' && _hasEpubTextBlockAncestor(element)) {
+      continue;
+    }
+    // 只取块的"自有文本"（排除嵌套块子树）：querySelectorAll 会同时
+    // 命中 blockquote 与其内部的 p，用整棵子树的 text 会导致正文重复。
+    //
+    // 源 XHTML 常把一个段落的文本折行排版，文本节点里会带着裸换行；
+    // 这些换行只是排版折行，不是真正的段落分隔（段落间已由下方的
+    // `\n\n` 显式分隔）。除 <pre> 外一律把内部空白（含换行）折叠成
+    // 空格，否则会被 normalizeParagraphBreaks 误判成新段落，导致
+    // 首行缩进出现在折行处而非每段真正的开头。
+    final isPreformatted = element.localName == 'pre';
+    final rawText = _epubElementOwnText(element);
+    final text = _normalizeEpubElementText(
+      rawText,
+      preformatted: isPreformatted,
+    );
+    if (text.isNotEmpty) {
+      if (plainText.isNotEmpty) plainText.write('\n\n');
+      final startOffset = plainText.length;
+      plainText.write(text);
+      final tag = (element.localName ?? '').toLowerCase();
+      final classes = element.classes
+          .map((className) => cssRules['.${className.toLowerCase()}'])
+          .whereType<String>();
+      final styleSource = <String>[
+        cssRules[tag] ?? '',
+        ...classes,
+        element.attributes['style'] ?? '',
+      ].join(';').toLowerCase();
+      final headingLevel = tag.startsWith('h')
+          ? int.tryParse(tag.substring(1))?.clamp(1, 6)
+          : null;
+      const headingScales = <int, double>{
+        1: 1.75,
+        2: 1.5,
+        3: 1.3,
+        4: 1.18,
+        5: 1.1,
+        6: 1.05,
+      };
+      final color = RegExp(
+        r'color\s*:\s*([^;]+)',
+      ).firstMatch(styleSource)?.group(1)?.trim();
+      blocks.add(<String, String>{
+        'type': 'text',
+        'content': text,
+        'startOffset': '$startOffset',
+        'endOffset': '${plainText.length}',
+        'fontScale': '${headingScales[headingLevel] ?? 1}',
+        'bold':
+            '${headingLevel != null || tag == 'strong' || tag == 'b' || styleSource.contains('font-weight:bold') || styleSource.contains('font-weight: bold')}',
+        'italic':
+            '${tag == 'em' || tag == 'i' || styleSource.contains('font-style:italic') || styleSource.contains('font-style: italic')}',
+        if (color != null) 'color': color,
+      });
+    }
+  }
+  if (blocks.isEmpty) {
+    final fallback = _extractHtmlParagraphText(
+      document.body?.nodes ?? const [],
+    );
+    if (fallback.isNotEmpty) {
+      plainText.write(fallback);
+      blocks.add(<String, String>{
+        'type': 'text',
+        'content': fallback,
+        'startOffset': '0',
+        'endOffset': '${fallback.length}',
+      });
+    }
+  }
+  if (plainText.isEmpty && blocks.isEmpty) return null;
+  return <String, dynamic>{
+    'id': id,
+    'title': title,
+    'depth': depth,
+    'plainText': plainText.toString(),
+    'blocks': blocks,
+  };
+}
+
+/// Kindle（MOBI/AZW/AZW3）→ 章节 map 列表，在 compute isolate 中执行。
+///
+/// KF8 的 skeleton 分段天然就是章节；MOBI7 只有一整段 HTML，按
+/// `<mbp:pagebreak>` 切分。图片引用（`recindex` / `kindle:embed`，均为
+/// 1-based 块索引）先重写成 KindleUnpack 文件名，再走共用的 HTML
+/// 章节转换。DRM 书籍抛 [KindleDrmException]。
+Future<List<Map<String, dynamic>>> _parseKindleChapters(Uint8List bytes) async {
+  final content = parseKindleContent(bytes);
+  final imagesByName = <String, String>{
+    for (final entry in content.imagesByName.entries)
+      entry.key.toLowerCase(): base64Encode(entry.value),
+  };
+  final cssRules = _cssRulesFromSources(content.cssParts);
+
+  final sections = <String>[];
+  if (content.htmlParts.length == 1) {
+    sections.addAll(
+      content.htmlParts.single
+          .split(RegExp(r'<mbp:pagebreak[^>]*>', caseSensitive: false))
+          .where((part) => part.trim().isNotEmpty),
+    );
+  } else {
+    sections.addAll(content.htmlParts);
+  }
+
+  final result = <Map<String, dynamic>>[];
+  for (var i = 0; i < sections.length; i++) {
+    final html = rewriteKindleImageRefs(
+      sections[i],
+      content.imageNameByBlockIndex,
+    );
+    final document = html_parser.parse(html);
+    // Kindle 没有可靠的 TOC 标签传导到分段这里，用分段内第一个标题
+    // 作为章节名；没有标题的分段留空，与无 NCX 条目的 EPUB 行为一致。
+    final heading = document.body
+        ?.querySelector('h1,h2,h3,h4,h5,h6')
+        ?.text
+        .trim();
+    final chapter = _chapterMapFromHtmlDocument(
+      id: 'kindle-$i',
+      title: heading ?? '',
+      depth: 0,
+      document: document,
+      imagesByName: imagesByName,
+      cssRules: cssRules,
+    );
+    if (chapter != null) result.add(chapter);
+  }
   return result;
 }
 
@@ -4690,6 +5014,37 @@ void _writeParsedChapterCache(Map<String, dynamic> arguments) {
   for (final stale in cachedFiles.skip(3)) {
     stale.deleteSync();
   }
+}
+
+/// 携带面向用户文案的书籍加载异常；错误页直接展示 [message]。
+class _ReaderBookLoadException implements Exception {
+  const _ReaderBookLoadException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
+}
+
+/// EPUB/Kindle 等富文本管线的章节 map → [_NativeChapter]（保留样式与图片块）。
+List<_NativeChapter> _richChaptersFromMaps(List<Map<String, dynamic>> parsed) {
+  return parsed
+      .map(
+        (chapter) => _NativeChapter(
+          id: chapter['id'] as String? ?? '',
+          title: chapter['title'] as String? ?? '',
+          depth: chapter['depth'] as int? ?? 0,
+          plainText: chapter['plainText'] as String? ?? '',
+          blocks: (chapter['blocks'] as List<dynamic>)
+              .map(
+                (block) => _NativeBlock.fromMap(
+                  Map<String, String>.from(block as Map),
+                ),
+              )
+              .toList(growable: false),
+        ),
+      )
+      .toList(growable: false);
 }
 
 _NativeChapter _nativeChapterFromMap(Map<String, dynamic> chapter) {

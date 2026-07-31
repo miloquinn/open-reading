@@ -50,6 +50,11 @@ class BookImportSourceService implements BookImportSourcePreparer {
     'application/x-cbz': 'cbz',
     'application/vnd.comicbook-rar': 'cbr',
     'application/x-cbr': 'cbr',
+    'application/x-cbt': 'cbt',
+    'application/x-cb7': 'cb7',
+    'text/html': 'html',
+    'application/xhtml+xml': 'xhtml',
+    'text/markdown': 'md',
   };
 
   final Future<FilePickerResult?> Function() _filePicker;

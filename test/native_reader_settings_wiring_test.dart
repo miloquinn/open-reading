@@ -90,6 +90,15 @@ void main() {
             .onPressed!();
         await tester.pumpAndSettle();
 
+        await tester.tap(find.text('Text'));
+        await tester.pumpAndSettle();
+        await tester.ensureVisible(
+          find.byKey(const ValueKey('reader-advanced-typography-tile')),
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Advanced typography'));
+        await tester.pumpAndSettle();
+
         final indentFinder = find.descendant(
           of: find.byKey(const ValueKey('reader-first-line-indent-slider')),
           matching: find.byType(Slider),

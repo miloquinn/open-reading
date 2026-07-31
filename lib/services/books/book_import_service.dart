@@ -22,7 +22,9 @@ import 'package:xxread/services/books/cover_generator_service.dart';
 import 'package:xxread/services/books/book_format_support.dart';
 import 'package:xxread/services/books/book_import_isolate_service.dart';
 import 'package:xxread/services/books/book_import_models.dart';
+import 'package:xxread/services/books/comic_book_parser.dart';
 import 'package:xxread/services/books/epub_image_extractor_service.dart';
+import 'package:xxread/services/books/kindle_book_parser.dart';
 import 'package:xxread/services/books/book_image_map_service.dart';
 import 'package:xxread/services/books/web_book_file_store.dart';
 import 'package:xxread/services/library/library_event_bus_service.dart';
@@ -869,7 +871,21 @@ class BookImportService implements BookFileImporter {
     // 对于超大的非TXT文件（如大PDF），仍然限制读取大小避免内存问题
     const int maxBytesForMetadata = 10 * 1024 * 1024; // 10MB
 
-    if (fileSize > maxBytesForMetadata && ext != 'txt' && ext != 'epub') {
+    // Kindle 的 EXTH 封面记录位于文件尾部，截断头部会丢封面且破坏
+    // PalmDB 记录表偏移；漫画容器的 ZIP 中央目录也在尾部、TAR 条目
+    // 顺序排布（页数与首页封面依赖完整包），因此这些格式必须完整读取。
+    const fullReadExtensions = <String>{
+      'txt',
+      'epub',
+      'mobi',
+      'azw',
+      'azw3',
+      'cbz',
+      'cbt',
+      'cbr',
+      'cb7',
+    };
+    if (fileSize > maxBytesForMetadata && !fullReadExtensions.contains(ext)) {
       // 非TXT/EPUB的大文件只读取前10MB用于元数据提取
       debugPrint('⚠️ 大型${ext.toUpperCase()}文件，只读取前10MB用于元数据提取');
       progressCallback?.call(0.1, '读取大文件头部...');
@@ -926,7 +942,10 @@ class BookImportService implements BookFileImporter {
         'azw' ||
         'azw3' => await _extractMobiMetadata(bytes, fileName),
         'fb2' => await _extractFb2Metadata(bytes, fileName),
-        'cbz' || 'cbr' => await _extractComicMetadata(bytes, fileName),
+        'cbz' ||
+        'cbr' ||
+        'cbt' ||
+        'cb7' => await _extractComicMetadata(bytes, fileName),
         'rtf' => await _extractRtfMetadata(bytes, fileName),
         _ => _extractBasicMetadata(bytes, fileName),
       };
@@ -1492,106 +1511,61 @@ class BookImportService implements BookFileImporter {
     try {
       debugPrint('📚 开始MOBI/AZW/AZW3元数据提取: $fileName');
 
-      // 对于大文件，使用isolate处理
-      SimpleMetadata simpleMetadata;
-      if (bytes.length > 5 * 1024 * 1024) {
-        // 大于5MB，使用isolate
-        debugPrint('使用isolate处理大MOBI文件: ${bytes.length / 1024 / 1024} MB');
-        const headSliceBytes = 500 * 1024;
-        simpleMetadata = await compute(
-          extractMobiMetadataInIsolate,
-          MetadataExtractionParams(
-            bytes: bytes.sublist(0, headSliceBytes),
-            fileName: fileName,
-            extension: fileName.split('.').last.toLowerCase(),
-            totalByteLength: bytes.length,
-          ),
-        );
-      } else {
-        // 小文件在主线程处理
-        String title = fileName.replaceAll(
-          RegExp(r'\.(mobi|azw|azw3)$', caseSensitive: false),
-          '',
-        );
-        int estimatedPages = 100;
+      // 头部解析（PalmDB/EXTH/封面记录切片）本身很轻，但大文件在
+      // isolate 里做可避免记录表扫描挤占 UI 帧。
+      final kindle = bytes.length > 5 * 1024 * 1024
+          ? await compute(parseKindleMetadata, bytes)
+          : parseKindleMetadata(bytes);
 
-        if (bytes.length >= 68) {
-          final identifier = String.fromCharCodes(bytes.sublist(60, 68));
-          debugPrint('文件标识: $identifier');
+      final fallbackTitle = fileName.replaceAll(
+        RegExp(r'\.(mobi|azw|azw3)$', caseSensitive: false),
+        '',
+      );
+      final title = kindle.title.isNotEmpty ? kindle.title : fallbackTitle;
+      final author = kindle.authors.isNotEmpty
+          ? kindle.authors.join(', ')
+          : 'Unknown';
 
-          if (identifier.contains('BOOKMOBI') ||
-              identifier.contains('TEXTREAD')) {
-            debugPrint('✅ 检测到有效的MOBI文件');
-
-            try {
-              final content = _extractMobiText(bytes);
-              if (content.isNotEmpty) {
-                final lines = content.split('\n').take(100).toList();
-                for (var line in lines) {
-                  final trimmed = line.trim();
-                  if (trimmed.isNotEmpty &&
-                      trimmed.length > 3 &&
-                      trimmed.length < 100) {
-                    if (!trimmed.contains('Chapter') &&
-                        !trimmed.contains('第') &&
-                        !trimmed.contains('章') &&
-                        !trimmed.contains('CHAPTER')) {
-                      title = trimmed;
-                      debugPrint('提取到标题: $title');
-                      break;
-                    }
-                  }
-                }
-                estimatedPages = (content.length / 1500).ceil().clamp(10, 9999);
-                debugPrint('内容长度: ${content.length}, 预估页数: $estimatedPages');
-              }
-            } catch (e) {
-              debugPrint('提取MOBI文本内容失败: $e');
-            }
-          }
+      // 优先内嵌封面；没有时本地生成默认封面。
+      Uint8List? coverImage = kindle.coverImage;
+      if (coverImage == null || coverImage.isEmpty) {
+        try {
+          coverImage = await CoverGenerator.generateTextCover(
+            title: title,
+            author: author,
+            format: 'MOBI',
+          );
+        } catch (e) {
+          debugPrint('❌ MOBI默认封面生成失败: $e');
         }
-
-        if (estimatedPages == 100) {
-          estimatedPages = (bytes.length / 3000).ceil().clamp(50, 1000);
-          debugPrint('基于文件大小估算页数: $estimatedPages');
-        }
-
-        simpleMetadata = SimpleMetadata(
-          title: title,
-          author: 'Unknown',
-          estimatedPages: estimatedPages,
-        );
       }
 
-      // MOBI/AZW 没有可用嵌入封面时，仅在本地生成默认封面。
-      Uint8List? coverImage;
-      try {
-        coverImage = await CoverGenerator.generateTextCover(
-          title: simpleMetadata.title,
-          author: simpleMetadata.author,
-          format: 'MOBI',
-        );
-      } catch (e) {
-        debugPrint('❌ MOBI默认封面生成失败: $e');
-      }
+      // PalmDOC textLength 是未压缩正文字节数，比文件大小更接近真实篇幅。
+      final estimatedPages = kindle.textLength > 0
+          ? (kindle.textLength / 1500).ceil().clamp(1, 99999)
+          : (bytes.length / 3000).ceil().clamp(50, 1000);
 
-      debugPrint('✅ MOBI元数据提取完成:');
-      debugPrint('   标题: ${simpleMetadata.title}');
-      debugPrint('   作者: ${simpleMetadata.author}');
-      debugPrint('   页数: ${simpleMetadata.estimatedPages}');
+      debugPrint(
+        '✅ MOBI元数据提取完成: $title / $author'
+        '${kindle.hasDrm ? '（DRM 加密，正文不可读）' : ''}',
+      );
 
       return EnhancedBookMetadata(
-        title: simpleMetadata.title,
-        author: simpleMetadata.author,
-        description: simpleMetadata.description,
-        language: simpleMetadata.language,
-        publisher: null,
-        publishDate: null,
-        isbn: null,
+        title: title,
+        author: author,
+        description: kindle.description,
+        language: kindle.language,
+        publisher: kindle.publisher,
+        publishDate: kindle.publishedDate,
+        isbn: kindle.isbn,
         coverImage: coverImage,
-        estimatedPages: simpleMetadata.estimatedPages,
-        tags: null,
-        additionalInfo: {'format': 'MOBI/AZW', 'fileSize': bytes.length},
+        estimatedPages: estimatedPages,
+        tags: kindle.subjects.isNotEmpty ? kindle.subjects : null,
+        additionalInfo: {
+          'format': 'MOBI/AZW',
+          'fileSize': bytes.length,
+          'hasDrm': kindle.hasDrm,
+        },
       );
     } catch (e) {
       debugPrint('MOBI/AZW3 metadata extraction failed: $e');
@@ -1619,16 +1593,15 @@ class BookImportService implements BookFileImporter {
     );
   }
 
-  /// Extract Comic Book (CBZ/CBR) metadata
+  /// Extract Comic Book (CBZ/CBR/CBT/CB7) metadata
   Future<EnhancedBookMetadata> _extractComicMetadata(
     Uint8List bytes,
     String fileName,
   ) async {
     try {
-      // CBZ files are ZIP archives containing images
-      // CBR files are RAR archives containing images
+      // 漫画容器统一按文件头识别：ZIP/TAR（含改名的 CBR/CB7）可解包。
       final extension = fileName.split('.').last.toLowerCase();
-      final title = fileName.replaceAll(RegExp(r'\.(cbz|cbr)$'), '');
+      final title = fileName.replaceAll(RegExp(r'\.(cbz|cbr|cbt|cb7)$'), '');
 
       // For comic books, we can extract some basic info
       String author = 'Unknown';
@@ -1639,15 +1612,32 @@ class BookImportService implements BookFileImporter {
         author = 'Series: ${seriesMatch.group(1)}';
       }
 
-      // Estimate pages based on typical comic book length
-      final estimatedPages = extension == 'cbz'
-          ? 25
-          : 30; // Comics typically 20-40 pages
+      // 可解包的容器取真实页数 + 第一页作封面；真 RAR/7z 或字节被
+      // 截断时解包会抛错，回退到估算值和生成封面。
+      int estimatedPages = extension == 'cbz' ? 25 : 30;
+      Uint8List? coverImage;
+      try {
+        final pages = await compute(indexComicPages, <String, dynamic>{
+          'bytes': bytes,
+          'ext': extension,
+        });
+        if (pages.isNotEmpty) {
+          estimatedPages = pages.length;
+          coverImage = await compute(extractComicPage, <String, dynamic>{
+            'bytes': bytes,
+            'ext': extension,
+            'name': pages.first,
+          });
+        }
+      } catch (e) {
+        debugPrint('漫画页索引/封面提取失败，使用回退元数据: $e');
+      }
 
       return EnhancedBookMetadata(
         title: title,
         author: author,
         description: 'Comic book in ${extension.toUpperCase()} format',
+        coverImage: coverImage,
         estimatedPages: estimatedPages,
         additionalInfo: {
           'format': extension.toUpperCase(),
@@ -1809,50 +1799,6 @@ class BookImportService implements BookFileImporter {
         .replaceAll(RegExp(r'<[^>]*>'), ' ')
         .replaceAll(RegExp(r'\s+'), ' ')
         .trim();
-  }
-
-  /// 提取MOBI文件的文本内容（支持多种字符集）
-  String _extractMobiText(Uint8List bytes) {
-    try {
-      // MOBI文件通常包含HTML或纯文本内容
-      String content = '';
-
-      // 尝试UTF-8解码
-      try {
-        content = utf8.decode(bytes, allowMalformed: true);
-      } catch (e) {
-        // 如果UTF-8失败，尝试Latin1
-        content = latin1.decode(bytes);
-      }
-
-      // 移除HTML标签
-      content = content.replaceAll(RegExp(r'<[^>]*>'), ' ');
-
-      // 移除多余的空白字符
-      content = content.replaceAll(RegExp(r'\s+'), ' ').trim();
-
-      // 移除控制字符，但保留常见的Unicode字符
-      final cleanContent = content.split('').where((char) {
-        final code = char.codeUnitAt(0);
-        return (code >= 32 && code <= 126) || // ASCII可打印字符
-            (code >= 0x4e00 && code <= 0x9fff) || // 中日韩统一表意文字
-            (code >= 0x3000 && code <= 0x303f) || // CJK 符号和标点
-            (code >= 0xff00 && code <= 0xffef) || // 全角ASCII、半角片假名和韩文
-            (code >= 0x3040 && code <= 0x309f) || // 平假名
-            (code >= 0x30a0 && code <= 0x30ff) || // 片假名
-            (code >= 0xac00 && code <= 0xd7af) || // 韩文音节
-            (code >= 0x0400 && code <= 0x04ff) || // 西里尔字母
-            (code >= 0x00c0 && code <= 0x00ff) || // 拉丁扩展-A
-            char == '\n' ||
-            char == '\r' ||
-            char == '\t';
-      }).join();
-
-      return cleanContent;
-    } catch (e) {
-      debugPrint('MOBI文本提取失败: $e');
-      return '';
-    }
   }
 
   String _stripXmlTags(String xml) {
