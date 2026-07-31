@@ -194,6 +194,33 @@ void main() {
     },
   );
 
+  test(
+    'maps canonical offsets back into the continuous display projection',
+    () {
+      const source = '  第一段\r\n第二段\n\n第三段';
+      const sourceOffset = 19;
+      final layout = ReaderTextLayout.build(
+        source,
+        sourceOffset: sourceOffset,
+        firstLineIndent: 2,
+        paragraphSpacing: 1,
+      );
+
+      for (
+        var offset = sourceOffset;
+        offset <= sourceOffset + source.length;
+        offset++
+      ) {
+        final displayOffset = layout.displayOffsetForSourceOffset(offset);
+        expect(displayOffset, inInclusiveRange(0, layout.text.length));
+        expect(
+          layout.sourceOffsetForDisplayOffset(displayOffset),
+          greaterThanOrEqualTo(offset),
+        );
+      }
+    },
+  );
+
   testWidgets('pagination keeps source ranges contiguous with paragraph gaps', (
     tester,
   ) async {

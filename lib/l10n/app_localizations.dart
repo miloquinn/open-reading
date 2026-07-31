@@ -326,8 +326,108 @@ abstract class AppLocalizations {
   /// No description provided for @bookSourcesAddTitle.
   ///
   /// In en, this message translates to:
-  /// **'Add open source'**
+  /// **'Add source'**
   String get bookSourcesAddTitle;
+
+  /// No description provided for @bookSourcesImportLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Import link'**
+  String get bookSourcesImportLink;
+
+  /// No description provided for @bookSourcesAnalyze.
+  ///
+  /// In en, this message translates to:
+  /// **'Analyze'**
+  String get bookSourcesAnalyze;
+
+  /// No description provided for @bookSourcesDetectedOrsp.
+  ///
+  /// In en, this message translates to:
+  /// **'Detected: ORSP'**
+  String get bookSourcesDetectedOrsp;
+
+  /// No description provided for @bookSourcesDetectedAdditional.
+  ///
+  /// In en, this message translates to:
+  /// **'Detected: Other protocol'**
+  String get bookSourcesDetectedAdditional;
+
+  /// No description provided for @bookSourcesProtocolGroupOrsp.
+  ///
+  /// In en, this message translates to:
+  /// **'ORSP sources'**
+  String get bookSourcesProtocolGroupOrsp;
+
+  /// No description provided for @bookSourcesProtocolGroupAdditional.
+  ///
+  /// In en, this message translates to:
+  /// **'Other protocol sources'**
+  String get bookSourcesProtocolGroupAdditional;
+
+  /// No description provided for @bookSourcesAdvancedFeatureRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable More source protocols in Advanced features before importing this source.'**
+  String get bookSourcesAdvancedFeatureRequired;
+
+  /// No description provided for @bookSourcesNoWorkingSources.
+  ///
+  /// In en, this message translates to:
+  /// **'No source passed the live search check. Nothing was imported.'**
+  String get bookSourcesNoWorkingSources;
+
+  /// No description provided for @bookSourcesVerificationProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Checked {completed}/{total}; {available} working'**
+  String bookSourcesVerificationProgress(
+    int completed,
+    int total,
+    int available,
+  );
+
+  /// No description provided for @bookSourcesSelect.
+  ///
+  /// In en, this message translates to:
+  /// **'Select sources'**
+  String get bookSourcesSelect;
+
+  /// No description provided for @bookSourcesSelectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all'**
+  String get bookSourcesSelectAll;
+
+  /// No description provided for @bookSourcesClearSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear selection'**
+  String get bookSourcesClearSelection;
+
+  /// No description provided for @bookSourcesEnableSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable selected'**
+  String get bookSourcesEnableSelected;
+
+  /// No description provided for @bookSourcesDisableSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable selected'**
+  String get bookSourcesDisableSelected;
+
+  /// No description provided for @bookSourcesDeleteSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete selected'**
+  String get bookSourcesDeleteSelected;
+
+  /// No description provided for @bookSourcesDeleteSelectedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {count} selected sources? Local books are not affected.'**
+  String bookSourcesDeleteSelectedMessage(int count);
 
   /// No description provided for @bookSourcesUrlLabel.
   ///
@@ -2918,7 +3018,7 @@ abstract class AppLocalizations {
   /// No description provided for @incomingBooksFileTooLarge.
   ///
   /// In en, this message translates to:
-  /// **'The file exceeds the 100 MB import limit'**
+  /// **'The file exceeds the 500 MB import limit'**
   String get incomingBooksFileTooLarge;
 
   /// No description provided for @incomingBooksTooManyFiles.
@@ -3053,6 +3153,60 @@ abstract class AppLocalizations {
   /// **'Deletion complete'**
   String get libraryDeleteComplete;
 
+  /// No description provided for @librarySelectMultiple.
+  ///
+  /// In en, this message translates to:
+  /// **'Select multiple'**
+  String get librarySelectMultiple;
+
+  /// No description provided for @librarySelectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all'**
+  String get librarySelectAll;
+
+  /// No description provided for @librarySelectedBooks.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String librarySelectedBooks(int count);
+
+  /// No description provided for @libraryDeleteSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {count}'**
+  String libraryDeleteSelected(int count);
+
+  /// No description provided for @libraryBatchDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete selected books?'**
+  String get libraryBatchDeleteTitle;
+
+  /// No description provided for @libraryBatchDeleteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This permanently deletes the selected {count} books, related notes and bookmarks, and local files. This cannot be undone.'**
+  String libraryBatchDeleteMessage(int count);
+
+  /// No description provided for @libraryDeletingSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting {done}/{total}'**
+  String libraryDeletingSelected(int done, int total);
+
+  /// No description provided for @libraryBatchDeleteSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted {count} books'**
+  String libraryBatchDeleteSuccess(int count);
+
+  /// No description provided for @libraryBatchDeletePartial.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted {success}; {failed} failed'**
+  String libraryBatchDeletePartial(int success, int failed);
+
   /// Chapter title for TXT content that appears before the first detected chapter heading
   ///
   /// In en, this message translates to:
@@ -3160,6 +3314,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Bottom margin'**
   String get readerBottomMarginLabel;
+
+  /// No description provided for @readerTxtChapterTitlePageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Chapter title on its own page'**
+  String get readerTxtChapterTitlePageTitle;
+
+  /// No description provided for @readerTxtChapterTitlePageHint.
+  ///
+  /// In en, this message translates to:
+  /// **'When off, the chapter title appears above the body text'**
+  String get readerTxtChapterTitlePageHint;
 
   /// No description provided for @readerVerticalMarginLabel.
   ///
@@ -3429,6 +3595,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'General'**
   String get settingsSectionGeneral;
+
+  /// No description provided for @settingsSectionAdvancedFeatures.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced features'**
+  String get settingsSectionAdvancedFeatures;
+
+  /// No description provided for @settingsAdditionalSourceProtocolsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'More source protocols'**
+  String get settingsAdditionalSourceProtocolsTitle;
+
+  /// No description provided for @settingsAdditionalSourceProtocolsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable support for additional source protocols.'**
+  String get settingsAdditionalSourceProtocolsSubtitle;
+
+  /// No description provided for @additionalSourcesImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Import more source protocols'**
+  String get additionalSourcesImport;
+
+  /// No description provided for @additionalSourcesImportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import source JSON'**
+  String get additionalSourcesImportTitle;
+
+  /// No description provided for @additionalSourcesImportNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported sources are checked before use and remain disabled until you enable them.'**
+  String get additionalSourcesImportNotice;
+
+  /// No description provided for @additionalSourcesChooseFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Add from JSON file'**
+  String get additionalSourcesChooseFile;
+
+  /// No description provided for @additionalSourcesUrlLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Source JSON URL'**
+  String get additionalSourcesUrlLabel;
+
+  /// No description provided for @additionalSourcesLoadUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Load URL'**
+  String get additionalSourcesLoadUrl;
+
+  /// No description provided for @additionalSourcesPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'{supported} available, {partial} partially supported, {unsupported} not supported'**
+  String additionalSourcesPreview(int supported, int partial, int unsupported);
+
+  /// No description provided for @additionalSourcesAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Available'**
+  String get additionalSourcesAvailable;
+
+  /// No description provided for @additionalSourcesPartial.
+  ///
+  /// In en, this message translates to:
+  /// **'Partially supported'**
+  String get additionalSourcesPartial;
+
+  /// No description provided for @additionalSourcesUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Not supported'**
+  String get additionalSourcesUnsupported;
+
+  /// No description provided for @additionalSourcesImportConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Import disabled'**
+  String get additionalSourcesImportConfirm;
+
+  /// No description provided for @additionalSourcesImported.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported {count} sources'**
+  String additionalSourcesImported(int count);
 
   /// Section title grouping donation, about info and contributors
   ///
@@ -3919,7 +4175,7 @@ abstract class AppLocalizations {
   /// Description of the floating home navigation settings entry
   ///
   /// In en, this message translates to:
-  /// **'Adjust the display style and destination order'**
+  /// **'Adjust size, display style, and destination order'**
   String get settingsFloatingNavigationSubtitle;
 
   /// No description provided for @floatingNavigationPreviewTitle.
@@ -3927,6 +4183,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Preview'**
   String get floatingNavigationPreviewTitle;
+
+  /// No description provided for @floatingNavigationSizeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Size'**
+  String get floatingNavigationSizeTitle;
+
+  /// No description provided for @floatingNavigationSizeAutomatic.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic'**
+  String get floatingNavigationSizeAutomatic;
+
+  /// No description provided for @floatingNavigationSizeCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get floatingNavigationSizeCustom;
+
+  /// No description provided for @floatingNavigationHeightLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Height'**
+  String get floatingNavigationHeightLabel;
+
+  /// No description provided for @floatingNavigationSideMarginLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Side margin'**
+  String get floatingNavigationSideMarginLabel;
 
   /// No description provided for @floatingNavigationDisplayModeTitle.
   ///
@@ -3979,13 +4265,13 @@ abstract class AppLocalizations {
   /// Title of the library layout selector
   ///
   /// In en, this message translates to:
-  /// **'Library layout'**
+  /// **'Library settings'**
   String get settingsLibraryLayoutTitle;
 
   /// Description of the card and cover-only grid library layouts
   ///
   /// In en, this message translates to:
-  /// **'Choose cards or a compact grid, then adjust the grid details'**
+  /// **'Adjust the library layout and book opening experience'**
   String get settingsLibraryLayoutSubtitle;
 
   /// Card layout option for the library
@@ -4029,6 +4315,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add one title line and a compact progress bar below each cover'**
   String get settingsLibraryGridShowDetailsSubtitle;
+
+  /// No description provided for @settingsLibraryOpenAnimationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Book opening animation'**
+  String get settingsLibraryOpenAnimationTitle;
+
+  /// No description provided for @settingsLibraryOpenAnimationSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Used only when opening a book from the library'**
+  String get settingsLibraryOpenAnimationSubtitle;
+
+  /// No description provided for @settingsLibraryOpenAnimationClassicCover.
+  ///
+  /// In en, this message translates to:
+  /// **'Classic cover expansion'**
+  String get settingsLibraryOpenAnimationClassicCover;
+
+  /// No description provided for @settingsLibraryOpenAnimationClassicCoverHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enlarge the original cover to full screen before revealing the reader'**
+  String get settingsLibraryOpenAnimationClassicCoverHint;
+
+  /// No description provided for @settingsLibraryOpenAnimationMinimal.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimal fade'**
+  String get settingsLibraryOpenAnimationMinimal;
+
+  /// No description provided for @settingsLibraryOpenAnimationMinimalHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A quick, stable fade with no directional movement'**
+  String get settingsLibraryOpenAnimationMinimalHint;
+
+  /// No description provided for @settingsLibraryOpenAnimationPaperRise.
+  ///
+  /// In en, this message translates to:
+  /// **'Paper rise'**
+  String get settingsLibraryOpenAnimationPaperRise;
+
+  /// No description provided for @settingsLibraryOpenAnimationPaperRiseHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The reading paper settles gently into place from below'**
+  String get settingsLibraryOpenAnimationPaperRiseHint;
+
+  /// No description provided for @settingsLibraryOpenAnimationPageSlide.
+  ///
+  /// In en, this message translates to:
+  /// **'Page slide'**
+  String get settingsLibraryOpenAnimationPageSlide;
+
+  /// No description provided for @settingsLibraryOpenAnimationPageSlideHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The reading page enters with a short sideways motion'**
+  String get settingsLibraryOpenAnimationPageSlideHint;
+
+  /// No description provided for @settingsLibraryOpenAnimationBookSpread.
+  ///
+  /// In en, this message translates to:
+  /// **'Book spread'**
+  String get settingsLibraryOpenAnimationBookSpread;
+
+  /// No description provided for @settingsLibraryOpenAnimationBookSpreadHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Two paper halves open outward from the center'**
+  String get settingsLibraryOpenAnimationBookSpreadHint;
 
   /// Accent summary when following the app theme
   ///
@@ -6207,7 +6565,7 @@ abstract class AppLocalizations {
   /// BookImportFailure message when the file exceeds the size limit
   ///
   /// In en, this message translates to:
-  /// **'File exceeds 100MB import limit'**
+  /// **'File exceeds 500 MB import limit'**
   String get importErrorFileTooLarge;
 
   /// BookImportFailure message when the source file cannot be prepared

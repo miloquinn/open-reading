@@ -47,6 +47,7 @@ class ReaderAnnotatedTextPage extends StatefulWidget {
     this.onAnnotationUnavailable,
     this.onInteractionChanged,
     this.onAskAiSelection,
+    this.fillAvailableSpace = true,
   });
 
   final ReaderTextPage page;
@@ -69,6 +70,7 @@ class ReaderAnnotatedTextPage extends StatefulWidget {
   final ValueChanged<bool>? onInteractionChanged;
   final Future<void> Function(ReaderSelectionSnapshot selection)?
   onAskAiSelection;
+  final bool fillAvailableSpace;
 
   @override
   State<ReaderAnnotatedTextPage> createState() =>
@@ -267,7 +269,9 @@ class _ReaderAnnotatedTextPageState extends State<ReaderAnnotatedTextPage> {
         ),
       ),
     );
-    return Stack(fit: StackFit.expand, children: [text]);
+    return widget.fillAvailableSpace
+        ? Stack(fit: StackFit.expand, children: [text])
+        : text;
   }
 }
 

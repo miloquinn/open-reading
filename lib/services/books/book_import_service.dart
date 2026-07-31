@@ -11,21 +11,22 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:epubx/epubx.dart';
 import 'package:pdfx/pdfx.dart';
+import 'package:html/parser.dart' as html_parser;
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 
 import 'package:xxread/models/book.dart';
 import 'package:xxread/services/books/book_dao.dart';
 import 'package:xxread/services/books/enhanced_txt_import_service.dart';
+import 'package:xxread/services/books/epub_native_parser.dart';
 import 'package:xxread/services/books/text_preprocessor_helper.dart';
 import 'package:xxread/services/books/cover_generator_service.dart';
 import 'package:xxread/services/books/book_format_support.dart';
+import 'package:xxread/services/books/book_import_limits.dart';
 import 'package:xxread/services/books/book_import_isolate_service.dart';
 import 'package:xxread/services/books/book_import_models.dart';
 import 'package:xxread/services/books/comic_book_parser.dart';
-import 'package:xxread/services/books/epub_image_extractor_service.dart';
 import 'package:xxread/services/books/kindle_book_parser.dart';
-import 'package:xxread/services/books/book_image_map_service.dart';
 import 'package:xxread/services/books/web_book_file_store.dart';
 import 'package:xxread/services/library/library_event_bus_service.dart';
 import 'package:xxread/services/ai/global_ai_reading_service.dart';
@@ -71,10 +72,114 @@ typedef ImportMetadataExtractor =
       ImportProgressCallback? onProgress,
     );
 
-/// 顶层函数：在 isolate 中解析 EPUB（zip 解压 + XML 解析是 CPU
-/// 密集操作，放主线程会掉帧）。
-Future<EpubBook> parseEpubBookInIsolate(Uint8List bytes) {
-  return EpubReader.readBook(bytes);
+Future<Map<String, dynamic>> extractEpubMetadataInIsolate(
+  Uint8List bytes,
+) async {
+  final book = await EpubReader.openBook(bytes);
+  final schema = book.Schema;
+  final package = schema?.Package;
+  final metadata = package?.Metadata;
+  final manifest = package?.Manifest?.Items ?? const <EpubManifestItem>[];
+  final manifestById = <String, EpubManifestItem>{
+    for (final item in manifest)
+      if (item.Id != null) item.Id!: item,
+  };
+
+  Uint8List? coverImage;
+  try {
+    EpubManifestItem? coverItem;
+    for (final item in manifest) {
+      if ((item.Properties ?? '')
+          .split(RegExp(r'\s+'))
+          .contains('cover-image')) {
+        coverItem = item;
+        break;
+      }
+    }
+    if (coverItem == null) {
+      String? coverId;
+      final metaItems = metadata?.MetaItems;
+      if (metaItems != null) {
+        for (final item in metaItems) {
+          if (item.Name?.toLowerCase() == 'cover') {
+            coverId = item.Content;
+            break;
+          }
+        }
+      }
+      coverItem = coverId == null ? null : manifestById[coverId];
+    }
+    final href = coverItem?.Href;
+    final reference = href == null ? null : book.Content?.Images?[href];
+    if (reference != null) {
+      coverImage = Uint8List.fromList(await reference.readContentAsBytes());
+    }
+  } catch (_) {
+    coverImage = null;
+  }
+
+  final spineItems = package?.Spine?.Items ?? const <EpubSpineItemRef>[];
+  final htmlRefs = book.Content?.Html ?? const {};
+  var htmlBytes = 0;
+  var chapterCount = 0;
+  String? fallbackDescription;
+  for (final itemRef in spineItems) {
+    final item = manifestById[itemRef.IdRef];
+    final href = item?.Href;
+    final reference = href == null ? null : htmlRefs[href];
+    if (reference == null) continue;
+    chapterCount++;
+    htmlBytes += reference.getContentFileEntry().size;
+    if ((metadata?.Description ?? '').trim().isEmpty &&
+        fallbackDescription == null) {
+      try {
+        final document = html_parser.parse(await reference.readContentAsText());
+        final text = document.body?.text.replaceAll(RegExp(r'\s+'), ' ').trim();
+        if (text != null && text.isNotEmpty) {
+          fallbackDescription = text.length <= 500
+              ? text
+              : '${text.substring(0, 497)}...';
+        }
+      } catch (_) {}
+    }
+  }
+  if (chapterCount == 0) {
+    chapterCount = htmlRefs.length;
+    for (final reference in htmlRefs.values) {
+      htmlBytes += reference.getContentFileEntry().size;
+    }
+  }
+
+  String? isbn;
+  final identifiers = metadata?.Identifiers;
+  if (identifiers != null) {
+    for (final identifier in identifiers) {
+      if (identifier.Scheme?.toLowerCase().contains('isbn') == true) {
+        isbn = identifier.Identifier;
+        break;
+      }
+    }
+  }
+  final description = (metadata?.Description ?? '').trim();
+  return <String, dynamic>{
+    'title': book.Title ?? '',
+    'author': book.Author ?? '',
+    'description': description.isEmpty ? fallbackDescription : description,
+    'language': metadata?.Languages?.firstOrNull,
+    'publisher': metadata?.Publishers?.firstOrNull,
+    'publishDate': metadata?.Dates?.firstOrNull?.Date,
+    'isbn': isbn,
+    'coverImage': coverImage,
+    'estimatedPages': (htmlBytes / 3000).ceil().clamp(1, 9999),
+    'tags': metadata?.Subjects
+        ?.where((subject) => subject.isNotEmpty)
+        .toList(growable: false),
+    'additionalInfo': <String, dynamic>{
+      'format': 'EPUB',
+      'hasImages': book.Content?.Images?.isNotEmpty == true,
+      'chapterCount': chapterCount,
+    },
+  };
 }
 
 class BookImportService implements BookFileImporter {
@@ -104,8 +209,6 @@ class BookImportService implements BookFileImporter {
   final _bookDao = BookDao();
   final _enhancedTxtService = EnhancedTxtImportService();
   final _preprocessor = TextPreprocessor();
-  final _imageExtractor = EpubImageExtractor();
-  final _imageMapService = BookImageMapService();
 
   /// 流式复制文件，支持大文件和进度回调
   ///
@@ -308,7 +411,7 @@ class BookImportService implements BookFileImporter {
         throw const BookImportFailure(code: 'source_missing');
       }
       final size = await sourceFile.length();
-      if (size > 100 * 1024 * 1024) {
+      if (size > maximumBookImportBytes) {
         throw const BookImportFailure(code: 'file_too_large');
       }
 
@@ -395,11 +498,6 @@ class BookImportService implements BookFileImporter {
       }
 
       databaseCommitted = true;
-      await _saveImageMapAfterInsert(
-        source: source,
-        metadata: metadata,
-        book: decision.book,
-      );
       LibraryEventBus().notifyLibraryChanged();
       unawaited(_scheduleAnalysis(decision.book));
       return BookImportResult(
@@ -438,7 +536,7 @@ class BookImportService implements BookFileImporter {
         !WebBookFileStore.isWebBookPath(virtualPath)) {
       throw const BookImportFailure(code: 'source_not_materialized');
     }
-    if (bytes.length > 100 * 1024 * 1024) {
+    if (bytes.length > maximumBookImportBytes) {
       throw const BookImportFailure(code: 'file_too_large');
     }
 
@@ -517,38 +615,6 @@ class BookImportService implements BookFileImporter {
     }
   }
 
-  Future<void> _saveImageMapAfterInsert({
-    required BookImportSource source,
-    required EnhancedBookMetadata metadata,
-    required Book book,
-  }) async {
-    final bookId = book.id;
-    final imageMapValue = metadata.additionalInfo?['imageMap'];
-    if (source.extension.toLowerCase() != 'epub' ||
-        bookId == null ||
-        imageMapValue is! Map<String, String> ||
-        imageMapValue.isEmpty) {
-      return;
-    }
-
-    try {
-      final normalized = <String, String>{};
-      for (final entry in imageMapValue.entries) {
-        final parts = entry.key.split('_');
-        final fileName = parts.length >= 2
-            ? parts.sublist(1).join('_')
-            : entry.key;
-        normalized['${bookId}_$fileName'] = entry.value
-            .replaceAll(RegExp(r'[\r\n\t]'), '')
-            .trim();
-      }
-      await _imageMapService.saveImageMap(bookId, normalized);
-    } catch (error) {
-      // 书籍记录已经提交，图片映射属于可恢复的派生产物，不能把导入误报为失败。
-      debugPrint('保存 EPUB 图片映射失败，书籍导入仍视为成功: $error');
-    }
-  }
-
   /// 导入书籍，支持进度回调
   ///
   /// 参数 [progressCallback] 可选的进度回调函数，接收进度值(0.0-1.0)和描述信息
@@ -583,19 +649,19 @@ class BookImportService implements BookFileImporter {
         );
 
         // 检查文件大小，对超大文件给出警告
-        if (fileSizeMB > 100) {
-          // 超过100MB，拒绝导入
+        if (fileSize > maximumBookImportBytes) {
+          // 超过单本书籍限制，拒绝导入
           throw Exception(
             '文件过大无法导入\n\n'
             '文件大小：${fileSizeMB.toStringAsFixed(1)} MB\n'
-            '限制大小：100 MB\n\n'
+            '限制大小：$maximumBookImportMegabytes MB\n\n'
             '建议：\n'
             '1. 将书籍分割为多个较小的文件\n'
             '2. 或压缩文件后再导入\n'
             '3. 使用专门的大文件阅读器',
           );
         } else if (fileSizeMB > 50) {
-          // 50-100MB，给出严重警告
+          // 超过 50 MB 时提醒用户导入可能较慢
           debugPrint(
             '⚠️ 警告：文件非常大 (${fileSizeMB.toStringAsFixed(1)} MB)，可能导致性能问题',
           );
@@ -785,47 +851,6 @@ class BookImportService implements BookFileImporter {
         debugPrint('Publisher: ${metadata.publisher ?? 'Unknown'}');
         LibraryEventBus().notifyLibraryChanged();
 
-        // 🖼️ 如果是EPUB格式，保存图片映射
-        if (pickedFile.extension?.toLowerCase() == 'epub' &&
-            metadata.additionalInfo?['imageMap'] != null) {
-          final oldImageMap =
-              metadata.additionalInfo!['imageMap'] as Map<String, String>;
-          if (oldImageMap.isNotEmpty) {
-            progressCallback?.call(0.95, '保存图片映射...');
-
-            // 🔧 修复键名：将临时bookId替换为真正的bookId
-            final newImageMap = <String, String>{};
-            final bookIdStr = bookId.toString();
-
-            for (var entry in oldImageMap.entries) {
-              // 提取文件名部分（去掉临时bookId前缀）
-              final parts = entry.key.split('_');
-              if (parts.length >= 2) {
-                // 重建键名：真实bookId_文件名
-                final fileName = parts.sublist(1).join('_');
-                final newKey = '${bookIdStr}_$fileName';
-                // 🔧 清理路径：移除所有换行符和多余空白
-                final cleanPath = entry.value
-                    .replaceAll(RegExp(r'[\r\n\t]'), '')
-                    .trim();
-                newImageMap[newKey] = cleanPath;
-                debugPrint('🔧 修复映射键: ${entry.key} -> $newKey');
-              } else {
-                // 保持原样（以防万一）
-                final cleanPath = entry.value
-                    .replaceAll(RegExp(r'[\r\n\t]'), '')
-                    .trim();
-                newImageMap[entry.key] = cleanPath;
-              }
-            }
-
-            await _imageMapService.saveImageMap(bookId, newImageMap);
-            debugPrint('✅ 图片映射已保存: ${newImageMap.length} 张');
-
-            // 当前阅读引擎按需分页，无需在导入阶段清除分页结果。
-          }
-        }
-
         progressCallback?.call(1.0, '导入成功！');
 
         final imported = book.copyWith(id: bookId);
@@ -863,6 +888,32 @@ class BookImportService implements BookFileImporter {
     debugPrint('📖 提取元数据: $fileName (${fileSize / 1024 / 1024} MB)');
 
     progressCallback?.call(0.0, '读取文件...');
+
+    if (ext == 'epub') {
+      try {
+        progressCallback?.call(0.2, '解析 EPUB 元数据...');
+        final metadata = await compute(
+          extractEpubNativeMetadata,
+          <String, dynamic>{'epubPath': filePath},
+        );
+        progressCallback?.call(1.0, '元数据提取完成');
+        return _epubMetadataFromMap(metadata, fileName);
+      } catch (error) {
+        debugPrint('EPUB metadata extraction failed: $error');
+        return EnhancedBookMetadata(
+          title: fileName.replaceAll(
+            RegExp(r'\.(epub)$', caseSensitive: false),
+            '',
+          ),
+          author: 'Unknown',
+          estimatedPages: (fileSize / 10000).ceil().clamp(1, 9999),
+          additionalInfo: <String, dynamic>{
+            'format': 'EPUB',
+            'fileSize': fileSize,
+          },
+        );
+      }
+    }
 
     // 📖 修改：TXT文件也完整读取，不再限制为10MB
     // 这样可以确保元数据提取基于完整内容
@@ -935,7 +986,10 @@ class BookImportService implements BookFileImporter {
     final ext = extension.toLowerCase();
     try {
       final metadata = switch (ext) {
-        'epub' => await _extractEpubMetadata(bytes, fileName),
+        'epub' => _epubMetadataFromMap(
+          await compute(extractEpubMetadataInIsolate, bytes),
+          fileName,
+        ),
         'pdf' => await _extractPdfMetadata(bytes, fileName),
         'txt' => await _extractTxtMetadata(bytes, fileName),
         'mobi' ||
@@ -959,146 +1013,29 @@ class BookImportService implements BookFileImporter {
   }
 
   /// Extract comprehensive EPUB metadata
-  Future<EnhancedBookMetadata> _extractEpubMetadata(
-    Uint8List bytes,
+  EnhancedBookMetadata _epubMetadataFromMap(
+    Map<String, dynamic> metadata,
     String fileName,
-  ) async {
-    try {
-      EpubBook epubBook;
-      try {
-        epubBook = await compute(parseEpubBookInIsolate, bytes);
-      } catch (e) {
-        // isolate 解析或结果传输失败时回退主线程解析
-        debugPrint('⚠️ EPUB isolate 解析失败，回退主线程: $e');
-        epubBook = await EpubReader.readBook(bytes);
-      }
-
-      // Extract basic metadata first (needed for cover fetching)
-      final title = epubBook.Title?.isNotEmpty == true
-          ? epubBook.Title!
-          : fileName.replaceAll(RegExp(r'\.(epub)$'), '');
-      final author = epubBook.Author?.isNotEmpty == true
-          ? epubBook.Author!
-          : 'Unknown';
-
-      // 🖼️ 提取图片（恢复为同步，确保图片可用）
-      // 注意：虽然是同步，但图片数量通常不多（<10张），影响很小
-      final tempBookId = DateTime.now().millisecondsSinceEpoch.toString();
-      debugPrint('🖼️ 开始提取EPUB图片...');
-      Map<String, String> imageMap = {};
-      try {
-        imageMap = await _imageExtractor.extractImagesFromEpubBook(
-          epubBook,
-          tempBookId,
-        );
-        debugPrint('✅ 图片提取完成: ${imageMap.length} 张');
-      } catch (e) {
-        debugPrint('⚠️ 图片提取失败: $e，继续导入流程');
-      }
-
-      // Extract ISBN from embedded metadata.
-      String? isbn;
-      if (epubBook.Schema?.Package?.Metadata?.Identifiers?.isNotEmpty == true) {
-        for (final identifier
-            in epubBook.Schema!.Package!.Metadata!.Identifiers!) {
-          if (identifier.Scheme?.toLowerCase().contains('isbn') == true) {
-            isbn = identifier.Identifier;
-            break;
-          }
-        }
-      }
-
-      // Prefer the embedded cover; otherwise generate one locally.
-      Uint8List? coverImage;
-      try {
-        coverImage = await _extractEpubCover(epubBook);
-        if (coverImage == null) {
-          coverImage = await CoverGenerator.generateTextCover(
-            title: title,
-            author: author,
-            format: 'EPUB',
-          );
-        } else {
-          debugPrint('✅ 成功从EPUB文件提取内置封面');
-        }
-      } catch (e) {
-        debugPrint('⚠️ 封面处理失败: $e，生成默认封面');
-        try {
-          coverImage = await CoverGenerator.generateTextCover(
-            title: title,
-            author: author,
-            format: 'EPUB',
-          );
-        } catch (genError) {
-          debugPrint('❌ EPUB封面生成失败: $genError');
-        }
-      }
-
-      // Try to extract description from available fields
-      String? description;
-      // EPUB standard doesn't have a direct Description property, so try alternative methods
-      final allContent = await _getAllEpubContent(epubBook);
-      if (allContent.isNotEmpty && allContent.length > 200) {
-        // Take first 500 characters as description
-        description = allContent
-            .substring(0, allContent.length.clamp(0, 500))
-            .trim();
-        if (description.length >= 500) {
-          description = '${description.substring(0, 497)}...';
-        }
-      }
-
-      // Extract language - simple approach since Language property may not exist
-      String? language;
-      if (epubBook.Schema?.Package?.Metadata?.Languages?.isNotEmpty == true) {
-        language = epubBook.Schema!.Package!.Metadata!.Languages!.first;
-      }
-
-      // Extract publisher - Publishers may be a list of strings
-      String? publisher;
-      if (epubBook.Schema?.Package?.Metadata?.Publishers?.isNotEmpty == true) {
-        publisher = epubBook.Schema!.Package!.Metadata!.Publishers!.first;
-      }
-
-      // Extract publication date
-      String? publishDate;
-      if (epubBook.Schema?.Package?.Metadata?.Dates?.isNotEmpty == true) {
-        publishDate = epubBook.Schema!.Package!.Metadata!.Dates!.first.Date;
-      }
-
-      // Extract subject tags - Subjects is likely a list of strings
-      List<String>? tags;
-      if (epubBook.Schema?.Package?.Metadata?.Subjects?.isNotEmpty == true) {
-        tags = epubBook.Schema!.Package!.Metadata!.Subjects!
-            .where((subject) => subject.isNotEmpty)
-            .toList();
-      }
-
-      // Estimate pages based on content length
-      final estimatedPages = (allContent.length / 1500).ceil().clamp(1, 9999);
-
-      return EnhancedBookMetadata(
-        title: title,
-        author: author,
-        description: description,
-        language: language,
-        publisher: publisher,
-        publishDate: publishDate,
-        isbn: isbn,
-        coverImage: coverImage,
-        estimatedPages: estimatedPages,
-        tags: tags,
-        additionalInfo: {
-          'format': 'EPUB',
-          'hasImages': epubBook.Content?.Images?.isNotEmpty == true,
-          'chapterCount': epubBook.Chapters?.length ?? 0,
-          'imageMap': imageMap, // 🖼️ 添加图片映射，用于阅读器渲染
-        },
-      );
-    } catch (e) {
-      debugPrint('EPUB metadata extraction failed: $e');
-      return _extractBasicMetadata(bytes, fileName);
-    }
+  ) {
+    final title = (metadata['title'] as String? ?? '').trim();
+    final author = (metadata['author'] as String? ?? '').trim();
+    return EnhancedBookMetadata(
+      title: title.isEmpty
+          ? fileName.replaceAll(RegExp(r'\.(epub)$', caseSensitive: false), '')
+          : title,
+      author: author.isEmpty ? 'Unknown' : author,
+      description: metadata['description'] as String?,
+      language: metadata['language'] as String?,
+      publisher: metadata['publisher'] as String?,
+      publishDate: metadata['publishDate'] as String?,
+      isbn: metadata['isbn'] as String?,
+      coverImage: metadata['coverImage'] as Uint8List?,
+      estimatedPages: metadata['estimatedPages'] as int? ?? 1,
+      tags: (metadata['tags'] as List<dynamic>?)?.cast<String>(),
+      additionalInfo: Map<String, dynamic>.from(
+        metadata['additionalInfo'] as Map? ?? const {},
+      ),
+    );
   }
 
   /// Extract PDF metadata
@@ -1775,109 +1712,12 @@ class BookImportService implements BookFileImporter {
     }
   }
 
-  // Recursively get all EPUB chapter content
-  Future<String> _getAllEpubContent(EpubBook book) async {
-    final buffer = StringBuffer();
-    // Using book.Content is often more reliable for getting all text content
-    if (book.Content != null) {
-      // Iterate over all HTML files
-      final htmlFiles = book.Content!.Html;
-      if (htmlFiles != null) {
-        for (var entry in htmlFiles.entries) {
-          final htmlContent = entry.value.Content;
-          if (htmlContent != null && htmlContent.isNotEmpty) {
-            buffer.writeln(_stripHtml(htmlContent));
-          }
-        }
-      }
-    }
-    return buffer.toString();
-  }
-
-  String _stripHtml(String html) {
-    return html
-        .replaceAll(RegExp(r'<[^>]*>'), ' ')
-        .replaceAll(RegExp(r'\s+'), ' ')
-        .trim();
-  }
-
   String _stripXmlTags(String xml) {
     return xml
         .replaceAll(RegExp(r'<[^>]*>'), ' ')
         .replaceAll(RegExp(r'\s+'), ' ')
         .replaceAll(RegExp(r'&[a-zA-Z0-9#]+;'), ' ') // Remove XML entities
         .trim();
-  }
-
-  /// 增强的EPUB封面提取
-  Future<Uint8List?> _extractEpubCover(EpubBook epubBook) async {
-    try {
-      // 方法1: 直接从CoverImage属性获取
-      if (epubBook.CoverImage != null) {
-        // 如果CoverImage是Uint8List类型
-        if (epubBook.CoverImage is Uint8List) {
-          return epubBook.CoverImage as Uint8List;
-        }
-        // 如果有其他类型，尝试转换
-      }
-
-      // 方法2: 从Content.Images中查找封面
-      if (epubBook.Content?.Images != null &&
-          epubBook.Content!.Images!.isNotEmpty) {
-        // 优先查找名称包含"cover"的图片
-        for (final entry in epubBook.Content!.Images!.entries) {
-          final fileName = entry.key.toLowerCase();
-          if (fileName.contains('cover') || fileName.contains('front')) {
-            final imageFile = entry.value;
-            if (imageFile.Content != null && imageFile.Content!.isNotEmpty) {
-              final imageBytes = Uint8List.fromList(imageFile.Content!);
-              if (_isValidImageFormat(imageBytes)) {
-                return imageBytes;
-              }
-            }
-          }
-        }
-
-        // 如果没找到，返回第一个有效的图片
-        for (final entry in epubBook.Content!.Images!.entries) {
-          final imageFile = entry.value;
-          if (imageFile.Content != null && imageFile.Content!.isNotEmpty) {
-            final imageBytes = Uint8List.fromList(imageFile.Content!);
-            if (_isValidImageFormat(imageBytes)) {
-              return imageBytes;
-            }
-          }
-        }
-      }
-
-      // 方法3: 从manifest中查找封面引用
-      if (epubBook.Schema?.Package?.Manifest?.Items != null) {
-        for (final item in epubBook.Schema!.Package!.Manifest!.Items!) {
-          // 查找cover相关的item
-          if (item.Id?.toLowerCase().contains('cover') == true ||
-              item.Href?.toLowerCase().contains('cover') == true ||
-              item.Properties?.contains('cover-image') == true) {
-            // 尝试从Images中获取对应的内容
-            if (epubBook.Content?.Images != null && item.Href != null) {
-              final imageFile = epubBook.Content!.Images![item.Href!];
-              if (imageFile?.Content != null &&
-                  imageFile!.Content!.isNotEmpty) {
-                final imageBytes = Uint8List.fromList(imageFile.Content!);
-                if (_isValidImageFormat(imageBytes)) {
-                  return imageBytes;
-                }
-              }
-            }
-          }
-        }
-      }
-
-      debugPrint('No cover image found in EPUB');
-      return null;
-    } catch (e) {
-      debugPrint('Error extracting EPUB cover: $e');
-      return null;
-    }
   }
 
   /// 验证图片格式

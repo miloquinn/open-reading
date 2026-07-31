@@ -133,7 +133,65 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bookSourcesConfirm => 'Confirm';
 
   @override
-  String get bookSourcesAddTitle => 'Add open source';
+  String get bookSourcesAddTitle => 'Add source';
+
+  @override
+  String get bookSourcesImportLink => 'Import link';
+
+  @override
+  String get bookSourcesAnalyze => 'Analyze';
+
+  @override
+  String get bookSourcesDetectedOrsp => 'Detected: ORSP';
+
+  @override
+  String get bookSourcesDetectedAdditional => 'Detected: Other protocol';
+
+  @override
+  String get bookSourcesProtocolGroupOrsp => 'ORSP sources';
+
+  @override
+  String get bookSourcesProtocolGroupAdditional => 'Other protocol sources';
+
+  @override
+  String get bookSourcesAdvancedFeatureRequired =>
+      'Enable More source protocols in Advanced features before importing this source.';
+
+  @override
+  String get bookSourcesNoWorkingSources =>
+      'No source passed the live search check. Nothing was imported.';
+
+  @override
+  String bookSourcesVerificationProgress(
+    int completed,
+    int total,
+    int available,
+  ) {
+    return 'Checked $completed/$total; $available working';
+  }
+
+  @override
+  String get bookSourcesSelect => 'Select sources';
+
+  @override
+  String get bookSourcesSelectAll => 'Select all';
+
+  @override
+  String get bookSourcesClearSelection => 'Clear selection';
+
+  @override
+  String get bookSourcesEnableSelected => 'Enable selected';
+
+  @override
+  String get bookSourcesDisableSelected => 'Disable selected';
+
+  @override
+  String get bookSourcesDeleteSelected => 'Delete selected';
+
+  @override
+  String bookSourcesDeleteSelectedMessage(int count) {
+    return 'Delete $count selected sources? Local books are not affected.';
+  }
 
   @override
   String get bookSourcesUrlLabel => 'Source address';
@@ -1564,7 +1622,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get incomingBooksFileTooLarge =>
-      'The file exceeds the 100 MB import limit';
+      'The file exceeds the 500 MB import limit';
 
   @override
   String get incomingBooksTooManyFiles =>
@@ -1649,6 +1707,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String get libraryDeleteComplete => 'Deletion complete';
 
   @override
+  String get librarySelectMultiple => 'Select multiple';
+
+  @override
+  String get librarySelectAll => 'Select all';
+
+  @override
+  String librarySelectedBooks(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String libraryDeleteSelected(int count) {
+    return 'Delete $count';
+  }
+
+  @override
+  String get libraryBatchDeleteTitle => 'Delete selected books?';
+
+  @override
+  String libraryBatchDeleteMessage(int count) {
+    return 'This permanently deletes the selected $count books, related notes and bookmarks, and local files. This cannot be undone.';
+  }
+
+  @override
+  String libraryDeletingSelected(int done, int total) {
+    return 'Deleting $done/$total';
+  }
+
+  @override
+  String libraryBatchDeleteSuccess(int count) {
+    return 'Deleted $count books';
+  }
+
+  @override
+  String libraryBatchDeletePartial(int success, int failed) {
+    return 'Deleted $success; $failed failed';
+  }
+
+  @override
   String get readerPrefaceTitle => 'Front Matter';
 
   @override
@@ -1713,6 +1810,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get readerBottomMarginLabel => 'Bottom margin';
+
+  @override
+  String get readerTxtChapterTitlePageTitle => 'Chapter title on its own page';
+
+  @override
+  String get readerTxtChapterTitlePageHint =>
+      'When off, the chapter title appears above the body text';
 
   @override
   String get readerVerticalMarginLabel => 'Vertical margin';
@@ -1879,6 +1983,57 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsSectionGeneral => 'General';
+
+  @override
+  String get settingsSectionAdvancedFeatures => 'Advanced features';
+
+  @override
+  String get settingsAdditionalSourceProtocolsTitle => 'More source protocols';
+
+  @override
+  String get settingsAdditionalSourceProtocolsSubtitle =>
+      'Enable support for additional source protocols.';
+
+  @override
+  String get additionalSourcesImport => 'Import more source protocols';
+
+  @override
+  String get additionalSourcesImportTitle => 'Import source JSON';
+
+  @override
+  String get additionalSourcesImportNotice =>
+      'Imported sources are checked before use and remain disabled until you enable them.';
+
+  @override
+  String get additionalSourcesChooseFile => 'Add from JSON file';
+
+  @override
+  String get additionalSourcesUrlLabel => 'Source JSON URL';
+
+  @override
+  String get additionalSourcesLoadUrl => 'Load URL';
+
+  @override
+  String additionalSourcesPreview(int supported, int partial, int unsupported) {
+    return '$supported available, $partial partially supported, $unsupported not supported';
+  }
+
+  @override
+  String get additionalSourcesAvailable => 'Available';
+
+  @override
+  String get additionalSourcesPartial => 'Partially supported';
+
+  @override
+  String get additionalSourcesUnsupported => 'Not supported';
+
+  @override
+  String get additionalSourcesImportConfirm => 'Import disabled';
+
+  @override
+  String additionalSourcesImported(int count) {
+    return 'Imported $count sources';
+  }
 
   @override
   String get settingsSectionAboutSupport => 'About & Support';
@@ -2155,10 +2310,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsFloatingNavigationSubtitle =>
-      'Adjust the display style and destination order';
+      'Adjust size, display style, and destination order';
 
   @override
   String get floatingNavigationPreviewTitle => 'Preview';
+
+  @override
+  String get floatingNavigationSizeTitle => 'Size';
+
+  @override
+  String get floatingNavigationSizeAutomatic => 'Automatic';
+
+  @override
+  String get floatingNavigationSizeCustom => 'Custom';
+
+  @override
+  String get floatingNavigationHeightLabel => 'Height';
+
+  @override
+  String get floatingNavigationSideMarginLabel => 'Side margin';
 
   @override
   String get floatingNavigationDisplayModeTitle => 'Display style';
@@ -2187,11 +2357,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get floatingNavigationResetDone => 'Default order restored';
 
   @override
-  String get settingsLibraryLayoutTitle => 'Library layout';
+  String get settingsLibraryLayoutTitle => 'Library settings';
 
   @override
   String get settingsLibraryLayoutSubtitle =>
-      'Choose cards or a compact grid, then adjust the grid details';
+      'Adjust the library layout and book opening experience';
 
   @override
   String get settingsLibraryLayoutCard => 'Cards';
@@ -2214,6 +2384,49 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settingsLibraryGridShowDetailsSubtitle =>
       'Add one title line and a compact progress bar below each cover';
+
+  @override
+  String get settingsLibraryOpenAnimationTitle => 'Book opening animation';
+
+  @override
+  String get settingsLibraryOpenAnimationSubtitle =>
+      'Used only when opening a book from the library';
+
+  @override
+  String get settingsLibraryOpenAnimationClassicCover =>
+      'Classic cover expansion';
+
+  @override
+  String get settingsLibraryOpenAnimationClassicCoverHint =>
+      'Enlarge the original cover to full screen before revealing the reader';
+
+  @override
+  String get settingsLibraryOpenAnimationMinimal => 'Minimal fade';
+
+  @override
+  String get settingsLibraryOpenAnimationMinimalHint =>
+      'A quick, stable fade with no directional movement';
+
+  @override
+  String get settingsLibraryOpenAnimationPaperRise => 'Paper rise';
+
+  @override
+  String get settingsLibraryOpenAnimationPaperRiseHint =>
+      'The reading paper settles gently into place from below';
+
+  @override
+  String get settingsLibraryOpenAnimationPageSlide => 'Page slide';
+
+  @override
+  String get settingsLibraryOpenAnimationPageSlideHint =>
+      'The reading page enters with a short sideways motion';
+
+  @override
+  String get settingsLibraryOpenAnimationBookSpread => 'Book spread';
+
+  @override
+  String get settingsLibraryOpenAnimationBookSpreadHint =>
+      'Two paper halves open outward from the center';
 
   @override
   String get settingsAccentFollowTheme => 'Accent color: follow theme';
@@ -3502,7 +3715,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Copied file does not match source';
 
   @override
-  String get importErrorFileTooLarge => 'File exceeds 100MB import limit';
+  String get importErrorFileTooLarge => 'File exceeds 500 MB import limit';
 
   @override
   String get importErrorSourcePrepareFailed => 'Cannot prepare import file';

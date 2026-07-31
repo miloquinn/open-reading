@@ -156,117 +156,118 @@ void main() {
     },
   );
 
-  testWidgets('native vertical paging uses positioned pages and fixed chrome', (
-    tester,
-  ) async {
-    debugDefaultTargetPlatformOverride = TargetPlatform.android;
-    await tester.binding.setSurfaceSize(const Size(400, 800));
-    final verticalBook = File(
-      '${Directory.systemTemp.path}/open-reading-vertical-paging.html',
-    );
-    verticalBook.writeAsStringSync(bookFile.readAsStringSync());
-    SharedPreferences.setMockInitialValues({
-      ReaderSettingsStore.pageModeKey: ReaderPageMode.verticalScroll.name,
-      ReaderSettingsStore.scrollByChapterKey: false,
-    });
-    try {
-      await tester.pumpWidget(
-        MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: NativeReaderPage(
-            book: Book(
-              title: 'Vertical paging test',
-              filePath: verticalBook.path,
-              format: 'html',
-              fileModifiedTime: verticalBook
-                  .lastModifiedSync()
-                  .millisecondsSinceEpoch,
+  testWidgets(
+    'native vertical reading uses continuous parts and fixed chrome',
+    (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+      await tester.binding.setSurfaceSize(const Size(400, 800));
+      final verticalBook = File(
+        '${Directory.systemTemp.path}/open-reading-vertical-paging.html',
+      );
+      verticalBook.writeAsStringSync(bookFile.readAsStringSync());
+      SharedPreferences.setMockInitialValues({
+        ReaderSettingsStore.pageModeKey: ReaderPageMode.verticalScroll.name,
+        ReaderSettingsStore.scrollByChapterKey: false,
+      });
+      try {
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: NativeReaderPage(
+              book: Book(
+                title: 'Vertical paging test',
+                filePath: verticalBook.path,
+                format: 'html',
+                fileModifiedTime: verticalBook
+                    .lastModifiedSync()
+                    .millisecondsSinceEpoch,
+              ),
             ),
           ),
-        ),
-      );
-      await tester.runAsync(() async {
-        for (var attempt = 0; attempt < 30; attempt++) {
-          await Future<void>.delayed(const Duration(milliseconds: 50));
-          await tester.pump();
-          if (find.byType(ScrollablePositionedList).evaluate().isNotEmpty) {
-            return;
+        );
+        await tester.runAsync(() async {
+          for (var attempt = 0; attempt < 30; attempt++) {
+            await Future<void>.delayed(const Duration(milliseconds: 50));
+            await tester.pump();
+            if (find.byType(ScrollablePositionedList).evaluate().isNotEmpty) {
+              return;
+            }
           }
-        }
-      });
-      await _pumpUntilFound(tester, find.byType(ScrollablePositionedList));
+        });
+        await _pumpUntilFound(tester, find.byType(ScrollablePositionedList));
 
-      expect(
-        find.byKey(const ValueKey('native-reader-viewport-title')),
-        findsOneWidget,
-      );
-      expect(
-        find.byKey(const ValueKey('native-reader-status')),
-        findsOneWidget,
-      );
-      final windowFinder = find.byKey(
-        const ValueKey('native-vertical-reading-window'),
-      );
-      final window = tester.widget<Padding>(windowFinder);
-      final windowPadding = window.padding.resolve(TextDirection.ltr);
-      final listRect = tester.getRect(find.byType(ScrollablePositionedList));
-      expect(windowPadding.vertical, greaterThan(0));
-      expect(listRect.top, closeTo(windowPadding.top, 0.1));
-      expect(listRect.bottom, closeTo(800 - windowPadding.bottom, 0.1));
+        expect(
+          find.byKey(const ValueKey('native-reader-viewport-title')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const ValueKey('native-reader-status')),
+          findsOneWidget,
+        );
+        final windowFinder = find.byKey(
+          const ValueKey('native-vertical-reading-window'),
+        );
+        final window = tester.widget<Padding>(windowFinder);
+        final windowPadding = window.padding.resolve(TextDirection.ltr);
+        final listRect = tester.getRect(find.byType(ScrollablePositionedList));
+        expect(windowPadding.vertical, greaterThan(0));
+        expect(listRect.top, closeTo(windowPadding.top, 0.1));
+        expect(listRect.bottom, closeTo(800 - windowPadding.bottom, 0.1));
 
-      final pageCells = find.byWidgetPredicate(
-        (widget) =>
-            widget is SizedBox &&
-            widget.key is ValueKey<String> &&
-            (widget.key! as ValueKey<String>).value.startsWith(
-              'native-vertical-page:',
-            ),
-      );
-      expect(pageCells, findsWidgets);
-      expect(
-        tester.widget<SizedBox>(pageCells.first).height,
-        closeTo(listRect.height, 0.1),
-      );
+        final continuousParts = find.byWidgetPredicate(
+          (widget) =>
+              widget is Column &&
+              widget.key is ValueKey<String> &&
+              (widget.key! as ValueKey<String>).value.startsWith(
+                'native-vertical-part:',
+              ),
+        );
+        expect(continuousParts, findsWidgets);
+        expect(
+          tester.getSize(continuousParts.first).height,
+          isNot(listRect.height),
+        );
 
-      final surface = find.byKey(const ValueKey('native-reader-surface'));
-      final hiddenTop = tester.widget<AnimatedPositioned>(
-        find.byKey(const ValueKey('native-reader-top-controls')),
-      );
-      expect(hiddenTop.top, -130);
+        final surface = find.byKey(const ValueKey('native-reader-surface'));
+        final hiddenTop = tester.widget<AnimatedPositioned>(
+          find.byKey(const ValueKey('native-reader-top-controls')),
+        );
+        expect(hiddenTop.top, -130);
 
-      final drag = await tester.startGesture(tester.getRect(surface).center);
-      await drag.moveBy(const Offset(0, -120));
-      await drag.up();
-      await tester.pump();
-      expect(
-        tester
-            .widget<AnimatedPositioned>(
-              find.byKey(const ValueKey('native-reader-top-controls')),
-            )
-            .top,
-        -130,
-      );
+        final drag = await tester.startGesture(tester.getRect(surface).center);
+        await drag.moveBy(const Offset(0, -120));
+        await drag.up();
+        await tester.pump();
+        expect(
+          tester
+              .widget<AnimatedPositioned>(
+                find.byKey(const ValueKey('native-reader-top-controls')),
+              )
+              .top,
+          -130,
+        );
 
-      await tester.tapAt(tester.getRect(surface).center);
-      await tester.pump();
-      expect(
-        tester
-            .widget<AnimatedPositioned>(
-              find.byKey(const ValueKey('native-reader-top-controls')),
-            )
-            .top,
-        greaterThan(-130),
-      );
-      expect(tester.takeException(), isNull);
-    } finally {
-      await tester.pumpWidget(const SizedBox.shrink());
-      await tester.pump();
-      await tester.binding.setSurfaceSize(null);
-      if (verticalBook.existsSync()) verticalBook.deleteSync();
-      debugDefaultTargetPlatformOverride = null;
-    }
-  });
+        await tester.tapAt(tester.getRect(surface).center);
+        await tester.pump();
+        expect(
+          tester
+              .widget<AnimatedPositioned>(
+                find.byKey(const ValueKey('native-reader-top-controls')),
+              )
+              .top,
+          greaterThan(-130),
+        );
+        expect(tester.takeException(), isNull);
+      } finally {
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pump();
+        await tester.binding.setSurfaceSize(null);
+        if (verticalBook.existsSync()) verticalBook.deleteSync();
+        debugDefaultTargetPlatformOverride = null;
+      }
+    },
+  );
 
   testWidgets('native horizontal reader resolves a side tap before animating', (
     tester,

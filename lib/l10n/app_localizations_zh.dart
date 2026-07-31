@@ -125,7 +125,64 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bookSourcesConfirm => '确认';
 
   @override
-  String get bookSourcesAddTitle => '添加开放书源';
+  String get bookSourcesAddTitle => '添加书源';
+
+  @override
+  String get bookSourcesImportLink => '导入链接';
+
+  @override
+  String get bookSourcesAnalyze => '分析书源';
+
+  @override
+  String get bookSourcesDetectedOrsp => '识别为：ORSP 书源';
+
+  @override
+  String get bookSourcesDetectedAdditional => '识别为：其他协议书源';
+
+  @override
+  String get bookSourcesProtocolGroupOrsp => 'ORSP 书源';
+
+  @override
+  String get bookSourcesProtocolGroupAdditional => '其他协议书源';
+
+  @override
+  String get bookSourcesAdvancedFeatureRequired =>
+      '请先在“高级功能”中开启“更多书源协议”，再导入该书源。';
+
+  @override
+  String get bookSourcesNoWorkingSources => '没有书源通过实际搜索检测，本次未导入任何书源。';
+
+  @override
+  String bookSourcesVerificationProgress(
+    int completed,
+    int total,
+    int available,
+  ) {
+    return '已检测 $completed/$total，可用 $available 个';
+  }
+
+  @override
+  String get bookSourcesSelect => '多选书源';
+
+  @override
+  String get bookSourcesSelectAll => '全选';
+
+  @override
+  String get bookSourcesClearSelection => '取消全选';
+
+  @override
+  String get bookSourcesEnableSelected => '启用所选';
+
+  @override
+  String get bookSourcesDisableSelected => '停用所选';
+
+  @override
+  String get bookSourcesDeleteSelected => '删除所选';
+
+  @override
+  String bookSourcesDeleteSelectedMessage(int count) {
+    return '确定删除选中的 $count 个书源吗？本地书籍不会受到影响。';
+  }
 
   @override
   String get bookSourcesUrlLabel => '书源地址';
@@ -1504,7 +1561,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get incomingBooksUnsupportedFormat => '暂不支持这种书籍格式';
 
   @override
-  String get incomingBooksFileTooLarge => '文件超过 100 MB 导入限制';
+  String get incomingBooksFileTooLarge => '文件超过 500 MB 导入限制';
 
   @override
   String get incomingBooksTooManyFiles => '一次分享的书籍文件过多，请分批添加';
@@ -1585,6 +1642,45 @@ class AppLocalizationsZh extends AppLocalizations {
   String get libraryDeleteComplete => '删除完成';
 
   @override
+  String get librarySelectMultiple => '选择多本';
+
+  @override
+  String get librarySelectAll => '全选';
+
+  @override
+  String librarySelectedBooks(int count) {
+    return '已选择 $count 本';
+  }
+
+  @override
+  String libraryDeleteSelected(int count) {
+    return '删除 $count 本';
+  }
+
+  @override
+  String get libraryBatchDeleteTitle => '删除所选书籍？';
+
+  @override
+  String libraryBatchDeleteMessage(int count) {
+    return '将永久删除所选的 $count 本书，以及相关笔记、书签和本地文件。此操作无法撤销。';
+  }
+
+  @override
+  String libraryDeletingSelected(int done, int total) {
+    return '正在删除 $done/$total';
+  }
+
+  @override
+  String libraryBatchDeleteSuccess(int count) {
+    return '已删除 $count 本书';
+  }
+
+  @override
+  String libraryBatchDeletePartial(int success, int failed) {
+    return '已删除 $success 本，$failed 本删除失败';
+  }
+
+  @override
   String get readerPrefaceTitle => '正文前';
 
   @override
@@ -1641,6 +1737,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get readerBottomMarginLabel => '下页边距';
+
+  @override
+  String get readerTxtChapterTitlePageTitle => '章节标题独立成页';
+
+  @override
+  String get readerTxtChapterTitlePageHint => '关闭后，章节标题显示在正文开头';
 
   @override
   String get readerVerticalMarginLabel => '上下页边距';
@@ -1797,6 +1899,55 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsSectionGeneral => '通用';
+
+  @override
+  String get settingsSectionAdvancedFeatures => '高级功能';
+
+  @override
+  String get settingsAdditionalSourceProtocolsTitle => '更多书源协议';
+
+  @override
+  String get settingsAdditionalSourceProtocolsSubtitle => '开启后，可以支持更多的书源协议。';
+
+  @override
+  String get additionalSourcesImport => '导入更多协议书源';
+
+  @override
+  String get additionalSourcesImportTitle => '导入书源 JSON';
+
+  @override
+  String get additionalSourcesImportNotice => '导入内容会先进行兼容性预检，并保持停用，需由你主动开启。';
+
+  @override
+  String get additionalSourcesChooseFile => '从 JSON 文件添加';
+
+  @override
+  String get additionalSourcesUrlLabel => '书源 JSON 地址';
+
+  @override
+  String get additionalSourcesLoadUrl => '从 URL 加载';
+
+  @override
+  String additionalSourcesPreview(int supported, int partial, int unsupported) {
+    return '可使用 $supported 个，部分支持 $partial 个，暂不支持 $unsupported 个';
+  }
+
+  @override
+  String get additionalSourcesAvailable => '可使用';
+
+  @override
+  String get additionalSourcesPartial => '部分支持';
+
+  @override
+  String get additionalSourcesUnsupported => '暂不支持';
+
+  @override
+  String get additionalSourcesImportConfirm => '停用状态导入';
+
+  @override
+  String additionalSourcesImported(int count) {
+    return '已导入 $count 个书源';
+  }
 
   @override
   String get settingsSectionAboutSupport => '关于与支持';
@@ -2050,10 +2201,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsFloatingNavigationTitle => '悬浮导航栏';
 
   @override
-  String get settingsFloatingNavigationSubtitle => '调整显示方式与入口顺序';
+  String get settingsFloatingNavigationSubtitle => '调整尺寸、显示方式与入口顺序';
 
   @override
   String get floatingNavigationPreviewTitle => '预览';
+
+  @override
+  String get floatingNavigationSizeTitle => '尺寸';
+
+  @override
+  String get floatingNavigationSizeAutomatic => '自动适配';
+
+  @override
+  String get floatingNavigationSizeCustom => '自定义';
+
+  @override
+  String get floatingNavigationHeightLabel => '高度';
+
+  @override
+  String get floatingNavigationSideMarginLabel => '左右边距';
 
   @override
   String get floatingNavigationDisplayModeTitle => '显示方式';
@@ -2080,10 +2246,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get floatingNavigationResetDone => '已恢复默认顺序';
 
   @override
-  String get settingsLibraryLayoutTitle => '书库布局';
+  String get settingsLibraryLayoutTitle => '书库设置';
 
   @override
-  String get settingsLibraryLayoutSubtitle => '选择卡片或紧凑网格，并按需调整网格信息';
+  String get settingsLibraryLayoutSubtitle => '调整书库布局与书籍打开体验';
 
   @override
   String get settingsLibraryLayoutCard => '卡片';
@@ -2105,6 +2271,43 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsLibraryGridShowDetailsSubtitle => '在每本封面下显示单行书名和精简进度条';
+
+  @override
+  String get settingsLibraryOpenAnimationTitle => '书籍打开动画';
+
+  @override
+  String get settingsLibraryOpenAnimationSubtitle => '仅作用于从书库打开书籍';
+
+  @override
+  String get settingsLibraryOpenAnimationClassicCover => '经典封面展开';
+
+  @override
+  String get settingsLibraryOpenAnimationClassicCoverHint =>
+      '将原封面放大至全屏，再衔接阅读正文';
+
+  @override
+  String get settingsLibraryOpenAnimationMinimal => '极简淡入';
+
+  @override
+  String get settingsLibraryOpenAnimationMinimalHint => '快速稳定地淡入，没有方向位移';
+
+  @override
+  String get settingsLibraryOpenAnimationPaperRise => '纸面浮现';
+
+  @override
+  String get settingsLibraryOpenAnimationPaperRiseHint => '阅读纸面从下方轻轻浮现并落定';
+
+  @override
+  String get settingsLibraryOpenAnimationPageSlide => '侧页推入';
+
+  @override
+  String get settingsLibraryOpenAnimationPageSlideHint => '阅读纸面从侧边短距离滑入';
+
+  @override
+  String get settingsLibraryOpenAnimationBookSpread => '双页展开';
+
+  @override
+  String get settingsLibraryOpenAnimationBookSpreadHint => '两侧纸面从中缝向外展开';
 
   @override
   String get settingsAccentFollowTheme => '强调色：跟随主题';
@@ -3328,7 +3531,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get importErrorCopyVerificationFailed => '复制后的文件与源文件不一致';
 
   @override
-  String get importErrorFileTooLarge => '文件超过 100 MB 导入限制';
+  String get importErrorFileTooLarge => '文件超过 500 MB 导入限制';
 
   @override
   String get importErrorSourcePrepareFailed => '无法准备导入文件';
@@ -4143,7 +4346,64 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get bookSourcesConfirm => '確認';
 
   @override
-  String get bookSourcesAddTitle => '新增開放書源';
+  String get bookSourcesAddTitle => '新增書源';
+
+  @override
+  String get bookSourcesImportLink => '匯入連結';
+
+  @override
+  String get bookSourcesAnalyze => '分析書源';
+
+  @override
+  String get bookSourcesDetectedOrsp => '識別為：ORSP 書源';
+
+  @override
+  String get bookSourcesDetectedAdditional => '識別為：其他協議書源';
+
+  @override
+  String get bookSourcesProtocolGroupOrsp => 'ORSP 書源';
+
+  @override
+  String get bookSourcesProtocolGroupAdditional => '其他協議書源';
+
+  @override
+  String get bookSourcesAdvancedFeatureRequired =>
+      '請先在「進階功能」中開啟「更多書源協議」，再匯入該書源。';
+
+  @override
+  String get bookSourcesNoWorkingSources => '沒有書源通過實際搜尋檢測，本次未匯入任何書源。';
+
+  @override
+  String bookSourcesVerificationProgress(
+    int completed,
+    int total,
+    int available,
+  ) {
+    return '已檢測 $completed/$total，可用 $available 個';
+  }
+
+  @override
+  String get bookSourcesSelect => '多選書源';
+
+  @override
+  String get bookSourcesSelectAll => '全選';
+
+  @override
+  String get bookSourcesClearSelection => '取消全選';
+
+  @override
+  String get bookSourcesEnableSelected => '啟用所選';
+
+  @override
+  String get bookSourcesDisableSelected => '停用所選';
+
+  @override
+  String get bookSourcesDeleteSelected => '刪除所選';
+
+  @override
+  String bookSourcesDeleteSelectedMessage(int count) {
+    return '確定刪除選取的 $count 個書源嗎？本機書籍不受影響。';
+  }
 
   @override
   String get bookSourcesUrlLabel => '書源位址';
@@ -5479,7 +5739,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get incomingBooksUnsupportedFormat => '暫不支援這種書籍格式';
 
   @override
-  String get incomingBooksFileTooLarge => '檔案超過 100 MB 匯入限制';
+  String get incomingBooksFileTooLarge => '檔案超過 500 MB 匯入限制';
 
   @override
   String get incomingBooksTooManyFiles => '一次分享的書籍檔案過多，請分批加入';
@@ -5560,6 +5820,45 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get libraryDeleteComplete => '刪除完成';
 
   @override
+  String get librarySelectMultiple => '選擇多本';
+
+  @override
+  String get librarySelectAll => '全選';
+
+  @override
+  String librarySelectedBooks(int count) {
+    return '已選擇 $count 本';
+  }
+
+  @override
+  String libraryDeleteSelected(int count) {
+    return '刪除 $count 本';
+  }
+
+  @override
+  String get libraryBatchDeleteTitle => '刪除所選書籍？';
+
+  @override
+  String libraryBatchDeleteMessage(int count) {
+    return '將永久刪除所選的 $count 本書，以及相關筆記、書籤和本機檔案。此操作無法復原。';
+  }
+
+  @override
+  String libraryDeletingSelected(int done, int total) {
+    return '正在刪除 $done/$total';
+  }
+
+  @override
+  String libraryBatchDeleteSuccess(int count) {
+    return '已刪除 $count 本書';
+  }
+
+  @override
+  String libraryBatchDeletePartial(int success, int failed) {
+    return '已刪除 $success 本，$failed 本刪除失敗';
+  }
+
+  @override
   String get readerPrefaceTitle => '內文前';
 
   @override
@@ -5616,6 +5915,12 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get readerBottomMarginLabel => '下頁邊距';
+
+  @override
+  String get readerTxtChapterTitlePageTitle => '章節標題獨立成頁';
+
+  @override
+  String get readerTxtChapterTitlePageHint => '關閉後，章節標題顯示在正文開頭';
 
   @override
   String get readerVerticalMarginLabel => '上下頁邊距';
@@ -5772,6 +6077,55 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get settingsSectionGeneral => '通用';
+
+  @override
+  String get settingsSectionAdvancedFeatures => '進階功能';
+
+  @override
+  String get settingsAdditionalSourceProtocolsTitle => '更多書源協議';
+
+  @override
+  String get settingsAdditionalSourceProtocolsSubtitle => '開啟後，可以支援更多的書源協議。';
+
+  @override
+  String get additionalSourcesImport => '匯入更多協議書源';
+
+  @override
+  String get additionalSourcesImportTitle => '匯入書源 JSON';
+
+  @override
+  String get additionalSourcesImportNotice => '匯入內容會先進行相容性預檢，並保持停用，需由你主動開啟。';
+
+  @override
+  String get additionalSourcesChooseFile => '從 JSON 檔案新增';
+
+  @override
+  String get additionalSourcesUrlLabel => '書源 JSON 網址';
+
+  @override
+  String get additionalSourcesLoadUrl => '從 URL 載入';
+
+  @override
+  String additionalSourcesPreview(int supported, int partial, int unsupported) {
+    return '可使用 $supported 個，部分支援 $partial 個，暫不支援 $unsupported 個';
+  }
+
+  @override
+  String get additionalSourcesAvailable => '可使用';
+
+  @override
+  String get additionalSourcesPartial => '部分支援';
+
+  @override
+  String get additionalSourcesUnsupported => '暫不支援';
+
+  @override
+  String get additionalSourcesImportConfirm => '停用狀態匯入';
+
+  @override
+  String additionalSourcesImported(int count) {
+    return '已匯入 $count 個書源';
+  }
 
   @override
   String get settingsSectionAboutSupport => '關於與支持';
@@ -6025,10 +6379,25 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get settingsFloatingNavigationTitle => '懸浮導覽列';
 
   @override
-  String get settingsFloatingNavigationSubtitle => '調整顯示方式與入口順序';
+  String get settingsFloatingNavigationSubtitle => '調整尺寸、顯示方式與入口順序';
 
   @override
   String get floatingNavigationPreviewTitle => '預覽';
+
+  @override
+  String get floatingNavigationSizeTitle => '尺寸';
+
+  @override
+  String get floatingNavigationSizeAutomatic => '自動調整';
+
+  @override
+  String get floatingNavigationSizeCustom => '自訂';
+
+  @override
+  String get floatingNavigationHeightLabel => '高度';
+
+  @override
+  String get floatingNavigationSideMarginLabel => '左右邊距';
 
   @override
   String get floatingNavigationDisplayModeTitle => '顯示方式';
@@ -6055,10 +6424,10 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get floatingNavigationResetDone => '已恢復預設順序';
 
   @override
-  String get settingsLibraryLayoutTitle => '書庫版面';
+  String get settingsLibraryLayoutTitle => '書庫設定';
 
   @override
-  String get settingsLibraryLayoutSubtitle => '選擇卡片或緊湊網格，並按需調整網格資訊';
+  String get settingsLibraryLayoutSubtitle => '調整書庫版面與書籍開啟體驗';
 
   @override
   String get settingsLibraryLayoutCard => '卡片';
@@ -6080,6 +6449,43 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get settingsLibraryGridShowDetailsSubtitle => '在每本封面下顯示單行書名和精簡進度列';
+
+  @override
+  String get settingsLibraryOpenAnimationTitle => '書籍開啟動畫';
+
+  @override
+  String get settingsLibraryOpenAnimationSubtitle => '僅套用於從書庫開啟書籍';
+
+  @override
+  String get settingsLibraryOpenAnimationClassicCover => '經典封面展開';
+
+  @override
+  String get settingsLibraryOpenAnimationClassicCoverHint =>
+      '將原封面放大至全螢幕，再銜接閱讀正文';
+
+  @override
+  String get settingsLibraryOpenAnimationMinimal => '極簡淡入';
+
+  @override
+  String get settingsLibraryOpenAnimationMinimalHint => '快速穩定地淡入，沒有方向位移';
+
+  @override
+  String get settingsLibraryOpenAnimationPaperRise => '紙面浮現';
+
+  @override
+  String get settingsLibraryOpenAnimationPaperRiseHint => '閱讀紙面從下方輕輕浮現並定位';
+
+  @override
+  String get settingsLibraryOpenAnimationPageSlide => '側頁推入';
+
+  @override
+  String get settingsLibraryOpenAnimationPageSlideHint => '閱讀紙面從側邊短距離滑入';
+
+  @override
+  String get settingsLibraryOpenAnimationBookSpread => '雙頁展開';
+
+  @override
+  String get settingsLibraryOpenAnimationBookSpreadHint => '兩側紙面從中縫向外展開';
 
   @override
   String get settingsAccentFollowTheme => '強調色：跟隨主題';
@@ -7303,7 +7709,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get importErrorCopyVerificationFailed => '複製後的檔案與來源檔案不一致';
 
   @override
-  String get importErrorFileTooLarge => '檔案超過 100 MB 匯入限制';
+  String get importErrorFileTooLarge => '檔案超過 500 MB 匯入限制';
 
   @override
   String get importErrorSourcePrepareFailed => '無法準備匯入檔案';

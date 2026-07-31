@@ -80,6 +80,15 @@ class ReaderTextPage {
         : textLayout.sourceOffsetForDisplayOffset(displayOffset);
   }
 
+  int textOffsetForSourceOffset(int sourceOffset) {
+    final textLayout = layout;
+    if (textLayout == null) {
+      return (sourceOffset - startOffset).clamp(0, text.length);
+    }
+    final displayOffset = textLayout.displayOffsetForSourceOffset(sourceOffset);
+    return (displayOffset - displayStart).clamp(0, displayEnd - displayStart);
+  }
+
   TextSpan buildSpan({
     required TextStyle style,
     ReaderSourceSpanBuilder? sourceSpanBuilder,

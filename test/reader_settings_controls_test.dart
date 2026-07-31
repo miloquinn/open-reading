@@ -16,6 +16,7 @@ void main() {
       bool? pullBookmark;
       bool? tapAnimation;
       bool? tabletTwoPage;
+      bool? txtChapterTitlePage;
 
       await tester.pumpWidget(
         MaterialApp(
@@ -51,6 +52,8 @@ void main() {
             horizontalMarginLabel: 'Horizontal margin',
             topMarginLabel: 'Top margin',
             bottomMarginLabel: 'Bottom margin',
+            txtChapterTitlePageTitle: 'Chapter title on its own page',
+            txtChapterTitlePageHint: 'Show the title above body text when off',
             themeId: ReaderThemes.day.id,
             fontSize: 19,
             lineHeight: 1.7,
@@ -64,6 +67,7 @@ void main() {
             pullBookmarkEnabled: false,
             tapPageAnimationEnabled: true,
             tabletTwoPageEnabled: true,
+            txtChapterTitlePageEnabled: true,
             themeLabelFor: (themeId) => themeId,
             onThemeChanged: (_) {},
             onCustomThemeTap: () {},
@@ -82,6 +86,8 @@ void main() {
             onPullBookmarkChanged: (value) => pullBookmark = value,
             onTapPageAnimationChanged: (value) => tapAnimation = value,
             onTabletTwoPageChanged: (value) => tabletTwoPage = value,
+            onTxtChapterTitlePageChanged: (value) =>
+                txtChapterTitlePage = value,
           ),
         ),
       );
@@ -153,6 +159,15 @@ void main() {
       expect(changedSpacing, 2);
       expect(changedLetterSpacing, 0.8);
       expect(changedAlignment, ReaderTextAlignment.justified);
+
+      await tester.tap(find.text('Layout tab'));
+      await tester.pumpAndSettle();
+      final titlePageSwitch = tester.widget<SwitchListTile>(
+        find.byKey(const ValueKey('reader-txt-chapter-title-page-switch')),
+      );
+      expect(titlePageSwitch.value, isTrue);
+      titlePageSwitch.onChanged!(false);
+      expect(txtChapterTitlePage, isFalse);
 
       await tester.tap(find.text('Theme tab'));
       await tester.pumpAndSettle();

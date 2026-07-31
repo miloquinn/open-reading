@@ -167,6 +167,15 @@ void main() {
         );
         final pageMatches = RegExp(r'(\d+)/(\d+)').allMatches(status.data!);
         expect(int.parse(pageMatches.last.group(1)!), greaterThan(1));
+        final scrollable = tester.state<ScrollableState>(
+          find
+              .descendant(
+                of: find.byType(ScrollablePositionedList),
+                matching: find.byType(Scrollable),
+              )
+              .first,
+        );
+        expect(scrollable.position.pixels, greaterThan(0));
       } finally {
         await tester.pumpWidget(const SizedBox.shrink());
         await tester.pump();

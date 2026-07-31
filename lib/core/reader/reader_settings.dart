@@ -121,6 +121,8 @@ class ReaderSettingsStore {
   static const tapPageAnimationKey = 'reader_tap_page_animation_enabled';
   static const tabletTwoPageKey = 'reader_tablet_two_page_enabled';
   static const scrollByChapterKey = 'native_reader_scroll_by_chapter';
+  static const txtChapterTitlePageKey =
+      'native_reader_txt_chapter_title_page_enabled';
   static const tapZonesKey = 'reader_tap_zones_v1';
   static const legacyBookSourceLineHeightKey = 'book_source_reader_line_height';
 
@@ -229,6 +231,16 @@ class ReaderSettingsStore {
   Future<void> saveScrollByChapter(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(scrollByChapterKey, value);
+  }
+
+  Future<bool> loadTxtChapterTitlePageEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(txtChapterTitlePageKey) ?? true;
+  }
+
+  Future<void> saveTxtChapterTitlePageEnabled(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(txtChapterTitlePageKey, value);
   }
 
   Future<ReaderTapZones> loadTapZones() async {

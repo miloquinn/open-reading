@@ -63,7 +63,25 @@
   "bookSourcesRemoveMessage": "This only removes the source configuration. Local books are not affected.",
   "bookSourcesCancel": "Cancel",
   "bookSourcesConfirm": "Confirm",
-  "bookSourcesAddTitle": "Add open source",
+  "bookSourcesAddTitle": "Add source",
+  "bookSourcesImportLink": "Import link",
+  "bookSourcesAnalyze": "Analyze",
+  "bookSourcesDetectedOrsp": "Detected: ORSP",
+  "bookSourcesDetectedAdditional": "Detected: Other protocol",
+  "bookSourcesProtocolGroupOrsp": "ORSP sources",
+  "bookSourcesProtocolGroupAdditional": "Other protocol sources",
+  "bookSourcesAdvancedFeatureRequired": "Enable More source protocols in Advanced features before importing this source.",
+  "bookSourcesNoWorkingSources": "No source passed the live search check. Nothing was imported.",
+  "bookSourcesVerificationProgress": "Checked {completed}/{total}; {available} working",
+  "@bookSourcesVerificationProgress": {"placeholders":{"completed":{"type":"int"},"total":{"type":"int"},"available":{"type":"int"}}},
+  "bookSourcesSelect": "Select sources",
+  "bookSourcesSelectAll": "Select all",
+  "bookSourcesClearSelection": "Clear selection",
+  "bookSourcesEnableSelected": "Enable selected",
+  "bookSourcesDisableSelected": "Disable selected",
+  "bookSourcesDeleteSelected": "Delete selected",
+  "bookSourcesDeleteSelectedMessage": "Delete {count} selected sources? Local books are not affected.",
+  "@bookSourcesDeleteSelectedMessage": {"placeholders":{"count":{"type":"int"}}},
   "bookSourcesUrlLabel": "Source address",
   "bookSourcesUrlHint": "https://example.com or a discovery document URL",
   "bookSourcesNoOfficialSourcesNotice": "OpenReading includes no sources and does not operate, recommend, or endorse third-party source services. Every source address is added by you.",
@@ -1671,7 +1689,7 @@
   "incomingBooksNoBookFile": "The shared content does not contain an importable book file",
   "incomingBooksPermissionExpired": "File access has expired. Share or open the file again",
   "incomingBooksUnsupportedFormat": "This book format is not supported",
-  "incomingBooksFileTooLarge": "The file exceeds the 100 MB import limit",
+  "incomingBooksFileTooLarge": "The file exceeds the 500 MB import limit",
   "incomingBooksTooManyFiles": "Too many book files were shared at once. Add them in smaller batches",
   "incomingBooksSomeFilesSkipped": "Some files could not be recognized; the remaining books will continue",
   "incomingBooksContentMismatch": "The file format does not match its content",
@@ -1775,6 +1793,21 @@
     "description": "Deletion progress step: removing database records"
   },
   "libraryDeleteComplete": "Deletion complete",
+  "librarySelectMultiple": "Select multiple",
+  "librarySelectAll": "Select all",
+  "librarySelectedBooks": "{count} selected",
+  "@librarySelectedBooks": {"placeholders": {"count": {"type": "int"}}},
+  "libraryDeleteSelected": "Delete {count}",
+  "@libraryDeleteSelected": {"placeholders": {"count": {"type": "int"}}},
+  "libraryBatchDeleteTitle": "Delete selected books?",
+  "libraryBatchDeleteMessage": "This permanently deletes the selected {count} books, related notes and bookmarks, and local files. This cannot be undone.",
+  "@libraryBatchDeleteMessage": {"placeholders": {"count": {"type": "int"}}},
+  "libraryDeletingSelected": "Deleting {done}/{total}",
+  "@libraryDeletingSelected": {"placeholders": {"done": {"type": "int"}, "total": {"type": "int"}}},
+  "libraryBatchDeleteSuccess": "Deleted {count} books",
+  "@libraryBatchDeleteSuccess": {"placeholders": {"count": {"type": "int"}}},
+  "libraryBatchDeletePartial": "Deleted {success}; {failed} failed",
+  "@libraryBatchDeletePartial": {"placeholders": {"success": {"type": "int"}, "failed": {"type": "int"}}},
   "@libraryDeleteComplete": {
     "description": "Deletion progress step: finished"
   },
@@ -1851,6 +1884,8 @@
   "readerHorizontalMarginLabel": "Horizontal margin",
   "readerTopMarginLabel": "Top margin",
   "readerBottomMarginLabel": "Bottom margin",
+  "readerTxtChapterTitlePageTitle": "Chapter title on its own page",
+  "readerTxtChapterTitlePageHint": "When off, the chapter title appears above the body text",
   "readerVerticalMarginLabel": "Vertical margin",
   "readerVerticalMarginValue": "Vertical margin  {margin}",
   "@readerVerticalMarginValue": {
@@ -2054,6 +2089,23 @@
     "description": "Section title grouping book sources, sync, cache and AI"
   },
   "settingsSectionGeneral": "General",
+  "settingsSectionAdvancedFeatures": "Advanced features",
+  "settingsAdditionalSourceProtocolsTitle": "More source protocols",
+  "settingsAdditionalSourceProtocolsSubtitle": "Enable support for additional source protocols.",
+  "additionalSourcesImport": "Import more source protocols",
+  "additionalSourcesImportTitle": "Import source JSON",
+  "additionalSourcesImportNotice": "Imported sources are checked before use and remain disabled until you enable them.",
+  "additionalSourcesChooseFile": "Add from JSON file",
+  "additionalSourcesUrlLabel": "Source JSON URL",
+  "additionalSourcesLoadUrl": "Load URL",
+  "additionalSourcesPreview": "{supported} available, {partial} partially supported, {unsupported} not supported",
+  "@additionalSourcesPreview": {"placeholders":{"supported":{"type":"int"},"partial":{"type":"int"},"unsupported":{"type":"int"}}},
+  "additionalSourcesAvailable": "Available",
+  "additionalSourcesPartial": "Partially supported",
+  "additionalSourcesUnsupported": "Not supported",
+  "additionalSourcesImportConfirm": "Import disabled",
+  "additionalSourcesImported": "Imported {count} sources",
+  "@additionalSourcesImported": {"placeholders":{"count":{"type":"int"}}},
   "@settingsSectionGeneral": {
     "description": "Section title grouping language and system toggles"
   },
@@ -2348,11 +2400,16 @@
   "@settingsFloatingNavigationTitle": {
     "description": "Title of the floating home navigation settings page"
   },
-  "settingsFloatingNavigationSubtitle": "Adjust the display style and destination order",
+  "settingsFloatingNavigationSubtitle": "Adjust size, display style, and destination order",
   "@settingsFloatingNavigationSubtitle": {
     "description": "Description of the floating home navigation settings entry"
   },
   "floatingNavigationPreviewTitle": "Preview",
+  "floatingNavigationSizeTitle": "Size",
+  "floatingNavigationSizeAutomatic": "Automatic",
+  "floatingNavigationSizeCustom": "Custom",
+  "floatingNavigationHeightLabel": "Height",
+  "floatingNavigationSideMarginLabel": "Side margin",
   "floatingNavigationDisplayModeTitle": "Display style",
   "floatingNavigationIconsOnly": "Icons only",
   "floatingNavigationIconsAndLabels": "Icons and labels",
@@ -2361,11 +2418,11 @@
   "floatingNavigationSyncHint": "The order also applies to swipe navigation and the wide-screen sidebar",
   "floatingNavigationResetOrder": "Restore default order",
   "floatingNavigationResetDone": "Default order restored",
-  "settingsLibraryLayoutTitle": "Library layout",
+  "settingsLibraryLayoutTitle": "Library settings",
   "@settingsLibraryLayoutTitle": {
     "description": "Title of the library layout selector"
   },
-  "settingsLibraryLayoutSubtitle": "Choose cards or a compact grid, then adjust the grid details",
+  "settingsLibraryLayoutSubtitle": "Adjust the library layout and book opening experience",
   "@settingsLibraryLayoutSubtitle": {
     "description": "Description of the card and cover-only grid library layouts"
   },
@@ -2397,6 +2454,18 @@
   "@settingsLibraryGridShowDetailsSubtitle": {
     "description": "Description of the grid title and progress toggle"
   },
+  "settingsLibraryOpenAnimationTitle": "Book opening animation",
+  "settingsLibraryOpenAnimationSubtitle": "Used only when opening a book from the library",
+  "settingsLibraryOpenAnimationClassicCover": "Classic cover expansion",
+  "settingsLibraryOpenAnimationClassicCoverHint": "Enlarge the original cover to full screen before revealing the reader",
+  "settingsLibraryOpenAnimationMinimal": "Minimal fade",
+  "settingsLibraryOpenAnimationMinimalHint": "A quick, stable fade with no directional movement",
+  "settingsLibraryOpenAnimationPaperRise": "Paper rise",
+  "settingsLibraryOpenAnimationPaperRiseHint": "The reading paper settles gently into place from below",
+  "settingsLibraryOpenAnimationPageSlide": "Page slide",
+  "settingsLibraryOpenAnimationPageSlideHint": "The reading page enters with a short sideways motion",
+  "settingsLibraryOpenAnimationBookSpread": "Book spread",
+  "settingsLibraryOpenAnimationBookSpreadHint": "Two paper halves open outward from the center",
   "settingsAccentFollowTheme": "Accent color: follow theme",
   "@settingsAccentFollowTheme": {
     "description": "Accent summary when following the app theme"
@@ -3631,7 +3700,7 @@
   "@importErrorCopyVerificationFailed": {
     "description": "BookImportFailure message when the copied file hash differs from the source"
   },
-  "importErrorFileTooLarge": "File exceeds 100MB import limit",
+  "importErrorFileTooLarge": "File exceeds 500 MB import limit",
   "@importErrorFileTooLarge": {
     "description": "BookImportFailure message when the file exceeds the size limit"
   },

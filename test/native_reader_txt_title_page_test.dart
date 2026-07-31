@@ -17,6 +17,7 @@ import 'package:xxread/utils/book_open_transition.dart';
 import 'package:xxread/utils/font_catalog_helper.dart';
 import 'package:xxread/utils/reader_themes.dart';
 import 'package:xxread/widgets/reader_navigation_sheet.dart';
+import 'package:xxread/widgets/reader_chapter_title_page.dart';
 import 'package:xxread/widgets/reader_paper_page_leaf.dart';
 
 void main() {
@@ -119,6 +120,60 @@ void main() {
     expect(title.style?.fontSize, 34);
     expect(find.text('1 / 2'), findsOneWidget);
     expect(_richTextContaining('天边压着墨色的云。'), findsNothing);
+  });
+
+  testWidgets('disabled TXT title page places the heading above body text', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({
+      ReaderSettingsStore.pageModeKey: ReaderPageMode.instantPage.name,
+      ReaderSettingsStore.txtChapterTitlePageKey: false,
+    });
+    await tester.binding.setSurfaceSize(const Size(400, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: NativeReaderPage(
+          book: Book(
+            title: '测试书',
+            filePath: bookFile.path,
+            format: 'txt',
+            textEncoding: 'utf8',
+            fileModifiedTime: bookFile
+                .lastModifiedSync()
+                .millisecondsSinceEpoch,
+          ),
+        ),
+      ),
+    );
+
+    await tester.runAsync(() async {
+      for (var attempt = 0; attempt < 30; attempt++) {
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        await tester.pump();
+        if (find
+            .byKey(ReaderInlineChapterTitle.contentKey)
+            .evaluate()
+            .isNotEmpty) {
+          return;
+        }
+      }
+    });
+    await _pumpUntilFound(
+      tester,
+      find.byKey(ReaderInlineChapterTitle.contentKey),
+    );
+
+    expect(find.byKey(ReaderChapterTitlePage.contentKey), findsNothing);
+    expect(
+      tester.widget<Text>(find.byKey(ReaderInlineChapterTitle.contentKey)).data,
+      '第十二章  风暴将至',
+    );
+    expect(_richTextContaining('天边压着墨色的云。'), findsOneWidget);
+    expect(find.text('1 / 1'), findsOneWidget);
   });
 
   testWidgets('opening placeholder uses the seeded reader theme', (

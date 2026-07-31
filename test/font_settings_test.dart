@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -298,6 +299,21 @@ void main() {
     expect(
       FontCatalog.appFonts.map((font) => font.id),
       contains(FontCatalog.instrumentSansId),
+    );
+  });
+
+  test('PingFang is offered only on Apple reader platforms', () {
+    expect(
+      FontCatalog.readerFontsForPlatform(
+        TargetPlatform.iOS,
+      ).map((font) => font.id),
+      contains(FontCatalog.pingFangScId),
+    );
+    expect(
+      FontCatalog.readerFontsForPlatform(
+        TargetPlatform.android,
+      ).map((font) => font.id),
+      isNot(contains(FontCatalog.pingFangScId)),
     );
   });
 

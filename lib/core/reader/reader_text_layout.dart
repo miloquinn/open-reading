@@ -179,6 +179,25 @@ class ReaderTextLayout {
     return _sourceBoundaries[safeOffset];
   }
 
+  int displayOffsetForSourceOffset(int sourceTextOffset) {
+    if (_sourceBoundaries.isEmpty) return 0;
+    final target = sourceTextOffset.clamp(
+      sourceOffset,
+      sourceOffset + sourceText.length,
+    );
+    var low = 0;
+    var high = _sourceBoundaries.length - 1;
+    while (low < high) {
+      final middle = (low + high) >> 1;
+      if (_sourceBoundaries[middle] < target) {
+        low = middle + 1;
+      } else {
+        high = middle;
+      }
+    }
+    return low.clamp(0, text.length);
+  }
+
   /// Maps a selection start to the first source code unit represented by the
   /// visible display character at [displayOffset].
   ///

@@ -42,6 +42,8 @@ class ReaderSettingsSheet extends StatefulWidget {
     required this.horizontalMarginLabel,
     required this.topMarginLabel,
     required this.bottomMarginLabel,
+    this.txtChapterTitlePageTitle,
+    this.txtChapterTitlePageHint,
     required this.themeId,
     required this.fontSize,
     required this.lineHeight,
@@ -55,6 +57,7 @@ class ReaderSettingsSheet extends StatefulWidget {
     required this.pullBookmarkEnabled,
     required this.tapPageAnimationEnabled,
     required this.tabletTwoPageEnabled,
+    this.txtChapterTitlePageEnabled,
     required this.themeLabelFor,
     required this.onThemeChanged,
     required this.onCustomThemeTap,
@@ -73,6 +76,7 @@ class ReaderSettingsSheet extends StatefulWidget {
     required this.onPullBookmarkChanged,
     required this.onTapPageAnimationChanged,
     required this.onTabletTwoPageChanged,
+    this.onTxtChapterTitlePageChanged,
   });
 
   final String title;
@@ -106,6 +110,8 @@ class ReaderSettingsSheet extends StatefulWidget {
   final String horizontalMarginLabel;
   final String topMarginLabel;
   final String bottomMarginLabel;
+  final String? txtChapterTitlePageTitle;
+  final String? txtChapterTitlePageHint;
   final String themeId;
   final double fontSize;
   final double lineHeight;
@@ -119,6 +125,7 @@ class ReaderSettingsSheet extends StatefulWidget {
   final bool pullBookmarkEnabled;
   final bool tapPageAnimationEnabled;
   final bool tabletTwoPageEnabled;
+  final bool? txtChapterTitlePageEnabled;
   final String Function(String themeId) themeLabelFor;
   final ValueChanged<String> onThemeChanged;
   final VoidCallback onCustomThemeTap;
@@ -137,6 +144,7 @@ class ReaderSettingsSheet extends StatefulWidget {
   final ValueChanged<bool> onPullBookmarkChanged;
   final ValueChanged<bool> onTapPageAnimationChanged;
   final ValueChanged<bool> onTabletTwoPageChanged;
+  final ValueChanged<bool>? onTxtChapterTitlePageChanged;
 
   @override
   State<ReaderSettingsSheet> createState() => _ReaderSettingsSheetState();
@@ -156,6 +164,7 @@ class _ReaderSettingsSheetState extends State<ReaderSettingsSheet> {
   late bool _pullBookmarkEnabled = widget.pullBookmarkEnabled;
   late bool _tapPageAnimationEnabled = widget.tapPageAnimationEnabled;
   late bool _tabletTwoPageEnabled = widget.tabletTwoPageEnabled;
+  late bool? _txtChapterTitlePageEnabled = widget.txtChapterTitlePageEnabled;
   _ReaderSettingsTab _tab = _ReaderSettingsTab.theme;
 
   @override
@@ -344,6 +353,22 @@ class _ReaderSettingsSheetState extends State<ReaderSettingsSheet> {
       onTopChangeEnd: widget.onTopMarginChanged,
       onBottomChangeEnd: widget.onBottomMarginChanged,
     ),
+    if (_txtChapterTitlePageEnabled != null &&
+        widget.txtChapterTitlePageTitle != null &&
+        widget.txtChapterTitlePageHint != null &&
+        widget.onTxtChapterTitlePageChanged != null)
+      SwitchListTile(
+        key: const ValueKey('reader-txt-chapter-title-page-switch'),
+        contentPadding: EdgeInsets.zero,
+        secondary: const Icon(Icons.title_rounded),
+        value: _txtChapterTitlePageEnabled!,
+        title: Text(widget.txtChapterTitlePageTitle!),
+        subtitle: Text(widget.txtChapterTitlePageHint!),
+        onChanged: (value) {
+          setState(() => _txtChapterTitlePageEnabled = value);
+          widget.onTxtChapterTitlePageChanged!(value);
+        },
+      ),
   ];
 
   List<Widget> _themeTabChildren(ThemeData theme) => [

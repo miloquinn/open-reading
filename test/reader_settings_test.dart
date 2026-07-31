@@ -12,6 +12,10 @@ void main() {
     expect(settings.pageMode, ReaderPageMode.horizontalSlide);
     expect(settings.letterSpacing, ReaderSettings.defaultLetterSpacing);
     expect(settings.textAlignment, ReaderTextAlignment.natural);
+    expect(
+      await const ReaderSettingsStore().loadTxtChapterTitlePageEnabled(),
+      isTrue,
+    );
   });
 
   test(
@@ -34,6 +38,17 @@ void main() {
       expect(prefs.getDouble(ReaderSettingsStore.bottomMarginKey), 10);
     },
   );
+
+  test('persists the TXT chapter title page preference', () async {
+    SharedPreferences.setMockInitialValues({});
+    const store = ReaderSettingsStore();
+
+    await store.saveTxtChapterTitlePageEnabled(false);
+
+    expect(await store.loadTxtChapterTitlePageEnabled(), isFalse);
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getBool(ReaderSettingsStore.txtChapterTitlePageKey), isFalse);
+  });
 
   test('persists one settings model for every reader entry', () async {
     SharedPreferences.setMockInitialValues({});

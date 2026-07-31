@@ -37,3 +37,52 @@ class ReaderChapterTitlePage extends StatelessWidget {
     );
   }
 }
+
+/// A compact chapter heading placed above the first body page.
+class ReaderInlineChapterTitle extends StatelessWidget {
+  const ReaderInlineChapterTitle({
+    super.key,
+    required this.title,
+    required this.bodyStyle,
+  });
+
+  static const contentKey = ValueKey('native-inline-chapter-title');
+  static const double spacingAfter = 24;
+
+  final String title;
+  final TextStyle bodyStyle;
+
+  static TextStyle titleStyleFor(TextStyle bodyStyle) => bodyStyle.copyWith(
+    fontSize: ((bodyStyle.fontSize ?? 19) * 1.45).clamp(24, 30),
+    fontWeight: FontWeight.w600,
+    height: 1.35,
+  );
+
+  static double extentFor({
+    required String title,
+    required double maxWidth,
+    required TextStyle bodyStyle,
+    required TextDirection textDirection,
+    required TextScaler textScaler,
+    Locale? locale,
+  }) {
+    final painter = TextPainter(
+      text: TextSpan(text: title, style: titleStyleFor(bodyStyle)),
+      textDirection: textDirection,
+      textScaler: textScaler,
+      locale: locale,
+      maxLines: 3,
+      ellipsis: '...',
+    )..layout(maxWidth: maxWidth);
+    return painter.height + spacingAfter;
+  }
+
+  @override
+  Widget build(BuildContext context) => Text(
+    title,
+    key: contentKey,
+    maxLines: 3,
+    overflow: TextOverflow.ellipsis,
+    style: titleStyleFor(bodyStyle),
+  );
+}

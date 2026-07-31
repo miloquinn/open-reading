@@ -126,7 +126,65 @@ class AppLocalizationsJa extends AppLocalizations {
   String get bookSourcesConfirm => '確認';
 
   @override
-  String get bookSourcesAddTitle => 'オープンソースを追加';
+  String get bookSourcesAddTitle => 'ソースを追加';
+
+  @override
+  String get bookSourcesImportLink => 'リンクをインポート';
+
+  @override
+  String get bookSourcesAnalyze => 'ソースを分析';
+
+  @override
+  String get bookSourcesDetectedOrsp => '検出: ORSP ソース';
+
+  @override
+  String get bookSourcesDetectedAdditional => '検出: その他のプロトコル';
+
+  @override
+  String get bookSourcesProtocolGroupOrsp => 'ORSP ソース';
+
+  @override
+  String get bookSourcesProtocolGroupAdditional => 'その他のプロトコル';
+
+  @override
+  String get bookSourcesAdvancedFeatureRequired =>
+      '高度な機能で追加のブックソースプロトコルを有効にしてからインポートしてください。';
+
+  @override
+  String get bookSourcesNoWorkingSources =>
+      '実際の検索確認に合格したソースがないため、インポートしませんでした。';
+
+  @override
+  String bookSourcesVerificationProgress(
+    int completed,
+    int total,
+    int available,
+  ) {
+    return '確認済み $completed/$total、利用可能 $available';
+  }
+
+  @override
+  String get bookSourcesSelect => 'ソースを複数選択';
+
+  @override
+  String get bookSourcesSelectAll => 'すべて選択';
+
+  @override
+  String get bookSourcesClearSelection => '選択を解除';
+
+  @override
+  String get bookSourcesEnableSelected => '選択項目を有効化';
+
+  @override
+  String get bookSourcesDisableSelected => '選択項目を無効化';
+
+  @override
+  String get bookSourcesDeleteSelected => '選択項目を削除';
+
+  @override
+  String bookSourcesDeleteSelectedMessage(int count) {
+    return '選択した $count 件のソースを削除しますか？ローカルの本には影響しません。';
+  }
 
   @override
   String get bookSourcesUrlLabel => 'ソースのアドレス';
@@ -1511,7 +1569,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get incomingBooksUnsupportedFormat => 'この書籍形式には対応していません';
 
   @override
-  String get incomingBooksFileTooLarge => 'ファイルが 100 MB の読み込み上限を超えています';
+  String get incomingBooksFileTooLarge => 'ファイルが 500 MB の読み込み上限を超えています';
 
   @override
   String get incomingBooksTooManyFiles => '一度に共有された書籍が多すぎます。分けて追加してください';
@@ -1592,6 +1650,45 @@ class AppLocalizationsJa extends AppLocalizations {
   String get libraryDeleteComplete => '削除が完了しました';
 
   @override
+  String get librarySelectMultiple => '複数選択';
+
+  @override
+  String get librarySelectAll => 'すべて選択';
+
+  @override
+  String librarySelectedBooks(int count) {
+    return '$count 冊を選択';
+  }
+
+  @override
+  String libraryDeleteSelected(int count) {
+    return '$count 冊を削除';
+  }
+
+  @override
+  String get libraryBatchDeleteTitle => '選択した本を削除しますか？';
+
+  @override
+  String libraryBatchDeleteMessage(int count) {
+    return '選択した $count 冊と、関連するメモ、ブックマーク、ローカルファイルを完全に削除します。この操作は取り消せません。';
+  }
+
+  @override
+  String libraryDeletingSelected(int done, int total) {
+    return '削除中 $done/$total';
+  }
+
+  @override
+  String libraryBatchDeleteSuccess(int count) {
+    return '$count 冊を削除しました';
+  }
+
+  @override
+  String libraryBatchDeletePartial(int success, int failed) {
+    return '$success 冊を削除、$failed 冊は失敗しました';
+  }
+
+  @override
   String get readerPrefaceTitle => '前付';
 
   @override
@@ -1648,6 +1745,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get readerBottomMarginLabel => '下余白';
+
+  @override
+  String get readerTxtChapterTitlePageTitle => '章タイトルを独立ページに表示';
+
+  @override
+  String get readerTxtChapterTitlePageHint => 'オフにすると、章タイトルは本文の先頭に表示されます';
 
   @override
   String get readerVerticalMarginLabel => '上下余白';
@@ -1809,6 +1912,57 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get settingsSectionGeneral => '一般';
+
+  @override
+  String get settingsSectionAdvancedFeatures => '高度な機能';
+
+  @override
+  String get settingsAdditionalSourceProtocolsTitle => 'その他のブックソースプロトコル';
+
+  @override
+  String get settingsAdditionalSourceProtocolsSubtitle =>
+      '有効にすると、追加のブックソースプロトコルを利用できます。';
+
+  @override
+  String get additionalSourcesImport => '追加プロトコルのソースをインポート';
+
+  @override
+  String get additionalSourcesImportTitle => 'ソース JSON をインポート';
+
+  @override
+  String get additionalSourcesImportNotice =>
+      'インポートしたソースは事前確認され、有効にするまで無効のままです。';
+
+  @override
+  String get additionalSourcesChooseFile => 'JSON ファイルから追加';
+
+  @override
+  String get additionalSourcesUrlLabel => 'ソース JSON URL';
+
+  @override
+  String get additionalSourcesLoadUrl => 'URL から読み込む';
+
+  @override
+  String additionalSourcesPreview(int supported, int partial, int unsupported) {
+    return '利用可能 $supported、一部対応 $partial、未対応 $unsupported';
+  }
+
+  @override
+  String get additionalSourcesAvailable => '利用可能';
+
+  @override
+  String get additionalSourcesPartial => '一部対応';
+
+  @override
+  String get additionalSourcesUnsupported => '未対応';
+
+  @override
+  String get additionalSourcesImportConfirm => '無効のままインポート';
+
+  @override
+  String additionalSourcesImported(int count) {
+    return '$count 件のソースをインポートしました';
+  }
 
   @override
   String get settingsSectionAboutSupport => 'アプリ情報とサポート';
@@ -2070,10 +2224,25 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsFloatingNavigationTitle => 'フローティングナビゲーション';
 
   @override
-  String get settingsFloatingNavigationSubtitle => '表示方法と項目の順序を調整します';
+  String get settingsFloatingNavigationSubtitle => 'サイズ、表示方法、項目の順序を調整します';
 
   @override
   String get floatingNavigationPreviewTitle => 'プレビュー';
+
+  @override
+  String get floatingNavigationSizeTitle => 'サイズ';
+
+  @override
+  String get floatingNavigationSizeAutomatic => '自動調整';
+
+  @override
+  String get floatingNavigationSizeCustom => 'カスタム';
+
+  @override
+  String get floatingNavigationHeightLabel => '高さ';
+
+  @override
+  String get floatingNavigationSideMarginLabel => '左右余白';
 
   @override
   String get floatingNavigationDisplayModeTitle => '表示方法';
@@ -2100,11 +2269,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get floatingNavigationResetDone => '既定の順序に戻しました';
 
   @override
-  String get settingsLibraryLayoutTitle => 'ライブラリの表示';
+  String get settingsLibraryLayoutTitle => 'ライブラリ設定';
 
   @override
-  String get settingsLibraryLayoutSubtitle =>
-      'カードまたはコンパクトなグリッドを選び、グリッド情報を調整できます';
+  String get settingsLibraryLayoutSubtitle => 'ライブラリの表示と本を開く動きを調整します';
 
   @override
   String get settingsLibraryLayoutCard => 'カード';
@@ -2127,6 +2295,45 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get settingsLibraryGridShowDetailsSubtitle =>
       '各表紙の下に1行のタイトルとコンパクトな進捗バーを表示します';
+
+  @override
+  String get settingsLibraryOpenAnimationTitle => '本を開くアニメーション';
+
+  @override
+  String get settingsLibraryOpenAnimationSubtitle => 'ライブラリから本を開くときだけ使用します';
+
+  @override
+  String get settingsLibraryOpenAnimationClassicCover => 'クラシック表紙展開';
+
+  @override
+  String get settingsLibraryOpenAnimationClassicCoverHint =>
+      '元の表紙を全画面まで拡大してから本文を表示します';
+
+  @override
+  String get settingsLibraryOpenAnimationMinimal => 'シンプルなフェード';
+
+  @override
+  String get settingsLibraryOpenAnimationMinimalHint =>
+      '方向移動のない、すばやく安定したフェードです';
+
+  @override
+  String get settingsLibraryOpenAnimationPaperRise => '紙面の浮上';
+
+  @override
+  String get settingsLibraryOpenAnimationPaperRiseHint =>
+      '読書画面が下から穏やかに所定位置へ移動します';
+
+  @override
+  String get settingsLibraryOpenAnimationPageSlide => 'ページスライド';
+
+  @override
+  String get settingsLibraryOpenAnimationPageSlideHint => '読書画面が横から短い距離だけ入ります';
+
+  @override
+  String get settingsLibraryOpenAnimationBookSpread => '見開き展開';
+
+  @override
+  String get settingsLibraryOpenAnimationBookSpreadHint => '左右の紙面が中央から外側へ開きます';
 
   @override
   String get settingsAccentFollowTheme => 'アクセントカラー：テーマに従う';
@@ -3363,7 +3570,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get importErrorCopyVerificationFailed => 'コピーしたファイルがソースと一致しません';
 
   @override
-  String get importErrorFileTooLarge => 'ファイルが 100 MB のインポート上限を超えています';
+  String get importErrorFileTooLarge => 'ファイルが 500 MB のインポート上限を超えています';
 
   @override
   String get importErrorSourcePrepareFailed => 'インポートファイルを準備できません';

@@ -38,6 +38,7 @@ class AppCacheManager {
            imageCacheBytesReader ?? _defaultImageCacheBytesReader;
 
   static const String updateDirectoryName = 'updates';
+  static const String nativeReaderDirectoryName = 'native_reader_cache';
 
   final SourceCoverCache _sourceCoverCache;
   final Directory? _temporaryDirectory;
@@ -87,6 +88,7 @@ class AppCacheManager {
       AppCacheCategory.sourceCovers: [await _sourceCoverCache.directory()],
       AppCacheCategory.sourceData: [
         Directory(path.join(temp.path, BookSourceChapterCache.directoryName)),
+        Directory(path.join(temp.path, nativeReaderDirectoryName)),
       ],
       AppCacheCategory.temporaryFiles: [
         Directory(path.join(temp.path, updateDirectoryName)),

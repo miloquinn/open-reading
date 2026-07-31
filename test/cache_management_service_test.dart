@@ -16,11 +16,20 @@ void main() {
     final chapters = Directory(
       path.join(root.path, BookSourceChapterCache.directoryName),
     );
+    final nativeReader = Directory(
+      path.join(root.path, AppCacheManager.nativeReaderDirectoryName),
+    );
     final updates = Directory(
       path.join(root.path, AppCacheManager.updateDirectoryName),
     );
     final userDocuments = Directory(path.join(root.path, 'books'));
-    for (final directory in [covers, chapters, updates, userDocuments]) {
+    for (final directory in [
+      covers,
+      chapters,
+      nativeReader,
+      updates,
+      userDocuments,
+    ]) {
       await directory.create(recursive: true);
     }
     await File(
@@ -29,6 +38,9 @@ void main() {
     await File(
       path.join(chapters.path, 'chapter.json'),
     ).writeAsBytes(List.filled(7, 1));
+    await File(
+      path.join(nativeReader.path, 'epub-index.json'),
+    ).writeAsBytes(List.filled(11, 1));
     await File(
       path.join(updates.path, 'update.part'),
     ).writeAsBytes(List.filled(13, 1));
@@ -49,9 +61,9 @@ void main() {
 
     final usage = await manager.usage();
     expect(usage.bytesFor(AppCacheCategory.sourceCovers), 30);
-    expect(usage.bytesFor(AppCacheCategory.sourceData), 7);
+    expect(usage.bytesFor(AppCacheCategory.sourceData), 18);
     expect(usage.bytesFor(AppCacheCategory.temporaryFiles), 13);
-    expect(usage.totalBytes, 50);
+    expect(usage.totalBytes, 61);
 
     await manager.clear(AppCacheCategory.sourceCovers);
     expect(await covers.exists(), isFalse);
@@ -61,6 +73,7 @@ void main() {
 
     await manager.clearAll();
     expect(await chapters.exists(), isFalse);
+    expect(await nativeReader.exists(), isFalse);
     expect(await updates.exists(), isFalse);
     expect(await book.exists(), isTrue);
   });

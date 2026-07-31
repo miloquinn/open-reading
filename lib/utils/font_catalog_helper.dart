@@ -1,6 +1,8 @@
 // 文件说明：字体资源目录，定义字体原语及 App/阅读两套语义字体域。
 // 技术要点：稳定 ID、作用域隔离、旧 family 迁移、字体回退链、在线下载元数据。
 
+import 'package:flutter/foundation.dart';
+
 import '../l10n/app_localizations.dart';
 import '../services/core/online_font_models.dart';
 
@@ -51,6 +53,7 @@ class FontCatalog {
   static const String systemId = 'system';
   static const String sourceHanSerifId = 'source_han_serif';
   static const String sourceHanSansId = 'source_han_sans';
+  static const String pingFangScId = 'ping_fang_sc';
   static const String instrumentSansId = 'instrument_sans';
   static const String newsreaderId = 'newsreader';
   static const String jetBrainsMonoId = 'jetbrains_mono';
@@ -82,6 +85,14 @@ class FontCatalog {
     family: null,
     fallbackFamilies: [],
     tone: FontTone.system,
+  );
+
+  static const FontOption pingFangSc = FontOption(
+    id: pingFangScId,
+    family: 'PingFang SC',
+    fallbackFamilies: ['PingFang TC'],
+    tone: FontTone.sansSerif,
+    displayName: '苹方',
   );
 
   /// 思源宋体（Noto Serif SC 变量字体，覆盖字重 300–700）。
@@ -179,13 +190,21 @@ class FontCatalog {
   ];
 
   /// 阅读字体选项。
-  static const List<FontOption> readerFonts = [
+  static const List<FontOption> _readerFonts = [
     systemFont,
     sourceHanSerif,
     newsreader,
     sourceHanSans,
     jetBrainsMono,
   ];
+
+  static List<FontOption> get readerFonts =>
+      readerFontsForPlatform(defaultTargetPlatform);
+
+  static List<FontOption> readerFontsForPlatform(TargetPlatform platform) =>
+      platform == TargetPlatform.iOS
+      ? <FontOption>[systemFont, pingFangSc, ..._readerFonts.skip(1)]
+      : _readerFonts;
 
   static FontOption appFontForId(
     String? id, {
@@ -199,11 +218,14 @@ class FontCatalog {
   static FontOption readerFontForId(
     String? id, {
     List<FontOption> customFonts = const <FontOption>[],
-  }) => _fontForId(
-    id,
-    options: <FontOption>[...readerFonts, ...customFonts],
-    fallback: defaultReaderFont,
-  );
+  }) {
+    final platformFonts = readerFontsForPlatform(defaultTargetPlatform);
+    return _fontForId(
+      id,
+      options: <FontOption>[...platformFonts, ...customFonts],
+      fallback: defaultReaderFont,
+    );
+  }
 
   static FontOption appFontForFamily(String? family) =>
       _fontForFamily(family, options: appFonts, fallback: defaultAppFont);
@@ -247,6 +269,8 @@ class FontCatalog {
         return l10n.fontSourceHanSerif;
       case sourceHanSansId:
         return l10n.fontSourceHanSans;
+      case pingFangScId:
+        return option.displayName!;
       case instrumentSansId:
         return l10n.fontInstrumentSans;
       case newsreaderId:
