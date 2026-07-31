@@ -66,7 +66,7 @@ dependencies:
   flutter_tts: ^4.2.5
 
   # 网络请求（AI 与封面检索）
-  dio: ^5.10.0
+  dio: ^5.11.0
 
   # 高亮笔记
   uuid: ^4.6.0
