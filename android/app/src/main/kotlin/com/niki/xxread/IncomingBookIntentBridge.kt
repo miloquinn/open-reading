@@ -36,7 +36,7 @@ class IncomingBookIntentBridge(
         private const val EVENT_METHOD = "incomingBooks"
         private const val PROCESSED_EXTRA = "com.niki.xxread.INCOMING_BOOK_INTENT_PROCESSED"
         private const val MAX_ITEM_COUNT = 10
-        private const val MAX_FILE_BYTES = 100L * 1024L * 1024L
+        private const val MAX_FILE_BYTES = 500L * 1024L * 1024L
         private const val MAX_AGGREGATE_BYTES = 500L * 1024L * 1024L
         private const val MANIFEST_NAME = "request.json"
         private const val MAX_MANIFEST_BYTES = 1024L * 1024L

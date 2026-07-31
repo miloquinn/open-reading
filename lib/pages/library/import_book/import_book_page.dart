@@ -137,9 +137,14 @@ class _ImportBookPageState extends State<ImportBookPage> {
     }
     if (!mounted || eligible.isEmpty) return;
 
+    if (sync.newBookUploadPolicy == WebDavNewBookUploadPolicy.automatic) {
+      sync.enqueueNewBookUploads(eligible);
+      return;
+    }
+
     final selected = switch (sync.newBookUploadPolicy) {
       WebDavNewBookUploadPolicy.manual => const <Book>[],
-      WebDavNewBookUploadPolicy.automatic => eligible,
+      WebDavNewBookUploadPolicy.automatic => const <Book>[],
       WebDavNewBookUploadPolicy.askEveryTime => await _askWhichBooksToUpload(
         eligible,
       ),

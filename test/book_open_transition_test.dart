@@ -49,6 +49,7 @@ void main() {
       ),
     );
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 1));
     await tester.pump(const Duration(milliseconds: 100));
 
     // 飞行中：目标页已经挂载预热，但仍由封面飞行层遮住。
@@ -605,6 +606,160 @@ void main() {
     );
     expect(position.position.value, Offset.zero);
     await tester.pumpAndSettle();
+  });
+
+  testWidgets('书库极简淡入不发生方向位移', (tester) async {
+    final navKey = GlobalKey<NavigatorState>();
+    await tester.pumpWidget(
+      MaterialApp(
+        navigatorKey: navKey,
+        home: const Scaffold(body: Text('library')),
+      ),
+    );
+
+    navKey.currentState!.push(
+      BookOpenTransition.createRoute<void>(
+        const Scaffold(body: Text('reader')),
+        libraryAnimation: LibraryBookOpenAnimation.minimalFade,
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 1));
+
+    final position = tester.widget<SlideTransition>(
+      find.byKey(const ValueKey('book-paper-transition-position')),
+    );
+    expect(position.position.value, Offset.zero);
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('书库轻量动画首帧使用阅读主题底色且保持不透明', (tester) async {
+    const readerBackground = Color(0xFF121212);
+    final navKey = GlobalKey<NavigatorState>();
+    await tester.pumpWidget(
+      MaterialApp(
+        navigatorKey: navKey,
+        home: const Scaffold(
+          backgroundColor: Colors.white,
+          body: Text('library'),
+        ),
+      ),
+    );
+
+    navKey.currentState!.push(
+      BookOpenTransition.createRoute<void>(
+        const Scaffold(body: Text('reader')),
+        libraryAnimation: LibraryBookOpenAnimation.minimalFade,
+        readerBackgroundColor: readerBackground,
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 1));
+
+    final surface = tester.widget<ColoredBox>(
+      find.byKey(const ValueKey('book-paper-transition-surface')),
+    );
+    expect(surface.color, readerBackground);
+    expect(
+      find.byKey(const ValueKey('book-paper-transition-surface-opacity')),
+      findsNothing,
+    );
+
+    final content = tester.widget<FadeTransition>(
+      find.byKey(const ValueKey('book-paper-transition-content-opacity')),
+    );
+    expect(content.opacity.value, lessThan(0.05));
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('书库纸面浮现从下方进入', (tester) async {
+    final navKey = GlobalKey<NavigatorState>();
+    await tester.pumpWidget(
+      MaterialApp(
+        navigatorKey: navKey,
+        home: const Scaffold(body: Text('library')),
+      ),
+    );
+
+    navKey.currentState!.push(
+      BookOpenTransition.createRoute<void>(
+        const Scaffold(body: Text('reader')),
+        libraryAnimation: LibraryBookOpenAnimation.paperRise,
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 1));
+
+    final position = tester.widget<SlideTransition>(
+      find.byKey(const ValueKey('book-paper-transition-position')),
+    );
+    expect(position.position.value.dy, greaterThan(0));
+    expect(position.position.value.dx, 0);
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('书库侧页推入从右侧进入', (tester) async {
+    final navKey = GlobalKey<NavigatorState>();
+    await tester.pumpWidget(
+      MaterialApp(
+        navigatorKey: navKey,
+        home: const Scaffold(body: Text('library')),
+      ),
+    );
+
+    navKey.currentState!.push(
+      BookOpenTransition.createRoute<void>(
+        const Scaffold(body: Text('reader')),
+        libraryAnimation: LibraryBookOpenAnimation.pageSlide,
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 1));
+
+    final position = tester.widget<SlideTransition>(
+      find.byKey(const ValueKey('book-paper-transition-position')),
+    );
+    expect(position.position.value.dx, greaterThan(0));
+    expect(position.position.value.dy, 0);
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('书库双页从中缝展开并完整交接正文', (tester) async {
+    final navKey = GlobalKey<NavigatorState>();
+    await tester.pumpWidget(
+      MaterialApp(
+        navigatorKey: navKey,
+        home: const Scaffold(body: Text('library')),
+      ),
+    );
+
+    navKey.currentState!.push(
+      BookOpenTransition.createRoute<void>(
+        const Scaffold(body: Text('spread-reader')),
+        libraryAnimation: LibraryBookOpenAnimation.bookSpread,
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 80));
+
+    expect(find.byKey(const ValueKey('book-spread-left-page')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('book-spread-right-page')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const ValueKey('book-spread-spine')), findsOneWidget);
+
+    await tester.pumpAndSettle();
+    expect(find.text('spread-reader'), findsOneWidget);
+    final contentOpacity = tester.widget<FadeTransition>(
+      find
+          .ancestor(
+            of: find.text('spread-reader'),
+            matching: find.byType(FadeTransition),
+          )
+          .first,
+    );
+    expect(contentOpacity.opacity.value, 1);
   });
 
   testWidgets('push 等待退出动画完成后才恢复调用方', (tester) async {

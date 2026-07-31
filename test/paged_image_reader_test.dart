@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -8,6 +6,8 @@ import 'package:xxread/core/reader/paged_image_reader_settings.dart';
 import 'package:xxread/core/reader/reader_keep_screen_on.dart';
 import 'package:xxread/l10n/app_localizations.dart';
 import 'package:xxread/pages/reader/paged_image_reader.dart';
+import 'package:xxread/utils/reader_themes.dart';
+import 'package:xxread/widgets/reader_theme_background.dart';
 
 /// 1x1 透明 PNG，Image.memory 可解码的最小合法图片。
 final Uint8List _tinyPng = Uint8List.fromList(const <int>[
@@ -95,6 +95,34 @@ void main() {
     expect(requested, contains(2));
     expect(requested, contains(1));
     await _unmountReader(tester);
+  });
+
+  testWidgets('打开失败提示页使用阅读主题背景和文字颜色', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const PagedReaderMessageScaffold(
+          title: 'Broken book',
+          message: 'Open failed',
+          palette: ReaderThemes.night,
+        ),
+      ),
+    );
+
+    final background = tester.widget<ReaderThemeBackground>(
+      find.byType(ReaderThemeBackground),
+    );
+    expect(background.palette, ReaderThemes.night);
+
+    final message = tester.widget<Text>(find.text('Open failed'));
+    expect(message.style?.color, ReaderThemes.night.text);
+    expect(
+      Theme.of(
+        tester.element(find.text('Open failed')),
+      ).scaffoldBackgroundColor,
+      ReaderThemes.night.background,
+    );
   });
 
   testWidgets('翻页触发 onPageChanged 并更新页码', (tester) async {

@@ -57,6 +57,29 @@ void main() {
     expect(notifications, 1);
   });
 
+  test('floating navigation custom size restores and persists', () async {
+    SharedPreferences.setMockInitialValues({
+      'customize_home_navigation_size_v1': true,
+      'home_navigation_height_v1': 64.0,
+      'home_navigation_horizontal_margin_v1': 28.0,
+    });
+    final notifier = await _loadNotifier();
+    addTearDown(notifier.dispose);
+
+    expect(notifier.customizeFloatingNavigationSize, isTrue);
+    expect(notifier.floatingNavigationHeight, 64);
+    expect(notifier.floatingNavigationHorizontalMargin, 28);
+
+    await notifier.setFloatingNavigationHeight(68);
+    await notifier.setFloatingNavigationHorizontalMargin(32);
+    await notifier.setCustomizeFloatingNavigationSize(false);
+
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getDouble('home_navigation_height_v1'), 68);
+    expect(prefs.getDouble('home_navigation_horizontal_margin_v1'), 32);
+    expect(prefs.getBool('customize_home_navigation_size_v1'), isFalse);
+  });
+
   test('navigation order restores, normalizes, and persists', () async {
     SharedPreferences.setMockInitialValues({
       'home_navigation_order_v1': ['settings', 'home', 'home', 'unknown'],

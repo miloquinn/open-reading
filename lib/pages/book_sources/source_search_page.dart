@@ -62,6 +62,7 @@ class _SourceSearchPageState extends State<SourceSearchPage> {
   bool _loadMoreFailed = false;
   int _failedSourceCount = 0;
   String _activeQuery = '';
+  int _searchGeneration = 0;
 
   bool get _hasMore => _pageStates.values.any((state) => state.hasMore);
 
@@ -100,7 +101,11 @@ class _SourceSearchPageState extends State<SourceSearchPage> {
   Future<void> _search() async {
     final query = _queryController.text.trim();
     final targetSources = _targets;
-    if (query.isEmpty || targetSources.isEmpty || _searching) return;
+    if (query.isEmpty || targetSources.isEmpty) {
+      if (_searching && mounted) setState(() => _searching = false);
+      return;
+    }
+    final generation = ++_searchGeneration;
 
     FocusScope.of(context).unfocus();
     setState(() {
@@ -132,7 +137,7 @@ class _SourceSearchPageState extends State<SourceSearchPage> {
       }),
     );
 
-    if (!mounted) return;
+    if (!mounted || generation != _searchGeneration) return;
     setState(() {
       _results = batches.expand((batch) => batch.items).toList(growable: false);
       _pageStates = {
@@ -160,6 +165,7 @@ class _SourceSearchPageState extends State<SourceSearchPage> {
     if (targets.isEmpty) return;
 
     final query = _activeQuery;
+    final generation = _searchGeneration;
     setState(() {
       _loadingMore = true;
       _loadMoreFailed = false;
@@ -191,7 +197,9 @@ class _SourceSearchPageState extends State<SourceSearchPage> {
       }),
     );
 
-    if (!mounted || query != _activeQuery) return;
+    if (!mounted || generation != _searchGeneration || query != _activeQuery) {
+      return;
+    }
     final seen = _results
         .map((item) => '${item.source.id}\u0000${item.book.id}')
         .toSet();
@@ -219,6 +227,7 @@ class _SourceSearchPageState extends State<SourceSearchPage> {
   }
 
   void _clearSearch() {
+    _searchGeneration++;
     _queryController.clear();
     setState(() {
       _results = const [];
@@ -226,6 +235,7 @@ class _SourceSearchPageState extends State<SourceSearchPage> {
       _hasSearched = false;
       _failedSourceCount = 0;
       _activeQuery = '';
+      _searching = false;
       _loadingMore = false;
       _loadMoreFailed = false;
     });
@@ -316,7 +326,15 @@ class _SourceSearchPageState extends State<SourceSearchPage> {
 
   void _changeScope(String? sourceId) {
     if (_selectedSourceId == sourceId) return;
-    setState(() => _selectedSourceId = sourceId);
+    _searchGeneration++;
+    setState(() {
+      _selectedSourceId = sourceId;
+      if (_hasSearched) {
+        _searching = true;
+        _results = const [];
+        _pageStates = const {};
+      }
+    });
     if (_hasSearched && _activeQuery.isNotEmpty) {
       _queryController.text = _activeQuery;
       unawaited(_search());
@@ -386,7 +404,7 @@ class _SourceSearchPageState extends State<SourceSearchPage> {
           padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
           sliver: SliverList.separated(
             itemCount: _results.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 10),
+            separatorBuilder: (_, _) => const SizedBox(height: 10),
             itemBuilder: (context, index) {
               final result = _results[index];
               return Center(

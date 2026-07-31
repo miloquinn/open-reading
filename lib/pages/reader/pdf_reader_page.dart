@@ -19,22 +19,33 @@ import 'package:xxread/services/reading/reading_resume_service.dart';
 import 'package:xxread/pages/reader/paged_image_reader.dart';
 import 'package:xxread/utils/book_open_transition.dart';
 import 'package:xxread/utils/localization_extension.dart';
+import 'package:xxread/utils/page_transitions.dart';
+import 'package:xxread/utils/reader_themes.dart';
 
 class PdfReaderPage extends StatefulWidget {
-  const PdfReaderPage({super.key, required this.book});
+  const PdfReaderPage({
+    super.key,
+    required this.book,
+    required this.initialTheme,
+  });
 
   final Book book;
+  final ReaderThemePalette initialTheme;
 
   /// 与 [NativeReaderService.openBook] 相同的封面展开转场入口。
   static Future<void> open(
     BuildContext context,
     Book book, {
     BookOpenAnimation? animation,
+    LibraryBookOpenAnimation? libraryAnimation,
     bool waitForReaderClose = true,
   }) async {
+    final initialTheme = await ReaderThemes.loadSavedPalette();
+    if (!context.mounted) return;
     final route = BookOpenTransition.createRoute<void>(
-      PdfReaderPage(book: book),
+      PdfReaderPage(book: book, initialTheme: initialTheme),
       animation: animation,
+      libraryAnimation: libraryAnimation,
       readerBackgroundColor: Colors.black,
     );
     final navigation = BookOpenTransition.push<void>(context, route);
@@ -166,12 +177,16 @@ class _PdfReaderPageState extends State<PdfReaderPage> {
     }
   }
 
-  void _saveProgress(int index) {
+  void _saveProgress(int index, int pageCount) {
     final bookId = widget.book.id;
     if (bookId == null) return;
     unawaited(
       BookDao()
-          .updateBookProgress(bookId, index)
+          .updateBookProgress(
+            bookId,
+            index,
+            readingProgress: (index + 1) / pageCount,
+          )
           .catchError((Object error) => debugPrint('保存 PDF 进度失败: $error')),
     );
   }
@@ -188,6 +203,7 @@ class _PdfReaderPageState extends State<PdfReaderPage> {
             return PagedReaderMessageScaffold(
               title: widget.book.title,
               message: l10n.readerOpenFailed(snapshot.error.toString()),
+              palette: widget.initialTheme,
             );
           }
           final document = snapshot.data;
@@ -200,6 +216,7 @@ class _PdfReaderPageState extends State<PdfReaderPage> {
             return PagedReaderMessageScaffold(
               title: widget.book.title,
               message: l10n.readerComicNoPages,
+              palette: widget.initialTheme,
             );
           }
           return PagedImageReader(
@@ -207,7 +224,7 @@ class _PdfReaderPageState extends State<PdfReaderPage> {
             pageCount: document.pagesCount,
             initialPage: widget.book.currentPage,
             loadPage: (index) => _loadPage(document, index),
-            onPageChanged: _saveProgress,
+            onPageChanged: (index) => _saveProgress(index, document.pagesCount),
             bookId: widget.book.id,
           );
         },

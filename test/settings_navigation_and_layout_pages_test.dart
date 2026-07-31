@@ -9,6 +9,7 @@ import 'package:xxread/models/home_navigation_destination.dart';
 import 'package:xxread/pages/settings/floating_navigation_settings_page.dart';
 import 'package:xxread/pages/settings/library_layout_settings_page.dart';
 import 'package:xxread/services/core/app_settings_service.dart';
+import 'package:xxread/utils/page_transitions.dart';
 
 Future<AppSettingsNotifier> _loadNotifier() async {
   final notifier = AppSettingsNotifier();
@@ -69,6 +70,37 @@ void main() {
       find.descendant(of: preview, matching: find.text('Home')),
       findsNothing,
     );
+    expect(
+      find.byKey(const ValueKey('floating-navigation-size-mode')),
+      findsOneWidget,
+    );
+
+    final sizeMode = tester.widget<SegmentedButton<bool>>(
+      find.byKey(const ValueKey('floating-navigation-size-mode')),
+    );
+    sizeMode.onSelectionChanged!({true});
+    await tester.pump();
+    expect(settings.customizeFloatingNavigationSize, isTrue);
+    expect(
+      find.byKey(const ValueKey('floating-navigation-height-slider')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('floating-navigation-margin-slider')),
+      findsOneWidget,
+    );
+
+    final heightSlider = tester.widget<Slider>(
+      find.byKey(const ValueKey('floating-navigation-height-slider')),
+    );
+    heightSlider.onChanged!(66);
+    final marginSlider = tester.widget<Slider>(
+      find.byKey(const ValueKey('floating-navigation-margin-slider')),
+    );
+    marginSlider.onChanged!(30);
+    await tester.pump();
+    expect(settings.floatingNavigationHeight, 66);
+    expect(settings.floatingNavigationHorizontalMargin, 30);
 
     final modeSelector = tester.widget<SegmentedButton<bool>>(
       find.byKey(const ValueKey('floating-navigation-display-mode')),
@@ -153,6 +185,24 @@ void main() {
     expect(
       find.byKey(const ValueKey('settings-library-grid-show-details')),
       findsOneWidget,
+    );
+    final spreadOption = find.byKey(
+      const ValueKey('settings-library-open-animation-bookSpread'),
+    );
+    expect(spreadOption, findsOneWidget);
+    expect(
+      find.byKey(
+        const ValueKey('settings-library-open-animation-classicCover'),
+      ),
+      findsOneWidget,
+    );
+    await tester.drag(find.byType(ListView), const Offset(0, -320));
+    await tester.pumpAndSettle();
+    await tester.tap(spreadOption);
+    await tester.pump();
+    expect(
+      settings.libraryBookOpenAnimation,
+      LibraryBookOpenAnimation.bookSpread,
     );
   });
 }

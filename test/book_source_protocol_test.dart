@@ -1,9 +1,15 @@
+import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:xxread/book_sources/models/registered_book_source.dart';
 import 'package:xxread/book_sources/protocol/book_source_protocol.dart';
 import 'package:xxread/book_sources/services/book_source_client.dart';
+import 'package:xxread/book_sources/services/book_source_chapter_cache.dart';
+import 'package:xxread/book_sources/services/book_source_network_policy.dart';
 import 'package:xxread/book_sources/services/book_source_registry.dart';
 
 class _ManifestClient extends BookSourceClient {
@@ -72,6 +78,23 @@ void main() {
         }),
         throwsA(isA<BookSourceProtocolException>()),
       );
+    });
+
+    test('rejects malformed protocol versions', () {
+      for (final version in ['1', '1.', '1.foo', '1.4.0']) {
+        expect(
+          () => BookSourceManifest.fromJson({
+            'protocol': 'open-reading-source',
+            'protocolVersion': version,
+            'id': 'org.example.books',
+            'name': 'Example Books',
+            'apiBaseUrl': 'https://example.org/api/',
+            'capabilities': ['search', 'detail', 'catalog', 'content'],
+          }),
+          throwsA(isA<BookSourceProtocolException>()),
+          reason: version,
+        );
+      }
     });
 
     test('rejects a manifest that omits a core reading capability', () {
@@ -193,6 +216,77 @@ void main() {
         'https://example.org/source.json',
       );
     });
+
+    test('rejects invalid persisted source identity and URLs', () {
+      expect(
+        () => RegisteredBookSource.fromJson({
+          ..._registeredSource('org.example.books', 'Example').toJson(),
+          'name': '',
+        }),
+        throwsA(isA<BookSourceProtocolException>()),
+      );
+      expect(
+        () => RegisteredBookSource.fromJson({
+          ..._registeredSource('org.example.books', 'Example').toJson(),
+          'apiBaseUrl': 'file:///tmp/source',
+        }),
+        throwsA(isA<BookSourceProtocolException>()),
+      );
+    });
+
+    test('rejects a detail response for a different book', () async {
+      final adapter = _JsonSequenceAdapter([
+        '{"id":"other-book","title":"Wrong book"}',
+      ]);
+      final client = _clientWithAdapter(adapter);
+
+      await expectLater(
+        client.getBook(
+          _registeredSource('org.example.books', 'Example'),
+          'book-1',
+        ),
+        throwsA(isA<BookSourceProtocolException>()),
+      );
+    });
+
+    test(
+      'does not cache a chapter response with mismatched identity',
+      () async {
+        final directory = await Directory.systemTemp.createTemp(
+          'book-source-identity-test-',
+        );
+        addTearDown(() => directory.delete(recursive: true));
+        BookSourceChapterCache.clearMemory();
+        final adapter = _JsonSequenceAdapter([
+          '{"bookId":"other-book","chapterId":"other-chapter",'
+              '"contentType":"text/plain","content":"wrong"}',
+          '{"bookId":"book-1","chapterId":"chapter-1",'
+              '"contentType":"text/plain","content":"correct"}',
+        ]);
+        final client = _clientWithAdapter(
+          adapter,
+          chapterCache: BookSourceChapterCache(cacheDirectory: directory),
+        );
+        final source = _registeredSource('org.example.books', 'Example');
+
+        await expectLater(
+          client.getChapterContent(
+            source,
+            bookId: 'book-1',
+            chapterId: 'chapter-1',
+          ),
+          throwsA(isA<BookSourceProtocolException>()),
+        );
+        final content = await client.getChapterContent(
+          source,
+          bookId: 'book-1',
+          chapterId: 'chapter-1',
+        );
+
+        expect(content.content, 'correct');
+        expect(adapter.requestCount, 2);
+      },
+    );
   });
 
   group('BookSourceRegistry', () {
@@ -232,6 +326,19 @@ void main() {
       expect(restored.contactUrl?.toString(), 'https://example.org/contact');
       expect(restored.contentLicense, 'Public Domain');
       expect(restored.rightsStatement, 'Public-domain works.');
+    });
+
+    test('serializes concurrent mutations without losing a source', () async {
+      final registry = BookSourceRegistry();
+      final first = _registeredSource('org.example.first', 'First');
+      final second = _registeredSource('org.example.second', 'Second');
+
+      await Future.wait([registry.upsert(first), registry.upsert(second)]);
+
+      expect((await registry.load()).map((source) => source.id), {
+        first.id,
+        second.id,
+      });
     });
 
     test(
@@ -288,4 +395,59 @@ void main() {
       },
     );
   });
+}
+
+BookSourceClient _clientWithAdapter(
+  HttpClientAdapter adapter, {
+  BookSourceChapterCache? chapterCache,
+}) {
+  final dio = Dio()..httpClientAdapter = adapter;
+  return BookSourceClient(
+    dio: dio,
+    chapterCache: chapterCache,
+    networkPolicy: BookSourceNetworkPolicy(
+      lookup: (_) async => [InternetAddress('93.184.216.34')],
+    ),
+  );
+}
+
+class _JsonSequenceAdapter implements HttpClientAdapter {
+  _JsonSequenceAdapter(this.responses);
+
+  final List<String> responses;
+  int requestCount = 0;
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    final body = responses[requestCount++];
+    return ResponseBody.fromString(
+      body,
+      HttpStatus.ok,
+      headers: {
+        Headers.contentTypeHeader: ['application/json'],
+      },
+    );
+  }
+
+  @override
+  void close({bool force = false}) {}
+}
+
+RegisteredBookSource _registeredSource(String id, String name) {
+  return RegisteredBookSource(
+    id: id,
+    name: name,
+    description: '',
+    manifestUrl: Uri.parse('https://example.org/$id/source.json'),
+    apiBaseUrl: Uri.parse('https://example.org/$id/api/'),
+    protocolVersion: '1.5',
+    languages: const ['en'],
+    capabilities: const {'search', 'detail', 'catalog', 'content'},
+    enabled: true,
+    addedAt: DateTime.utc(2026, 7, 31),
+  );
 }

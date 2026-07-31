@@ -5,6 +5,7 @@ import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as html_parser;
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
+import 'package:crypto/crypto.dart';
 
 import '../../models/book.dart';
 import '../../services/books/book_dao.dart';
@@ -81,11 +82,13 @@ class BookSourceShelfService {
     final currentUnits =
         chapterIndex * unitsPerChapter +
         (chapterProgress.clamp(0, 1) * unitsPerChapter).round();
-    await _bookDao.updateBookProgress(shelfBookId, currentUnits);
-    await _bookDao.updateBookTotalPages(
+    final totalUnits = chapterCount * unitsPerChapter;
+    await _bookDao.updateBookProgress(
       shelfBookId,
-      chapterCount * unitsPerChapter,
+      currentUnits,
+      readingProgress: totalUnits <= 0 ? 0 : currentUnits / totalUnits,
     );
+    await _bookDao.updateBookTotalPages(shelfBookId, totalUnits);
   }
 
   Future<Book> downloadToLocal({
@@ -101,7 +104,7 @@ class BookSourceShelfService {
         book.id,
         cancellation: cancellation,
       ),
-    ]..sort((a, b) => a.order.compareTo(b.order));
+    ]..sort(compareBookSourceChapters);
     cancellation?.throwIfCancelled();
     if (chapters.isEmpty) {
       throw const BookSourceProtocolException(
@@ -116,7 +119,7 @@ class BookSourceShelfService {
     final file = File(
       path.join(
         directory.path,
-        '${_safeFileName(book.title)}-${_safeFileName(book.id)}.txt',
+        '${_safeFileName(book.title)}-${_downloadIdentity(source, book)}.txt',
       ),
     );
     final temporaryFile = File(
@@ -164,9 +167,8 @@ class BookSourceShelfService {
       cancellation?.throwIfCancelled();
       await sink.close();
       sink = null;
-      if (await file.exists()) await file.delete();
       cancellation?.throwIfCancelled();
-      await temporaryFile.rename(file.path);
+      await _commitDownloadedFile(temporaryFile, file);
     } catch (_) {
       try {
         await sink?.close();
@@ -182,7 +184,6 @@ class BookSourceShelfService {
     }
 
     if (cancellation?.isCancelled ?? false) {
-      if (await file.exists()) await file.delete();
       throw const BookDownloadCancelledException();
     }
 
@@ -248,6 +249,28 @@ class BookSourceShelfService {
         .replaceAll(RegExp(r'\s+'), ' ')
         .trim();
     return safe.isEmpty ? 'book' : safe.substring(0, safe.length.clamp(0, 80));
+  }
+
+  String _downloadIdentity(RegisteredBookSource source, BookSourceBook book) =>
+      sha256
+          .convert(utf8.encode('${source.id}\u0000${book.id}'))
+          .toString()
+          .substring(0, 20);
+
+  Future<void> _commitDownloadedFile(File temporary, File destination) async {
+    final backup = File('${destination.path}.backup');
+    final hadDestination = await destination.exists();
+    if (await backup.exists()) await backup.delete();
+    try {
+      if (hadDestination) await destination.rename(backup.path);
+      await temporary.rename(destination.path);
+      if (await backup.exists()) await backup.delete();
+    } catch (_) {
+      if (!await destination.exists() && await backup.exists()) {
+        await backup.rename(destination.path);
+      }
+      rethrow;
+    }
   }
 
   String _plainText(BookSourceChapterContent content) {

@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:xxread/book_sources/models/registered_book_source.dart';
 import 'package:xxread/book_sources/protocol/book_source_protocol.dart';
 import 'package:xxread/book_sources/services/book_source_client.dart';
+import 'package:xxread/book_sources/services/book_source_network_policy.dart';
 
 import '../tool/example_book_source_server.dart';
 
@@ -14,7 +15,8 @@ void main() {
       final sourceUrl = await server.start(port: 0);
       addTearDown(server.close);
 
-      final client = BookSourceClient();
+      final client = _localSourceClient();
+      addTearDown(client.close);
       final discovered = await client.discover(sourceUrl.toString());
       final source = RegisteredBookSource.fromManifest(
         manifest: discovered.manifest,
@@ -75,7 +77,8 @@ void main() {
       final sourceUrl = await server.start(port: 0);
       addTearDown(server.close);
 
-      final client = BookSourceClient();
+      final client = _localSourceClient();
+      addTearDown(client.close);
       final discovered = await client.discover(sourceUrl.toString());
       final source = RegisteredBookSource.fromManifest(
         manifest: discovered.manifest,
@@ -105,7 +108,8 @@ void main() {
       final sourceUrl = await server.start(port: 0);
       addTearDown(server.close);
 
-      final client = BookSourceClient();
+      final client = _localSourceClient();
+      addTearDown(client.close);
       final discovered = await client.discover(sourceUrl.toString());
       final source = RegisteredBookSource.fromManifest(
         manifest: discovered.manifest,
@@ -127,3 +131,7 @@ void main() {
     },
   );
 }
+
+BookSourceClient _localSourceClient() => BookSourceClient(
+  networkPolicy: const BookSourceNetworkPolicy(allowPrivateNetwork: true),
+);

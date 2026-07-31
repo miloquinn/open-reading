@@ -11,6 +11,7 @@ class Book {
   final String format;
   final int currentPage;
   final int totalPages; // 添加总页数字段
+  final double? readingProgress;
   final DateTime importDate;
   // 缓存相关字段
   final String? cachedContent;
@@ -53,6 +54,14 @@ class Book {
 
   bool get isOnline => storageType == 'online';
 
+  /// 全书阅读进度。新数据使用统一的 0..1 值，旧数据继续兼容页码比值。
+  double get progress {
+    final normalized = readingProgress;
+    if (normalized != null) return normalized.clamp(0.0, 1.0);
+    if (totalPages <= 0) return 0;
+    return (currentPage / totalPages).clamp(0.0, 1.0);
+  }
+
   Book({
     this.id,
     required this.title,
@@ -61,6 +70,7 @@ class Book {
     required this.format,
     this.currentPage = 0,
     this.totalPages = 1, // 默认总页数为1
+    this.readingProgress,
     DateTime? importDate,
     this.cachedContent,
     this.cachedPages,
@@ -93,6 +103,7 @@ class Book {
       'format': format,
       'currentPage': currentPage,
       'totalPages': totalPages,
+      'reading_progress': readingProgress,
       'importDate': importDate.millisecondsSinceEpoch,
       'cached_content': cachedContent,
       'cached_pages': cachedPages,
@@ -124,6 +135,7 @@ class Book {
       format: map['format'],
       currentPage: map['currentPage'] ?? 0,
       totalPages: map['totalPages'] ?? 1,
+      readingProgress: (map['reading_progress'] as num?)?.toDouble(),
       importDate: DateTime.fromMillisecondsSinceEpoch(map['importDate']),
       cachedContent: map['cached_content'],
       cachedPages: map['cached_pages'],
@@ -154,6 +166,7 @@ class Book {
     String? format,
     int? currentPage,
     int? totalPages,
+    double? readingProgress,
     DateTime? importDate,
     String? cachedContent,
     String? cachedPages,
@@ -183,6 +196,7 @@ class Book {
       format: format ?? this.format,
       currentPage: currentPage ?? this.currentPage,
       totalPages: totalPages ?? this.totalPages,
+      readingProgress: readingProgress ?? this.readingProgress,
       importDate: importDate ?? this.importDate,
       cachedContent: cachedContent ?? this.cachedContent,
       cachedPages: cachedPages ?? this.cachedPages,

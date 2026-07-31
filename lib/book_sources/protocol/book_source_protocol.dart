@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 const String openReadingSourceProtocol = 'open-reading-source';
-const String openReadingSourceProtocolVersion = '1.4';
+const String openReadingSourceProtocolVersion = '1.5';
 const String openReadingSourceProtocolRepositoryUrl =
     'https://github.com/miloquinn/open-reading-source-protocol';
 const String openReadingRightsReportUrl =
@@ -67,8 +67,9 @@ class BookSourceManifest {
     if (protocol != openReadingSourceProtocol) {
       throw BookSourceProtocolException('Unsupported protocol: $protocol');
     }
-    if (protocolVersion.split('.').first !=
-        openReadingSourceProtocolVersion.split('.').first) {
+    if (!RegExp(r'^\d+\.\d+$').hasMatch(protocolVersion) ||
+        protocolVersion.split('.').first !=
+            openReadingSourceProtocolVersion.split('.').first) {
       throw BookSourceProtocolException(
         'Unsupported protocol version: $protocolVersion',
       );
@@ -424,7 +425,7 @@ Uri _httpUri(String value) {
 int? _catalogPageSizeFromJson(Object? value) {
   if (value is! num) return null;
   final parsed = value.toInt();
-  return parsed > 0 ? parsed : null;
+  return parsed >= 1 && parsed <= 1000 ? parsed : null;
 }
 
 Uri? _optionalHttpUri(Object? value) {

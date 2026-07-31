@@ -16,6 +16,10 @@ const double kHomeMobileFloatingNavScreenGap = 36.0;
 const double kHomeMobileFloatingNavHorizontalPadding = 4.0;
 const double kHomeMobileFloatingNavDesiredItemWidth = 90.0;
 const double kHomeMobileFloatingNavExtraWidth = 8.0;
+const double kHomeMobileFloatingNavMinHeight = 52.0;
+const double kHomeMobileFloatingNavMaxHeight = 72.0;
+const double kHomeMobileFloatingNavMinHorizontalMargin = 12.0;
+const double kHomeMobileFloatingNavMaxHorizontalMargin = 48.0;
 const double kHomeMobileContentTopExtra = 8.0;
 const double kHomeMobileContentBottomExtra = 10.0;
 const double kHomeMobileFloatingActionExtra = 15.0;
@@ -50,6 +54,60 @@ double homeMobileFloatingNavItemWidthFor({
   return (contentWidth / itemCount).clamp(0.0, double.infinity).toDouble();
 }
 
+@immutable
+class HomeMobileFloatingNavDimensions {
+  const HomeMobileFloatingNavDimensions({
+    required this.width,
+    required this.height,
+    required this.horizontalMargin,
+  });
+
+  final double width;
+  final double height;
+  final double horizontalMargin;
+}
+
+HomeMobileFloatingNavDimensions homeMobileFloatingNavDimensionsFor({
+  required double screenWidth,
+  required int itemCount,
+  required TargetPlatform platform,
+  required double systemBottomInset,
+  double? customHeight,
+  double? customHorizontalMargin,
+}) {
+  final usesIosHomeIndicator =
+      platform == TargetPlatform.iOS && systemBottomInset >= 20;
+  final automaticHeight = usesIosHomeIndicator
+      ? 60.0
+      : kHomeMobileFloatingNavHeight;
+  final automaticMargin = usesIosHomeIndicator
+      ? (screenWidth * 0.06).clamp(22.0, 28.0).toDouble()
+      : kHomeMobileFloatingNavScreenGap / 2;
+  final height = (customHeight ?? automaticHeight)
+      .clamp(kHomeMobileFloatingNavMinHeight, kHomeMobileFloatingNavMaxHeight)
+      .toDouble();
+  final horizontalMargin = (customHorizontalMargin ?? automaticMargin)
+      .clamp(
+        kHomeMobileFloatingNavMinHorizontalMargin,
+        kHomeMobileFloatingNavMaxHorizontalMargin,
+      )
+      .toDouble();
+  final maximumWidth = (screenWidth - horizontalMargin * 2)
+      .clamp(0.0, double.infinity)
+      .toDouble();
+  final automaticWidth = homeMobileFloatingNavWidthFor(
+    screenWidth: screenWidth,
+    itemCount: itemCount,
+  );
+
+  final width = automaticWidth.clamp(0.0, maximumWidth).toDouble();
+  return HomeMobileFloatingNavDimensions(
+    width: width,
+    height: height,
+    horizontalMargin: (screenWidth - width) / 2,
+  );
+}
+
 /// 手机壳层的统一安全区与浮动控件尺寸。
 ///
 /// 系统安全区始终来自 [MediaQueryData.viewPadding]，这样键盘弹出时不会
@@ -76,11 +134,13 @@ class HomeMobileChromeMetrics {
   factory HomeMobileChromeMetrics.fromMediaQuery(
     MediaQueryData mediaQuery, {
     EdgeInsets? systemInsets,
+    double floatingNavHeight = kHomeMobileFloatingNavHeight,
   }) {
     final resolvedInsets = systemInsets ?? mediaQuery.viewPadding;
     return HomeMobileChromeMetrics(
       systemTopInset: resolvedInsets.top,
       systemBottomInset: resolvedInsets.bottom,
+      floatingNavHeight: floatingNavHeight,
       keyboardVisible: mediaQuery.viewInsets.bottom > 0,
     );
   }

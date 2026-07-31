@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import '../../models/book.dart';
@@ -45,6 +47,9 @@ class WebDavSyncController extends ChangeNotifier {
   List<RemoteBookDescriptor> _remoteBooks = const [];
   WebDavNewBookUploadPolicy _newBookUploadPolicy =
       WebDavNewBookUploadPolicy.askEveryTime;
+  final List<Book> _backgroundUploadQueue = <Book>[];
+  final Set<String> _backgroundUploadTitles = <String>{};
+  bool _backgroundUploadRunning = false;
 
   bool get isConfigured => _configuration != null;
   WebDavSyncStatus get status => _status;
@@ -63,6 +68,31 @@ class WebDavSyncController extends ChangeNotifier {
   List<RemoteBookDescriptor> get remoteBooks => _remoteBooks;
   WebDavNewBookUploadPolicy get newBookUploadPolicy => _newBookUploadPolicy;
   SyncFileCapabilities get fileCapabilities => const SyncFileCapabilities();
+
+  /// Queues automatic uploads without making the caller wait for network I/O.
+  /// Existing remote titles and titles already queued in this app session are
+  /// skipped before any transfer starts.
+  int enqueueNewBookUploads(Iterable<Book> books) {
+    if (!isConfigured || !scope.bookFiles) return 0;
+    final remoteTitles = remoteBooks
+        .map((book) => _normalizedBookTitle(book.title))
+        .where((title) => title.isNotEmpty)
+        .toSet();
+    var queued = 0;
+    for (final book in books) {
+      if (book.isOnline || book.filePath.isEmpty) continue;
+      final title = _normalizedBookTitle(book.title);
+      if (title.isEmpty ||
+          remoteTitles.contains(title) ||
+          !_backgroundUploadTitles.add(title)) {
+        continue;
+      }
+      _backgroundUploadQueue.add(book);
+      queued++;
+    }
+    if (queued > 0) unawaited(_drainBackgroundBookUploads());
+    return queued;
+  }
 
   Future<void> initialize() async {
     _configuration = await _configStore.readConfiguration();
@@ -324,6 +354,26 @@ class WebDavSyncController extends ChangeNotifier {
         .toList(growable: false);
   }
 
+  Future<void> _drainBackgroundBookUploads() async {
+    if (_backgroundUploadRunning) return;
+    _backgroundUploadRunning = true;
+    try {
+      while (_backgroundUploadQueue.isNotEmpty) {
+        final book = _backgroundUploadQueue.removeAt(0);
+        final title = _normalizedBookTitle(book.title);
+        try {
+          await uploadBookFile(book);
+        } catch (error, stackTrace) {
+          _backgroundUploadTitles.remove(title);
+          debugPrint('Background WebDAV book upload failed: $error');
+          debugPrintStack(stackTrace: stackTrace);
+        }
+      }
+    } finally {
+      _backgroundUploadRunning = false;
+    }
+  }
+
   void _setFailure(WebDavSyncFailure failure) {
     _status = WebDavSyncStatus.failed;
     _lastError = failure.code;
@@ -335,3 +385,6 @@ class WebDavSyncController extends ChangeNotifier {
     _lastErrorMessage = null;
   }
 }
+
+String _normalizedBookTitle(String title) =>
+    title.trim().replaceAll(RegExp(r'\s+'), ' ').toLowerCase();

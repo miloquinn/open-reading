@@ -2,8 +2,10 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:xxread/book_sources/services/book_source_network_policy.dart';
 import 'package:xxread/book_sources/services/source_cover_cache.dart';
 
 void main() {
@@ -86,6 +88,27 @@ void main() {
     expect(await cache.diskSizeBytes(), 3);
   });
 
+  test('aborts a chunked response as soon as it exceeds the limit', () async {
+    final directory = await Directory.systemTemp.createTemp('source-stream-');
+    addTearDown(() => directory.delete(recursive: true));
+    final dio = Dio()..httpClientAdapter = _ChunkedCoverAdapter();
+    final cache = SourceCoverCache(
+      dio: dio,
+      cacheDirectory: directory,
+      maxImageBytes: 5,
+      networkPolicy: BookSourceNetworkPolicy(
+        lookup: (_) async => [InternetAddress('93.184.216.34')],
+      ),
+    );
+
+    await expectLater(
+      cache.load(Uri.parse('https://example.org/oversized.jpg')),
+      throwsA(isA<SourceCoverLoadException>()),
+    );
+    expect(await cache.diskSizeBytes(), 0);
+    expect(cache.memorySizeBytes, 0);
+  });
+
   test('evict removes memory and disk so the next load refetches', () async {
     final directory = await Directory.systemTemp.createTemp('source-evict-');
     addTearDown(() => directory.delete(recursive: true));
@@ -145,4 +168,28 @@ void main() {
       expect(calls, 2);
     },
   );
+}
+
+class _ChunkedCoverAdapter implements HttpClientAdapter {
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    return ResponseBody(
+      Stream.fromIterable([
+        Uint8List.fromList([1, 2, 3]),
+        Uint8List.fromList([4, 5, 6]),
+        Uint8List.fromList([7, 8, 9]),
+      ]),
+      HttpStatus.ok,
+      headers: {
+        Headers.contentTypeHeader: ['image/jpeg'],
+      },
+    );
+  }
+
+  @override
+  void close({bool force = false}) {}
 }

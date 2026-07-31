@@ -327,7 +327,7 @@ final class ShareViewController: SLComposeServiceViewController {
 
 private final class ShareCopyBudget {
   static let maxItemCount = 10
-  static let maxFileBytes: Int64 = 100 * 1024 * 1024
+  static let maxFileBytes: Int64 = 500 * 1024 * 1024
   static let maxAggregateBytes: Int64 = 500 * 1024 * 1024
 
   private let lock = NSLock()

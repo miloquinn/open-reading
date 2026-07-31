@@ -154,7 +154,7 @@ lib/
 
 - `FontCatalog` 维护 App 字体与阅读字体两套内置语义目录；用户字体作为共享资产同时合并到两套候选列表。
 - `AppSettingsNotifier` 分别保存 `app_font_id_v2` 与 `reader_font_id_v2`，同一用户字体可独立用于 App、阅读或两者。
-- `AppSettingsNotifier` 同时持久化手机底部导航文字显隐与稳定目的地顺序；悬浮导航配置页更新后，`HomeShellPage` 通过 Provider 即时同步手机横滑页、悬浮栏和宽屏侧栏，默认保持纯图标与“首页、书库、发现、设置”顺序。书籍路由存活时，手机悬浮栏向屏幕下方滑出并停止接收点击；点击返回或 Android 预测性返回手势起步时立即从下方回弹，手势取消则重新收起。阅读活动彻底结束前首页会锁住进入阅读器前的系统安全区，避免 Android 临时手势提示栏改变 inset 后让回弹中的悬浮栏跳高。
+- `AppSettingsNotifier` 同时持久化手机底部导航文字显隐、稳定目的地顺序与可选的自定义高度/左右边距；自动尺寸会在带 Home Indicator 的 iPhone 上增加高度并收窄栏体，悬浮导航配置页的预览与 `HomeShellPage` 共用同一计算。配置更新后，Provider 即时同步手机横滑页、悬浮栏和宽屏侧栏，默认保持纯图标与“首页、书库、发现、设置”顺序。书籍路由存活时，手机悬浮栏向屏幕下方滑出并停止接收点击；点击返回或 Android 预测性返回手势起步时立即从下方回弹，手势取消则重新收起。阅读活动彻底结束前首页会锁住进入阅读器前的系统安全区，避免 Android 临时手势提示栏改变 inset 后让回弹中的悬浮栏跳高。
 - `ThemeNotifier` 只持久化一个应用强调色 `appAccentColorV2`；`AppThemes.fromAccentColor` 通过 Material 3 `ColorScheme.fromSeed` 同时生成浅色与深色色板。旧版 `appTheme`、`customAccentColor`、`globalAccentColor` 首次读取时按覆盖优先级折叠迁移，设置页不再暴露独立的“应用主题”。
 - `AppSettingsNotifier` 持久化书库卡片/纯封面网格模式与手机网格 2/3 列密度；手机严格按选择列数显示，平板和桌面按同一封面密度响应式增加列数。卡片模式保留既有书名、进度等信息，纯封面网格仍支持点击阅读与长按管理。
 - `CustomFontService` 在原生平台负责 TTF/OTF 校验、SHA-256 去重、运行时 `FontLoader` 注册、清单恢复和文件删除；Web 首版不提供持久化字体导入。
@@ -273,13 +273,13 @@ EPUB 图片块与其后的正文共用同一个显示投影：携带图片的第
 
 ## 在线书源结构
 
-协议标识为 `open-reading-source`，当前版本为 `1.3`；v1 客户端继续接受所有 `1.x` 发现文档。
+协议标识为 `open-reading-source`，当前版本为 `1.5`；v1 客户端继续接受所有 `1.x` 发现文档。
 
 主要数据对象：
 
 - `BookSourceManifest`：书源身份、API 地址、语言和能力声明，以及可选的运营者、联系入口、内容许可、权利声明和章节目录单页上限。
 - `BookSourceBook`：在线书籍元数据。
-- `BookSourceChapter`：章节目录项；客户端按 ORSP 1.4 分页信封持续拉取，直至 `hasMore` 为 `false`。
+- `BookSourceChapter`：章节目录项；客户端按 ORSP 1.5 分页信封持续拉取，校验分页上限、重复 ID 和 `(order, id)` 顺序，直至 `hasMore` 为 `false`。
 - `BookSourceChapterContent`：章节正文，支持纯文本、Markdown 和 HTML。
 - `BookSourceSearchPage`：分页搜索结果。
 - `BookSourceDiscoveryPage`：可选的发现页分区。

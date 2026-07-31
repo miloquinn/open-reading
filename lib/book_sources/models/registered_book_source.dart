@@ -1,5 +1,7 @@
 import '../protocol/book_source_protocol.dart';
 
+enum BookSourceProtocolKind { orsp, legado }
+
 class RegisteredBookSource {
   final String id;
   final String name;
@@ -17,6 +19,8 @@ class RegisteredBookSource {
   final Set<String> capabilities;
   final bool enabled;
   final DateTime addedAt;
+  final BookSourceProtocolKind sourceProtocol;
+  final Map<String, dynamic>? sourceConfig;
 
   /// Largest `pageSize` this source accepts on the chapter-catalog endpoint.
   /// Absent means the protocol default of 100 applies.
@@ -40,6 +44,8 @@ class RegisteredBookSource {
     this.contentLicense = '',
     this.rightsStatement = '',
     this.maxCatalogPageSize,
+    this.sourceProtocol = BookSourceProtocolKind.orsp,
+    this.sourceConfig,
   });
 
   factory RegisteredBookSource.fromManifest({
@@ -68,29 +74,64 @@ class RegisteredBookSource {
   }
 
   factory RegisteredBookSource.fromJson(Map<String, dynamic> json) {
+    final sourceProtocol = switch (json['sourceProtocol']) {
+      'legado' => BookSourceProtocolKind.legado,
+      _ => BookSourceProtocolKind.orsp,
+    };
+    final id = _requiredStoredString(json, 'id');
+    final name = _requiredStoredString(json, 'name');
+    final manifestUrl = _requiredStoredHttpUri(json, 'manifestUrl');
+    final apiBaseUrl = _requiredStoredHttpUri(json, 'apiBaseUrl');
+    final protocolVersion = _requiredStoredString(json, 'protocolVersion');
+    if (sourceProtocol == BookSourceProtocolKind.orsp &&
+        !RegExp(r'^1\.\d+$').hasMatch(protocolVersion)) {
+      throw const BookSourceProtocolException(
+        'Stored book source has an invalid protocol version.',
+      );
+    }
+    final maxCatalogPageSize = (json['maxCatalogPageSize'] as num?)?.toInt();
+    if (maxCatalogPageSize != null &&
+        (maxCatalogPageSize < 1 || maxCatalogPageSize > 1000)) {
+      throw const BookSourceProtocolException(
+        'Stored book source has an invalid catalog page-size limit.',
+      );
+    }
+    final sourceConfig = json['sourceConfig'] is Map
+        ? (json['sourceConfig'] as Map).map(
+            (key, value) => MapEntry('$key', value),
+          )
+        : null;
+    if (sourceProtocol == BookSourceProtocolKind.legado &&
+        sourceConfig == null) {
+      throw const BookSourceProtocolException(
+        'Stored compatible book source is missing its source configuration.',
+      );
+    }
     return RegisteredBookSource(
-      id: json['id'] as String,
-      name: json['name'] as String,
+      id: id,
+      name: name,
       description: json['description'] as String? ?? '',
-      manifestUrl: Uri.parse(json['manifestUrl'] as String),
-      apiBaseUrl: Uri.parse(json['apiBaseUrl'] as String),
+      manifestUrl: manifestUrl,
+      apiBaseUrl: apiBaseUrl,
       iconUrl: _optionalUri(json['iconUrl']),
       websiteUrl: _optionalUri(json['websiteUrl']),
       operatorName: json['operatorName'] as String? ?? '',
       contactUrl: _optionalUri(json['contactUrl']),
       contentLicense: json['contentLicense'] as String? ?? '',
       rightsStatement: json['rightsStatement'] as String? ?? '',
-      protocolVersion: json['protocolVersion'] as String,
+      protocolVersion: protocolVersion,
       languages: (json['languages'] as List? ?? const [])
           .whereType<String>()
           .toList(growable: false),
       capabilities: (json['capabilities'] as List? ?? const [])
           .whereType<String>()
           .toSet(),
-      maxCatalogPageSize: (json['maxCatalogPageSize'] as num?)?.toInt(),
+      maxCatalogPageSize: maxCatalogPageSize,
       enabled: json['enabled'] as bool? ?? true,
       addedAt:
           DateTime.tryParse(json['addedAt'] as String? ?? '') ?? DateTime.now(),
+      sourceProtocol: sourceProtocol,
+      sourceConfig: sourceConfig,
     );
   }
 
@@ -112,6 +153,8 @@ class RegisteredBookSource {
     if (maxCatalogPageSize != null) 'maxCatalogPageSize': maxCatalogPageSize,
     'enabled': enabled,
     'addedAt': addedAt.toIso8601String(),
+    'sourceProtocol': sourceProtocol.name,
+    if (sourceConfig != null) 'sourceConfig': sourceConfig,
   };
 
   RegisteredBookSource copyWith({bool? enabled}) {
@@ -133,8 +176,31 @@ class RegisteredBookSource {
       maxCatalogPageSize: maxCatalogPageSize,
       enabled: enabled ?? this.enabled,
       addedAt: addedAt,
+      sourceProtocol: sourceProtocol,
+      sourceConfig: sourceConfig,
     );
   }
+}
+
+String _requiredStoredString(Map<String, dynamic> json, String key) {
+  final value = json[key];
+  if (value is! String || value.trim().isEmpty) {
+    throw BookSourceProtocolException('Stored book source is missing $key.');
+  }
+  return value.trim();
+}
+
+Uri _requiredStoredHttpUri(Map<String, dynamic> json, String key) {
+  final value = _requiredStoredString(json, key);
+  final uri = Uri.tryParse(value);
+  if (uri == null ||
+      !uri.hasAuthority ||
+      (uri.scheme != 'http' && uri.scheme != 'https')) {
+    throw BookSourceProtocolException(
+      'Stored book source has an invalid $key.',
+    );
+  }
+  return uri;
 }
 
 Uri? _optionalUri(Object? value) {

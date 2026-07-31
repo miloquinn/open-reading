@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -194,6 +195,94 @@ void main() {
     expect(client.searchedSourceIds, ['source-b']);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('ignores an old search after changing source scope', (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(390, 1000);
+    addTearDown(tester.view.reset);
+    final sourceA = _source();
+    final sourceB = RegisteredBookSource(
+      id: 'source-b',
+      name: 'Source B',
+      description: '',
+      manifestUrl: Uri.parse('https://example.org/b/source.json'),
+      apiBaseUrl: Uri.parse('https://example.org/b/api/'),
+      protocolVersion: '1.5',
+      languages: const ['en'],
+      capabilities: const {'search'},
+      enabled: true,
+      addedAt: DateTime.utc(2026, 7, 31),
+    );
+    final client = _DelayedScopeClient();
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: SourceSearchPage(
+          sources: [sourceA, sourceB],
+          client: client,
+          shelfService: BookSourceShelfService(client: client),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final queryField = find.byKey(const Key('bookSourceQueryControl'));
+    await tester.enterText(queryField, 'test');
+    await tester.testTextInput.receiveAction(TextInputAction.search);
+    await tester.pump();
+    await tester.tap(find.widgetWithText(ChoiceChip, 'Source B'));
+    await tester.pump();
+    client.releaseSourceB();
+    await tester.pump();
+    client.releaseSourceA();
+    await tester.pumpAndSettle();
+
+    expect(find.text('Book of Source B'), findsOneWidget);
+    expect(find.text('Book of Source A'), findsNothing);
+  });
+}
+
+class _DelayedScopeClient extends BookSourceClient {
+  final _completers = <String, List<Completer<void>>>{};
+
+  void releaseSourceA() => _release('source-a');
+  void releaseSourceB() => _release('source-b');
+
+  void _release(String id) {
+    for (final completer in _completers[id] ?? const []) {
+      if (!completer.isCompleted) completer.complete();
+    }
+  }
+
+  @override
+  Future<BookSourceSearchPage> search(
+    RegisteredBookSource source,
+    String query, {
+    int page = 1,
+    int pageSize = 20,
+  }) async {
+    final completer = Completer<void>();
+    _completers.putIfAbsent(source.id, () => []).add(completer);
+    await completer.future;
+    return BookSourceSearchPage(
+      items: [
+        BookSourceBook(
+          id: '${source.id}-book',
+          title: 'Book of ${source.name}',
+          author: 'Author',
+          description: '',
+          categories: const [],
+        ),
+      ],
+      page: page,
+      pageSize: pageSize,
+      total: 1,
+      hasMore: false,
+    );
+  }
 }
 
 class _ScopeTrackingClient extends BookSourceClient {

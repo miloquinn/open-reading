@@ -17,6 +17,8 @@ import 'package:xxread/core/reader/reader_tap_zones.dart';
 import 'package:xxread/core/reader/reader_volume_key_controller.dart';
 import 'package:xxread/utils/book_open_transition.dart';
 import 'package:xxread/utils/localization_extension.dart';
+import 'package:xxread/utils/reader_themes.dart';
+import 'package:xxread/widgets/reader_theme_background.dart';
 
 /// 单页图片阅读器：加载、翻页、缩放、点击区域、页码指示与跳页。
 ///
@@ -736,27 +738,31 @@ class PagedReaderMessageScaffold extends StatelessWidget {
     super.key,
     required this.title,
     required this.message,
+    required this.palette,
   });
 
   final String title;
   final String message;
+  final ReaderThemePalette palette;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
-        title: Text(title),
-      ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Text(
-            message,
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.white70),
+    return Theme(
+      data: palette.toThemeData(typography: Theme.of(context).textTheme),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(title: Text(title)),
+        body: ReaderThemeBackground(
+          palette: palette,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Text(
+                message,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: palette.text, height: 1.4),
+              ),
+            ),
           ),
         ),
       ),

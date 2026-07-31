@@ -21,7 +21,7 @@ class DatabaseService {
 
   static Database? _database;
   static const String _dbName = 'xxread_v2.db';
-  static const int _dbVersion = 20;
+  static const int _dbVersion = 21;
   static Future<Database>? _openingDatabase;
 
   Future<Database> get database async {
@@ -361,6 +361,9 @@ class DatabaseService {
     if (oldVersion < 20) {
       await ReaderAnnotationSchemaMigration.migrate(db);
     }
+    if (oldVersion < 21) {
+      await db.execute('ALTER TABLE books ADD COLUMN reading_progress REAL');
+    }
   }
 
   Future<void> _createTables(Database db) async {
@@ -373,6 +376,7 @@ class DatabaseService {
         format TEXT NOT NULL,
         currentPage INTEGER DEFAULT 0,
         totalPages INTEGER DEFAULT 1,
+        reading_progress REAL,
         importDate INTEGER NOT NULL,
         cached_content TEXT,
         cached_pages TEXT,

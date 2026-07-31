@@ -10,7 +10,8 @@ import 'dart:io';
 /// dart run tool/example_book_source_server.dart
 /// ```
 ///
-/// Then add `http://127.0.0.1:8787` from the Sources page.
+/// This is a protocol-development server. The production app rejects
+/// loopback and private-network source targets by default.
 class ExampleBookSourceServer {
   final String sourceId;
   final String sourceName;

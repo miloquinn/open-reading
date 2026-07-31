@@ -15,6 +15,7 @@ import '../home_mobile_chrome.dart';
 /// 只负责显示标题和视觉样式，不处理页面业务逻辑。
 class HomeMobileTopBar extends StatelessWidget {
   final String title;
+  final Widget? leading;
   final Widget? trailing;
   final double titleFontSize;
   final FontWeight titleFontWeight;
@@ -23,6 +24,7 @@ class HomeMobileTopBar extends StatelessWidget {
   const HomeMobileTopBar({
     super.key,
     required this.title,
+    this.leading,
     this.trailing,
     this.titleFontSize = 34,
     this.titleFontWeight = FontWeight.w700,
@@ -66,6 +68,7 @@ class HomeMobileTopBar extends StatelessWidget {
         ),
         child: Row(
           children: [
+            if (leading != null) ...[leading!, const SizedBox(width: 8)],
             Expanded(
               child: Text(
                 title,
@@ -79,7 +82,7 @@ class HomeMobileTopBar extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            if (trailing != null) trailing!,
+            ?trailing,
           ],
         ),
       ),

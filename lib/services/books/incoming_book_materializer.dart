@@ -6,12 +6,13 @@ import 'dart:io';
 
 import 'package:path/path.dart' as path;
 import 'package:xxread/services/books/book_format_support.dart';
+import 'package:xxread/services/books/book_import_limits.dart';
 import 'package:xxread/services/books/book_import_models.dart';
 import 'package:xxread/services/books/incoming_book_models.dart';
 
 class IncomingBookMaterializer {
   static const int maximumRequestItems = 10;
-  static const int maximumBookBytes = 100 * 1024 * 1024;
+  static const int maximumBookBytes = maximumBookImportBytes;
   static const int maximumRequestBytes = 500 * 1024 * 1024;
   static const Set<String> supportedIncomingExtensions = {'txt', 'epub'};
 

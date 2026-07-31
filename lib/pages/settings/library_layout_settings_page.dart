@@ -1,13 +1,15 @@
-// 文件说明：书库布局独立配置页，收纳卡片/网格及网格细节设置。
-// 技术要点：Provider 状态联动、响应式 SegmentedButton。
+// 文件说明：书库独立配置页，收纳布局和书籍打开动画设置。
+// 技术要点：Provider 状态联动、响应式选择控件。
 
 import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:xxread/l10n/app_localizations.dart';
 import 'package:xxread/services/core/app_settings_service.dart';
 import 'package:xxread/utils/localization_extension.dart';
+import 'package:xxread/utils/page_transitions.dart';
 import 'package:xxread/utils/page_style_helper.dart';
 
 class LibraryLayoutSettingsPage extends StatelessWidget {
@@ -125,12 +127,91 @@ class LibraryLayoutSettingsPage extends StatelessWidget {
                   ],
                 ),
               ),
+              const SizedBox(height: 16),
+              _SettingsSurface(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.settingsLibraryOpenAnimationTitle,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      l10n.settingsLibraryOpenAnimationSubtitle,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    RadioGroup<LibraryBookOpenAnimation>(
+                      groupValue: settings.libraryBookOpenAnimation,
+                      onChanged: (value) {
+                        if (value == null) return;
+                        unawaited(settings.setLibraryBookOpenAnimation(value));
+                      },
+                      child: Column(
+                        children: [
+                          for (final animation
+                              in LibraryBookOpenAnimation.values)
+                            RadioListTile<LibraryBookOpenAnimation>(
+                              key: ValueKey(
+                                'settings-library-open-animation-${animation.name}',
+                              ),
+                              contentPadding: EdgeInsets.zero,
+                              dense: true,
+                              value: animation,
+                              title: Text(_animationTitle(l10n, animation)),
+                              subtitle: Text(
+                                _animationSubtitle(l10n, animation),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
       ),
     );
   }
+
+  String _animationTitle(
+    AppLocalizations l10n,
+    LibraryBookOpenAnimation animation,
+  ) => switch (animation) {
+    LibraryBookOpenAnimation.classicCover =>
+      l10n.settingsLibraryOpenAnimationClassicCover,
+    LibraryBookOpenAnimation.minimalFade =>
+      l10n.settingsLibraryOpenAnimationMinimal,
+    LibraryBookOpenAnimation.paperRise =>
+      l10n.settingsLibraryOpenAnimationPaperRise,
+    LibraryBookOpenAnimation.pageSlide =>
+      l10n.settingsLibraryOpenAnimationPageSlide,
+    LibraryBookOpenAnimation.bookSpread =>
+      l10n.settingsLibraryOpenAnimationBookSpread,
+  };
+
+  String _animationSubtitle(
+    AppLocalizations l10n,
+    LibraryBookOpenAnimation animation,
+  ) => switch (animation) {
+    LibraryBookOpenAnimation.classicCover =>
+      l10n.settingsLibraryOpenAnimationClassicCoverHint,
+    LibraryBookOpenAnimation.minimalFade =>
+      l10n.settingsLibraryOpenAnimationMinimalHint,
+    LibraryBookOpenAnimation.paperRise =>
+      l10n.settingsLibraryOpenAnimationPaperRiseHint,
+    LibraryBookOpenAnimation.pageSlide =>
+      l10n.settingsLibraryOpenAnimationPageSlideHint,
+    LibraryBookOpenAnimation.bookSpread =>
+      l10n.settingsLibraryOpenAnimationBookSpreadHint,
+  };
 }
 
 class _SettingsSurface extends StatelessWidget {

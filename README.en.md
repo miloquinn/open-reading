@@ -88,12 +88,12 @@ and configured by the user. Cloud sync and WebDAV are not currently built in.
 
 ## Open book sources
 
-ORSP 1.4 defines standard discovery, search, book-detail, paginated
+ORSP 1.5 defines standard discovery, search, book-detail, paginated
 chapter-catalog, and chapter-content endpoints. Reader apps implement the
 protocol once; source developers may use any server language or framework.
 
 - Repository: [miloquinn/open-reading-source-protocol](https://github.com/miloquinn/open-reading-source-protocol)
-- Version: `1.4`
+- Version: `1.5`
 - Intended content: original, public-domain, or properly licensed works
 - Transparency metadata: operator, contact URL, content license, and rights statement
 
@@ -102,6 +102,10 @@ Run the local example source:
 ```bash
 dart run tool/example_book_source_server.dart
 ```
+
+This server is intended for protocol development and API inspection. The
+production app's source network policy rejects loopback and private-network
+targets by default, so it cannot be registered directly through the app.
 
 ## Development
 

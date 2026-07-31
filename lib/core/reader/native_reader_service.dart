@@ -49,6 +49,7 @@ class NativeReaderService {
     BuildContext context,
     Book book, {
     BookOpenAnimation? animation,
+    LibraryBookOpenAnimation? libraryAnimation,
     ReaderPageTransitionOrigin origin = ReaderPageTransitionOrigin.standard,
     bool waitForReaderClose = true,
   }) async {
@@ -76,6 +77,7 @@ class NativeReaderService {
         context,
         repaired,
         animation: animation,
+        libraryAnimation: libraryAnimation,
         waitForReaderClose: waitForReaderClose,
       );
       return;
@@ -95,6 +97,7 @@ class NativeReaderService {
         context,
         repaired,
         animation: animation,
+        libraryAnimation: libraryAnimation,
         waitForReaderClose: waitForReaderClose,
       );
       return;
@@ -110,13 +113,14 @@ class NativeReaderService {
       return;
     }
     if (!context.mounted) return;
-    final initialTheme = animation == null
+    final initialTheme = animation == null && libraryAnimation == null
         ? null
         : await ReaderThemes.loadSavedPalette();
     if (!context.mounted) return;
     final route = BookOpenTransition.createRoute<void>(
       NativeReaderPage(book: repaired, initialTheme: initialTheme),
       animation: animation,
+      libraryAnimation: libraryAnimation,
       readerBackgroundColor: initialTheme?.background,
       origin: origin,
       waitForReaderReady: true,

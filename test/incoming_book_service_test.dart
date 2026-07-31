@@ -292,6 +292,67 @@ void main() {
     await service.dispose();
   });
 
+  test('accepts a book at the 500 MB import boundary', () async {
+    const expectedLimitBytes = 500 * 1024 * 1024;
+    expect(IncomingBookMaterializer.maximumBookBytes, expectedLimitBytes);
+    final file = File('${sandbox.path}/at-limit.txt');
+    final handle = await file.open(mode: FileMode.write);
+    await handle.truncate(expectedLimitBytes);
+    await handle.close();
+
+    final source = await IncomingBookMaterializer().prepare(
+      IncomingBookRequest(
+        requestId: 'at-limit',
+        action: IncomingBookAction.open,
+        items: [
+          IncomingBookItem(
+            id: 'at-limit',
+            displayName: 'at-limit.txt',
+            localPath: file.path,
+          ),
+        ],
+      ),
+      IncomingBookItem(
+        id: 'at-limit',
+        displayName: 'at-limit.txt',
+        localPath: file.path,
+      ),
+    );
+
+    expect(source.sizeBytes, expectedLimitBytes);
+  });
+
+  test('rejects a book one byte above the 500 MB import boundary', () async {
+    const expectedLimitBytes = 500 * 1024 * 1024;
+    final file = File('${sandbox.path}/over-limit.txt');
+    final handle = await file.open(mode: FileMode.write);
+    await handle.truncate(expectedLimitBytes + 1);
+    await handle.close();
+    final item = IncomingBookItem(
+      id: 'over-limit',
+      displayName: 'over-limit.txt',
+      localPath: file.path,
+    );
+
+    expect(
+      () => IncomingBookMaterializer().prepare(
+        IncomingBookRequest(
+          requestId: 'over-limit',
+          action: IncomingBookAction.open,
+          items: [item],
+        ),
+        item,
+      ),
+      throwsA(
+        isA<IncomingBookFailure>().having(
+          (failure) => failure.code,
+          'code',
+          'file_too_large',
+        ),
+      ),
+    );
+  });
+
   test('enforces aggregate byte limit for desktop argument intake', () async {
     final items = <IncomingBookItem>[];
     for (var index = 0; index < 6; index++) {

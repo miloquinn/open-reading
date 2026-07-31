@@ -279,9 +279,7 @@ class _DetailedStatsPageState extends State<DetailedStatsPage>
       result.add({
         'book': book,
         'readingTime': (real?['durationMinutes'] as int?) ?? 0,
-        'progress': book.totalPages > 0
-            ? (book.currentPage / book.totalPages).clamp(0.0, 1.0)
-            : 0.0,
+        'progress': book.progress,
         'pagesRead': sessionPages > 0 ? sessionPages : book.currentPage,
         'totalPages': book.totalPages,
         'sessionCount': (real?['sessionCount'] as int?) ?? 0,

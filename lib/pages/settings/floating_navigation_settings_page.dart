@@ -58,6 +58,63 @@ class FloatingNavigationSettingsPage extends StatelessWidget {
                 const SizedBox(height: 10),
                 _NavigationPreview(settings: settings),
                 const SizedBox(height: 24),
+                _SectionLabel(label: l10n.floatingNavigationSizeTitle),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: SegmentedButton<bool>(
+                    key: const ValueKey('floating-navigation-size-mode'),
+                    showSelectedIcon: false,
+                    expandedInsets: EdgeInsets.zero,
+                    segments: [
+                      ButtonSegment(
+                        value: false,
+                        icon: const Icon(Icons.auto_awesome_outlined),
+                        label: Text(l10n.floatingNavigationSizeAutomatic),
+                      ),
+                      ButtonSegment(
+                        value: true,
+                        icon: const Icon(Icons.tune_rounded),
+                        label: Text(l10n.floatingNavigationSizeCustom),
+                      ),
+                    ],
+                    selected: {settings.customizeFloatingNavigationSize},
+                    onSelectionChanged: (selection) {
+                      if (selection.isEmpty) return;
+                      unawaited(
+                        settings.setCustomizeFloatingNavigationSize(
+                          selection.first,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                if (settings.customizeFloatingNavigationSize) ...[
+                  const SizedBox(height: 14),
+                  _NavigationSizeSlider(
+                    sliderKey: const ValueKey(
+                      'floating-navigation-height-slider',
+                    ),
+                    icon: Icons.height_rounded,
+                    label: l10n.floatingNavigationHeightLabel,
+                    value: settings.floatingNavigationHeight,
+                    min: kHomeMobileFloatingNavMinHeight,
+                    max: kHomeMobileFloatingNavMaxHeight,
+                    onChanged: settings.setFloatingNavigationHeight,
+                  ),
+                  _NavigationSizeSlider(
+                    sliderKey: const ValueKey(
+                      'floating-navigation-margin-slider',
+                    ),
+                    icon: Icons.horizontal_distribute_rounded,
+                    label: l10n.floatingNavigationSideMarginLabel,
+                    value: settings.floatingNavigationHorizontalMargin,
+                    min: kHomeMobileFloatingNavMinHorizontalMargin,
+                    max: kHomeMobileFloatingNavMaxHorizontalMargin,
+                    onChanged: settings.setFloatingNavigationHorizontalMargin,
+                  ),
+                ],
+                const SizedBox(height: 24),
                 _SectionLabel(label: l10n.floatingNavigationDisplayModeTitle),
                 const SizedBox(height: 10),
                 SizedBox(
@@ -228,16 +285,25 @@ class _NavigationPreview extends StatelessWidget {
         ).extension<UiStyleThemeExtension>()?.isMaterial3Style ??
         false;
     final visibleOrder = settings.visibleHomeNavigationOrder;
-    final width = homeMobileFloatingNavWidthFor(
-      screenWidth: MediaQuery.sizeOf(context).width,
+    final mediaQuery = MediaQuery.of(context);
+    final dimensions = homeMobileFloatingNavDimensionsFor(
+      screenWidth: mediaQuery.size.width,
       itemCount: visibleOrder.length,
+      platform: Theme.of(context).platform,
+      systemBottomInset: mediaQuery.viewPadding.bottom,
+      customHeight: settings.customizeFloatingNavigationSize
+          ? settings.floatingNavigationHeight
+          : null,
+      customHorizontalMargin: settings.customizeFloatingNavigationSize
+          ? settings.floatingNavigationHorizontalMargin
+          : null,
     );
 
     return Center(
       child: Container(
         key: const ValueKey('floating-navigation-live-preview'),
-        width: width,
-        height: kHomeMobileFloatingNavHeight,
+        width: dimensions.width,
+        height: dimensions.height,
         padding: const EdgeInsets.symmetric(
           horizontal: kHomeMobileFloatingNavHorizontalPadding,
           vertical: 4,
@@ -246,7 +312,7 @@ class _NavigationPreview extends StatelessWidget {
           color: isMaterial3Style
               ? scheme.surfaceContainerHigh
               : GlassEffectConfig.chromeSurfaceColor(context),
-          borderRadius: BorderRadius.circular(kHomeMobileFloatingNavHeight / 2),
+          borderRadius: BorderRadius.circular(dimensions.height / 2),
           border: Border.all(
             color: scheme.outline.withValues(
               alpha: isMaterial3Style ? 0.18 : 0.1,
@@ -280,6 +346,60 @@ class _NavigationPreview extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _NavigationSizeSlider extends StatelessWidget {
+  const _NavigationSizeSlider({
+    required this.sliderKey,
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.min,
+    required this.max,
+    required this.onChanged,
+  });
+
+  final Key sliderKey;
+  final IconData icon;
+  final String label;
+  final double value;
+  final double min;
+  final double max;
+  final ValueChanged<double> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: scheme.onSurfaceVariant),
+        const SizedBox(width: 8),
+        SizedBox(width: 76, child: Text(label)),
+        Expanded(
+          child: Slider(
+            key: sliderKey,
+            value: value,
+            min: min,
+            max: max,
+            divisions: (max - min).round(),
+            label: value.round().toString(),
+            onChanged: onChanged,
+          ),
+        ),
+        SizedBox(
+          width: 34,
+          child: Text(
+            value.round().toString(),
+            textAlign: TextAlign.end,
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+              color: scheme.onSurfaceVariant,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

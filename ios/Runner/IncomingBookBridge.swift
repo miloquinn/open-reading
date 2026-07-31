@@ -57,7 +57,7 @@ final class IncomingBookInbox {
   private static let inboxDirectoryName = "IncomingBooks"
   private static let supportedExtensions = Set(["txt", "epub", "pdf"])
   private static let maxItemCount = 10
-  private static let maxFileBytes: Int64 = 100 * 1024 * 1024
+  private static let maxFileBytes: Int64 = 500 * 1024 * 1024
   private static let maxAggregateBytes: Int64 = 500 * 1024 * 1024
   private static let mimeTypes = [
     "txt": "text/plain",

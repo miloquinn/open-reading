@@ -118,7 +118,7 @@ class _BookSourcesPageState extends State<BookSourcesPage> {
   }
 
   Future<void> _loadSources() async {
-    final sources = await _registry.load();
+    final sources = await _registry.loadRunnable();
     if (!mounted) return;
     setState(() {
       _sources = sources;

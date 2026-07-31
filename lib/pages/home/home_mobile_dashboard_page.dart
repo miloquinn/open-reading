@@ -508,9 +508,7 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage>
       );
     }
 
-    final progress = book.totalPages <= 0
-        ? 0.0
-        : (book.currentPage / book.totalPages).clamp(0.0, 1.0);
+    final progress = book.progress;
     final percent = (progress * 100).round();
     final coverWidth = spacious ? 118.0 : 102.0;
     final coverHeight = spacious ? 164.0 : 142.0;
@@ -850,9 +848,7 @@ class _HomeMobileDashboardPageState extends State<HomeMobileDashboardPage>
 
   Widget _buildRecentBookItem(Book book) {
     final palette = _palette;
-    final progress = book.totalPages <= 0
-        ? 0
-        : ((book.currentPage / book.totalPages) * 100).clamp(0, 100).round();
+    final progress = (book.progress * 100).round();
     return Semantics(
       button: true,
       label:

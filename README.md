@@ -24,7 +24,7 @@
     <img src="https://img.shields.io/badge/Reader_Engine-Flutter_Native-0ea5e9" alt="Flutter Native Reader Engine">
     <img src="https://img.shields.io/badge/Core_Reader-No_WebView-f97316" alt="Core Reader Without WebView">
     <a href="https://github.com/miloquinn/open-reading"><img src="https://img.shields.io/badge/GitHub-open--reading-181717?logo=github" alt="GitHub"></a>
-    <a href="https://github.com/miloquinn/open-reading-source-protocol"><img src="https://img.shields.io/badge/Book_Source-ORSP_1.1-7c3aed" alt="Open Reading Source Protocol 1.1"></a>
+    <a href="https://github.com/miloquinn/open-reading-source-protocol"><img src="https://img.shields.io/badge/Book_Source-ORSP_1.5-7c3aed" alt="Open Reading Source Protocol 1.5"></a>
   </p>
 </div>
 
@@ -69,7 +69,7 @@ Open Reading Source Protocol（ORSP）连接用户自行选择的公开内容服
 
 ### 开放书源
 
-- 添加、启用、停用或移除符合 ORSP 1.4 的 HTTP(S) 书源；
+- 添加、启用、停用或移除符合 ORSP 1.5 的 HTTP(S) 书源；
 - 聚合多个已启用书源的推荐、分类、最新内容和搜索结果，并可筛选全部或单一书源；
 - 支持在线查看书籍详情、目录和章节正文，也可加入本地书架；
 - 在线阅读与本地阅读共用主题、排版、翻页模式、书签入口和阅读设置；
@@ -122,14 +122,11 @@ Open Reading Source Protocol（ORSP）连接用户自行选择的公开内容服
 
 ## Open Reading Source Protocol
 
-ORSP 1.4 让阅读器通过统一 HTTP 协议连接公开、无需登录的内容服务，而不是在客户端保存站点
+ORSP 1.5 让阅读器通过统一 HTTP 协议连接公开、无需登录的内容服务，而不是在客户端保存站点
 抓取规则、Cookie 或可执行脚本。协议定义发现文档、搜索、书籍详情、分页章节目录与章节正文，
 还可选提供推荐、分类和浏览能力，以及运营者、联系入口、内容许可与权利声明元数据。
 
-- 协议仓库：[miloquinn/open-reading-source-protocol](https://github.com/miloquinn/open-reading-source-protocol)
-- 仓库内规范副本：[`docs/book-source-protocol-v1.md`](docs/book-source-protocol-v1.md)
-- OpenAPI 定义：[`docs/book-source-openapi.yaml`](docs/book-source-openapi.yaml)
-- 示例发现文档：[`docs/examples/open-reading-source.json`](docs/examples/open-reading-source.json)
+- 权威协议仓库：[miloquinn/open-reading-source-protocol](https://github.com/miloquinn/open-reading-source-protocol)
 
 运行仓库内的本地示例书源：
 
@@ -137,8 +134,8 @@ ORSP 1.4 让阅读器通过统一 HTTP 协议连接公开、无需登录的内�
 dart run tool/example_book_source_server.dart
 ```
 
-然后在 App 的“书源”页面添加 `http://127.0.0.1:8787`。Android 模拟器访问宿主机时通常需要
-改用 `http://10.0.2.2:8787`。
+该服务用于协议开发和接口调试。正式 App 的书源网络策略默认拒绝回环和私网地址，不能直接
+把 `127.0.0.1` 或模拟器宿主地址注册为书源。
 
 请只接入原创、公共领域或已获得合法授权的内容，不要使用书源能力绕过访问控制、付费机制
 或第三方服务条款。

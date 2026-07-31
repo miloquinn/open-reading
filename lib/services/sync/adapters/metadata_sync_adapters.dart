@@ -198,7 +198,15 @@ class BookSourcesSyncAdapter implements MetadataSyncAdapter {
     }
     final payload = operation.payload;
     if (payload == null) return;
-    final source = RegisteredBookSource.fromJson(payload);
+    late final RegisteredBookSource source;
+    try {
+      source = RegisteredBookSource.fromJson(payload);
+    } catch (_) {
+      throw const WebDavSyncFailure(
+        WebDavSyncErrorCode.corruptRemoteData,
+        'A synced book source contains invalid data.',
+      );
+    }
     if (source.id != operation.entityKey ||
         operation.recordId != stableRecordId('book_source', source.id)) {
       throw const WebDavSyncFailure(
@@ -382,10 +390,18 @@ class ProgressSyncAdapter extends _BaseAdapter {
           bookId: sourceBookId,
         );
       }
-      if (locator == null && sourceProgress == null) continue;
+      final readingProgress = (row['reading_progress'] as num?)?.toDouble();
+      if (locator == null &&
+          sourceProgress == null &&
+          readingProgress == null) {
+        continue;
+      }
       seen.add(uid);
       final payload = <String, dynamic>{'book_uid': uid};
       if (locator != null) payload['canonical_locator'] = locator;
+      if (readingProgress != null) {
+        payload['reading_progress'] = readingProgress;
+      }
       if (sourceProgress != null) {
         payload.addAll({
           'source_progress': sourceProgress.toJson(),
@@ -438,6 +454,11 @@ class ProgressSyncAdapter extends _BaseAdapter {
       values['last_canonical_locator'] = jsonEncode(
         payload['canonical_locator'],
       );
+    }
+    if (payload['reading_progress'] is num) {
+      values['reading_progress'] = (payload['reading_progress'] as num)
+          .toDouble()
+          .clamp(0.0, 1.0);
     }
     final rawSourceProgress = payload['source_progress'];
     if (row['storage_type'] == 'online' &&

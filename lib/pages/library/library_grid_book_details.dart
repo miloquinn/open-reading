@@ -11,9 +11,7 @@ class LibraryGridBookDetails extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final progress = book.totalPages > 0
-        ? (book.currentPage / book.totalPages).clamp(0.0, 1.0)
-        : 0.0;
+    final progress = book.progress;
     final percent = (progress * 100).round();
 
     return SizedBox(

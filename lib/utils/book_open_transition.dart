@@ -177,6 +177,7 @@ class BookOpenTransition {
   static PageRoute<T> createRoute<T extends Object?>(
     Widget page, {
     BookOpenAnimation? animation,
+    LibraryBookOpenAnimation? libraryAnimation,
     Color? readerBackgroundColor,
     ReaderPageTransitionOrigin origin = ReaderPageTransitionOrigin.standard,
     bool waitForReaderReady = false,
@@ -189,6 +190,7 @@ class BookOpenTransition {
       return CustomPageTransitions.createSmoothReaderPageRoute<T>(
         page,
         origin: origin,
+        libraryAnimation: libraryAnimation,
         backgroundColor: readerBackgroundColor,
         routeWrapper: (route, routeAnimation, child) =>
             _AndroidPredictiveBackDriver(

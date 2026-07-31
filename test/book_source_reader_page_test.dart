@@ -61,7 +61,7 @@ void main() {
         find.byKey(const ValueKey('book-source-reader-loading-placeholder')),
         findsWidgets,
       );
-      expect(find.byType(CircularProgressIndicator), findsNothing);
+      expect(find.byType(ReaderOpeningLoader), findsNothing);
 
       client.completeCatalog();
       await tester.pump();
@@ -70,7 +70,7 @@ void main() {
         find.byKey(const ValueKey('book-source-reader-content')),
         findsOneWidget,
       );
-      expect(find.byType(CircularProgressIndicator), findsNothing);
+      expect(find.byType(ReaderOpeningLoader), findsNothing);
     },
   );
 
@@ -100,7 +100,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 660));
     await tester.pump();
     expect(find.byType(ReaderOpeningLoader), findsOneWidget);
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byKey(const ValueKey('reader-opening-dots')), findsOneWidget);
 
     expect(
       tester
@@ -129,10 +129,10 @@ void main() {
       find.byKey(const ValueKey('book-source-reader-content')),
       findsOneWidget,
     );
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byType(ReaderOpeningLoader), findsOneWidget);
 
     await tester.pump(const Duration(milliseconds: 300));
-    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(find.byType(ReaderOpeningLoader), findsNothing);
   });
 
   testWidgets('loads source chapters and navigates to the next chapter', (
@@ -171,7 +171,7 @@ void main() {
     );
     await _pumpUntilFound(tester, find.text('第一章'));
     expect(find.text('第一章'), findsWidgets);
-    expect(find.byType(ReaderChapterTitlePage), findsOneWidget);
+    expect(find.byType(ReaderInlineChapterTitle), findsOneWidget);
     await tester.fling(
       find.byKey(const ValueKey('book-source-reader-surface')),
       const Offset(0, -500),
@@ -405,7 +405,7 @@ void main() {
     expect(body.text.style?.letterSpacing, 0.7);
   });
 
-  testWidgets('vertical source pages are clipped to one fixed reading window', (
+  testWidgets('vertical source text keeps its natural continuous height', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(400, 800));
@@ -442,18 +442,18 @@ void main() {
       expect(listRect.top, closeTo(windowPadding.top, 0.1));
       expect(listRect.bottom, closeTo(800 - windowPadding.bottom, 0.1));
 
-      final pageCells = find.byWidgetPredicate(
+      final continuousParts = find.byWidgetPredicate(
         (widget) =>
-            widget is SizedBox &&
+            widget is Column &&
             widget.key is ValueKey<String> &&
             (widget.key! as ValueKey<String>).value.startsWith(
-              'book-source-vertical-page:',
+              'book-source-vertical-part:',
             ),
       );
-      expect(pageCells, findsWidgets);
+      expect(continuousParts, findsOneWidget);
       expect(
-        tester.widget<SizedBox>(pageCells.first).height,
-        closeTo(listRect.height, 0.1),
+        tester.getSize(continuousParts.first).height,
+        isNot(closeTo(listRect.height, 0.1)),
       );
     } finally {
       await tester.pumpWidget(const SizedBox.shrink());

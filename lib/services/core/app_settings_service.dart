@@ -9,8 +9,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../models/home_navigation_destination.dart';
 import '../../utils/font_catalog_helper.dart';
+import '../../utils/page_transitions.dart';
 import 'custom_font_service.dart';
 import 'online_font_service.dart';
+
+const String additionalSourceProtocolsPreferenceKey =
+    'additional_source_protocols_v1';
 
 enum LibraryLayoutMode { card, grid }
 
@@ -27,10 +31,18 @@ class AppSettingsNotifier extends ChangeNotifier {
       'hide_home_navigation_labels_v1';
   static const String _keyHomeNavigationOrder = 'home_navigation_order_v1';
   static const String _keyHomeNavigationHidden = 'home_navigation_hidden_v1';
+  static const String _keyCustomizeFloatingNavigationSize =
+      'customize_home_navigation_size_v1';
+  static const String _keyFloatingNavigationHeight =
+      'home_navigation_height_v1';
+  static const String _keyFloatingNavigationHorizontalMargin =
+      'home_navigation_horizontal_margin_v1';
   static const String _keyLibraryLayoutMode = 'library_layout_mode_v1';
   static const String _keyLibraryGridColumns = 'library_grid_columns_v1';
   static const String _keyLibraryGridShowDetails =
       'library_grid_show_details_v1';
+  static const String _keyLibraryBookOpenAnimation =
+      'library_book_open_animation_v1';
 
   Locale? _locale;
   String _localeCode = 'system';
@@ -41,9 +53,15 @@ class AppSettingsNotifier extends ChangeNotifier {
       defaultHomeNavigationOrder;
   Set<HomeNavigationDestination> _hiddenHomeNavigationDestinations =
       const <HomeNavigationDestination>{};
+  bool _customizeFloatingNavigationSize = false;
+  double _floatingNavigationHeight = 60;
+  double _floatingNavigationHorizontalMargin = 24;
   LibraryLayoutMode _libraryLayoutMode = LibraryLayoutMode.grid;
   int _libraryGridColumns = 2;
   bool _libraryGridShowDetails = true;
+  LibraryBookOpenAnimation _libraryBookOpenAnimation =
+      LibraryBookOpenAnimation.minimalFade;
+  bool _additionalSourceProtocolsEnabled = false;
   bool _isInitialized = false;
   final CustomFontService _customFontService;
   final OnlineFontService _onlineFontService;
@@ -69,6 +87,10 @@ class AppSettingsNotifier extends ChangeNotifier {
       _homeNavigationOrder;
   Set<HomeNavigationDestination> get hiddenHomeNavigationDestinations =>
       _hiddenHomeNavigationDestinations;
+  bool get customizeFloatingNavigationSize => _customizeFloatingNavigationSize;
+  double get floatingNavigationHeight => _floatingNavigationHeight;
+  double get floatingNavigationHorizontalMargin =>
+      _floatingNavigationHorizontalMargin;
 
   /// 按用户顺序过滤隐藏项后的实际导航列表；设置页永远可见。
   List<HomeNavigationDestination> get visibleHomeNavigationOrder =>
@@ -85,6 +107,10 @@ class AppSettingsNotifier extends ChangeNotifier {
   LibraryLayoutMode get libraryLayoutMode => _libraryLayoutMode;
   int get libraryGridColumns => _libraryGridColumns;
   bool get libraryGridShowDetails => _libraryGridShowDetails;
+  LibraryBookOpenAnimation get libraryBookOpenAnimation =>
+      _libraryBookOpenAnimation;
+  bool get additionalSourceProtocolsEnabled =>
+      _additionalSourceProtocolsEnabled;
 
   /// 用户自定义导入的字体列表（在线字体不在此列）。
   List<FontOption> get customFonts => _customFontService.fonts
@@ -281,6 +307,16 @@ class AppSettingsNotifier extends ChangeNotifier {
         normalizeHiddenHomeNavigationDestinations(
           prefs.getStringList(_keyHomeNavigationHidden),
         );
+    _customizeFloatingNavigationSize =
+        prefs.getBool(_keyCustomizeFloatingNavigationSize) ?? false;
+    _floatingNavigationHeight =
+        (prefs.getDouble(_keyFloatingNavigationHeight) ?? 60)
+            .clamp(52, 72)
+            .toDouble();
+    _floatingNavigationHorizontalMargin =
+        (prefs.getDouble(_keyFloatingNavigationHorizontalMargin) ?? 24)
+            .clamp(12, 48)
+            .toDouble();
     _libraryLayoutMode = switch (prefs.getString(_keyLibraryLayoutMode)) {
       'card' => LibraryLayoutMode.card,
       _ => LibraryLayoutMode.grid,
@@ -290,6 +326,12 @@ class AppSettingsNotifier extends ChangeNotifier {
       _ => 2,
     };
     _libraryGridShowDetails = prefs.getBool(_keyLibraryGridShowDetails) ?? true;
+    _libraryBookOpenAnimation = LibraryBookOpenAnimation.values.firstWhere(
+      (mode) => mode.name == prefs.getString(_keyLibraryBookOpenAnimation),
+      orElse: () => LibraryBookOpenAnimation.minimalFade,
+    );
+    _additionalSourceProtocolsEnabled =
+        prefs.getBool(additionalSourceProtocolsPreferenceKey) ?? false;
     await _restoreSelectedFonts(prefs);
     _isInitialized = true;
     notifyListeners();
@@ -430,6 +472,32 @@ class AppSettingsNotifier extends ChangeNotifier {
   Future<void> setShowNavigationLabels(bool value) =>
       setHideNavigationLabels(!value);
 
+  Future<void> setCustomizeFloatingNavigationSize(bool value) async {
+    if (_customizeFloatingNavigationSize == value) return;
+    _customizeFloatingNavigationSize = value;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyCustomizeFloatingNavigationSize, value);
+  }
+
+  Future<void> setFloatingNavigationHeight(double value) async {
+    final normalized = value.clamp(52, 72).toDouble();
+    if (_floatingNavigationHeight == normalized) return;
+    _floatingNavigationHeight = normalized;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_keyFloatingNavigationHeight, normalized);
+  }
+
+  Future<void> setFloatingNavigationHorizontalMargin(double value) async {
+    final normalized = value.clamp(12, 48).toDouble();
+    if (_floatingNavigationHorizontalMargin == normalized) return;
+    _floatingNavigationHorizontalMargin = normalized;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_keyFloatingNavigationHorizontalMargin, normalized);
+  }
+
   Future<void> setHomeNavigationOrder(
     List<HomeNavigationDestination> order,
   ) async {
@@ -499,6 +567,24 @@ class AppSettingsNotifier extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_keyLibraryGridShowDetails, value);
+  }
+
+  Future<void> setLibraryBookOpenAnimation(
+    LibraryBookOpenAnimation animation,
+  ) async {
+    if (_libraryBookOpenAnimation == animation) return;
+    _libraryBookOpenAnimation = animation;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyLibraryBookOpenAnimation, animation.name);
+  }
+
+  Future<void> setAdditionalSourceProtocolsEnabled(bool value) async {
+    if (_additionalSourceProtocolsEnabled == value) return;
+    _additionalSourceProtocolsEnabled = value;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(additionalSourceProtocolsPreferenceKey, value);
   }
 
   Future<void> prepareCustomFontPreviews() async {

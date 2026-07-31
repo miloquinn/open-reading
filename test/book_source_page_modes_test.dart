@@ -500,11 +500,26 @@ void main() {
       final verticalList = tester.widget<ScrollablePositionedList>(
         find.byType(ScrollablePositionedList),
       );
-      expect(verticalList.itemCount, greaterThan(1));
+      expect(verticalList.itemCount, 1);
+      final continuousParts = find.byWidgetPredicate(
+        (widget) =>
+            widget is Column &&
+            widget.key is ValueKey<String> &&
+            (widget.key! as ValueKey<String>).value.startsWith(
+              'book-source-vertical-part:',
+            ),
+      );
+      expect(continuousParts, findsWidgets);
+      expect(
+        tester.getSize(continuousParts.first).height,
+        greaterThan(
+          tester.getSize(find.byType(ScrollablePositionedList)).height,
+        ),
+      );
       final status = tester.widget<Text>(statusFinder).data!;
       final fractions = RegExp(r'(\d+)/(\d+)').allMatches(status).toList();
       expect(fractions.length, 2);
-      expect(int.parse(fractions[1].group(2)!), greaterThan(1), reason: status);
+      expect(int.parse(fractions[1].group(2)!), 1, reason: status);
     },
   );
 }

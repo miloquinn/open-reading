@@ -447,9 +447,7 @@ extension _DetailedStatsOverviewView on _DetailedStatsPageState {
           : Column(
               children: _recentBooks.asMap().entries.map((entry) {
                 final book = entry.value;
-                final progress = book.totalPages > 0
-                    ? (book.currentPage / book.totalPages).clamp(0.0, 1.0)
-                    : 0.0;
+                final progress = book.progress;
                 return Padding(
                   padding: EdgeInsets.only(
                     bottom: entry.key == _recentBooks.length - 1 ? 0 : 14,

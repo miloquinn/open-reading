@@ -1,25 +1,3 @@
 {
-  "protocol": "open-reading-source",
-  "protocolVersion": "1.4",
-  "id": "org.example.public-books",
-  "name": "Example Public Books",
-  "description": "A minimal Open Reading compatible source",
-  "apiBaseUrl": "https://books.example.org/api/",
-  "iconUrl": "https://books.example.org/icon.png",
-  "websiteUrl": "https://books.example.org/",
-  "operatorName": "Example Public Library",
-  "contactUrl": "https://books.example.org/contact",
-  "contentLicense": "CC BY 4.0",
-  "rightsStatement": "Original and public-domain works distributed with permission.",
-  "languages": ["zh-CN", "en"],
-  "maxCatalogPageSize": 200,
-  "capabilities": [
-    "search",
-    "discover",
-    "categories",
-    "browse",
-    "detail",
-    "catalog",
-    "content"
-  ]
+  "$comment": "Canonical example: https://github.com/miloquinn/open-reading-source-protocol/blob/main/examples/open-reading-source.json"
 }

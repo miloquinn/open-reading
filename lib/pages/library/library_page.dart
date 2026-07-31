@@ -31,6 +31,7 @@ import 'package:xxread/utils/book_open_transition.dart';
 import 'package:xxread/utils/glass_config.dart';
 import 'package:xxread/utils/layout_helper.dart';
 import 'package:xxread/utils/localization_extension.dart';
+import 'package:xxread/utils/page_transitions.dart';
 import 'package:xxread/utils/page_style_helper.dart';
 import 'package:xxread/utils/reader_themes.dart';
 import 'package:xxread/utils/system_ui_helper.dart';
@@ -44,6 +45,7 @@ import 'package:xxread/widgets/source_cover_image.dart';
 import 'import_book/import_book_page.dart';
 import 'download_tasks_page.dart';
 import 'library_grid_book_details.dart';
+import 'library_selection_model.dart';
 
 enum _LibraryFilter { all, reading, finished }
 
@@ -54,13 +56,49 @@ class LibraryPageController {
 
   /// 当前是否有生效的筛选（非“全部”）。顶栏据此点亮筛选按钮。
   final ValueNotifier<bool> filterActive = ValueNotifier<bool>(false);
+  final ValueNotifier<LibrarySelectionSnapshot> selection =
+      ValueNotifier<LibrarySelectionSnapshot>(
+        const LibrarySelectionSnapshot.inactive(),
+      );
 
   void toggleSearch() => _state?._toggleSearchBar();
 
   Future<void> showFilterMenu(Rect anchor) async =>
       _state?._showFilterMenu(anchor);
 
-  void dispose() => filterActive.dispose();
+  void exitSelection() => _state?._exitSelectionMode();
+
+  void selectAllVisible() => _state?._selectAllVisibleBooks();
+
+  Future<void> deleteSelected() async => _state?._confirmDeleteSelectedBooks();
+
+  void dispose() {
+    filterActive.dispose();
+    selection.dispose();
+  }
+}
+
+class LibrarySelectionSnapshot {
+  final bool isActive;
+  final int selectedCount;
+
+  const LibrarySelectionSnapshot({
+    required this.isActive,
+    required this.selectedCount,
+  });
+
+  const LibrarySelectionSnapshot.inactive()
+    : isActive = false,
+      selectedCount = 0;
+
+  @override
+  bool operator ==(Object other) =>
+      other is LibrarySelectionSnapshot &&
+      other.isActive == isActive &&
+      other.selectedCount == selectedCount;
+
+  @override
+  int get hashCode => Object.hash(isActive, selectedCount);
 }
 
 class LibraryPage extends StatefulWidget {
@@ -84,9 +122,10 @@ class _LibraryPageState extends State<LibraryPage> {
   String _searchQuery = '';
   bool _searchBarVisible = false;
   _LibraryFilter _selectedFilter = _LibraryFilter.all;
+  final LibrarySelectionModel _selection = LibrarySelectionModel();
   final Set<String> _exportingBookPaths = <String>{};
 
-  /// 每本书封面组件的 key，用于打开/退出动画捕获与回溯封面位置。
+  /// 经典封面展开需要在点击和返回时定位书库里的原封面。
   final Map<int, GlobalKey> _coverKeys = <int, GlobalKey>{};
 
   GlobalKey _coverKeyFor(Book book) =>
@@ -99,16 +138,18 @@ class _LibraryPageState extends State<LibraryPage> {
         false;
   }
 
-  Future<void> _openBook(Book book, {BookOpenAnimation? animation}) async {
+  Future<void> _openBook(
+    Book book, {
+    required LibraryBookOpenAnimation libraryAnimation,
+    BookOpenAnimation? animation,
+  }) async {
     final openingActivity = BookOpenTransition.beginActivity();
     try {
       final fullBook = await _bookDao.getBookById(book.id!);
       if (fullBook == null || !mounted) return;
       if (fullBook.isOnline) {
         try {
-          final initialTheme = animation == null
-              ? null
-              : await ReaderThemes.loadSavedPalette();
+          final initialTheme = await ReaderThemes.loadSavedPalette();
           if (!mounted) return;
           final source = _sourceShelfService.sourceFrom(fullBook);
           final sourceBook = _sourceShelfService.sourceBookFrom(fullBook);
@@ -120,8 +161,9 @@ class _LibraryPageState extends State<LibraryPage> {
               initialTheme: initialTheme,
             ),
             animation: animation,
-            readerBackgroundColor: initialTheme?.background,
-            waitForReaderReady: true,
+            libraryAnimation: animation == null ? libraryAnimation : null,
+            readerBackgroundColor: initialTheme.background,
+            waitForReaderReady: animation != null,
           );
           await BookOpenTransition.push<void>(context, route);
         } catch (error) {
@@ -138,12 +180,32 @@ class _LibraryPageState extends State<LibraryPage> {
           context,
           fullBook,
           animation: animation,
+          libraryAnimation: animation == null ? libraryAnimation : null,
         );
       }
       if (mounted) _loadBooks();
     } finally {
       openingActivity.dispose();
     }
+  }
+
+  Future<void> _openBookFromCover(
+    Book book, {
+    required GlobalKey coverKey,
+    required BorderRadius radius,
+    required WidgetBuilder coverBuilder,
+  }) {
+    final selected = context
+        .read<AppSettingsNotifier>()
+        .libraryBookOpenAnimation;
+    final animation = selected == LibraryBookOpenAnimation.classicCover
+        ? BookOpenAnimation.fromCoverKey(
+            coverKey,
+            radius: radius,
+            coverBuilder: coverBuilder,
+          )
+        : null;
+    return _openBook(book, libraryAnimation: selected, animation: animation);
   }
 
   BoxDecoration _panelDecoration({
@@ -291,6 +353,55 @@ class _LibraryPageState extends State<LibraryPage> {
         _selectedFilter != _LibraryFilter.all;
   }
 
+  void _syncSelection() {
+    widget.controller?.selection.value = LibrarySelectionSnapshot(
+      isActive: _selection.isActive,
+      selectedCount: _selection.selectedIds.length,
+    );
+  }
+
+  void _enterSelectionMode(Book book) {
+    final id = book.id;
+    if (id == null) return;
+    setState(() => _selection.enter(id));
+    _syncSelection();
+  }
+
+  void _toggleBookSelection(Book book) {
+    final id = book.id;
+    if (id == null) return;
+    setState(() => _selection.toggle(id));
+    _syncSelection();
+  }
+
+  void _selectAllVisibleBooks() {
+    final visibleIds = _visibleBooks.map((book) => book.id).nonNulls;
+    setState(() => _selection.selectAllVisible(visibleIds));
+    _syncSelection();
+  }
+
+  void _exitSelectionMode() {
+    if (!_selection.isActive) return;
+    setState(_selection.exit);
+    _syncSelection();
+  }
+
+  bool _isBookSelected(Book book) {
+    final id = book.id;
+    return id != null && _selection.selectedIds.contains(id);
+  }
+
+  Future<void> _handleBookTap(
+    Book book, {
+    required Future<void> Function() openBook,
+  }) async {
+    if (_selection.isActive) {
+      _toggleBookSelection(book);
+      return;
+    }
+    await openBook();
+  }
+
   void _onSearchChanged(String value) {
     _searchDebounce?.cancel();
     _searchDebounce = Timer(const Duration(milliseconds: 120), () {
@@ -321,8 +432,10 @@ class _LibraryPageState extends State<LibraryPage> {
       if (mounted) {
         setState(() {
           _books = books;
+          _selection.retainOnly(books.map((book) => book.id).nonNulls.toSet());
           _isInitialLoading = false;
         });
+        _syncSelection();
       }
     } catch (e) {
       if (mounted) {
@@ -342,29 +455,40 @@ class _LibraryPageState extends State<LibraryPage> {
 
     // 在侧边导航栏模式下，不显示 Scaffold 和 AppBar
     if (useRailNavigation) {
-      return _buildContent(context, useRailNavigation: useRailNavigation);
+      return Stack(
+        children: [
+          _buildContent(context, useRailNavigation: useRailNavigation),
+          if (_selection.isActive) _buildRailSelectionBottomBar(),
+        ],
+      );
     }
 
     // 手机模式：显示完整的 Scaffold + AppBar
-    return Scaffold(
-      extendBody: true, // 让内容延伸到导航区，配合手势小白条
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: appBarColor,
-        elevation: 0,
-        toolbarHeight: 0,
-        surfaceTintColor: appBarColor,
-        scrolledUnderElevation: 0,
-        systemOverlayStyle: SystemUiHelper.overlayStyleForBrightness(
-          Theme.of(context).brightness,
+    return PopScope(
+      canPop: !_selection.isActive,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && _selection.isActive) _exitSelectionMode();
+      },
+      child: Scaffold(
+        extendBody: true, // 让内容延伸到导航区，配合手势小白条
+        extendBodyBehindAppBar: true,
+        appBar: AppBar(
+          backgroundColor: appBarColor,
+          elevation: 0,
+          toolbarHeight: 0,
+          surfaceTintColor: appBarColor,
+          scrolledUnderElevation: 0,
+          systemOverlayStyle: SystemUiHelper.overlayStyleForBrightness(
+            Theme.of(context).brightness,
+          ),
         ),
+        body: _buildContent(context, useRailNavigation: useRailNavigation),
+        // 手机端改为顶部“+”按钮入口，宽屏继续保留FAB
+        floatingActionButton:
+            LayoutHelper.getNavigationType(context) == NavigationType.rail
+            ? _buildFloatingActionButton()
+            : null,
       ),
-      body: _buildContent(context, useRailNavigation: useRailNavigation),
-      // 手机端改为顶部“+”按钮入口，宽屏继续保留FAB
-      floatingActionButton:
-          LayoutHelper.getNavigationType(context) == NavigationType.rail
-          ? _buildFloatingActionButton()
-          : null,
     );
   }
 
@@ -464,14 +588,11 @@ class _LibraryPageState extends State<LibraryPage> {
   }
 
   bool _isFinishedBook(Book book) {
-    if (book.totalPages <= 0) {
-      return false;
-    }
-    return book.currentPage >= book.totalPages;
+    return book.progress >= 1;
   }
 
   bool _isReadingBook(Book book) {
-    return book.currentPage > 0 && !_isFinishedBook(book);
+    return book.progress > 0 && !_isFinishedBook(book);
   }
 
   Widget _buildTopBar() {
@@ -482,91 +603,146 @@ class _LibraryPageState extends State<LibraryPage> {
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       child: Row(
         children: [
-          Text(
-            context.l10n.library,
-            style: TextStyle(
-              fontSize: 36,
-              fontWeight: FontWeight.w700,
-              color: Theme.of(context).colorScheme.onSurface,
-              height: 1.05,
+          if (_selection.isActive) ...[
+            IconButton(
+              tooltip: context.l10n.cancel,
+              onPressed: _exitSelectionMode,
+              icon: const Icon(Icons.close_rounded),
+            ),
+            const SizedBox(width: 4),
+          ],
+          Expanded(
+            child: Text(
+              _selection.isActive
+                  ? context.l10n.librarySelectedBooks(
+                      _selection.selectedIds.length,
+                    )
+                  : context.l10n.library,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: _selection.isActive ? 24 : 36,
+                fontWeight: FontWeight.w700,
+                color: Theme.of(context).colorScheme.onSurface,
+                height: 1.05,
+              ),
             ),
           ),
-          const Spacer(),
-          if (webDavSync?.isConfigured ?? false) ...[
+          if (_selection.isActive)
+            TextButton(
+              onPressed: _selectAllVisibleBooks,
+              child: Text(context.l10n.librarySelectAll),
+            )
+          else ...[
+            if (webDavSync?.isConfigured ?? false) ...[
+              _buildTopBarIcon(
+                icon: Icons.cloud_sync_rounded,
+                active: webDavSync!.remoteBooks.any(
+                  (book) => book.fileAvailable,
+                ),
+                tooltip: context.l10n.webDavBookFilesTitle,
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const BookFileSyncPage(),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+            ],
             _buildTopBarIcon(
-              icon: Icons.cloud_sync_rounded,
-              active: webDavSync!.remoteBooks.any((book) => book.fileAvailable),
-              tooltip: context.l10n.webDavBookFilesTitle,
+              icon: Icons.downloading_rounded,
+              active:
+                  context.watch<DownloadTaskController?>()?.hasActiveTasks ??
+                  false,
+              tooltip: context.l10n.downloadTasksTitle,
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute<void>(
-                  builder: (_) => const BookFileSyncPage(),
+                  builder: (_) => const DownloadTasksPage(),
                 ),
               ),
             ),
             const SizedBox(width: 8),
-          ],
-          _buildTopBarIcon(
-            icon: Icons.downloading_rounded,
-            active:
-                context.watch<DownloadTaskController?>()?.hasActiveTasks ??
-                false,
-            tooltip: context.l10n.downloadTasksTitle,
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => const DownloadTasksPage(),
-              ),
+            _buildTopBarIcon(
+              icon: Icons.search_rounded,
+              active: _searchBarVisible,
+              tooltip: context.l10n.bookSourcesSearch,
+              onTap: _toggleSearchBar,
             ),
-          ),
-          const SizedBox(width: 8),
-          _buildTopBarIcon(
-            icon: Icons.search_rounded,
-            active: _searchBarVisible,
-            tooltip: context.l10n.bookSourcesSearch,
-            onTap: _toggleSearchBar,
-          ),
-          const SizedBox(width: 8),
-          _LibraryFilterButton(
-            active: _selectedFilter != _LibraryFilter.all,
-            decoration: (active) => _panelDecoration(
-              radius: 22,
-              stronger: true,
-              color: active
-                  ? scheme.primaryContainer
-                  : (_isMaterial3Style
-                        ? scheme.surfaceContainer
-                        : palette.card),
-            ),
-            iconColor: _selectedFilter != _LibraryFilter.all
-                ? scheme.onPrimaryContainer
-                : palette.iconMuted,
-            onTapWithRect: _showFilterMenu,
-          ),
-          const SizedBox(width: 8),
-          InkWell(
-            borderRadius: BorderRadius.circular(22),
-            onTap: () async {
-              final result = await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ImportBookPage()),
-              );
-              if (result == true && mounted) {
-                _loadBooks();
-              }
-            },
-            child: Container(
-              width: 44,
-              height: 44,
-              decoration: _panelDecoration(
+            const SizedBox(width: 8),
+            _LibraryFilterButton(
+              active: _selectedFilter != _LibraryFilter.all,
+              decoration: (active) => _panelDecoration(
                 radius: 22,
                 stronger: true,
-                color: _isMaterial3Style
-                    ? scheme.surfaceContainer
-                    : palette.card,
+                color: active
+                    ? scheme.primaryContainer
+                    : (_isMaterial3Style
+                          ? scheme.surfaceContainer
+                          : palette.card),
               ),
-              child: Icon(Icons.add_rounded, color: palette.iconMuted),
+              iconColor: _selectedFilter != _LibraryFilter.all
+                  ? scheme.onPrimaryContainer
+                  : palette.iconMuted,
+              onTapWithRect: _showFilterMenu,
+            ),
+            const SizedBox(width: 8),
+            InkWell(
+              borderRadius: BorderRadius.circular(22),
+              onTap: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ImportBookPage(),
+                  ),
+                );
+                if (result == true && mounted) {
+                  _loadBooks();
+                }
+              },
+              child: Container(
+                width: 44,
+                height: 44,
+                decoration: _panelDecoration(
+                  radius: 22,
+                  stronger: true,
+                  color: _isMaterial3Style
+                      ? scheme.surfaceContainer
+                      : palette.card,
+                ),
+                child: Icon(Icons.add_rounded, color: palette.iconMuted),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRailSelectionBottomBar() {
+    final scheme = Theme.of(context).colorScheme;
+    return Positioned(
+      left: 24,
+      right: 24,
+      bottom: MediaQuery.viewPaddingOf(context).bottom + 18,
+      child: SafeArea(
+        top: false,
+        child: Center(
+          child: FilledButton.icon(
+            key: const ValueKey('library-delete-selected'),
+            onPressed: _selection.selectedIds.isEmpty
+                ? null
+                : _confirmDeleteSelectedBooks,
+            style: FilledButton.styleFrom(
+              minimumSize: const Size(260, 52),
+              backgroundColor: scheme.error,
+              foregroundColor: scheme.onError,
+            ),
+            icon: const Icon(Icons.delete_outline_rounded),
+            label: Text(
+              context.l10n.libraryDeleteSelected(_selection.selectedIds.length),
             ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -795,7 +971,8 @@ class _LibraryPageState extends State<LibraryPage> {
     final spacing = useRail ? 14.0 : 10.0;
     final horizontalPadding = useRail ? 16.0 : 12.0;
     final bottomPadding = useRail
-        ? MediaQuery.viewPaddingOf(context).bottom + 24
+        ? MediaQuery.viewPaddingOf(context).bottom +
+              (_selection.isActive ? 104 : 24)
         : HomeMobileChromeScope.of(context).pageBottomPadding;
 
     return LayoutBuilder(
@@ -845,40 +1022,60 @@ class _LibraryPageState extends State<LibraryPage> {
                   child: InkWell(
                     borderRadius: BorderRadius.circular(10),
                     onTap: () async {
-                      final animation = BookOpenAnimation.fromCoverKey(
-                        coverKey,
-                        radius: BorderRadius.circular(10),
-                        coverBuilder: (context) => _gridCoverArt(context, book),
+                      await _handleBookTap(
+                        book,
+                        openBook: () => _openBookFromCover(
+                          book,
+                          coverKey: coverKey,
+                          radius: BorderRadius.circular(10),
+                          coverBuilder: (context) =>
+                              _gridCoverArt(context, book),
+                        ),
                       );
-                      await _openBook(book, animation: animation);
                     },
-                    onLongPress: () => _showBookOptions(book),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    onLongPress: _selection.isActive
+                        ? () => _toggleBookSelection(book)
+                        : () => _showBookOptions(book),
+                    child: Stack(
                       children: [
-                        Expanded(
-                          child: SizedBox.expand(
-                            key: coverKey,
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Theme.of(context).colorScheme.shadow
-                                        .withValues(alpha: 0.14),
-                                    blurRadius: 7,
-                                    offset: const Offset(0, 3),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: SizedBox.expand(
+                                key: coverKey,
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(10),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .shadow
+                                            .withValues(alpha: 0.14),
+                                        blurRadius: 7,
+                                        offset: const Offset(0, 3),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(10),
-                                child: _gridCoverArt(context, book),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(10),
+                                    child: _gridCoverArt(context, book),
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
+                            if (showDetails) LibraryGridBookDetails(book: book),
+                          ],
                         ),
-                        if (showDetails) LibraryGridBookDetails(book: book),
+                        if (_selection.isActive)
+                          Positioned(
+                            top: 6,
+                            left: 6,
+                            child: _BookSelectionIndicator(
+                              selected: _isBookSelected(book),
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -892,8 +1089,7 @@ class _LibraryPageState extends State<LibraryPage> {
   }
 
   int _bookProgressPercent(Book book) {
-    if (book.totalPages <= 0) return 0;
-    return ((book.currentPage / book.totalPages).clamp(0.0, 1.0) * 100).round();
+    return (book.progress * 100).round();
   }
 
   Widget _buildBooksGrid(List<Book> books, {required double topPadding}) {
@@ -953,7 +1149,8 @@ class _LibraryPageState extends State<LibraryPage> {
               16,
               12,
               16,
-              MediaQuery.viewPaddingOf(context).bottom + 24,
+              MediaQuery.viewPaddingOf(context).bottom +
+                  (_selection.isActive ? 104 : 24),
             ),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: crossAxisCount,
@@ -969,16 +1166,22 @@ class _LibraryPageState extends State<LibraryPage> {
                 child: _BookCoverItem(
                   book: book,
                   coverKey: coverKey,
+                  selectionActive: _selection.isActive,
+                  selected: _isBookSelected(book),
                   onTap: () async {
-                    // 在点击瞬间捕获封面位置，随后直接打开沉浸式阅读器
-                    final animation = BookOpenAnimation.fromCoverKey(
-                      coverKey,
-                      radius: BorderRadius.circular(12),
-                      coverBuilder: (context) => _gridCoverArt(context, book),
+                    await _handleBookTap(
+                      book,
+                      openBook: () => _openBookFromCover(
+                        book,
+                        coverKey: coverKey,
+                        radius: BorderRadius.circular(12),
+                        coverBuilder: (context) => _gridCoverArt(context, book),
+                      ),
                     );
-                    await _openBook(book, animation: animation);
                   },
-                  onLongPress: () => _showBookOptions(book),
+                  onLongPress: _selection.isActive
+                      ? () => _toggleBookSelection(book)
+                      : () => _showBookOptions(book),
                 ),
               );
             },
@@ -1006,9 +1209,7 @@ class _LibraryPageState extends State<LibraryPage> {
       itemBuilder: (context, index) {
         final book = books[index];
         final coverKey = _coverKeyFor(book);
-        final progress = book.totalPages > 0
-            ? (book.currentPage / book.totalPages).clamp(0.0, 1.0)
-            : 0.0;
+        final progress = book.progress;
         final progressText = context.l10n.libraryProgressContinue(
           (progress * 100).round(),
         );
@@ -1036,14 +1237,19 @@ class _LibraryPageState extends State<LibraryPage> {
             child: InkWell(
               borderRadius: BorderRadius.circular(16),
               onTap: () async {
-                final animation = BookOpenAnimation.fromCoverKey(
-                  coverKey,
-                  radius: BorderRadius.circular(11),
-                  coverBuilder: (context) => _buildListCover(context, book),
+                await _handleBookTap(
+                  book,
+                  openBook: () => _openBookFromCover(
+                    book,
+                    coverKey: coverKey,
+                    radius: BorderRadius.circular(11),
+                    coverBuilder: (context) => _buildListCover(context, book),
+                  ),
                 );
-                await _openBook(book, animation: animation);
               },
-              onLongPress: () => _showBookOptions(book),
+              onLongPress: _selection.isActive
+                  ? () => _toggleBookSelection(book)
+                  : () => _showBookOptions(book),
               child: Padding(
                 padding: const EdgeInsets.all(10),
                 child: Row(
@@ -1109,12 +1315,15 @@ class _LibraryPageState extends State<LibraryPage> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Icon(
-                      Icons.chevron_right_rounded,
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withValues(alpha: 0.35),
-                    ),
+                    if (_selection.isActive)
+                      _BookSelectionIndicator(selected: _isBookSelected(book))
+                    else
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.35),
+                      ),
                   ],
                 ),
               ),
@@ -1286,9 +1495,7 @@ class _LibraryPageState extends State<LibraryPage> {
       isScrollControlled: true,
       builder: (context) {
         final localScheme = Theme.of(context).colorScheme;
-        final progress =
-            (book.currentPage / (book.totalPages > 0 ? book.totalPages : 1))
-                .clamp(0.0, 1.0);
+        final progress = book.progress;
         final content = Container(
           decoration: BoxDecoration(
             color: isMaterial3Style
@@ -1433,6 +1640,16 @@ class _LibraryPageState extends State<LibraryPage> {
                     children: [
                       _buildOptionItem(
                         context: context,
+                        icon: Icons.library_add_check_outlined,
+                        iconColor: localScheme.primary,
+                        title: context.l10n.librarySelectMultiple,
+                        onTap: () {
+                          Navigator.pop(context);
+                          _enterSelectionMode(book);
+                        },
+                      ),
+                      _buildOptionItem(
+                        context: context,
                         icon: Icons.play_circle_outline,
                         iconColor: localScheme.primary,
                         title: context.l10n.continueReading,
@@ -1445,7 +1662,12 @@ class _LibraryPageState extends State<LibraryPage> {
                           Navigator.pop(context);
                           final fullBook = await _bookDao.getBookById(book.id!);
                           if (fullBook != null && context.mounted) {
-                            await _openBook(fullBook);
+                            await _openBook(
+                              fullBook,
+                              libraryAnimation: context
+                                  .read<AppSettingsNotifier>()
+                                  .libraryBookOpenAnimation,
+                            );
                             _loadBooks();
                           }
                         },
@@ -1816,7 +2038,7 @@ class _LibraryPageState extends State<LibraryPage> {
             const SizedBox(height: 12),
             _buildInfoRow(
               context.l10n.readingProgress,
-              '${((book.currentPage / (book.totalPages > 0 ? book.totalPages : 1)) * 100).toStringAsFixed(1)}%',
+              '${(book.progress * 100).toStringAsFixed(1)}%',
             ),
           ],
         ),
@@ -1966,6 +2188,113 @@ class _LibraryPageState extends State<LibraryPage> {
     );
   }
 
+  Future<void> _confirmDeleteSelectedBooks() async {
+    final selectedIds = _selection.selectedIds;
+    if (selectedIds.isEmpty) return;
+    final selectedBooks = _books
+        .where((book) => book.id != null && selectedIds.contains(book.id))
+        .toList(growable: false);
+    if (selectedBooks.isEmpty) return;
+
+    final l10n = context.l10n;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.libraryBatchDeleteTitle),
+        content: Text(l10n.libraryBatchDeleteMessage(selectedBooks.length)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+            ),
+            child: Text(l10n.delete),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    await _deleteSelectedBooks(selectedBooks);
+  }
+
+  Future<void> _deleteSelectedBooks(List<Book> selectedBooks) async {
+    final progress = ValueNotifier<int>(0);
+    final l10n = context.l10n;
+    final navigator = Navigator.of(context);
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => PopScope(
+        canPop: false,
+        child: AlertDialog(
+          content: ValueListenableBuilder<int>(
+            valueListenable: progress,
+            builder: (context, done, _) => Row(
+              children: [
+                const CircularProgressIndicator(),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Text(
+                    l10n.libraryDeletingSelected(done, selectedBooks.length),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final failedIds = <int>{};
+    final deletedIds = <int>{};
+    for (var index = 0; index < selectedBooks.length; index += 1) {
+      final book = selectedBooks[index];
+      try {
+        await _performBookDeletion(book);
+        if (book.id != null) deletedIds.add(book.id!);
+      } catch (_) {
+        if (book.id != null) failedIds.add(book.id!);
+      }
+      progress.value = index + 1;
+    }
+
+    if (!mounted) {
+      progress.dispose();
+      return;
+    }
+    navigator.pop();
+    progress.dispose();
+    setState(() {
+      _books.removeWhere((book) => deletedIds.contains(book.id));
+      if (failedIds.isEmpty) {
+        _selection.exit();
+      } else {
+        _selection.retainOnly(failedIds);
+      }
+    });
+    _syncSelection();
+    LibraryEventBus().notifyLibraryChanged();
+
+    if (failedIds.isEmpty) {
+      showSideToast(
+        context,
+        l10n.libraryBatchDeleteSuccess(deletedIds.length),
+        kind: SideToastKind.success,
+      );
+    } else {
+      showSideToast(
+        context,
+        l10n.libraryBatchDeletePartial(deletedIds.length, failedIds.length),
+        kind: SideToastKind.error,
+      );
+    }
+  }
+
   /// 执行书籍删除操作（在后台执行）
   ///
   /// 彻底删除书籍及其所有相关文件和缓存：
@@ -2033,12 +2362,16 @@ class _BookCoverItem extends StatelessWidget {
   final GlobalKey coverKey;
   final Future<void> Function() onTap;
   final VoidCallback onLongPress;
+  final bool selectionActive;
+  final bool selected;
 
   const _BookCoverItem({
     required this.book,
     required this.coverKey,
     required this.onTap,
     required this.onLongPress,
+    required this.selectionActive,
+    required this.selected,
   });
 
   /// 封面下方文本区域高度与间距，网格计算格子高度时复用。
@@ -2047,8 +2380,7 @@ class _BookCoverItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final progress =
-        book.currentPage / (book.totalPages > 0 ? book.totalPages : 1);
+    final progress = book.progress;
 
     return InkWell(
       onTap: () => unawaited(onTap()),
@@ -2100,6 +2432,12 @@ class _BookCoverItem extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                           child: _gridCoverArt(context, book),
                         ),
+                        if (selectionActive)
+                          Positioned(
+                            top: 6,
+                            left: 6,
+                            child: _BookSelectionIndicator(selected: selected),
+                          ),
                         if (book.isOnline)
                           Positioned(
                             top: 6,
@@ -2245,6 +2583,42 @@ class _BookCoverItem extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+}
+
+class _BookSelectionIndicator extends StatelessWidget {
+  const _BookSelectionIndicator({required this.selected});
+
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 160),
+      width: 28,
+      height: 28,
+      decoration: BoxDecoration(
+        color: selected
+            ? scheme.primary
+            : scheme.surface.withValues(alpha: 0.9),
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: selected ? scheme.primary : scheme.outline,
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: scheme.shadow.withValues(alpha: 0.18),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: selected
+          ? Icon(Icons.check_rounded, size: 18, color: scheme.onPrimary)
+          : null,
     );
   }
 }

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as path;
 
 import 'package:xxread/book_sources/models/registered_book_source.dart';
 import 'package:xxread/book_sources/protocol/book_source_protocol.dart';
@@ -75,6 +76,49 @@ void main() {
       expect(text.indexOf('正文0'), lessThan(text.indexOf('正文6')));
     },
   );
+
+  test('uses source identity in offline download paths', () async {
+    final directory = await Directory.systemTemp.createTemp('source-identity-');
+    addTearDown(() => directory.delete(recursive: true));
+    final serviceA = BookSourceShelfService(
+      bookDao: _MemoryBookDao(),
+      client: _DownloadClient(),
+      downloadDirectory: directory,
+    );
+    final serviceB = BookSourceShelfService(
+      bookDao: _MemoryBookDao(),
+      client: _DownloadClient(),
+      downloadDirectory: directory,
+    );
+    final sourceB = RegisteredBookSource(
+      id: 'different-source',
+      name: 'Different source',
+      description: '',
+      manifestUrl: Uri.parse('https://other.example/source.json'),
+      apiBaseUrl: Uri.parse('https://other.example/api/'),
+      protocolVersion: '1.5',
+      languages: const ['zh-CN'],
+      capabilities: const {'search', 'detail', 'catalog', 'content'},
+      enabled: true,
+      addedAt: DateTime.utc(2026, 7, 31),
+    );
+
+    final first = await serviceA.downloadToLocal(
+      source: _source,
+      book: _sourceBook,
+    );
+    final second = await serviceB.downloadToLocal(
+      source: sourceB,
+      book: _sourceBook,
+    );
+
+    expect(
+      path.basename(first.filePath),
+      isNot(path.basename(second.filePath)),
+    );
+    expect(await File(first.filePath).exists(), isTrue);
+    expect(await File(second.filePath).exists(), isTrue);
+  });
 
   test('streams completed batches before the whole book finishes', () async {
     final directory = await Directory.systemTemp.createTemp('source-stream-');

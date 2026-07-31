@@ -34,6 +34,7 @@ class BookDao implements BookImportStore {
           'format',
           'currentPage',
           'totalPages',
+          'reading_progress',
           'importDate',
           'file_modified_time',
           'content_hash',
@@ -59,12 +60,20 @@ class BookDao implements BookImportStore {
     }
   }
 
-  Future<void> updateBookProgress(int bookId, int currentPage) async {
+  Future<void> updateBookProgress(
+    int bookId,
+    int currentPage, {
+    double? readingProgress,
+  }) async {
     try {
       final db = await _dbService.database;
+      final values = <String, Object?>{'currentPage': currentPage};
+      if (readingProgress != null) {
+        values['reading_progress'] = readingProgress.clamp(0.0, 1.0);
+      }
       final result = await db.update(
         'books',
-        {'currentPage': currentPage},
+        values,
         where: 'id = ?',
         whereArgs: [bookId],
       );
@@ -367,14 +376,18 @@ class BookDao implements BookImportStore {
     String canonicalJson,
     String? renderedJson,
     String? layoutSignature,
-    int currentPage,
-  ) async {
+    int currentPage, {
+    double? readingProgress,
+  }) async {
     try {
       final db = await _dbService.database;
       final updates = <String, dynamic>{
         'last_canonical_locator': canonicalJson,
         'currentPage': currentPage,
       };
+      if (readingProgress != null) {
+        updates['reading_progress'] = readingProgress.clamp(0.0, 1.0);
+      }
       if (renderedJson != null) {
         updates['last_rendered_locator'] = renderedJson;
       }

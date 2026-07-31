@@ -232,11 +232,7 @@ class ReadingPlanService {
     }
 
     // 优先推荐仍在读的书籍；若没有则使用最近导入的一本。
-    final inProgress = books
-        .where(
-          (book) => book.totalPages > 0 && book.currentPage < book.totalPages,
-        )
-        .toList();
+    final inProgress = books.where((book) => book.progress < 1).toList();
     if (inProgress.isNotEmpty) {
       inProgress.sort((a, b) => b.importDate.compareTo(a.importDate));
       return inProgress.first.id;

@@ -1160,12 +1160,20 @@ class _NativeReaderPageState extends State<NativeReaderPage>
           ? 0
           : page.startOffset / chapter.plainText.length,
     );
+    final chapterProgress = chapter.plainText.isEmpty
+        ? 1.0
+        : (page.endOffset / chapter.plainText.length).clamp(0.0, 1.0);
+    final chapterCount = _loadedChapters.length;
+    final readingProgress = chapterCount <= 0
+        ? null
+        : ((chapterIndex + chapterProgress) / chapterCount).clamp(0.0, 1.0);
     BookDao().updateBookCanonicalLocator(
       bookId,
       LocatorCodec.encodeCanonicalLocator(locator),
       null,
       _layoutSignature,
       chapterIndex,
+      readingProgress: readingProgress,
     );
   }
 
@@ -1956,6 +1964,12 @@ class _NativeReaderPageState extends State<NativeReaderPage>
       null,
       _layoutSignature,
       chapterIndex,
+      readingProgress:
+          (chapterIndex +
+              (chapter.plainText.isEmpty
+                  ? 1.0
+                  : offset / chapter.plainText.length)) /
+          _loadedChapters.length,
     );
   }
 
@@ -4317,6 +4331,31 @@ class _NativeReaderPageState extends State<NativeReaderPage>
     );
   }
 
+  Widget _buildReaderMessageScaffold({
+    required Key key,
+    required String message,
+    bool showAppBar = false,
+  }) {
+    return Scaffold(
+      key: key,
+      backgroundColor: Colors.transparent,
+      appBar: showAppBar ? AppBar(title: Text(widget.book.title)) : null,
+      body: ReaderThemeBackground(
+        palette: _readerTheme,
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: _readerTheme.text, height: 1.4),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   void _scheduleOpeningContentReady() {
     if (_openingContentReadyScheduled) return;
     _openingContentReadyScheduled = true;
@@ -4375,16 +4414,12 @@ class _NativeReaderPageState extends State<NativeReaderPage>
               if (snapshot.hasError) {
                 _scheduleOpeningContentReady();
                 return _openingCrossfade(
-                  Scaffold(
+                  _buildReaderMessageScaffold(
                     key: const ValueKey('native-reader-error'),
-                    appBar: AppBar(title: Text(widget.book.title)),
-                    body: Center(
-                      child: Text(
-                        context.l10n.readerOpenFailed(
-                          snapshot.error.toString(),
-                        ),
-                      ),
+                    message: context.l10n.readerOpenFailed(
+                      snapshot.error.toString(),
                     ),
+                    showAppBar: true,
                   ),
                 );
               }
@@ -4408,9 +4443,9 @@ class _NativeReaderPageState extends State<NativeReaderPage>
               if (chapters.isEmpty) {
                 _scheduleOpeningContentReady();
                 return _openingCrossfade(
-                  Scaffold(
+                  _buildReaderMessageScaffold(
                     key: const ValueKey('native-reader-empty'),
-                    body: Center(child: Text(context.l10n.readerNoContent)),
+                    message: context.l10n.readerNoContent,
                   ),
                 );
               }

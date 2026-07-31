@@ -6,8 +6,11 @@ import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
+import 'package:dio/io.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
+
+import 'book_source_network_policy.dart';
 
 typedef SourceCoverLoader = Future<Uint8List> Function(Uri uri);
 
@@ -37,21 +40,26 @@ class SourceCoverCache {
     this.maxDiskAge = const Duration(days: 7),
     this.maxImageBytes = 8 * 1024 * 1024,
     this.maxMemoryBytes = 24 * 1024 * 1024,
+    BookSourceNetworkPolicy networkPolicy = const BookSourceNetworkPolicy(),
   }) : assert(maxConcurrent > 0),
        assert(maxImageBytes > 0),
        assert(maxMemoryBytes > 0),
-       _cacheDirectory = cacheDirectory {
+       _cacheDirectory = cacheDirectory,
+       _networkPolicy = networkPolicy {
     _dio =
         dio ??
-        Dio(
-          BaseOptions(
-            connectTimeout: const Duration(seconds: 8),
-            receiveTimeout: const Duration(seconds: 15),
-            sendTimeout: const Duration(seconds: 8),
-            responseType: ResponseType.bytes,
-            headers: const {'Accept': 'image/*'},
-          ),
-        );
+        (Dio(
+            BaseOptions(
+              connectTimeout: const Duration(seconds: 8),
+              receiveTimeout: const Duration(seconds: 15),
+              sendTimeout: const Duration(seconds: 8),
+              responseType: ResponseType.bytes,
+              headers: const {'Accept': 'image/*'},
+            ),
+          )
+          ..httpClientAdapter = IOHttpClientAdapter(
+            createHttpClient: networkPolicy.createPinnedHttpClient,
+          ));
     _loader = loader ?? _download;
   }
 
@@ -64,6 +72,7 @@ class SourceCoverCache {
   final int maxImageBytes;
   final int maxMemoryBytes;
   final Directory? _cacheDirectory;
+  final BookSourceNetworkPolicy _networkPolicy;
 
   late final Dio _dio;
   late final SourceCoverLoader _loader;
@@ -163,28 +172,65 @@ class SourceCoverCache {
 
   Future<Uint8List> _download(Uri uri) async {
     try {
-      final response = await _dio.get<List<int>>(
-        uri.toString(),
-        options: Options(
-          responseType: ResponseType.bytes,
-          validateStatus: (status) =>
-              status != null && status >= 200 && status < 600,
-        ),
-      );
-      final status = response.statusCode ?? 0;
-      final data = response.data;
-      final contentType =
-          response.headers.value(Headers.contentTypeHeader) ?? '';
-      if (status != HttpStatus.ok || data == null) {
-        throw SourceCoverLoadException(
-          'Cover request failed with HTTP $status.',
-          transient: _isTransientStatus(status),
+      var current = uri;
+      for (var redirects = 0; redirects <= 5; redirects++) {
+        await _networkPolicy.validate(current);
+        final response = await _dio.get<ResponseBody>(
+          current.toString(),
+          options: Options(
+            responseType: ResponseType.stream,
+            followRedirects: false,
+            validateStatus: (status) =>
+                status != null && status >= 200 && status < 400,
+          ),
         );
+        final status = response.statusCode ?? 0;
+        if (status >= 300) {
+          await response.data?.stream.drain<void>();
+          if (redirects == 5) {
+            throw const SourceCoverLoadException(
+              'Cover redirected too many times.',
+            );
+          }
+          current = BookSourceNetworkPolicy.redirectTarget(
+            current,
+            response.headers.value(HttpHeaders.locationHeader),
+          );
+          continue;
+        }
+        if (status != HttpStatus.ok || response.data == null) {
+          throw SourceCoverLoadException(
+            'Cover request failed with HTTP $status.',
+            transient: _isTransientStatus(status),
+          );
+        }
+        final contentType =
+            response.headers.value(Headers.contentTypeHeader) ?? '';
+        if (!contentType.toLowerCase().startsWith('image/')) {
+          throw const SourceCoverLoadException(
+            'Cover response is not an image.',
+          );
+        }
+        final declaredLength = int.tryParse(
+          response.headers.value(HttpHeaders.contentLengthHeader) ?? '',
+        );
+        if (declaredLength != null && declaredLength > maxImageBytes) {
+          throw SourceCoverLoadException(
+            'Cover exceeds the $maxImageBytes byte limit.',
+          );
+        }
+        final builder = BytesBuilder(copy: false);
+        await for (final chunk in response.data!.stream) {
+          if (builder.length + chunk.length > maxImageBytes) {
+            throw SourceCoverLoadException(
+              'Cover exceeds the $maxImageBytes byte limit.',
+            );
+          }
+          builder.add(chunk);
+        }
+        return builder.takeBytes();
       }
-      if (!contentType.toLowerCase().startsWith('image/')) {
-        throw const SourceCoverLoadException('Cover response is not an image.');
-      }
-      return data is Uint8List ? data : Uint8List.fromList(data);
+      throw const SourceCoverLoadException('Cover request failed.');
     } on DioException catch (error) {
       throw SourceCoverLoadException(
         'Cover request failed: ${error.message ?? error.type.name}',

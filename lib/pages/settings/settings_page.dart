@@ -620,6 +620,20 @@ class _SettingsPageState extends State<SettingsPage> {
             ],
           ),
           const SizedBox(height: 20),
+          _buildSectionCard(
+            title: l10n.settingsSectionAdvancedFeatures,
+            icon: Icons.science_outlined,
+            children: [
+              _buildSwitchSetting(
+                title: l10n.settingsAdditionalSourceProtocolsTitle,
+                subtitle: l10n.settingsAdditionalSourceProtocolsSubtitle,
+                value: appSettings.additionalSourceProtocolsEnabled,
+                onChanged: appSettings.setAdditionalSourceProtocolsEnabled,
+                icon: Icons.extension_outlined,
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
           KeyedSubtree(
             key: _supportSectionKey,
             child: _buildSectionCard(

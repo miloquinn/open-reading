@@ -5,6 +5,15 @@ import 'package:flutter/material.dart';
 
 enum ReaderPageTransitionOrigin { standard, home, discoverSheet }
 
+/// 仅用于从书库进入阅读器的打开动画。
+enum LibraryBookOpenAnimation {
+  classicCover,
+  minimalFade,
+  paperRise,
+  pageSlide,
+  bookSpread,
+}
+
 /// 自定义页面过渡动画
 /// 提供流畅的页面进入和退出动画效果
 class CustomPageTransitions {
@@ -133,6 +142,7 @@ class CustomPageTransitions {
   static PageRoute<T> createSmoothReaderPageRoute<T extends Object?>(
     Widget page, {
     ReaderPageTransitionOrigin origin = ReaderPageTransitionOrigin.standard,
+    LibraryBookOpenAnimation? libraryAnimation,
     Color? backgroundColor,
     Widget Function(
       PageRoute<T> route,
@@ -141,19 +151,41 @@ class CustomPageTransitions {
     )?
     routeWrapper,
   }) {
-    final transitionDuration = switch (origin) {
-      ReaderPageTransitionOrigin.discoverSheet => const Duration(
-        milliseconds: 380,
+    final transitionDuration = switch (libraryAnimation) {
+      LibraryBookOpenAnimation.classicCover => const Duration(
+        milliseconds: 400,
       ),
-      ReaderPageTransitionOrigin.home => const Duration(milliseconds: 400),
-      ReaderPageTransitionOrigin.standard => const Duration(milliseconds: 400),
+      LibraryBookOpenAnimation.minimalFade => const Duration(milliseconds: 220),
+      LibraryBookOpenAnimation.paperRise => const Duration(milliseconds: 320),
+      LibraryBookOpenAnimation.pageSlide => const Duration(milliseconds: 340),
+      LibraryBookOpenAnimation.bookSpread => const Duration(milliseconds: 380),
+      null => switch (origin) {
+        ReaderPageTransitionOrigin.discoverSheet => const Duration(
+          milliseconds: 380,
+        ),
+        ReaderPageTransitionOrigin.home => const Duration(milliseconds: 400),
+        ReaderPageTransitionOrigin.standard => const Duration(
+          milliseconds: 400,
+        ),
+      },
     };
-    final reverseTransitionDuration = switch (origin) {
-      ReaderPageTransitionOrigin.discoverSheet => const Duration(
-        milliseconds: 300,
+    final reverseTransitionDuration = switch (libraryAnimation) {
+      LibraryBookOpenAnimation.classicCover => const Duration(
+        milliseconds: 320,
       ),
-      ReaderPageTransitionOrigin.home => const Duration(milliseconds: 320),
-      ReaderPageTransitionOrigin.standard => const Duration(milliseconds: 320),
+      LibraryBookOpenAnimation.minimalFade => const Duration(milliseconds: 180),
+      LibraryBookOpenAnimation.paperRise => const Duration(milliseconds: 260),
+      LibraryBookOpenAnimation.pageSlide => const Duration(milliseconds: 280),
+      LibraryBookOpenAnimation.bookSpread => const Duration(milliseconds: 300),
+      null => switch (origin) {
+        ReaderPageTransitionOrigin.discoverSheet => const Duration(
+          milliseconds: 300,
+        ),
+        ReaderPageTransitionOrigin.home => const Duration(milliseconds: 320),
+        ReaderPageTransitionOrigin.standard => const Duration(
+          milliseconds: 320,
+        ),
+      },
     };
     final beginOffset = switch (origin) {
       ReaderPageTransitionOrigin.discoverSheet => const Offset(0, 0.04),
@@ -173,26 +205,34 @@ class CustomPageTransitions {
       allowSnapshotting: false,
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
         final reduceMotion = MediaQuery.disableAnimationsOf(context);
+        final selectedAnimation = reduceMotion
+            ? LibraryBookOpenAnimation.minimalFade
+            : libraryAnimation;
+        if (selectedAnimation == LibraryBookOpenAnimation.bookSpread) {
+          return _buildBookSpreadTransition(
+            context: context,
+            animation: animation,
+            backgroundColor: backgroundColor,
+            child: child,
+          );
+        }
         final motion = CurvedAnimation(
           parent: animation,
           curve: const Interval(0.04, 1, curve: Curves.easeOutQuart),
           reverseCurve: Curves.easeInCubic,
         );
+        final transitionOffset = switch (selectedAnimation) {
+          LibraryBookOpenAnimation.classicCover => Offset.zero,
+          LibraryBookOpenAnimation.minimalFade => Offset.zero,
+          LibraryBookOpenAnimation.pageSlide => const Offset(0.065, 0),
+          LibraryBookOpenAnimation.paperRise => const Offset(0, 0.035),
+          LibraryBookOpenAnimation.bookSpread => Offset.zero,
+          null => reduceMotion ? Offset.zero : beginOffset,
+        };
         final position = Tween<Offset>(
-          begin: reduceMotion ? Offset.zero : beginOffset,
+          begin: transitionOffset,
           end: Offset.zero,
         ).animate(motion);
-        final surfaceOpacity = Tween<double>(begin: 0, end: 1).animate(
-          CurvedAnimation(
-            parent: animation,
-            curve: Interval(
-              0,
-              reduceMotion ? 0.3 : 0.55,
-              curve: Curves.easeOutCubic,
-            ),
-            reverseCurve: Curves.easeInCubic,
-          ),
-        );
         final contentOpacity = Tween<double>(begin: 0, end: 1).animate(
           CurvedAnimation(
             parent: animation,
@@ -208,16 +248,17 @@ class CustomPageTransitions {
           ),
         );
 
+        final surface =
+            backgroundColor ?? Theme.of(context).colorScheme.surface;
         return RepaintBoundary(
-          child: SlideTransition(
-            key: const ValueKey('book-paper-transition-position'),
-            position: position,
-            child: FadeTransition(
-              key: const ValueKey('book-paper-transition-surface-opacity'),
-              opacity: surfaceOpacity,
+          child: ColoredBox(
+            key: const ValueKey('book-paper-transition-surface'),
+            color: surface,
+            child: SlideTransition(
+              key: const ValueKey('book-paper-transition-position'),
+              position: position,
               child: ColoredBox(
-                key: const ValueKey('book-paper-transition-surface'),
-                color: backgroundColor ?? Theme.of(context).colorScheme.surface,
+                color: surface,
                 child: FadeTransition(
                   key: const ValueKey('book-paper-transition-content-opacity'),
                   opacity: contentOpacity,
@@ -230,6 +271,96 @@ class CustomPageTransitions {
       },
     );
     return route;
+  }
+
+  static Widget _buildBookSpreadTransition({
+    required BuildContext context,
+    required Animation<double> animation,
+    required Color? backgroundColor,
+    required Widget child,
+  }) {
+    final surface = backgroundColor ?? Theme.of(context).colorScheme.surface;
+    final open = CurvedAnimation(
+      parent: animation,
+      curve: const Cubic(0.16, 1, 0.3, 1),
+      reverseCurve: Curves.easeInCubic,
+    );
+    final contentOpacity = CurvedAnimation(
+      parent: animation,
+      curve: const Interval(0.48, 1, curve: Curves.easeOutCubic),
+      reverseCurve: const Interval(0, 0.58, curve: Curves.easeInCubic),
+    );
+    return RepaintBoundary(
+      child: ColoredBox(
+        color: surface,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            FadeTransition(opacity: contentOpacity, child: child),
+            IgnorePointer(
+              child: FadeTransition(
+                opacity: ReverseAnimation(contentOpacity),
+                child: AnimatedBuilder(
+                  animation: open,
+                  builder: (context, _) => Row(
+                    children: [
+                      Expanded(
+                        child: Transform.scale(
+                          key: const ValueKey('book-spread-left-page'),
+                          scaleX: open.value,
+                          alignment: Alignment.centerRight,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: surface,
+                              border: Border(
+                                right: BorderSide(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.shadow.withValues(alpha: 0.08),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Transform.scale(
+                          key: const ValueKey('book-spread-right-page'),
+                          scaleX: open.value,
+                          alignment: Alignment.centerLeft,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: surface,
+                              border: Border(
+                                left: BorderSide(
+                                  color: Theme.of(context).colorScheme.onSurface
+                                      .withValues(alpha: 0.04),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Align(
+              alignment: Alignment.center,
+              child: FadeTransition(
+                opacity: ReverseAnimation(open),
+                child: Container(
+                  key: const ValueKey('book-spread-spine'),
+                  width: 1,
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   /// 创建优化的阅读页面过渡动画

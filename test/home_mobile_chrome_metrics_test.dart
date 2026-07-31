@@ -62,6 +62,47 @@ void main() {
       },
     );
 
+    test('adapts the automatic shape for an iPhone 16 Pro', () {
+      final dimensions = homeMobileFloatingNavDimensionsFor(
+        screenWidth: 402,
+        itemCount: 5,
+        platform: TargetPlatform.iOS,
+        systemBottomInset: 34,
+      );
+
+      expect(dimensions.height, 60);
+      expect(dimensions.horizontalMargin, closeTo(24.12, 0.01));
+      expect(dimensions.width, closeTo(353.76, 0.01));
+    });
+
+    test('keeps Android automatic dimensions unchanged', () {
+      final dimensions = homeMobileFloatingNavDimensionsFor(
+        screenWidth: 412,
+        itemCount: 4,
+        platform: TargetPlatform.android,
+        systemBottomInset: 24,
+      );
+
+      expect(dimensions.height, 56);
+      expect(dimensions.horizontalMargin, 22);
+      expect(dimensions.width, 368);
+    });
+
+    test('custom dimensions override the automatic shape safely', () {
+      final dimensions = homeMobileFloatingNavDimensionsFor(
+        screenWidth: 402,
+        itemCount: 5,
+        platform: TargetPlatform.iOS,
+        systemBottomInset: 34,
+        customHeight: 66,
+        customHorizontalMargin: 30,
+      );
+
+      expect(dimensions.height, 66);
+      expect(dimensions.horizontalMargin, 30);
+      expect(dimensions.width, 342);
+    });
+
     test('uses Android system insets without platform-specific branches', () {
       final metrics = HomeMobileChromeMetrics.fromMediaQuery(
         const MediaQueryData(

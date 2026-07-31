@@ -18,22 +18,33 @@ import 'package:xxread/services/reading/reading_resume_service.dart';
 import 'package:xxread/pages/reader/paged_image_reader.dart';
 import 'package:xxread/utils/book_open_transition.dart';
 import 'package:xxread/utils/localization_extension.dart';
+import 'package:xxread/utils/page_transitions.dart';
+import 'package:xxread/utils/reader_themes.dart';
 
 class ComicReaderPage extends StatefulWidget {
-  const ComicReaderPage({super.key, required this.book});
+  const ComicReaderPage({
+    super.key,
+    required this.book,
+    required this.initialTheme,
+  });
 
   final Book book;
+  final ReaderThemePalette initialTheme;
 
   /// 与 [NativeReaderService.openBook] 相同的封面展开转场入口。
   static Future<void> open(
     BuildContext context,
     Book book, {
     BookOpenAnimation? animation,
+    LibraryBookOpenAnimation? libraryAnimation,
     bool waitForReaderClose = true,
   }) async {
+    final initialTheme = await ReaderThemes.loadSavedPalette();
+    if (!context.mounted) return;
     final route = BookOpenTransition.createRoute<void>(
-      ComicReaderPage(book: book),
+      ComicReaderPage(book: book, initialTheme: initialTheme),
       animation: animation,
+      libraryAnimation: libraryAnimation,
       readerBackgroundColor: Colors.black,
     );
     final navigation = BookOpenTransition.push<void>(context, route);
@@ -113,12 +124,16 @@ class _ComicReaderPageState extends State<ComicReaderPage> {
     return future;
   }
 
-  void _saveProgress(int index) {
+  void _saveProgress(int index, int pageCount) {
     final bookId = widget.book.id;
     if (bookId == null) return;
     unawaited(
       BookDao()
-          .updateBookProgress(bookId, index)
+          .updateBookProgress(
+            bookId,
+            index,
+            readingProgress: (index + 1) / pageCount,
+          )
           .catchError((Object error) => debugPrint('保存漫画进度失败: $error')),
     );
   }
@@ -142,6 +157,7 @@ class _ComicReaderPageState extends State<ComicReaderPage> {
             return PagedReaderMessageScaffold(
               title: widget.book.title,
               message: message,
+              palette: widget.initialTheme,
             );
           }
           final pages = snapshot.data;
@@ -154,6 +170,7 @@ class _ComicReaderPageState extends State<ComicReaderPage> {
             return PagedReaderMessageScaffold(
               title: widget.book.title,
               message: l10n.readerComicNoPages,
+              palette: widget.initialTheme,
             );
           }
           return PagedImageReader(
@@ -161,7 +178,7 @@ class _ComicReaderPageState extends State<ComicReaderPage> {
             pageCount: pages.length,
             initialPage: widget.book.currentPage,
             loadPage: (index) => _loadPage(pages, index),
-            onPageChanged: _saveProgress,
+            onPageChanged: (index) => _saveProgress(index, pages.length),
             bookId: widget.book.id,
           );
         },

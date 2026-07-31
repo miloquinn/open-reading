@@ -257,10 +257,12 @@ class SourcedBookActions {
             media.size.height - media.padding.top - 16,
           ),
         ),
-        builder: (sheetContext) => _SourcedBookDetailsSheet(
+        builder: (sheetContext) => _SourcedBookDetailsLoader(
           result: result,
+          client: client,
           shelfService: shelfService,
-          onRead: () => _openReader(result),
+          onRead: (book) =>
+              _openReader(SourcedBook(source: result.source, book: book)),
           onDownloadContinuesInBackground: () {
             if (!context.mounted) return;
             showSideToast(context, context.l10n.downloadRunningInBackground);
@@ -286,6 +288,60 @@ class SourcedBookActions {
   }
 }
 
+class _SourcedBookDetailsLoader extends StatefulWidget {
+  const _SourcedBookDetailsLoader({
+    required this.result,
+    required this.client,
+    required this.shelfService,
+    required this.onRead,
+    required this.onDownloadContinuesInBackground,
+  });
+
+  final SourcedBook result;
+  final BookSourceClient client;
+  final BookSourceShelfService shelfService;
+  final Future<void> Function(BookSourceBook book) onRead;
+  final VoidCallback onDownloadContinuesInBackground;
+
+  @override
+  State<_SourcedBookDetailsLoader> createState() =>
+      _SourcedBookDetailsLoaderState();
+}
+
+class _SourcedBookDetailsLoaderState extends State<_SourcedBookDetailsLoader> {
+  late BookSourceBook _book = widget.result.book;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_loadDetails());
+  }
+
+  Future<void> _loadDetails() async {
+    try {
+      final book = await widget.client.getBook(
+        widget.result.source,
+        widget.result.book.id,
+      );
+      if (mounted) setState(() => _book = book);
+    } catch (_) {
+      // Search/discovery summaries remain usable when detail is unavailable.
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final result = SourcedBook(source: widget.result.source, book: _book);
+    return _SourcedBookDetailsSheet(
+      key: ValueKey(_book.id),
+      result: result,
+      shelfService: widget.shelfService,
+      onRead: () => widget.onRead(result.book),
+      onDownloadContinuesInBackground: widget.onDownloadContinuesInBackground,
+    );
+  }
+}
+
 enum _BookDetailsSheetStep {
   details,
   shelfOptions,
@@ -299,6 +355,7 @@ enum _BookDetailsSheetStep {
 
 class _SourcedBookDetailsSheet extends StatefulWidget {
   const _SourcedBookDetailsSheet({
+    super.key,
     required this.result,
     required this.shelfService,
     required this.onRead,
