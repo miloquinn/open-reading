@@ -35,9 +35,9 @@ dependencies:
   cupertino_icons: ^1.0.9
 
   # 文件处理和存储
-  file_picker: ^11.0.2
+  file_picker: ^12.0.0-beta.7
   shared_preferences: ^2.5.5
-  package_info_plus: ^9.0.1
+  package_info_plus: ^10.2.1
   sqflite: ^2.4.3 # 移动平台数据库
   path: ^1.9.1 # 数据库路径处理
   crypto: ^3.0.7 # 加密和哈希计算
