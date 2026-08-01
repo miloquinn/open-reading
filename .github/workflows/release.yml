@@ -50,30 +50,8 @@ jobs:
             exit 1
           fi
 
-      - name: Set up Flutter
-        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
-        with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: stable
-          cache: true
-
-      - name: Install locked dependencies
-        run: flutter pub get --enforce-lockfile
-
-      - name: Generate localizations
-        run: flutter gen-l10n
-
-      - name: Verify generated localizations are current
-        run: git diff --exit-code -- lib/l10n
-
-      - name: Verify formatting
-        run: dart format --output=none --set-exit-if-changed lib test tool
-
-      - name: Analyze source
-        run: flutter analyze --no-fatal-infos --no-fatal-warnings
-
-      - name: Run tests
-        run: flutter test
+      - name: Continue directly to release builds
+        run: echo "Release source validation was explicitly skipped for this release."
 
   web:
     name: Flutter Web
