@@ -44,7 +44,7 @@ dependencies:
 
   # 电子书格式支持
   epubx: ^4.0.0
-  pdfx: ^2.9.2
+  pdfx: ^2.11.0
   archive: ^3.6.1
   kindle_unpack: ^0.1.1
 
@@ -52,7 +52,7 @@ dependencies:
   url_launcher: ^6.3.2
 
   # 数据处理
-  html: ^0.15.6
+  html: ^0.15.7
 
   # UI
   fl_chart: ^1.2.0
